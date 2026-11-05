@@ -11,6 +11,12 @@ Run `Scripts/ci.sh` from a checkout to generate the ignored Xcode project and ru
 Launch and Welcome suites. The last three suites contain only smoke tests in Phase 0; design snapshots
 arrive in Phases 1 and 3c. There are no image baselines to approve yet.
 
+After XcodeGen runs, `make generate` copies the committed `Packages/ChronoFlowKit/Package.resolved`
+to `ChronoFlow.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`, where Xcode reads
+the project's package pins. Xcode ignores the nested package's lockfile when building the project.
+All Makefile Xcode builds pass `-onlyUsePackageVersionsFromResolvedFile` so dependency drift fails
+instead of silently resolving new versions. Regenerate after updating the committed lockfile.
+
 All Makefile Xcode builds use `build/DerivedData`. The default destination is
 `platform=iOS Simulator,name=iPhone 17e,OS=27.2`. Run the Duo window/UI check after `make generate`:
 

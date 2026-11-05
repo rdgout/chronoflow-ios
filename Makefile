@@ -4,7 +4,7 @@ SHELL := /bin/sh
 
 XCODEGEN ?= /opt/homebrew/bin/xcodegen
 DESTINATION := platform=iOS Simulator,name=iPhone 17e,OS=27.2
-XCODEBUILD := xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData
+XCODEBUILD := xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData -onlyUsePackageVersionsFromResolvedFile
 SWIFT_PATHS := App AppUITests PerfUITests Packages/ChronoFlowKit/Package.swift Packages/ChronoFlowKit/Sources Packages/ChronoFlowKit/Tests $(wildcard Tools/*/Package.swift Tools/*/Sources)
 UI_SUITES := DesignSystemTests LaunchTests WelcomeTests
 
@@ -12,6 +12,8 @@ UI_SUITES := DesignSystemTests LaunchTests WelcomeTests
 
 generate:
 	$(XCODEGEN) generate
+	mkdir -p ChronoFlow.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
+	cp Packages/ChronoFlowKit/Package.resolved ChronoFlow.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
 
 format:
 	xcrun swift format format --in-place -r $(SWIFT_PATHS)
