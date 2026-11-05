@@ -342,7 +342,7 @@ Unblocked (OQ 1–4 settled 5 Nov).
 - [ ] `.swift-format` (4-space, line 120); `Makefile`: `generate`, `format`, `lint` (`swift format lint --strict -r`), `test`, `snapshots` (pinned iPhone 17e / iOS 27.2), `perf`, `tokens`, `fonts`, `assets`, `check` (lint + test + snapshots); `Scripts/ci.sh` = `make generate check`. Confirm which Instruments templates exist in Xcode 27.2 (`xctrace list templates`: Animation Hitches, App Launch) and record them. (Implemented; lint passed, Xcode checks and Instruments template listing blocked by the execution sandbox. Results in `Docs/tooling.md`; generator targets explicitly require Phase 1.)
   Files: `.swift-format`, `Makefile`, `Scripts/ci.sh`.
   Test: `Scripts/ci.sh` passes on a clean clone.
-- [ ] `CLAUDE.md`: commands; working rules; traps (launch-screen caching: Clean Build Folder, delete app, restart Simulator; `.xcodeproj` is generated; RN repo read-only; fonts registered in the package, not `UIAppFonts`; no masks/filters/shadows in the launch tree; no localised launch storyboard); trailer rule (OQ 1).
+- [x] `CLAUDE.md`: commands; working rules; traps (launch-screen caching: Clean Build Folder, delete app, restart Simulator; `.xcodeproj` is generated; RN repo read-only; fonts registered in the package, not `UIAppFonts`; no masks/filters/shadows in the launch tree; no localised launch storyboard); trailer rule (OQ 1). (Actual commands documented; shared rules and traps remain inherited through `@AGENTS.md`.)
   Files: `CLAUDE.md`.
   Test: review.
 
