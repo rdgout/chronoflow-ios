@@ -390,7 +390,7 @@ OQ 5 follows the settled S1/S2 and listed S3–S6 rules. OQ 11 uses its default 
 - [x] `MoonTarget` fallback math (pure): centre from safe insets and row height. (OQ 10 default assumed, confirm). Pure fallback uses the specified RN padding and row-height rule, with content bounds from all four safe insets. Board (38, 78), larger rows and asymmetric/short/wide host fixtures pass. Hosted running-device tests are written and type-check for iOS 17; all seven D1c simulator runs remain for the orchestrator.
   Files: `Sources/AppCore/MoonTarget.swift`.
   Test: board target (38, 78) on 390 × 844 with insets 47/34 → padding rule; all pinned devices; larger row height moves the centre.
-- [ ] `LaunchTimeline.opening` (incl. Reduce Motion) and `sample(at:)`.
+- [x] `LaunchTimeline.opening` (incl. Reduce Motion) and `sample(at:)`. (Pure Sendable scalar/point tracks, absolute seconds from t0, one track per layer/key path. Every opening key/curve, all specified sample times, plane/stroke agreement every 10 ms and static Reduce Motion frame pass on the host; detached-task use and iOS 17 compile/type-check pass. No scene wiring in this phase.)
   Files: `Sources/Launch/LaunchTimeline.swift`, `Sources/Launch/LayerID.swift`.
   Test: table test of every key; `sample` at 0, 300, 700, 1100, 1400, 1500.
 - [ ] `withReadyExit`, `withStatus`.
