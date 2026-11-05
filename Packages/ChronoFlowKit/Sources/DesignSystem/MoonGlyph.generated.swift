@@ -2,14 +2,16 @@
 import CoreGraphics
 
 nonisolated enum MoonGlyph {
-    static var viewBox: CGFloat { 24 }
+    static var viewBox: CGFloat { 24.0000000000 }
     static var path: CGPath {
         let path = CGMutablePath()
-        path.move(to: CGPoint(x: 12, y: 3))
+        path.move(to: CGPoint(x: 12.0000000000, y: 3.0000000000))
         path.addArc(
-            center: CGPoint(x: 16.5, y: 7.5), radius: hypot(9, 9) / 2, startAngle: -.pi * 3 / 4, endAngle: -.pi * 7 / 4,
-            clockwise: true)
-        path.addArc(center: CGPoint(x: 12, y: 12), radius: 9, startAngle: 0, endAngle: .pi * 3 / 2, clockwise: false)
+            center: CGPoint(x: 16.5000000000, y: 7.5000000000), radius: 6.3639610307, startAngle: -2.3561944902,
+            endAngle: -5.4977871438, clockwise: true)
+        path.addArc(
+            center: CGPoint(x: 12.0000000000, y: 12.0000000000), radius: 9.0000000000, startAngle: 0.0000000000,
+            endAngle: 4.7123889804, clockwise: false)
         path.closeSubpath()
         return path
     }

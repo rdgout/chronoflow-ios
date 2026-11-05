@@ -6,17 +6,6 @@ import ImageIO
 import TokenGenCore
 import UniformTypeIdentifiers
 
-public func moonPath() -> CGPath {
-    let path = CGMutablePath()
-    path.move(to: CGPoint(x: 12, y: 3))
-    path.addArc(
-        center: CGPoint(x: 16.5, y: 7.5), radius: hypot(9, 9) / 2, startAngle: -.pi * 3 / 4, endAngle: -.pi * 7 / 4,
-        clockwise: true)
-    path.addArc(center: CGPoint(x: 12, y: 12), radius: 9, startAngle: 0, endAngle: .pi * 3 / 2, clockwise: false)
-    path.closeSubpath()
-    return path
-}
-
 public struct WordmarkLayout {
     public let line: CTLine
     public let width: Int
@@ -78,7 +67,7 @@ public func wordmarkImage(layout: WordmarkLayout, scale: Int) -> CGImage {
     return context.makeImage()!
 }
 
-public func moonImage(color: RGB, scale: Int) -> CGImage {
+func moonImage(color: RGB, scale: Int, geometry: MoonGeometry) -> CGImage {
     let size = 288 * scale
     let count = size * size
     var alpha = [UInt8](repeating: 0, count: count)
@@ -89,12 +78,12 @@ public func moonImage(color: RGB, scale: Int) -> CGImage {
         context.translateBy(x: 0, y: CGFloat(size))
         context.scaleBy(x: CGFloat(scale), y: -CGFloat(scale))
         context.translateBy(x: 92, y: 92)
-        context.scaleBy(x: 104 / 24, y: 104 / 24)
+        context.scaleBy(x: 104 / geometry.viewBox, y: 104 / geometry.viewBox)
         context.setStrokeColor(gray: 1, alpha: 1)
         context.setLineWidth(1.6)
         context.setLineCap(.round)
         context.setLineJoin(.round)
-        context.addPath(moonPath())
+        context.addPath(geometry.path)
         context.strokePath()
     }
     let sigma = 9.0 * Double(scale)

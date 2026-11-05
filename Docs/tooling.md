@@ -125,8 +125,11 @@ site after the overlay flush belongs to Phase 3b.
 AssetGen uses P3 contexts, CoreText and a separable Gaussian for the baked glow, with no runtime
 filter or shadow. Its SVG coordinates are flipped once for bitmap rendering. Pixel tests check the
 outer arc's color and the inner arc's orientation. Wordmark ink bounds are checked against CoreText
-at both scales and in both themes. All app/package asset copies are identical. A generated moon path
-also supplies `MoonShape`, so production shape geometry does not duplicate the path constants.
+at both scales and in both themes. All app/package asset copies are identical. AssetGen parses the
+moon's SVG `d` attribute from `SplashScreen.dc.html`, resolves its circular arcs (including SVG radius
+correction), and uses that one description for the PNG, retained SVG and generated `MoonGlyph` used
+by `MoonShape`. Unsupported path syntax fails generation. A translated in-memory board fixture
+checks that changes reach both raster and Swift output; the board files themselves stay read-only.
 
 Launch image gamut decision (5 November 2026 review): **accept sRGB in `Assets.car`** for `LaunchMoon`
 and `LaunchWordmark`; P3 describes their source PNGs, not their compiled renditions. `assetutil --info`

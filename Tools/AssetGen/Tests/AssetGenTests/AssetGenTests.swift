@@ -140,3 +140,33 @@ extension Int { fileprivate var double: Double { Double(self) } }
         }
     }
 }
+
+@Test func moonGeometryComesFromTheBoardForBothRenderers() throws {
+    let board = try String(contentsOf: root.appending(path: "_design/canvas/SplashScreen.dc.html"), encoding: .utf8)
+    let moon = try MoonGeometry(board: board)
+    #expect(moon.viewBox == 24)
+    #expect(moon.start == CGPoint(x: 12, y: 3))
+    #expect(moon.arcs.count == 2)
+    let inner = moon.arcs[0]
+    #expect(abs(inner.center.x - 16.5) < 1e-8 && abs(inner.center.y - 7.5) < 1e-8)
+    #expect(abs(inner.radius - hypot(9, 9) / 2) < 1e-8)
+    #expect(inner.clockwise && abs(inner.endAngle - inner.startAngle + .pi) < 1e-8)
+    let outer = moon.arcs[1]
+    #expect(abs(outer.center.x - 12) < 1e-8 && abs(outer.center.y - 12) < 1e-8)
+    #expect(outer.radius == 9)
+    #expect(!outer.clockwise && abs(outer.endAngle - outer.startAngle - 1.5 * .pi) < 1e-8)
+
+    let shifted = try MoonGeometry(board: board.replacingOccurrences(of: "M12 3", with: "M13 3"))
+    #expect(shifted.start.x == moon.start.x + 1)
+    for (original, translated) in zip(moon.arcs, shifted.arcs) {
+        #expect(abs(translated.center.x - original.center.x - 1) < 1e-8)
+        #expect(abs(translated.center.y - original.center.y) < 1e-8)
+    }
+    #expect(moon.swiftSource != shifted.swiftSource)
+    let color = try DesignSource(root: root).color("dawn", "light").rgb(p3: true)
+    #expect(
+        png(moonImage(color: color, scale: 2, geometry: moon))
+            != png(moonImage(color: color, scale: 2, geometry: shifted)))
+    #expect(throws: GenerationError.self) { try MoonGeometry(svgPath: "M12 3a6 7 0 0 0 9 9Z") }
+    #expect(throws: GenerationError.self) { try MoonGeometry(svgPath: "M12 3L21 12Z") }
+}
