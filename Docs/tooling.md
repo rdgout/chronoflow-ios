@@ -326,3 +326,39 @@ Phase 2 task 1 host verification (2026-11-06, fix round 4): `make generate`, `ma
 (6 TokenGen, 6 Python font/cache, 3 AssetGen tests), plist lint and `git diff --check` passed.
 All hosted tests pass a direct Swift 6 type-check against the installed simulator SDK targeting iOS 17.0;
 this does not run UIKit or replace the matrix commands above. Full `make check` remains for the orchestrator.
+
+`LaunchFrameView(frame:traits:)` draws the generated skyTop and natural-size moon with the same
+superview centring constraints as the storyboard. UIKit lays out the intrinsic image at display scale;
+the hosted resize test checks that its origin is on the pixel grid, including odd pixel dimensions.
+The supplied scene traits capture the launch appearance; the view keeps that appearance while the
+underlying window changes. The frame is reusable by the overlay and Reduce Motion path in Phase 3b;
+no scene-connection or animation code is introduced in Phase 2.
+
+`LaunchFrameParityTests` renders both the app storyboard and the package-backed frame into 8-bit
+Display P3 buffers at the running window's scale. Every channel of every pixel must differ by no
+more than 2 bytes (2/255); alpha must be opaque and the moon must appear in the rendered buffer.
+Both frame views are hosted in windows, so neither has the unattached-reference trait trap. Each
+moon's resolved image and rendered pixels are also compared independently with the explicitly
+resolved main-bundle asset, so matching wrong appearances cannot pass whole-frame parity alone.
+Whole-frame and moon comparisons share the style and first-pixel diagnostics above.
+Further tests exercise resizing, asymmetric insets, accessibility text size, captured appearance and
+an animation-free layer tree without masks, filters or shadows. `LaunchImagesTests` checks natural
+size, image scale and bitmap dimensions in both appearances at the running device's scale. Simulator
+builds retain only that scale (`actool --filter-for-thinning-device-configuration`), so requesting both
+2× and 3× in one process fails even though the source assets contain both. The package test reads
+`UIScreen.main.scale` because a package runner may have no connected scene. The matrix runner now runs
+DesignSystemTests on every device, exercising 2× on SE and 3× on the other devices. Generator host tests
+continue to verify every uncompiled 2×/3× source PNG in both appearances. The revised package image test
+needs execution outside this sandbox.
+
+Phase 2 task 2 host verification (2026-11-06, fix round 4):
+
+- Host SwiftPM suite with `--disable-sandbox`, repo-local scratch/cache/config/security/temp paths
+  and `--triple arm64-apple-macosx14.0`: 11 tests passed. UIKit-specific tests are excluded on macOS.
+- Direct compilation of DesignSystem and Launch and type-check of all hosted AppTests and the UIKit
+  asset test against the installed simulator SDK targeting iOS 17.0: passed. Only D11's existing
+  CoreText deprecation warning remains.
+
+There are no Phase 2 OQ defaults to assume and no undesigned states to defer. Package simulator tests,
+full `make check` and the updated D1c matrix runner remain for the orchestrator; the cached system-frame
+recording remains in Phase 8. No physical-device task belongs to this phase.
