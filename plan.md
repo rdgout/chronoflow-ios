@@ -330,7 +330,7 @@ Unblocked (OQ 1–4 settled 5 Nov).
 - [ ] XcodeGen 2.46.0 is installed. `project.yml`: target `ChronoFlow` (iOS 17.0, iPhone, portrait, Swift 6, Debug ID `net.chronoflow.app.native`, `Local.xcconfig` include for `DEVELOPMENT_TEAM`), `AppUITests`, `PerfUITests`; schemes `ChronoFlow` and `Perf` (Release). `.gitignore`: `*.xcodeproj`, `DerivedData`, `build/`, `Local.xcconfig`; `Local.xcconfig.example` committed. Verify XcodeGen output opens and builds in Xcode 27.2.
   Files: `project.yml`, `.gitignore`, `Config/Local.xcconfig.example`.
   Test: `make generate && xcodebuild -scheme ChronoFlow -destination 'platform=iOS Simulator,name=iPhone 17e' build`.
-- [ ] App shell: `AppDelegate`, `SceneDelegate` (creates the main window with `UIHostingController(rootView: RootView())`), empty `RootView`.
+- [ ] App shell: `AppDelegate`, `SceneDelegate` (creates the main window with `UIHostingController(rootView: RootView())`), empty `RootView`. (Implemented; iOS 17 simulator type-check passed, launch verification blocked by the execution sandbox.)
   Files: `App/AppDelegate.swift`, `App/SceneDelegate.swift`, `App/RootView.swift`.
   Test: builds and launches.
 - [ ] Info.plist: `UIApplicationSceneManifest` (one scene, `SceneDelegate`), `UILaunchStoryboardName = LaunchScreen`, `CADisableMinimumFrameDurationOnPhone = YES`, `UIUserInterfaceStyle = Automatic`, portrait only, `UIViewControllerBasedStatusBarAppearance = YES`. Minimal `LaunchScreen.storyboard` (background a temporary `LaunchSky` colour set with skyTop light/dark hex; replaced by TokenGen output in Phase 1).
