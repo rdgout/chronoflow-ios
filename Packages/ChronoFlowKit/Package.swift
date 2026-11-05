@@ -16,7 +16,9 @@ let package = Package(
         .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", .upToNextMinor(from: "1.19.0"))
     ],
     targets: [
-        .target(name: "DesignSystem", swiftSettings: [.defaultIsolation(MainActor.self)]),
+        .target(
+            name: "DesignSystem", resources: [.process("Resources")], swiftSettings: [.defaultIsolation(MainActor.self)]
+        ),
         .target(name: "AppCore", swiftSettings: [.defaultIsolation(nil)]),
         .target(
             name: "Launch",
