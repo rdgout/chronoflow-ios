@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Splash screen</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="ds/chronoflow/components/bundle.css">
+<script src="ds/chronoflow/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Figtree';src:url("/_blob/74876cc764ebb15bf4ae98bcdbf3140c") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/741b1ce40b46479a73d934d0d5be9774") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/079d83fda74d66d1f31e35072f71201d") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/991830890debdac04981f1a27656ed5c") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Fraunces';src:url("/_blob/fc815083784d00806d267d81858d2414") format("woff2");font-weight:400 500;font-style:normal;font-display:swap}
+body{margin:0}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; min-height: 3100px; box-sizing: border-box; padding: 24px 16px 40px; display: flex; flex-direction: column; gap: 28px; background: var(--background); color: var(--foreground); font-family: var(--font-sans);">
+  <header style="display: flex; flex-direction: column; gap: 6px;">
+    <h1 style="margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 28px; line-height: 34px; letter-spacing: -0.01em;">Splash screen</h1>
+    <p style="margin: 0; font-size: 15px; line-height: 22px; color: var(--muted-foreground);">Night turns to dawn while the app loads: the sun comes up and a flight path crosses the sky, then the splash lifts away into a loaded app.</p>
+  </header>
+  <section style="display: flex; flex-direction: column; gap: 12px;">
+    <h3 style="margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">Key frames · data ready</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px 14px;"><figure style="margin: 0; display: flex; flex-direction: column; gap: 6px;">
+      <div style="position: relative; width: 156px; height: 338px; border-radius: 22px; overflow: hidden; border: 1px solid var(--border);">
+        <div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px; transform: scale(0.4); transform-origin: 0 0;">
+          <dc-import name="SplashScreen" mode="ready" at="{{f0}}" theme="{{theme}}" hint-size="390px,844px"></dc-import>
+        </div>
+      </div>
+      <figcaption style="font-size: 13px; line-height: 18px;"><span style="font-weight: 600; font-variant-numeric: tabular-nums;">0 ms</span> · Same as the system launch screen: the moon on the night sky</figcaption>
+    </figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 6px;">
+      <div style="position: relative; width: 156px; height: 338px; border-radius: 22px; overflow: hidden; border: 1px solid var(--border);">
+        <div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px; transform: scale(0.4); transform-origin: 0 0;">
+          <dc-import name="SplashScreen" mode="ready" at="{{f700}}" theme="{{theme}}" hint-size="390px,844px"></dc-import>
+        </div>
+      </div>
+      <figcaption style="font-size: 13px; line-height: 18px;"><span style="font-weight: 600; font-variant-numeric: tabular-nums;">700 ms</span> · Dawn rises from the horizon, stars fade, the flight path starts</figcaption>
+    </figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 6px;">
+      <div style="position: relative; width: 156px; height: 338px; border-radius: 22px; overflow: hidden; border: 1px solid var(--border);">
+        <div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px; transform: scale(0.4); transform-origin: 0 0;">
+          <dc-import name="SplashScreen" mode="ready" at="{{f1400}}" theme="{{theme}}" hint-size="390px,844px"></dc-import>
+        </div>
+      </div>
+      <figcaption style="font-size: 13px; line-height: 18px;"><span style="font-weight: 600; font-variant-numeric: tabular-nums;">1400 ms</span> · Sun up, path drawn, wordmark in</figcaption>
+    </figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 6px;">
+      <div style="position: relative; width: 156px; height: 338px; border-radius: 22px; overflow: hidden; border: 1px solid var(--border);">
+        <div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px; transform: scale(0.4); transform-origin: 0 0;">
+          <dc-import name="SplashScreen" mode="ready" at="{{f1900}}" theme="{{theme}}" hint-size="390px,844px"></dc-import>
+        </div>
+      </div>
+      <figcaption style="font-size: 13px; line-height: 18px;"><span style="font-weight: 600; font-variant-numeric: tabular-nums;">1900 ms</span> · Hand-off: the splash lifts away into the app</figcaption>
+    </figure></div>
+  </section>
+  <section style="display: flex; flex-direction: column; gap: 12px;">
+    <h3 style="margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">Key frames · first load, still loading</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px 14px;"><figure style="margin: 0; display: flex; flex-direction: column; gap: 6px;">
+      <div style="position: relative; width: 156px; height: 338px; border-radius: 22px; overflow: hidden; border: 1px solid var(--border);">
+        <div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px; transform: scale(0.4); transform-origin: 0 0;">
+          <dc-import name="SplashScreen" mode="slow" at="{{f2600}}" theme="{{theme}}" hint-size="390px,844px"></dc-import>
+        </div>
+      </div>
+      <figcaption style="font-size: 13px; line-height: 18px;"><span style="font-weight: 600; font-variant-numeric: tabular-nums;">2600 ms</span> · Still loading: a quiet status line</figcaption>
+    </figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 6px;">
+      <div style="position: relative; width: 156px; height: 338px; border-radius: 22px; overflow: hidden; border: 1px solid var(--border);">
+        <div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px; transform: scale(0.4); transform-origin: 0 0;">
+          <dc-import name="SplashScreen" mode="slow" at="{{f4900}}" theme="{{theme}}" hint-size="390px,844px"></dc-import>
+        </div>
+      </div>
+      <figcaption style="font-size: 13px; line-height: 18px;"><span style="font-weight: 600; font-variant-numeric: tabular-nums;">4900 ms</span> · Ready: same hand-off</figcaption>
+    </figure></div>
+  </section>
+  <section style="display: flex; flex-direction: column; gap: 12px;">
+    <h3 style="margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">Key frames · signed out, into Welcome</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px 14px;"><figure style="margin: 0; display: flex; flex-direction: column; gap: 6px;">
+      <div style="position: relative; width: 156px; height: 338px; border-radius: 22px; overflow: hidden; border: 1px solid var(--border);">
+        <div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px; transform: scale(0.4); transform-origin: 0 0;">
+          <dc-import name="SplashScreen" mode="welcome" at="{{w1500}}" theme="{{theme}}" hint-size="390px,844px"></dc-import>
+        </div>
+      </div>
+      <figcaption style="font-size: 13px; line-height: 18px;"><span style="font-weight: 600; font-variant-numeric: tabular-nums;">1500 ms</span> · Same opening as above</figcaption>
+    </figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 6px;">
+      <div style="position: relative; width: 156px; height: 338px; border-radius: 22px; overflow: hidden; border: 1px solid var(--border);">
+        <div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px; transform: scale(0.4); transform-origin: 0 0;">
+          <dc-import name="SplashScreen" mode="welcome" at="{{w1950}}" theme="{{theme}}" hint-size="390px,844px"></dc-import>
+        </div>
+      </div>
+      <figcaption style="font-size: 13px; line-height: 18px;"><span style="font-weight: 600; font-variant-numeric: tabular-nums;">1950 ms</span> · Sun sets back, the path fades, the moon travels to its spot in the wordmark</figcaption>
+    </figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 6px;">
+      <div style="position: relative; width: 156px; height: 338px; border-radius: 22px; overflow: hidden; border: 1px solid var(--border);">
+        <div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px; transform: scale(0.4); transform-origin: 0 0;">
+          <dc-import name="SplashScreen" mode="welcome" at="{{w2400}}" theme="{{theme}}" hint-size="390px,844px"></dc-import>
+        </div>
+      </div>
+      <figcaption style="font-size: 13px; line-height: 18px;"><span style="font-weight: 600; font-variant-numeric: tabular-nums;">2400 ms</span> · The splash dissolves into Welcome: same sky, the moon stays put</figcaption>
+    </figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 6px;">
+      <div style="position: relative; width: 156px; height: 338px; border-radius: 22px; overflow: hidden; border: 1px solid var(--border);">
+        <div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px; transform: scale(0.4); transform-origin: 0 0;">
+          <dc-import name="SplashScreen" mode="welcome" at="{{w3300}}" theme="{{theme}}" hint-size="390px,844px"></dc-import>
+        </div>
+      </div>
+      <figcaption style="font-size: 13px; line-height: 18px;"><span style="font-weight: 600; font-variant-numeric: tabular-nums;">3300 ms</span> · Headline, text and buttons rise in one after another</figcaption>
+    </figure></div>
+    <p style="margin: 0; font-size: 13px; line-height: 18px; color: var(--muted-foreground);">No snap: the sky is shared, so only the moving parts change. The moon is the one element that carries over (1600–2300 ms, ease-in-out) and lands exactly on the Welcome wordmark. Welcome content enters 2300–3200 ms, 14 pt rise and fade, staggered about 100 ms. Signed-in users get the lift-away into Today instead.</p>
+  </section>
+  <section style="display: flex; flex-direction: column; gap: 12px;">
+    <h3 style="margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">Timing</h3>
+    <div style="border-radius: 18px; border: 1px solid var(--border); background: var(--card); overflow: hidden;"><div style="display: grid; grid-template-columns: 110px 1fr; gap: 10px; padding: 10px 12px;"><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground); font-variant-numeric: tabular-nums;">0–300 ms</span><span style="font-size: 14px; line-height: 20px;">Static first frame, matches the system launch screen</span></div><div style="display: grid; grid-template-columns: 110px 1fr; gap: 10px; padding: 10px 12px; border-top: 1px solid var(--border);"><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground); font-variant-numeric: tabular-nums;">300–1100</span><span style="font-size: 14px; line-height: 20px;">Dawn gradient rises; the moon lifts and settles smaller</span></div><div style="display: grid; grid-template-columns: 110px 1fr; gap: 10px; padding: 10px 12px; border-top: 1px solid var(--border);"><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground); font-variant-numeric: tabular-nums;">300–1200</span><span style="font-size: 14px; line-height: 20px;">Stars fade out</span></div><div style="display: grid; grid-template-columns: 110px 1fr; gap: 10px; padding: 10px 12px; border-top: 1px solid var(--border);"><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground); font-variant-numeric: tabular-nums;">400–1300</span><span style="font-size: 14px; line-height: 20px;">Sun rises over the horizon</span></div><div style="display: grid; grid-template-columns: 110px 1fr; gap: 10px; padding: 10px 12px; border-top: 1px solid var(--border);"><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground); font-variant-numeric: tabular-nums;">500–1400</span><span style="font-size: 14px; line-height: 20px;">Flight path draws left to right, a light travels along it</span></div><div style="display: grid; grid-template-columns: 110px 1fr; gap: 10px; padding: 10px 12px; border-top: 1px solid var(--border);"><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground); font-variant-numeric: tabular-nums;">1000–1400</span><span style="font-size: 14px; line-height: 20px;">"ChronoFlow" fades in</span></div><div style="display: grid; grid-template-columns: 110px 1fr; gap: 10px; padding: 10px 12px; border-top: 1px solid var(--border);"><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground); font-variant-numeric: tabular-nums;">1500</span><span style="font-size: 14px; line-height: 20px;">Animation done. Open as soon as the app is ready</span></div><div style="display: grid; grid-template-columns: 110px 1fr; gap: 10px; padding: 10px 12px; border-top: 1px solid var(--border);"><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground); font-variant-numeric: tabular-nums;">+400</span><span style="font-size: 14px; line-height: 20px;">Hand-off: splash fades and scales up 8% to reveal the app</span></div></div>
+    <p style="margin: 0; font-size: 13px; line-height: 18px; color: var(--muted-foreground);">Easing: ease-out for the sun and icon, linear for the path. Total before hand-off: 1.5 s.</p>
+  </section>
+  <section style="display: flex; flex-direction: column; gap: 12px;">
+    <h3 style="margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">Loading while it plays</h3>
+    <div style="display: flex; flex-direction: column; gap: 10px;"><div style="display: flex; gap: 12px;"><span aria-hidden="true" style="width: 6px; height: 6px; margin-top: 8px; flex-shrink: 0; border-radius: 9999px; background: var(--dawn);"></span><span style="font-size: 14px; line-height: 20px;"><span style="font-weight: 600;">Start loading at launch.</span> <span style="color: var(--muted-foreground);">The app reads the stored plan and starts a background sync the moment it launches, while the animation plays.</span></span></div><div style="display: flex; gap: 12px;"><span aria-hidden="true" style="width: 6px; height: 6px; margin-top: 8px; flex-shrink: 0; border-radius: 9999px; background: var(--dawn);"></span><span style="font-size: 14px; line-height: 20px;"><span style="font-weight: 600;">Never wait for the network.</span> <span style="color: var(--muted-foreground);">The app is offline first: as soon as the stored plan is read (usually well under 1.5 s), the splash hands off when the animation ends. Sync carries on in the background; Settings shows "Syncing…" quietly.</span></span></div><div style="display: flex; gap: 12px;"><span aria-hidden="true" style="width: 6px; height: 6px; margin-top: 8px; flex-shrink: 0; border-radius: 9999px; background: var(--dawn);"></span><span style="font-size: 14px; line-height: 20px;"><span style="font-weight: 600;">Never cut the animation short.</span> <span style="color: var(--muted-foreground);">Even when data is ready early, the splash finishes its 1.5 s and then hands off, so it never flashes.</span></span></div><div style="display: flex; gap: 12px;"><span aria-hidden="true" style="width: 6px; height: 6px; margin-top: 8px; flex-shrink: 0; border-radius: 9999px; background: var(--dawn);"></span><span style="font-size: 14px; line-height: 20px;"><span style="font-weight: 600;">Slow first load.</span> <span style="color: var(--muted-foreground);">Only when nothing is stored yet (first open after sign-in) can it take longer. At 2 s "Getting your plan ready" fades in under the wordmark.</span></span></div><div style="display: flex; gap: 12px;"><span aria-hidden="true" style="width: 6px; height: 6px; margin-top: 8px; flex-shrink: 0; border-radius: 9999px; background: var(--dawn);"></span><span style="font-size: 14px; line-height: 20px;"><span style="font-weight: 600;">Hard limit.</span> <span style="color: var(--muted-foreground);">At 8 s the app opens anyway, with skeletons where data is missing (the existing first-load boards).</span></span></div><div style="display: flex; gap: 12px;"><span aria-hidden="true" style="width: 6px; height: 6px; margin-top: 8px; flex-shrink: 0; border-radius: 9999px; background: var(--dawn);"></span><span style="font-size: 14px; line-height: 20px;"><span style="font-weight: 600;">Lands on.</span> <span style="color: var(--muted-foreground);">Today, or the screen a notification or link opened. Sign-in, terms update and walkthrough come after the splash when needed.</span></span></div></div>
+  </section>
+  <section style="display: flex; flex-direction: column; gap: 12px;">
+    <h3 style="margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">Platforms and settings</h3>
+    <div style="display: flex; flex-direction: column; gap: 10px;"><div style="display: flex; gap: 12px;"><span style="width: 92px; flex-shrink: 0; font-size: 13px; line-height: 20px; font-weight: 600;">iOS</span><span style="font-size: 14px; line-height: 20px; color: var(--muted-foreground);">The launch screen (storyboard) can't animate: it is the night-sky colour with the amber moon centred, exactly the 0 ms frame. The app's first screen redraws that frame and plays the animation from there, so the switch is invisible.</span></div><div style="display: flex; gap: 12px;"><span style="width: 92px; flex-shrink: 0; font-size: 13px; line-height: 20px; font-weight: 600;">Android 12+</span><span style="font-size: 14px; line-height: 20px; color: var(--muted-foreground);">The system splash shows the moon (as the splash icon) on the night-sky colour. Keep it on screen until the first frame is drawn, then play the same animation in the app.</span></div><div style="display: flex; gap: 12px;"><span style="width: 92px; flex-shrink: 0; font-size: 13px; line-height: 20px; font-weight: 600;">Reduce Motion</span><span style="font-size: 14px; line-height: 20px; color: var(--muted-foreground);">No sun, path or movement: the launch frame cross-fades into the app in 300 ms. The status line still appears on a slow first load.</span></div><div style="display: flex; gap: 12px;"><span style="width: 92px; flex-shrink: 0; font-size: 13px; line-height: 20px; font-weight: 600;">Dark mode</span><span style="font-size: 14px; line-height: 20px; color: var(--muted-foreground);">Same animation on the dark sky colours.</span></div></div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":3100}}'>
+class Component extends DCLogic {
+  renderVals() { return { w1500: 1500, w1950: 1950, w2400: 2400, w3300: 3300, f0: 0, f700: 700, f1400: 1400, f1900: 1900, f2600: 2600, f4900: 4900, theme: this.props.theme ?? 'light' }; }
+}
+</script>
+</body>
+</html>

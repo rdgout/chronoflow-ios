@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Welcome</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="ds/chronoflow/components/bundle.css">
+<script src="ds/chronoflow/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Figtree';src:url("/_blob/74876cc764ebb15bf4ae98bcdbf3140c") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/741b1ce40b46479a73d934d0d5be9774") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/079d83fda74d66d1f31e35072f71201d") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/991830890debdac04981f1a27656ed5c") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Fraunces';src:url("/_blob/fc815083784d00806d267d81858d2414") format("woff2");font-weight:400 500;font-style:normal;font-display:swap}
+body{margin:0}
+a{color:var(--sky-title)}a:hover{color:var(--sky-title)}
+@keyframes cfwi-w{0%{opacity:0;transform:translateY(14px)}44.23%{opacity:0;transform:translateY(14px)}52.88%{opacity:1;transform:none}99.9%{opacity:1;transform:none}100%{opacity:0;transform:translateY(14px)}}
+@keyframes cfwi-e{0%{opacity:0;transform:translateY(14px)}46.15%{opacity:0;transform:translateY(14px)}54.81%{opacity:1;transform:none}99.9%{opacity:1;transform:none}100%{opacity:0;transform:translateY(14px)}}
+@keyframes cfwi-h{0%{opacity:0;transform:translateY(14px)}47.12%{opacity:0;transform:translateY(14px)}55.77%{opacity:1;transform:none}99.9%{opacity:1;transform:none}100%{opacity:0;transform:translateY(14px)}}
+@keyframes cfwi-c{0%{opacity:0;transform:translateY(14px)}50.00%{opacity:0;transform:translateY(14px)}58.65%{opacity:1;transform:none}99.9%{opacity:1;transform:none}100%{opacity:0;transform:translateY(14px)}}
+@keyframes cfwi-b1{0%{opacity:0;transform:translateY(14px)}51.92%{opacity:0;transform:translateY(14px)}60.58%{opacity:1;transform:none}99.9%{opacity:1;transform:none}100%{opacity:0;transform:translateY(14px)}}
+@keyframes cfwi-b2{0%{opacity:0;transform:translateY(14px)}52.88%{opacity:0;transform:translateY(14px)}61.54%{opacity:1;transform:none}99.9%{opacity:1;transform:none}100%{opacity:0;transform:translateY(14px)}}
+</style>
+</helmet>
+<div class="cf-sky" data-theme="{{theme}}" style="position: relative; width: 390px; height: 844px; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; padding: 64px 24px 40px; color: var(--sky-title); font-family: var(--font-sans);">
+  <div class="pattern-dots" aria-hidden="true" style="position: absolute; inset: 0; opacity: 0.2; color: var(--sky-title); pointer-events: none;"></div>
+
+  <div style="position: relative; display: flex; flex-direction: column; gap: 16px;">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--dawn);"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg>
+      <span style="{{iv.w}}">ChronoFlow</span>
+    </div>
+    <p style="{{iv.e}}">Jet-lag planner</p>
+    <h1 style="{{iv.h}}">Plan your clock shift for your next trip</h1>
+  </div>
+
+  <div style="position: relative; display: flex; flex-direction: column; gap: 12px;">
+    <p style="{{iv.c}}">Tell us your flights and how you sleep. You get a day-by-day plan for sleep, light and caffeine that helps your body clock shift.</p>
+    <a href="GuestFlight.dc.html" class="cf-press" style="{{iv.b1}}">Plan my trip</a>
+    <a href="AuthSignIn.dc.html" class="cf-press" style="{{iv.b2}}">Sign in</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"intro":{"editor":"boolean","default":false},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const base = {"w": "font-family: var(--font-display); font-size: 20px; line-height: 28px; letter-spacing: -0.01em;", "e": "margin: 56px 0 0; font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dawn);", "h": "margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 48px; line-height: 1; letter-spacing: -0.01em; color: var(--sky-title);", "c": "margin: 0 0 12px; padding: 16px 20px; border-radius: 22px; background: var(--sky-copy-background); color: var(--sky-copy); font-size: 16px; line-height: 24px;", "b1": "display: flex; align-items: center; justify-content: center; height: 52px; border-radius: 9999px; background: var(--dawn); color: var(--dawn-foreground); font-size: 16px; font-weight: 600; text-decoration: none;", "b2": "display: flex; align-items: center; justify-content: center; height: 52px; border-radius: 9999px; background: var(--sky-copy-background); color: var(--sky-copy); font-size: 16px; font-weight: 500; text-decoration: none;"};
+    const iv = {};
+    for (const k in base) iv[k] = base[k] + (this.props.intro ? ' animation: cfwi-' + k + ' 5200ms cubic-bezier(0.2, 0.8, 0.2, 1) infinite;' : '');
+    return { theme: this.props.theme ?? 'light', iv };
+  }
+}
+</script>
+</body>
+</html>

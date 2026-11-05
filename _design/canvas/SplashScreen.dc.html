@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Splash screen</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="ds/chronoflow/components/bundle.css">
+<script src="ds/chronoflow/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Figtree';src:url("/_blob/74876cc764ebb15bf4ae98bcdbf3140c") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/741b1ce40b46479a73d934d0d5be9774") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/079d83fda74d66d1f31e35072f71201d") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/991830890debdac04981f1a27656ed5c") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Fraunces';src:url("/_blob/fc815083784d00806d267d81858d2414") format("woff2");font-weight:400 500;font-style:normal;font-display:swap}
+body{margin:0}
+@keyframes cfsp-sky-r{0%{opacity:0}7.14%{opacity:0}26.19%{opacity:1}99.9%{opacity:1}100%{opacity:0}}
+@keyframes cfsp-band-r{0%{opacity:0}7.14%{opacity:0}26.19%{opacity:1}99.9%{opacity:1}100%{opacity:0}}
+@keyframes cfsp-stars-r{0%{opacity:0.55}7.14%{opacity:0.55}28.57%{opacity:0}99.9%{opacity:0}100%{opacity:0.55}}
+@keyframes cfsp-sun-r{0%{transform:translate(-50%,110px);opacity:0}9.52%{transform:translate(-50%,110px);opacity:0}30.95%{transform:translate(-50%,0);opacity:1}99.9%{transform:translate(-50%,0);opacity:1}100%{transform:translate(-50%,110px);opacity:0}}
+@keyframes cfsp-arc-r{0%{stroke-dashoffset:560;opacity:1}11.90%{stroke-dashoffset:560;opacity:1}33.33%{stroke-dashoffset:0;opacity:1}99.9%{stroke-dashoffset:0;opacity:1}100%{stroke-dashoffset:560;opacity:1}}
+@keyframes cfsp-plane-r{0%{offset-distance:0%;opacity:0}11.90%{offset-distance:0%;opacity:0}13.33%{offset-distance:3%;opacity:1}33.33%{offset-distance:100%;opacity:1}35.71%{offset-distance:100%;opacity:0}99.9%{offset-distance:100%;opacity:0}100%{offset-distance:0%;opacity:0}}
+@keyframes cfsp-icon-r{0%{transform:translate(-50%,0) scale(1)}7.14%{transform:translate(-50%,0) scale(1)}26.19%{transform:translate(-50%,-28px) scale(0.86)}99.9%{transform:translate(-50%,-28px) scale(0.86)}100%{transform:translate(-50%,0) scale(1)}}
+@keyframes cfsp-word-r{0%{opacity:0;transform:translate(-50%,8px)}23.81%{opacity:0;transform:translate(-50%,8px)}33.33%{opacity:1;transform:translate(-50%,0)}99.9%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,8px)}}
+@keyframes cfsp-out-r{0%{opacity:1;transform:scale(1)}40.48%{opacity:1;transform:scale(1)}50.00%{opacity:0;transform:scale(1.08)}99.9%{opacity:0;transform:scale(1.08)}100%{opacity:1;transform:scale(1)}}
+@keyframes cfsp-sky-s{0%{opacity:0}4.29%{opacity:0}15.71%{opacity:1}99.9%{opacity:1}100%{opacity:0}}
+@keyframes cfsp-band-s{0%{opacity:0}4.29%{opacity:0}15.71%{opacity:1}99.9%{opacity:1}100%{opacity:0}}
+@keyframes cfsp-stars-s{0%{opacity:0.55}4.29%{opacity:0.55}17.14%{opacity:0}99.9%{opacity:0}100%{opacity:0.55}}
+@keyframes cfsp-sun-s{0%{transform:translate(-50%,110px);opacity:0}5.71%{transform:translate(-50%,110px);opacity:0}18.57%{transform:translate(-50%,0);opacity:1}99.9%{transform:translate(-50%,0);opacity:1}100%{transform:translate(-50%,110px);opacity:0}}
+@keyframes cfsp-arc-s{0%{stroke-dashoffset:560;opacity:1}7.14%{stroke-dashoffset:560;opacity:1}20.00%{stroke-dashoffset:0;opacity:1}99.9%{stroke-dashoffset:0;opacity:1}100%{stroke-dashoffset:560;opacity:1}}
+@keyframes cfsp-plane-s{0%{offset-distance:0%;opacity:0}7.14%{offset-distance:0%;opacity:0}8.00%{offset-distance:3%;opacity:1}20.00%{offset-distance:100%;opacity:1}21.43%{offset-distance:100%;opacity:0}99.9%{offset-distance:100%;opacity:0}100%{offset-distance:0%;opacity:0}}
+@keyframes cfsp-icon-s{0%{transform:translate(-50%,0) scale(1)}4.29%{transform:translate(-50%,0) scale(1)}15.71%{transform:translate(-50%,-28px) scale(0.86)}99.9%{transform:translate(-50%,-28px) scale(0.86)}100%{transform:translate(-50%,0) scale(1)}}
+@keyframes cfsp-word-s{0%{opacity:0;transform:translate(-50%,8px)}14.29%{opacity:0;transform:translate(-50%,8px)}20.00%{opacity:1;transform:translate(-50%,0)}99.9%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,8px)}}
+@keyframes cfsp-out-s{0%{opacity:1;transform:scale(1)}65.71%{opacity:1;transform:scale(1)}71.43%{opacity:0;transform:scale(1.08)}99.9%{opacity:0;transform:scale(1.08)}100%{opacity:1;transform:scale(1)}}
+@keyframes cfsp-status-s{0%{opacity:0}28.57%{opacity:0}32.86%{opacity:1}99.9%{opacity:1}100%{opacity:0}}
+@keyframes cfsp-sky-w{0%{opacity:0}5.77%{opacity:0}21.15%{opacity:1}99.9%{opacity:1}100%{opacity:0}}
+@keyframes cfsp-band-w{0%{opacity:0}5.77%{opacity:0}21.15%{opacity:1}30.77%{opacity:1}44.23%{opacity:0}99.9%{opacity:0}100%{opacity:0}}
+@keyframes cfsp-stars-w{0%{opacity:0.55}5.77%{opacity:0.55}23.08%{opacity:0}32.69%{opacity:0}44.23%{opacity:0.2}99.9%{opacity:0.2}100%{opacity:0.55}}
+@keyframes cfsp-sun-w{0%{transform:translate(-50%,110px);opacity:0}7.69%{transform:translate(-50%,110px);opacity:0}25.00%{transform:translate(-50%,0);opacity:1}30.77%{transform:translate(-50%,0);opacity:1}42.31%{transform:translate(-50%,120px);opacity:0}99.9%{transform:translate(-50%,120px);opacity:0}100%{transform:translate(-50%,110px);opacity:0}}
+@keyframes cfsp-arc-w{0%{stroke-dashoffset:560;opacity:1}9.62%{stroke-dashoffset:560;opacity:1}26.92%{stroke-dashoffset:0;opacity:1}30.77%{stroke-dashoffset:0;opacity:1}38.46%{stroke-dashoffset:0;opacity:0}99.9%{stroke-dashoffset:0;opacity:0}100%{stroke-dashoffset:560;opacity:1}}
+@keyframes cfsp-plane-w{0%{offset-distance:0%;opacity:0}9.62%{offset-distance:0%;opacity:0}10.77%{offset-distance:3%;opacity:1}26.92%{offset-distance:100%;opacity:1}28.85%{offset-distance:100%;opacity:0}99.9%{offset-distance:100%;opacity:0}100%{offset-distance:0%;opacity:0}}
+@keyframes cfsp-icon-w{0%{transform:translate(-50%,0) scale(1)}5.77%{transform:translate(-50%,0) scale(1)}21.15%{transform:translate(-50%,-28px) scale(0.86)}30.77%{transform:translate(-50%,-28px) scale(0.86)}44.23%{transform:translate(-50%,0) translate(-157px,-314px) scale(0.27)}99.9%{transform:translate(-50%,0) translate(-157px,-314px) scale(0.27)}100%{transform:translate(-50%,0) scale(1)}}
+@keyframes cfsp-word-w{0%{opacity:0;transform:translate(-50%,8px)}19.23%{opacity:0;transform:translate(-50%,8px)}26.92%{opacity:1;transform:translate(-50%,0)}30.77%{opacity:1;transform:translate(-50%,0)}36.54%{opacity:0;transform:translate(-50%,-6px)}99.9%{opacity:0;transform:translate(-50%,-6px)}100%{opacity:0;transform:translate(-50%,8px)}}
+@keyframes cfsp-out-w{0%{opacity:1}44.23%{opacity:1}49.04%{opacity:0}99.9%{opacity:0}100%{opacity:1}}
+@keyframes cfsp-dot{0%,80%,100%{opacity:0.25}40%{opacity:1}}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="position: relative; width: 390px; height: 844px; overflow: hidden; background: var(--background); font-family: var(--font-sans);">
+  <!-- The app, already loaded underneath -->
+  <div aria-hidden="true" style="position: absolute; inset: 0;">
+    <sc-if value="{{toToday}}" hint-placeholder-val="{{ true }}"><dc-import name="Today" theme="{{theme}}" hint-size="390px,844px"></dc-import></sc-if>
+    <sc-if value="{{toWelcome}}" hint-placeholder-val="{{ false }}"><dc-import name="Main" intro="{{yes}}" theme="{{theme}}" hint-size="390px,844px"></dc-import></sc-if>
+  </div>
+
+  <!-- Splash -->
+  <div role="img" aria-label="ChronoFlow is opening" class="cfsp-move" style="{{st.splash}}">
+    <div class="cf-sky cfsp-move" style="{{st.sky}}"></div>
+    <div class="pattern-dots cfsp-move" aria-hidden="true" style="{{st.stars}}"></div>
+
+    <!-- Sun rising over the horizon -->
+    <div class="cfsp-move" aria-hidden="true" style="{{st.sun}}"></div>
+    <div class="cfsp-move" aria-hidden="true" style="{{st.band}}"></div>
+
+    <!-- Flight path across time zones -->
+    <svg aria-hidden="true" width="390" height="844" viewBox="0 0 390 844" style="position: absolute; inset: 0;">
+      <path class="cfsp-move" d="M -10 640 C 90 470, 300 470, 400 640" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.5" stroke-dasharray="560" style="{{st.arc}}"></path>
+    </svg>
+    <div class="cfsp-move" aria-hidden="true" style="{{st.plane}}"></div>
+
+    <!-- Moon mark (the first frame matches the system launch screen) -->
+    <svg class="cfsp-move" aria-hidden="true" width="104" height="104" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="{{st.icon}}"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg>
+    <p class="cfsp-move" style="{{st.word}}">ChronoFlow</p>
+
+    <sc-if value="{{slow}}" hint-placeholder-val="{{ false }}">
+      <p role="status" class="cfsp-move" style="{{st.status}}">Getting your plan ready<span aria-hidden="true" style="display: inline-flex; gap: 3px; margin-left: 6px;"><span style="{{st.d1}}"></span><span style="{{st.d2}}"></span><span style="{{st.d3}}"></span></span></p>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"mode":{"editor":"enum","options":["ready","slow","welcome"],"default":"ready"},"at":{"editor":"int","default":-1,"min":-1,"max":7000},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const mode = this.props.mode ?? 'ready';
+    const slow = mode === 'slow', welcome = mode === 'welcome';
+    const sfx = slow ? '-s' : welcome ? '-w' : '-r', dur = slow ? 7000 : welcome ? 5200 : 4200;
+    const at = this.props.at;
+    const frozen = at !== undefined && at !== null && at >= 0;
+    const a = (n) => ' animation: cfsp-' + n + sfx + ' ' + dur + 'ms ' + (n === 'arc' || n === 'plane' ? 'linear' : 'ease-out') + ' infinite;' + (frozen ? ' animation-delay: -' + at + 'ms; animation-play-state: paused;' : '');
+    const dot = (delay) => 'display: block; width: 4px; height: 4px; border-radius: 9999px; background: currentColor; animation: cfsp-dot 1200ms ease-in-out ' + delay + 'ms infinite;';
+    return {
+      theme: this.props.theme ?? 'light',
+      slow, yes: true, toWelcome: welcome, toToday: !welcome,
+      st: {
+        splash: 'position: absolute; inset: 0; overflow: hidden; background: var(--sky-top); transform-origin: 50% 40%;' + a('out'),
+        sky: 'position: absolute; inset: 0;' + a('sky'),
+        band: 'position: absolute; left: 0; right: 0; top: 470px; bottom: 0; background: linear-gradient(180deg, transparent 0%, color-mix(in oklab, var(--sky-horizon) 22%, transparent) 40%, color-mix(in oklab, var(--sky-horizon) 70%, transparent) 75%, var(--sky-horizon) 100%);' + a('band'),
+        stars: 'position: absolute; inset: 0 0 40% 0; color: #fff; pointer-events: none;' + a('stars'),
+        sun: 'position: absolute; left: 50%; top: 560px; width: 180px; height: 180px; border-radius: 9999px; background: radial-gradient(circle, var(--dawn) 0 55%, color-mix(in oklab, var(--dawn) 0%, transparent) 72%); box-shadow: 0 0 80px 20px color-mix(in oklab, var(--dawn) 45%, transparent);' + a('sun'),
+        arc: a('arc').trim(),
+        plane: "position: absolute; left: 0; top: 0; width: 8px; height: 8px; border-radius: 9999px; background: #fff; box-shadow: 0 0 10px 2px rgba(255,255,255,0.8); offset-path: path('M -10 640 C 90 470, 300 470, 400 640'); offset-rotate: 0deg;" + a('plane'),
+        icon: 'position: absolute; left: 50%; top: 340px; width: 104px; height: 104px; color: var(--dawn); filter: drop-shadow(0 0 18px color-mix(in oklab, var(--dawn) 45%, transparent)); transform-origin: 50% 50%;' + a('icon'),
+        word: 'position: absolute; left: 50%; top: 432px; margin: 0; white-space: nowrap; font-family: var(--font-display); font-size: 32px; line-height: 40px; letter-spacing: -0.01em; color: var(--sky-title);' + a('word'),
+        status: 'position: absolute; left: 0; right: 0; top: 488px; margin: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; line-height: 20px; color: var(--sky-title); opacity: 0;' + a('status'),
+        d1: dot(0), d2: dot(200), d3: dot(400)
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>
