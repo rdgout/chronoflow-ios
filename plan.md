@@ -321,7 +321,7 @@ Each `with…` returns a timeline with one merged track per key path (D4). Live 
 
 Unblocked (OQ 1–4 settled 5 Nov).
 
-- [ ] `git init -b main` (done); first commit `docs: add plan, working rules and design copy` with `plan.md`, `CLAUDE.md`, `AGENTS.md` (Codex reads it; same rules), `_design/canvas/` (five boards, `canvas.json`, `ds/chronoflow/{tokens.json,README.md,components}`, `SOURCE.md` with canvas URL and download date). Branch `feat/phase-0-scaffold`.
+- [x] `git init -b main` (done); first commit `docs: add plan, working rules and design copy` with `plan.md`, `CLAUDE.md`, `AGENTS.md` (Codex reads it; same rules), `_design/canvas/` (five boards, `canvas.json`, `ds/chronoflow/{tokens.json,README.md,components}`, `SOURCE.md` with canvas URL and download date). Branch `feat/phase-0-scaffold`. (`main` holds only `e277d5d`.)
   Files: `plan.md`, `CLAUDE.md`, `AGENTS.md`, `_design/**`.
   Test: one commit on `main`; branch exists.
 - [ ] Export board reference frames: render each board in the canvas (Chrome) at the board key frames (ready 0/700/1400/1900, slow 2600/4900, welcome 1500/1950/2400/3300, Welcome final), light and dark; record the method. Notes: board dots are not frozen (`dot()` ignores `frozen`), so dot opacity is excluded; `Main` ignores `at` and loops its intro, so Welcome content at 2400/3300 is compared against the `Main` keyframes, not the render.
