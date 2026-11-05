@@ -8,6 +8,8 @@ Codex implements and Opus reviews; Claude orchestrates and does not hand-write f
 2. Opus reviewers check the diff against `plan.md`, the boards in `_design/canvas/`, the D1c device matrix and correctness/performance. Only findings that survive verification go back to Codex.
 3. Repeat until the review is clean, then make sure `make check` passes and the commits are atomic and ticked in `plan.md`.
 
+Codex's `workspace-write` sandbox cannot run `xcodebuild` (nested `sandbox-exec`), CoreSimulator or `xctrace`, and may be denied `.git/index.lock`. Running Codex with `danger-full-access` is not permitted. So Claude runs builds, tests and simulator checks (`make check`, `make duo`) outside the sandbox, feeds the exact output back to Codex, and makes the commits Codex could not, using Codex's suggested messages.
+
 ## Commands
 
 `make generate` creates the ignored Xcode project. `make format` formats owned Swift sources;
