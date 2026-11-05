@@ -2,6 +2,7 @@ import hashlib
 import json
 from pathlib import Path
 import sys
+import tempfile
 import urllib.parse
 import urllib.request
 
@@ -14,6 +15,10 @@ FAMILIES = {
     'Figtree': ('Figtree[wght].ttf', '26ad3db9b31ff7dde67a91ff515d022d2f495cd506590699cf264f0bfe6fb714'),
     'Fraunces': ('Fraunces[SOFT,WONK,opsz,wght].ttf', '177ff6c0f14e5550a3c624247cd1189611d4eb65d000b14944c63d967958abbb'),
 }
+LICENSE_HASHES = {
+    'Figtree': '140d37233e7f3ce7313798befa9600893bcceaf41a55fa0fa5ad52f7f657a268',
+    'Fraunces': 'bdf4c22802eaf804f998195871c6b8938aac2ac14b2d78a8bd66a6f1eced833b',
+}
 FONT_DIR = ROOT / 'Packages/ChronoFlowKit/Sources/DesignSystem/Resources/Fonts'
 
 
@@ -21,12 +26,26 @@ def digest(data):
     return hashlib.sha256(data).hexdigest()
 
 
-def download(family, filename):
+def download(family, filename, expected_hash):
     cache = ROOT / 'build/FontSources' / f'{family.lower()}-{filename}'
-    if not cache.exists():
-        cache.parent.mkdir(parents=True, exist_ok=True)
+    if cache.exists():
+        if digest(cache.read_bytes()) == expected_hash:
+            return cache
+        cache.unlink()
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    temporary = None
+    try:
         url = f'https://raw.githubusercontent.com/google/fonts/{COMMIT}/ofl/{family.lower()}/{urllib.parse.quote(filename)}'
-        cache.write_bytes(urllib.request.urlopen(url).read())
+        with tempfile.NamedTemporaryFile(dir=cache.parent, prefix=f'.{cache.name}.', delete=False) as output:
+            temporary = Path(output.name)
+            with urllib.request.urlopen(url, timeout=30) as response:
+                output.write(response.read())
+        if digest(temporary.read_bytes()) != expected_hash:
+            raise RuntimeError(f'Source hash mismatch: {family}/{filename}; download discarded, retry when the network is reliable')
+        temporary.replace(cache)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
     return cache
 
 
@@ -36,11 +55,9 @@ def generate(check=False):
     faces = []
     sources = {}
     for family, (filename, expected_hash) in FAMILIES.items():
-        path = download(family, filename)
+        path = download(family, filename, expected_hash)
         sources[filename] = digest(path.read_bytes())
-        if sources[filename] != expected_hash:
-            raise RuntimeError(f'Source hash mismatch: {filename}')
-        outputs[f'{family}-OFL.txt'] = download(family, 'OFL.txt').read_bytes()
+        outputs[f'{family}-OFL.txt'] = download(family, 'OFL.txt', LICENSE_HASHES[family]).read_bytes()
         original = TTFont(path, recalcTimestamp=False)
         axes = {a.axisTag: (a.minValue, a.defaultValue, a.maxValue) for a in original['fvar'].axes}
         if family == 'Fraunces':
@@ -76,6 +93,8 @@ def generate(check=False):
 Google Fonts commit [`{COMMIT}`](https://github.com/google/fonts/tree/{COMMIT}), fetched 2026-11-05. Both families are OFL licensed; their licenses are included separately. Full upstream TTF character sets are retained (including English and Dutch).
 
 Regenerate with `make fonts`; verify with `sh Tools/fonts.sh --check`. fonttools 4.60.1 and brotli 1.1.0 are pinned in a repo-local venv. Source and output SHA-256 hashes, face names and axis cuts are in `manifest.json`. No variable axes remain in the output.
+
+The first run (including `make check` and `Scripts/ci.sh` on a clean clone) needs network access to PyPI for those tools and to `raw.githubusercontent.com` for the pinned TTFs and OFL licenses. The ignored `build/fonttools-venv`, `build/pip-cache` and `build/FontSources` hold the local tools and sources; warmed tools and verified sources can be reused offline. Every cached source and license is checksum-verified before use. A corrupt cache entry is removed and fetched again; downloads are verified in temporary files before atomic replacement, so a failed fetch cannot poison later runs. License hashes are pinned in `Tools/generate_fonts.py`.
 
 Fraunces source version 1.000 [b76b70a41] has opsz 9–144 (default 9), wght 100–900 (default 900), SOFT 0–100 (default 0), WONK 0–1 (default 1). Cuts pin SOFT=0 and WONK=1. The web's `@fontsource-variable/fraunces/files/fraunces-latin-opsz-normal.woff2` has the same version and retains opsz/wght only. Its outlines for A–Z, a–z, the wordmark and ëïéè were compared at opsz 20/32/48 and weight 400: exact matches to the Google source with SOFT=0 / WONK=1. No synthetic bold or optical-size substitution is used.
 

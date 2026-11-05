@@ -11,6 +11,17 @@ Run `Scripts/ci.sh` from a checkout to generate the ignored Xcode project and ru
 window UI test, then the DesignSystem, Launch and Welcome suites. DesignSystem includes four approved
 primitive image baselines; launch snapshots arrive in Phase 3c.
 
+A clean clone needs network access for `make check` / `Scripts/ci.sh`: SwiftPM fetches the pinned
+SnapshotTesting dependency from GitHub; `Tools/fonts.sh` installs fonttools 4.60.1 and brotli 1.1.0
+from PyPI (including its file host) and fetches the pinned font TTFs and OFL licenses from
+`raw.githubusercontent.com`. `--check` re-derives the committed outputs and has the same bootstrap
+requirements as regeneration. Warm SwiftPM caches, `build/fonttools-venv` and `build/FontSources`
+allow reuse offline; deleting `build` removes these local prerequisites. `build/pip-cache` caches
+Python downloads. Every cached font source and license is SHA-256 verified; corrupt entries are
+removed and downloaded again. Downloads go through temporary files, are verified before atomic
+replacement, and are discarded on failure. Fix the network and rerun after a failed download;
+manual cache deletion is unnecessary.
+
 After XcodeGen runs, `make generate` copies the committed `Packages/ChronoFlowKit/Package.resolved`
 to `ChronoFlow.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`, where Xcode reads
 the project's package pins. Xcode ignores the nested package's lockfile when building the project.
