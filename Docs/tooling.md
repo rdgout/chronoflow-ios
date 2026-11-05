@@ -7,8 +7,8 @@ MainActor; AppCore is nonisolated.
 ## Commands
 
 Run `Scripts/ci.sh` from a checkout to generate the ignored Xcode project and run `make check`.
-`make check` runs strict formatting lint, generator freshness and host tests, AppCore tests and the app
-window UI test, then the DesignSystem, Launch and Welcome suites. DesignSystem includes four approved
+`make check` runs strict formatting lint, generator freshness and host tests, hosted launch and AppCore
+tests and the app window UI test, then the DesignSystem, Launch and Welcome suites. DesignSystem includes four approved
 primitive image baselines; launch snapshots arrive in Phase 3c.
 
 A clean clone needs network access for `make check` / `Scripts/ci.sh`: SwiftPM fetches the pinned
@@ -38,7 +38,7 @@ make duo
 `make duo` uses Python 3 and `Scripts/duo-destination.py` to read `xcrun simctl list devices -j`.
 It selects the first available device with type `com.apple.CoreSimulator.SimDeviceType.iPhone-Duo`
 under runtime `com.apple.CoreSimulator.SimRuntime.iOS-27-2-iPhone19-4`, then passes its resolved UDID
-as the destination for `AppUITests/WindowTests`. No UDID is stored in the repo. If no matching device
+as the destination for `AppTests` and `AppUITests/WindowTests`. No UDID is stored in the repo. If no matching device
 is available, it exits with an explanation before running xcodebuild.
 
 Duo runs on its own iOS 27.2 runtime (build 24B91016s). The regular iOS 27.2 runtime (24B8117)
@@ -256,3 +256,73 @@ git diff --exit-code
 ```
 
 Local command logs are under ignored `build/Logs/`.
+
+## Phase 2 system launch screen
+
+`AppTests` is a hosted unit-test target: it loads the app's compiled `LaunchScreen.storyboard` and
+main-bundle assets in a real scene window. `make test` includes it; `make duo` runs it alongside
+the existing window UI test on Duo's separate runtime. Host resource tests check the storyboard's
+constraints, unlocalised text-free structure, generated asset references and hosted-test linkage. `make launch-resources-check`
+is part of `make check` and also runs eight fixture tests for the simulator matrix runner.
+
+`LaunchStoryboardTests` checks behaviour after layout in the running device's window, in both
+appearances, with normal and asymmetric safe-area insets. The image view's centre must match the
+whole window within 0.5 pt, its size must match the catalog asset's natural size, every edge must
+align to the display's pixel grid, and the background must resolve to the named `LaunchSky` colour.
+The storyboard moon and catalog moon are rendered into identical 8-bit Display P3 buffers; no channel
+may differ by more than 2/255. The reference asset is explicitly resolved using the requested
+`userInterfaceStyle` and the window's `displayScale`, then copied into a `UIImage(cgImage:scale:orientation:)`
+before rendering. This prevents an unattached reference image view from reselecting a catalog variant
+using ambient traits. The hosted moon's traits and resolved image are checked against that reference
+separately from its rendered pixels. Pixel failures report the style, maximum channel error and the
+first pixel outside tolerance (x/y, RGBA channel, actual and expected bytes).
+
+The orchestrator reports all `AppTests` (including the reference meta-test) and `WindowTests` pass
+on all seven D1c devices, and `make duo` passes. The reference meta-test uses the host window's scale,
+checks both appearances under opposite ambient traits and confirms their pixels differ. Its diagnostic
+fixture checks first-pixel coordinates and maximum-error reporting independently.
+
+Fix round 4 preserves the orchestrator's dependency correction in `project.yml`: hosted `AppTests`
+depends only on `ChronoFlow`, with `TEST_HOST` / `BUNDLE_LOADER` resolving the package symbols already
+in the app. Linking DesignSystem and Launch into the test bundle again duplicated the package resource
+accessors and crashed package test processes with `unable to find bundle named ChronoFlowKit_DesignSystem`.
+The trap is recorded in `AGENTS.md`. A host regression guard rejects duplicate dependencies or a missing
+bundle loader; both failure mutations were verified without changing the source configuration.
+
+Run the generated handoff script from the repo root:
+
+```sh
+sh build/commits/simulators.sh
+```
+
+It invokes the committed runner, which can also be run directly:
+
+```sh
+python3 -I Scripts/launch-simulators.py
+```
+
+The runner executes `make generate`, cleans the build folder, then resolves each D1c device by type
+and runtime (Duo on iPhone19-4). For each device it deletes the installed app if present and restarts
+the simulator to invalidate the launch cache, then runs the hosted, window and DesignSystem suites:
+
+```sh
+xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData \
+  -onlyUsePackageVersionsFromResolvedFile -scheme ChronoFlow \
+  -destination "platform=iOS Simulator,id=$device" \
+  -only-testing:AppTests -only-testing:AppUITests/WindowTests -only-testing:DesignSystemTests test
+```
+
+It continues after failed tests, missing devices or preparation errors and reports PASS/FAIL for every
+device. It always attempts the final `make check` and `make duo` after the matrix and exits nonzero
+if any step failed. Generation failure stops before simulator work. Host fixtures verify continuation,
+aggregate status, runtime/type filtering, first-available selection, cache clearing, already booted
+simulators and missing apps. No real simulator command runs in those fixture tests.
+
+This checks an instantiated storyboard. The system launch screen itself is a cached snapshot;
+screen-recorded last-system-frame/first-app-frame verification remains in Phase 8.
+
+Phase 2 task 1 host verification (2026-11-06, fix round 4): `make generate`, `make lint`,
+`make launch-resources-check` (4 resource tests and 8 runner tests), `make generators-check`
+(6 TokenGen, 6 Python font/cache, 3 AssetGen tests), plist lint and `git diff --check` passed.
+All hosted tests pass a direct Swift 6 type-check against the installed simulator SDK targeting iOS 17.0;
+this does not run UIKit or replace the matrix commands above. Full `make check` remains for the orchestrator.

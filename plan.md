@@ -370,7 +370,7 @@ validate the revised tree outside the sandbox. These results cover 17e and Duo, 
 
 ### Phase 2: System launch screen (`feat/phase-2-launch-screen`)
 
-- [ ] `LaunchScreen.storyboard`: background `LaunchSky`; `UIImageView` `LaunchMoon`, content mode `center`, centred X/Y on the superview (not safe area), no size constraints.
+- [x] `LaunchScreen.storyboard`: background `LaunchSky`; `UIImageView` `LaunchMoon`, content mode `center`, centred X/Y on the superview (not safe area), no size constraints. (Hosted tests cover both appearances and normal/asymmetric insets. The orchestrator reports all AppTests and WindowTests pass on all seven D1c devices, and `make duo` passes. Fix round 4 preserves the orchestrator's AppTests host-only dependency fix, adds the resource-bundle trap to `AGENTS.md` and a host regression guard. Host checks and iOS 17 type-check pass; full `make check` awaits the package scale-test fix rerun. Commands in `Docs/tooling.md`.)
   Files: `App/LaunchScreen.storyboard`.
   Test: hosted app test instantiates `UIStoryboard(name: "LaunchScreen")` in a window on every device in the D1c matrix (iPhone Duo required), light/dark; moon glyph centre at (w/2, h/2) ±0.5 pt.
 - [ ] `LaunchFrameView`: frame 0 drawn the same way (skyTop, `LaunchMoon` at natural size, centred, pixel-aligned); used by the overlay and Reduce Motion.

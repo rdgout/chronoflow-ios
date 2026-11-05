@@ -5,10 +5,10 @@ SHELL := /bin/sh
 XCODEGEN ?= /opt/homebrew/bin/xcodegen
 DESTINATION := platform=iOS Simulator,name=iPhone 17e,OS=27.2
 XCODEBUILD := xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData -onlyUsePackageVersionsFromResolvedFile
-SWIFT_PATHS := App AppUITests PerfUITests Packages/ChronoFlowKit/Package.swift Packages/ChronoFlowKit/Sources Packages/ChronoFlowKit/Tests $(wildcard Tools/*/Package.swift Tools/*/Sources Tools/*/Tests)
+SWIFT_PATHS := App AppTests AppUITests PerfUITests Packages/ChronoFlowKit/Package.swift Packages/ChronoFlowKit/Sources Packages/ChronoFlowKit/Tests $(wildcard Tools/*/Package.swift Tools/*/Sources Tools/*/Tests)
 UI_SUITES := DesignSystemTests LaunchTests WelcomeTests
 
-.PHONY: generate format lint test snapshots duo perf tokens fonts assets generators-check check
+.PHONY: generate format lint test snapshots duo perf tokens fonts assets generators-check launch-resources-check check
 
 generate:
 	$(XCODEGEN) generate
@@ -29,7 +29,7 @@ snapshots:
 
 duo:
 	@destination="$$(python3 Scripts/duo-destination.py)" && \
-		$(XCODEBUILD) -destination "$$destination" -scheme ChronoFlow -only-testing:AppUITests/WindowTests test
+		$(XCODEBUILD) -destination "$$destination" -scheme ChronoFlow -only-testing:AppTests -only-testing:AppUITests/WindowTests test
 
 perf:
 	$(XCODEBUILD) -destination '$(DESTINATION)' -scheme Perf -configuration Release test
@@ -49,4 +49,8 @@ generators-check:
 	build/fonttools-venv/bin/python3 -I Tools/test_fonts.py
 	sh Scripts/swiftpm.sh test AssetGen
 
-check: lint generators-check test snapshots
+launch-resources-check:
+	python3 -I Tests/test_launch_resources.py
+	python3 -I Tests/test_launch_simulators.py
+
+check: lint generators-check launch-resources-check test snapshots
