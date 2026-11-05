@@ -393,7 +393,7 @@ OQ 5 follows the settled S1/S2 and listed S3–S6 rules. OQ 11 uses its default 
 - [x] `LaunchTimeline.opening` (incl. Reduce Motion) and `sample(at:)`. (Pure Sendable scalar/point tracks, absolute seconds from t0, one track per layer/key path. Every opening key/curve, all specified sample times, plane/stroke agreement every 10 ms and static Reduce Motion frame pass on the host; detached-task use and iOS 17 compile/type-check pass. No scene wiring in this phase.)
   Files: `Sources/Launch/LaunchTimeline.swift`, `Sources/Launch/LayerID.swift`.
   Test: table test of every key; `sample` at 0, 300, 700, 1100, 1400, 1500.
-- [ ] `withReadyExit`, `withStatus`.
+- [x] `withReadyExit`, `withStatus`. (OQ 6 default assumed, confirm). Reduce Motion uses the 300 ms ease-out fade and dots held at 1.0. Ready clamps to 1500 ms only with motion; status latches, pulses repeat from mount with three delayed replicas, and repeated endings replace prior endings. Host tests cover keys, fade samples, opening preservation and both composition orders; iOS 17 compile/type-check passes.
   Files: `Sources/Launch/LaunchTimeline+Ready.swift`.
   Test: keys; merged tracks keep opening keys intact (sample at 700 unchanged after adding an exit at 1500).
 - [ ] `withWelcomeExit`.
