@@ -384,7 +384,7 @@ OQ 5 follows the settled S1/S2 and listed S3–S6 rules. OQ 11 uses its default 
 - [x] `CubicBezier`: CSS/CA solver (Newton + bisection), presets `easeOut`, `easeInOut`, `intro`, `linear`. (Pure Sendable solver; CSS references, endpoints, clamping, flat derivatives, overshoot and monotonicity pass on the host. iOS 17 compile/type-check passes; presentation-layer comparison remains in 3b.)
   Files: `Sources/AppCore/CubicBezier.swift`.
   Test: known CSS reference values to 1e-4 (the presentation-layer comparison is in 3b).
-- [ ] `FlightPath`: bottom-anchored cubic for any size, 1024-sample arc-length table, `point(atFraction:)`, fraction curve.
+- [x] `FlightPath`: bottom-anchored cubic for any size, 1024-sample arc-length table, `point(atFraction:)`, fraction curve. (OQ 11 default assumed, confirm). The 1024-entry table and 128 moving position keys preserve the 560 ms fraction knot. Host numerical and rendered stroke-tip tests pass every 10 ms; cubic trimming drift required the specified sampled-polyline fallback for the displayed path. Board length/apex and short/wide fixtures pass; iOS 17 compile/type-check passes. D1c simulator run remains for the orchestrator.
   Files: `Sources/Launch/FlightPath.swift`.
   Test: length 505.8 ± 0.2 on 390 × 844; apex (195, 512.5); plane = stroke tip every 10 ms.
 - [ ] `MoonTarget` fallback math (pure): centre from safe insets and row height.
