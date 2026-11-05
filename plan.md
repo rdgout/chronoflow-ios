@@ -379,9 +379,9 @@ validate the revised tree outside the sandbox. These results cover 17e and Duo, 
 
 ### Phase 3a: Pure timeline (`feat/phase-3a-timeline`)
 
-Blocked by OQ 5, 11.
+OQ 5 follows the settled S1/S2 and listed S3–S6 rules. OQ 11 uses its default below; simulator verification remains for the orchestrator.
 
-- [ ] `CubicBezier`: CSS/CA solver (Newton + bisection), presets `easeOut`, `easeInOut`, `intro`, `linear`.
+- [x] `CubicBezier`: CSS/CA solver (Newton + bisection), presets `easeOut`, `easeInOut`, `intro`, `linear`. (Pure Sendable solver; CSS references, endpoints, clamping, flat derivatives, overshoot and monotonicity pass on the host. iOS 17 compile/type-check passes; presentation-layer comparison remains in 3b.)
   Files: `Sources/AppCore/CubicBezier.swift`.
   Test: known CSS reference values to 1e-4 (the presentation-layer comparison is in 3b).
 - [ ] `FlightPath`: bottom-anchored cubic for any size, 1024-sample arc-length table, `point(atFraction:)`, fraction curve.
