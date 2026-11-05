@@ -122,3 +122,21 @@ private func unsmoothedWordmark(layout: WordmarkLayout, scale: Int) -> CGImage {
 }
 
 extension Int { fileprivate var double: Double { Double(self) } }
+
+@Test func launchPaletteAllowsSRGBCompilationWithinOneByte() throws {
+    let source = try DesignSource(root: root)
+    let srgb = try #require(CGColorSpace(name: CGColorSpace.sRGB))
+    let p3 = try #require(CGColorSpace(name: CGColorSpace.displayP3))
+    for theme in ["light", "dark"] {
+        for token in ["dawn", "sky-title"] {
+            let original = p3Color(try source.color(token, theme).rgb(p3: true))
+            let converted = try #require(original.converted(to: srgb, intent: .relativeColorimetric, options: nil))
+            let components = try #require(converted.components).map { ($0 * 255).rounded() / 255 }
+            let quantized = try #require(CGColor(colorSpace: srgb, components: components))
+            let roundTrip = try #require(quantized.converted(to: p3, intent: .relativeColorimetric, options: nil))
+            for (expected, actual) in zip(try #require(original.components), try #require(roundTrip.components)) {
+                #expect(abs(expected - actual) <= 1 / 255.0, "Revisit the sRGB exception if launch colors change")
+            }
+        }
+    }
+}

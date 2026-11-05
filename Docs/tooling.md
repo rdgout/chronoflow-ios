@@ -128,6 +128,17 @@ outer arc's color and the inner arc's orientation. Wordmark ink bounds are check
 at both scales and in both themes. All app/package asset copies are identical. A generated moon path
 also supplies `MoonShape`, so production shape geometry does not duplicate the path constants.
 
+Launch image gamut decision (5 November 2026 review): **accept sRGB in `Assets.car`** for `LaunchMoon`
+and `LaunchWordmark`; P3 describes their source PNGs, not their compiled renditions. `assetutil --info`
+confirmed sRGB in both the app and package catalogs. Standalone `actool` probes with explicit
+`display-gamut` slots (including separate files and P3-only slots) still produced sRGB color data on
+Xcode 27.2. [Apple's image-set format](https://developer.apple.com/library/archive/documentation/Xcode/Reference/xcode_ref-Asset_Catalog_Format/ImageSetType.html)
+distinguishes display-gamut selection from the stored color space. The dawn colors and dark skyTitle
+fit sRGB; light skyTitle exceeds linear sRGB blue by only about 0.0013. An AssetGen test guards that
+conversion to 8-bit sRGB and back stays within 1/255 per P3 channel for both tokens in both themes.
+That is within Phase 2's 2/255 frame parity budget and avoids duplicate gamut renditions for this
+palette. Color sets and runtime gradients remain P3. Revisit this exception when the palette changes.
+
 Primitives accept their actual view/rectangle size and display scale. No production primitive assumes
 390 × 844 or uses a phone's fixed safe-area values. The four snapshot fixtures intentionally exercise
 isolated primitives at two arbitrary widths, rather than introduce a screen design. They use a common
