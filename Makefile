@@ -38,7 +38,6 @@ tokens:
 	sh Scripts/swiftpm.sh run TokenGen TokenGen
 
 fonts:
-	@test -f Tools/fonts.sh || { echo 'Font generation is scheduled for Phase 1.' >&2; exit 1; }
 	sh Tools/fonts.sh
 
 assets:
@@ -47,5 +46,7 @@ assets:
 
 generators-check:
 	sh Scripts/swiftpm.sh test TokenGen
+	sh Tools/fonts.sh --check
+	build/fonttools-venv/bin/python3 -I Tools/test_fonts.py
 
 check: lint generators-check test snapshots

@@ -1,0 +1,91 @@
+{
+  "brotli": "1.1.0",
+  "faces": [
+    {
+      "family": "Figtree",
+      "file": "CFFigtree-400.ttf",
+      "opsz": null,
+      "postScriptName": "CFFigtree-400",
+      "sha256": "686c2512dfe40452a46d04008cd4969810f8a3ff3f4e5a8a627b3260aa053344",
+      "weight": 400
+    },
+    {
+      "family": "Figtree",
+      "file": "CFFigtree-500.ttf",
+      "opsz": null,
+      "postScriptName": "CFFigtree-500",
+      "sha256": "1cafc3d5c8d2b81d2a4f4a88958445f9169e3bfe669122c1226ad4fec770e113",
+      "weight": 500
+    },
+    {
+      "family": "Figtree",
+      "file": "CFFigtree-600.ttf",
+      "opsz": null,
+      "postScriptName": "CFFigtree-600",
+      "sha256": "8fb8e0dd3c66a26f0561b626f61aa88eba919da9e596b0b1e8959e86951d4555",
+      "weight": 600
+    },
+    {
+      "family": "Figtree",
+      "file": "CFFigtree-700.ttf",
+      "opsz": null,
+      "postScriptName": "CFFigtree-700",
+      "sha256": "e3618108cf5b2ed4f5af6c0848e2a48bbda4eea33caa2cb34650c86701c2ab1c",
+      "weight": 700
+    },
+    {
+      "family": "Fraunces",
+      "file": "CFFraunces-400-Opsz20.ttf",
+      "opsz": 20,
+      "postScriptName": "CFFraunces-400-Opsz20",
+      "sha256": "1d5e40673d093bb6047b60f0b4618fb9b93055ac4dad2f9dfc07a7d90535f3e5",
+      "weight": 400
+    },
+    {
+      "family": "Fraunces",
+      "file": "CFFraunces-400-Opsz32.ttf",
+      "opsz": 32,
+      "postScriptName": "CFFraunces-400-Opsz32",
+      "sha256": "e5614ccbec229d798127395a494514bc5f458c3da283d0d25e60e4326da2bb1d",
+      "weight": 400
+    },
+    {
+      "family": "Fraunces",
+      "file": "CFFraunces-400-Opsz48.ttf",
+      "opsz": 48,
+      "postScriptName": "CFFraunces-400-Opsz48",
+      "sha256": "c9bdb5b1d9e24187e830b50598ef07ee19d75da8a34ab43867340f4199b4b9f2",
+      "weight": 400
+    },
+    {
+      "family": "Fraunces",
+      "file": "CFFraunces-500-Opsz20.ttf",
+      "opsz": 20,
+      "postScriptName": "CFFraunces-500-Opsz20",
+      "sha256": "fc7a3d5221232b1c5e35562776d6d6324b128e2268b43e9c2a8ea04e56c0f5b1",
+      "weight": 500
+    },
+    {
+      "family": "Fraunces",
+      "file": "CFFraunces-500-Opsz32.ttf",
+      "opsz": 32,
+      "postScriptName": "CFFraunces-500-Opsz32",
+      "sha256": "3ddf293fb40258e762df17f88106667ceab83cb1944ede7e4e1dcd783862694f",
+      "weight": 500
+    },
+    {
+      "family": "Fraunces",
+      "file": "CFFraunces-500-Opsz48.ttf",
+      "opsz": 48,
+      "postScriptName": "CFFraunces-500-Opsz48",
+      "sha256": "6c67072103e1b91abbebe36c057292ab195c403271cb87028c60c11eaa00379d",
+      "weight": 500
+    }
+  ],
+  "fonttools": "4.60.1",
+  "googleFontsCommit": "24ddc1f324cac5d9f5aedca126d298f56e3f1640",
+  "sources": {
+    "Figtree[wght].ttf": "26ad3db9b31ff7dde67a91ff515d022d2f495cd506590699cf264f0bfe6fb714",
+    "Fraunces[SOFT,WONK,opsz,wght].ttf": "177ff6c0f14e5550a3c624247cd1189611d4eb65d000b14944c63d967958abbb"
+  }
+}
