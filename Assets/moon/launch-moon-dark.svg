@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="288" height="288" viewBox="0 0 288 288">
+  <defs><filter id="glow" x="-100%" y="-100%" width="300%" height="300%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="9"/></filter></defs>
+  <g fill="none" stroke="color(display-p3 0.9082625891 0.6882337800 0.4860896207)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <g opacity="0.45" filter="url(#glow)"><path transform="translate(92 92) scale(4.3333333333)" d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></g>
+    <path transform="translate(92 92) scale(4.3333333333)" d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+  </g>
+</svg>

@@ -41,12 +41,12 @@ fonts:
 	sh Tools/fonts.sh
 
 assets:
-	@test -f Tools/AssetGen/Package.swift || { echo 'AssetGen is scheduled for Phase 1.' >&2; exit 1; }
-	xcrun swift run --package-path Tools/AssetGen AssetGen
+	sh Scripts/swiftpm.sh run AssetGen AssetGen
 
 generators-check:
 	sh Scripts/swiftpm.sh test TokenGen
 	sh Tools/fonts.sh --check
 	build/fonttools-venv/bin/python3 -I Tools/test_fonts.py
+	sh Scripts/swiftpm.sh test AssetGen
 
 check: lint generators-check test snapshots

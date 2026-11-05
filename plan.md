@@ -354,7 +354,7 @@ Unblocked (OQ 1–4 settled 5 Nov).
 - [x] `Tools/fonts.sh` (venv with `fonttools`, `brotli`): TTFs from `google/fonts` at a pinned commit (OFL). First confirm the Fraunces source has the `opsz` axis and record SOFT/WONK defaults matching the web's `opsz-normal` build. Figtree static 400–700; Fraunces 400/500 at opsz 20, 32, 48. `FontRegistry.register()` via `CTFontManagerRegisterFontsForURLs(.process)`.
   Files: `Tools/fonts.sh`, `Sources/DesignSystem/Resources/Fonts/**` (+ `OFL.txt`, `SOURCE.md`), `Sources/DesignSystem/FontRegistry.swift`, `Sources/DesignSystem/Typography.swift`.
   Test: every face resolves after `register()`; styles match the typography table.
-- [ ] `Tools/AssetGen`: `LaunchMoon` (288 pt @2x 576 px / @3x 864 px, glyph 104 pt at offset 92, glow σ 9 α0.45, light #E78A45 / dark #F2AD73, P3) and `LaunchWordmark` (D8) to both catalogs; SVG sources committed.
+- [x] `Tools/AssetGen`: `LaunchMoon` (288 pt @2x 576 px / @3x 864 px, glyph 104 pt at offset 92, glow σ 9 α0.45, light #E78A45 / dark #F2AD73, P3) and `LaunchWordmark` (D8) to both catalogs; SVG sources committed.
   Files: `Tools/AssetGen/**`, `Assets/moon/*.svg`, `App/Assets.xcassets/{LaunchMoon,LaunchWordmark}.imageset/**`, `Sources/DesignSystem/Resources/Launch.xcassets/**`.
   Test: dimensions; stroke colour at the glyph's top-left arc; wordmark ink bounds match a CoreText layout of the string; copies identical.
 - [ ] Primitives: `CfSkyLayer` / `CfSky`, `PatternDots`, `PressStyle` (Reduce Motion: opacity 0.85, scale 1, no transition), `MoonShape`.

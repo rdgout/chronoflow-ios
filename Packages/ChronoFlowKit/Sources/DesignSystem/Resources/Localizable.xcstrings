@@ -1,0 +1,12 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "ChronoFlow" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "ChronoFlow" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "ChronoFlow" } }
+      }
+    }
+  },
+  "version" : "1.0"
+}
