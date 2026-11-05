@@ -387,7 +387,7 @@ OQ 5 follows the settled S1/S2 and listed S3–S6 rules. OQ 11 uses its default 
 - [x] `FlightPath`: bottom-anchored cubic for any size, 1024-sample arc-length table, `point(atFraction:)`, fraction curve. (OQ 11 default assumed, confirm). The 1024-entry table and 128 moving position keys preserve the 560 ms fraction knot. Host numerical and rendered stroke-tip tests pass every 10 ms; cubic trimming drift required the specified sampled-polyline fallback for the displayed path. Board length/apex and short/wide fixtures pass; iOS 17 compile/type-check passes. D1c simulator run remains for the orchestrator.
   Files: `Sources/Launch/FlightPath.swift`.
   Test: length 505.8 ± 0.2 on 390 × 844; apex (195, 512.5); plane = stroke tip every 10 ms.
-- [ ] `MoonTarget` fallback math (pure): centre from safe insets and row height.
+- [x] `MoonTarget` fallback math (pure): centre from safe insets and row height. (OQ 10 default assumed, confirm). Pure fallback uses the specified RN padding and row-height rule, with content bounds from all four safe insets. Board (38, 78), larger rows and asymmetric/short/wide host fixtures pass. Hosted running-device tests are written and type-check for iOS 17; all seven D1c simulator runs remain for the orchestrator.
   Files: `Sources/AppCore/MoonTarget.swift`.
   Test: board target (38, 78) on 390 × 844 with insets 47/34 → padding rule; all pinned devices; larger row height moves the centre.
 - [ ] `LaunchTimeline.opening` (incl. Reduce Motion) and `sample(at:)`.
