@@ -48,6 +48,7 @@ Simulators: Xcode 27.2 with iOS 27.2 runtimes (iPhone SE 3rd gen, 17e, 17, Air, 
 - `xcode-select` points at full Xcode (`/Applications/Xcode.app`); keep it that way.
 - The launch screen is cached by iOS. After changing it: Clean Build Folder, delete the app, restart the Simulator.
 - `*.xcodeproj` is generated; edit `project.yml`, never the project file.
+- XcodeGen target presets override project-level settings. Set `TARGETED_DEVICE_FAMILY: "1"` and `SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO` on every iOS target to keep it iPhone only.
 - XcodeGen defaults to an `AppIcon` asset; its setting stays empty until OQ 18 resolves the icon design.
 - Fonts are registered from the package with `CTFontManagerRegisterFontsForURLs`, not `UIAppFonts`.
 - The launch storyboard is not localised.
