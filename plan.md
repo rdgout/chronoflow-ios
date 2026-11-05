@@ -348,6 +348,11 @@ Unblocked (OQ 1–4 settled 5 Nov).
 
 ### Phase 1: Design tokens, fonts and launch assets (`feat/phase-1-design-system`)
 
+Implementation complete; verification recorded in `Docs/tooling.md`. The orchestrator's iPhone 17e /
+iOS 27.2 `make check` passed everything except nil-traits accessibility font scaling. UIKit typography now
+requires explicit traits, with exact default sizes and metrics-based scaling tested at 2× and 3×.
+The updated font test, full `make check` and D1c matrix still require an outside-sandbox run before committing.
+
 - [x] `Tools/TokenGen` (SwiftPM executable): OKLCH → OKLab → linear P3 (clip) → transfer curve. Writes 9 `.colorset`s (Any/Dark), `LaunchSky` to both catalogs (D10), `CfSky.generated.swift` (per-segment ramp with exact mid stop), `TokenGenReport.md` (sRGB hex).
   Files: `Tools/TokenGen/**`, `Sources/DesignSystem/Resources/Colors.xcassets/**`, `App/Assets.xcassets/LaunchSky.colorset/**`, `Sources/DesignSystem/CfSky.generated.swift`.
   Test: every hex/P3 in the spec table to ±1/255; ramp vs true OKLab at 1000 points ±1/255 both themes; `make tokens && git diff --exit-code`; catalog copies identical.
@@ -357,7 +362,7 @@ Unblocked (OQ 1–4 settled 5 Nov).
 - [x] `Tools/AssetGen`: `LaunchMoon` (288 pt @2x 576 px / @3x 864 px, glyph 104 pt at offset 92, glow σ 9 α0.45, light #E78A45 / dark #F2AD73, P3) and `LaunchWordmark` (D8) to both catalogs; SVG sources committed.
   Files: `Tools/AssetGen/**`, `Assets/moon/*.svg`, `App/Assets.xcassets/{LaunchMoon,LaunchWordmark}.imageset/**`, `Sources/DesignSystem/Resources/Launch.xcassets/**`.
   Test: dimensions; stroke colour at the glyph's top-left arc; wordmark ink bounds match a CoreText layout of the string; copies identical.
-- [ ] Primitives: `CfSkyLayer` / `CfSky`, `PatternDots`, `PressStyle` (Reduce Motion: opacity 0.85, scale 1, no transition), `MoonShape`.
+- [x] Primitives: `CfSkyLayer` / `CfSky`, `PatternDots`, `PressStyle` (Reduce Motion: opacity 0.85, scale 1, no transition), `MoonShape`.
   Files: `Sources/DesignSystem/{CfSky,PatternDots,PressStyle,MoonShape}.swift`.
   Test: snapshots light/dark; unit test of `PressStyle` values with and without Reduce Motion.
 

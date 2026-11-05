@@ -18,8 +18,10 @@ Codex's `workspace-write` sandbox cannot run `xcodebuild` (nested `sandbox-exec`
 
 Use `make lint`, `make test` or `make snapshots` for an individual check and `make perf` for the Release
 launch metric scaffold. Phase 0 snapshot suites contain smoke tests; image baselines follow in Phases 1
-and 3c. `make tokens`, `make fonts` and `make assets` require the Phase 1 generators and explain when
-they are missing. Toolchain verification and environment limitations are recorded in `Docs/tooling.md`.
+and 3c. `make tokens`, `make fonts` and `make assets` regenerate the committed design outputs.
+`make generators-check` verifies their freshness, fonts and raster assets on the host and is part of
+`make check`. Toolchain and Phase 1 verification, remaining simulator commands and environment
+limitations are recorded in `Docs/tooling.md`.
 
 Signing is optional for simulators. Device signing comes from ignored `Config/Local.xcconfig`, included
 by `Config/Base.xcconfig`; copy `Config/Local.xcconfig.example` to get started. All working rules and traps,
