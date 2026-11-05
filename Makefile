@@ -4,11 +4,11 @@ SHELL := /bin/sh
 
 XCODEGEN ?= /opt/homebrew/bin/xcodegen
 DESTINATION := platform=iOS Simulator,name=iPhone 17e,OS=27.2
-XCODEBUILD := xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData -destination '$(DESTINATION)'
+XCODEBUILD := xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData
 SWIFT_PATHS := App AppUITests PerfUITests Packages/ChronoFlowKit/Package.swift Packages/ChronoFlowKit/Sources Packages/ChronoFlowKit/Tests $(wildcard Tools/*/Package.swift Tools/*/Sources)
 UI_SUITES := DesignSystemTests LaunchTests WelcomeTests
 
-.PHONY: generate format lint test snapshots perf tokens fonts assets check
+.PHONY: generate format lint test snapshots duo perf tokens fonts assets check
 
 generate:
 	$(XCODEGEN) generate
@@ -20,13 +20,17 @@ lint:
 	xcrun swift format lint --strict -r $(SWIFT_PATHS)
 
 test:
-	$(XCODEBUILD) -scheme ChronoFlow $(addprefix -skip-testing:,$(UI_SUITES)) test
+	$(XCODEBUILD) -destination '$(DESTINATION)' -scheme ChronoFlow $(addprefix -skip-testing:,$(UI_SUITES)) test
 
 snapshots:
-	$(XCODEBUILD) -scheme ChronoFlow $(addprefix -only-testing:,$(UI_SUITES)) test
+	$(XCODEBUILD) -destination '$(DESTINATION)' -scheme ChronoFlow $(addprefix -only-testing:,$(UI_SUITES)) test
+
+duo:
+	@destination="$$(python3 Scripts/duo-destination.py)" && \
+		$(XCODEBUILD) -destination "$$destination" -scheme ChronoFlow -only-testing:AppUITests/WindowTests test
 
 perf:
-	$(XCODEBUILD) -scheme Perf -configuration Release test
+	$(XCODEBUILD) -destination '$(DESTINATION)' -scheme Perf -configuration Release test
 
 tokens:
 	@test -f Tools/TokenGen/Package.swift || { echo 'TokenGen is scheduled for Phase 1.' >&2; exit 1; }
