@@ -21,6 +21,7 @@ public struct WordmarkLayout {
     public let line: CTLine
     public let width: Int
     public let height: Int
+    public let advance: CGFloat
     public let origin: CGPoint
     public let ink: CGRect
 
@@ -47,12 +48,12 @@ public struct WordmarkLayout {
         line = CTLineCreateWithAttributedString(NSAttributedString(string: "ChronoFlow", attributes: attributes))
         var ascent: CGFloat = 0
         var descent: CGFloat = 0
-        let advance = CTLineGetTypographicBounds(line, &ascent, &descent, nil)
+        advance = CGFloat(CTLineGetTypographicBounds(line, &ascent, &descent, nil))
         let bounds = CTLineGetImageBounds(line, nil)
-        let left = min(0, bounds.minX)
-        width = Int(ceil(max(advance, bounds.maxX) - left))
+        let overhang = max(0, -bounds.minX, bounds.maxX - advance)
+        width = Int(ceil(advance + 2 * overhang))
         height = Int(lineHeight)
-        origin = CGPoint(x: -left, y: (lineHeight - ascent - descent) / 2 + descent)
+        origin = CGPoint(x: (CGFloat(width) - advance) / 2, y: (lineHeight - ascent - descent) / 2 + descent)
         ink = bounds.offsetBy(dx: origin.x, dy: origin.y)
     }
 }
@@ -67,6 +68,11 @@ public func wordmarkImage(layout: WordmarkLayout, scale: Int) -> CGImage {
         data: nil, width: layout.width * scale, height: layout.height * scale, bitsPerComponent: 8, bytesPerRow: 0,
         space: CGColorSpace(name: CGColorSpace.displayP3)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
     context.scaleBy(x: CGFloat(scale), y: CGFloat(scale))
+    // macOS stem darkening would bake a heavier weight than iOS text rendering.
+    context.setAllowsFontSmoothing(false)
+    context.setShouldSmoothFonts(false)
+    context.setShouldSubpixelPositionFonts(true)
+    context.setShouldSubpixelQuantizeFonts(false)
     context.textPosition = layout.origin
     CTLineDraw(layout.line, context)
     return context.makeImage()!

@@ -29,6 +29,25 @@ private func pixels(_ image: CGImage) -> [UInt8] {
     return bytes
 }
 
+private func alphaCoverage(_ image: CGImage) -> Int {
+    let bytes = pixels(image)
+    return stride(from: 3, to: bytes.count, by: 4).reduce(0) { $0 + Int(bytes[$1]) }
+}
+
+private func unsmoothedWordmark(layout: WordmarkLayout, scale: Int) -> CGImage {
+    let context = CGContext(
+        data: nil, width: layout.width * scale, height: layout.height * scale, bitsPerComponent: 8, bytesPerRow: 0,
+        space: CGColorSpace(name: CGColorSpace.displayP3)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+    context.scaleBy(x: CGFloat(scale), y: CGFloat(scale))
+    context.setAllowsFontSmoothing(false)
+    context.setShouldSmoothFonts(false)
+    context.setShouldSubpixelPositionFonts(true)
+    context.setShouldSubpixelQuantizeFonts(false)
+    context.textPosition = layout.origin
+    CTLineDraw(layout.line, context)
+    return context.makeImage()!
+}
+
 @Test func assetDimensionsP3ColorsAndCopies() throws {
     let outputs = try assetOutputs(root: root)
     try writeOutputs(outputs, root: root, check: true)
@@ -75,6 +94,11 @@ private func pixels(_ image: CGImage) -> [UInt8] {
                     let layout = try WordmarkLayout(root: root, color: source.color("sky-title", theme).rgb(p3: true))
                     #expect(image.width == layout.width * scale)
                     #expect(image.height == 40 * scale)
+                    #expect(abs(layout.origin.x + layout.advance / 2 - CGFloat(layout.width) / 2) < 0.01)
+                    #expect(layout.ink.minX >= 0 && layout.ink.maxX <= CGFloat(layout.width))
+                    let referenceCoverage = alphaCoverage(unsmoothedWordmark(layout: layout, scale: scale))
+                    #expect(referenceCoverage > 0)
+                    #expect(alphaCoverage(image) == referenceCoverage, "Baked weight must match unsmoothed iOS text")
                     let bytes = pixels(image)
                     var xs: [Int] = []
                     var ys: [Int] = []
