@@ -28,12 +28,14 @@ ChronoFlow is a jet-lag planner. It plans sleep, light and caffeine for a trip. 
 | Command | What it does |
 | --- | --- |
 | `make generate` | Generate `ChronoFlow.xcodeproj` from `project.yml` (the project file is not committed) |
-| `make check` | Lint, unit tests and snapshots; run before every commit |
+| `make check` | Lint, generator freshness and host tests, unit tests and snapshots; run before every commit |
 | `make format` | Format owned Swift sources with the toolchain formatter |
-| `make lint` / `make test` / `make snapshots` | Run the individual checks on the pinned iPhone 17e / iOS 27.2 |
+| `make lint` | Run strict Swift formatting lint on the host |
+| `make test` / `make snapshots` | Run the individual suites on the pinned iPhone 17e / iOS 27.2 |
 | `make duo` | Run window/UI checks on the first available iPhone Duo on its iPhone19-4 iOS 27.2 runtime; resolve its destination dynamically |
 | `make perf` | Run the Release `Perf` scheme (launch metric scaffold until Phase 7) |
-| `make tokens` / `make fonts` / `make assets` | Run the Phase 1 generators; fail with an explanation until those tools exist |
+| `make tokens` / `make fonts` / `make assets` | Regenerate the committed tokens, static fonts and launch assets |
+| `make generators-check` | Verify generated outputs, fonts and raster assets and run their host tests; first run needs network (see `Docs/tooling.md`) |
 | `Scripts/ci.sh` | Run `make generate check` locally |
 
 Simulators: Xcode 27.2 with iOS 27.2 runtimes (iPhone SE 3rd gen, 17e, 17, Air, 18 Pro, 18 Pro Max, iPhone Duo). Duo runs on its own runtime (`com.apple.CoreSimulator.SimRuntime.iOS-27-2-iPhone19-4`, build 24B91016s); the regular runtime (24B8117) has no Duo device type. Use `make duo`, which resolves by device type and runtime instead of name/OS or a fixed UDID. No iOS 17 simulator runtime is downloadable for Xcode 27.
@@ -52,5 +54,5 @@ Simulators: Xcode 27.2 with iOS 27.2 runtimes (iPhone SE 3rd gen, 17e, 17, Air, 
 - XcodeGen defaults to an `AppIcon` asset; its setting stays empty until OQ 18 resolves the icon design.
 - Fonts are registered from the package with `CTFontManagerRegisterFontsForURLs`, not `UIAppFonts`.
 - The launch storyboard is not localised.
-- `make snapshots` runs the DesignSystem, Launch and Welcome test suites; Phase 0 has only smoke tests, with image baselines added in Phases 1 and 3c.
+- `make snapshots` runs the DesignSystem, Launch and Welcome test suites; Phase 1 has four approved primitive baselines, with launch image baselines added in Phase 3c.
 - `Config/Base.xcconfig` optionally includes ignored `Config/Local.xcconfig`; copy `Local.xcconfig.example` there for a device team. Simulator builds need no team.

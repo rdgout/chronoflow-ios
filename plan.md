@@ -86,7 +86,7 @@ SplashSpec's prose gives the rule; keyframes fill what the prose leaves out. Whe
 - **Copy** promises a clock shift, never symptom relief; modest scientific claims.
 - **No unneeded comments.** Native components. No `+load` or static initialisers. No synchronous I/O on the main thread before the overlay flush.
 - **Git.** `git init -b main`; first commit holds only docs. Then one branch per phase or sub-phase (`feat/phase-N-slug`, `feat/phase-3a-…`), stacked. Atomic Conventional Commits that tick the task here. Never commit to `main` directly; never merge or force-push unless asked. No `Co-Authored-By` or other trailer (OQ 1). Push and PRs only once OQ 4 names a remote.
-- **Local builds only.** `make check` = lint + unit tests + snapshots on a pinned simulator. Nothing runs on PRs.
+- **Local builds only.** `make check` = lint + generator freshness and host tests + unit tests + snapshots on a pinned simulator. Nothing runs on PRs.
 - **Board updates.** Refresh `_design/canvas/` from the canvas artifact, re-export frames, record the date here.
 - **Who writes what.** Codex (`codex exec`) implements each phase; Opus reviewers check the diff against this plan, the boards and the device matrix (D1c); confirmed findings go back to Codex until the review is clean. Claude orchestrates and commits.
 - **iOS 17 runtime.** Xcode 27.2 offers no downloadable iOS 17 (or 18) simulator runtime. The 17.0 floor is enforced by the compiler (deployment target) and checked on a physical iOS 17 device when one is available; simulator checks run on iOS 27.2.
@@ -348,10 +348,12 @@ Unblocked (OQ 1–4 settled 5 Nov).
 
 ### Phase 1: Design tokens, fonts and launch assets (`feat/phase-1-design-system`)
 
-Implementation complete; verification recorded in `Docs/tooling.md`. The orchestrator's iPhone 17e /
-iOS 27.2 `make check` passed everything except nil-traits accessibility font scaling. UIKit typography now
-requires explicit traits, with exact default sizes and metrics-based scaling tested at 2× and 3×.
-The updated font test, full `make check` and D1c matrix still require an outside-sandbox run before committing.
+Implementation complete. The orchestrator verified the committed Phase 1 state on 2026-11-05:
+`make generate`, `make snapshots` and `make check` passed on iPhone 17e / iOS 27.2, including the
+explicit-traits UIKit font test. Four primitive baselines were recorded and visually approved.
+`make duo` passed on iPhone Duo's iPhone19-4 iOS 27.2 runtime; generators reproduced with no diff.
+Review corrections and their host checks are recorded in `Docs/tooling.md`, along with commands to
+validate the revised tree outside the sandbox. These results cover 17e and Duo, not the full D1c matrix.
 
 - [x] `Tools/TokenGen` (SwiftPM executable): OKLCH → OKLab → linear P3 (clip) → transfer curve. Writes 9 `.colorset`s (Any/Dark), `LaunchSky` to both catalogs (D10), `CfSky.generated.swift` (per-segment ramp with exact mid stop), `TokenGenReport.md` (sRGB hex).
   Files: `Tools/TokenGen/**`, `Sources/DesignSystem/Resources/Colors.xcassets/**`, `App/Assets.xcassets/LaunchSky.colorset/**`, `Sources/DesignSystem/CfSky.generated.swift`.
