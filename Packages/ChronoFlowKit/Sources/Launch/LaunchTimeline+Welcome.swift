@@ -10,7 +10,6 @@ extension LaunchTimeline {
         var timeline = withoutExit()
         let exit = max(1.6, start.timeInterval)
         timeline.append(.band, "opacity", start: exit, end: exit + 0.7, value: .scalar(0), curve: .easeOut)
-        timeline.append(.stars, "opacity", start: exit + 0.1, end: exit + 0.7, value: .scalar(0.2), curve: .easeOut)
         for layer in [LayerID.sun, .halo] {
             timeline.append(layer, "opacity", start: exit, end: exit + 0.6, value: .scalar(0), curve: .easeOut)
             timeline.append(

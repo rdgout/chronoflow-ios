@@ -39,7 +39,8 @@
                     scene.container.removeFromSuperlayer()
                     #expect(image.cgImage?.width == Int((size.width * scale).rounded()))
                     #expect(image.cgImage?.height == Int((size.height * scale).rounded()))
-                    let preservesBoardReference = size.height == 844
+                    let preservesBoardReference =
+                        size.height == 844 && !(frame.mode == .welcome && frame.milliseconds > 1600)
                     let recordingFrame = record && !preservesBoardReference
                     let result = verifySnapshot(
                         of: image, as: .image,

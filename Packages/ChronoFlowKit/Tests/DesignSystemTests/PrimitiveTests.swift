@@ -33,31 +33,6 @@ import Testing
     }
 }
 
-@Test @MainActor func patternTileMatchesTheCSSRadialFade() {
-    for appearance in TokenAppearance.allCases {
-        for scale in [2.0, 3.0] {
-            let image = PatternDots.tile(color: ColorToken.skyTitle.components(for: appearance), scale: scale)
-            let side = Int(7 * scale)
-            #expect(image.width == side && image.height == side)
-            var pixels = [UInt8](repeating: 0, count: side * side * 4)
-            pixels.withUnsafeMutableBytes { data in
-                let context = CGContext(
-                    data: data.baseAddress, width: side, height: side, bitsPerComponent: 8, bytesPerRow: side * 4,
-                    space: CGColorSpace(name: CGColorSpace.displayP3)!,
-                    bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
-                context.draw(image, in: CGRect(x: 0, y: 0, width: side, height: side))
-            }
-            for y in 0..<side {
-                for x in 0..<side {
-                    let radius = hypot((Double(x) + 0.5) / scale - 3.5, (Double(y) + 0.5) / scale - 3.5)
-                    let expected = 0.16 * min(1, max(0, (1.5 - radius) / 0.5))
-                    #expect(abs(Double(pixels[(y * side + x) * 4 + 3]) / 255 - expected) <= 1 / 255.0)
-                }
-            }
-        }
-    }
-}
-
 @Test @MainActor func moonShapeScalesAndKeepsTheSVGOrientation() {
     let rect = CGRect(x: 17, y: 29, width: 56, height: 56)
     let path = MoonShape().path(in: rect)

@@ -81,15 +81,6 @@ public func tokenOutputs(root: URL) throws -> [String: Data] {
     }
     code +=
         "}\nnonisolated public enum PressTokens { public static var scale: Double { \(scale) }; public static var opacity: Double { \(opacity) }; public static var duration: Double { \(duration) / 1000 }; public static var curve: [Double] { [0.25, 0.1, 0.25, 1] } }\n"
-    let css = try String(
-        contentsOf: root.appending(path: "_design/canvas/ds/chronoflow/components/bundle.css"), encoding: .utf8)
-    let radius = try captures(#"radial-gradient\(currentColor ([\d.]+)px"#, in: css)[0]
-    let fade = try captures(#"currentColor [\d.]+px,#0000 ([\d.]+)px"#, in: css)[0]
-    let tile = try captures(#"\.pattern-dots\{background-size:([\d.]+)px 7px\}"#, in: css)[0]
-    let alpha = try captures(#"currentColor ([\d.]+)%,transparent\)1px"#, in: css)[0]
-    guard radius == "1", fade == "1.5", tile == "7", alpha == "16" else {
-        throw GenerationError.invalid("pattern-dots differs from plan")
-    }
     let splashBoard = try String(
         contentsOf: root.appending(path: "_design/canvas/SplashScreen.dc.html"), encoding: .utf8)
     guard splashBoard.contains("background: #fff;"),
@@ -112,8 +103,6 @@ public func tokenOutputs(root: URL) throws -> [String: Data] {
         "public static var haloStops: [(Double, Double)] { ["
         + halo.map { "(\(number($0.0)), \(number($0.1)))" }.joined(separator: ",") + "] }\n"
     code += "public static var planeAlphas: [Double] { [" + plane.map(number).joined(separator: ",") + "] }\n}\n"
-    code +=
-        "nonisolated public enum PatternTokens { public static var radius: Double { \(radius) }; public static var fadeRadius: Double { \(fade) }; public static var tile: Double { \(tile) }; public static var alpha: Double { \(alpha) / 100 } }\n"
     outputs["Packages/ChronoFlowKit/Sources/DesignSystem/CfSky.generated.swift"] = try formattedSwift(code, root: root)
     outputs["Tools/TokenGen/TokenGenReport.md"] = Data(report.utf8)
     outputs["Packages/ChronoFlowKit/Sources/DesignSystem/WelcomeTokens.generated.swift"] = try welcomeTokens(root: root)

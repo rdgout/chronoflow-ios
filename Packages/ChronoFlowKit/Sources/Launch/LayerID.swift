@@ -2,7 +2,7 @@ import CoreGraphics
 import Foundation
 
 nonisolated public enum LayerID: String, CaseIterable, Sendable {
-    case container, sky, stars, halo, sun, band, path, plane, moon, wordmark, status, statusDot
+    case container, sky, halo, sun, band, path, plane, moon, wordmark, status, statusDot
 }
 
 nonisolated public enum TrackValue: Sendable, Equatable {

@@ -17,8 +17,8 @@ Codex's `workspace-write` sandbox cannot run `xcodebuild` (nested `sandbox-exec`
 `build/DerivedData`. `Scripts/ci.sh` runs `make generate check`.
 
 Use `make lint`, `make test` or `make snapshots` for an individual check and `make perf` for the Release
-launch metric scaffold. Phase 1 includes four approved primitive image baselines; launch image baselines
-follow in Phase 3c. `make tokens`, `make fonts` and `make assets` regenerate the committed design outputs.
+launch metric scaffold. Phase 1's four dot-bearing primitive baselines were removed by the user's 2026-11-06 no-pattern
+decision; launch image baselines follow in Phase 3c. `make tokens`, `make fonts` and `make assets` regenerate the committed design outputs.
 `make generators-check` verifies their freshness, fonts and raster assets on the host and is part of
 `make check`. Toolchain and Phase 1 verification, remaining simulator commands and environment
 limitations are recorded in `Docs/tooling.md`.

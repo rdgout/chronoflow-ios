@@ -14,7 +14,7 @@ nonisolated final class LaunchSceneTests: XCTestCase {
                 traits: LaunchTestHost.imageTraits(style: style, scale: host.window.screen.scale), reduceMotion: false)
             XCTAssertEqual(
                 scene.container.sublayers?.compactMap(\.name),
-                ["sky", "stars", "halo", "sun", "band", "path", "plane", "moon", "wordmark", "status"])
+                ["sky", "halo", "sun", "band", "path", "plane", "moon", "wordmark", "status"])
             XCTAssertEqual(Set(scene.layers.keys), Set(LayerID.allCases))
             XCTAssertTrue(scene.container.masksToBounds)
             for (actual, expected) in zip(
@@ -30,7 +30,6 @@ nonisolated final class LaunchSceneTests: XCTestCase {
             XCTAssertNil(scene.statusLine.text)
             XCTAssertEqual(scene.statusLine.replicator.instanceCount, 3)
             XCTAssertEqual(scene.statusLine.replicator.instanceDelay, 0.2)
-            XCTAssertEqual(scene.layer(.stars).bounds.height, scene.size.height * 0.6)
             XCTAssertEqual(scene.layer(.sun).position.y, scene.size.height / 2 + (422 - 194))
             XCTAssertEqual(scene.layer(.moon).bounds.size, CGSize(width: 288, height: 288))
             XCTAssertEqual(scene.layer(.moon).minificationFilter, .trilinear)

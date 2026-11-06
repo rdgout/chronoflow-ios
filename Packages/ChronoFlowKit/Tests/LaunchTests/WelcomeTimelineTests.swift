@@ -14,7 +14,6 @@ nonisolated struct WelcomeTimelineTests {
         let timeline = opening.withWelcomeExit(at: .milliseconds(50), size: size, moonTarget: target)
         let expected: [(LayerID, String, Double, Double, TrackValue, CubicBezier)] = [
             (.band, "opacity", 1.6, 2.3, .scalar(0), .easeOut),
-            (.stars, "opacity", 1.7, 2.3, .scalar(0.2), .easeOut),
             (.sun, "opacity", 1.6, 2.2, .scalar(0), .easeOut),
             (.halo, "opacity", 1.6, 2.2, .scalar(0), .easeOut),
             (.sun, "transform.translation.y", 1.6, 2.2, .scalar(120), .easeOut),

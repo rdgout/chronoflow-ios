@@ -1,4 +1,3 @@
-import SnapshotTesting
 import Testing
 
 @testable import DesignSystem

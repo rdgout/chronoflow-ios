@@ -21,14 +21,6 @@
             sky.appearance = appearance
             sky.frame = container.bounds
             add(sky, as: .sky)
-            let stars = CALayer()
-            stars.frame = CGRect(x: 0, y: 0, width: size.width, height: size.height * 0.6)
-            let tile = UIImage(
-                cgImage: PatternDots.tile(color: LaunchPaint.white, scale: traits.displayScale),
-                scale: traits.displayScale, orientation: .up)
-            stars.backgroundColor = UIColor(patternImage: tile).cgColor
-            add(stars, as: .stars)
-
             let centre = layout.sunCentre
             let halo = LaunchRadialLayer(
                 size: 500, centre: centre, radius: 250, color: dawn,

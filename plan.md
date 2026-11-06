@@ -49,7 +49,7 @@ SplashSpec's prose gives the rule; keyframes fill what the prose leaves out. Whe
 | # | Conflict | Native default | Why |
 |---|---|---|---|
 | S1 | Moon centre: board y 392 (30 pt above centre); prose "centred" | Centred in the window | Launch screen centres it and frame 0 must match (RN same). On 390 × 844 the wordmark top is 462, band top 470, apex 512.5 and status top 518. **User decision 2026-11-06:** preserve these relative y offsets at every height by centring the composition. At 874 the apex is 527.5 and status top 533, the same 5.5 pt clearance; the path no longer crosses the status text. |
-| S2 | Stars at 0.55 at 0 ms; prose "0–300 static first frame, matches the system launch screen" and "300–1200 stars fade out" | 0–300 static (moon only). Stars stay at 0 throughout the opening. | The prose's static launch frame wins; any star fade-in would be invented. RN instead fades 0→0.55 over 0–300 (alternative in OQ 5). |
+| S2 | Board stars vs static system launch frame | Stars and pattern-dots removed by the user on 2026-11-06, in splash and Welcome | Plain CfSky gradient only. No opening or welcome-exit stars layer/track remains. |
 | S3 | Ready hand-off: keyframes 1700–2100; prose "1500 Animation done … +400 Hand-off" | 1500–1900 | Prose rule (RN same). The board's "1900 ms · Hand-off" frame renders keyframes and shows mid-lift; it maps to native 1700. |
 | S4 | Moon flight: keyframes ease-out; prose ease-in-out | ease-in-out | Prose rule (RN same). |
 | S5 | Path: dasharray 560 on a 505.8 pt path completes at 1313 ms, up to 47 pt ahead of the light; prose "in step with the light" | `strokeEnd` = the light's arc-length fraction | Prose rule. |
@@ -120,11 +120,11 @@ Inside `cf-sky`, `dawn-text` is `dawn`.
 
 TokenGen samples each segment separately, always emits a stop exactly at the mid stop (light 0.55 = #4D427F; on the 0.1 grid light is off by up to 5.7/255 there), and adds stops until `CAGradientLayer`'s interpolation is within ±1/255 of true OKLab at 1000 points.
 
-**`pattern-dots`:** 7 × 7 pt tile from the layer's top-left, dot centred at 3.5; solid to r 1, linear fade to 0 at r 1.5; dot colour α0.16 × layer opacity. One layer, `backgroundColor` = pattern image rendered at screen scale.
+**`pattern-dots`:** removed by the user on 2026-11-06. No tile primitive, generated pattern constants or approved dot-bearing primitive baselines remain.
 
 **`cf-press`:** pressed scale 0.97, opacity 0.85, 120 ms `cubic-bezier(0.25, 0.1, 0.25, 1)`. **Reduce Motion:** pressed = opacity 0.85, scale 1, no transition (`theme.css:143-146`).
 
-**Other constants:** path stroke white α0.55. Plane 8 pt white dot; glow disc r 6 (4 + spread 2), blur σ 5, white α0.8. Stars white (splash) / skyTitle (Welcome).
+**Other constants:** path stroke white α0.55. Plane 8 pt white dot; glow disc r 6 (4 + spread 2), blur σ 5, white α0.8. Stars/pattern-dots removed by the user on 2026-11-06.
 
 ### Typography
 
@@ -148,7 +148,7 @@ The container **is** the splash root: full window, ignores safe areas, `masksToB
 | Layer | Geometry |
 |---|---|
 | sky | `CAGradientLayer` `cf-sky`, full window; opacity animated |
-| stars | top 60 % of `h`, white pattern-dots |
+| stars | Removed by the user on 2026-11-06; no layer. |
 | halo | `CAGradientLayer(.radial)` centred on the sun, approximating `box-shadow 0 0 80 20` dawn α0.45 (disc r 110 blurred σ 40). **Alpha 0 for r < 90** (CSS clips an outer shadow inside the border box); pixel check at r ≈ 85 |
 | sun | 180 × 180, centre (w/2, cy + 228), `cornerRadius` 90 + `masksToBounds` (no mask layer). Radial dawn: solid to r 70, α0 at r 91.6 (gradient radius 127.3). User composition decision 2026-11-06: on short screens its bottom may extend below the window like a horizon; its sides stay inside the horizontal safe bounds, its top stays inside the window, and at least one third of its height must be visible in sampled frames. |
 | band | top = cy + 48, height = h − (cy + 48), stretching to the window bottom; skyHorizon with alpha 0 / 0.22 / 0.70 / 1.0 at 0 / 0.40 / 0.75 / 1.0; above the sun |
@@ -162,7 +162,7 @@ The container **is** the splash root: full window, ignores safe areas, `masksToB
 
 | Element | Property | Keys (ms: value) | Easing |
 |---|---|---|---|
-| Stars | opacity | 0 throughout (S2) | — |
+| Stars | Removed by the user on 2026-11-06 (S2) | — | — |
 | Sky | opacity | 300: 0 → 1100: 1 | ease-out |
 | Band | opacity | 300: 0 → 1100: 1 | ease-out |
 | Sun + halo | translateY, opacity | 400: +110, 0 → 1300: 0, 1 | ease-out |
@@ -187,7 +187,7 @@ Curves: **ease-out** (0, 0, 0.58, 1), **ease-in-out** (0.42, 0, 0.58, 1), **intr
 | Element | Change | ms | Easing |
 |---|---|---|---|
 | Band | opacity 1 → 0 | W → W+700 | ease-out |
-| Stars | opacity 0 → 0.2 | W+100 → W+700 | ease-out |
+| Stars | Removed by the user on 2026-11-06 | — | — |
 | Sun + halo | translateY 0 → +120, opacity 1 → 0 | W → W+600 | ease-out |
 | Path | opacity 1 → 0 | W → W+400 | linear |
 | Wordmark | opacity 1 → 0, translateY 0 → −6 | W → W+300 | ease-out |
@@ -213,7 +213,7 @@ Last item lands at 3200. Welcome's moon is not animated; it sits under the overl
 
 ### Welcome layout (on `cf-sky`)
 
-- Background: one `CfSky` + pattern-dots in skyTitle over full height at layer opacity 0.2.
+- Background: one `CfSky` gradient only; pattern-dots removed by the user on 2026-11-06.
 - Padding: top `max(safeTop + 16, 64)`, sides 24, bottom `max(safeBottom, 40)` (RN's rule; board is fixed 64 / 24 / 40; on Dynamic Island phones top becomes ~78 — OQ 10).
 - Column `space-between` inside a scroll view (RN). Top group gap 16: moon row (Lucide moon 28 × 28, stroke 2 → 2.33 pt, dawn, no glow; gap 8; wordmark), eyebrow (+56 margin above), headline. Bottom group gap 12: copy card (+12 margin below), "Plan my trip", "Sign in".
 - Board geometry on 390 × 844: moon row y 64–92, eyebrow 164–180, headline from 196, "Plan my trip" 688–740, "Sign in" 752–804.
@@ -364,9 +364,9 @@ validate the revised tree. These results cover 17e and Duo, not the full D1c mat
 - [x] `Tools/AssetGen`: `LaunchMoon` (288 pt @2x 576 px / @3x 864 px, glyph 104 pt at offset 92, glow σ 9 α0.45, light #E78A45 / dark #F2AD73, P3) and `LaunchWordmark` (D8) to both catalogs; SVG sources committed.
   Files: `Tools/AssetGen/**`, `Assets/moon/*.svg`, `App/Assets.xcassets/{LaunchMoon,LaunchWordmark}.imageset/**`, `Sources/DesignSystem/Resources/Launch.xcassets/**`.
   Test: dimensions; stroke colour at the glyph's top-left arc; wordmark ink bounds match a CoreText layout of the string; copies identical.
-- [x] Primitives: `CfSkyLayer` / `CfSky`, `PatternDots`, `PressStyle` (Reduce Motion: opacity 0.85, scale 1, no transition), `MoonShape`.
-  Files: `Sources/DesignSystem/{CfSky,PatternDots,PressStyle,MoonShape}.swift`.
-  Test: snapshots light/dark; unit test of `PressStyle` values with and without Reduce Motion.
+- [x] Primitives: `CfSkyLayer` / `CfSky`, `PressStyle` (Reduce Motion: opacity 0.85, scale 1, no transition), `MoonShape`.
+  Files: `Sources/DesignSystem/{CfSky,PressStyle,MoonShape}.swift`.
+  Test: light/dark gradient and moon unit coverage; `PressStyle` values with and without Reduce Motion. The unused PatternDots primitive, its tests, tokens and four composite primitive snapshots were removed by the user's 2026-11-06 no-pattern decision.
 
 ### Phase 2: System launch screen (`feat/phase-2-launch-screen`)
 
@@ -396,7 +396,7 @@ OQ 5 follows the settled S1/S2 and listed S3–S6 rules. OQ 11 uses its default 
 - [x] `withReadyExit`, `withStatus`. (OQ 6 default assumed, confirm). Reduce Motion uses the 300 ms ease-out fade and dots held at 1.0. Ready clamps to 1500 ms only with motion; status latches, pulses repeat from mount with three delayed replicas, and repeated endings replace prior endings. Host tests cover keys, fade samples, opening preservation and both composition orders; iOS 17 compile/type-check passes.
   Files: `Sources/Launch/LaunchTimeline+Ready.swift`.
   Test: keys; merged tracks keep opening keys intact (sample at 700 unchanged after adding an exit at 1500).
-- [x] `withWelcomeExit`. (OQ 6 default assumed, confirm). No moon cross-fade; stars retain the board geometry during the dissolve. (OQ 7 default assumed, confirm). W starts at max(1600 ms, resolution time). Host tests cover every ending key, one straight-line progress for centre/scale, landing within 0.01 pt, changed targets, late endings, opening preservation when added at 50 ms and Reduce Motion. Hosted D1c landing tests and the continuing matrix runner are written; iOS 17 compile/type-check passes.
+- [x] `withWelcomeExit`. (OQ 6 default assumed, confirm). No moon cross-fade; stars were subsequently removed by the user on 2026-11-06. (OQ 7 default assumed, confirm). W starts at max(1600 ms, resolution time). Host tests cover every ending key, one straight-line progress for centre/scale, landing within 0.01 pt, changed targets, late endings, opening preservation when added at 50 ms and Reduce Motion. Hosted D1c landing tests and the continuing matrix runner are written; iOS 17 compile/type-check passes.
   Files: `Sources/Launch/LaunchTimeline+Welcome.swift`.
   Test: moon lands on a given target to 0.01 pt; opening keys intact when added at 50 ms.
 
@@ -404,7 +404,7 @@ OQ 5 follows the settled S1/S2 and listed S3–S6 rules. OQ 11 uses its default 
 
 Verified by the orchestrator on 2026-11-06: all seven D1c devices, make check and make duo passed. Device runs need OQ 4 (team) and OQ 14 (device). The physical-device D3 proof stays open; Phase 3c snapshot work proceeds by user direction.
 
-- [x] `LaunchScene` layers (landed as one commit; accepted): sky/stars/band; sun/halo; path/plane; moon/wordmark; status (text created lazily + replicated dots). `apply(_:)` sets model values from `sample`. (OQ 6 default assumed, confirm). Stars retain the board geometry; Reduce Motion dots hold at 1.0, with the existing ease-out fade and no moon cross-fade. Complete layer tree, radial sun/clipped halo with generated alpha ramps, sampled path, baked plane glow, generated moon/wordmark and lazy localized status are implemented. The halo has a 250 pt radius and the sun has the designed 127.3 pt radius on both axes; host pixel tests verify both gradients at 2×/3×. Sampled scale transforms retain Z = 1 so render(in:) draws the moon and container at their sampled sizes. Frame geometry uses 1e-9 accuracy for anchor arithmetic residuals. Host tests and iOS 17 type-check pass.
+- [x] `LaunchScene` layers (landed as one commit; accepted): sky/band; sun/halo; path/plane; moon/wordmark; status (text created lazily + replicated dots). `apply(_:)` sets model values from `sample`. (OQ 6 default assumed, confirm). Stars were removed by the user on 2026-11-06; Reduce Motion dots hold at 1.0, with the existing ease-out fade and no moon cross-fade. Complete layer tree, radial sun/clipped halo with generated alpha ramps, sampled path, baked plane glow, generated moon/wordmark and lazy localized status are implemented. The halo has a 250 pt radius and the sun has the designed 127.3 pt radius on both axes; host pixel tests verify both gradients at 2×/3×. Sampled scale transforms retain Z = 1 so render(in:) draws the moon and container at their sampled sizes. Frame geometry uses 1e-9 accuracy for anchor arithmetic residuals. Host tests and iOS 17 type-check pass.
   Files: `Sources/Launch/LaunchScene.swift`, `Sources/Launch/LaunchScene+Layers.swift`, `Sources/Launch/StatusLineLayer.swift`.
   Test: layer list equals the spec; no layer has `mask`, `filters`, `compositingFilter` or `shadowOpacity > 0`.
 - [x] `LaunchOverlayController` + `SceneDelegate` order (D3, D14): overlay window (root VC `preferredStatusBarStyle = .lightContent`, VoiceOver element "ChronoFlow is opening" with its `nl` in the same commit), `isHidden = false`, opening tracks added, `CATransaction.flush()`, `t0` recorded; main window + root next run-loop turn; font registration detached; capture `connectionOptions` into `PendingLaunchIntent`. Verify which window drives the status bar; if not the overlay, set it on the main hosting controller until hand-off. Overlay is committed before scheduling the SwiftUI root, fonts register detached, intents are captured without routing, and a process-owned gate prevents replay. Both controllers request light status bars. Hosted ordering/reconnection/accessibility tests and UI coverage are written and iOS 17 type-checked. Actual status-bar appearance stays open (needs a device; open).
@@ -428,7 +428,7 @@ Verified by the orchestrator on 2026-11-06: all seven D1c devices, make check an
   ready 0, 700, 1400, 1700 (↔ board 1900), 1900; slow 2600, 4900 (readyAt 4600); welcome 1500, 1950, 2400 (fallback target); Reduce Motion 0.
   Files: `Tests/LaunchTests/LaunchSnapshotTests.swift`, `Tests/LaunchTests/__Snapshots__/**`.
   Test: recorded, reviewed side by side with `_design/frames/`, then pass. Status vs path apex: assert and record the relation on 844 and 874 (S1).
-  Note: implementation and initial recorded baselines are complete above; acceptance stays open for PNG/board-frame approval. `_design/frames/` is absent. Full path containment conflicts with the designed endpoints, which bleed 10 pt beyond both edges; no inset redesign/default is provided. Tests preserve the bleed and assert vertical bounds/clipping. The user settled OQ 11's vertical part on 2026-11-06: preserve the 844 pt board's composition at every height. The SE/Duo collisions and 874 pt S1 crossing are resolved in geometry; ordinary clearance assertions replace the known issues. S1 now retains status top minus apex = 5.5 pt at both 844 (518 / 512.5) and 874 (533 / 527.5). Replacement non-844 launch recordings and their visual approval remain open. The 844 references are compared even in record mode to guard unchanged board frames.
+  Note: implementation and initial recorded baselines are complete above; acceptance stays open for PNG/board-frame approval. `_design/frames/` is absent. Full path containment conflicts with the designed endpoints, which bleed 10 pt beyond both edges; no inset redesign/default is provided. Tests preserve the bleed and assert vertical bounds/clipping. The user settled OQ 11's vertical part on 2026-11-06: preserve the 844 pt board's composition at every height. The SE/Duo collisions and 874 pt S1 crossing are resolved in geometry; ordinary clearance assertions replace the known issues. S1 now retains status top minus apex = 5.5 pt at both 844 (518 / 512.5) and 874 (533 / 527.5). Replacement non-844 launch recordings and their visual approval remain open. The 844 references are compared even in record mode to guard unchanged board frames, except the two Welcome-exit samples changed by the subsequent no-pattern decision.
 
 - [x] Add the `--snapshots` D1c runner mode with compare-only default, optional record pass only under `SNAPSHOT_RECORD=1`, explicit en/US, failure continuation and final `make check` / `make duo`. Fixture tests cover recording isolation, all devices, failures and Duo runtime selection.
   Files: `Scripts/launch-simulators.py`, `Tests/test_launch_simulators.py`.
@@ -482,7 +482,7 @@ OQ 10 scaling settled by the user on 2026-11-06: cap at xxLarge. Defaults author
 - [x] `WelcomeView` per layout and typography, one `CfSky`, scroll view; six strings with `nl` in the same commit; header trait; reading order.
   Files: `Sources/Welcome/WelcomeView.swift`, `Sources/Welcome/WelcomeBrand.swift`, `Sources/DesignSystem/Buttons.swift`, `Sources/Welcome/Resources/Localizable.xcstrings`.
   Test: snapshots on the D1c matrix (iPhone Duo required), light/dark, en/nl, default and OQ 10 sizes; on 390 × 844 the board geometry above; on Duo nothing sits under the side rail or horizontal insets.
-  Note: implemented the Main board with generated metrics, one sky, full-height dots, scroll/space-between groups, exact typography, header trait and source reading order. All six Dutch values match RN `src/i18n/locales/nl.json`. (OQ 10 default assumed, confirm). RN padding and scrolling apply to all four safe insets. The user settled scaling on 2026-11-06: cap centrally at xxLarge, including xxxLarge and AX1–AX5. Test default/xxLarge and AX5 equality on every D1c device. Snapshot recording/comparison, board-frame approval and simulator geometry validation remain open; no new baselines are claimed.
+  Note: implemented the Main board with generated metrics, one sky (dots removed by the user 2026-11-06), scroll/space-between groups, exact typography, header trait and source reading order. All six Dutch values match RN `src/i18n/locales/nl.json`. (OQ 10 default assumed, confirm). RN padding and scrolling apply to all four safe insets. The user settled scaling on 2026-11-06: cap centrally at xxLarge, including xxxLarge and AX1–AX5. Test default/xxLarge and AX5 equality on every D1c device. Snapshot recording/comparison, board-frame approval and simulator geometry validation remain open; no new baselines are claimed.
 - [x] Moon anchor → `MoonAnchorStore` → `LaunchEvent.moonAnchor`.
   Files: `Sources/AppCore/MoonAnchorStore.swift`, `Sources/Welcome/WelcomeBrand.swift`.
   Test: UI test at `-cf.freezeAt 2300`: flying moon centre within 0.5 pt of Welcome's moon on every D1c device (iPhone Duo required), and at the largest agreed text size.
@@ -576,6 +576,14 @@ mismatch on iPhone18,4. This round's revised comparison, make check and make duo
   Fix round 4: preserve the user's 2026-11-06 horizon composition on SE/Duo. Only the sun's bottom may cross the window; require horizontal safe containment, an inside top edge and at least one third visible height. Moon glyph, wordmark and status retain full containment. Host tests cover all D1c sizes/sample times and reject top/side overflow, less than one third visible, fully hidden and empty suns. The other short-screen assertions concern clearances, path bounds and landing, and retain their existing rules. Revised simulator execution remains open.
 
 - [ ] Record and accept composition-centred launch references on all non-844 D1c devices. Verify the unchanged 844 frames, frozen moon landing, make check and make duo; visual approval remains open.
+
+### User decision: plain sky without a dot pattern (2026-11-06)
+
+- [x] Delete the splash stars layer/LayerID/tracks and Welcome pattern-dots, leaving only CfSky. Remove unused PatternDots, generated pattern/Welcome opacity tokens and generator parsing, the tile test, and all four dot-bearing Phase 1 composite primitive baselines and their fixture. Update existing layer/timeline expectations, S2/spec/background/constants and DesignSystem notes. Add no test for the absence of dots, per the user. Keep unchanged 844 frame comparisons except the two affected Welcome-exit samples.
+  Files: launch/welcome/design-system sources, TokenGen, existing tests, `AGENTS.md`, `CLAUDE.md`.
+  Test: existing suites updated; combined launch/Welcome replacement recording and visual approval remain open.
+
+- [ ] Re-record affected launch and Welcome baselines with the plain sky on every D1c device; compare all references, run make check and make duo, then obtain visual approval. The orchestrator will use `SNAPSHOT_RECORD=all`.
 
 ### Phase 4 review fixes (after Phase 5)
 
@@ -677,7 +685,7 @@ The design sets the floor: hand-off ends at 1900 ms (ready) and Welcome is fully
 | 3 | ~~Minimum iOS~~ **Settled 5 Nov: iOS 17.0** (D1), Liquid Glass on 26+ (D1b). | — | — |
 | 4 | **Settled 5 Nov:** `net.chronoflow.app.native` in development, local git only, no remote. Still open: Apple team ID (device runs from 3b) and whether native later takes `net.chronoflow.app`. | — | Device runs from 3b |
 | 5 | **S1 and S2 settled 5 Nov:** moon centred; no stars in the opening. S3–S6 as listed (prose wins). | As listed | — |
-| 6 | **Undesigned details:** Reduce Motion dot opacity and fade easing; flying moon (1.87 pt stroke, glow) vs Welcome moon (2.33 pt, no glow) — cross-fade or not; splash stars top 60 % vs Welcome full height during the dissolve. | Dots hold at 1.0; ease-out; no cross-fade; as boards | Phase 3a / 5 |
+| 6 | **Undesigned details:** Reduce Motion dot opacity and fade easing; flying moon (1.87 pt stroke, glow) vs Welcome moon (2.33 pt, no glow) — cross-fade or not; splash/Welcome pattern-dots removed by the user on 2026-11-06. | Dots hold at 1.0; ease-out; no cross-fade; pattern removed | Phase 3a / 5 |
 | 7 | **Late or unknown session:** signed out known after 1600 → welcome ending at that moment, or the `ready` lift-away? Session unknown at 8 s → signed out? | Start at resolution; signed out | Phase 4 |
 | 8 | **Stub destinations:** (a) Debug-only route-name screens, (b) inert buttons, (c) route seam only, (d) bring `AuthSignIn` / `TodayLoading` in. | (c) + (a), never in Release | Phase 4 |
 | 9 | **Session source and migration.** Is the RN app live with real users? If native later ships as `net.chronoflow.app`, should it read the RN Keychain item (`app:no-auth` / `session`) and migrate SQLite, kv-store, `api.deviceId`? | Native-only key now; decide at bundle switch | Phase 4 (shape only) |

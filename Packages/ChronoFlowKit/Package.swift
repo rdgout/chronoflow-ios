@@ -34,8 +34,7 @@ let package = Package(
         ),
         .testTarget(
             name: "DesignSystemTests",
-            dependencies: ["DesignSystem", .product(name: "SnapshotTesting", package: "swift-snapshot-testing")],
-            exclude: ["__Snapshots__"],
+            dependencies: ["DesignSystem"],
             swiftSettings: [.defaultIsolation(MainActor.self)]
         ),
         .testTarget(name: "AppCoreTests", dependencies: ["AppCore"], swiftSettings: [.defaultIsolation(nil)]),

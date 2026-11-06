@@ -25,7 +25,6 @@ import SwiftUI
                     let bottom = max(insets.bottom, WelcomeTokens.bottomPadding)
                     ZStack {
                         CfSky()
-                        PatternDots().opacity(WelcomeTokens.starsOpacity)
                         ScrollView {
                             VStack(alignment: .leading, spacing: 0) {
                                 heading

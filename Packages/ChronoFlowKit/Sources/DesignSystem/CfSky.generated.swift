@@ -225,9 +225,3 @@ nonisolated public enum LaunchPaint {
         ]
     }
 }
-nonisolated public enum PatternTokens {
-    public static var radius: Double { 1 }
-    public static var fadeRadius: Double { 1.5 }
-    public static var tile: Double { 7 }
-    public static var alpha: Double { 16 / 100 }
-}

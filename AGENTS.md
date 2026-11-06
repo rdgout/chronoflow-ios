@@ -56,5 +56,5 @@ Simulators: Xcode 27.2 with iOS 27.2 runtimes (iPhone SE 3rd gen, 17e, 17, Air, 
 - AppIcon reuses RN's opaque 1024 px icon; dark/tinted variants and a layered Liquid Glass icon need design assets (OQ 18).
 - Fonts are registered from the package with `CTFontManagerRegisterFontsForURLs`, not `UIAppFonts`.
 - The launch storyboard is not localised.
-- `make snapshots` runs the DesignSystem, Launch and Welcome test suites; Phase 1 has four approved primitive baselines, with launch image baselines added in Phase 3c.
+- `make snapshots` runs the DesignSystem, Launch and Welcome test suites; Phase 1's four dot-bearing primitive baselines were removed with the user's 2026-11-06 no-pattern decision; launch image baselines were added in Phase 3c.
 - `Config/Base.xcconfig` optionally includes ignored `Config/Local.xcconfig`; copy `Local.xcconfig.example` there for a device team. Simulator builds use ad-hoc signing (`CODE_SIGN_IDENTITY = -`) with no team; disabling signing breaks hosted Keychain access (`errSecMissingEntitlement`).

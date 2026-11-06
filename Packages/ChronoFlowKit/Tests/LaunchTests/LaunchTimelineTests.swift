@@ -14,7 +14,6 @@ nonisolated struct LaunchTimelineTests {
             (.container, "opacity", [0], [1], []),
             (.container, "transform.scale", [0], [1], []),
             (.sky, "opacity", [0, 0.3, 1.1], [0, 0, 1], [.linear, .easeOut]),
-            (.stars, "opacity", [0], [0], []),
             (.band, "opacity", [0, 0.3, 1.1], [0, 0, 1], [.linear, .easeOut]),
             (.sun, "opacity", [0, 0.4, 1.3], [0, 0, 1], [.linear, .easeOut]),
             (.halo, "opacity", [0, 0.4, 1.3], [0, 0, 1], [.linear, .easeOut]),
@@ -78,7 +77,6 @@ nonisolated struct LaunchTimelineTests {
             #expect(try scalar(timeline, .container, "opacity", at: time) == 1)
             #expect(try scalar(timeline, .container, "transform.scale", at: time) == 1)
             #expect(try scalar(timeline, .plane, "opacity", at: time) == plane)
-            #expect(try scalar(timeline, .stars, "opacity", at: time) == 0)
             #expect(try scalar(timeline, .status, "opacity", at: time) == 0)
         }
         #expect(timeline.sample(at: .milliseconds(-10)) == timeline.sample(at: .zero))

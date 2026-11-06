@@ -16,6 +16,5 @@ nonisolated public enum WelcomeTokens {
     public static var cardHorizontalPadding: CGFloat { 20 }
     public static var cardRadius: CGFloat { 22 }
     public static var buttonHeight: CGFloat { 52 }
-    public static var starsOpacity: CGFloat { 0.2 }
     public static var introRise: CGFloat { 14 }
 }
