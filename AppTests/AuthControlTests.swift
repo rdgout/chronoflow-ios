@@ -13,7 +13,7 @@ nonisolated final class AuthControlTests: XCTestCase {
         for style in [UIUserInterfaceStyle.light, .dark] {
             host.configure(CfSky(), style: style)
             try await host.settle()
-            let sky = try SnapshotRaster(png: XCTUnwrap(host.image().pngData()))
+            let skies = try shadowCaptures(host)
             for banner in [nil] + AuthBannerKind.allCases.map(Optional.some) {
                 var frames: [AuthElement: CGRect] = [:]
                 let model = authSnapshotModel()
@@ -23,20 +23,36 @@ nonisolated final class AuthControlTests: XCTestCase {
                 try await host.settle()
                 let card = try XCTUnwrap(frames[.card])
                 XCTAssertEqual(card.maxY, 728, accuracy: 0.5)
-                let raster = try SnapshotRaster(png: XCTUnwrap(host.image().pngData()))
-                for sample in AuthShadowBoard.samples {
-                    let expected = style == .dark ? sample.dark : sample.light
-                    let actual = sample.mean(in: raster)
-                    let context = "\(style), \(banner?.rawValue ?? "none"), \(sample.name)"
-                    for (actual, expected) in zip(actual, expected) {
-                        XCTAssertEqual(actual, expected, accuracy: 4, "Board sRGB: \(context)")
+                for (capture, raster) in try shadowCaptures(host) {
+                    let sky = try XCTUnwrap(skies[capture])
+                    for sample in AuthShadowBoard.samples {
+                        let expected = style == .dark ? sample.dark : sample.light
+                        let actual = sample.mean(in: raster)
+                        let context = "\(capture), \(style), \(banner?.rawValue ?? "none"), \(sample.name)"
+                        print("Auth card shadow \(context): RGB \(actual); board \(expected)")
+                        for (actual, expected) in zip(actual, expected) {
+                            XCTAssertEqual(actual, expected, accuracy: 4, "Board sRGB: \(context)")
+                        }
+                        let minimumInk = style == .dark ? sample.minimumDarkInk : sample.minimumLightInk
+                        XCTAssertGreaterThanOrEqual(
+                            sample.mean(in: sky)[0] - actual[0], minimumInk,
+                            "Shadow ink must survive capture: \(context)")
                     }
-                    let minimumInk = style == .dark ? sample.minimumDarkInk : sample.minimumLightInk
-                    XCTAssertGreaterThanOrEqual(
-                        sample.mean(in: sky)[0] - actual[0], minimumInk, "Shadow ink must survive capture: \(context)")
                 }
             }
         }
+    }
+
+    @MainActor private func shadowCaptures(_ host: AuthTestHost) throws -> [String: SnapshotRaster] {
+        let cpu = try SnapshotRaster(png: XCTUnwrap(host.image().pngData()))
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = host.scale
+        format.opaque = false
+        format.preferredRange = .standard
+        let display = UIGraphicsImageRenderer(size: host.window.bounds.size, format: format).image { _ in
+            XCTAssertTrue(host.window.drawHierarchy(in: host.window.bounds, afterScreenUpdates: true))
+        }
+        return ["layer": cpu, "hierarchy": try SnapshotRaster(png: XCTUnwrap(display.pngData()))]
     }
 
     @MainActor func testLatePasskeyAnchorQueriesUseTheAvailableWindowOrAnEmptyFallback() {

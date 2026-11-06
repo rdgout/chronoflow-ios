@@ -1298,6 +1298,29 @@ reference hashes remain unchanged, and PNGs are excluded from the patch. **Re-re
 896 Auth references** after this fix, then review all eight board pairs on 17e. No final
 visual acceptance, keyboard closure, Duo runtime or seven-simulator matrix is claimed.
 
+#### Phase 10a visual round 4: shadow orientation (user 2026-11-06)
+
+The user's hosted round-3 guard failed in all eight Sign in states; its new recording
+was discarded. Round 3's Mac layer composition hid the bitmap's inverted vertical offset.
+Full reproduction, fixed image measurements and hosted commands are in
+`Docs/auth-shadow-round-4.md`. Shared-shell/final visual acceptance stays open.
+
+- [x] Convert the generated downward shadow offset to Quartz bitmap coordinates. Direct
+  image-row composition with the old offset reproduces every reported below-card RGB
+  channel and the 0.74/2.68 red attenuation exactly. Preserve generated shadow metrics,
+  colors, opacity, raster extent and card layout.
+- [x] Correct the Mac board guard's image orientation, cover 2×/3× plus raw downward
+  alpha across bounds/appearance/scale changes, and reject the old-direction mutation.
+  Extend the unchanged hosted board/ink thresholds to both CPU layer capture and UIKit
+  hierarchy capture in all eight states, with per-path plain-sky controls and RGB logs.
+
+Verification: `make quick` passes; Auth and all hosted AppTests type-check for iOS 17.
+The old-direction mutation fails both Mac tests (32 issues). Existing 896 Auth reference
+hashes are unchanged; no PNGs are included in the patch. CoreSimulator remains inaccessible
+in the sandbox. Run the controls/layout guard before re-recording, then all Auth profile
+comparisons, sign-in smoke and the serial audit on 17e. Hosted execution, visual acceptance
+and OQ 32 closure remain pending; no Duo runtime or seven-simulator matrix is claimed.
+
 #### Phase 10b: Two-factor code/recovery and auth acceptance (`feat/phase-10b-two-factor`)
 
 Stack on 10a. OQ 28's Two-factor translations are resolved and recorded; ship them with this phase. Expired challenges have no separate board: use the approved notice/banner policy or defer that visual state under OQ 30.

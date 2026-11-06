@@ -1,5 +1,8 @@
 # Phase 10a visual round 3: card shadow
 
+Historical report: the subsequent hosted run failed. [Round 4](auth-shadow-round-4.md)
+identifies the inverted bitmap and corrects the Mac guard's image-coordinate mismatch.
+
 Measured against HEAD `5228ba3` and the user's 896 subsequently recorded Auth references.
 All 896 reference SHA-256 hashes were captured before work and verified unchanged afterward.
 No reference was recorded, removed, staged or included in the delivery patch.

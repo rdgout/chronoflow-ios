@@ -36,8 +36,9 @@ nonisolated final class AuthCardShadowLayer: CALayer {
         else { return }
         context.scaleBy(x: scale, y: scale)
         // Bake the blur so CPU snapshot capture does not depend on render-server effects.
+        // Quartz bitmap Y points up; UIKit displays the image's first row at the top.
         context.setShadow(
-            offset: CGSize(width: 0, height: y * scale), blur: blur * 2 * scale,
+            offset: CGSize(width: 0, height: -y * scale), blur: blur * 2 * scale,
             color: ColorToken.authShadow.components(for: appearance).cgColor)
         context.setFillColor(ColorToken.card.components(for: appearance).cgColor)
         context.addPath(
