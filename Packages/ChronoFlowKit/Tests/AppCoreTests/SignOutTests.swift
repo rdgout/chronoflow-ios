@@ -226,7 +226,10 @@ extension SignOutTests {
         let log = SessionEventLog()
         let credentials = ControllerMemoryStore(log: log)
         var hooks = SessionTeardown()
-        hooks.pendingCount = { await log.record("pending"); return 0 }
+        hooks.pendingCount = {
+            await log.record("pending")
+            return 0
+        }
         hooks.flush = { await log.record("flush") }
         hooks.beginWipe = { _ in await log.record("marker") }
         hooks.logout = { _ in await log.record("logout") }

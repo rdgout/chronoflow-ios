@@ -39,7 +39,7 @@ SUITES = {
     "AppCoreTests": {"host": ("CatalogTests", "CubicBezierTests", "LaunchCoordinatorTests", "LaunchIntroTests", "LaunchLifecycleTests",
                                  "LaunchReadinessTests", "LaunchSignpostsTests", "MoonAnchorStoreTests", "MoonTargetTests", "SessionStoreTests", "SessionControllerTests", "SignOutTests", "StoredDataReadinessTests", "DeviceIdentityTests", "SmokeTests")},
     "DataAccessTests": {"host": ("ContractsTests", "DataSourceSelectionTests", "APIClientTests", "APICookieTests", "APIDataSourceTests", "MockAuthTests", "MockAccountTripsTests", "MockPersistenceTests", "DataSourceParityTests")},
-    "SyncTests": {"host": ("LocalMutationsTests", "OutboxFlusherTests", "FullPullTests", "PendingProtectionTests", "PlanRetentionTests", "CheckOffReconcilerTests", "SyncEngineTests", "DataSourceIntegrationTests", "SyncTriggerTests", "SessionWipeTests")},
+    "SyncTests": {"host": ("LocalMutationsTests", "OutboxFlusherTests", "FullPullTests", "PendingProtectionTests", "PlanRetentionTests", "CheckOffReconcilerTests", "SyncEngineTests", "DataSourceIntegrationTests", "SyncTriggerTests", "SessionSyncReadinessTests", "SessionWipeTests")},
     "LocalStoreTests": {"host": ("SchemaV1Tests", "AccountDatabaseTests", "RecordsTests", "RepositoryObservationTests", "SessionAccountDatabaseTests", "AccountWiperTests", "AccountReadinessTests")},
     "DesignSystemTests": {"logic": ("ExactLineTextLayoutTests", "PrimitiveTests", "SmokeTests", "TypographyTests"),
                           "matrix": ("LaunchImagesTests",)},

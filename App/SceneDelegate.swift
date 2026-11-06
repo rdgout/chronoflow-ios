@@ -21,7 +21,6 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var serviceConfigurationFactory: (@Sendable () async throws -> (AppServices, URL?))?
     var nativeSessionFactory: (@MainActor (AppServices, URL) -> NativeSessionController)?
     var readinessFactory: (@MainActor (LaunchArguments, any LaunchClock) -> any LaunchReadiness)?
-    var sessionActivity: (@MainActor (Bool) -> Void)?
     private(set) var nativeSession: NativeSessionController?
     private(set) var serviceFailure: (any Error)?
     private var servicesTask: Task<Void, Never>?
@@ -130,7 +129,10 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         } else {
             startReadiness(on: windowScene, arguments: arguments)
         }
-        if !firstConnection, let native = (UIApplication.shared.delegate as? AppDelegate)?.nativeSession {
+        if !firstConnection,
+            let native = nativeSession
+                ?? (nativeSessionFactory == nil ? (UIApplication.shared.delegate as? AppDelegate)?.nativeSession : nil)
+        {
             nativeSession = native
             native.observe()
             setActive(isActive)
@@ -338,7 +340,6 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     private func setActive(_ active: Bool) {
         isActive = active
-        sessionActivity?(active)
         let previous = activityTask
         activityTask = Task { [weak self] in
             await previous?.value

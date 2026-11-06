@@ -126,7 +126,7 @@ nonisolated final class SessionLifecycleTests: XCTestCase {
         XCTAssertNil(delegate.window)
         XCTAssertNotNil(launchScene.t0)
         let animationKeys = launchScene.container.sublayers?.flatMap { $0.animationKeys() ?? [] } ?? []
-        XCTAssertFalse(animationKeys.isEmpty)
+        if !launchScene.timeline.reduceMotion { XCTAssertFalse(animationKeys.isEmpty) }
         let heartbeat = expectation(description: "main actor remains responsive during native open")
         Task { @MainActor in heartbeat.fulfill() }
         await fulfillment(of: [heartbeat], timeout: 1)

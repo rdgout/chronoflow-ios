@@ -81,7 +81,7 @@ class ClassificationTests(unittest.TestCase):
         self.assertEqual(perf.count('config: Perf'), 3)
         self.assertIn('-configuration Perf test', (ROOT / 'Makefile').read_text())
         for suite in ('AppCoreTests/SignOutTests', 'AppCoreTests/StoredDataReadinessTests',
-                      'SyncTests/SyncTriggerTests', 'SyncTests/SessionWipeTests', 'LocalStoreTests/AccountWiperTests', 'LocalStoreTests/AccountReadinessTests'):
+                      'SyncTests/SyncTriggerTests', 'SyncTests/SessionSyncReadinessTests', 'SyncTests/SessionWipeTests', 'LocalStoreTests/AccountWiperTests', 'LocalStoreTests/AccountReadinessTests'):
             self.assertIn(suite, runner.selectors('host'))
 
     def test_target_and_method_selection_is_explicit_and_validated(self):

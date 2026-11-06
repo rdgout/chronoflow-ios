@@ -35,12 +35,24 @@ actor TriggerEvents {
             scheduler: SyncScheduler(now: { syncDate }, sleep: { try await clock.sleep($0) }), path: path)
         try await lifecycle.start()
         await clock.waitForSleep()
-        for _ in 0..<10 { await lifecycle.requestSync() }
+        for _ in 0..<10 {
+            let registration = await clock.requestedDelays.count
+            await lifecycle.requestSync()
+            try #require(await triggerEventually { await clock.requestedDelays.count > registration })
+        }
+        let outboxRegistration = await clock.requestedDelays.count
         _ = try await store.enqueue(.walkthrough)
+        try #require(await triggerEventually { await clock.requestedDelays.count > outboxRegistration })
+        let registrations = await clock.requestedDelays.count
         await path.send(false)
         await path.send(true)
-        #expect(await source.calls.isEmpty)
-        _ = try await lifecycle.refreshNow()
+        try #require(await triggerEventually { await clock.requestedDelays.count > registrations })
+        #expect(await source.calls == [])
+        await clock.advance()
+        try #require(await triggerEventually { await lifecycle.retryState.lastResult?.state == .idle })
+        let calls = await source.calls
+        #expect(calls == ["send", "identity", "account", "trips", "detail"])
+        #expect(await source.maximumActiveCalls == 1)
         #expect(try await OutboxRepository(database: store.database).pending().isEmpty)
         await lifecycle.stop()
         #expect(await path.stopped)
@@ -130,7 +142,12 @@ actor TriggerEvents {
             scheduler: SyncScheduler(now: { syncDate }, sleep: { try await clock.sleep($0) }),
             verification: { await events.verify($0) })
         try await lifecycle.start()
+        await clock.waitForSleep()
+        #expect(await clock.requestedDelays == [1])
         #expect(try await lifecycle.refreshNow().state == .offline)
+        try #require(await triggerEventually { await lifecycle.retryState.lastResult?.state == .offline })
+        try #require(await triggerEventually { await clock.pendingCount == 0 })
+        #expect(await clock.requestedDelays == [1])
         await source.configure(failMethod: "account", methodFailure: .emailUnverified(status: 403))
         #expect(try await lifecycle.refreshNow().state == .verificationRequired)
         await source.configure(identity: identity(verified: false))
@@ -233,14 +250,20 @@ extension SyncTriggerTests {
         #expect(await source.calls == ["identity"])
         #expect(try await sync.refreshNow()?.state == .failed)
         #expect(await source.calls == ["identity"])
-        time.advance(290)
+        await sync.setEnabled(false)
+        let replacementRegistrations = await clock.requestedDelays.count
+        await sync.setEnabled(true)
+        await sync.resume(session: session, epoch: 6)
+        try #require(await triggerEventually { await clock.requestedDelays.count > replacementRegistrations })
+        #expect(await clock.requestedDelays.last == 1)
+        time.advance(1)
         await source.configure(trips: [])
         await clock.advance()
         try #require(await triggerEventually { await source.calls.count == 4 })
         #expect(await source.calls == ["identity", "identity", "account", "trips"])
         await sync.setEnabled(false)
         await sync.setEnabled(true)
-        await sync.resume(session: session, epoch: 6)
+        await sync.resume(session: session, epoch: 7)
         try #require(await triggerEventually { await clock.pendingCount == 1 })
         #expect(await clock.requestedDelays.last == 1)
         await sync.stop()
@@ -354,6 +377,35 @@ extension SyncTriggerTests {
         #expect(await source.calls == before)
         #expect(await clock.requestedDelays.count == registrations)
         await lifecycle.stop()
+        try await store.close()
+    }
+}
+
+extension SyncTriggerTests {
+    @Test func reconnectAloneStartsOneDebouncedCycle() async throws {
+        let store = try await SyncStore()
+        let source = ScriptedSource()
+        let clock = ManualSyncScheduler()
+        let path = TriggerPath()
+        let lifecycle = SyncLifecycle(
+            database: store.database, source: source, epoch: store.epoch,
+            scheduler: SyncScheduler(now: { syncDate }, sleep: { try await clock.sleep($0) }), path: path)
+        try await lifecycle.start()
+        await clock.waitForSleep()
+        await clock.advance()
+        try #require(await triggerEventually { await lifecycle.retryState.lastResult?.state == .idle })
+        #expect(await source.calls == ["identity", "account", "trips", "detail"])
+        let registrations = await clock.requestedDelays.count
+        await path.send(false)
+        await path.send(true)
+        try #require(await triggerEventually { await clock.requestedDelays.count > registrations })
+        #expect(await clock.requestedDelays.last == 1)
+        #expect(await source.calls == ["identity", "account", "trips", "detail"])
+        await clock.advance()
+        try #require(await triggerEventually { await source.calls.count == 7 })
+        await lifecycle.stop()
+        #expect(await source.calls == ["identity", "account", "trips", "detail", "identity", "account", "trips"])
+        #expect(await source.maximumActiveCalls == 1)
         try await store.close()
     }
 }

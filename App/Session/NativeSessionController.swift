@@ -19,6 +19,8 @@ final class NativeSessionController {
     init(
         applicationSupport: URL, namespace: StorageNamespace, credentials: (any SessionStore)? = nil,
         accountStore: (@MainActor (SessionAccountDatabase) -> any SessionAccountStore)? = nil,
+        syncScheduler: SyncScheduler = SyncScheduler(),
+        syncPath: @escaping @Sendable () -> (any SyncPathMonitoring)? = { NetworkPathMonitor() },
         requestSync: @escaping @Sendable (UInt64) async -> Void = { _ in },
         source: (@Sendable (StoredSession) async -> any DataSource)? = nil,
         unauthorized: @escaping @Sendable (UInt64) async -> Void = { _ in },
@@ -35,7 +37,7 @@ final class NativeSessionController {
         let reference = SessionControllerReference()
         let sync = source.map {
             SessionSync(
-                accounts: accounts, makePath: { NetworkPathMonitor() }, source: $0,
+                accounts: accounts, scheduler: syncScheduler, makePath: syncPath, source: $0,
                 isCurrent: { session, epoch in
                     guard let current = await reference.value()?.activeSession() else { return false }
                     return current.session == session && current.epoch == epoch
