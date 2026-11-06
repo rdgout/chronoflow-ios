@@ -342,6 +342,19 @@ class RunnerTests(unittest.TestCase):
             self.assertNotIn('SNAPSHOT_RECORD', e)
             self.assertNotIn('TEST_RUNNER_SNAPSHOT_RECORD', e)
 
+    def test_matrix_profiles_and_system_references_run_once_on_17e(self):
+        selections, _ = runner.schedule('matrix', list(runner.MATRIX))
+        for suite in runner.selectors('profiles') + runner.selectors('reference'):
+            self.assertEqual([alias for alias in selections if suite in selections[alias]], ['17e'])
+        self.assertFalse(set(runner.selectors('profiles') + runner.selectors('reference')) & set(runner.selection('runtime', 'duo')))
+
+    def test_lpt_is_only_used_for_an_explicit_matrix(self):
+        selections, order = runner.schedule('check', ['se', '17e', 'duo'])
+        self.assertEqual(order, ['se', '17e', 'duo'])
+        selections, order = runner.schedule('matrix', ['se', '17e', 'duo'], only=['AppTests/RootNavigationTests'])
+        self.assertEqual(order, ['se', '17e', 'duo'])
+        self.assertTrue(all(s == ['AppTests/RootNavigationTests'] for s in selections.values()))
+
     def test_record_modes_are_isolated_and_paths_cannot_collide(self):
         for mode, expected in [('1', set(runner.SNAPSHOTS[1:])), ('launch', set(runner.SNAPSHOTS[:1])), ('all', set(runner.SNAPSHOTS))]:
             self.setUp()
@@ -561,6 +574,18 @@ class ParallelTests(unittest.TestCase):
             self.assertEqual(runner.workers_for('duo', selected, {}, True), 1)
         with patch.dict(os.environ, TEST_WORKERS='5'):
             with self.assertRaises(ValueError): runner.workers_for('duo', selected, {})
+
+    def test_device_appearance_helper_is_used_only_by_registered_serial_callers(self):
+        for path in (ROOT / 'AppUITests').glob('*.swift'):
+            if 'DeviceAppearance.set' in path.read_text():
+                for suite in discovered_suites(path.parent):
+                    if re.search(r'class\s+' + suite + r'\b', path.read_text()):
+                        self.assertIn('AppUITests/' + suite, runner.SERIAL_TESTS)
+        for suite in runner.SERIAL_TESTS:
+            parts = runner.split_passes('Debug', [suite], 2)
+            self.assertEqual(len(parts), 1)
+            self.assertEqual(parts[0].workers, 1)
+            self.assertEqual(parts[0].suffix, 'serial')
 
     def test_global_mutations_require_serial_registration(self):
         for target in ['AppTests', 'AppUITests']:

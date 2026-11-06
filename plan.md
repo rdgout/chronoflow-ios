@@ -977,7 +977,7 @@ Implementation ticks below describe code and host verification; simulator accept
 
 - [x] 4. Add `make quick` (strict lint, every SwiftPM host suite, runner/resource fixtures), retain targeted selection/reuse, and make the commit gate run host checks/generators then only 17e Debug hosted/profile/UI smoke plus isolated Release. Default runner invocation also selects only 17e; `make matrix` explicitly requests LPT scheduling across seven destinations. `make duo` selects runtime smoke on its dedicated runtime and is opt-in. Build each configuration once; reuse test-without-building and parallel workers with serial device-appearance passes. Host fixtures cover tier graph/default destination/build counts/recording isolation/failure aggregation. Time targets remain unverified below.
 - [x] 5. Update AGENTS.md, CLAUDE.md, Docs/tooling.md and D1c with the dated user decision, current tier commands, profile recording contract, serial appearance trap, UI assertion coverage mapping and explicit pending simulator/visual/device checks. Historical phase results stay historical; Matrix S/A execution counts are superseded, not acceptance claims.
-- [ ] 6. Retain LPT matrix scheduling, isolated parallel workers, event-driven waits and the exact intro-order selector with host regressions.
+- [x] 6. Retain and regression-test measured/static LPT scheduling exclusively for requested matrices, bounded isolated workers, event/stability waits, serial global-state callers, fixture hooks that preserve unittest assertion failures and exact compiled intro-order selection with fresh/warm comparison. Profile snapshots and system-launch/reference suites run once on 17e, including in the requested matrix; targeted runtime requests remain explicit. All 43 host scheduler/tier/isolation/selector fixtures pass. Host gate passes in 26.74 s warm: 94 package tests, 7 TokenGen, 3 AssetGen, 43 runner and 9 resource fixtures; generator/font checks and 6 font/cache fixtures pass. Direct iOS 17 Debug/Release hosted/UI/package type-checks and XcodeGen generation pass. Simulator clone execution, prior SE order-capture diagnosis and check/targeted timing remain open.
 Fix-round validation (2026-11-06): host quick passes in 26.49 s (96 package tests, 7 TokenGen,
 3 AssetGen, 43 runner and 9 resource fixtures); generators/font freshness and six font/cache fixtures pass
 in 5.13 s. Direct iOS 17 Debug/Release hosted/UI/package/Perf type-checking passes. Eight unoptimized Mac blank-guard scans improved from 0.795 s to 0.088 s;
@@ -986,7 +986,7 @@ with all 792 reference filenames retained. The user's failed 1111 s recording an
 acceptance. No replacement simulator timing or order-determinism pass is claimed; the fixes above require
 the targeted container suite first, then recording/comparison/check on 17e. See Docs/tooling.md.
 
-- [ ] Record and visually accept the new profile references on 17e, compare them, and confirm check <300 s / quick <60 s / targeted <180 s. Requires the orchestrator; no simulator result is claimed.
+- [ ] Record and visually accept the new profile references on 17e, compare them, and confirm check <300 s / targeted <180 s. Requires the orchestrator; no simulator result is claimed.
 
 
 ### Phase 6: Audit (`feat/phase-6-audit`)
