@@ -1762,3 +1762,67 @@ the app with -scheme ChronoFlow -configuration DeviceSigned -destination 'generi
 This config adds webcredentials:app.chronoflow.net only on iphoneos for the app target; the signing
 guard requires an actual certificate/team. Debug/Release/simulator/ad-hoc builds have no association.
 AASA deployment/CDN/team/real-device checks remain open.
+
+## Phase 10a review fixes after the Phase 9b rebase — 6 November 2026
+
+The full package host suite passed immediately after the rebase: 198 tests. Only the backend's
+`These sign-in details don't match our records.` maps to the credentials banner; the old Laravel key
+now has a server-fallback regression. The rebased mock's `password_confirmation` mapping is retained.
+
+Auth controls now tint template glyphs with their button foreground, place the token-sized busy
+spinner first in the centered content, suppress empty-field placeholders, and draw the one-point
+field border plus its two-point outset focus ring. Error glyphs are centered. Forgot/Create fill the
+card width when both fit and use generated line height with underlined WelcomeText. Hosted
+AuthControlTests assert glyph ink in both appearances, spinner geometry, empty native fields,
+focus-ring pixels/error alignment and late passkey anchor fallbacks. AuthLayoutTests assert link
+edges on Pro Max/Duo and line height under a narrow Dutch xxLarge proposal.
+
+Auth token generation reads uniquely selected board declarations and component utilities, checks
+shared values for disagreement, and derives typography from the relevant element/named token.
+Source mutations cover repeated gap/height declarations, metrics, focus/opacity utilities, font
+family/weight/size/line height/tracking. Committed token values are numerically unchanged.
+
+SignInModel routes after successful session acceptance even when the caller has been canceled.
+The real SessionController already preserves committed acceptance after the rebase; a gated-sync
+host regression verifies credentials, presence, routing and secret clearing for verified/unverified
+accounts. Stale passkey anchor callbacks return the captured/current window or an empty anchor.
+
+The strict Auth audit retains its original type set and now adds identifier, label, type, language,
+appearance and scroll stage to failure messages, console output and retained attachments. Its issue
+handler always returns false; no Auth contrast exemptions were added. Removing the system
+placeholders and correcting the key foreground address real defects, but identifying the elements
+behind the supplied 24 failures still requires the hosted rerun below.
+
+TokenGen computes sRGB relative-luminance contrast from tokens.json (unrounded color values):
+
+| Pair | Light | Dark |
+|---|---:|---:|
+| `primary-foreground` / `primary` (key and passkey label) | 12.2052:1 | 9.4892:1 |
+| `muted-foreground` / `card` (divider text) | 11.6159:1 | 7.7103:1 |
+| `foreground` / `card` (Forgot) | 17.1478:1 | 14.9195:1 |
+| `dawn-text` / `card` (Create) | 5.4441:1 | 9.2888:1 |
+| `input` / `card` (empty field boundary, outline exterior) | 1.5076:1 | 1.5051:1 |
+| `input` / `background` (outline interior) | 1.4243:1 | 1.6222:1 |
+| `border` / `card` (decorative divider lines) | 1.4140:1 | 1.3951:1 |
+
+The border pairs are board properties, recorded in plan.md OQ 33 for design review. They have not
+been confirmed as the audit's failing elements. Their colors remain as drawn and the audit remains
+strict. Decorative divider lines are reported separately from its passing text.
+
+Final host verification: **200 package tests (23 Auth), 9 TokenGen, 4 AssetGen, 6 font/cache,
+3 signing-guard, 10 resource and 22 runner tests pass**; strict lint and generated-output freshness
+pass. SwiftPM Auth/DataAccess/Launch compilation and direct Swift 6/MainActor type checking of
+AuthControlTests/AuthLayoutTests/AuthSnapshotTests and AuthAuditTests pass at the iOS 17 simulator
+floor. Hosted execution, screenshots and contrast acceptance remain open; no references were recorded.
+The rebase's two explicit xcodebuild recipes above are preserved as separate complete shell blocks.
+
+Run the audit first, then the remaining requested suites on the same build:
+
+```sh
+make targeted DEVICES="17e" ONLY="AppUITests/AuthAuditTests"
+make targeted DEVICES="17e" ONLY="AppTests/AuthControlTests AppTests/AuthLayoutTests AppUITests/SignInTests" REUSE_BUILD=1
+```
+
+The second command is still useful if the first fails: each issue now supplies actionable details in
+`build/test-results/17e/Debug-compare.xcresult`. This runner replaces that result on each pass; retain
+the audit bundle/log before running the second command when diagnosing a failure.

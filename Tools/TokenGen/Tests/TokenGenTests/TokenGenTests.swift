@@ -180,15 +180,19 @@ private var root: URL {
         for (text, background) in [
             ("card-foreground", "card"), ("card-foreground", "auth-error-background"),
             ("muted-foreground", "card"), ("primary-foreground", "primary"), ("dawn-text", "card"),
-            ("destructive", "card"),
+            ("destructive", "card"), ("foreground", "card"), ("foreground", "background"),
         ] {
+            let ratio = try contrast(source.color(text, theme), source.color(background, theme))
+            print("Auth contrast \(theme): \(text) / \(background) = \(ratio):1")
             #expect(
-                try contrast(source.color(text, theme), source.color(background, theme)) >= 4.5,
+                ratio >= 4.5,
                 "\(text) on \(background), \(theme)")
         }
-        #expect(
-            try contrast(source.color("input", theme), source.color("card", theme)) < 3,
-            "The source's control-border contrast conflict remains a design review item")
+        for (border, background) in [("input", "card"), ("input", "background"), ("border", "card")] {
+            let ratio = try contrast(source.color(border, theme), source.color(background, theme))
+            print("Auth board contrast question \(theme): \(border) / \(background) = \(ratio):1")
+            #expect(ratio < 3, "Reassess OQ 33 when the source's border contrast is amended")
+        }
         let mixed = try source.color("auth-error-background", theme)
         let expected = try source.color("card", theme).mixed(with: source.color("destructive", theme), fraction: 0.1)
         #expect(mixed.rgb(p3: true) == expected.rgb(p3: true))

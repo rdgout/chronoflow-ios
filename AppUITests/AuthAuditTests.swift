@@ -20,14 +20,32 @@ nonisolated final class AuthAuditTests: XCTestCase {
                 for _ in 0..<8 where !signIn.isHittable { app.scrollViews.firstMatch.swipeUp() }
                 signIn.tap()
                 XCTAssertTrue(app.staticTexts["auth.heading"].waitForExistence(timeout: 3))
-                try app.performAccessibilityAudit(for: .all.subtracting(.dynamicType))
+                try audit(app, language: language, appearance: appearance, stage: "initial")
                 for id in ["sign-in.passkey", "sign-in.submit", "sign-in.forgot", "sign-in.signup", "sign-in.guest"] {
                     let button = app.buttons[id]
                     for _ in 0..<8 where !button.isHittable { app.scrollViews.firstMatch.swipeUp() }
                     XCTAssertTrue(button.isHittable)
-                    try app.performAccessibilityAudit(for: .all.subtracting(.dynamicType))
+                    try audit(app, language: language, appearance: appearance, stage: id)
                 }
             }
+        }
+    }
+
+    @MainActor private func audit(
+        _ app: XCUIApplication, language: String, appearance: XCUIDevice.Appearance, stage: String
+    ) throws {
+        try app.performAccessibilityAudit(for: .all.subtracting(.dynamicType)) { issue in
+            let message = """
+                Auth accessibility [\(language), \(appearance), \(stage)] \
+                auditType=\(issue.auditType) identifier=\(issue.element?.identifier ?? "<nil>") \
+                label=\(issue.element?.label ?? "<nil>") compactDescription=\(issue.compactDescription)
+                """
+            print(message)
+            let attachment = XCTAttachment(string: message)
+            attachment.lifetime = .keepAlways
+            self.add(attachment)
+            XCTFail(message)
+            return false
         }
     }
 }
