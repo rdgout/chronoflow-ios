@@ -1171,6 +1171,18 @@ Originally ported early onto 9a/9b by user authorization on 2026-11-06; now inte
   Files: `Sources/Auth/{PasskeySignIn,SignInModel}.swift`, `Sources/Auth/Resources/Localizable.xcstrings`, device entitlements/configuration in `Config/` and `project.yml`.
   Test: host DTO/base64url/error mapping tests and mock/UI cancellation/retry/success tests; no live passkey requests. **Open: device-only verification** needs the confirmed Apple team/bundle IDs (OQ 4), a team-signed build and deployed AASA over public HTTPS, including Apple CDN delivery. Backend branch is not deployed; simulator/mock acceptance does not close this check.
 
+#### Phase 10a second fix round (2026-11-06)
+
+Hosted 17e results supplied by the user: AuthLayoutTests and SignInTests pass. AuthControlTests
+reported a 195 vs 187.5 centre; all 24 Auth audits identified only `sign-in.guest` contrast.
+
+- [x] Repair the loading-button test's stale initial host measurements: always lay out after the
+  390-point scene window is resized to the 375-point fixture, wait for stable geometry without
+  waiting for spinner pixels, and compare the inline spinner/glyph/label group with the button
+  frame in the same global coordinate space. Assert the resized button width and retain both
+  token gaps and group-edge checks. AuthButton already centres the board's inline loading group.
+  Files: `AppTests/AuthControlTests.swift`. Hosted execution remains open.
+
 #### Phase 10b: Two-factor code/recovery and auth acceptance (`feat/phase-10b-two-factor`)
 
 Stack on 10a. OQ 28's Two-factor strings must be resolved. Expired challenges have no separate board: use the approved notice/banner policy or defer that visual state under OQ 30.

@@ -87,14 +87,31 @@ nonisolated final class AuthControlTests: XCTestCase {
     @MainActor func testBusySpinnerPrecedesGlyphAndLabelInTheCenteredContent() async throws {
         try await FontRegistry.register()
         var frames: [AuthControlPart: CGRect] = [:]
+        var buttonFrame = CGRect.zero
         let host = try AuthTestHost(
             AuthButton("Sign in with a passkey", busy: true, glyph: .key, measure: { frames[$0] = $1 }) {}
+                .onGeometryChange(for: CGRect.self) {
+                    $0.frame(in: .global)
+                } action: {
+                    buttonFrame = $0
+                }
                 .padding(AuthTokens.cardPadding), size: CGSize(width: 375, height: 812))
         defer { host.close() }
-        for _ in 0..<100 where frames.count != 4 {
+        var previous: [AuthControlPart: CGRect] = [:]
+        var previousButton = CGRect.zero
+        var stable = 0
+        for _ in 0..<100 {
             host.window.layoutIfNeeded()
+            host.controller.view.layoutIfNeeded()
             try await Task.sleep(for: .milliseconds(10))
+            let resized = abs(buttonFrame.width - (host.window.bounds.width - 2 * AuthTokens.cardPadding)) <= 0.5
+            stable =
+                resized && frames.count == 4 && frames == previous && buttonFrame == previousButton ? stable + 1 : 0
+            if stable == 3 { break }
+            previous = frames
+            previousButton = buttonFrame
         }
+        XCTAssertEqual(stable, 3, "Wait for geometry after the host window is resized; the spinner keeps animating")
         let spinner = try XCTUnwrap(frames[.spinner])
         let glyph = try XCTUnwrap(frames[.glyph])
         let label = try XCTUnwrap(frames[.label])
@@ -102,7 +119,8 @@ nonisolated final class AuthControlTests: XCTestCase {
         XCTAssertEqual(spinner.size, CGSize(width: AuthTokens.icon, height: AuthTokens.icon))
         XCTAssertEqual(glyph.minX - spinner.maxX, AuthTokens.fieldGap, accuracy: 0.5)
         XCTAssertEqual(label.minX - glyph.maxX, AuthTokens.fieldGap, accuracy: 0.5)
-        XCTAssertEqual(content.midX, host.window.bounds.midX, accuracy: 0.5)
+        XCTAssertEqual(buttonFrame.width, host.window.bounds.width - 2 * AuthTokens.cardPadding, accuracy: 0.5)
+        XCTAssertEqual(content.midX, buttonFrame.midX, accuracy: 0.5)
         XCTAssertEqual(content.minX, spinner.minX, accuracy: 0.5)
         XCTAssertEqual(content.maxX, label.maxX, accuracy: 0.5)
     }
