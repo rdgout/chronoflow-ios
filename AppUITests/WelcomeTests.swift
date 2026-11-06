@@ -127,7 +127,7 @@ nonisolated final class WelcomeTests: XCTestCase {
     @MainActor
     private func auditTopAndActions(
         _ app: XCUIApplication, language: String, appearance: XCUIDevice.Appearance,
-        types: XCUIAccessibilityAuditType = .all
+        types: XCUIAccessibilityAuditType = WelcomeTests.welcomeAuditTypes
     ) throws {
         try audit(app, language: language, appearance: appearance, types: types)
         scrollTo(app.buttons["welcome.signIn"], in: app)
@@ -162,9 +162,22 @@ nonisolated final class WelcomeTests: XCTestCase {
     }
 
     @MainActor
+    private static var welcomeAuditTypes: XCUIAccessibilityAuditType { .all.subtracting(.dynamicType) }
+
+    @MainActor
+    func testAuditTypesRespectTheUserDynamicTypeCap() {
+        XCTAssertEqual(
+            Self.welcomeAuditTypes, XCUIAccessibilityAuditType.all.subtracting(.dynamicType),
+            "User decision 2026-11-06: cap Dynamic Type at xxLarge; audit every other accessibility type")
+        XCTAssertFalse(
+            Self.welcomeAuditTypes.contains(.dynamicType),
+            "User decision 2026-11-06: xxLarge is the maximum supported Dynamic Type size")
+    }
+
+    @MainActor
     private func audit(
         _ app: XCUIApplication, language: String, appearance: XCUIDevice.Appearance,
-        types: XCUIAccessibilityAuditType = .all
+        types: XCUIAccessibilityAuditType = WelcomeTests.welcomeAuditTypes
     ) throws {
         try app.performAccessibilityAudit(for: types) { issue in
             let element = issue.element

@@ -551,6 +551,16 @@ The supplied iPhone 18 Pro app screenshots render the actual Welcome in both the
 
 - [ ] Record and accept replacement Welcome baselines after the cap and hosted capture changes on every D1c device, including SE, 17e and Duo. Compare all references, pass the strict audits, make check and make duo; visual approval remains open. Only the four confirmed board-contrast identifiers (eyebrow, headline, copy, signIn) are allowed; all other issues fail.
 
+### Phase 5 fix round 3 (2026-11-06)
+
+The orchestrator reports that hosted Welcome recording succeeded on all seven D1c devices. Comparison
+found the expected Dynamic Type cap audit failures and one intermittent dark English 2400 ms intro
+mismatch on iPhone18,4. This round's revised comparison, make check and make duo remain open.
+
+- [x] Audit all accessibility types except `.dynamicType`, honoring the user's 2026-11-06 xxLarge cap. Assert the exact audit type set with that decision in the failure message; retain the four board-contrast pairs and strict handling of every other reported issue.
+  Files: `AppUITests/WelcomeTests.swift`.
+  Test: audit selection and exception-policy tests written; simulator execution remains open.
+
 ### Phase 4 review fixes (after Phase 5)
 
 - [x] Keep `-cf.mode ready` and validated `-cf.mainThreadStall` diagnostics in Release for the D3 procedure. Keep slow/Welcome modes, freeze, readyAt and all readiness overrides Debug-only; Release readiness remains signed out without Keychain access or route-name placeholders. Extend the isolated Release tests and document why the device proof can observe the 500 ms stall.
