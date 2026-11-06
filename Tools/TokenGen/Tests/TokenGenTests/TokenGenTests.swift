@@ -10,6 +10,16 @@ private var root: URL {
         .deletingLastPathComponent().deletingLastPathComponent()
 }
 
+@Test func welcomeMetricsComeFromTheBoard() throws {
+    let code = String(decoding: try welcomeTokens(root: root), as: UTF8.self)
+    for (name, value) in [("topPadding", "64"), ("moonSize", "28"), ("cardRadius", "22"), ("buttonHeight", "52")] {
+        #expect(code.contains("var \(name): CGFloat { \(value) }"))
+    }
+    let committed = try Data(
+        contentsOf: root.appending(path: "Packages/ChronoFlowKit/Sources/DesignSystem/WelcomeTokens.generated.swift"))
+    #expect(committed == Data(code.utf8))
+}
+
 @Test func specColorsAndAliases() throws {
     let source = try DesignSource(root: root)
     let hexes = [

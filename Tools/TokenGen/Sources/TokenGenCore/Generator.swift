@@ -116,6 +116,7 @@ public func tokenOutputs(root: URL) throws -> [String: Data] {
         "nonisolated public enum PatternTokens { public static var radius: Double { \(radius) }; public static var fadeRadius: Double { \(fade) }; public static var tile: Double { \(tile) }; public static var alpha: Double { \(alpha) / 100 } }\n"
     outputs["Packages/ChronoFlowKit/Sources/DesignSystem/CfSky.generated.swift"] = try formattedSwift(code, root: root)
     outputs["Tools/TokenGen/TokenGenReport.md"] = Data(report.utf8)
+    outputs["Packages/ChronoFlowKit/Sources/DesignSystem/WelcomeTokens.generated.swift"] = try welcomeTokens(root: root)
     return outputs
 }
 

@@ -2,6 +2,7 @@ import AppCore
 import DesignSystem
 import Observation
 import SwiftUI
+import Welcome
 
 @Observable
 final class RootNavigator: Navigator {
@@ -25,11 +26,15 @@ struct RootView: View {
 
     @ViewBuilder private var content: some View {
         if let route = navigator.route {
-            #if DEBUG
-                RoutePlaceholder(route: route)
-            #else
-                EmptyView()
-            #endif
+            if route == .welcome {
+                WelcomeView()
+            } else {
+                #if DEBUG
+                    RoutePlaceholder(route: route)
+                #else
+                    EmptyView()
+                #endif
+            }
         }
     }
 }

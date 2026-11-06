@@ -4,7 +4,7 @@ nonisolated final class ReadinessTests: XCTestCase {
     @MainActor
     func testSignedOutHandsOffToWelcome() {
         let app = launch(["-cf.session", "out"])
-        XCTAssertTrue(app.staticTexts["route.welcome"].waitForExistence(timeout: 6))
+        XCTAssertTrue(app.staticTexts["welcome.wordmark"].waitForExistence(timeout: 6))
         XCTAssertFalse(app.images["launch.opening"].exists)
     }
 
@@ -57,10 +57,10 @@ nonisolated final class ReadinessTests: XCTestCase {
     @MainActor
     func testUnknownSessionDefaultsToWelcomeAndReduceMotionCanSkipTheOpeningWait() {
         let unknown = launch(["-cf.session", "never"])
-        XCTAssertTrue(unknown.staticTexts["route.welcome"].waitForExistence(timeout: 12))
+        XCTAssertTrue(unknown.staticTexts["welcome.wordmark"].waitForExistence(timeout: 12))
         unknown.terminate()
         let reduced = launch(["-cf.session", "out", "-cf.reduceMotion"])
-        XCTAssertTrue(reduced.staticTexts["route.welcome"].waitForExistence(timeout: 4))
+        XCTAssertTrue(reduced.staticTexts["welcome.wordmark"].waitForExistence(timeout: 4))
         XCTAssertFalse(reduced.images["launch.opening"].exists)
     }
 

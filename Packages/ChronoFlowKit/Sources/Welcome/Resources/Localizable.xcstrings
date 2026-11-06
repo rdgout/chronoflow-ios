@@ -1,5 +1,108 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {},
-  "version" : "1.0"
+  "sourceLanguage": "en",
+  "strings": {
+    "ChronoFlow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChronoFlow"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChronoFlow"
+          }
+        }
+      }
+    },
+    "Jet-lag planner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jet-lag planner"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jetlagplanner"
+          }
+        }
+      }
+    },
+    "Plan your clock shift for your next trip": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan your clock shift for your next trip"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan de verschuiving van je biologische klok voor je volgende reis"
+          }
+        }
+      }
+    },
+    "Tell us your flights and how you sleep. You get a day-by-day plan for sleep, light and caffeine that helps your body clock shift.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tell us your flights and how you sleep. You get a day-by-day plan for sleep, light and caffeine that helps your body clock shift."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vertel ons welke vluchten je neemt en hoe je slaapt. Je krijgt een dagplan voor slaap, licht en cafeïne dat je biologische klok helpt verschuiven."
+          }
+        }
+      }
+    },
+    "Plan my trip": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan my trip"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan mijn reis"
+          }
+        }
+      }
+    },
+    "Sign in": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inloggen"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
 }

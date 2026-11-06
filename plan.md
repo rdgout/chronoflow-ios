@@ -477,11 +477,12 @@ Defaults authorized for OQ 7, 8, 9, 15 and 16; confirmation remains open.
 
 ### Phase 5: Welcome, intro and moon hand-over (`feat/phase-5-welcome`)
 
-Blocked by OQ 10, 12 (and OQ 6 for the moon cross-fade).
+OQ 10 scaling settled by the user on 2026-11-06: cap at xxLarge. Defaults authorized for its padding/scrolling, OQ 12 and OQ 6; confirmation remains open.
 
-- [ ] `WelcomeView` per layout and typography, one `CfSky`, scroll view; six strings with `nl` in the same commit; header trait; reading order.
+- [x] `WelcomeView` per layout and typography, one `CfSky`, scroll view; six strings with `nl` in the same commit; header trait; reading order.
   Files: `Sources/Welcome/WelcomeView.swift`, `Sources/Welcome/WelcomeBrand.swift`, `Sources/DesignSystem/Buttons.swift`, `Sources/Welcome/Resources/Localizable.xcstrings`.
   Test: snapshots on the D1c matrix (iPhone Duo required), light/dark, en/nl, default and OQ 10 sizes; on 390 × 844 the board geometry above; on Duo nothing sits under the side rail or horizontal insets.
+  Note: implemented the Main board with generated metrics, one sky, full-height dots, scroll/space-between groups, exact typography, header trait and source reading order. All six Dutch values match RN `src/i18n/locales/nl.json`. (OQ 10 default assumed, confirm). RN padding and scrolling apply to all four safe insets. The user settled scaling on 2026-11-06: cap centrally at xxLarge, including xxxLarge and AX1–AX5. Test default/xxLarge and AX5 equality on every D1c device. Snapshot recording/comparison, board-frame approval and simulator geometry validation remain open; no new baselines are claimed.
 - [ ] Moon anchor → `MoonAnchorStore` → `LaunchEvent.moonAnchor`.
   Files: `Sources/AppCore/MoonAnchorStore.swift`, `Sources/Welcome/WelcomeBrand.swift`.
   Test: UI test at `-cf.freezeAt 2300`: flying moon centre within 0.5 pt of Welcome's moon on every D1c device (iPhone Duo required), and at the largest agreed text size.
