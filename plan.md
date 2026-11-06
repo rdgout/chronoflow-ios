@@ -433,6 +433,9 @@ Device runs need OQ 4 (team) and OQ 14 (device). Phase 3c remains gated on the p
 - [x] Add the `--snapshots` D1c runner mode with compare-only default, optional record pass only under `SNAPSHOT_RECORD=1`, explicit en/US, failure continuation and final `make check` / `make duo`. Fixture tests cover recording isolation, all devices, failures and Duo runtime selection.
   Files: `Scripts/launch-simulators.py`, `Tests/test_launch_simulators.py`.
 
+- [x] Document the committed snapshot entry point, explicit recording/language rules, geometry limits and the orchestrator's dated results.
+  Files: `Docs/tooling.md`.
+
 ### Phase 4: Readiness and hand-off (`feat/phase-4-readiness`)
 
 Blocked by OQ 7, 8, 9, 15, 16.

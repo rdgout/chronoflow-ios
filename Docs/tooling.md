@@ -9,7 +9,7 @@ MainActor; AppCore is nonisolated.
 Run `Scripts/ci.sh` from a checkout to generate the ignored Xcode project and run `make check`.
 `make check` runs strict formatting lint, generator freshness and host tests, hosted launch and AppCore
 tests and the app window UI test, then the DesignSystem, Launch and Welcome suites. DesignSystem includes four approved
-primitive image baselines; launch snapshots arrive in Phase 3c.
+primitive image baselines; Launch includes the Phase 3c splash baselines.
 
 A clean clone needs network access for `make check` / `Scripts/ci.sh`: SwiftPM fetches the pinned
 SnapshotTesting dependency from GitHub; `Tools/fonts.sh` installs fonttools 4.60.1 and brotli 1.1.0
@@ -548,3 +548,52 @@ rerun is recorded. The device D3 proof remains open in `Docs/perf/2026-11-06-d3-
 Defaults carried into this phase: OQ 6 dots/fade/no moon cross-fade/stars as drawn;
 OQ 10 RN fallback padding/row height; OQ 11 width-scaled bottom anchoring;
 OQ 14 proposed device budget. There are no additional undesigned screens or states.
+
+## Phase 3c splash snapshots
+
+Compare the eleven Phase 3c frames in light and dark on every D1c simulator:
+
+```sh
+python3 -I Scripts/launch-simulators.py --snapshots
+```
+
+The runner resolves each device by type/runtime (Duo uses iPhone19-4), continues after failures,
+reports PASS/FAIL per device, then attempts both `make check` and `make duo`. It compares existing
+baselines by default. To deliberately record before the comparison pass:
+
+```sh
+SNAPSHOT_RECORD=1 python3 -I Scripts/launch-simulators.py --snapshots
+```
+
+The record pass forwards `TEST_RUNNER_SNAPSHOT_RECORD=1` to xcodebuild, which exposes it to tests as
+`SNAPSHOT_RECORD`. Comparison and final checks clear both variables. Missing baselines fail without
+creating a reference. Per resolved device, comparison runs:
+
+```sh
+xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData \
+  -onlyUsePackageVersionsFromResolvedFile -scheme ChronoFlow \
+  -destination "platform=iOS Simulator,id=$device" \
+  -testLanguage en -testRegion US -only-testing:LaunchTests test
+```
+
+`make test` and `make snapshots` also pin en/US. Slow snapshot text resolves the Launch catalog's
+explicit `en` localization independently of runner flags. Phase 3c has no Dutch snapshot requirement.
+PNG names include the simulator model, window dimensions, own display scale, appearance, mode and
+time. The sampler sets model values and static dot replicas, then renders through a transparent
+parent so exit scale and opacity are included. Welcome content snapshots belong to Phase 5.
+
+Geometry checks use the running window and all four safe-area insets, with asymmetric and side-only
+additional insets. A zero top inset is valid on SE and Duo. Visible moon glyph, wordmark, status ink
+and sun are checked against the window and horizontal safe area. The path's designed 10 pt bleed is
+preserved and checked for vertical bounds and container clipping; full safe-area containment lacks a
+design/default and stays open. Host tests assert the frame list, ending times, safe-area landing, all
+154 PNGs' coverage/dimensions and S1: status top 518 is below apex 512.5 at height 844; top 533 is above
+apex 542.5 at height 874.
+
+The orchestrator reported on **2026-11-06**: 154 baselines recorded; record/comparison passed on 17e,
+17, Air, 18 Pro and 18 Pro Max. SE and Duo snapshots matched, but geometry failed on the top-inset
+assumption. `make duo` passed. `make check` failed on four 17e slow frames because the host selected
+Dutch. The zero-inset and explicit-language corrections are implemented; revised simulator validation
+is open. PNG approval and side-by-side review stay open because `_design/frames/` has not been exported.
+Snapshot work precedes the physical-device D3 proof by user direction; repeat review if that proof
+changes the layer tree. No device performance result is claimed.
