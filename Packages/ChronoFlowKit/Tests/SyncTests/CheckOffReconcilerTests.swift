@@ -74,19 +74,55 @@ import Testing
         #expect(try await OutboxRepository(database: store.database).pending().count == 1)
         try await store.close()
     }
-    @Test func staleResponseRefreshesOnceAndThenDefers() async throws {
+    @Test(arguments: [
+        DataFailure.conflict(status: 409),
+        .validation(fields: ["plan_input_hash": FieldMessage(key: "invalid hash")], status: 422),
+        .validation(
+            fields: ["form": FieldMessage(key: "This plan has changed. Refresh it before marking this step.")],
+            status: 422),
+    ])
+    func staleResponseRefreshesOnceAndThenDefers(_ failure: DataFailure) async throws {
         let store = try await SyncStore()
         let source = ScriptedSource()
         _ = try await store.enqueue(.checkOff(check()))
-        await source.configure(failures: [.conflict(status: 409), .conflict(status: 409)])
+        await source.configure(failures: [failure, failure])
         let result = try await OutboxFlusher(database: store.database, source: source).run(epoch: store.epoch)
         #expect(result.retryAfter == 1)
+        #expect(result.refusals.isEmpty)
         #expect(await source.calls == ["send", "detail", "send"])
-        #expect(try await OutboxRepository(database: store.database).pending().first?.attempts == 1)
-        await source.configure(failures: [.conflict(status: 409), .conflict(status: 409)])
+        let pending = try await OutboxRepository(database: store.database).pending()
+        #expect(pending.count == 1)
+        #expect(pending.first?.attempts == 1)
+        #expect(pending.first?.lastError == (failure.status == 409 ? "conflict" : "validation"))
+        #expect(
+            try await SettingsRepository(database: store.database).settings().allSatisfy { $0.section != "syncFailure" }
+        )
+        await source.configure(failures: [failure, failure])
         let retry = try await OutboxFlusher(database: store.database, source: source).run(epoch: store.epoch)
         #expect(retry.retryAfter == 2)
+        #expect(retry.refusals.isEmpty)
+        #expect(await source.calls == ["send", "detail", "send", "send", "detail", "send"])
+        #expect(
+            try await SettingsRepository(database: store.database).settings().allSatisfy { $0.section != "syncFailure" }
+        )
         #expect(try await OutboxRepository(database: store.database).pending().first?.attempts == 2)
+        try await store.close()
+    }
+    @Test func nonStaleValidationRefusesCheckOff() async throws {
+        let store = try await SyncStore()
+        let source = ScriptedSource()
+        let row = try await store.enqueue(.checkOff(check()))
+        await source.configure(failures: [
+            .validation(fields: ["status": FieldMessage(key: "invalid status")], status: 422)
+        ])
+        let result = try await OutboxFlusher(database: store.database, source: source).run(epoch: store.epoch)
+        #expect(await source.calls == ["send"])
+        #expect(result.refusals.map(\.id) == [row.id])
+        #expect(result.refusals.first?.status == 422)
+        #expect(result.retryAfter == nil)
+        #expect(try await OutboxRepository(database: store.database).pending().isEmpty)
+        #expect(
+            try await SettingsRepository(database: store.database).settings().contains { $0.section == "syncFailure" })
         try await store.close()
     }
     @Test func malformedDetailCannotProveStepDisappeared() async throws {
