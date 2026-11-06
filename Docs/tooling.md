@@ -1049,3 +1049,8 @@ it reads back directory/DB/WAL/SHM protection; the simulator returns nil, so it 
 setting the same class does not throw. Hosted execution on one 17e and physical lock proof remain open.
 macOS 27.2's backup URL getter reports false despite writing the exclusion xattr; host tests verify that marker.
 No simulator run is claimed. The seven-simulator matrix runs only when the user asks for it.
+
+Records/repositories now retain unknown JSON members and expose off-main GRDB value streams.
+AccountModel lives in LocalStore with an app alias, allowing host tests for unknown/empty/loaded/error,
+atomic delivery, cancellation and account replacement. Close cancels observers before draining the pool.
+No view is mounted and no new hosted observation suite is needed under the user's host-test override.

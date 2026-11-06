@@ -38,7 +38,7 @@ SUITES = {
     },
     "AppCoreTests": {"host": ("CatalogTests", "CubicBezierTests", "LaunchCoordinatorTests", "LaunchIntroTests", "LaunchLifecycleTests",
                                  "LaunchReadinessTests", "LaunchSignpostsTests", "MoonAnchorStoreTests", "MoonTargetTests", "SessionStoreTests", "SmokeTests")},
-    "LocalStoreTests": {"host": ("SchemaV1Tests", "AccountDatabaseTests")},
+    "LocalStoreTests": {"host": ("SchemaV1Tests", "AccountDatabaseTests", "RecordsTests", "RepositoryObservationTests")},
     "DesignSystemTests": {"logic": ("ExactLineTextLayoutTests", "PrimitiveTests", "SmokeTests", "TypographyTests"),
                           "matrix": ("LaunchImagesTests",)},
     "LaunchTests": {"logic": ("FlightPathTests", "LaunchGlowTests", "LaunchLayoutTests", "LaunchRadialLayerTests", "LaunchSnapshotCoverageTests",

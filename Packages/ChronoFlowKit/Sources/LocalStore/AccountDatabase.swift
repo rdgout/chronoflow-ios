@@ -10,8 +10,10 @@ public actor AccountDatabase {
     private let applicationSupport: URL
     public let namespace: StorageNamespace
     private var pool: DatabasePool?
+    private var observations: [UUID: @Sendable () -> Void] = [:]
     public private(set) var accountID: AccountID?
     private var boundID: AccountID?
+    var observationCount: Int { observations.count }
     private let migrate: @Sendable (Database) throws -> Void
 
     public init(applicationSupport: URL, namespace: StorageNamespace = .api) {
@@ -87,7 +89,31 @@ public actor AccountDatabase {
         return try await pool.write(updates)
     }
 
+    public func observe<Value: Sendable>(
+        _ fetch: @Sendable @escaping (Database) throws -> Value
+    ) throws -> AsyncThrowingStream<Value, any Error> {
+        guard let pool else { throw StoreFailure.closed }
+        let id = UUID()
+        let (stream, continuation) = AsyncThrowingStream<Value, any Error>.makeStream(
+            bufferingPolicy: .bufferingNewest(1))
+        let lifetime = ObservationLifetime(continuation)
+        observations[id] = { lifetime.cancel() }
+        continuation.onTermination = { [weak self, weak lifetime] _ in
+            lifetime?.cancel()
+            Task { await self?.removeObservation(id) }
+        }
+        let cancellable = ValueObservation.tracking(fetch).start(
+            in: pool, scheduling: .async(onQueue: DispatchQueue(label: "net.chronoflow.store.observation")),
+            onError: { lifetime.fail($0) }, onChange: { lifetime.yield($0) })
+        lifetime.install(cancellable)
+        return stream
+    }
+
+    private func removeObservation(_ id: UUID) { observations.removeValue(forKey: id)?() }
+
     public func close() throws {
+        for cancel in observations.values { cancel() }
+        observations.removeAll()
         guard let pool else { return }
         try pool.close()
         self.pool = nil
