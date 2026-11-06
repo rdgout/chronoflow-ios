@@ -8,7 +8,7 @@ MainActor; AppCore is nonisolated.
 
 Run `Scripts/ci.sh` from a checkout to generate the ignored Xcode project and run `make check`.
 `make check` runs strict formatting lint, generator freshness and host tests, hosted launch and AppCore
-tests and the app window UI test, then the DesignSystem, Launch and Welcome suites. DesignSystem includes four approved
+tests and the app window UI test, then the DesignSystem, Launch, Welcome and hosted Welcome snapshot suites. DesignSystem includes four approved
 primitive image baselines; Launch includes the Phase 3c splash baselines.
 
 A clean clone needs network access for `make check` / `Scripts/ci.sh`: SwiftPM fetches the pinned
@@ -168,11 +168,13 @@ a repo-local temporary directory and `CFFIXED_USER_HOME` for Foundation's cache 
 `HOME` unchanged. Font tooling uses a repo-local venv, temporary directory and pip cache. Use the
 standard SwiftPM build system; the deprecated native build system is not part of this workflow.
 
-UIKit typography requires a nonoptional `UITraitCollection` argument; callers pass their view's traits
-with its effective content-size category. On iOS 27.2, the ambient category read by the previous nil-traits
+UIKit typography requires a nonoptional `UITraitCollection` argument; callers pass their view's traits.
+ContentSizeCap clamps explicit categories at xxLarge before metrics are evaluated. On iOS 27.2,
+the ambient category read by the previous nil-traits
 path did not follow `performAsCurrent` for an accessibility category, returning 16 pt instead of 45 pt.
 There is no ambient category lookup or default argument now. An explicit `.large` returns the base font;
-other categories are passed to `UIFontMetrics`. The splash stays fixed in all categories. Skipping metrics
+other categories through xxLarge are passed to `UIFontMetrics`. The splash wordmark stays fixed;
+the status uses capped metrics. Skipping metrics
 at `.large` keeps the exact design size and avoids introducing screen-scale-dependent font rounding.
 A host probe on this toolchain also reproduced a Swift Testing
 mixed-type equality failure: ordinary `CGFloat(32) == Double(32)` is true, while the same expression
@@ -617,8 +619,9 @@ by the container fade's CATransaction completion, isolated from the repeating st
 
 The native Keychain service is `net.chronoflow.app.native`, account `session`, with JSON keys
 `token` and `accountId`. A malformed value is deleted and resolves signed out. No RN migration
-or URL scheme is enabled. Release always resolves signed out and ignores diagnostic ending,
-freeze, stall and readiness overrides. Debug destinations use route-name placeholders; Release
+or URL scheme is enabled. Release always resolves signed out. It parses `-cf.mode ready` and a validated
+`-cf.mainThreadStall` for the physical-device D3 proof; slow/Welcome modes, freeze, readyAt and
+readiness overrides are Debug-only. Debug destinations use route-name placeholders; Release
 renders no placeholder text. Welcome content and anchor publication belong to Phase 5.
 
 Debug readiness controls:
@@ -631,7 +634,9 @@ Debug readiness controls:
   the forced first-load path while preserving the slow status.
 
 Existing `-cf.mode` and `-cf.freezeAt` diagnostics bypass readiness in Debug to retain frozen
-scene comparisons. The opening-window UI tests freeze at zero rather than racing the hand-off.
+scene comparisons. Release supports only ready playback and the main-thread stall; the isolated
+Release suite asserts both the enabled diagnostic flags and signed-out readiness restriction.
+The opening-window UI tests freeze at zero rather than racing the hand-off.
 
 Run all Phase 4 hosted, readiness UI, existing window/parity, AppCore, Launch and DesignSystem
 checks on all seven D1c devices:
@@ -666,19 +671,22 @@ make check
 make duo
 ```
 
-Phase 4 simulator validation is pending. The physical-device D3 proof, status-bar observation
-and performance measurements remain open in their existing plan tasks.
+The orchestrator verified Phase 4 on **2026-11-06**: all seven D1c devices passed the Debug
+suites plus the isolated Release check, and `make check` and `make duo` passed. OQ confirmations,
+the physical-device D3 proof, status-bar observation and performance measurements remain open.
 
-The orchestrator's **2026-11-06** Debug pass reported three failures: unsigned simulator Keychain
-access (-34018), a missing manual-clock sleep and readiness update, and immediate weak-reference
-assertions after window teardown. Simulator signing is now ad-hoc. The stub's synchronous overload
-selected the protocol's one-value stream on concrete async calls. It now implements the async
-requirement explicitly; tests cover concrete and protocol calls, the absolute
-manual-clock deadline, an already-passed deadline and cancellation. Lifetime tests drain the run loop
-and scoped autorelease pools for up to two seconds, then still require both objects to deallocate.
-The completion path uses weak captures and clears the delegate's window/controller references.
-Both normal hand-off and disconnection during a pending exit have lifetime coverage. Revised
-simulator validation, `make check` and `make duo` are pending.
+Simulator signing is ad-hoc for hosted Keychain access. The stub implements the async stored-data
+stream requirement explicitly for both concrete and protocol callers. Tests cover the absolute
+manual-clock deadline, already-passed deadlines and cancellation. Lifetime tests drain the run loop
+and scoped autorelease pools for up to two seconds, then require both objects to deallocate.
+The completion path uses weak captures and clears both window/controller references, including
+on disconnection during a pending exit.
+
+The Phase 4 review adds cancellation tests that stop with two signed-in or three signed-out
+sleeps still pending, require them to drain before any clock advance, and reject later callbacks.
+A separate unresolved session must observe task cancellation. Release diagnostic parsing tests
+cover the D3 flags while retaining signed-out readiness and Debug-only overrides. These new checks
+need the revised matrix run; the dated Phase 4 results above cover the previously reviewed tree.
 
 Validate the Release signed-out restriction separately on the pinned simulator:
 

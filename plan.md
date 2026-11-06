@@ -48,7 +48,7 @@ SplashSpec's prose gives the rule; keyframes fill what the prose leaves out. Whe
 
 | # | Conflict | Native default | Why |
 |---|---|---|---|
-| S1 | Moon centre: board y 392 (30 pt above centre); prose "centred" | Centred in the window | Launch screen centres it and frame 0 must match (RN same). **Consequence on 390 × 844:** wordmark moves 432→462 (inside the band, which starts at 470) and status 488→518, below the path apex 512.5, so the path runs between wordmark and status; on 874 pt the status is above the apex (533 vs 542.5). The relation flips by device. |
+| S1 | Moon centre: board y 392 (30 pt above centre); prose "centred" | Centred in the window | Launch screen centres it and frame 0 must match (RN same). **Consequence on 390 × 844:** wordmark moves 432→462 (inside the band, which starts at 470) and status 488→518, below the path apex 512.5, so the path runs between wordmark and status; on 874 pt the status starts at 533 and its text-frame/replicator union extends below apex 542.5: **path crosses the status text at 874**. Flagged for board review; the relation flips by device. |
 | S2 | Stars at 0.55 at 0 ms; prose "0–300 static first frame, matches the system launch screen" and "300–1200 stars fade out" | 0–300 static (moon only). Stars stay at 0 throughout the opening. | The prose's static launch frame wins; any star fade-in would be invented. RN instead fades 0→0.55 over 0–300 (alternative in OQ 5). |
 | S3 | Ready hand-off: keyframes 1700–2100; prose "1500 Animation done … +400 Hand-off" | 1500–1900 | Prose rule (RN same). The board's "1900 ms · Hand-off" frame renders keyframes and shows mid-lift; it maps to native 1700. |
 | S4 | Moon flight: keyframes ease-out; prose ease-in-out | ease-in-out | Prose rule (RN same). |
@@ -327,7 +327,7 @@ Unblocked (OQ 1–4 settled 5 Nov).
 - [ ] Export board reference frames: render each board in the canvas (Chrome) at the board key frames (ready 0/700/1400/1900, slow 2600/4900, welcome 1500/1950/2400/3300, Welcome final), light and dark; record the method. Notes: board dots are not frozen (`dot()` ignores `frozen`), so dot opacity is excluded; `Main` ignores `at` and loops its intro, so Welcome content at 2400/3300 is compared against the `Main` keyframes, not the render.
   Files: `_design/frames/**`, `_design/frames/README.md`.
   Test: a frame exists for every listed time and theme.
-- [x] XcodeGen 2.46.0 is installed. `project.yml`: target `ChronoFlow` (iOS 17.0, iPhone, portrait, Swift 6, Debug ID `net.chronoflow.app.native`, `Local.xcconfig` include for `DEVELOPMENT_TEAM`), `AppUITests`, `PerfUITests`; schemes `ChronoFlow` and `Perf` (Release). `.gitignore`: `*.xcodeproj`, `DerivedData`, `build/`, `Local.xcconfig`; `Local.xcconfig.example` committed. Verify XcodeGen output opens and builds in Xcode 27.2. (Orchestrator verified generation and full build via `make generate && make check`, 5 Nov; AppIcon explicitly unset per OQ 18. See `Docs/tooling.md`.)
+- [x] XcodeGen 2.46.0 is installed. `project.yml`: target `ChronoFlow` (iOS 17.0, iPhone, portrait, Swift 6, Debug ID `net.chronoflow.app.native`, `Local.xcconfig` include for `DEVELOPMENT_TEAM`), `AppUITests`, `PerfUITests`; schemes `ChronoFlow` and `Perf` (Release). `.gitignore`: `*.xcodeproj`, `DerivedData`, `build/`, `Local.xcconfig`; `Local.xcconfig.example` committed. Verify XcodeGen output opens and builds in Xcode 27.2. (Orchestrator verified generation and full build via `make generate && make check`, 5 Nov; AppIcon was unset for that run; OQ 18 icon now settled on RN's 1024 px asset. See `Docs/tooling.md`.)
   Files: `project.yml`, `.gitignore`, `Config/Local.xcconfig.example`.
   Test: `make generate && xcodebuild -scheme ChronoFlow -destination 'platform=iOS Simulator,name=iPhone 17e' build`.
 - [x] App shell: `AppDelegate`, `SceneDelegate` (creates the main window with `UIHostingController(rootView: RootView())`), empty `RootView`. (Build and launch verified by the orchestrator's passing window UI tests, 5 Nov.)
@@ -452,27 +452,27 @@ Verified by the orchestrator on 2026-11-06: all seven D1c devices, make check an
 
 ### Phase 4: Readiness and hand-off (`feat/phase-4-readiness`)
 
-Defaults authorized for OQ 7, 8, 9, 15 and 16; confirmation remains open.
+Defaults authorized for OQ 7, 8, 9, 15 and 16; confirmation remains open. Verified by the orchestrator on 2026-11-06: all seven D1c devices passed Debug plus the isolated Release check; `make check` and `make duo` passed.
 
 - [x] `Route` (`.welcome`, `.today`, `.signIn`, `.guestWizard`, `.terms`, `.verify`, `.walkthrough`) and `Navigator`; `RootView` mounts the gate's route from its first frame; Debug-only route screen per OQ 8.
   Files: `Sources/AppCore/Route.swift`, `App/RootView.swift`, `App/Debug/RoutePlaceholder.swift`.
-  Test: hosted navigator tests cover every route and the unresolved state; Phase 4 UI tests read route identifiers after hand-off. (OQ 8 default assumed, confirm). Route seam plus Debug-only route-name placeholders, including the temporary Welcome seam until Phase 5; Release renders no placeholder text. Simulator validation is open.
+  Test: hosted navigator tests cover every route and the unresolved state; Phase 4 UI tests read route identifiers after hand-off. (OQ 8 default assumed, confirm). Route seam plus Debug-only route-name placeholders, including the temporary Welcome seam until Phase 5; Release renders no placeholder text. Verified by the orchestrator on 2026-11-06: full D1c Debug plus isolated Release, `make check` and `make duo` passed.
 - [x] Reducer, `LaunchClock` (`CACurrentMediaTime`, `t0` from D3), `ManualLaunchClock`.
   Files: `Sources/AppCore/LaunchReadiness.swift`, `Sources/AppCore/LaunchCoordinator.swift`, `Sources/AppCore/LaunchClock.swift`.
-  Note: pure reducer, media/manual clocks and staged coordinator are implemented. A cancellable stored-data stream extends the one-shot seam so a first load can move false → true. (OQ 7 default assumed, confirm). Late signed-out starts at resolution; unknown session defaults signed out at eight seconds. Reducer/clock/coordinator tests are written; simulator validation is open.
+  Note: pure reducer, media/manual clocks and staged coordinator are implemented. A cancellable stored-data stream extends the one-shot seam so a first load can move false → true. (OQ 7 default assumed, confirm). Late signed-out starts at resolution; unknown session defaults signed out at eight seconds. Reducer/clock/coordinator tests are written; the orchestrator verified the full D1c Debug plus isolated Release checks, `make check` and `make duo` on 2026-11-06.
   Tests: ending chosen once; hand-off waits for animation and readiness; signed out ready at once; terms/verify/walkthrough ready without data; ready before 1500 emits exit at 1500; status committed at 2000 only when `hasStoredData == false`, cancelled if ready first, never for `nil`, latched; 8 s forces readiness and `allowFirstLoad` once for the current session; unresolved session at 8 s → OQ 7 default; welcome exit emitted on first anchor, re-emitted on anchor change before W, fallback at W − 50; Reduce Motion skips the wait; exit once; `PendingLaunchIntent` never changes the ending.
 - [x] `SessionStore` + `KeychainSessionStore` (native service `net.chronoflow.app.native`, account `session`, JSON `{token, accountId}`; malformed → delete, signed out). `StubReadiness` via `-cf.session`, `-cf.gate`, `-cf.stored yes|no|never`, `-cf.readyDelay <s>`. Release wiring: signed out always (only the perf path runs Release).
   Files: `Sources/AppCore/SessionStore.swift`, `App/Readiness/KeychainSessionStore.swift`, `App/Readiness/StubReadiness.swift`, `App/LaunchArguments.swift`, `project.yml`, `Tests/test_launch_resources.py`.
-  Test: protocol-backed in-memory parse/delete tests, hosted Keychain round-trip/malformed deletion, Debug parser/delayed-update and Release override-isolation tests are written. Simulator signing is ad-hoc without a team so the hosted app can use Keychain. The stub explicitly implements the async stream requirement; concrete and protocol calls share the injected absolute deadline. Tests use sleep-registration expectations, cover passed deadlines/cancellation and keep each iterator within one detached task. The orchestrator's 6 Nov Debug pass found unsigned Keychain access and a missing manual-clock sleep/readiness update; revised simulator validation is open. (OQ 9 default assumed, confirm). Native-only key; migration deferred until a bundle switch. (OQ 15 default assumed, confirm). No URL scheme. Release always resolves signed out; the readiness store performs no synchronous I/O on the main actor.
+  Test: protocol-backed in-memory parse/delete tests, hosted Keychain round-trip/malformed deletion, Debug parser/delayed-update and Release override-isolation tests are written. Simulator signing is ad-hoc without a team so the hosted app can use Keychain. The stub explicitly implements the async stream requirement; concrete and protocol calls share the injected absolute deadline. Tests use sleep-registration expectations, cover passed deadlines/cancellation and keep each iterator within one detached task. The orchestrator's 6 Nov Debug pass found unsigned Keychain access and a missing manual-clock sleep/readiness update; the orchestrator verified the full D1c Debug plus isolated Release checks, `make check` and `make duo` on 2026-11-06. (OQ 9 default assumed, confirm). Native-only key; migration deferred until a bundle switch. (OQ 15 default assumed, confirm). No URL scheme. Release always resolves signed out; the readiness store performs no synchronous I/O on the main actor.
 - [x] Hand-off wiring: coordinator effects rebuild the timeline (D4); "Getting your plan ready" + `nl` added; on exit completion (`CATransaction` completion block) hide and release the window, clear `accessibilityElementsHidden`, post `.screenChanged`, restore status bar; announce status once, queued.
   Files: `Sources/Launch/LaunchOverlayController.swift`, `Sources/Launch/StatusLineLayer.swift`, `Sources/Launch/Resources/Localizable.xcstrings`, `App/SceneDelegate.swift`.
-  Note: merged timeline effects, isolated exit-opacity CATransaction completion, stale-completion guards, window release, accessibility restoration/queued status and session/ready/exit signposts are implemented. Existing Launch catalog already contains both status translations. The root is created only once a route resolves, on the next main-loop turn. (OQ 16 default assumed, confirm). Every cold process start splashes; reconnects do not replay. The orchestrator's 6 Nov Debug pass found intermittent immediate weak-reference assertions after teardown. Lifetime tests now use scoped autorelease pools and bounded run-loop draining before requiring deallocation, including disconnection during a pending exit; production completion captures remain weak and both delegate references are cleared. Hosted and UI tests are written; revised simulator validation is open. Welcome visuals, measured anchor publication and intro remain Phase 5. Device status-bar/performance checks remain in the open Phase 3b/8 tasks.
+  Note: merged timeline effects, isolated exit-opacity CATransaction completion, stale-completion guards, window release, accessibility restoration/queued status and session/ready/exit signposts are implemented. Existing Launch catalog already contains both status translations. The root is created only once a route resolves, on the next main-loop turn. (OQ 16 default assumed, confirm). Every cold process start splashes; reconnects do not replay. The orchestrator's 6 Nov Debug pass found intermittent immediate weak-reference assertions after teardown. Lifetime tests now use scoped autorelease pools and bounded run-loop draining before requiring deallocation, including disconnection during a pending exit; production completion captures remain weak and both delegate references are cleared. Hosted and UI tests are written; the orchestrator verified the full D1c Debug plus isolated Release checks, `make check` and `make duo` on 2026-11-06. Welcome visuals, measured anchor publication and intro remain Phase 5. Device status-bar/performance checks remain in the open Phase 3b/8 tasks.
   Test: UI tests: signed out → `Route.welcome`; signed in + ready → `Route.today`; `-cf.stored no -cf.readyDelay 3.5` → status, hand-off ≈ 3.5 s; `-cf.stored never` → hand-off at 8 s; element tree hidden until hand-off.
 
-- [x] Add the `--readiness` D1c simulator runner mode, en/US throughout, all Phase 4 Debug hosted/UI suites plus Release override-isolation tests, failure continuation and final `make check` / `make duo`; include readiness UI checks in `make duo`. The dedicated `ReadinessRelease` scheme builds only the app and hosted tests, with testability enabled only for that verification command; package test bundles stay in Debug. Fixture tests cover the full matrix, failure aggregation, scheme isolation and Duo runtime selection. Simulator validation is open.
+- [x] Add the `--readiness` D1c simulator runner mode, en/US throughout, all Phase 4 Debug hosted/UI suites plus Release override-isolation tests, failure continuation and final `make check` / `make duo`; include readiness UI checks in `make duo`. The dedicated `ReadinessRelease` scheme builds only the app and hosted tests, with testability enabled only for that verification command; package test bundles stay in Debug. Fixture tests cover the full matrix, failure aggregation, scheme isolation and Duo runtime selection. Verified by the orchestrator on 2026-11-06: full D1c Debug plus isolated Release, `make check` and `make duo` passed.
   Files: `Scripts/launch-simulators.py`, `Tests/test_launch_simulators.py`, `Makefile`, `project.yml`.
 
-- [x] Document the committed readiness runner, Debug argument units/defaults, native Keychain shape, simulator ad-hoc signing, Release behavior and pending simulator/device validation; update the shared signing trap.
+- [x] Document the committed readiness runner, Debug argument units/defaults, native Keychain shape, simulator ad-hoc signing, Release behavior and verified 2026-11-06 simulator results and open device validation; update the shared signing trap.
   Files: `Docs/tooling.md`, `AGENTS.md`, `CLAUDE.md`.
 
 ### Phase 5: Welcome, intro and moon hand-over (`feat/phase-5-welcome`)
@@ -502,6 +502,39 @@ OQ 10 scaling settled by the user on 2026-11-06: cap at xxLarge. Defaults author
 - [x] Document the committed Welcome matrix/recording entry points, the root xxLarge scaling policy, source translations, measured hand-over, shared-clock intro and host checks. Keep Phase 5 simulator, baseline and visual approval open until verified results are reported.
   Files: `Docs/tooling.md`.
 
+### Phase 5 fix round 1
+
+The orchestrator's 2026-11-06 record passes completed on all seven D1c devices, but all 196 Welcome
+PNGs were blank. Comparison, `make check` and `make duo` failed. The accessibility audits reported
+144 contrast failures, nine near failures and twelve English clipping issues without element details.
+The supplied iPhone 18 Pro app screenshots render the actual Welcome in both themes; inspection against
+`Main.dc.html` confirms the board's typography, text, card and pill surfaces. Formal visual approval stays open.
+
+- [x] Capture Welcome through `drawHierarchy(afterScreenUpdates: true)` in a key, visible, explicitly laid-out hosting window, with explicit appearance/category/own display-scale traits and key-window restoration. Reject failed, uniform and transparent captures before snapshot verification. Add synthetic guard mutations and independent final-screen comparisons across both appearances/languages at default/xxLarge. Exercise asymmetric horizontal insets at every Dynamic Type size. Discard the 196 invalid recordings; replacement baseline recording/comparison remains open.
+  Files: `AppTests/WelcomeSnapshotTests.swift`, `AppTests/WelcomeSnapshotPixels.swift`, `AppTests/WelcomeSnapshotGuardTests.swift`, `AppTests/WelcomeSnapshotReference.swift`, `AppTests/__Snapshots__/README.md`.
+  Test: two portable pixel-guard tests pass on the host; iOS 17 type-check passes. UIKit execution and 196 replacement baselines await the D1c simulator run.
+
+- [x] Log every accessibility issue's audit type, optional identifier/label and compact description to the console and retained attachments. Ignore only the five confirmed `(identifier, .contrast)` pairs listed below, whose token assignments and font weights match `Main.dc.html`, plus round 5's partial-visibility contrast rule; fail unknown/nil identifiers on fully visible elements, combined audit types, clipping and every other issue. Add exception-policy tests. Preserve the designed colours.
+  Files: `AppUITests/WelcomeTests.swift`.
+  Test: iOS 17 type-check passes; simulator diagnostics and revised audit results remain open.
+
+- [x] Resolve the English `welcome.eyebrow` clipping identified by the orchestrator on 2026-11-06. Give the positively tracked label its intrinsic horizontal size while retaining the board's Figtree 600, 12/16 and +1.2 tracking. Hosted tests compare its frame with the attributed string's natural width at every category in en/nl, and UI tests audit clipping at xxLarge and AX5. No clipping issues are ignored; simulator validation remains open.
+  Files: `Sources/DesignSystem/WelcomeText.swift`, `AppTests/WelcomeSnapshotTests.swift`, `AppUITests/WelcomeTests.swift`.
+
+- [x] Keep Welcome recording opt-in and isolated to the hosted Welcome snapshot and guard suites, and include the isolated Release readiness/diagnostics check in each device's comparison pass. Continue from Debug failure to Release and through the full D1c matrix, then attempt both `make check` and `make duo`. Fixtures cover pass ordering, recording isolation and Release execution after Debug failure.
+  Files: `Scripts/launch-simulators.py`, `Tests/test_launch_simulators.py`.
+  Test: all 28 runner fixtures pass on the host; simulator execution remains open.
+
+- [x] Document the corrected capture/guard contract, diagnostic audit policy, verified failed first run and pending replacement recording/accessibility acceptance through committed entry points.
+  Files: `Docs/tooling.md`.
+
+- [ ] Welcome contrast per board tokens: `welcome.eyebrow`, needs design decision. Open pair: `(welcome.eyebrow, .contrast)`, Figtree 600, `dawn` on `cf-sky`; no corrective design/default exists.
+- [ ] Welcome contrast per board tokens: `welcome.headline`, needs design decision. Open pair: `(welcome.headline, .contrast)`, Fraunces 400, `skyTitle` on `cf-sky`; no corrective design/default exists.
+- [ ] Welcome contrast per board tokens: `welcome.copy`, needs design decision. Open pair: `(welcome.copy, .contrast)`, Figtree 400, `skyCopy` on `skyCopyBackground`; no corrective design/default exists.
+- [ ] Welcome contrast per board tokens: `welcome.signIn`, needs design decision. Open pair: `(welcome.signIn, .contrast)`, Figtree 500, `skyCopy` on `skyCopyBackground`; no corrective design/default exists.
+- [ ] Welcome contrast per board tokens: `welcome.plan`, needs design decision. Measured on SE nl: text 6.76:1 on the pill, pill 1.40:1 against the sky (the audit flags it). No corrective design/default exists.
+- [ ] Accept the 196 replacement Welcome references and revised accessibility results on every D1c device, then pass `make check` and `make duo`. The failed 2026-11-06 run is recorded above; no replacement result is claimed.
+
 ### Phase 5 user decisions and fix round 2 (2026-11-06)
 
 - [x] Cap Dynamic Type at xxLarge once at RootView and on both production windows. Clamp explicit font traits and MoonTarget fallback row metrics through shared ContentSizeCap; the status layer uses the capped font and scaled line height. Tests compare AX5 with xxLarge for fonts, status pixels, row height, Welcome frames/pixels and action reachability, retaining different large-size output. The moon UI landing test uses AX5 with the existing 0.5 pt tolerance. OQ 10's scaling part is settled by the user; simulator execution remains open.
@@ -513,55 +546,10 @@ OQ 10 scaling settled by the user on 2026-11-06: cap at xxLarge. Defaults author
 - [x] Move Welcome snapshots and capture guards to hosted AppTests, keeping baselines alongside them and AppTests dependent only on ChronoFlow. Compare decoded RGBA pixels without linking package products again. Keep failed/uniform/transparent and opposite-language/appearance guards, with explicit own-scale/style traits and key-window restoration. make snapshots and the Welcome-only record pass select the hosted suites. The orchestrator's second package capture attempt failed on every device because the bare xctest process had no render-server connection; replacement recording/comparison remains open.
   Files: `AppTests/WelcomeSnapshot*.swift`, `AppTests/__Snapshots__/**`, `project.yml`, `Package.swift`, `Makefile`, `Scripts/launch-simulators.py`, `Tests/test_launch_resources.py`.
 
-- [ ] Record and accept replacement Welcome baselines after the cap and hosted capture changes on every D1c device, including SE, 17e and Duo. Compare all references, pass the strict audits, make check and make duo; visual approval remains open. Only the four confirmed board-contrast identifiers (eyebrow, headline, copy, signIn) are allowed; all other issues fail.
-
 - [x] Replace 50 ms launch-connection sleeps with a bounded wait for the root window after async font registration. Freeze diagnostic Welcome at zero so overlay teardown cannot race the accessibility/order assertions. Retain the synchronous no-root/flush checks, flush-before-root-layout ordering, modal accessibility, and reconnect-no-replay assertions; disconnect both test delegates deterministically. Simulator validation remains open.
   Files: `AppTests/LaunchConnectionTests.swift`.
 
-### Phase 5 fix round 1
-
-The orchestrator's 2026-11-06 record passes completed on all seven D1c devices, but all 196 Welcome
-PNGs were blank. Comparison, `make check` and `make duo` failed. The accessibility audits reported
-144 contrast failures, nine near failures and twelve English clipping issues without element details.
-The supplied iPhone 18 Pro app screenshots render the actual Welcome in both themes; inspection against
-`Main.dc.html` confirms the board's typography, text, card and pill surfaces. Formal visual approval stays open.
-
-- [x] Log every accessibility issue's audit type, optional identifier/label and compact description to the console and retained attachments. Ignore only the five confirmed `(identifier, .contrast)` pairs listed below, whose token assignments and font weights match `Main.dc.html`, plus round 5's partial-visibility contrast rule; fail unknown/nil identifiers on fully visible elements, combined audit types, clipping and every other issue. Add exception-policy tests. Preserve the designed colours.
-  Files: `AppUITests/WelcomeTests.swift`.
-  Test: iOS 17 type-check passes; simulator diagnostics and revised audit results remain open.
-
-- [ ] Welcome contrast per board tokens: `welcome.eyebrow`, needs design decision. Open pair: `(welcome.eyebrow, .contrast)`, Figtree 600, `dawn` on `cf-sky`; no corrective design/default exists.
-
-- [ ] Welcome contrast per board tokens: `welcome.headline`, needs design decision. Open pair: `(welcome.headline, .contrast)`, Fraunces 400, `skyTitle` on `cf-sky`; no corrective design/default exists.
-
-- [ ] Welcome contrast per board tokens: `welcome.copy`, needs design decision. Open pair: `(welcome.copy, .contrast)`, Figtree 400, `skyCopy` on `skyCopyBackground`; no corrective design/default exists.
-
-- [ ] Welcome contrast per board tokens: `welcome.signIn`, needs design decision. Open pair: `(welcome.signIn, .contrast)`, Figtree 500, `skyCopy` on `skyCopyBackground`; no corrective design/default exists.
-- [ ] Welcome contrast per board tokens: `welcome.plan`, needs design decision. Measured on SE nl: text 6.76:1 on the pill, pill 1.40:1 against the sky (the audit flags it). No corrective design/default exists.
-
-- [x] Capture Welcome through `drawHierarchy(afterScreenUpdates: true)` in a key, visible, explicitly laid-out hosting window, with explicit appearance/category/own display-scale traits and key-window restoration. Reject failed, uniform and transparent captures before snapshot verification. Add synthetic guard mutations and independent final-screen comparisons across both appearances/languages at default/xxLarge. Exercise asymmetric horizontal insets at every Dynamic Type size. Discard the 196 invalid recordings; replacement baseline recording/comparison remains open.
-  Files: `AppTests/WelcomeSnapshotTests.swift`, `AppTests/WelcomeSnapshotPixels.swift`, `AppTests/WelcomeSnapshotGuardTests.swift`, `AppTests/WelcomeSnapshotReference.swift`, `AppTests/__Snapshots__/README.md`.
-  Test: two portable pixel-guard tests pass on the host; iOS 17 type-check passes. UIKit execution and 196 replacement baselines await the D1c simulator run.
-
-- [x] Resolve the English `welcome.eyebrow` clipping identified by the orchestrator on 2026-11-06. Give the positively tracked label its intrinsic horizontal size while retaining the board's Figtree 600, 12/16 and +1.2 tracking. Hosted tests compare its frame with the attributed string's natural width at every category in en/nl, and UI tests audit clipping at xxLarge and AX5. No clipping issues are ignored; simulator validation remains open.
-  Files: `Sources/DesignSystem/WelcomeText.swift`, `AppTests/WelcomeSnapshotTests.swift`, `AppUITests/WelcomeTests.swift`.
-
-- [ ] Accept the 196 replacement Welcome references and revised accessibility results on every D1c device, then pass `make check` and `make duo`. The failed 2026-11-06 run is recorded above; no replacement result is claimed.
-
-- [x] Keep Welcome recording opt-in and isolated to the hosted Welcome snapshot and guard suites, and include the isolated Release readiness/diagnostics check in each device's comparison pass. Continue from Debug failure to Release and through the full D1c matrix, then attempt both `make check` and `make duo`. Fixtures cover pass ordering, recording isolation and Release execution after Debug failure.
-  Files: `Scripts/launch-simulators.py`, `Tests/test_launch_simulators.py`.
-  Test: all 28 runner fixtures pass on the host; simulator execution remains open.
-
-- [x] Document the corrected capture/guard contract, diagnostic audit policy, verified failed first run and pending replacement recording/accessibility acceptance through committed entry points.
-  Files: `Docs/tooling.md`.
-
-### Phase 3c review fixes (after Phase 5)
-
-- [x] Flag settled short-screen sun/moon/wordmark/status collisions with geometry tests and height-scoped known issues; assert the status text-frame/replicator union against the path apex, including the 874 pt S1 crossing. Record exact affected baselines, OQ 11 and the materialised risk. Keep Phase 3c visual acceptance open for a user/design decision.
-  Files: `Tests/LaunchTests/LaunchSnapshotTests.swift`, `plan.md`.
-
-- [x] Replace stale Phase 3c/3b review-fix validation notes with the orchestrator's verified 2026-11-06 results for all seven D1c devices, both appearance UI tests, make check and make duo. Retain PNG/board-frame approval, short-screen collisions/S1 board review and physical-device D3 proof as open.
-  Files: `plan.md`, `Docs/tooling.md`.
+- [ ] Record and accept replacement Welcome baselines after the cap and hosted capture changes on every D1c device, including SE, 17e and Duo. Compare all references, pass the strict audits, make check and make duo; visual approval remains open. Only the four confirmed board-contrast identifiers (eyebrow, headline, copy, signIn) are allowed; all other issues fail.
 
 ### Phase 4 review fixes (after Phase 5)
 
@@ -572,6 +560,17 @@ The supplied iPhone 18 Pro app screenshots render the actual Welcome in both the
 - [x] Prove `stop()` cancels work before any clock advance: bounded registration waits for two signed-in timers or three signed-out timers, drains to zero on stop and observes no state/callback change after eight seconds. Separately suspend session resolution and require its task to observe cancellation, with no later callback/forced readiness.
   Files: `Tests/AppCoreTests/LaunchCoordinatorTests.swift`.
   Test: host SwiftPM passes all 42 AppCore tests (77 package tests total, plus two portable capture guards), including both timer cases and unresolved-session cancellation.
+
+- [x] Record the orchestrator's verified 2026-11-06 Phase 4 full D1c Debug plus isolated Release pass, `make check` and `make duo` in the Phase 4 notes and tooling guide. Retain OQ confirmations and device-only checks. These results cover the reviewed Phase 4 tree; this round's changed tests still need execution.
+  Files: `plan.md`, `Docs/tooling.md`.
+
+### Phase 3c review fixes (after Phase 5)
+
+- [x] Flag settled short-screen sun/moon/wordmark/status collisions with geometry tests and height-scoped known issues; assert the status text-frame/replicator union against the path apex, including the 874 pt S1 crossing. Record exact affected baselines, OQ 11 and the materialised risk. Keep Phase 3c visual acceptance open for a user/design decision.
+  Files: `Tests/LaunchTests/LaunchSnapshotTests.swift`, `plan.md`.
+
+- [x] Replace stale Phase 3c/3b review-fix validation notes with the orchestrator's verified 2026-11-06 results for all seven D1c devices, both appearance UI tests, make check and make duo. Retain PNG/board-frame approval, short-screen collisions/S1 board review and physical-device D3 proof as open.
+  Files: `plan.md`, `Docs/tooling.md`.
 
 ### Phase 6: Audit (`feat/phase-6-audit`)
 
@@ -657,7 +656,7 @@ The design sets the floor: hand-off ends at 1900 ms (ready) and Welcome is fully
 | 8 | **Stub destinations:** (a) Debug-only route-name screens, (b) inert buttons, (c) route seam only, (d) bring `AuthSignIn` / `TodayLoading` in. | (c) + (a), never in Release | Phase 4 |
 | 9 | **Session source and migration.** Is the RN app live with real users? If native later ships as `net.chronoflow.app`, should it read the RN Keychain item (`app:no-auth` / `session`) and migrate SQLite, kv-store, `api.deviceId`? | Native-only key now; decide at bundle switch | Phase 4 (shape only) |
 | 10 | **Scaling settled by the user 2026-11-06:** maximum xxLarge; xxxLarge and accessibility sizes AX1–AX5 clamp to it. Smaller sizes scale normally. Still open: scrolling on 667 pt screens, long Dutch headline and safe-area padding (`max(safeTop+16, 64)` gives ~78 on Dynamic Island phones vs board 64). | Scroll as RN; RN padding rule | Phase 5 |
-| 11 | **Short, wide and iPad screens:** every iPhone including iPhone Duo must fit (D1c, settled). Still open: iPhone portrait only (does Duo need its other postures)? Sun, band and path on 667 pt and wide widths? | RN rule: x control points × w/390, bottom-anchored | Phase 3a |
+| 11 | **Short, wide and iPad screens:** every iPhone including iPhone Duo must fit (D1c, settled). Still open: iPhone portrait only (does Duo need its other postures)? Sun, band and path on 667 pt and wide widths? **Review 6 Nov:** SE 375 × 667 and Duo 466 × 678 `ready-1400` / `slow-2600` PNGs in both themes show wordmark/status over the sun and the apex touching the moon glyph (exact names in Phase 3c acceptance). Needs a user or design decision; no corrective layout default exists. | RN rule: x control points × w/390, bottom-anchored | Phase 3a |
 | 12 | **Stale board link:** `Main` links "Plan my trip" to superseded `GuestFlight`; target is the new guest wizard (`WizardWhereGuest`)? | Yes; designer fixes the link | Phase 5 |
 | 13 | **Translations source:** RN `en.json` / `nl.json` as single source generating `.xcstrings`, or iOS owns its strings? | Entered by hand for this slice | Later |
 | 14 | **Performance targets and reference iPhone** (ProMotion) for device runs and the RN comparison. | Budget as proposed | Phase 3b device run, 7, 8 |
