@@ -242,3 +242,35 @@ extension SignOutTests {
         #expect(await credentials.data == nil)
     }
 }
+
+extension SignOutTests {
+    @Test func explicitSignOutUpgradesQueuedEpochScopedFlight() async throws {
+        let log = SessionEventLog()
+        let credentials = ControllerMemoryStore(log: log)
+        let controller = SessionController(credentials: credentials, accounts: ControllerAccountStore(log: log))
+        try await controller.accept(wipeSession())
+        let oldEpoch = await controller.epoch
+        let write = SessionTestGate()
+        await credentials.configure(writeGate: write)
+        let replacement = Task {
+            try await controller.accept(SessionResult(token: "replacement-token", account: wipeSession().account))
+        }
+        await write.waitUntilEntered()
+        let forced = Task { try await controller.unauthorized(epoch: oldEpoch) }
+        let deadline = ContinuousClock.now + .seconds(5)
+        while await controller.signOutFlight == nil, ContinuousClock.now < deadline { await Task.yield() }
+        try #require(await controller.signOutFlight != nil)
+        let generation = await controller.generation
+        let explicit = Task { try await controller.signOut(discardPending: true) }
+        while await controller.generation == generation, ContinuousClock.now < deadline { await Task.yield() }
+        // Release even when the generation assertion fails, so the pre-fix test drains.
+        #expect(await controller.generation > generation)
+        await write.release()
+        try await replacement.value
+        #expect(try await forced.value == .signedOut)
+        #expect(try await explicit.value == .signedOut)
+        #expect(await controller.presence == .signedOut)
+        #expect(await controller.activeSession() == nil)
+        #expect(await credentials.data == nil)
+    }
+}

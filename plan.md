@@ -1049,6 +1049,8 @@ Stack on 9b. No UI; scope is the documented engine/repositories, not Settings/To
 
 #### Phase 9d: Sync lifecycle, sign-out wipe and launch readiness (`feat/phase-9d-session-lifecycle`)
 
+- [x] Review fix: upgrade epoch-scoped sign-out flights for explicit requests and supersede pending accepts; gated credential-write regression covers the race.
+
 - [x] Review fix: skip voluntary flush when the outbox is empty; regression asserts immediate wipe/logout without a flush.
 
 Stack on 9c. No UI. OQ 29 leaves voluntary pending-change confirmation as a return value only; no new dialog. D25 forced wipe is required regardless of that UI decision.
