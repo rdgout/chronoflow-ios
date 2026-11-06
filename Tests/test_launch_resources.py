@@ -37,6 +37,18 @@ class LaunchResourcesTests(unittest.TestCase):
         self.assertIn("ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon", project)
         self.assertIn('TARGETED_DEVICE_FAMILY: "1"', project)
 
+    def test_welcome_capture_is_hosted_without_duplicate_package_linkage(self):
+        source = ROOT / "AppTests/WelcomeSnapshotTests.swift"
+        self.assertIn("drawHierarchy", source.read_text())
+        self.assertFalse((ROOT / "Packages/ChronoFlowKit/Tests/WelcomeTests/WelcomeSnapshotTests.swift").exists())
+        self.assertTrue((source.parent / "__Snapshots__/README.md").exists())
+        self.assertNotIn("SnapshotTesting", (source.parent / "WelcomeSnapshotReference.swift").read_text())
+        command = subprocess.check_output(["make", "-n", "snapshots"], cwd=ROOT, text=True)
+        for suite in ["AppTests/WelcomeSnapshotTests", "AppTests/WelcomeSnapshotGuardTests"]:
+            self.assertIn("-only-testing:" + suite, command)
+        project = (ROOT / "project.yml").read_text()
+        self.assertIn("excludes: [__Snapshots__]", project)
+
     def test_make_test_and_snapshots_pin_the_snapshot_language(self):
         for target in ["test", "snapshots"]:
             with self.subTest(target=target):

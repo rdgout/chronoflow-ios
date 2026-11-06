@@ -50,7 +50,9 @@ targets:
   AppTests:
     type: bundle.unit-test
     platform: iOS
-    sources: [AppTests]
+    sources:
+      - path: AppTests
+        excludes: [__Snapshots__]
     settings:
       TARGETED_DEVICE_FAMILY: "1"
       SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO

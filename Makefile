@@ -6,7 +6,7 @@ XCODEGEN ?= /opt/homebrew/bin/xcodegen
 DESTINATION := platform=iOS Simulator,name=iPhone 17e,OS=27.2
 XCODEBUILD := xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData -onlyUsePackageVersionsFromResolvedFile
 SWIFT_PATHS := App AppTests AppUITests PerfUITests Packages/ChronoFlowKit/Package.swift Packages/ChronoFlowKit/Sources Packages/ChronoFlowKit/Tests $(wildcard Tools/*/Package.swift Tools/*/Sources Tools/*/Tests)
-UI_SUITES := DesignSystemTests LaunchTests WelcomeTests
+UI_SUITES := DesignSystemTests LaunchTests WelcomeTests AppTests/WelcomeSnapshotTests AppTests/WelcomeSnapshotGuardTests
 
 .PHONY: generate format lint test snapshots duo perf tokens fonts assets generators-check launch-resources-check check
 

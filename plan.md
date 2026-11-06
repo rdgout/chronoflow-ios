@@ -504,6 +504,11 @@ OQ 10 scaling settled by the user on 2026-11-06: cap at xxLarge. Defaults author
 - [x] Reuse RN's opaque 1024 px icon unchanged in the universal iOS AppIcon asset and enable AppIcon compilation for the iPhone app. Host tests check dimensions, absence of alpha/transparency and exact RN bytes; a hosted test checks the built CFBundleIcons primary name. OQ 18 icon settled by the user on 2026-11-06. (OQ 18 default assumed, confirm). No distinguishing Debug display name. Dark/tinted variants and a layered Liquid Glass icon need design assets; those remain Open. Built-icon validation remains open.
   Files: `App/Assets.xcassets/AppIcon.appiconset/**`, `project.yml`, `Tests/test_launch_resources.py`, `AppTests/AppIconTests.swift`, `AGENTS.md`.
 
+- [x] Move Welcome snapshots and capture guards to hosted AppTests, keeping baselines alongside them and AppTests dependent only on ChronoFlow. Compare decoded RGBA pixels without linking package products again. Keep failed/uniform/transparent and opposite-language/appearance guards, with explicit own-scale/style traits and key-window restoration. make snapshots and the Welcome-only record pass select the hosted suites. The orchestrator's second package capture attempt failed on every device because the bare xctest process had no render-server connection; replacement recording/comparison remains open.
+  Files: `AppTests/WelcomeSnapshot*.swift`, `AppTests/__Snapshots__/**`, `project.yml`, `Package.swift`, `Makefile`, `Scripts/launch-simulators.py`, `Tests/test_launch_resources.py`.
+
+- [ ] Record and accept replacement Welcome baselines after the cap and hosted capture changes on every D1c device, including SE, 17e and Duo. Compare all references, pass the strict audits, make check and make duo; visual approval remains open. Only the four confirmed board-contrast identifiers (eyebrow, headline, copy, signIn) are allowed; all other issues fail.
+
 ### Phase 5 fix round 1
 
 - [x] Log every accessibility issue's audit type, optional identifier/label and compact description to the console and retained attachments. Ignore only the five confirmed `(identifier, .contrast)` pairs listed below, whose token assignments and font weights match `Main.dc.html`, plus round 5's partial-visibility contrast rule; fail unknown/nil identifiers on fully visible elements, combined audit types, clipping and every other issue. Add exception-policy tests. Preserve the designed colours.
@@ -518,6 +523,16 @@ OQ 10 scaling settled by the user on 2026-11-06: cap at xxLarge. Defaults author
 
 - [ ] Welcome contrast per board tokens: `welcome.signIn`, needs design decision. Open pair: `(welcome.signIn, .contrast)`, Figtree 500, `skyCopy` on `skyCopyBackground`; no corrective design/default exists.
 - [ ] Welcome contrast per board tokens: `welcome.plan`, needs design decision. Measured on SE nl: text 6.76:1 on the pill, pill 1.40:1 against the sky (the audit flags it). No corrective design/default exists.
+
+- [x] Capture Welcome through `drawHierarchy(afterScreenUpdates: true)` in a key, visible, explicitly laid-out hosting window, with explicit appearance/category/own display-scale traits and key-window restoration. Reject failed, uniform and transparent captures before snapshot verification. Add synthetic guard mutations and independent final-screen comparisons across both appearances/languages at default/xxLarge. Exercise asymmetric horizontal insets at every Dynamic Type size. Discard the 196 invalid recordings; replacement baseline recording/comparison remains open.
+  Files: `AppTests/WelcomeSnapshotTests.swift`, `AppTests/WelcomeSnapshotPixels.swift`, `AppTests/WelcomeSnapshotGuardTests.swift`, `AppTests/WelcomeSnapshotReference.swift`, `AppTests/__Snapshots__/README.md`.
+  Test: two portable pixel-guard tests pass on the host; iOS 17 type-check passes. UIKit execution and 196 replacement baselines await the D1c simulator run.
+
+- [x] Resolve the English `welcome.eyebrow` clipping identified by the orchestrator on 2026-11-06. Give the positively tracked label its intrinsic horizontal size while retaining the board's Figtree 600, 12/16 and +1.2 tracking. Hosted tests compare its frame with the attributed string's natural width at every category in en/nl, and UI tests audit clipping at xxLarge and AX5. No clipping issues are ignored; simulator validation remains open.
+  Files: `Sources/DesignSystem/WelcomeText.swift`, `AppTests/WelcomeSnapshotTests.swift`, `AppUITests/WelcomeTests.swift`.
+
+- [ ] Accept the 196 replacement Welcome references and revised accessibility results on every D1c device, then pass `make check` and `make duo`. The failed 2026-11-06 run is recorded above; no replacement result is claimed.
+
 ### Phase 6: Audit (`feat/phase-6-audit`)
 
 Reduce Motion, dark mode, VoiceOver and strings are built in the phases above; this phase only audits.

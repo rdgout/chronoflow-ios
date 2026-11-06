@@ -47,7 +47,7 @@ let package = Package(
         ),
         .testTarget(
             name: "WelcomeTests",
-            dependencies: ["Welcome", .product(name: "SnapshotTesting", package: "swift-snapshot-testing")],
+            dependencies: ["Welcome"],
             swiftSettings: [.defaultIsolation(MainActor.self)]
         ),
     ],

@@ -1,5 +1,4 @@
 import Foundation
-import SnapshotTesting
 import Testing
 
 @testable import Welcome
