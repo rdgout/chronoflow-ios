@@ -27,7 +27,7 @@ class LaunchSimulatorsTests(unittest.TestCase):
         self.failure = lambda command: False
         self.installed = True
 
-    def execute(self):
+    def execute(self, timeline=False):
         output = io.StringIO()
 
         def fake_run(command, **kwargs):
@@ -41,7 +41,7 @@ class LaunchSimulatorsTests(unittest.TestCase):
             return subprocess.CompletedProcess(command, status, "")
 
         with patch.object(runner.subprocess, "run", side_effect=fake_run), contextlib.redirect_stdout(output):
-            status = runner.main()
+            status = runner.main(timeline=timeline)
         return status, output.getvalue()
 
     def test_all_devices_use_type_and_runtime_and_clear_the_launch_cache(self):
@@ -129,6 +129,37 @@ class LaunchSimulatorsTests(unittest.TestCase):
         self.assertIn("FAIL list simulators:", output)
         for label, _, _ in runner.MATRIX:
             self.assertIn("FAIL " + label + ": No available simulator:", output)
+        self.assertEqual(self.commands[-2:], [["make", "check"], ["make", "duo"]])
+
+    def test_timeline_runs_core_and_launch_suites_on_every_device(self):
+        status, output = self.execute(timeline=True)
+        self.assertEqual(status, 0)
+        self.assertIn("Phase 3a simulator results:", output)
+        tests = [command for command in self.commands if command[0] == "xcodebuild" and command[-1] == "test"]
+        self.assertEqual(len(tests), 7)
+        for command in tests:
+            for suite in ["AppTests", "AppUITests/WindowTests", "DesignSystemTests", "AppCoreTests", "LaunchTests"]:
+                self.assertIn("-only-testing:" + suite, command)
+        self.assertIn("platform=iOS Simulator,id=device-6", tests[-1])
+        self.assertEqual(self.commands[-2:], [["make", "check"], ["make", "duo"]])
+
+    def test_timeline_continues_after_failure_and_runs_both_final_checks(self):
+        self.failure = lambda command: command[-1] == "check" or (
+            command[0] == "xcodebuild" and command[-1] == "test" and "platform=iOS Simulator,id=device-0" in command
+        )
+        status, output = self.execute(timeline=True)
+        self.assertEqual(status, 1)
+        self.assertIn("FAIL iPhone SE (3rd gen):", output)
+        self.assertIn("PASS iPhone Duo\n", output)
+        self.assertIn("FAIL make check:", output)
+        self.assertIn("PASS make duo\n", output)
+
+    def test_timeline_missing_duo_does_not_use_the_regular_runtime(self):
+        self.devices[runner.REGULAR_RUNTIME].append(self.devices[runner.DUO_RUNTIME].pop())
+        status, output = self.execute(timeline=True)
+        self.assertEqual(status, 1)
+        self.assertIn("FAIL iPhone Duo: No available simulator:", output)
+        self.assertNotIn("platform=iOS Simulator,id=device-6", str(self.commands))
         self.assertEqual(self.commands[-2:], [["make", "check"], ["make", "duo"]])
 
 
