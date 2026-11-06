@@ -4,4 +4,5 @@ import UIKit
 @main
 final class AppDelegate: UIResponder, UIApplicationDelegate {
     var launchProcess = LaunchProcessState()
+    let navigator = RootNavigator()
 }

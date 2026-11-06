@@ -10,7 +10,12 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     private(set) var overlayWindow: UIWindow?
     private(set) var overlayController: LaunchOverlayController?
     private(set) var pendingIntent = PendingLaunchIntent()
+    private(set) var coordinator: LaunchCoordinator?
+    var navigator = RootNavigator()
     let signposts = LaunchSignposts()
+    private var exitSignpostTask: Task<Void, Never>?
+    private var rootScheduled = false
+    private var connectionGeneration = 0
 
     func scene(
         _ scene: UIScene,
@@ -20,7 +25,6 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = scene as? UIWindowScene,
             let app = UIApplication.shared.delegate as? AppDelegate
         else { return }
-        connect(to: windowScene, firstConnection: app.launchProcess.claimOverlay())
         let response = connectionOptions.notificationResponse
         pendingIntent = PendingLaunchIntent(
             urls: Set(connectionOptions.urlContexts.map(\.url)),
@@ -30,13 +34,19 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                     userInfo: $0.notification.request.content.userInfo,
                     userText: ($0 as? UNTextInputNotificationResponse)?.userText)
             })
+        navigator = app.navigator
+        connect(to: windowScene, firstConnection: app.launchProcess.claimOverlay())
     }
 
     func connect(to windowScene: UIWindowScene, firstConnection: Bool, arguments: LaunchArguments = LaunchArguments()) {
+        connectionGeneration += 1
         signposts.event(.sceneConnect)
+        let diagnostic = arguments.mode != nil || arguments.freezeAt != nil
         if firstConnection {
             signposts.begin(.launch)
             signposts.begin(.firstCommit)
+            signposts.begin(.session)
+            signposts.begin(.ready)
             let overlay = UIWindow(windowScene: windowScene)
             let traits = windowScene.traitCollection.modifyingTraits {
                 $0.displayScale = windowScene.screen.scale
@@ -72,19 +82,65 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                         forTimeInterval: Double(stall.components.seconds) + Double(stall.components.attoseconds) / 1e18)
                 }
             }
-            Task {
+            Task { [weak self, weak controller] in
                 do {
                     try await FontRegistry.register()
-                    if arguments.mode == .slow {
-                        scene.prepareStatus()
-                    }
-                } catch { signposts.event(.fontRegistrationFailed) }
+                    controller?.fontsDidRegister()
+                    if arguments.mode == .slow { scene.prepareStatus() }
+                } catch { self?.signposts.event(.fontRegistrationFailed) }
             }
         }
+        if diagnostic || (!firstConnection && navigator.route != nil) {
+            mountRoot(on: windowScene)
+        } else {
+            startReadiness(on: windowScene, arguments: arguments)
+        }
+    }
+
+    private func startReadiness(on windowScene: UIWindowScene, arguments: LaunchArguments) {
+        let clock = MediaLaunchClock(t0: overlayController?.launchScene.t0 ?? CACurrentMediaTime())
+        let safe = overlayController?.view.safeAreaInsets ?? windowScene.keyWindow?.safeAreaInsets ?? .zero
+        let size = overlayController?.launchScene.size ?? windowScene.coordinateSpace.bounds.size
+        let fallback = MoonTarget.fallback(
+            size: size, safeAreaInsets: .init(top: safe.top, left: safe.left, bottom: safe.bottom, right: safe.right),
+            rowHeight: LaunchArguments.fallbackRowHeight(compatibleWith: windowScene.traitCollection))
+        let source = StubReadiness(configuration: arguments.readiness, store: KeychainSessionStore(), clock: clock)
+        let coordinator = LaunchCoordinator(
+            readiness: source, clock: clock,
+            reduceMotion: overlayController?.launchScene.timeline.reduceMotion ?? true,
+            state: .init(fallbackTarget: fallback, pendingIntent: pendingIntent)
+        ) { [weak self, weak windowScene] state, effects in
+            guard let self, let windowScene else { return }
+            if state.session != nil { signposts.end(.session) }
+            if state.isReady { signposts.end(.ready) }
+            if let route = state.route {
+                navigator.navigate(to: route)
+                mountRoot(on: windowScene)
+            }
+            if let controller = overlayController {
+                controller.update(state: state, effects: effects) { [weak self] in self?.finishLaunch() }
+                if state.didCommitExit, exitSignpostTask == nil, let start = state.exitStart {
+                    exitSignpostTask = Task { [weak self] in
+                        do { try await clock.sleep(until: start) } catch { return }
+                        self?.signposts.begin(.exit)
+                    }
+                }
+            } else if state.route != nil {
+                self.coordinator?.stop()
+            }
+        }
+        self.coordinator = coordinator
+        coordinator.start()
+    }
+
+    private func mountRoot(on windowScene: UIWindowScene) {
+        guard window == nil && !rootScheduled else { return }
+        rootScheduled = true
+        let generation = connectionGeneration
         DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
+            guard let self, self.connectionGeneration == generation else { return }
             let window = UIWindow(windowScene: windowScene)
-            let controller = LaunchHostingController(rootView: RootView(), signposts: signposts)
+            let controller = LaunchHostingController(rootView: RootView(navigator: navigator), signposts: signposts)
             controller.launchIsVisible = overlayWindow != nil
             window.rootViewController = controller
             controller.view.accessibilityElementsHidden = overlayWindow != nil
@@ -92,30 +148,35 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             window.makeKeyAndVisible()
         }
     }
-}
 
-final class LaunchHostingController<Content: View>: UIHostingController<Content> {
-    var launchIsVisible = true {
-        didSet { setNeedsStatusBarAppearanceUpdate() }
-    }
-    private let signposts: LaunchSignposts
-    private var recordedLayout = false
-
-    init(rootView: Content, signposts: LaunchSignposts) {
-        self.signposts = signposts
-        super.init(rootView: rootView)
-    }
-
-    @available(*, unavailable)
-    required init?(coder: NSCoder) { return nil }
-
-    override var preferredStatusBarStyle: UIStatusBarStyle { launchIsVisible ? .lightContent : .default }
-
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        if !recordedLayout {
-            recordedLayout = true
-            signposts.event(.rootFirstLayout)
+    private func finishLaunch() {
+        guard let overlay = overlayWindow else { return }
+        coordinator?.send(.exitCompleted)
+        coordinator?.stop()
+        exitSignpostTask?.cancel()
+        overlay.isHidden = true
+        overlay.rootViewController = nil
+        overlayWindow = nil
+        overlayController = nil
+        if let controller = window?.rootViewController as? LaunchHostingController<RootView> {
+            controller.view.accessibilityElementsHidden = false
+            controller.launchIsVisible = false
         }
+        signposts.event(.overlayRemoved)
+        signposts.end(.exit)
+        signposts.end(.launch)
+        UIAccessibility.post(notification: .screenChanged, argument: nil)
+    }
+
+    func sceneDidDisconnect(_ scene: UIScene) {
+        connectionGeneration += 1
+        finishLaunch()
+        coordinator?.stop()
+        coordinator = nil
+        exitSignpostTask?.cancel()
+        exitSignpostTask = nil
+        window?.isHidden = true
+        window = nil
+        rootScheduled = false
     }
 }

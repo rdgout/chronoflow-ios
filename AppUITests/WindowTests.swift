@@ -4,6 +4,7 @@ nonisolated final class WindowTests: XCTestCase {
     @MainActor
     func testOpeningIsOneLocalizedImageElement() {
         let app = XCUIApplication()
+        app.launchArguments = ["-cf.freezeAt", "0"]
         app.launch()
         let opening = app.images["launch.opening"]
         XCTAssertTrue(opening.waitForExistence(timeout: 10))
@@ -14,6 +15,7 @@ nonisolated final class WindowTests: XCTestCase {
     @MainActor
     func testWindowFillsScreen() {
         let app = XCUIApplication()
+        app.launchArguments = ["-cf.freezeAt", "0"]
         app.launch()
         let window = app.windows.firstMatch
         XCTAssertTrue(window.waitForExistence(timeout: 10))
