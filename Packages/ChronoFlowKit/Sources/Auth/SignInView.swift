@@ -60,16 +60,16 @@
                 AuthButton(copy("Sign in"), kind: .outline, busy: model.form.pending == .password) { submit(.password) }
                     .accessibilityIdentifier("sign-in.submit").authMeasure(.submit, report)
                 ViewThatFits(in: .horizontal) {
-                    HStack(alignment: .top, spacing: AuthTokens.fieldGap) {
-                        forgot
-                        Spacer(minLength: 0)
-                        signup
-                    }.fixedSize(horizontal: true, vertical: false)
+                    HStack(alignment: .top, spacing: 0) {
+                        forgot.fixedSize(horizontal: true, vertical: false)
+                        Spacer(minLength: AuthTokens.fieldGap)
+                        signup.fixedSize(horizontal: true, vertical: false)
+                    }
                     VStack(alignment: .leading, spacing: 0) {
                         forgot
                         signup
                     }
-                }
+                }.frame(maxWidth: .infinity, alignment: .leading)
             } footer: {
                 AuthButton(copy("New here? Plan a trip first"), kind: .footer, action: guest).accessibilityIdentifier(
                     "sign-in.guest")
@@ -105,12 +105,16 @@
         }
         private func link(_ key: String, id: String, color: ColorToken, action: @escaping () -> Void) -> some View {
             Button(action: action) {
-                Text(verbatim: copy(key)).font((color == .dawnText ? Typography.authStrong : Typography.authLabel).font)
-                    .foregroundStyle(color.color)
-                    .underline().fixedSize(horizontal: false, vertical: true).padding(.horizontal, AuthTokens.fieldGap)
-                    .frame(minHeight: AuthTokens.touch, alignment: .leading)
-                    .contentShape(Rectangle())
+                WelcomeText(
+                    copy(key), style: color == .dawnText ? Typography.authStrong : Typography.authLabel, color: color,
+                    underlined: true
+                )
+                .authMeasure(color == .dawnText ? .signupLabel : .forgotLabel, report)
+                .padding(.horizontal, AuthTokens.fieldGap)
+                .frame(minHeight: AuthTokens.touch, alignment: .leading)
+                .contentShape(Rectangle())
             }.buttonStyle(.plain).accessibilityIdentifier(id)
+                .authMeasure(color == .dawnText ? .signup : .forgot, report)
         }
         private func report(_ element: AuthElement, _ rect: CGRect) {
             if frames[element] != rect { frames[element] = rect }

@@ -8,11 +8,13 @@ import SwiftUI
         public let text: String
         public let style: Typography.Style
         public let color: ColorToken
+        public let underlined: Bool
 
-        public init(_ text: String, style: Typography.Style, color: ColorToken) {
+        public init(_ text: String, style: Typography.Style, color: ColorToken, underlined: Bool = false) {
             self.text = text
             self.style = style
             self.color = color
+            self.underlined = underlined
         }
 
         public var body: some View {
@@ -22,11 +24,14 @@ import SwiftUI
             let lineHeight = style.lineHeight.map { $0 * ratio } ?? font.lineHeight
             if lineHeight < font.lineHeight {
                 ExactLineText(
-                    text: text, font: font, lineHeight: lineHeight, tracking: style.tracking * ratio, color: color.color
+                    text: text, font: font, lineHeight: lineHeight, tracking: style.tracking * ratio,
+                    color: color.color,
+                    underlined: underlined
                 )
                 .fixedSize(horizontal: false, vertical: true)
             } else {
                 Text(verbatim: text)
+                    .underline(underlined)
                     .font(.custom(style.face.rawValue, fixedSize: font.pointSize))
                     .foregroundStyle(color.color)
                     .tracking(style.tracking * ratio)

@@ -2,7 +2,9 @@
     import DesignSystem
     import SwiftUI
 
-    public enum AuthElement: String, CaseIterable { case brand, heading, card, footer, email, password, submit }
+    public enum AuthElement: String, CaseIterable {
+        case brand, heading, card, footer, email, password, submit, forgot, signup, forgotLabel, signupLabel
+    }
 
     public struct AuthScreen<Card: View, Footer: View>: View {
         @Environment(\.colorScheme) private var scheme

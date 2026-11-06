@@ -8,6 +8,7 @@
         let lineHeight: CGFloat
         let tracking: CGFloat
         let color: Color
+        var underlined = false
 
         func makeUIView(context: Context) -> ExactLineTextView { ExactLineTextView() }
 
@@ -15,7 +16,11 @@
             view.font = font
             view.lineHeight = lineHeight
             view.text = NSAttributedString(
-                string: text, attributes: [.font: font, .kern: tracking, .foregroundColor: UIColor(color)])
+                string: text,
+                attributes: [
+                    .font: font, .kern: tracking, .foregroundColor: UIColor(color),
+                    .underlineStyle: underlined ? NSUnderlineStyle.single.rawValue : 0,
+                ])
             view.accessibilityLabel = text
             view.setNeedsLayout()
             view.invalidateIntrinsicContentSize()
