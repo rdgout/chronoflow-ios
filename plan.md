@@ -949,7 +949,7 @@ The user explicitly requests skipping the seven-simulator matrix unless asked.
 Implementation ticks below describe code and host verification; simulator acceptance stays open separately.
 
 - [x] 0. Fix device-appearance parity in a serial pass, wait for three consecutive nonempty equal UI frame samples with a 60-second upper bound, and reject stale as well as missing classified suites. Host regressions cover discovery and stability. Simulator parity remains to be run.
-- [ ] 1. Move device-fit geometry into pure functions and Mac tests against every D1c profile; retain one live-window smoke.
+- [x] 1. Share pure LaunchLayout/StatusLineLayout/MoonTarget and WelcomeGeometry with production; Mac device-table tests cover all seven D1c point sizes/scales/four insets, SE without a home indicator, Duo’s 19 pt rail, sampled ink/sun containment, composition/S1, board groups and English/Dutch headline pitch. Remove repeated simulator containment/fallback/timeline tests; DeviceGeometrySmokeTests compares live geometry to the pure layouts. (OQ 10 default assumed, confirm). (OQ 11 default assumed, confirm). RN padding/scrolling and width-scaled path controls remain; no geometry redesign.
 - [ ] 2. Render all D1c snapshot profiles in one hosted simulator with explicit size, four insets and display scale; replace old baselines.
 - [ ] 3. Reduce UI launches to smoke coverage and map every removed assertion to hosted or host coverage.
 - [ ] 4. Add quick, targeted, commit-gate, Duo and opt-in matrix tiers with runner regressions.

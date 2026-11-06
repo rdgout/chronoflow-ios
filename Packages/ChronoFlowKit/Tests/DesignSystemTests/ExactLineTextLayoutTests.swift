@@ -1,5 +1,6 @@
 import CoreText
 import Foundation
+import SnapshotSupport
 import Testing
 
 @testable import DesignSystem
@@ -56,6 +57,37 @@ import Testing
                 for index in layout.ranges.indices {
                     let line = layout.line(at: index).string
                     #expect(line == line.trimmingCharacters(in: .whitespacesAndNewlines))
+                }
+            }
+        }
+    }
+
+    @Test func deviceTableHeadlinePitchInBothLanguages() async throws {
+        try await FontRegistry.register()
+        for device in try SnapshotDevice.all() {
+            for string in [
+                "Plan your clock shift for your next trip",
+                "Plan de verschuiving van je biologische klok voor je volgende reis",
+            ] {
+                for ratio in [1.0, 1.2, 1.5] {
+                    let style = Typography.headline
+                    let font = CTFontCreateWithName(style.face.rawValue as CFString, style.size * ratio, nil)
+                    let pitch = CGFloat(try #require(style.lineHeight)) * ratio
+                    let text = NSAttributedString(
+                        string: string,
+                        attributes: [
+                            .init(kCTFontAttributeName as String): font,
+                            .init(kCTKernAttributeName as String): style.tracking * ratio,
+                        ])
+                    let width = device.width - device.insets.left - device.insets.right - 2 * WelcomeTokens.gutter
+                    let layout = ExactLineTextLayout(text: text, width: width, lineHeight: pitch)
+                    #expect(abs(layout.height - CGFloat(layout.ranges.count) * pitch) < 1e-9)
+                    #expect(layout.ranges.map { text.attributedSubstring(from: $0).string }.joined() == string)
+                    let natural = CTFontGetAscent(font) + CTFontGetDescent(font) + CTFontGetLeading(font)
+                    for index in layout.ranges.indices {
+                        let frame = layout.frame(for: index, width: width, naturalHeight: natural)
+                        #expect(abs(frame.midY - (CGFloat(index) + 0.5) * pitch) < 1e-9)
+                    }
                 }
             }
         }

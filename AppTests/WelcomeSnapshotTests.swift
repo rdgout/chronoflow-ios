@@ -56,8 +56,6 @@
                 try await finalWelcome()
                 try await accessibilitySizesRenderTheSameWelcomeAsXXLarge()
                 try await trackedEyebrowKeepsItsIntrinsicWidthThroughTheCap()
-                try await boardGeometryAndAsymmetricInsets()
-                try await headlineUsesTheScaledBoardPitchInBothLanguages()
                 try await positiveLeadingStylesKeepTheirExistingPixels()
                 explicitLocalesResolveTheCatalog()
                 try await renderedWelcomeContainsTextAndChangesWithAppearanceAndLanguage()
@@ -227,66 +225,6 @@
                     #expect(frame.width >= natural.width - 0.5, "\(language), \(size): \(frame), \(natural)")
                     #expect(frame.height >= natural.height - 0.5)
                     try host.assertHorizontalInsets()
-                }
-            }
-        }
-
-        @Test func boardGeometryAndAsymmetricInsets() async throws {
-            try await FontRegistry.register()
-            let board = WelcomeTestWindow(style: .light, size: CGSize(width: 390, height: 844))
-            defer { board.close() }
-            board.controller.safeAreaRegions = []
-            try await board.layout()
-            let expected: [(WelcomeElement, CGFloat, CGFloat?)] = [
-                (.brand, 64, 28), (.eyebrow, 164, 16),
-                (.headline, 196, 3 * CGFloat(try #require(Typography.headline.lineHeight))),
-                (.plan, 688, 52), (.signIn, 752, 52),
-            ]
-            for (element, top, height) in expected {
-                let rect = try #require(board.frames[element])
-                #expect(abs(rect.minY - top) <= 0.5, "\(element): \(rect)")
-                #expect(abs(rect.minX - 24) <= 0.5)
-                if let height { #expect(abs(rect.height - height) <= 0.5, "\(element): \(rect)") }
-            }
-            for language in ["en", "nl"] {
-                for size in try profileSizes() {
-                    let host = WelcomeTestWindow(style: .dark, language: language, typeSize: size)
-                    defer { host.close() }
-                    host.controller.additionalSafeAreaInsets = UIEdgeInsets(top: 7, left: 19, bottom: 11, right: 31)
-                    try await host.layout()
-                    try host.assertHorizontalInsets()
-                    let headline = try #require(host.frames[.headline])
-                    let card = try #require(host.frames[.copy])
-                    #expect(card.minY - headline.maxY >= 23.5)
-                    #expect(try #require(host.frames[.signIn]).height >= 52)
-                }
-            }
-        }
-
-        @Test func headlineUsesTheScaledBoardPitchInBothLanguages() async throws {
-            try await FontRegistry.register()
-            for language in ["en", "nl"] {
-                for size in [DynamicTypeSize.large, .xxLarge, .accessibility5] {
-                    let host = WelcomeTestWindow(style: .light, language: language, typeSize: size)
-                    defer { host.close() }
-                    try await host.layout()
-                    let headline = try #require(host.frames[.headline])
-                    let font = Typography.headline.uiFont(
-                        compatibleWith: UITraitCollection(preferredContentSizeCategory: UIContentSizeCategory(size)))
-                    let pitch = try #require(Typography.headline.lineHeight) * font.pointSize / Typography.headline.size
-                    func labels(in view: UIView) -> [UILabel] {
-                        view.subviews.flatMap { child in (child as? UILabel).map { [$0] } ?? labels(in: child) }
-                    }
-                    let lines = labels(in: host.controller.view).sorted {
-                        $0.convert($0.bounds, to: host.window).minY < $1.convert($1.bounds, to: host.window).minY
-                    }
-                    #expect(lines.count > 1)
-                    #expect(abs(headline.height - CGFloat(lines.count) * pitch) <= 0.5)
-                    for (first, second) in zip(lines, lines.dropFirst()) {
-                        let a = first.convert(first.bounds, to: host.window)
-                        let b = second.convert(second.bounds, to: host.window)
-                        #expect(abs(b.minY - a.minY - pitch) <= 0.5, "\(language), \(size): \(a), \(b)")
-                    }
                 }
             }
         }

@@ -21,8 +21,10 @@ import SwiftUI
             GeometryReader { safeGeometry in
                 GeometryReader { geometry in
                     let insets = safeGeometry.safeAreaInsets
-                    let top = max(insets.top + WelcomeTokens.groupGap, WelcomeTokens.topPadding)
-                    let bottom = max(insets.bottom, WelcomeTokens.bottomPadding)
+                    let layout = WelcomeGeometry(
+                        size: geometry.size,
+                        insets: .init(
+                            top: insets.top, left: insets.leading, bottom: insets.bottom, right: insets.trailing))
                     ZStack {
                         CfSky()
                         ScrollView {
@@ -31,11 +33,11 @@ import SwiftUI
                                 Spacer(minLength: WelcomeTokens.gutter)
                                 actions
                             }
-                            .frame(minHeight: max(0, geometry.size.height - top - bottom), alignment: .topLeading)
-                            .padding(.top, top)
-                            .padding(.bottom, bottom)
-                            .padding(.leading, insets.leading + WelcomeTokens.gutter)
-                            .padding(.trailing, insets.trailing + WelcomeTokens.gutter)
+                            .frame(minHeight: max(0, layout.content.height), alignment: .topLeading)
+                            .padding(.top, layout.top)
+                            .padding(.bottom, layout.bottom)
+                            .padding(.leading, layout.leading)
+                            .padding(.trailing, layout.trailing)
                         }
                         .scrollIndicators(.hidden)
                     }

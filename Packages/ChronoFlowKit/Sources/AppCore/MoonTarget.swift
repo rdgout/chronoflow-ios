@@ -2,7 +2,7 @@ import CoreGraphics
 import Foundation
 
 public enum MoonTarget {
-    public struct Insets: Sendable, Equatable {
+    public struct Insets: Codable, Sendable, Equatable {
         public let top: CGFloat
         public let left: CGFloat
         public let bottom: CGFloat
