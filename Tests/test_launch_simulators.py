@@ -27,7 +27,7 @@ class LaunchSimulatorsTests(unittest.TestCase):
         self.failure = lambda command: False
         self.installed = True
 
-    def execute(self, timeline=False):
+    def execute(self, timeline=False, scene=False):
         output = io.StringIO()
 
         def fake_run(command, **kwargs):
@@ -41,7 +41,7 @@ class LaunchSimulatorsTests(unittest.TestCase):
             return subprocess.CompletedProcess(command, status, "")
 
         with patch.object(runner.subprocess, "run", side_effect=fake_run), contextlib.redirect_stdout(output):
-            status = runner.main(timeline=timeline)
+            status = runner.main(timeline=timeline, scene=scene)
         return status, output.getvalue()
 
     def test_all_devices_use_type_and_runtime_and_clear_the_launch_cache(self):
@@ -161,6 +161,34 @@ class LaunchSimulatorsTests(unittest.TestCase):
         self.assertIn("FAIL iPhone Duo: No available simulator:", output)
         self.assertNotIn("platform=iOS Simulator,id=device-6", str(self.commands))
         self.assertEqual(self.commands[-2:], [["make", "check"], ["make", "duo"]])
+
+    def test_scene_runs_presentation_and_ui_suites_on_all_seven_devices(self):
+        status, output = self.execute(scene=True)
+        self.assertEqual(status, 0)
+        self.assertIn("Phase 3b simulator results:", output)
+        tests = [c for c in self.commands if c[0] == "xcodebuild" and c[-1] == "test"]
+        self.assertEqual(len(tests), 7)
+        for command in tests:
+            for suite in ["AppTests", "AppUITests/WindowTests", "AppUITests/LaunchSceneTests", "DesignSystemTests", "AppCoreTests", "LaunchTests"]:
+                self.assertIn("-only-testing:" + suite, command)
+        self.assertIn("platform=iOS Simulator,id=device-6", tests[-1])
+        self.assertEqual(self.commands[-2:], [["make", "check"], ["make", "duo"]])
+
+    def test_scene_failure_continues_to_duo_and_both_final_commands(self):
+        self.failure = lambda c: c[-1] == "check" or (c[0] == "xcodebuild" and c[-1] == "test" and "platform=iOS Simulator,id=device-0" in c)
+        status, output = self.execute(scene=True)
+        self.assertEqual(status, 1)
+        self.assertIn("FAIL iPhone SE (3rd gen):", output)
+        self.assertIn("PASS iPhone Duo", output)
+        self.assertIn("FAIL make check:", output)
+        self.assertIn("PASS make duo", output)
+
+    def test_scene_requires_duos_own_runtime(self):
+        self.devices[runner.REGULAR_RUNTIME].append(self.devices[runner.DUO_RUNTIME].pop())
+        status, output = self.execute(scene=True)
+        self.assertEqual(status, 1)
+        self.assertIn("FAIL iPhone Duo: No available simulator:", output)
+        self.assertNotIn("platform=iOS Simulator,id=device-6", str(self.commands))
 
 
 if __name__ == "__main__":

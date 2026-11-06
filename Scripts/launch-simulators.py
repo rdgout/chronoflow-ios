@@ -28,7 +28,7 @@ def run(command, *, check=True, capture_output=False):
     return subprocess.run(command, cwd=ROOT, check=check, capture_output=capture_output, text=True)
 
 
-def test_device(device_type, runtime, devices, timeline=False):
+def test_device(device_type, runtime, devices, timeline=False, scene=False):
     identifier = "com.apple.CoreSimulator.SimDeviceType." + device_type
     device = next(
         (d for d in devices.get(runtime, []) if d.get("isAvailable") and d.get("deviceTypeIdentifier") == identifier),
@@ -52,10 +52,10 @@ def test_device(device_type, runtime, devices, timeline=False):
     run(XCODEBUILD + [
         "-destination", "platform=iOS Simulator,id=" + udid,
         "-only-testing:AppTests", "-only-testing:AppUITests/WindowTests", "-only-testing:DesignSystemTests",
-    ] + (["-only-testing:AppCoreTests", "-only-testing:LaunchTests"] if timeline else []) + ["test"])
+    ] + (["-only-testing:AppCoreTests", "-only-testing:LaunchTests"] if timeline or scene else []) + (["-only-testing:AppUITests/LaunchSceneTests"] if scene else []) + ["test"])
 
 
-def main(timeline=False):
+def main(timeline=False, scene=False):
     results = []
 
     def record(label, action):
@@ -68,7 +68,7 @@ def main(timeline=False):
         return True
 
     def report():
-        phase = "3a" if timeline else "2"
+        phase = "3b" if scene else "3a" if timeline else "2"
         print(f"\nPhase {phase} simulator results:", flush=True)
         for label, passed, detail in results:
             print(f"{'PASS' if passed else 'FAIL'} {label}" + (": " + detail if detail else ""), flush=True)
@@ -87,7 +87,7 @@ def main(timeline=False):
     record("list simulators", discover)
     for label, device_type, runtime in MATRIX:
         print("\nTesting " + label + " on " + runtime, flush=True)
-        record(label, lambda: test_device(device_type, runtime, devices, timeline))
+        record(label, lambda: test_device(device_type, runtime, devices, timeline, scene))
     record("make check", lambda: run(["make", "check"]))
     record("make duo", lambda: run(["make", "duo"]))
     return report()
@@ -96,4 +96,6 @@ def main(timeline=False):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--timeline", action="store_true", help="also run the Phase 3a pure timeline suites on each device")
-    raise SystemExit(main(timeline=parser.parse_args().timeline))
+    parser.add_argument("--scene", action="store_true", help="also run Phase 3b scene presentation and UI suites on each device")
+    args = parser.parse_args()
+    raise SystemExit(main(timeline=args.timeline, scene=args.scene))
