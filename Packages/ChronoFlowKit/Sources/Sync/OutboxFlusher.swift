@@ -5,6 +5,7 @@ import LocalStore
 public struct OutboxFlushResult: Sendable, Equatable {
     public var refusals: [SyncRefusal] = []
     public var retryAfter: TimeInterval?
+    public var serverRetryAfter: TimeInterval?
     public var parked: Int = 0
     public var offline = false
     public init() {}
@@ -105,7 +106,12 @@ public struct OutboxFlusher: Sendable {
                         return try StoreApplication.pending(db).first(where: { $0.id == sent.id })?.attempts ?? 0
                     }
                     let retryAfter: TimeInterval
-                    if case .throttled(let seconds, _) = failure { retryAfter = seconds } else { retryAfter = 0 }
+                    if case .throttled(let seconds, _) = failure {
+                        retryAfter = seconds
+                        result.serverRetryAfter = max(result.serverRetryAfter ?? 0, seconds)
+                    } else {
+                        retryAfter = 0
+                    }
                     result.retryAfter = max(
                         result.retryAfter ?? 0,
                         OutboxFailurePolicy.retryDelay(attempts: max(0, attempts - 1), retryAfter: retryAfter))

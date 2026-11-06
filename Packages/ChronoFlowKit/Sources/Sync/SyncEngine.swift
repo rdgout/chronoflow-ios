@@ -134,6 +134,7 @@ public actor SyncEngine {
         }
         var result: SyncResult
         var retryAfter: TimeInterval?
+        var serverRetryAfter: TimeInterval?
         var refusals: [SyncRefusal] = []
         try runEpoch.check()
         emit(.started(accountID: epoch.accountID, epoch: epoch.generation))
@@ -143,11 +144,13 @@ public actor SyncEngine {
             result = try await runOnce(epoch: runEpoch)
             try runEpoch.check()
             if let delay = result.retryAfter { retryAfter = max(retryAfter ?? 0, delay) }
+            if let delay = result.serverRetryAfter { serverRetryAfter = max(serverRetryAfter ?? 0, delay) }
             refusals.append(contentsOf: result.refusals)
             if result.state == .unauthorized || result.state == .verificationRequired { break }
         } while rerun
         let merged = SyncResult(
-            state: result.state, pendingCount: result.pendingCount, retryAfter: retryAfter, refusals: refusals)
+            state: result.state, pendingCount: result.pendingCount, retryAfter: retryAfter,
+            serverRetryAfter: serverRetryAfter, refusals: refusals)
         emit(.finished(accountID: epoch.accountID, epoch: epoch.generation, result: merged))
         return merged
     }
@@ -156,6 +159,7 @@ public actor SyncEngine {
         guard let source else { throw CancellationError() }
         var state: SyncState = .idle
         var retryAfter: TimeInterval?
+        var serverRetryAfter: TimeInterval?
         var refusals: [SyncRefusal] = []
         do {
             let online = await isOnline()
@@ -178,6 +182,7 @@ public actor SyncEngine {
                 try epoch.check()
                 refusals = flush.refusals
                 retryAfter = flush.retryAfter
+                serverRetryAfter = flush.serverRetryAfter
                 if flush.offline {
                     state = .offline
                 } else {
@@ -206,7 +211,8 @@ public actor SyncEngine {
                 try epoch.check()
             case .throttled(let seconds, _):
                 state = .failed
-                retryAfter = seconds
+                retryAfter = max(retryAfter ?? 0, seconds)
+                serverRetryAfter = max(serverRetryAfter ?? 0, seconds)
             default:
                 state = .failed
                 retryAfter = max(retryAfter ?? 0, 1)
@@ -214,7 +220,9 @@ public actor SyncEngine {
         }
         let pending = try await OutboxRepository(database: database).pending().count
         try epoch.check()
-        return SyncResult(state: state, pendingCount: pending, retryAfter: retryAfter, refusals: refusals)
+        return SyncResult(
+            state: state, pendingCount: pending, retryAfter: retryAfter, serverRetryAfter: serverRetryAfter,
+            refusals: refusals)
     }
 
     private func emit(_ event: SyncEvent) {

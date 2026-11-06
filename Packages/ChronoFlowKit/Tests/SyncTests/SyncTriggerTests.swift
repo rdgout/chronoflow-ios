@@ -295,3 +295,65 @@ extension SyncTriggerTests {
         try await store.close()
     }
 }
+
+extension SyncTriggerTests {
+    @Test(arguments: ["activation", "outbox", "reconnect"])
+    func newTriggerPreemptsExponentialRetry(_ trigger: String) async throws {
+        let store = try await SyncStore()
+        let source = ScriptedSource()
+        let clock = ManualSyncScheduler()
+        let path = TriggerPath()
+        await source.configure(failMethod: "identity", methodFailure: .server(status: 500))
+        let lifecycle = SyncLifecycle(
+            database: store.database, source: source, epoch: store.epoch,
+            scheduler: SyncScheduler(now: { syncDate }, sleep: { try await clock.sleep($0) }), path: path)
+        try await lifecycle.start()
+        for delay in [1.0, 2, 4, 8, 16, 32, 64, 128] {
+            _ = try await lifecycle.refreshNow()
+            try #require(await triggerEventually { await clock.requestedDelays.last == delay })
+        }
+        let before = await source.calls.count
+        let registrations = await clock.requestedDelays.count
+        switch trigger {
+        case "outbox": _ = try await store.enqueue(.walkthrough)
+        case "reconnect":
+            await path.send(false)
+            await path.send(true)
+        default: await lifecycle.requestSync()
+        }
+        try #require(await triggerEventually { await clock.requestedDelays.count > registrations })
+        #expect(await clock.requestedDelays.last == 1)
+        #expect(await source.calls.count == before)
+        await clock.advance()
+        let expected = trigger == "outbox" ? ["send", "identity"] : ["identity"]
+        try #require(await triggerEventually { await source.calls.count >= before + expected.count })
+        try #require(await triggerEventually { await clock.requestedDelays.last == 256 })
+        #expect(await Array(source.calls.dropFirst(before)) == expected)
+        await lifecycle.stop()
+        try await store.close()
+    }
+
+    @Test func outboxBackoffCanBePreemptedButServerDeadlineCannot() async throws {
+        let store = try await SyncStore()
+        _ = try await store.enqueue(.walkthrough)
+        let source = ScriptedSource()
+        let clock = ManualSyncScheduler()
+        let time = TriggerTime()
+        await source.configure(trips: [], failures: [.throttled(retryAfterSeconds: 300, status: 429)])
+        let lifecycle = SyncLifecycle(
+            database: store.database, source: source, epoch: store.epoch,
+            scheduler: SyncScheduler(now: { time.now() }, sleep: { try await clock.sleep($0) }))
+        try await lifecycle.start()
+        let result = try await lifecycle.refreshNow()
+        #expect(result.serverRetryAfter == 300)
+        try #require(await triggerEventually { await clock.requestedDelays.last == 300 })
+        let before = await source.calls
+        let registrations = await clock.requestedDelays.count
+        await lifecycle.requestSync()
+        _ = try await lifecycle.refreshNow()
+        #expect(await source.calls == before)
+        #expect(await clock.requestedDelays.count == registrations)
+        await lifecycle.stop()
+        try await store.close()
+    }
+}

@@ -102,7 +102,9 @@ public actor SyncLifecycle {
     }
 
     public func requestSync() async {
-        guard !stopped, !unauthorizedSent, retry == nil else { return }
+        guard !stopped, !unauthorizedSent else { return }
+        if let serverDeadline, serverDeadline > scheduler.now(), retry != nil { return }
+        cancelRetry()
         if let serverDeadline, serverDeadline > scheduler.now() {
             scheduleRetry(max(1, serverDeadline.timeIntervalSince(scheduler.now())))
         } else {
@@ -148,7 +150,7 @@ public actor SyncLifecycle {
             let exponential = min(pow(2, Double(min(failures, 9))), 300)
             failures += 1
             let delay = max(exponential, result.retryAfter ?? 0)
-            serverDeadline = result.retryAfter.map { scheduler.now().addingTimeInterval($0) }
+            serverDeadline = result.serverRetryAfter.map { scheduler.now().addingTimeInterval($0) }
             scheduleRetry(delay)
         }
     }
