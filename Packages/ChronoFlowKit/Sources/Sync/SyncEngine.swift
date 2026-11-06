@@ -133,15 +133,23 @@ public actor SyncEngine {
             rerun = false
         }
         var result: SyncResult
+        var retryAfter: TimeInterval?
+        var refusals: [SyncRefusal] = []
+        try runEpoch.check()
+        emit(.started(accountID: epoch.accountID, epoch: epoch.generation))
         repeat {
+            rerun = false
             try runEpoch.check()
-            emit(.started(accountID: epoch.accountID, epoch: epoch.generation))
             result = try await runOnce(epoch: runEpoch)
             try runEpoch.check()
-            emit(.finished(accountID: epoch.accountID, epoch: epoch.generation, result: result))
-            guard result.state == .idle, result.retryAfter == nil else { return result }
-            if rerun { rerun = false } else { return result }
-        } while true
+            if let delay = result.retryAfter { retryAfter = max(retryAfter ?? 0, delay) }
+            refusals.append(contentsOf: result.refusals)
+            if result.state == .unauthorized || result.state == .verificationRequired { break }
+        } while rerun
+        let merged = SyncResult(
+            state: result.state, pendingCount: result.pendingCount, retryAfter: retryAfter, refusals: refusals)
+        emit(.finished(accountID: epoch.accountID, epoch: epoch.generation, result: merged))
+        return merged
     }
 
     private func runOnce(epoch: SyncEpoch) async throws -> SyncResult {

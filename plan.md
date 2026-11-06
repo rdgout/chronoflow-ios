@@ -1043,6 +1043,8 @@ Stack on 9b. No UI; scope is the documented engine/repositories, not Settings/To
 
 - [x] Review fix: track shared-flight waiters so cancellation only invalidates work when the last waiter cancels; canceling either of two waiters preserves the other caller and the coalesced rerun, while single-caller and teardown cancellation still drain late responses.
 
+- [x] Review fix (findings 5/6): honor coalesced reruns after transient, failed and offline flights; stop early only for unauthorized/verification-required. Merge maximum retry-after and all refusals, publishing one finished result for 9d backoff. Regressions cover a check-off queued during detail 500, joined refreshes, both retry-delay orders, protected stops and the lifecycle server deadline.
+
 #### Phase 9d: Sync lifecycle, sign-out wipe and launch readiness (`feat/phase-9d-session-lifecycle`)
 
 Stack on 9c. No UI. OQ 29 leaves voluntary pending-change confirmation as a return value only; no new dialog. D25 forced wipe is required regardless of that UI decision.

@@ -87,6 +87,38 @@ actor TriggerEvents {
         try await store.close()
     }
 
+    @Test func coalescedRecoveryPreservesServerDeadline() async throws {
+        let store = try await SyncStore()
+        let source = ScriptedSource()
+        let gate = TestGate()
+        let clock = ManualSyncScheduler()
+        _ = try await store.enqueue(.walkthrough)
+        await source.configure(
+            failures: [.throttled(retryAfterSeconds: 900, status: 429)],
+            hook: { method in if method == "identity" { await gate.block() } })
+        let lifecycle = SyncLifecycle(
+            database: store.database, source: source, epoch: store.epoch,
+            scheduler: SyncScheduler(now: { syncDate }, sleep: { try await clock.sleep($0) }))
+        try await lifecycle.start()
+        await clock.waitForSleep()
+        let run = Task { try await lifecycle.refreshNow() }
+        await gate.waitUntilBlocked()
+        await lifecycle.requestSync()
+        await source.configure()
+        await gate.release()
+        let result = try await run.value
+        #expect(result.pendingCount == 0)
+        #expect(result.retryAfter == 900)
+        while await clock.requestedDelays.last != 900 { await Task.yield() }
+        let calls = await source.calls
+        #expect(try await lifecycle.refreshNow() == result)
+        #expect(await source.calls == calls)
+        #expect(await clock.pendingCount == 1)
+        await lifecycle.stop()
+        #expect(await clock.pendingCount == 0)
+        try await store.close()
+    }
+
     @Test func offlineWaitsForHintAndVerificationProbesIdentityOnly() async throws {
         let store = try await SyncStore()
         let source = ScriptedSource()
