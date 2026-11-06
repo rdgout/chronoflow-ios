@@ -1049,6 +1049,8 @@ Stack on 9b. No UI; scope is the documented engine/repositories, not Settings/To
 
 #### Phase 9d: Sync lifecycle, sign-out wipe and launch readiness (`feat/phase-9d-session-lifecycle`)
 
+- [x] Review fix: drive the production native SceneDelegate and StoredDataReadiness path with literal cached/fresh/unverified outcomes, off-main credential/open assertions and a suspended real SQLite open; correct the earlier tooling proof claim.
+
 - [x] Review fix: schedule sync startup after session publication without awaiting data-source/path setup; suspended production source-factory host regression proves StoredDataReadiness.session resolves independently.
 
 - [x] Review fix: let activation, reconnect and outbox commits preempt exponential backoff while preserving true server retry-after deadlines; literal call-sequence regressions cover all three triggers.

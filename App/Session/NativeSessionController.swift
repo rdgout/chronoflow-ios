@@ -18,6 +18,7 @@ final class NativeSessionController {
 
     init(
         applicationSupport: URL, namespace: StorageNamespace, credentials: (any SessionStore)? = nil,
+        accountStore: (@MainActor (SessionAccountDatabase) -> any SessionAccountStore)? = nil,
         requestSync: @escaping @Sendable (UInt64) async -> Void = { _ in },
         source: (@Sendable (StoredSession) async -> any DataSource)? = nil,
         unauthorized: @escaping @Sendable (UInt64) async -> Void = { _ in },
@@ -68,7 +69,8 @@ final class NativeSessionController {
             await signedOut()
         }
         controller = SessionController(
-            credentials: credentials, accounts: accounts, teardown: teardown, stopSync: { await sync?.stop() },
+            credentials: credentials, accounts: accountStore?(accounts) ?? accounts, teardown: teardown,
+            stopSync: { await sync?.stop() },
             requestSync: { epoch in
                 if let controller = reference.value() {
                     await sync?.requestStart(controller: controller, epoch: epoch)

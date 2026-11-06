@@ -1362,7 +1362,11 @@ CHRONOFLOW_READINESS=signed-out; it constructs no account controller, SQLite sto
 Launch arguments cannot select this setting. Release still accepts only its existing ready-playback,
 stall and Reduce Motion diagnostics; readiness overrides remain Debug-only. Configuration loading runs
 on a detached worker after CATransaction.flush; account/Keychain/migration/observation work stays on
-workers/actors. The suspended-store first-flush proof remains in SessionLifecycleTests. Launch preserves
+workers/actors. SessionLifecycleTests now drives the native service-configuration branch through an injected native-session
+factory, independent of the hosted app's global session. Its literal cached/fresh/unverified fixtures exercise
+StoredDataReadiness, assert first-commit ordering and off-main credential/open work, and suspend the real
+account open while checking the overlay animations and MainActor heartbeat. The earlier ControllerReadiness
+seam alone did not cover this production composition. Launch preserves
 external session navigation while keeping the existing 2/8-second rules. No splash geometry, assets,
 fonts, strings or Duo-specific behavior changed.
 

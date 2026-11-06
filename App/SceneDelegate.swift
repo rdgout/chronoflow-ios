@@ -19,6 +19,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     private(set) var launchIntro: LaunchIntro?
     private var allowsIntro = false
     var serviceConfigurationFactory: (@Sendable () async throws -> (AppServices, URL?))?
+    var nativeSessionFactory: (@MainActor (AppServices, URL) -> NativeSessionController)?
     var readinessFactory: (@MainActor (LaunchArguments, any LaunchClock) -> any LaunchReadiness)?
     var sessionActivity: (@MainActor (Bool) -> Void)?
     private(set) var nativeSession: NativeSessionController?
@@ -167,7 +168,12 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                     } else {
                         let app = UIApplication.shared.delegate as? AppDelegate
                         let native: NativeSessionController
-                        if let existing = app?.nativeSession {
+                        if let factory = nativeSessionFactory {
+                            guard let root = configuration.1 else {
+                                throw AppServices.Failure.applicationSupportUnavailable
+                            }
+                            native = factory(configuration.0, root)
+                        } else if let existing = app?.nativeSession {
                             native = existing
                         } else {
                             guard let root = configuration.1 else {

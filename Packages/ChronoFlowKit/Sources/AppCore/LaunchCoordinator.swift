@@ -5,7 +5,7 @@ public final class LaunchCoordinator {
     public private(set) var state: LaunchState
     public let clock: any LaunchClock
     private let reduceMotion: Bool
-    private let readiness: any LaunchReadiness
+    public let readiness: any LaunchReadiness
     private let onChange: @MainActor (LaunchState, [LaunchEffect]) -> Void
     private var tasks: [Task<Void, Never>] = []
     private var deadlineTask: Task<Void, Never>?
