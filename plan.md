@@ -420,10 +420,15 @@ Device runs need OQ 4 (team) and OQ 14 (device). Phase 3c remains gated on the p
 
 ### Phase 3c: Splash snapshots (`feat/phase-3c-snapshots`)
 
+- [x] Implement the sampled splash snapshot suite and commit the 154 recorded baselines: all eleven frames in light/dark on every D1c device, opt-in recording, running-window and asymmetric/side-only inset geometry, host coverage and S1 checks. Pin `make test` and `make snapshots` to en/US and resolve slow snapshot copy from the explicit English Launch catalog. Host checks cover baseline completeness and Makefile language arguments. Verified by the orchestrator on 2026-11-06: recording/comparison passed on 17e, 17, Air, 18 Pro and 18 Pro Max; SE and Duo snapshots matched but their geometry test rejected a zero top inset; make duo passed. make check failed on locale-dependent 17e slow frames. The top-inset assumption and ambient snapshot language are corrected; revised simulator validation is open.
+  Files: `Tests/LaunchTests/LaunchSnapshot*.swift`, `Tests/LaunchTests/__Snapshots__/**`, `Package.swift`, `Makefile`, `Tests/test_launch_resources.py`.
+  (OQ 6 default assumed, confirm). (OQ 10 default assumed, confirm). (OQ 11 default assumed, confirm). Snapshot work proceeds before the physical-device D3 proof by user direction; re-check if that proof changes the layer tree. The D3 device task stays open (needs a device; open).
+
 - [ ] Snapshots via `sample(at:)`, light and dark, on iPhone 17e for the full set and on every D1c device (iPhone SE, Air, 18 Pro Max, iPhone Duo at least) for 0, 1400 and welcome 2400; a geometry test asserts on each size that the moon, wordmark, status, sun and path stay inside the window and its horizontal safe area:
   ready 0, 700, 1400, 1700 (↔ board 1900), 1900; slow 2600, 4900 (readyAt 4600); welcome 1500, 1950, 2400 (fallback target); Reduce Motion 0.
   Files: `Tests/LaunchTests/LaunchSnapshotTests.swift`, `Tests/LaunchTests/__Snapshots__/**`.
   Test: recorded, reviewed side by side with `_design/frames/`, then pass. Status vs path apex: assert and record the relation on 844 and 874 (S1).
+  Note: implementation and recorded baselines are complete above; this acceptance task stays open for PNG/board-frame approval and revised simulator validation. `_design/frames/` is absent. Full path containment conflicts with the designed endpoints, which bleed 10 pt beyond both edges; no inset redesign/default is provided. Tests preserve the bleed and assert vertical bounds/clipping. S1: status top 518 is below apex 512.5 at height 844; top 533 is above apex 542.5 at height 874.
 
 ### Phase 4: Readiness and hand-off (`feat/phase-4-readiness`)
 

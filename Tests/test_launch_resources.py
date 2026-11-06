@@ -3,6 +3,7 @@ from pathlib import Path
 import plistlib
 import re
 import struct
+import subprocess
 import unittest
 import xml.etree.ElementTree as ET
 
@@ -14,6 +15,34 @@ class LaunchResourcesTests(unittest.TestCase):
     def setUp(self):
         self.document = ET.parse(ROOT / "App/LaunchScreen.storyboard").getroot()
         self.view = self.document.find(".//viewController/view")
+
+    def test_make_test_and_snapshots_pin_the_snapshot_language(self):
+        for target in ["test", "snapshots"]:
+            with self.subTest(target=target):
+                command = subprocess.check_output(["make", "-n", target], cwd=ROOT, text=True)
+                self.assertIn("-testLanguage en -testRegion US", command)
+
+    def test_splash_baselines_cover_all_frames_at_each_devices_own_scale(self):
+        directory = ROOT / "Packages/ChronoFlowKit/Tests/LaunchTests/__Snapshots__/LaunchSnapshotTests"
+        frames = {
+            "ready-0", "ready-700", "ready-1400", "ready-1700", "ready-1900",
+            "slow-2600", "slow-4900", "welcome-1500", "welcome-1950", "welcome-2400", "reduceMotion-0",
+        }
+        devices = {}
+        for image in directory.glob("*.png"):
+            match = re.fullmatch(r"sampledSplashFrames\.(iPhone\d+-\d+)-(\d+)x(\d+)-([23])x-(light|dark)-(.+)\.png", image.name)
+            self.assertIsNotNone(match, image.name)
+            model, width, height, scale, style, frame = match.groups()
+            dimensions = (int(width), int(height), int(scale))
+            previous, coverage = devices.setdefault(model, (dimensions, set()))
+            self.assertEqual(previous, dimensions, model)
+            coverage.add((style, frame))
+            data = image.read_bytes()
+            self.assertEqual(data[:8], b"\x89PNG\r\n\x1a\n")
+            self.assertEqual(struct.unpack(">II", data[16:24]), (int(width) * int(scale), int(height) * int(scale)))
+        self.assertEqual(set(devices), {"iPhone14-6", "iPhone18-5", "iPhone18-3", "iPhone18-4", "iPhone19-2", "iPhone19-3", "iPhone19-4"})
+        for model, (_, coverage) in devices.items():
+            self.assertEqual(coverage, {(style, frame) for style in ["light", "dark"] for frame in frames}, model)
 
     def test_hosted_tests_reuse_the_apps_package_products(self):
         project = (ROOT / "project.yml").read_text()

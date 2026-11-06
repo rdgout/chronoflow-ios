@@ -22,10 +22,10 @@ lint:
 	xcrun swift format lint --strict -r $(SWIFT_PATHS)
 
 test:
-	$(XCODEBUILD) -destination '$(DESTINATION)' -scheme ChronoFlow $(addprefix -skip-testing:,$(UI_SUITES)) test
+	$(XCODEBUILD) -destination '$(DESTINATION)' -scheme ChronoFlow -testLanguage en -testRegion US $(addprefix -skip-testing:,$(UI_SUITES)) test
 
 snapshots:
-	$(XCODEBUILD) -destination '$(DESTINATION)' -scheme ChronoFlow $(addprefix -only-testing:,$(UI_SUITES)) test
+	$(XCODEBUILD) -destination '$(DESTINATION)' -scheme ChronoFlow -testLanguage en -testRegion US $(addprefix -only-testing:,$(UI_SUITES)) test
 
 duo:
 	@destination="$$(python3 Scripts/duo-destination.py)" && \
