@@ -1,4 +1,5 @@
 import AppCore
+import Auth
 import DesignSystem
 import Observation
 import SwiftUI
@@ -21,6 +22,7 @@ final class RootNavigator: Navigator {
 
 struct RootView: View {
     var navigator = RootNavigator()
+    var authModel: SignInModel?
     var moonAnchorStore: MoonAnchorStore?
     var launchIntro: LaunchIntro?
     var forcesReduceMotion = false
@@ -37,6 +39,10 @@ struct RootView: View {
                     .environment(\.moonAnchorStore, moonAnchorStore)
                     .environment(\.launchIntro, launchIntro)
                     .environment(\.forcesReduceMotion, forcesReduceMotion)
+            } else if route == .signIn, let authModel {
+                AuthRootView(
+                    model: authModel, back: { navigator.navigate(to: .welcome) },
+                    guest: { navigator.navigate(to: .guestWizard) })
             } else {
                 #if DEBUG
                     RoutePlaceholder(route: route)

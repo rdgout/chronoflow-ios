@@ -1,0 +1,33 @@
+import XCTest
+
+nonisolated final class AuthAuditTests: XCTestCase {
+    @MainActor func testSignInAuditInBothLanguagesAndAppearances() async throws {
+        let device = XCUIDevice.shared
+        let previous = device.appearance
+        defer { device.appearance = previous }
+        for language in ["en", "nl"] {
+            for appearance in [XCUIDevice.Appearance.light, .dark] {
+                try DeviceAppearance.set(appearance)
+                let app = XCUIApplication()
+                app.launchArguments = [
+                    "-cf.session", "out", "-cf.reduceMotion", "-AppleLanguages", "(\(language))", "-AppleLocale",
+                    language == "nl" ? "nl_NL" : "en_US",
+                ]
+                app.launch()
+                defer { app.terminate() }
+                let signIn = app.buttons["welcome.signIn"]
+                XCTAssertTrue(signIn.waitForExistence(timeout: 6))
+                for _ in 0..<8 where !signIn.isHittable { app.scrollViews.firstMatch.swipeUp() }
+                signIn.tap()
+                XCTAssertTrue(app.staticTexts["auth.heading"].waitForExistence(timeout: 3))
+                try app.performAccessibilityAudit(for: .all.subtracting(.dynamicType))
+                for id in ["sign-in.passkey", "sign-in.submit", "sign-in.forgot", "sign-in.signup", "sign-in.guest"] {
+                    let button = app.buttons[id]
+                    for _ in 0..<8 where !button.isHittable { app.scrollViews.firstMatch.swipeUp() }
+                    XCTAssertTrue(button.isHittable)
+                    try app.performAccessibilityAudit(for: .all.subtracting(.dynamicType))
+                }
+            }
+        }
+    }
+}

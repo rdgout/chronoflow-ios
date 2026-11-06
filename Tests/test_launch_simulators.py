@@ -80,6 +80,22 @@ class ClassificationTests(unittest.TestCase):
             costs = [runner.estimated_seconds(a, selections[a], {}) for a in order]
             self.assertEqual(costs, sorted(costs, reverse=True))
 
+    def test_auth_host_logic_profiles_and_serial_appearance_are_in_check(self):
+        host = set(runner.selectors('host'))
+        self.assertTrue(any(s.startswith('AuthTests/') for s in host))
+        logic = {'AppTests/AuthControlTests', 'AppTests/AuthLayoutTests',
+                 'AppUITests/SignInTests', 'AppUITests/AuthAuditTests'}
+        self.assertTrue(logic <= set(runner.selectors('logic')))
+        self.assertIn('AppTests/AuthSnapshotTests', runner.selectors('profiles'))
+        self.assertIn('AppTests/AuthSnapshotTests', runner.SNAPSHOTS)
+        selected = runner.selection('check', '17e')
+        for suite in logic | {'AppTests/AuthSnapshotTests'}:
+            self.assertEqual(selected.count(suite), 1, suite)
+        self.assertFalse(set(selected) & host)
+        self.assertIn('AppUITests/AuthAuditTests', runner.SERIAL_TESTS)
+        self.assertEqual(runner.recording_selection(['AppTests/AuthSnapshotTests'], 'welcome', '1'),
+                         ['AppTests/AuthSnapshotTests'])
+
     def test_store_and_core_logic_run_on_host_by_default(self):
         host = set(runner.selectors('host'))
         self.assertTrue(any(s.startswith('LocalStoreTests/') for s in host))
@@ -398,6 +414,19 @@ class RunnerTests(unittest.TestCase):
         selections, order = runner.schedule('matrix', ['se', '17e', 'duo'], only=['AppTests/RootNavigationTests'])
         self.assertEqual(order, ['se', '17e', 'duo'])
         self.assertTrue(all(s == ['AppTests/RootNavigationTests'] for s in selections.values()))
+
+    def test_check_executes_auth_logic_profiles_and_serial_audit_once(self):
+        status, output = self.execute(aliases=['17e'], mode='check')
+        self.assertEqual(status, 0, output)
+        commands = self.commands_for_tests()
+        for suite in ['AppTests/AuthControlTests', 'AppTests/AuthLayoutTests',
+                      'AppTests/AuthSnapshotTests', 'AppUITests/SignInTests', 'AppUITests/AuthAuditTests']:
+            matches = [c for c in commands if '-only-testing:' + suite in c]
+            self.assertEqual(len(matches), 1, suite)
+            self.assertIn('-configuration', matches[0])
+            self.assertEqual(matches[0][matches[0].index('-configuration') + 1], 'Debug')
+            if suite == 'AppUITests/AuthAuditTests':
+                self.assertEqual(matches[0][matches[0].index('-parallel-testing-enabled') + 1], 'NO')
 
     def test_record_modes_are_isolated_and_paths_cannot_collide(self):
         for mode, expected in [('1', set(runner.SNAPSHOTS[1:])), ('launch', set(runner.SNAPSHOTS[:1])), ('all', set(runner.SNAPSHOTS))]:
