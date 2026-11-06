@@ -12,7 +12,7 @@ nonisolated final class LaunchConnectionTests: XCTestCase {
         let previousKey = scene.windows.first(where: \.isKeyWindow)
         var process = LaunchProcessState()
         let first = SceneDelegate()
-        first.connect(to: scene, firstConnection: process.claimOverlay())
+        first.connect(to: scene, firstConnection: process.claimOverlay(), arguments: LaunchArguments([]))
         defer {
             first.overlayWindow?.isHidden = true
             first.window?.isHidden = true
@@ -43,7 +43,7 @@ nonisolated final class LaunchConnectionTests: XCTestCase {
             try XCTUnwrap(events.firstIndex(of: .rootFirstLayout)))
         XCTAssertFalse(first.signposts.activeIntervals.contains(.firstCommit))
         let second = SceneDelegate()
-        second.connect(to: scene, firstConnection: process.claimOverlay())
+        second.connect(to: scene, firstConnection: process.claimOverlay(), arguments: LaunchArguments([]))
         defer { second.window?.isHidden = true }
         XCTAssertNil(second.overlayWindow)
         XCTAssertNil(second.overlayController)

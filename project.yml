@@ -68,6 +68,8 @@ targets:
       GENERATE_INFOPLIST_FILE: YES
     dependencies:
       - target: ChronoFlow
+      - package: ChronoFlowKit
+        products: [Launch, DesignSystem]
   PerfUITests:
     type: bundle.ui-testing
     platform: iOS

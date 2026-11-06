@@ -4,6 +4,41 @@ import Testing
 @testable import AppCore
 
 struct CubicBezierTests {
+    @Test func presetsAgreeWithIndependentBisectionToOneTenThousandth() {
+        for curve in [CubicBezier.linear, .easeOut, .easeInOut, .intro] {
+            for step in 0...1000 {
+                let progress = Double(step) / 1000
+                let expected = referenceValue(for: curve, at: progress)
+                #expect(abs(curve.value(at: progress) - expected) < 0.0001)
+            }
+        }
+    }
+
+    @Test func introNearEndpointAgreesWithIndependentBisection() {
+        for progress in [0.9, 0.95, 0.99, 0.999, 0.999999] {
+            let expected = referenceValue(for: .intro, at: progress)
+            #expect(abs(CubicBezier.intro.value(at: progress) - expected) < 1e-12)
+            #expect(CubicBezier.intro.value(at: progress) < 1)
+        }
+        #expect(abs(CubicBezier.intro.value(at: 0.95) - 0.9997243836889174) < 1e-12)
+    }
+
+    private func referenceValue(for curve: CubicBezier, at progress: Double) -> Double {
+        func coordinate(_ t: Double, _ a: Double, _ b: Double) -> Double {
+            let p = t * a
+            let q = (1 - t) * a + t * b
+            let r = (1 - t) * b + t
+            return (1 - t) * ((1 - t) * p + t * q) + t * ((1 - t) * q + t * r)
+        }
+        var low = 0.0
+        var high = 1.0
+        for _ in 0..<60 {
+            let t = (low + high) / 2
+            if coordinate(t, curve.x1, curve.x2) < progress { low = t } else { high = t }
+        }
+        return coordinate((low + high) / 2, curve.y1, curve.y2)
+    }
+
     @Test func cssReferenceValues() {
         let inputs = [0.1, 0.25, 0.5, 0.75, 0.9]
         let references: [(CubicBezier, [Double])] = [

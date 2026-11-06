@@ -34,7 +34,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             })
     }
 
-    func connect(to windowScene: UIWindowScene, firstConnection: Bool) {
+    func connect(to windowScene: UIWindowScene, firstConnection: Bool, arguments: LaunchArguments = LaunchArguments()) {
         signposts.event(.sceneConnect)
         if firstConnection {
             signposts.begin(.launch)
@@ -45,7 +45,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             }
             let scene = LaunchScene(
                 size: overlay.bounds.size, traits: traits,
-                reduceMotion: UIAccessibility.isReduceMotionEnabled)
+                reduceMotion: arguments.reduceMotion || UIAccessibility.isReduceMotionEnabled)
             let controller = LaunchOverlayController(scene: scene)
             overlay.windowLevel = .normal + 1
             overlay.overrideUserInterfaceStyle = traits.userInterfaceStyle
@@ -56,14 +56,29 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             controller.view.layoutIfNeeded()
             CATransaction.begin()
             CATransaction.setDisableActions(true)
-            scene.play(scene.timeline, at: CACurrentMediaTime())
+            let safe = controller.view.safeAreaInsets
+            let timeline = arguments.timeline(
+                opening: scene.timeline,
+                safeAreaInsets: .init(top: safe.top, left: safe.left, bottom: safe.bottom, right: safe.right),
+                rowHeight: arguments.mode == .welcome ? LaunchArguments.fallbackRowHeight(compatibleWith: traits) : 28)
+            scene.play(timeline, at: CACurrentMediaTime())
             CATransaction.commit()
             CATransaction.flush()
             signposts.event(.overlayFirstCommit)
             signposts.end(.firstCommit)
+            if let time = arguments.freezeAt { scene.freeze(at: time) }
+            if let stall = arguments.mainThreadStall {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    Thread.sleep(
+                        forTimeInterval: Double(stall.components.seconds) + Double(stall.components.attoseconds) / 1e18)
+                }
+            }
             Task {
                 do {
                     try await FontRegistry.register()
+                    if arguments.mode == .slow {
+                        scene.prepareStatus()
+                    }
                 } catch { signposts.event(.fontRegistrationFailed) }
             }
         }
