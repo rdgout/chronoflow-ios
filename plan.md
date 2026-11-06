@@ -396,7 +396,7 @@ OQ 5 follows the settled S1/S2 and listed S3–S6 rules. OQ 11 uses its default 
 - [x] `withReadyExit`, `withStatus`. (OQ 6 default assumed, confirm). Reduce Motion uses the 300 ms ease-out fade and dots held at 1.0. Ready clamps to 1500 ms only with motion; status latches, pulses repeat from mount with three delayed replicas, and repeated endings replace prior endings. Host tests cover keys, fade samples, opening preservation and both composition orders; iOS 17 compile/type-check passes.
   Files: `Sources/Launch/LaunchTimeline+Ready.swift`.
   Test: keys; merged tracks keep opening keys intact (sample at 700 unchanged after adding an exit at 1500).
-- [ ] `withWelcomeExit`.
+- [x] `withWelcomeExit`. (OQ 6 default assumed, confirm). No moon cross-fade; stars retain the board geometry during the dissolve. (OQ 7 default assumed, confirm). W starts at max(1600 ms, resolution time). Host tests cover every ending key, one straight-line progress for centre/scale, landing within 0.01 pt, changed targets, late endings, opening preservation when added at 50 ms and Reduce Motion. Hosted D1c landing tests and the continuing matrix runner are written; iOS 17 compile/type-check passes. Simulator execution and full make check remain for the orchestrator; see Docs/tooling.md.
   Files: `Sources/Launch/LaunchTimeline+Welcome.swift`.
   Test: moon lands on a given target to 0.01 pt; opening keys intact when added at 50 ms.
 
