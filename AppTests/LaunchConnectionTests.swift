@@ -37,6 +37,8 @@ nonisolated final class LaunchConnectionTests: XCTestCase {
         XCTAssertEqual(first.signposts.events, [.sceneConnect, .overlayFirstCommit])
         let overlay = try XCTUnwrap(first.overlayWindow)
         XCTAssertEqual(overlay.windowLevel, .normal + 1)
+        XCTAssertEqual(overlay.overrideUserInterfaceStyle, scene.traitCollection.userInterfaceStyle)
+        XCTAssertEqual(overlay.traitCollection.userInterfaceStyle, scene.traitCollection.userInterfaceStyle)
         XCTAssertFalse(overlay.isHidden)
         let controller = try XCTUnwrap(first.overlayController)
         XCTAssertTrue(controller.view.accessibilityViewIsModal)

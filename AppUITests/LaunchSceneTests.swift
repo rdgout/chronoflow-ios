@@ -5,8 +5,39 @@ import XCTest
 
 nonisolated final class LaunchSceneTests: XCTestCase {
     @MainActor
-    func testOpeningAccessibilityAndFrozenScreenshotMatchesSampleAt700() throws {
+    func testLightOpeningAccessibilityAndFrozenScreenshotMatchesSampleAt700() async throws {
+        try await assertFrozenScreenshot(style: .light)
+    }
+
+    @MainActor
+    func testDarkOpeningAccessibilityAndFrozenScreenshotMatchesSampleAt700() async throws {
+        try await assertFrozenScreenshot(style: .dark)
+    }
+
+    @MainActor
+    private func assertFrozenScreenshot(style expectedStyle: UIUserInterfaceStyle) async throws {
+        let device = XCUIDevice.shared
+        let previousAppearance = device.appearance
         let app = XCUIApplication()
+        addTeardownBlock { @MainActor in
+            app.terminate()
+            device.appearance = previousAppearance
+            let restored = try await Self.waitForAppearance(previousAppearance)
+            XCTAssertTrue(restored, "The device must finish restoring its appearance before the next test")
+        }
+        let expectedAppearance: XCUIDevice.Appearance = expectedStyle == .dark ? .dark : .light
+        device.appearance = expectedAppearance
+        app.terminate()
+        device.press(.home)
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        guard springboard.wait(for: .runningForeground, timeout: 10) else {
+            XCTFail("SpringBoard must be in the foreground before launching the frozen splash")
+            return
+        }
+        guard try await Self.waitForAppearance(expectedAppearance) else {
+            XCTFail("The device did not apply the expected \(expectedStyle == .dark ? "dark" : "light") appearance")
+            return
+        }
         app.launchArguments = ["-cf.mode", "ready", "-cf.freezeAt", "700"]
         app.launch()
         let opening = app.images["launch.opening"]
@@ -19,7 +50,6 @@ nonisolated final class LaunchSceneTests: XCTestCase {
         let actualBytes = try pixels(actual)
         let statusBar = app.statusBars.firstMatch
         let top = statusBar.exists ? max(0, statusBar.frame.maxY - opening.frame.minY) : 0
-        var errors: [(metrics: LaunchImageComparison.Metrics, moon: LaunchImageComparison.Metrics, shift: CGFloat)] = []
         for style in [UIUserInterfaceStyle.light, .dark] {
             let traits = UITraitCollection {
                 $0.userInterfaceStyle = style
@@ -49,8 +79,19 @@ nonisolated final class LaunchSceneTests: XCTestCase {
             let displacement = CGFloat(max(abs(shift.x), abs(shift.y))) / scale
             let moonMetrics = LaunchImageComparison.measure(
                 actualBytes, expected, width: actual.width, region: moonRegion)
-            errors.append((metrics, moonMetrics, displacement))
-            if style == .light {
+            if style == expectedStyle {
+                XCTAssertTrue(metrics.passes, metrics.description)
+                XCTAssertLessThanOrEqual(moonMetrics.mean, 1, "Moon: \(moonMetrics.description)")
+                XCTAssertLessThanOrEqual(
+                    moonMetrics.interiorMean, 1, "Moon away from edges: \(moonMetrics.description)")
+                XCTAssertLessThanOrEqual(
+                    displacement, 0.5, "Best moon alignment shift in points; a 1 pt displacement must fail")
+            } else {
+                XCTAssertFalse(metrics.passes, "The opposite appearance must fail parity")
+                XCTAssertGreaterThan(
+                    metrics.mean, 8, "The opposite appearance must differ clearly: \(metrics.description)")
+            }
+            if style == expectedStyle {
                 let reference = scene.timeline.sample(at: .milliseconds(700))
                 for key in ["position", "opacity"] {
                     scene.apply(reference)
@@ -80,15 +121,20 @@ nonisolated final class LaunchSceneTests: XCTestCase {
             attachment.lifetime = .keepAlways
             add(attachment)
         }
-        let best = try XCTUnwrap(errors.min { $0.metrics.mean < $1.metrics.mean })
-        XCTAssertTrue(best.metrics.passes, best.metrics.description)
-        XCTAssertLessThanOrEqual(best.moon.mean, 1, "Moon: \(best.moon.description)")
-        XCTAssertLessThanOrEqual(best.moon.interiorMean, 1, "Moon away from edges: \(best.moon.description)")
-        XCTAssertLessThanOrEqual(best.shift, 0.5, "Best moon alignment shift in points; a 1 pt displacement must fail")
         let attachment = XCTAttachment(screenshot: screenshot)
         attachment.name = "live-frozen-700"
         attachment.lifetime = .keepAlways
         add(attachment)
+    }
+
+    @MainActor
+    private static func waitForAppearance(_ appearance: XCUIDevice.Appearance) async throws -> Bool {
+        let deadline = ContinuousClock.now.advanced(by: .seconds(10))
+        while XCUIDevice.shared.appearance != appearance {
+            guard ContinuousClock.now < deadline else { return false }
+            try await Task.sleep(for: .milliseconds(50))
+        }
+        return true
     }
 
     @MainActor

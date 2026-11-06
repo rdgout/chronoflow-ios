@@ -444,6 +444,9 @@ Device runs need OQ 4 (team) and OQ 14 (device). Phase 3c remains gated on the p
 - [x] Resolve the overlay opening accessibility label immediately after the first flush and first-commit signpost, keeping string-table I/O out of construction. Hosted tests check the label is absent before commit and available afterward; connection accessibility assertions are retained.
   Files: `Sources/Launch/LaunchOverlayController.swift`, `App/SceneDelegate.swift`, `AppTests/LaunchConnectionTests.swift`.
 
+- [x] Pin device appearance before launching frozen screenshot parity in separate light/dark UI tests. After setting appearance, terminate any running instance, return to SpringBoard and poll the device's reported appearance with a 10-second bound before launch. Async teardown terminates the app and waits for appearance restoration before the next test. Each appearance must match its own model and clearly differ from the opposite model; retain displacement/opacity mutation checks. Hosted connection assertions check the overlay window inherits the scene style. Revised UI validation is open.
+  Files: `AppUITests/LaunchSceneTests.swift`, `AppTests/LaunchConnectionTests.swift`.
+
 ### Phase 4: Readiness and hand-off (`feat/phase-4-readiness`)
 
 Blocked by OQ 7, 8, 9, 15, 16.
