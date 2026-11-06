@@ -441,6 +441,9 @@ Device runs need OQ 4 (team) and OQ 14 (device). Phase 3c remains gated on the p
 - [x] Guard notification payloads with `JSONSerialization.isValidJSONObject` before serialization. Capture identifier/action/payload/text through a testable AppCore function; Date, Data, non-string keys, nested invalid values and nonfinite numbers retain response metadata with nil JSON. Host tests also cover valid JSON and empty payloads.
   Files: `App/SceneDelegate.swift`, `Sources/AppCore/PendingLaunchIntent.swift`, `Tests/AppCoreTests/LaunchLifecycleTests.swift`.
 
+- [x] Resolve the overlay opening accessibility label immediately after the first flush and first-commit signpost, keeping string-table I/O out of construction. Hosted tests check the label is absent before commit and available afterward; connection accessibility assertions are retained.
+  Files: `Sources/Launch/LaunchOverlayController.swift`, `App/SceneDelegate.swift`, `AppTests/LaunchConnectionTests.swift`.
+
 ### Phase 4: Readiness and hand-off (`feat/phase-4-readiness`)
 
 Blocked by OQ 7, 8, 9, 15, 16.

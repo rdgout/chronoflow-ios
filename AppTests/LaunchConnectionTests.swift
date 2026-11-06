@@ -7,6 +7,21 @@ import XCTest
 
 nonisolated final class LaunchConnectionTests: XCTestCase {
     @MainActor
+    func testOpeningLabelIsAbsentDuringConstructionAndAvailableAfterCommit() throws {
+        let windowScene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let scene = LaunchScene(
+            size: windowScene.coordinateSpace.bounds.size, traits: windowScene.traitCollection, reduceMotion: false)
+        let controller = LaunchOverlayController(scene: scene)
+        controller.loadViewIfNeeded()
+        XCTAssertNil(controller.view.accessibilityLabel)
+        XCTAssertTrue(controller.view.isAccessibilityElement)
+        scene.play(scene.timeline, at: CACurrentMediaTime())
+        CATransaction.flush()
+        controller.prepareAccessibilityLabel()
+        XCTAssertFalse(controller.view.accessibilityLabel?.isEmpty ?? true)
+    }
+
+    @MainActor
     func testOverlayFlushPrecedesRootLayoutAndReconnectDoesNotReplay() async throws {
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
         let previousKey = scene.windows.first(where: \.isKeyWindow)

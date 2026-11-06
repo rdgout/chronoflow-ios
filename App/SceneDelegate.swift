@@ -64,6 +64,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             CATransaction.flush()
             signposts.event(.overlayFirstCommit)
             signposts.end(.firstCommit)
+            controller.prepareAccessibilityLabel()
             if let time = arguments.freezeAt { scene.freeze(at: time) }
             if let stall = arguments.mainThreadStall {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {

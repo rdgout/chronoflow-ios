@@ -15,6 +15,10 @@
 
         public override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
 
+        public func prepareAccessibilityLabel() {
+            view.accessibilityLabel = String(localized: "ChronoFlow is opening", bundle: .module)
+        }
+
         public override func loadView() {
             let frame = LaunchFrameView(
                 frame: CGRect(origin: .zero, size: launchScene.size), traits: launchScene.traits)
@@ -22,7 +26,6 @@
             frame.isAccessibilityElement = true
             frame.accessibilityTraits = .image
             frame.accessibilityIdentifier = "launch.opening"
-            frame.accessibilityLabel = String(localized: "ChronoFlow is opening", bundle: .module)
             frame.accessibilityViewIsModal = true
             view = frame
         }
