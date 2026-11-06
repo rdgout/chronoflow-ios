@@ -188,3 +188,110 @@ extension SyncTriggerTests {
         try await store.close()
     }
 }
+
+final class TriggerTime: @unchecked Sendable {
+    private let lock = NSLock()
+    private var value = syncDate
+    func now() -> Date { lock.withLock { value } }
+    func advance(_ seconds: Double) { lock.withLock { value.addTimeInterval(seconds) } }
+}
+
+func triggerEventually(_ condition: @Sendable () async throws -> Bool) async throws -> Bool {
+    let deadline = ContinuousClock.now + .seconds(5)
+    while ContinuousClock.now < deadline {
+        if try await condition() { return true }
+        await Task.yield()
+    }
+    return try await condition()
+}
+
+extension SyncTriggerTests {
+    @Test func sessionPausePreservesServerDeadlineAndReplacementEpochDropsIt() async throws {
+        let store = try await SyncStore()
+        let accounts = SessionAccountDatabase(
+            applicationSupport: store.root.appendingPathComponent("session"), namespace: .mock)
+        try await accounts.open(accountID: AccountID(syncAccount))
+        let source = ScriptedSource()
+        let clock = ManualSyncScheduler()
+        let time = TriggerTime()
+        await source.configure(failMethod: "identity", methodFailure: .throttled(retryAfterSeconds: 300, status: 429))
+        let sync = SessionSync(
+            accounts: accounts, scheduler: SyncScheduler(now: { time.now() }, sleep: { try await clock.sleep($0) }),
+            source: { _ in source }, unauthorized: { _ in }, verification: { _ in })
+        let session = StoredSession(token: "test", accountId: syncAccount)
+        await sync.start(session: session, epoch: 5)
+        #expect(try await sync.refreshNow()?.state == .failed)
+        try #require(await triggerEventually { await clock.requestedDelays.last == 300 })
+        await sync.setEnabled(false)
+        #expect(await clock.pendingCount == 0)
+        time.advance(10)
+        let registrations = await clock.requestedDelays.count
+        await sync.setEnabled(true)
+        await sync.resume(session: session, epoch: 5)
+        try #require(await triggerEventually { await clock.requestedDelays.count > registrations })
+        #expect(await clock.requestedDelays.last == 290)
+        #expect(await source.calls == ["identity"])
+        #expect(try await sync.refreshNow()?.state == .failed)
+        #expect(await source.calls == ["identity"])
+        time.advance(290)
+        await source.configure(trips: [])
+        await clock.advance()
+        try #require(await triggerEventually { await source.calls.count == 4 })
+        #expect(await source.calls == ["identity", "identity", "account", "trips"])
+        await sync.setEnabled(false)
+        await sync.setEnabled(true)
+        await sync.resume(session: session, epoch: 6)
+        try #require(await triggerEventually { await clock.pendingCount == 1 })
+        #expect(await clock.requestedDelays.last == 1)
+        await sync.stop()
+        try await accounts.close()
+        try await store.close()
+    }
+
+    @Test func sessionPausePreservesFailureExponent() async throws {
+        let store = try await SyncStore()
+        let accounts = SessionAccountDatabase(
+            applicationSupport: store.root.appendingPathComponent("session"), namespace: .mock)
+        try await accounts.open(accountID: AccountID(syncAccount))
+        let source = ScriptedSource()
+        let clock = ManualSyncScheduler()
+        let time = TriggerTime()
+        await source.configure(failMethod: "identity", methodFailure: .server(status: 500))
+        let sync = SessionSync(
+            accounts: accounts, scheduler: SyncScheduler(now: { time.now() }, sleep: { try await clock.sleep($0) }),
+            source: { _ in source }, unauthorized: { _ in }, verification: { _ in })
+        let session = StoredSession(token: "test", accountId: syncAccount)
+        await sync.start(session: session, epoch: 5)
+        _ = try await sync.refreshNow()
+        try #require(await triggerEventually { await clock.requestedDelays.last == 1 })
+        await sync.setEnabled(false)
+        time.advance(2)
+        await sync.setEnabled(true)
+        await sync.resume(session: session, epoch: 5)
+        _ = try await sync.refreshNow()
+        try #require(await triggerEventually { await clock.requestedDelays.last == 2 })
+        #expect(await source.calls == ["identity", "identity"])
+        await sync.stop()
+        try await accounts.close()
+        try await store.close()
+    }
+
+    @Test func restartSeedsBackoffFromPersistedOutboxAttempts() async throws {
+        let store = try await SyncStore()
+        var row = try await store.enqueue(.walkthrough)
+        row.attempts = 8
+        try await OutboxRepository(database: store.database).upsert(row)
+        let source = ScriptedSource()
+        await source.configure(failMethod: "identity", methodFailure: .server(status: 500))
+        let clock = ManualSyncScheduler()
+        let lifecycle = SyncLifecycle(
+            database: store.database, source: source, epoch: store.epoch,
+            scheduler: SyncScheduler(now: { syncDate }, sleep: { try await clock.sleep($0) }))
+        try await lifecycle.start()
+        _ = try await lifecycle.refreshNow()
+        try #require(await triggerEventually { await clock.requestedDelays.last == 256 })
+        #expect(await clock.requestedDelays.last == 256)
+        await lifecycle.stop()
+        try await store.close()
+    }
+}

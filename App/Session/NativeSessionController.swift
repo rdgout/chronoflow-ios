@@ -1,6 +1,7 @@
 import AppCore
 import Foundation
 import LocalStore
+import Sync
 
 @MainActor
 final class NativeSessionController {
@@ -33,7 +34,7 @@ final class NativeSessionController {
         let reference = SessionControllerReference()
         let sync = source.map {
             SessionSync(
-                accounts: accounts, source: $0,
+                accounts: accounts, makePath: { NetworkPathMonitor() }, source: $0,
                 isCurrent: { session, epoch in
                     guard let current = await reference.value()?.activeSession() else { return false }
                     return current.session == session && current.epoch == epoch

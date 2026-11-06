@@ -7,6 +7,17 @@ public protocol SyncPathMonitoring: Sendable {
     func stop() async
 }
 
+public struct SyncRetryState: Sendable {
+    public var failures: Int
+    public var serverDeadline: Date?
+    public var lastResult: SyncResult?
+    public init(failures: Int = 0, serverDeadline: Date? = nil, lastResult: SyncResult? = nil) {
+        self.failures = failures
+        self.serverDeadline = serverDeadline
+        self.lastResult = lastResult
+    }
+}
+
 public actor SyncLifecycle {
     public let engine: SyncEngine
     private let database: AccountDatabase
@@ -28,10 +39,14 @@ public actor SyncLifecycle {
 
     public init(
         database: AccountDatabase, source: any DataSource, epoch: SyncEpoch,
-        scheduler: SyncScheduler = SyncScheduler(), path: (any SyncPathMonitoring)? = nil,
+        scheduler: SyncScheduler = SyncScheduler(), retryState: SyncRetryState = SyncRetryState(),
+        path: (any SyncPathMonitoring)? = nil,
         unauthorized: @escaping @Sendable (UInt64) async -> Void = { _ in },
         verification: @escaping @Sendable (UInt64) async -> Void = { _ in }
     ) {
+        failures = retryState.failures
+        serverDeadline = retryState.serverDeadline
+        lastResult = retryState.lastResult
         self.database = database
         self.epoch = epoch
         self.scheduler = scheduler
@@ -44,6 +59,8 @@ public actor SyncLifecycle {
     public func start() async throws {
         guard !started, !stopped else { return }
         started = true
+        let attempts = try await OutboxRepository(database: database).pending().map(\.attempts).max() ?? 0
+        failures = max(failures, attempts)
         let events = await engine.events()
         let rows = try await OutboxRepository(database: database).values()
         listeners.append(
@@ -86,7 +103,15 @@ public actor SyncLifecycle {
 
     public func requestSync() async {
         guard !stopped, !unauthorizedSent, retry == nil else { return }
-        await engine.requestSync()
+        if let serverDeadline, serverDeadline > scheduler.now() {
+            scheduleRetry(max(1, serverDeadline.timeIntervalSince(scheduler.now())))
+        } else {
+            await engine.requestSync()
+        }
+    }
+
+    public var retryState: SyncRetryState {
+        SyncRetryState(failures: failures, serverDeadline: serverDeadline, lastResult: lastResult)
     }
 
     public func refreshNow() async throws -> SyncResult {
@@ -124,15 +149,19 @@ public actor SyncLifecycle {
             failures += 1
             let delay = max(exponential, result.retryAfter ?? 0)
             serverDeadline = result.retryAfter.map { scheduler.now().addingTimeInterval($0) }
-            cancelRetry()
-            let id = retryID
-            retry = Task { [weak self, scheduler] in
-                do {
-                    try await scheduler.sleep(delay)
-                    try Task.checkCancellation()
-                    await self?.retryFired(id)
-                } catch {}
-            }
+            scheduleRetry(delay)
+        }
+    }
+
+    private func scheduleRetry(_ delay: TimeInterval) {
+        cancelRetry()
+        let id = retryID
+        retry = Task { [weak self, scheduler] in
+            do {
+                try await scheduler.sleep(delay)
+                try Task.checkCancellation()
+                await self?.retryFired(id)
+            } catch {}
         }
     }
 
@@ -175,6 +204,5 @@ public actor SyncLifecycle {
         let timers = canceledTimers
         canceledTimers.removeAll()
         for timer in timers.values { await timer.value }
-        lastResult = nil
     }
 }
