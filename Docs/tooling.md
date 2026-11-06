@@ -1223,6 +1223,18 @@ The Phase 9b implementation record now names its three existing commits instead 
 commits were made. `python3 -I Tests/test_launch_resources.py
 LaunchResourcesTests.test_phase9b_tooling_records_the_committed_implementation` fails against the
 old note and passes after correction, checking the recorded hashes against git history.
+
+Mock sign-in now uses the exact backend wrong-credentials key; register/reset attach mismatch errors
+to `password_confirmation` alongside any independent password error. Exact host regressions fail
+against the old behavior and pass after correction. Settings validation visits keys in sorted order
+and collects all invalid field values before throwing. API/mock parity covers multiple errors in
+reminders, preferences and body-clock patches, reversed insertion order and unchanged state after
+rejection. Each regression fails against its original implementation.
+
+Review verification: `make host-tests` passes **177 tests**, including **54 DataAccess tests**;
+`make lint`, `make launch-resources-check` (10 resource/history checks, 21 runner fixtures), and
+`make generators-check` (7 TokenGen, 6 font/cache, 3 AssetGen tests; generated assets unchanged)
+all pass. Host SwiftPM uses `--disable-sandbox` and repo-local cache, scratch and temp paths.
 These regressions need no new hosted execution; the existing factory/build-setting commands above
 and integrated `make check` remain open for the orchestrator.
 

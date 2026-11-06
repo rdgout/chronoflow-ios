@@ -5,6 +5,38 @@ import Testing
 @testable import DataAccess
 
 @Suite struct DataSourceParityTests {
+    @Test(arguments: [SettingsSection.reminders, .preferences, .bodyClock])
+    func invalidSettingsReturnEveryField(section: SettingsSection) async throws {
+        let patch: JSONObject
+        switch section {
+        case .reminders: patch = JSONObject(["lead_min": .number(45), "light": .string("x"), "winddown": .bool(true)])
+        case .preferences:
+            patch = JSONObject(["time_format": .string("13"), "show_optional_items": .string("x")])
+        case .bodyClock: patch = JSONObject(["habitual_bed": .string("25:00"), "habitual_wake": .string("99:00")])
+        }
+        let fields = patch.fields.keys.filter { $0 != "winddown" }
+        let message = section == .bodyClock ? "Enter a valid time." : "Choose one of the available options."
+        let expected = DataFailure.validation(
+            fields: Dictionary(uniqueKeysWithValues: fields.map { ($0, FieldMessage(key: message)) }), status: 422)
+        let body = try JSONSerialization.data(withJSONObject: [
+            "code": "validation_failed", "message": "The given data was invalid.",
+            "errors": Dictionary(uniqueKeysWithValues: fields.map { ($0, message) }),
+        ])
+        let server = StubServer { _ in .init(422, String(decoding: body, as: UTF8.self)) }
+        let api = APIDataSource(client: try server.client())
+        let mock = try mockSource()
+        _ = try await login(mock)
+        let before = try await mock.fetchAccount()
+        let keys = patch.fields.keys.sorted()
+        for source: any DataSource in [api, mock] {
+            for order in [keys, Array(keys.reversed())] {
+                let reordered = JSONObject(Dictionary(uniqueKeysWithValues: order.map { ($0, patch[$0]!) }))
+                await #expect(throws: expected) { try await source.send(.settings(section: section, patch: reordered)) }
+            }
+        }
+        #expect(try await mock.fetchAccount() == before)
+    }
+
     @Test func wrongCredentialsMatchBackendValidation() async throws {
         let server = StubServer { _ in
             .init(422, try fixtureText("errors/wrong_credentials.json"))

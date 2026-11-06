@@ -12,7 +12,9 @@ enum MockSettings {
     }
     static func validate(section: SettingsSection, patch: JSONObject, current: AccountSettings) throws {
         try SettingsPatchValidation.validate(section: section, patch: patch)
-        for (key, value) in patch.fields {
+        var fields: [String: FieldMessage] = [:]
+        for key in patch.fields.keys.sorted() {
+            let value = patch.fields[key]!
             let valid: Bool
             switch section {
             case .preferences:
@@ -36,12 +38,12 @@ enum MockSettings {
             case .bodyClock: valid = bodyValue(key: key, value: value)
             }
             if !valid {
-                throw invalid(
-                    key,
-                    key.contains("bed") || key.contains("wake")
+                fields[key] = FieldMessage(
+                    key: key.contains("bed") || key.contains("wake")
                         ? "Enter a valid time." : "Choose one of the available options.")
             }
         }
+        if !fields.isEmpty { throw DataFailure.validation(fields: fields, status: 422) }
         if section == .bodyClock {
             var merged = current.bodyClock
             for (key, value) in patch.fields { merged[camel(key)] = value }
