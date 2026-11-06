@@ -208,8 +208,10 @@ public actor SessionController: SessionControlling {
         else {
             throw SessionFailure.invalidResult
         }
-        presence = nil
-        storedSession = nil
+        if case .signedIn(let accountID) = presence, accountID != id.rawValue {
+            storedSession = nil
+            publish(.signedOut)
+        }
         do {
             try await accounts.open(accountID: id)
             try check(generation)

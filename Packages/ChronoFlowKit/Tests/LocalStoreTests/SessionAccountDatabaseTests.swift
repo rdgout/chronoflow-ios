@@ -7,12 +7,59 @@ import Testing
 
 private actor IntegrationCredentials: SessionStore {
     var data: Data?
+    private var writeFails = false
     func read() -> Data? { data }
-    func write(_ data: Data) { self.data = data }
+    func failWrites() { writeFails = true }
+    func write(_ data: Data) throws {
+        if writeFails { throw StoreFailure.unavailable }
+        self.data = data
+    }
     func delete() { data = nil }
 }
 
 struct SessionAccountDatabaseTests {
+    @Test(arguments: [accountA, accountB])
+    func failedAcceptanceAfterSignInMatchesThePublishedStateAndDatabase(_ nextID: String) async throws {
+        let root = try temporaryStoreRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let accounts = SessionAccountDatabase(applicationSupport: root, namespace: .mock)
+        let credentials = IntegrationCredentials()
+        let controller = SessionController(credentials: credentials, accounts: accounts)
+        let account = SessionAccount(
+            id: accountA, name: "A", email: "a@example.test", hasVerifiedEmail: true,
+            policies: AccountPolicies(termsVersion: "1", privacyVersion: "1"), walkthroughSeen: false)
+        try await controller.accept(SessionResult(token: "original", account: account))
+        let first = try #require(await accounts.activeDatabase())
+        var updates = await controller.updates().makeAsyncIterator()
+        let published = try #require(await updates.next())
+        await credentials.failWrites()
+        let next = SessionAccount(
+            id: nextID, name: "New", email: "new@example.test", hasVerifiedEmail: true,
+            policies: account.policies, walkthroughSeen: false)
+        await #expect(throws: SessionFailure.credentialWrite) {
+            try await controller.accept(SessionResult(token: "replacement", account: next))
+        }
+        let persisted = try await credentials.readStoredSession()
+        #expect(persisted == StoredSession(token: "original", accountId: accountA))
+        let active = try #require(await accounts.activeDatabase())
+        #expect(try await AccountRepository(database: active).account()?.id == nextID)
+        if nextID == accountA {
+            #expect(active === first)
+            #expect(await controller.presence == published.presence)
+            #expect(await controller.epoch == published.epoch)
+            #expect(await controller.storedSession == persisted)
+        } else {
+            await #expect(throws: StoreFailure.closed) { try await AccountRepository(database: first).account() }
+            #expect(await controller.storedSession == nil)
+            try #require(await controller.presence == .signedOut)
+            let update = try #require(await updates.next())
+            #expect(update.presence == .signedOut)
+            #expect(await controller.presence == update.presence)
+            #expect(update.epoch == published.epoch + 1)
+        }
+        try await accounts.close()
+    }
+
     @Test func acceptancePreservesSyncedMarkerAndAccountAndSourceIsolation() async throws {
         let root = try temporaryStoreRoot()
         defer { try? FileManager.default.removeItem(at: root) }

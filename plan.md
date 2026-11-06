@@ -992,6 +992,7 @@ No UI. Four bounded rounds: 9a persistence/session, 9b remote contracts, 9c pull
 Implementation complete (2026-11-06); 115 host SwiftPM tests pass (30 new), plus 21 runner fixtures, nine resource checks, strict formatting and generator checks (7 TokenGen, 6 font/cache, 3 AssetGen). All package tests compile for the iOS 17 simulator target; Debug/Release app and hosted tests compile through SIL. Keychain, iOS file-protection attributes and first-flush/suspended-open hosted execution remain **Open: orchestrator on one 17e**; no simulator or physical-device result is claimed. Commands and defaults are in `Docs/tooling.md`, Phase 9a. The backup exclusion default (OQ 26) permits development; hardware lock proof and shipping approval stay open. Session lifecycle/sync/wipe composition stays in 9d.
 
 - [x] Review fix: make a successful credential write the accept commit point; reject superseded/canceled accepts only before that point. Host regressions suspend the write and sync request, covering a newer invalid accept and caller cancellation without losing the committed publication.
+- [x] Review fix: retain the published session during same-account refresh; publish signed-out before switching databases. Host regressions cover open, upsert and Keychain failures after sign-in, including the suspended refresh write, and compare presence, credentials, stored session and observer epoch.
 
 #### Phase 9b: Data-source contract, mock and API (`feat/phase-9b-data-source`)
 

@@ -46,16 +46,20 @@ actor ControllerMemoryStore: SessionStore {
     var deleteFails = false
     var deletes = 0
     let log: SessionEventLog
-    let writeGate: SessionTestGate?
+    var writeGate: SessionTestGate?
     init(_ data: Data? = nil, log: SessionEventLog, writeGate: SessionTestGate? = nil) {
         self.data = data
         self.log = log
         self.writeGate = writeGate
     }
-    func configure(readFails: Bool = false, writeFails: Bool = false, deleteFails: Bool = false) {
+    func configure(
+        readFails: Bool = false, writeFails: Bool = false, deleteFails: Bool = false,
+        writeGate: SessionTestGate? = nil
+    ) {
         self.readFails = readFails
         self.writeFails = writeFails
         self.deleteFails = deleteFails
+        self.writeGate = writeGate
     }
     func read() async throws -> Data? {
         #expect(!sessionTestIsMainThread())
@@ -300,5 +304,62 @@ struct SessionControllerTests {
         let firstResult = await first.result
         await #expect(throws: SessionFailure.invalidResult) { try await second.value }
         try firstResult.get()
+    }
+
+    @Test(arguments: ["open", "upsert", "keychain"])
+    func failedSameAccountRefreshRetainsThePublishedSession(_ failure: String) async throws {
+        let log = SessionEventLog()
+        let credentials = ControllerMemoryStore(log: log)
+        let accounts = ControllerAccountStore(log: log)
+        let controller = SessionController(credentials: credentials, accounts: accounts)
+        try await controller.accept(sessionResult())
+        var updates = await controller.updates().makeAsyncIterator()
+        let published = try #require(await updates.next())
+        let session = try #require(await controller.storedSession)
+        let gate = SessionTestGate()
+        await credentials.configure(writeFails: failure == "keychain", writeGate: failure == "keychain" ? gate : nil)
+        await accounts.configure(openFails: failure == "open", upsertFails: failure == "upsert")
+        let refresh = Task {
+            try await controller.accept(SessionResult(token: "refreshed-token", account: sessionResult().account))
+        }
+        if failure == "keychain" {
+            await gate.waitUntilEntered()
+            #expect(await controller.presence == published.presence)
+            #expect(await controller.storedSession == session)
+            await gate.release()
+        }
+        await #expect(
+            throws: failure == "keychain" ? SessionFailure.credentialWrite : SessionFailure.databaseUnavailable
+        ) {
+            try await refresh.value
+        }
+        #expect(await controller.presence == published.presence)
+        #expect(await controller.epoch == published.epoch)
+        #expect(await controller.storedSession == session)
+        #expect(StoredSession.parse(try #require(await credentials.data)) == session)
+    }
+
+    @Test(arguments: ["open", "upsert", "keychain"])
+    func failedAccountSwitchPublishesSignedOut(_ failure: String) async throws {
+        let log = SessionEventLog()
+        let credentials = ControllerMemoryStore(log: log)
+        let accounts = ControllerAccountStore(log: log)
+        let controller = SessionController(credentials: credentials, accounts: accounts)
+        try await controller.accept(sessionResult())
+        var updates = await controller.updates().makeAsyncIterator()
+        let published = try #require(await updates.next())
+        let session = try #require(await controller.storedSession)
+        await credentials.configure(writeFails: failure == "keychain")
+        await accounts.configure(openFails: failure == "open", upsertFails: failure == "upsert")
+        await #expect(
+            throws: failure == "keychain" ? SessionFailure.credentialWrite : SessionFailure.databaseUnavailable
+        ) {
+            try await controller.accept(sessionResult(sessionAccountB))
+        }
+        #expect(await controller.storedSession == nil)
+        #expect(StoredSession.parse(try #require(await credentials.data)) == session)
+        try #require(await controller.presence == .signedOut)
+        #expect(await controller.epoch == published.epoch + 1)
+        #expect(await updates.next() == SessionUpdate(presence: .signedOut, epoch: published.epoch + 1))
     }
 }
