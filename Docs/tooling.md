@@ -117,6 +117,10 @@ full quick must be rerun where loopback binding is allowed. The remaining quick 
 (`make token-tests asset-tests launch-resources-check`) pass: 14 generator tests and 85
 Python fixtures. Logs: `build/phase12-quick.log`, `build/phase12-host-tools.log` and
 `build/phase12-contracts-mutation.log`. No simulator commands were run.
+The designed app icon set replaces the temporary RN icon. AssetGen emits the three flat appearances
+and the layered Composer bundle. [App icon integration and verification](app-icon.md) records the
+board's opaque-dark choice, offline Xcode/actool evidence, XcodeGen file-type adapter, generator
+dependencies and exact host/17e commands. Combined compilation and hosted verification remain pending.
 
 ## Test tiers — user decision 2026-11-06
 
@@ -1276,11 +1280,9 @@ xxLarge cap must be validated before new baselines are accepted. The launch orde
 for the asynchronously mounted root instead of assuming font registration completes within 50 ms.
 It freezes the overlay at zero and retains flush-before-root and reconnect assertions.
 
-The app's AppIcon asset reuses RN's opaque 1024 px icon unchanged, as requested by the user on
-2026-11-06 (OQ 18). The universal iOS slot lets Xcode derive the device sizes. Host checks require
-byte identity, dimensions and no alpha/transparency; AppIconTests checks the built app's CFBundleIcons
-primary name is AppIcon. Dark/tinted variants and a layered Liquid Glass icon need design assets and
-remain Open. iOS derives its appearances; Debug keeps the ordinary display name by default.
+The temporary RN AppIcon from this revision has since been replaced by the user-supplied design
+set (OQ 18 settled). The primary name is now ChronoFlow for both the flat catalog and Composer bundle;
+Debug keeps the ordinary display name. See [the current icon delivery record](app-icon.md).
 
 Host verification for the hosted-capture/xxLarge revision: 77 package tests pass (42 AppCore,
 27 Launch, 7 DesignSystem, 1 Welcome); the two portable pixel guards pass separately. Strict formatting,
