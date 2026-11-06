@@ -6,6 +6,7 @@ public final class LaunchSignposts {
     public enum Interval: String, CaseIterable, Sendable {
         case launch
         case firstCommit = "first-commit"
+        case session, ready, exit, intro
     }
 
     public enum Event: String, Sendable {
@@ -27,6 +28,10 @@ public final class LaunchSignposts {
         switch interval {
         case .launch: intervals[interval] = signposter.beginInterval("launch", id: id)
         case .firstCommit: intervals[interval] = signposter.beginInterval("first-commit", id: id)
+        case .session: intervals[interval] = signposter.beginInterval("session", id: id)
+        case .ready: intervals[interval] = signposter.beginInterval("ready", id: id)
+        case .exit: intervals[interval] = signposter.beginInterval("exit", id: id)
+        case .intro: intervals[interval] = signposter.beginInterval("intro", id: id)
         }
     }
 
@@ -36,6 +41,10 @@ public final class LaunchSignposts {
         switch interval {
         case .launch: signposter.endInterval("launch", state)
         case .firstCommit: signposter.endInterval("first-commit", state)
+        case .session: signposter.endInterval("session", state)
+        case .ready: signposter.endInterval("ready", state)
+        case .exit: signposter.endInterval("exit", state)
+        case .intro: signposter.endInterval("intro", state)
         }
     }
 
