@@ -1011,6 +1011,9 @@ Stack on 9a. No UI; build passkey contracts and data-source methods for Phase 10
 
 Implementation complete (2026-11-06): all three tasks are ticked. Host verification and exact orchestrator commands are recorded in `Docs/tooling.md`, Phase 9b. Hosted execution remains open; no simulator or live API was run. The backend passkey handoff overrides the stale RN passkey TODO and token/email verification shape: passkey sign-in returns a session even with 2FA or an unverified email, verification uses authenticated signed fields, and password reset revokes sessions without signing in. Native AuthenticationServices/entitlements remain Phase 10/device work; no UI or Phase 9c/9d lifecycle wiring is added.
 
+- [x] Review fix: exercise URLSession redirect callbacks for 301/302/307/308 and same/foreign hosts, with a following control session; verify effective cookie/cache/header configuration and real host-only loopback cookie handling. Delegate and security-configuration mutations fail the host regressions.
+- [x] Review fix: replace Phase 9b's stale no-commits tooling note with its three implementation commits; a host regression checks the record against git history.
+
 #### Phase 9c: Full pull and durable outbox (`feat/phase-9c-sync`)
 
 Stack on 9b. No UI; scope is the documented engine/repositories, not Settings/Today or security forms. OQ 31 defers producers/handlers for absent endpoints; schema parity remains required.

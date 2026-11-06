@@ -79,25 +79,32 @@ import Testing
         }
     }
     @Test(arguments: [301, 302, 307, 308]) func refusesEveryRedirect(status: Int) async throws {
-        for target in ["https://same.invalid/v1/next", "https://foreign.invalid/secret"] {
-            let server = StubServer { _ in .init(status, "", headers: ["Location": target]) }
+        for crossOrigin in [false, true] {
+            let foreign = StubServer { _ in .init(204) }
+            _ = try foreign.client()
+            let server = StubServer { request in
+                if request.url!.path == "/v1/next" { return .init(204) }
+                let target = crossOrigin ? "https://\(foreign.host)/v1/next" : "/v1/next"
+                return .init(status, headers: ["Location": target, "Set-Cookie": "secret=fake; Path=/"])
+            }
             let client = try server.client()
             await #expect(throws: DataFailure.server(status: status)) {
                 let _: AccountIdentity = try await client.request(APIEndpoint(path: ["users", "me"]))
             }
             #expect(server.requests.count == 1)
-            let delegate = APIRedirectDelegate()
-            let session = URLSession(configuration: .ephemeral)
-            defer { session.invalidateAndCancel() }
-            let request = URLRequest(url: URL(string: target)!)
-            let response = HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!
-            let allowed = await withCheckedContinuation { continuation in
-                delegate.urlSession(
-                    session, task: session.dataTask(with: request), willPerformHTTPRedirection: response,
-                    newRequest: request
-                ) { continuation.resume(returning: $0 != nil) }
-            }
-            #expect(!allowed)
+            #expect(server.requests.first?.value(forHTTPHeaderField: "Authorization") == "Bearer artificial-old-token")
+            #expect(foreign.requests.isEmpty)
+            #expect(foreign.requests.allSatisfy { $0.value(forHTTPHeaderField: "Authorization") == nil })
+            #expect(server.requests.allSatisfy { $0.value(forHTTPHeaderField: "Cookie") == nil })
+            #expect(foreign.requests.allSatisfy { $0.value(forHTTPHeaderField: "Cookie") == nil })
+
+            let configuration = URLSessionConfiguration.ephemeral
+            configuration.protocolClasses = [StubProtocol.self]
+            let control = URLSession(configuration: configuration)
+            defer { control.invalidateAndCancel() }
+            let (_, response) = try await control.data(from: URL(string: "https://\(server.host)/v1/start")!)
+            #expect((response as? HTTPURLResponse)?.statusCode == 204)
+            #expect(crossOrigin ? foreign.requests.count == 1 : server.requests.count == 3)
         }
     }
     @Test func transportAndExplicitCancellation() async throws {
@@ -132,6 +139,7 @@ import Testing
         let body = try fixtureText("account/identity.json")
         let server = StubServer { request in
             #expect(request.value(forHTTPHeaderField: "Cookie") == nil)
+            #expect(!request.httpShouldHandleCookies)
             #expect(request.cachePolicy == .reloadIgnoringLocalCacheData)
             return .init(200, body, headers: ["Set-Cookie": "secret=fake", "Cache-Control": "max-age=3600"])
         }
@@ -139,10 +147,37 @@ import Testing
         let _: AccountIdentity = try await client.request(APIEndpoint(path: ["users", "me"]))
         let _: AccountIdentity = try await client.request(APIEndpoint(path: ["users", "me"]))
         #expect(server.requests.count == 2)
+        let configuration = await client.effectiveConfiguration
+        #expect(configuration.httpCookieStorage == nil)
+        #expect(!configuration.httpShouldSetCookies)
+        #expect(configuration.httpCookieAcceptPolicy == .never)
+        #expect(configuration.urlCache == nil)
+        #expect(configuration.requestCachePolicy == .reloadIgnoringLocalCacheData)
+        #expect(configuration.urlCredentialStorage == nil)
+        #expect(configuration.httpAdditionalHeaders == nil)
         let empty = APIClient(baseURL: try APIBaseURL("https://never.invalid/v1", release: true))
         await #expect(throws: DataFailure.unauthorized(status: 401)) {
             let _: AccountIdentity = try await empty.request(APIEndpoint(path: ["users", "me"]))
         }
+    }
+
+    @Test func sanitizesInjectedConfiguration() async throws {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.httpShouldSetCookies = true
+        configuration.httpCookieAcceptPolicy = .always
+        configuration.urlCache = URLCache(memoryCapacity: 4096, diskCapacity: 0)
+        configuration.httpAdditionalHeaders = ["Authorization": "Bearer stale", "Cookie": "secret=fake"]
+        let client = APIClient(
+            baseURL: try APIBaseURL("https://never.invalid/v1", release: true), configuration: configuration)
+        let effective = await client.effectiveConfiguration
+        #expect(effective.httpCookieStorage == nil)
+        #expect(!effective.httpShouldSetCookies)
+        #expect(effective.httpCookieAcceptPolicy == .never)
+        #expect(effective.urlCache == nil)
+        #expect(effective.httpAdditionalHeaders == nil)
+        #expect(configuration.httpShouldSetCookies)
+        #expect(configuration.urlCache != nil)
+        #expect(configuration.httpAdditionalHeaders != nil)
     }
 }
 

@@ -10,6 +10,10 @@ public actor APIClient {
     private let now: @Sendable () -> Date
     private var session: URLSession?
 
+    var effectiveConfiguration: URLSessionConfiguration {
+        session?.configuration ?? configuration.copy() as! URLSessionConfiguration
+    }
+
     public init(
         baseURL: APIBaseURL, configuration: URLSessionConfiguration = .ephemeral,
         bearer: @escaping @Sendable () async throws -> String? = { nil },

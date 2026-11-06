@@ -13,6 +13,18 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class LaunchResourcesTests(unittest.TestCase):
+    def test_phase9b_tooling_records_the_committed_implementation(self):
+        section = (ROOT / "Docs/tooling.md").read_text().split(
+            "## Phase 9b: data-source contracts, API and mock", 1
+        )[1].split("\n## ", 1)[0]
+        commits = subprocess.check_output(
+            ["git", "log", "--format=%h", "b13fffa..c730aa3"], cwd=ROOT, text=True
+        ).splitlines()
+        self.assertEqual(len(commits), 3)
+        for commit in commits:
+            self.assertIn(commit, section)
+        self.assertNotIn("No commits were made in this worktree.", section)
+
     def setUp(self):
         self.document = ET.parse(ROOT / "App/LaunchScreen.storyboard").getroot()
         self.view = self.document.find(".//viewController/view")

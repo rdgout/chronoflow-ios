@@ -87,6 +87,11 @@ final class StubProtocol: URLProtocol, @unchecked Sendable {
             }
             let response = HTTPURLResponse(
                 url: request.url!, statusCode: reply.status, httpVersion: "HTTP/1.1", headerFields: reply.headers)!
+            if (300..<400).contains(reply.status), let location = response.value(forHTTPHeaderField: "Location"),
+                let target = URL(string: location, relativeTo: request.url)?.absoluteURL
+            {
+                client?.urlProtocol(self, wasRedirectedTo: URLRequest(url: target), redirectResponse: response)
+            }
             client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
             client?.urlProtocol(self, didLoad: reply.body)
             client?.urlProtocolDidFinishLoading(self)

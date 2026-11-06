@@ -1142,7 +1142,8 @@ still uses the Phase 4 composition until 9d, and no auth UI or sync lifecycle is
 
 The API client lazily creates an ephemeral URLSession on its actor. It disables cookies, URL credentials
 and persistent caching, refuses every redirect, excludes bearer on all public auth routes and cancels
-requests at injected 15/90/3-second deadlines. All tests inject a deny-by-default URLProtocol; fixtures
+requests at injected 15/90/3-second deadlines. Tests inject a deny-by-default URLProtocol, with one
+macOS-only loopback test for real HTTP cookies and redirects; fixtures
 are synthesized from backend DTOs and assertions, with source/provenance notes alongside them. No live
 API or production credential was used.
 
@@ -1173,8 +1174,8 @@ Verification in this worktree:
 - `make launch-resources-check`: passed (9 resource checks, 21 simulator-runner fixtures).
 - SwiftPM `swift build --build-tests` for `arm64-apple-ios17.0-simulator` and direct Swift 6/MainActor
   Debug/Release app and hosted-test module/SIL compilation: passed. Compilation does not execute UIKit.
-- Three ordered patches, each with its task tick, replayed using `git apply --index` against HEAD and
-  compared byte-for-byte with the final versioned tree. No commits were made in this worktree.
+- Implementation commits, each with its task tick: `d6b54f0` (`feat(data-source)`),
+  `6ed5c29` (`feat(api)`) and `c730aa3` (`feat(mock)`).
 
 Run these exact targeted checks outside the sandbox on **one iPhone 17e**, without a matrix:
 
@@ -1200,6 +1201,30 @@ source construction. Their execution and the integrated `make check` remain **Op
 The seven-simulator matrix runs only when requested. Existing physical-device protection/performance,
 Apple team/bundle confirmation, deployed AASA and later UI/copy/shipping questions remain open;
 none blocks this service-only 9b implementation.
+
+## Phase 9b review corrections (6 November 2026)
+
+Redirect stubs now notify URLSession of 301/302/307/308 redirects with Location and Set-Cookie.
+Tests cover same-host and foreign-host targets, record both destinations, and use a delegate-less
+control session that must follow each redirect. APIClient must refuse every redirect without a
+second request or bearer/cookie leakage. Its internal effective-configuration snapshot returns a copy;
+tests check cookie storage/policy, credentials, cache and additional headers after injection and use.
+
+`APICookieTests` runs only on macOS. Its Network listener binds an ephemeral port on 127.0.0.1, closes
+every HTTP connection and stops at test teardown. A control URLSession must follow a 302, store its
+cookie and send it to the next path. APIClient must refuse that response, ignore a pre-seeded cookie,
+store no response cookie and send no cookie on a later request. No external host or real-time sleep
+is involved. `sh Scripts/host-tests.sh --filter 'APICookieTests|APIClientTests'`: **12 tests passed**.
+Removing the installed redirect delegate fails the tests; removing cookie/cache/header protections
+also fails, including the real cookie send/store assertions. The original stub fails the new
+redirect control assertions before its fix.
+
+The Phase 9b implementation record now names its three existing commits instead of saying no
+commits were made. `python3 -I Tests/test_launch_resources.py
+LaunchResourcesTests.test_phase9b_tooling_records_the_committed_implementation` fails against the
+old note and passes after correction, checking the recorded hashes against git history.
+These regressions need no new hosted execution; the existing factory/build-setting commands above
+and integrated `make check` remain open for the orchestrator.
 
 ## Phase 9a review corrections (6 November 2026)
 
