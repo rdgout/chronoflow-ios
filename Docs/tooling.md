@@ -999,3 +999,10 @@ Round 2 host checks pass: 82 SwiftPM tests, two portable capture guards, strict 
 30 simulator-runner fixtures and XcodeGen generation. Direct Swift 6/MainActor iOS 17 module/test
 type-checking and Debug/Release app/hosted-test SIL compilation pass; only the existing D11 CoreText
 deprecation remains. These checks do not execute UIKit; revised SE/17e and matrix validation stay open.
+
+The hand-over regression now begins with normal motion and a signed-out first connection. It
+requires the window to mount, the intro to exist at exitStart + 700 ms and Welcome to claim it once.
+After disconnect/reconnect it requires a new mounted window without overlay/intro and compares
+its pixels with an explicit final Welcome reference immediately and after 500 ms. A separate
+Reduce Motion regression requires the root window to mount before checking that no intro exists.
+All mounting/claim waits are bounded and assert their outcome; UIKit execution remains open.
