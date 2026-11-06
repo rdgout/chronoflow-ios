@@ -46,7 +46,7 @@ targets:
         SWIFT_EMIT_LOC_STRINGS: YES
     dependencies:
       - package: ChronoFlowKit
-        products: [DesignSystem, AppCore, LocalStore, Launch, Welcome]
+        products: [DesignSystem, AppCore, LocalStore, DataAccess, Launch, Welcome]
   AppTests:
     type: bundle.unit-test
     platform: iOS
@@ -103,6 +103,7 @@ schemes:
         - package: ChronoFlowKit/DesignSystemTests
         - package: ChronoFlowKit/AppCoreTests
         - package: ChronoFlowKit/LocalStoreTests
+        - package: ChronoFlowKit/DataAccessTests
         - package: ChronoFlowKit/LaunchTests
         - package: ChronoFlowKit/WelcomeTests
   ReadinessRelease:

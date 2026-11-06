@@ -104,7 +104,11 @@ class LaunchResourcesTests(unittest.TestCase):
         self.assertNotRegex(project, r'(?m)^\s+CODE_SIGNING_ALLOWED:')
         self.assertNotRegex(project, r'(?m)^\s+CODE_SIGN_IDENTITY:')
         self.assertNotRegex(project, r'(?m)^\s+DEVELOPMENT_TEAM:')
-        self.assertEqual((ROOT / "Config/Base.xcconfig").read_text().strip(), '#include? "Local.xcconfig"')
+        self.assertEqual((ROOT / "Config/Base.xcconfig").read_text().splitlines(), [
+            "CHRONOFLOW_DATA_SOURCE = mock",
+            "CHRONOFLOW_API_BASE_URL = https:/$()/api.chronoflow.net/v1",
+            '#include? "Local.xcconfig"',
+        ])
 
     def test_launch_is_an_unlocalised_storyboard_without_text_or_custom_code(self):
         with (ROOT / "App/Info.plist").open("rb") as source:

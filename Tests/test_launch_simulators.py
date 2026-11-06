@@ -64,6 +64,7 @@ class ClassificationTests(unittest.TestCase):
         host = set(runner.selectors('host'))
         self.assertTrue(any(s.startswith('LocalStoreTests/') for s in host))
         self.assertTrue(any(s.startswith('AppCoreTests/') for s in host))
+        self.assertTrue(any(s.startswith('DataAccessTests/') for s in host))
         for alias in runner.MATRIX:
             self.assertFalse(set(runner.selection('welcome', alias)) & host)
         makefile = (ROOT / 'Makefile').read_text()
