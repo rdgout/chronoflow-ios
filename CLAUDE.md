@@ -23,6 +23,6 @@ follow in Phase 3c. `make tokens`, `make fonts` and `make assets` regenerate the
 `make check`. Toolchain and Phase 1 verification, remaining simulator commands and environment
 limitations are recorded in `Docs/tooling.md`.
 
-Signing is optional for simulators. Device signing comes from ignored `Config/Local.xcconfig`, included
+Simulators use ad-hoc signing without a team so hosted Keychain tests can run. Device signing comes from ignored `Config/Local.xcconfig`, included
 by `Config/Base.xcconfig`; copy `Config/Local.xcconfig.example` to get started. All working rules and traps,
 including the no-trailer commit rule, are inherited from `AGENTS.md`.

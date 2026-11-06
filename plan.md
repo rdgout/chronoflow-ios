@@ -472,6 +472,9 @@ Defaults authorized for OQ 7, 8, 9, 15 and 16; confirmation remains open.
 - [x] Add the `--readiness` D1c simulator runner mode, en/US throughout, all Phase 4 Debug hosted/UI suites plus Release override-isolation tests, failure continuation and final `make check` / `make duo`; include readiness UI checks in `make duo`. The dedicated `ReadinessRelease` scheme builds only the app and hosted tests, with testability enabled only for that verification command; package test bundles stay in Debug. Fixture tests cover the full matrix, failure aggregation, scheme isolation and Duo runtime selection. Simulator validation is open.
   Files: `Scripts/launch-simulators.py`, `Tests/test_launch_simulators.py`, `Makefile`, `project.yml`.
 
+- [x] Document the committed readiness runner, Debug argument units/defaults, native Keychain shape, simulator ad-hoc signing, Release behavior and pending simulator/device validation; update the shared signing trap.
+  Files: `Docs/tooling.md`, `AGENTS.md`, `CLAUDE.md`.
+
 ### Phase 5: Welcome, intro and moon hand-over (`feat/phase-5-welcome`)
 
 Blocked by OQ 10, 12 (and OQ 6 for the moon cross-fade).

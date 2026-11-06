@@ -52,7 +52,12 @@ belongs to Phase 7. `make tokens fonts assets` regenerates the committed Phase 1
 `make generators-check` verifies them and runs their host tests (details below).
 Signing uses `Config/Base.xcconfig` with an optional `#include? "Local.xcconfig"`. Copy
 `Config/Local.xcconfig.example` to `Config/Local.xcconfig` and set `DEVELOPMENT_TEAM` for device runs.
-Simulator signing is disabled independently of that setting.
+Simulator builds use ad-hoc signing (`CODE_SIGNING_ALLOWED = YES`, `CODE_SIGN_IDENTITY = -`)
+and an empty simulator-only `DEVELOPMENT_TEAM`, independently of device signing. The app and
+test host must be signed locally for Keychain access; disabling signing causes
+`errSecMissingEntitlement` (-34018). No simulator team or provisioning profile is needed.
+The simulator identity is also set on the app target because XcodeGen's application preset
+otherwise overrides the project identity with `iPhone Developer`.
 
 ## Phase 0 verified results
 
@@ -602,3 +607,92 @@ strict formatting, generator freshness/tests (6 TokenGen, 6 font/cache, 3 AssetG
 tests and 19 simulator-runner fixtures. Direct module compilation and type-checking of the app, hosted
 tests, AppCoreTests, LaunchTests and AppUITests against the iOS 17 simulator SDK passed. This does not
 execute UIKit tests; the existing D11 font-registration deprecation remains.
+
+## Phase 4 readiness and hand-off
+
+Readiness starts after the first overlay flush. The coordinator uses that commit's media epoch,
+resolves the session, then reads the gate and stored-data updates independently. The root mounts
+its resolved route on its first frame. Stored-data updates support false → true during a first
+load; the eight-second fallback remains scoped to the launch source. Window teardown is driven
+by the container fade's CATransaction completion, isolated from the repeating status dots.
+
+The native Keychain service is `net.chronoflow.app.native`, account `session`, with JSON keys
+`token` and `accountId`. A malformed value is deleted and resolves signed out. No RN migration
+or URL scheme is enabled. Release always resolves signed out and ignores diagnostic ending,
+freeze, stall and readiness overrides. Debug destinations use route-name placeholders; Release
+renders no placeholder text. Welcome content and anchor publication belong to Phase 5.
+
+Debug readiness controls:
+
+- `-cf.session in|out|never` (default: read the native Keychain).
+- `-cf.gate app|terms|verify|walkthrough` (default: `app`).
+- `-cf.stored yes|no|never` (default: `yes`). `never` leaves the stored-data fact unknown.
+- `-cf.readyDelay 3.5` (seconds from the overlay commit, default: zero). With `stored no`,
+  emit false immediately, then true at that deadline. A delay above eight seconds exercises
+  the forced first-load path while preserving the slow status.
+
+Existing `-cf.mode` and `-cf.freezeAt` diagnostics bypass readiness in Debug to retain frozen
+scene comparisons. The opening-window UI tests freeze at zero rather than racing the hand-off.
+
+Run all Phase 4 hosted, readiness UI, existing window/parity, AppCore, Launch and DesignSystem
+checks on all seven D1c devices:
+
+```sh
+python3 -I Scripts/launch-simulators.py --readiness
+```
+
+The runner prepares each device by type/runtime and pins `-testLanguage en -testRegion US`.
+It attempts both the Debug suites and the Release override-isolation hosted test per device,
+continues after failures, reports PASS/FAIL per device, then attempts both `make check` and `make duo`.
+Duo remains on its iPhone19-4 runtime. `make duo` now includes the readiness UI suite and en/US.
+The hosted Keychain round-trip uses a unique test service. AppTests still links only ChronoFlow
+through TEST_HOST/BUNDLE_LOADER; package host tests use an in-memory SessionStore.
+
+The dedicated `ReadinessRelease` scheme lists only AppTests. Its command enables testability for
+the hosted `@testable import ChronoFlow`; the `Perf` scheme keeps its normal Release settings.
+Package test bundles run only in Debug, where their `@testable` imports are supported. Selecting
+a test with `-only-testing` does not remove other test targets from a scheme's build graph.
+
+For one resolved simulator destination:
+
+```sh
+make generate
+xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData \
+  -onlyUsePackageVersionsFromResolvedFile -scheme ChronoFlow \
+  -destination "platform=iOS Simulator,id=$device" -testLanguage en -testRegion US \
+  -only-testing:AppTests -only-testing:AppCoreTests -only-testing:LaunchTests \
+  -only-testing:DesignSystemTests -only-testing:AppUITests/WindowTests \
+  -only-testing:AppUITests/LaunchSceneTests -only-testing:AppUITests/ReadinessTests test
+make check
+make duo
+```
+
+Phase 4 simulator validation is pending. The physical-device D3 proof, status-bar observation
+and performance measurements remain open in their existing plan tasks.
+
+The orchestrator's **2026-11-06** Debug pass reported three failures: unsigned simulator Keychain
+access (-34018), a missing manual-clock sleep and readiness update, and immediate weak-reference
+assertions after window teardown. Simulator signing is now ad-hoc. The stub's synchronous overload
+selected the protocol's one-value stream on concrete async calls. It now implements the async
+requirement explicitly; tests cover concrete and protocol calls, the absolute
+manual-clock deadline, an already-passed deadline and cancellation. Lifetime tests drain the run loop
+and scoped autorelease pools for up to two seconds, then still require both objects to deallocate.
+The completion path uses weak captures and clears the delegate's window/controller references.
+Both normal hand-off and disconnection during a pending exit have lifetime coverage. Revised
+simulator validation, `make check` and `make duo` are pending.
+
+Validate the Release signed-out restriction separately on the pinned simulator:
+
+```sh
+xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData \
+  -onlyUsePackageVersionsFromResolvedFile -scheme ReadinessRelease -configuration Release \
+  -destination 'platform=iOS Simulator,name=iPhone 17e,OS=27.2' -testLanguage en -testRegion US \
+  ENABLE_TESTABILITY=YES -only-testing:AppTests/ReleaseReadinessTests test
+```
+
+Direct hosted-test compilation must use `-swift-version 6 -default-isolation MainActor`, with
+`-D DEBUG -Onone` for Debug and `-O` for Release. Compile through SIL generation as well as
+type-checking: region-isolation diagnostics can arise during SIL generation. The stored-data
+test consumes the stream in one detached task so its mutable iterator never crosses actor boundaries
+between reads. A sleep-registration expectation replaces yield-count polling: both concrete and
+protocol calls must use the injected clock before the test advances it.

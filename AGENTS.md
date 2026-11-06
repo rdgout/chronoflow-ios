@@ -56,4 +56,4 @@ Simulators: Xcode 27.2 with iOS 27.2 runtimes (iPhone SE 3rd gen, 17e, 17, Air, 
 - Fonts are registered from the package with `CTFontManagerRegisterFontsForURLs`, not `UIAppFonts`.
 - The launch storyboard is not localised.
 - `make snapshots` runs the DesignSystem, Launch and Welcome test suites; Phase 1 has four approved primitive baselines, with launch image baselines added in Phase 3c.
-- `Config/Base.xcconfig` optionally includes ignored `Config/Local.xcconfig`; copy `Local.xcconfig.example` there for a device team. Simulator builds need no team.
+- `Config/Base.xcconfig` optionally includes ignored `Config/Local.xcconfig`; copy `Local.xcconfig.example` there for a device team. Simulator builds use ad-hoc signing (`CODE_SIGN_IDENTITY = -`) with no team; disabling signing breaks hosted Keychain access (`errSecMissingEntitlement`).
