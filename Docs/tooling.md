@@ -1922,3 +1922,29 @@ The default two-worker Debug run writes logic to Debug-compare.xcresult and appe
 Debug-serial.xcresult under build/test-results/17e. Recording runs serially, then compares in a fresh
 test process; the final command supplies another independent comparison. All default/CI flows remain
 single-simulator; no seven-device matrix or Duo-specific runtime run is introduced.
+
+## Phase 10a port fix round — 6 November 2026
+
+The user reports hosted passes for AuthBoardContrastTests, AuthControlTests, AuthLayoutTests,
+SignInTests and serial AuthAuditTests. SessionReadinessTests failed the canceled post-commit
+verify, terms and walkthrough cases: cancellation ends the gate's AsyncStream read immediately,
+so it falls back to `.app`. NativeSessionController now delegates to the shared
+StoredDataReadiness post-accept router, which reads the gate in an unstructured task and re-checks
+the active session and epoch before navigating or invoking verification. Launch readiness retains
+its existing cancellation behavior.
+
+Host SignInModelTests calls that production router, ignoring the model's suggested route just as
+AuthSessionServices does. It exercises password/passkey × four stored gates × canceled/uncanceled
+requests, asserts cancellation is already set before routing, and checks verification epochs.
+Four delayed-read/sign-out scenarios retain stale-session protection. Removing the unstructured
+task reproduces the reported Today misroutes for both methods on the host; restoring it passes.
+
+After applying the fix, rerun the full hosted SessionReadinessTests suite on the pinned 17e:
+
+```sh
+make generate
+make targeted DEVICES="17e" ONLY="AppTests/SessionReadinessTests"
+```
+
+These commands remain pending outside this sandbox. No simulator or xcodebuild execution is
+claimed for this round.

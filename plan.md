@@ -1194,6 +1194,19 @@ reported a 195 vs 187.5 centre; all 24 Auth audits identified only `sign-in.gues
   `Tests/DesignSystemTests/AuthBoardContrastTests.swift`, `Tools/TokenGen/Tests/TokenGenTests/TokenGenTests.swift`,
   `Scripts/launch-simulators.py`. Host ratio/token guards and iOS 17 type-checks pass; revised hosted execution remains open.
 
+#### Phase 10a port fix round (2026-11-06)
+
+The user's hosted 17e run passes AuthBoardContrastTests, AuthControlTests, AuthLayoutTests,
+SignInTests and serial AuthAuditTests. SessionReadinessTests exposed canceled post-commit gate
+reads falling back to Today for verify, terms and walkthrough. Hosted rerun remains open.
+
+- [x] Read the committed session's stored gate independently of request cancellation, retaining
+  the active-session/epoch re-check and verification callback. Share the production router with
+  host SignInModelTests: password/passkey × all four stored gates × canceled/uncanceled requests,
+  plus sign-out during the gate read. Removing the isolated read reproduces the reported gated
+  routing failures on the host. Files: `App/Session/NativeSessionController.swift`,
+  `Sources/AppCore/StoredDataReadiness.swift`, `Tests/AuthTests/SignInModelTests.swift`.
+
 #### Phase 10b: Two-factor code/recovery and auth acceptance (`feat/phase-10b-two-factor`)
 
 Stack on 10a. OQ 28's Two-factor strings must be resolved. Expired challenges have no separate board: use the approved notice/banner policy or defer that visual state under OQ 30.

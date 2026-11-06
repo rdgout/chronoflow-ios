@@ -57,6 +57,20 @@ public actor StoredDataReadiness: LaunchReadiness {
     public func gate() async -> Gate { await firstValue()?.gate ?? .app }
     public func hasStoredData() async -> Bool { await firstValue()?.hasStoredData ?? false }
 
+    @MainActor public func routeAcceptedSession(
+        navigator: any Navigator, verification: @MainActor (UInt64) async -> Void
+    ) async {
+        guard let current = await controller.activeSession() else { return }
+        // Committed sessions must read their stored gate even after the sign-in request is canceled.
+        let gate = await Task { await self.gate() }.value
+        guard await controller.activeSession() == current else { return }
+        if gate == .verify {
+            await verification(current.epoch)
+        } else {
+            navigator.navigate(to: gate.route)
+        }
+    }
+
     private func firstValue() async -> StoredAccountReadiness? {
         var iterator = updates().makeAsyncIterator()
         return await iterator.next() ?? nil

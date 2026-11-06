@@ -85,14 +85,7 @@ final class NativeSessionController {
     func routeAcceptedSession(
         navigator: RootNavigator, verification: @MainActor (UInt64) async -> Void
     ) async {
-        guard let current = await controller.activeSession() else { return }
-        let gate = await readiness.gate()
-        guard await controller.activeSession() == current else { return }
-        if gate == .verify {
-            await verification(current.epoch)
-        } else {
-            navigator.navigate(to: gate.route)
-        }
+        await readiness.routeAcceptedSession(navigator: navigator, verification: verification)
     }
 
     func setActive(_ active: Bool) async {

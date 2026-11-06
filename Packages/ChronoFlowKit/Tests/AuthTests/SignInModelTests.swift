@@ -26,7 +26,10 @@ func authTestSource(verified: Bool = true, twoFactor: Bool = false) throws -> Mo
         termsVersion: "1.0", privacyVersion: "1.0", acceptedTermsVersion: "1.0")
     let account = MockServerAccount(
         snapshot: snapshot, password: "Password123!", twoFactorCode: twoFactor ? "123456" : nil, walkthroughSeen: true)
-    return MockDataSource(seed: MockServerState(accounts: [account]), delay: { 0 }, sleep: { _ in })
+    let id = snapshot.id
+    return MockDataSource(
+        seed: MockServerState(accounts: [account]), delay: { 0 }, sleep: { _ in },
+        assertionProvider: { credential, _ in credential.id == "AQ" ? id : nil })
 }
 
 @MainActor struct SignInModelTests {
@@ -127,34 +130,99 @@ func authTestSource(verified: Bool = true, twoFactor: Bool = false) throws -> Mo
         #expect(AuthNavigation.route(for: account(verified: true, accepted: "2", seen: true)) == .today)
     }
 
-    @Test(arguments: [true, false]) func cancellationDuringCommittedSessionSyncStillRoutes(_ verified: Bool)
+    @Test(arguments: Gate.allCases, [false, true])
+    func committedSessionUsesStoredGateWithAndWithoutCancellation(_ storedGate: Gate, _ cancelAfterCommit: Bool)
         async throws
     {
+        for usePasskey in [false, true] {
+            let gate = AcceptedSessionSyncGate()
+            let credentials = AcceptedSessionCredentials()
+            let session = SessionController(
+                credentials: credentials, accounts: AcceptedSessionAccounts(), requestSync: { _ in await gate.wait() })
+            let readiness = StoredDataReadiness(controller: session) { id in
+                AsyncThrowingStream {
+                    $0.yield(StoredAccountReadiness(accountID: id, gate: storedGate, hasStoredData: false))
+                    $0.finish()
+                }
+            }
+            let navigator = AcceptedSessionNavigator()
+            var verificationEpochs: [UInt64] = []
+            let model = SignInModel(
+                source: try authTestSource(), session: session,
+                deviceIdentity: { "0199a3c0-0000-7000-8000-000000000001" }, deviceName: "test",
+                assertionProvider: DeterministicAssertionProvider { _ in
+                    Base64URL.assertion(
+                        credentialID: Data([1]), clientDataJSON: Data([2]), authenticatorData: Data([3]),
+                        signature: Data([4]), userHandle: nil)
+                },
+                route: { _ in
+                    #expect(Task.isCancelled == cancelAfterCommit)
+                    await readiness.routeAcceptedSession(navigator: navigator) { epoch in
+                        verificationEpochs.append(epoch)
+                        navigator.navigate(to: .verify)
+                    }
+                })
+            model.editEmail("demo@example.com")
+            model.editPassword("Password123!")
+            let request = Task {
+                if usePasskey { await model.submitPasskey() } else { await model.submitPassword() }
+            }
+            await gate.waitUntilEntered()
+            let data = try #require(await credentials.data)
+            let stored = try #require(StoredSession.parse(data))
+            #expect(await session.presence == .signedIn(accountID: stored.accountId))
+            #expect(navigator.routes.isEmpty)
+            if cancelAfterCommit { request.cancel() }
+            await gate.release()
+            await request.value
+            #expect(navigator.routes == [storedGate.route])
+            let epoch = await session.epoch
+            #expect(verificationEpochs == (storedGate == .verify ? [epoch] : []))
+            #expect(model.password.isEmpty && !model.form.busy && model.form.banner == nil)
+            #expect(model.sessionFailure == nil)
+            #expect(await session.storedSession == stored)
+        }
+    }
+
+    @Test(arguments: [Gate.verify, .terms], [false, true])
+    func signOutDuringStoredGateReadPreventsStaleRouting(_ storedGate: Gate, _ cancelRequest: Bool) async throws {
         let gate = AcceptedSessionSyncGate()
-        let credentials = AcceptedSessionCredentials()
         let session = SessionController(
-            credentials: credentials, accounts: AcceptedSessionAccounts(), requestSync: { _ in await gate.wait() })
-        var routes: [Route] = []
-        let model = SignInModel(
-            source: try authTestSource(verified: verified), session: session,
-            deviceIdentity: { "0199a3c0-0000-7000-8000-000000000001" }, deviceName: "test",
-            route: { routes.append($0) })
-        model.editEmail("demo@example.com")
-        model.editPassword("Password123!")
-        let request = Task { await model.submitPassword() }
+            credentials: AcceptedSessionCredentials(), accounts: AcceptedSessionAccounts())
+        let source = try authTestSource()
+        let result = try await source.signIn(
+            PasswordSignInInput(
+                email: "demo@example.com", password: "Password123!",
+                deviceID: "0199a3c0-0000-7000-8000-000000000001", deviceName: "test"))
+        guard case .session(let accepted) = result else {
+            Issue.record("Expected a session")
+            return
+        }
+        try await session.accept(accepted)
+        let readiness = StoredDataReadiness(controller: session) { id in
+            await gate.wait()
+            return AsyncThrowingStream {
+                $0.yield(StoredAccountReadiness(accountID: id, gate: storedGate, hasStoredData: false))
+                $0.finish()
+            }
+        }
+        let navigator = AcceptedSessionNavigator()
+        let request = Task {
+            await readiness.routeAcceptedSession(navigator: navigator) { _ in Issue.record("Stale verification") }
+        }
         await gate.waitUntilEntered()
-        let data = try #require(await credentials.data)
-        let stored = try #require(StoredSession.parse(data))
-        #expect(await session.presence == .signedIn(accountID: stored.accountId))
-        #expect(routes.isEmpty)
-        request.cancel()
+        if cancelRequest { request.cancel() }
+        _ = try await session.signOut(discardPending: true, unauthorized: true)
+        navigator.navigate(to: .signIn)
         await gate.release()
         await request.value
-        #expect(routes == [verified ? .today : .verify])
-        #expect(model.password.isEmpty && !model.form.busy && model.form.banner == nil)
-        #expect(model.sessionFailure == nil)
-        #expect(await session.storedSession == stored)
+        #expect(navigator.routes == [.signIn])
     }
+}
+
+@MainActor private final class AcceptedSessionNavigator: Navigator {
+    private(set) var routes: [Route] = []
+    func navigate(to route: Route) { routes.append(route) }
 }
 
 private actor AcceptedSessionCredentials: SessionStore {
