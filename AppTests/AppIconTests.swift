@@ -16,12 +16,9 @@ nonisolated final class AppIconTests: XCTestCase {
         XCTAssertNil(Bundle.main.infoDictionary?["UIDesignRequiresCompatibility"])
     }
 
-    func testCompiledCatalogContainsTheDesignedAppearanceRenditions() throws {
+    func testCompiledCatalogContainsAppearanceKeysAndTheGlassStack() throws {
         let url = try XCTUnwrap(Bundle.main.url(forResource: "Assets", withExtension: "car"))
         let catalog = try Data(contentsOf: url)
-        for filename in ["AppIcon-default.png", "AppIcon-dark.png", "AppIcon-tinted.png"] {
-            XCTAssertNotNil(catalog.range(of: Data(filename.utf8)), "Missing compiled rendition: \(filename)")
-        }
         for appearance in ["UIAppearanceDark", "ISAppearanceTintable"] {
             XCTAssertNotNil(catalog.range(of: Data(appearance.utf8)), "Missing compiled appearance: \(appearance)")
         }

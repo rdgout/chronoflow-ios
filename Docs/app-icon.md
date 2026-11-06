@@ -3,7 +3,7 @@
 The user's canvas export, `_design/canvas/AppIcon.dc.html`, selects `AppIcon-default.png`,
 `AppIcon-dark.png` and `AppIcon-tinted.png`. Dark is **opaque**: it retains the night sky and ember
 horizon. The transparent version is explicitly an alternative on the board, so it stays a design
-source. iOS 17 uses default; iOS 18–25 can use the designed dark and grayscale tinted variants.
+source. These are the intended legacy designs; the supported Composer build does **not** ship these pixels on iOS 17–25. See the limitation below.
 All supplied files under `_design/icon/` and the board are retained unchanged, including SVG masters,
 the hand-written Composer starter and reference previews. Previews are approximations, not shipped
 glass images. Some board-linked layer/preview PNGs were not included in the supplied export.
@@ -36,77 +36,104 @@ directory. XcodeGen 2.46.0 emits the legacy `wrapper.icon` file type; `options.p
 `Scripts/configure-icon-project.py` to set `folder.iconcomposer.icon` deterministically and
 idempotently. This is part of generation from `project.yml`; the generated project is never committed.
 
-Offline evidence in the installed Xcode 27.2 (27B52) toolchain:
+## Legacy-icon limitation — second fix round
 
-- `Contents/SharedFrameworks/XCBuild.framework/Versions/A/PlugIns/XCBBuildService.bundle/Contents/PlugIns/XCBSpecifications.ideplugin/Contents/Resources/StandardFileTypes.xcspec`
-  declares `folder.iconcomposer.icon`, extension `icon`, based on `folder.abstractassetcatalog`.
-- The adjacent `AssetCatalogCompiler.xcspec` groups both `folder.assetcatalog` and
-  `folder.iconcomposer.icon` as actool inputs. It maps `ASSETCATALOG_COMPILER_APPICON_NAME` to
-  `--app-icon` and `ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS` to `--include-all-app-icons`.
-- `Contents/Developer/usr/share/man/man1/actool.1` documents primary-icon compilation into Assets.car
-  for iOS 11+, and the partial Info.plist that Xcode merges into the app.
-- The Icon Composer file template contains `fill`, `groups` and `supported-platforms`, with
-  `squares` encoded as the string `"shared"`. Individual group/fill decoder round-trips do not
-  establish document validity; the host's full actool compilation remains the acceptance check.
-- The installed AssetCatalogFoundation contains `enable-icon-stack-fallback-generation` and the
-  fallback-generation option. The project passes `--enable-icon-stack-fallback-generation=disabled`
-  and includes all app icons to retain supplied flat renditions alongside the stack. These settings
-  require the combined compilation check below; merely having source files is insufficient.
+**Supported outcome:** iOS 26+ uses the layered Liquid Glass icon. iOS 17 uses a Composer-generated
+flat default; iOS 18–25 can use Composer-generated dark and tinted flats. **The supplied
+AppIcon-default/dark/tinted PNGs are not preserved as the legacy app icons.** The authored flat
+catalog remains generated and checked as a design control, not evidence of what the app ships.
+OQ 18 records this limitation; the original dual-source goal is not achieved.
 
-[Apple's Composer documentation](https://developer.apple.com/documentation/xcode/creating-your-app-icon-using-icon-composer)
-notes that Composer can replace existing icon catalogs with generated older-platform images.
-[Apple DTS](https://developer.apple.com/forums/thread/813010) confirms the primary setting must match
-the Composer basename. The undocumented fallback flag is toolchain-dependent; its presence alone
-does not prove that a compiler honors it. The audit rejects missing designed renditions, including
-when a compiler substitutes Composer-generated flat images. A failed audit blocks acceptance.
+[Apple's current Composer documentation](https://developer.apple.com/documentation/xcode/creating-your-app-icon-using-icon-composer)
+explicitly says a Composer file replaces the existing icon asset catalog, and Xcode creates images
+for older releases from that file. Apple directs apps that need their existing icons on older releases
+to continue using asset catalogs. It documents no setting to combine an authored legacy bitmap
+with a Composer primary icon. [Apple DTS](https://developer.apple.com/forums/thread/813010) requires
+the primary icon setting to match the Composer basename; using different primary names is not a
+documented OS-version selector. The installed `AssetCatalogCompiler.xcspec` exposes the primary
+name and include-all settings but no legacy-source override. Keeping additional icons under other
+names would not establish that older systems select them as the primary icon.
 
-## Verification
+The previous `--enable-icon-stack-fallback-generation=disabled` workaround is undocumented.
+The user's combined compilation with that flag succeeded, but its stored flats differ from the
+supplied PNGs. Removed it from `project.yml`; `ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS`
+remains enabled. No binary CAR editing, alternate-icon switching, deployment-target changes,
+compatibility opt-out or custom runtime icon selection is introduced.
 
-Verified here: `make generate` produces exactly one Composer reference in Resources with
-`folder.iconcomposer.icon`; `make quick` passes (304 Swift host tests and 69 Python fixtures, plus
-strict formatting lint); hosted AppIconTests type-check with Swift 6, root MainActor isolation and
-an iOS 17 simulator target; flat-only actool compilation passes;
-assetutil reports `AppIcon-default.png`, `AppIcon-dark.png` (`UIAppearanceDark`) and
-`AppIcon-tinted.png` (`ISAppearanceTintable`), all opaque 1024² `Icon Image` renditions named ChronoFlow.
-The installed Composer app's own Assets.car confirms assetutil calls the layered root `IconImageStack`.
+### Observed content, independently of rendition filenames
 
-The host's `.icon` compilation and build-for-testing **failed** with “The layer ‘Sky’ does not have
-an image name.” The generator fix restores its required base `image-name`, retains the dark
-specialization and corrects `supported-platforms.squares` from an array to `"shared"`.
-This is a document error; the earlier sandbox Launch Services failure did not identify the cause
-of the host build failure. Combined compilation, the catalog audit and hosted tests still require
-the host commands below after regeneration. Do not infer successful older-iOS fallback or glass
-rendering from the passing generator or flat-only checks.
+Read the supplied `icon-car-info.json` and the existing `build/icon-actool/Assets.car` without
+running actool or assetutil. `Scripts/icon-pixels.m` opens the catalog through host CoreUI using
+`dlopen`, selects the phone's 1024-square multisize icon for each appearance, and reads the stored
+`_CUIThemePixelRendition.unslicedImage`. It refuses a different image/rendition class, so this is
+not an IconServices rendering of the glass stack. All three selected bitmap names match the UUID
+names in the saved metadata. All are opaque. Decode both those bitmaps and the authored PNGs
+into sRGB, RGBA8, premultiplied alpha, then SHA-256 the pixel bytes:
 
-Run these from `/Users/rickgout/Sites/chronoflow-ios-icon` on the host:
+| Appearance | Stored bitmap RGBA SHA-256 | Designed PNG RGBA SHA-256 |
+| --- | --- | --- |
+| Any | `275859459d4a513afaaba5a2df0df90f80c83665858bb86d34949c83c84e098b` | `cae48743d30f54466f41a40588924b84e1a1534df302cdfb198f46384cb30ae9` |
+| Dark | `cbda7aeaf30a772813e8e1489c25d7b0d52c4adc079a192df00a2a0d752aa4a0` | `6cb182e55862db9bc0ba9502fd2a9c700805f82846dc331c7d1e3ac08e8967f1` |
+| Tinted | `92cf05b75ac21555bacb0ee699c57b486ef15669191a6feb1631055c136706b1` | `c97233d1b86272964b0e5bde6d1572124fb718ec3fc8bac92171cc2bbe544ca0` |
+
+This proves the stored images are **not simply renamed designed PNGs**. Apple's documented
+behavior identifies Composer-generated replacements as the expected source. An independent
+Composer-only compilation is still required to prove that attribution by content; this sandbox
+has not run the host's compiler controls. Do not describe that remaining check as passed.
+
+### Reproducible host probe and audit
+
+`make icon-probe` prints and executes four unthinned compilations with the same platform,
+deployment target, primary name and include-all setting:
+
+1. `flat`: asset catalog alone, to establish the compiler's treatment of the authored PNGs.
+2. `composer`: `.icon` alone, to establish generated fallback content independently of the catalog.
+3. `combined`: both inputs with supported settings, matching the project.
+4. `combined-disabled`: both inputs plus the old undocumented flag, to measure whether it changes content.
+
+An optional `ICON_EXISTING` catalog is also classified. Each appearance is compared by decoded
+pixel digest against the source PNG, flat-only control and Composer-only control. The probe writes
+`build/icon-probe/report.json`, complete `assetutil --info` output and PNG exports in each case's
+`pixels/` directory. UUID filenames and CAR compression do not affect the comparison. It saves
+the report **before** its assertions, so unexpected compiler behavior remains inspectable. It fails
+if flat-only differs from the source PNGs or supported combined output differs from Composer-only;
+if either happens, paste the report back for investigation rather than changing the acceptance check.
+The old flag's result is reported independently, not assumed to work or fail on a given toolchain.
+
+`Scripts/check-app-icon.py` requires those fresh controls, validates their source hashes and Xcode
+version, verifies the flat-only control against the designed PNGs, and compares the shipped bitmap
+pixels with the Composer-only control. It also checks all three phone icon appearances, opacity,
+1024-square dimensions, all three Liquid Glass stack appearances, and the built app's primary-icon
+metadata. It explicitly prints whether each designed PNG was preserved. `--flat-only` instead requires
+the designed pixels and does not require the glass stack. The helper is compiled under `build/`;
+private CoreUI APIs exist only in this Mac audit utility and are never linked into the iOS app.
+A host CoreUI API change fails the audit rather than selecting a rendered stack silently.
+
+Run these commands **in order**, from the host (the existing catalog is the one from the failing audit):
 
 ```sh
+cd /Users/rickgout/Sites/chronoflow-ios-icon
 make generate
 make quick
-
-mkdir -p build/icon-actool
-xcrun actool App/Assets.xcassets App/ChronoFlow.icon \
-  --compile build/icon-actool --platform iphonesimulator \
-  --minimum-deployment-target 17.0 --target-device iphone \
-  --app-icon ChronoFlow --include-all-app-icons \
-  --enable-icon-stack-fallback-generation=disabled \
-  --output-partial-info-plist build/icon-actool/partial.plist \
-  --output-format human-readable-text --warnings --errors --notices
-python3 -I Scripts/check-app-icon.py build/icon-actool/Assets.car
+make icon-probe ICON_EXISTING=build/icon-actool/Assets.car
+python3 -I Scripts/check-app-icon.py build/icon-probe/combined/Assets.car
 
 xcodebuild -project ChronoFlow.xcodeproj -scheme ChronoFlow -configuration Debug \
   -derivedDataPath build/DerivedData -onlyUsePackageVersionsFromResolvedFile \
   -destination 'platform=iOS Simulator,name=iPhone 17e,OS=27.2' build-for-testing
-python3 -I Scripts/check-app-icon.py build/DerivedData/Build/Products/Debug-iphonesimulator/ChronoFlow.app
+make icon-audit
 REUSE_BUILD=1 make targeted DEVICES="17e" ONLY="AppTests/AppIconTests"
 ```
 
-The direct actool check is unthinned, so it checks fallback preservation independently of the running
-simulator's OS. The built-app check also verifies the primary icon metadata. The hosted suite loads
-the primary fallback image and checks that the designed source rendition names, dark/tintable
-appearance keys and `ChronoFlow.iconstack` are present in Assets.car. iOS has no public assetutil
-equivalent; the host audit
-associates those appearances with the ChronoFlow renditions and checks for the glass stack.
-The combined check must pass before ticking the plan's delivery verification task. Inspect the
-icon in Icon Composer/Home Screen for the board's default/dark/clear/tinted appearance intent.
-No splash/launch asset, storyboard or compatibility opt-out is changed.
+For a fresh checkout without the earlier catalog, omit `ICON_EXISTING=...`. To classify just that
+catalog after creating the controls, run `python3 -I Scripts/check-app-icon.py build/icon-actool/Assets.car`.
+To audit the authored control explicitly, run
+`python3 -I Scripts/check-app-icon.py --flat-only build/icon-probe/flat/Assets.car`.
+
+The unthinned probe establishes legacy content independently of the installed simulator OS.
+The hosted suite checks primary fallback image loading, appearance keys and the glass stack;
+the host audit owns pixel provenance. No hosted assertion depends on original rendition filenames.
+Build, independent compiler controls and hosted AppIconTests remain host acceptance gates;
+passing the Mac fixtures or decoding the saved CAR does not complete those gates. Inspect the icon
+in Icon Composer/Home Screen for default/dark/clear/tinted appearance intent. No simulator matrix
+is needed for this icon-only change. Splash assets and launch behavior are unchanged.

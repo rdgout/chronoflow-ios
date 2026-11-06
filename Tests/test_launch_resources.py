@@ -57,7 +57,7 @@ class LaunchResourcesTests(unittest.TestCase):
         self.assertIn("path: App/ChronoFlow.icon\n        type: file\n        buildPhase: resources", project)
         self.assertIn("postGenCommand: python3 -I Scripts/configure-icon-project.py", project)
         self.assertIn("ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS: YES", project)
-        self.assertIn("ASSETCATALOG_OTHER_FLAGS: --enable-icon-stack-fallback-generation=disabled", project)
+        self.assertNotIn("--enable-icon-stack-fallback-generation", project)
         self.assertIn('TARGETED_DEVICE_FAMILY: "1"', project)
 
     def test_welcome_capture_is_hosted_without_duplicate_package_linkage(self):
