@@ -1,0 +1,10 @@
+{
+  "challengeId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "options": {
+    "challenge": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "rpId": "app.chronoflow.net",
+    "timeout": 60000,
+    "userVerification": "required",
+    "allowCredentials": []
+  }
+}

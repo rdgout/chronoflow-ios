@@ -26,7 +26,10 @@ let package = Package(
         .target(name: "AppCore", swiftSettings: [.defaultIsolation(nil)]),
         .target(name: "DataAccess", dependencies: ["AppCore"], swiftSettings: [.defaultIsolation(nil)]),
         .testTarget(
-            name: "DataAccessTests", dependencies: ["DataAccess"], resources: [.copy("Fixtures")],
+            name: "DataAccessTests", dependencies: ["DataAccess"], exclude: ["Fixtures/README.md"],
+            resources: [
+                .copy("Fixtures/auth"), .copy("Fixtures/account"), .copy("Fixtures/trips"), .copy("Fixtures/errors"),
+            ],
             swiftSettings: [.defaultIsolation(nil)]),
         .target(
             name: "LocalStore", dependencies: ["AppCore", .product(name: "GRDB", package: "GRDB.swift")],

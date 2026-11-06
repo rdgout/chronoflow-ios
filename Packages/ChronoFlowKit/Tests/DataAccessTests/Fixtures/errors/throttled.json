@@ -1,0 +1,5 @@
+{
+  "code": "throttled",
+  "message": "Artificial envelope message.",
+  "retryAfterSeconds": 37
+}
