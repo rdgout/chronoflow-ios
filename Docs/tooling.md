@@ -362,3 +362,122 @@ Phase 2 task 2 host verification (2026-11-06, fix round 4):
 There are no Phase 2 OQ defaults to assume and no undesigned states to defer. Package simulator tests,
 full `make check` and the updated D1c matrix runner remain for the orchestrator; the cached system-frame
 recording remains in Phase 8. No physical-device task belongs to this phase.
+
+## Phase 3a pure timeline — 6 November 2026
+
+All six implementation tasks are complete. The app still uses the Phase 2 shell; scene playback,
+Core Animation presentation-layer comparison and overlay wiring belong to Phase 3b.
+
+`CubicBezier`, `MoonTarget`, `FlightPath`, `LaunchTimeline`, tracks and sampled values are pure Sendable
+values. The UI target's default MainActor isolation does not apply to these launch value types.
+Track `keyTimes` are absolute **seconds from t0**, including explicit opening holds. The Phase 3b
+adapter must normalize them for CA, retain t0 as the animation begin time, and use one animation key
+per layer/key path. Rebuilding an ending preserves the opening keys and replaces any earlier ending;
+status remains independent of the ending. Moon position is an absolute window-space centre, with its
+opening lift already included, so the adapter must not add a second translation.
+
+The dot source track repeats from t0, with `replicaCount = 3` and `replicaDelay = 0.2` for the live
+replicator. `sample(at:)` also returns `LayerValues.replicaOpacities`, in source/second/third order,
+for rendering model snapshots of the three instances. They include the phase delay, even when the
+status fade is committed late. Reduce Motion returns three constant 1.0 values and no repeating track.
+Status visibility is a parent opacity; it stays at 1 after its fade while the container hands off.
+
+The flight cubic's 1024-entry arc-length table gives length about 505.789 pt and apex (195, 512.5)
+on the board fixture. Its 128 moving position samples include the exact 3% fraction knot at 560 ms;
+the timeline adds one initial hold key at 0. The x controls scale with window width; all y coordinates
+are bottom-anchored. Only the test fixture uses 390 × 844 as a window size.
+
+The host rendering spike found cubic `CAShapeLayer.strokeEnd` trimming drift: at fraction 0.25 the
+rendered tip was around x = 82, versus the arc-length reference x = 75.605. Although
+[Apple documents linear interpretation along path length](https://developer.apple.com/documentation/quartzcore/cashapelayer/strokestart),
+that cubic rendition did not meet the required plane/tip alignment. `FlightPath.path` therefore uses
+the spec's sampled-polyline fallback, through the same 128 vertices as the plane. Numerical tests
+compare the plane with both the original arc-length reference and the polyline's length-based tip
+every 10 ms within 0.02 pt. A separate rendered shape-layer test checks pixels 1 pt before and after
+the tip every 10 ms where visible. This passes on the host; the same test is included in the iOS
+matrix. Flight endpoints extend 10 pt beyond the window by design and will be clipped by the container.
+
+`MoonTarget.fallback` returns the glyph's 28 pt frame, rather than the 288 pt glow bitmap frame.
+It centres the glyph vertically in `max(28, rowHeight)`. `contentBounds` applies top, left, bottom
+and right safe insets: top `max(safeTop + 16, 64)`, sides `safeLeft/Right + 24`, bottom
+`max(safeBottom, 40)`. Extra row height moves the target down; right/bottom insets limit the content
+area without moving the top-leading row. Hosted tests use each running simulator's actual window
+and safe areas, plus asymmetric additions, including Duo's side rail. Additional pure short/wide
+fixtures exercise arbitrary sizes; they are not stored device-dimension assumptions.
+
+Defaults assumed, recorded on the corresponding tasks (the OQ table remains open):
+
+- OQ 6: Reduce Motion dots hold at 1.0, fade uses ease-out, no flying-moon cross-fade, stars stay
+  as drawn during the dissolve. The actual star surface belongs to Phase 3b/5.
+- OQ 7: a late Welcome ending starts at resolution, with W = max(1600 ms, resolution time).
+- OQ 10: the fallback uses the spec's RN safe-area padding rule; Welcome's text scaling is Phase 5.
+- OQ 11: RN width-scaled x controls and bottom anchoring, portrait iPhones including Duo.
+
+Host verification for the final Phase 3a tree:
+
+- `make format`, `make lint`: passed.
+- Host package SwiftPM: **38 tests passed**, including 27 new pure timeline/geometry tests.
+  UIKit-only asset, snapshot and hosted-window tests require the simulator and are not part of this count.
+- `make generators-check`: passed (6 TokenGen, 6 Python font/cache, 3 AssetGen tests), with generated
+  outputs unchanged.
+- `make launch-resources-check`: passed (4 resource tests, 11 matrix-runner fixture tests).
+- Direct Swift 6 module compilation for AppCore, DesignSystem and Launch and type-checking all
+  AppTests, AppCoreTests and LaunchTests against `arm64-apple-ios17.0-simulator`: passed.
+  This invokes swiftc, not xcodebuild, and does not execute UIKit tests. D11's existing CoreText
+  registration deprecation is the only warning.
+- `git diff --check`: passed. Six atomic patches are replayed with `git apply --index` against HEAD
+  and checked against the final source tree byte for byte, including executable modes.
+
+Reproduce the host package run without writing caches outside the repo:
+
+```sh
+mkdir -p build/tmp build/SwiftPMHome
+TMPDIR="$PWD/build/tmp" CFFIXED_USER_HOME="$PWD/build/SwiftPMHome" \
+CLANG_MODULE_CACHE_PATH="$PWD/build/ModuleCache" \
+swift test --disable-sandbox --package-path Packages/ChronoFlowKit \
+  --scratch-path build/Phase3aHost --cache-path "$PWD/build/SwiftPMCache" \
+  --config-path "$PWD/build/SwiftPMConfig" --security-path "$PWD/build/SwiftPMSecurity" \
+  --triple arm64-apple-macosx14.0
+```
+
+The orchestrator must run the simulator matrix and complete `make check` outside the sandbox:
+
+```sh
+sh build/commits/simulators.sh
+```
+
+The wrapper invokes the committed runner, so it can also be run directly:
+
+```sh
+python3 -I Scripts/launch-simulators.py --timeline
+```
+
+It runs `make generate`, cleans the build folder, dynamically resolves all seven D1c device types
+and runtimes, clears the launch cache as in Phase 2, and executes this command per resolved device:
+
+```sh
+xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData \
+  -onlyUsePackageVersionsFromResolvedFile -scheme ChronoFlow \
+  -destination "platform=iOS Simulator,id=$device" \
+  -only-testing:AppTests -only-testing:AppUITests/WindowTests \
+  -only-testing:DesignSystemTests -only-testing:AppCoreTests -only-testing:LaunchTests test
+```
+
+It continues past missing devices, preparation and test failures, reports PASS/FAIL per device,
+then attempts **both** final commands, aggregating failures into its exit status:
+
+```sh
+make check
+make duo
+```
+
+Duo is resolved only on `com.apple.CoreSimulator.SimRuntime.iOS-27-2-iPhone19-4`; the regular
+27.2 runtime is never a substitute. The runner's fixtures verify the Phase 3a suite selection,
+continuation, aggregate failure status and Duo runtime filtering. As before, generation failure
+stops before simulator work. Each asset test uses the running device's own displayScale, and hosted
+AppTests still depends only on ChronoFlow with TEST_HOST/BUNDLE_LOADER.
+
+Simulator execution and full `make check` are pending for the orchestrator. No physical-device or
+Apple-team-dependent task belongs to Phase 3a, and no undesigned state was introduced or deferred.
+The presentation-layer solver comparison remains in Phase 3b; snapshot approval remains in Phase 3c.
+Logs from host verification are in ignored `build/phase3a-*.log`.
