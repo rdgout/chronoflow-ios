@@ -52,7 +52,7 @@ class LaunchResourcesTests(unittest.TestCase):
 
     def test_welcome_capture_is_hosted_without_duplicate_package_linkage(self):
         source = ROOT / "AppTests/WelcomeSnapshotTests.swift"
-        self.assertIn("drawHierarchy", source.read_text())
+        self.assertIn("window.layer.render(in:", (source.parent / "WelcomeTestWindow.swift").read_text())
         self.assertFalse((ROOT / "Packages/ChronoFlowKit/Tests/WelcomeTests/WelcomeSnapshotTests.swift").exists())
         self.assertTrue((source.parent / "__Snapshots__/README.md").exists())
         self.assertNotIn("SnapshotTesting", (source.parent / "WelcomeSnapshotReference.swift").read_text())
@@ -91,13 +91,14 @@ class LaunchResourcesTests(unittest.TestCase):
 
     def test_hosted_tests_reuse_the_apps_package_products(self):
         project = (ROOT / "project.yml").read_text()
-        target = re.search(r"(?ms)^  AppTests:\n(.*?)(?=^  \S|\Z)", project)
-        self.assertIsNotNone(target)
-        configuration = target.group(1)
-        self.assertIn('TEST_HOST: "$(BUILT_PRODUCTS_DIR)/ChronoFlow.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ChronoFlow"', configuration)
-        self.assertIn('BUNDLE_LOADER: "$(TEST_HOST)"', configuration)
-        dependencies = configuration.split("    dependencies:\n", 1)[1]
-        self.assertEqual(dependencies.strip(), "- target: ChronoFlow")
+        for name in ['AppTests', 'RenderTests']:
+            target = re.search(r"(?ms)^  " + name + r":\n(.*?)(?=^  \S|\Z)", project)
+            self.assertIsNotNone(target)
+            configuration = target.group(1)
+            self.assertIn('TEST_HOST: "$(BUILT_PRODUCTS_DIR)/ChronoFlow.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ChronoFlow"', configuration)
+            self.assertIn('BUNDLE_LOADER: "$(TEST_HOST)"', configuration)
+            dependencies = configuration.split("    dependencies:\n", 1)[1]
+            self.assertEqual(dependencies.strip(), "- target: ChronoFlow")
 
     def test_simulator_keychain_host_uses_adhoc_signing_without_a_team(self):
         project = (ROOT / "project.yml").read_text()

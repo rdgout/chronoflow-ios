@@ -8,7 +8,8 @@ MainActor; AppCore is nonisolated.
 
 The user requests **skipping the seven-simulator matrix unless asked**. This section supersedes
 all matrix/default-run and per-simulator recording recipes in the dated history below. Device-fit,
-visual approval and physical-device requirements remain. This tooling work starts no Phase 9 task.
+visual approval and physical-device requirements remain. The tier port preserves the implemented
+Phase 9a–9d stack and its review records below.
 
 | Tier | Command | Coverage | Target |
 |---|---|---|---|
@@ -78,26 +79,105 @@ parent additional insets of 120/80/100/90. This covers host insets larger than S
 
 Welcome reuses one window/controller per profile across appearance, locale and size variants. Each
 configuration installs a new SwiftUI identity, intro and anchor store; callbacks from replaced identities
-are ignored. A main-queue turn followed by descendant layout/display, transaction flush and synchronous
-`drawHierarchy(afterScreenUpdates: true)` precedes each sample. Two consecutive exact normalized rasters
-and frame sets must agree with all geometry callbacks and intro claim present; the bound is eight passes,
-with no fixed sleeps. Failure and blank guards remain strict. Captures, repeated roots and PNG comparisons
-share one explicit sRGB RGBA conversion. The independent fresh-window/clock/order regressions remain.
+are ignored. A main-queue turn followed by descendant layout/display and transaction flush precedes
+CPU `window.layer.render(in:)` at the fixture scale. Two consecutive exact sRGB RGBA rasters and frame
+sets must agree, with all geometry callbacks and intro claim present, within eight passes. No fixed
+sleep or pixel tolerance is used. Container tests compare fresh and reconfigured windows on every profile.
+
+#### Second fix round: capture diagnosis and references (2026-11-06)
+
+The user's first container run passed. Recording then completed, but immediate comparison failed 60
+finalWelcome filenames; frozenIntro and splash passed. The subsequent check failed in 552 s.
+The compare log reports the **first** differing byte, not the total differing-byte count.
+Independent decoding of the recorded finalWelcome/landed-frozenIntro images reproduces those exact
+first mismatches in sky-only pixels: 18 Pro dark byte 4246, Pro Max dark 4234, Air dark 3621,
+Air light 4986 and Duo dark 4374. In their first 50 rows the respective differing-channel counts are
+1402 / 3627 / 2810 / 130 / 4999, all with maximum magnitude 1. These are already present between
+equivalent skies in the same recording. Text, locale and type-size changes do not account for them.
+The axial CfSkyLayer gradient has horizontal quantization noise; the differing patches start partway
+across row zero. This implicates the render-server gradient dither/quantization rather than text layout.
+A definitive GPU state experiment cannot run inside the agent sandbox: CoreSimulator access is denied.
+
+The fix bypasses that path: Welcome now uses the same CPU layer-tree capture API as splash, with
+explicit scale and standard range. A Mac probe of the actual CfSkyLayer implementation at all seven
+fixture sizes/scales, both appearances, fresh and reconfigured layers, produced identical raster hashes
+in two independent processes. Hosted fresh/reused-window and repeated-clock/root tests remain the UIKit
+acceptance checks. Comparison stays **byte-exact**, with no ±1 allowance or pixel-count budget. Uniform/
+transparent rejection and the opposite-variant >8-channel-delta / >0.1% guard remain independent; the
+latter now uses a buffer scan with an early success threshold, preserving its original rule.
+
+**Capture rendering changes: re-record the 320 Welcome references.** All 792 of the user's recorded
+PNGs are retained byte-for-byte by this delivery. Splash's 472 references and its capture path are
+unchanged. An exact comparison against the old Welcome capture is expected to fail before recording.
+Production rendering, tokens and geometry are unchanged. No references are deleted or fabricated here.
+
+#### Wall-time diagnosis and stage budget
+
+Saved xcresults/logs show Debug-compare **335.593 s**, serial device-appearance smoke **112.558 s**
+(78.290 s in tests), and isolated Release **28.900 s** (0.009 s in tests). The remaining approximately
+75 s of the user's 552 s gate includes host/generator work, builds, preparation and result extraction.
+The original Welcome durations were frozenIntro 50.324 s, repeated frozen roots/clocks 84.536 s,
+finalWelcome 34.192 s, cap equivalence 21.163 s and opposite-variant checks 21.270 s. All these Swift
+Testing cases ran on the same hosted worker after the XCTest cases, leaving the UI worker idle.
+
+`RenderTests/WelcomeRenderingTests` is now a separate app-hosted bundle, so Xcode can schedule the
+fresh-root/clock/typography regressions independently of the AppTests profile snapshots on its two
+isolated workers. It links only ChronoFlow, with TEST_HOST/BUNDLE_LOADER, just like AppTests. Both
+bundles keep their own serialized Swift Testing suites. Recording selects only the two baseline suites;
+guards and rendering regressions run once in comparison. Release and device appearance stay isolated.
+
+finalWelcome retains **every existing profile filename/category**, including full SE/17e/Duo/Pro Max
+coverage and compact 17/Air/18 Pro large/xxLarge coverage. Moving the remaining full categories to
+compact would violate the settled profile decision, so no coverage is removed. It now checks actual
+17e renders of every requested category above xxLarge against the existing xxLarge pixels and frames,
+and compares large/xxLarge, locale and appearance variants using captures already in hand on every
+profile. The separate cap and opposite-variant window loops are removed. Repeated frozen tests retain
+two independent windows at every profile time in both locales/appearances and all three clock advances;
+the redundant ten-window 2400 ms stress loop and third capture after layout are removed. Comparisons
+use SnapshotRaster's exact memcmp. A fresh/warm separate-process intro diagnostic remains opt-in.
+
+Launch parity's shift search evaluates zero displacement first and prunes a candidate only after its
+accumulated nonnegative error exceeds the best complete result. The minimum-error and Manhattan-distance
+tie rules are unchanged and checked against exhaustive search, including clamped edges. A warm unoptimized
+Mac benchmark at 1170×2532 with a 340×340 moon search and radius 5 fell from **30.82 s to 3.18 s**, with
+identical whole-image/interior metrics and displacement. This directly targets the long pixel-analysis
+spans in Debug-serial and the hosted image-mutation/parity tests. It does not loosen parity thresholds.
+
+Warm stage estimates, to be measured on 17e after recording (not simulator results):
+
+| Stage | Expected wall time |
+|---|---:|
+| quick | 17 s (measured 16.82 s) |
+| generator/font freshness beyond quick | 8 s (measured 7.72 s) |
+| Debug + Release incremental builds | 15–25 s |
+| preparation and result extraction | 5–10 s |
+| Debug compare, two workers | 100–120 s |
+| serial appearance smoke | 75–85 s |
+| isolated Release readiness | 25–30 s |
+| Total | approximately 245–295 s warm; the <300 s acceptance is still open |
+
+Build or simulator startup variance can exceed this budget. The compare estimates depend on CPU capture
+and worker distribution and need a real run; the sandbox permits host checks and iOS 17 type-checking
+but not simulator execution. Do not claim the five-minute gate from the host benchmark alone.
+
+The xcresult parser now recognizes a qualified identifier only when it contains target/suite/method;
+`WelcomeTests/method()` under AppUITests must retain its suite name even though WelcomeTests is also a
+package target. Fixtures cover qualified/unqualified forms, neighboring suite names, the actual Dutch
+AX5 case, timing extraction and `Clone N` log lines. Executed-case timings, including failed cases, are retained even when another
+suite fails, so the scheduler can learn from a failed compare run.
 
 Splash displays/flushes and renders the parent layer at the profile scale. The **32 ready-1900 references**
 are intentionally fully transparent: the designed 400 ms ready exit ends at 1900 ms. Host timeline tests
 prove these are the only zero-opacity samples. The verifier explicitly requires all alpha bytes to be zero
 for this endpoint and rejects any visible pixel; every other splash/Welcome sample must have visible variation.
 SE renders at 2× inside the 3× 17e runtime; Duo retains its asymmetric layout inset.
-The root Dynamic Type cap stays xxLarge. All profile filenames remain required. Capped sizes reuse the
-xxLarge render, with separate hosted equivalence checks for every category above the cap. Fully landed
-intro 3300 reuses 3200 where present; the shared intro tests prove all items have landed by 3200.
-Splash frames without status text reuse the same raster across language/type variants. Equivalent
-references also share one immutable PNG and decoded raster: 392 PNG preparations instead of 792 per pass;
-each output still checks its own reference and content contract. Per recording or
-comparison pass this reduces frozen roots **192 → 160**, final Welcome renders **216 → 120** and splash
-renders **472 → 184**. Each suite prints its actual capture count and elapsed time.
-Full profiles retain every frame/category; compact 17/Air/18 Pro profiles retain their existing selections.
+The root Dynamic Type cap stays xxLarge. All 792 profile filenames remain required. Above-cap filenames
+reuse xxLarge except on 17e, where every requested category is independently rendered and checked for
+exact pixel/frame equivalence inside finalWelcome. Landed intro 3300 reuses 3200 where present; shared
+intro tests prove all items have landed by 3200. Splash frames without status text reuse the raster
+across language/type variants. There are 160 frozen roots, 144 final renders and 184 splash renders
+per baseline pass, with 416 immutable PNG/raster preparations for 792 reference checks. Each suite
+prints its capture count and elapsed time. Full/compact selections remain unchanged.
 
 All **278 old per-simulator references are deleted**. Replacement references live under
 `AppTests/__Snapshots__/{WelcomeSnapshotTests,LaunchSnapshotTests}` and use profile aliases, points and
@@ -106,21 +186,28 @@ languages, Welcome's profile categories/intro times, splash large/xxLarge at eac
 The host inventory guard rejects partial or stale recordings; wholly absent suites are explicitly pending
 orchestrator work. Compare-only simulator runs fail on missing references. No generated baseline is fabricated.
 
-One-time recording, comparison and normal gate, from the repository root:
+For this fix round, regenerate the project, verify capture/container invariants, re-record Welcome,
+then run the complete gate. The targeted recording command writes **only Welcome**, once, and follows
+it with an independent comparison process. Existing splash references are compared by check.
 
 ```sh
 make generate
 SNAPSHOT_RECORD=0 /usr/bin/time -p make targeted DEVICES="17e" ONLY="AppTests/SnapshotContainerTests"
-SNAPSHOT_RECORD=1 /usr/bin/time -p make snapshots
-SNAPSHOT_RECORD=0 /usr/bin/time -p make snapshots
+SNAPSHOT_RECORD=1 /usr/bin/time -p make targeted DEVICES="17e" ONLY="AppTests/WelcomeSnapshotTests"
 SNAPSHOT_RECORD=0 /usr/bin/time -p make check
-make targeted DEVICES="17e" ONLY="AppTests/WelcomeSnapshotTests/frozenIntro()" REUSE_BUILD=1
 ```
 
-`SNAPSHOT_RECORD=1 make snapshots` records **both** screens once on **17e**, with one worker, then
-compares them. Builds, preparation and comparison clear recording variables. Legacy explicit `launch`/`all`
-recording selections remain supported. Shared profile namespaces are never recorded from other simulators.
-Inspect new images alongside the boards; `_design/frames/` export/approval remains open.
+Optional separate-process intro-order proof, reusing the just-built products:
+
+```sh
+SNAPSHOT_RECORD=0 python3 -I Scripts/launch-simulators.py --no-generate --devices 17e --reuse-build --intro-order-check
+```
+
+For future intentional changes to both screens, `SNAPSHOT_RECORD=1 make snapshots` records both baseline
+suites once on 17e with one worker, then compares and runs guards/rendering regressions. Legacy explicit
+`launch`/`all` recording selections remain supported. Shared profile namespaces are never recorded from
+other simulators. Builds, preparation and comparisons clear recording variables. Inspect new images
+alongside the boards; `_design/frames/` export/approval remains open.
 
 Only for a Duo runtime change:
 
@@ -151,7 +238,7 @@ is used only for the app's own post-launch audit UI. Frame stability means three
 finite, nonempty frame arrays, with reset after missing/changed data and a 60-second upper bound;
 there is no six-second CPU-speed acceptance rule.
 
-Single-device and heavy matrix jobs use two isolated AppTests/AppUITests workers by default;
+Single-device and heavy matrix jobs use two isolated AppTests/RenderTests/AppUITests workers by default;
 `TEST_WORKERS=1…4` overrides. Serial selectors are removed from the parallel pass and run separately
 with parallel testing disabled. Recording, Release and intro-order diagnostics always use one worker.
 Snapshots retain suite serialization. XCTest workers run on isolated clones, bounded by a shared budget.
@@ -225,15 +312,18 @@ Device-only D3/Instruments/locked-device/VoiceOver/status-bar checks retain thei
 **(needs a device; open)**, with Apple team/reference device still unavailable. No other phase is ticked.
 
 
+The phase records below retain their original verification results. Historical command examples
+use `LaunchToWelcomeTests` for the retired window smoke; the original runs preceded that replacement.
+
 ## Phase 0 verified results
 
 The orchestrator ran the following on 5 November 2026 with
 Xcode 27.2:
 
 - `make generate && make check`: passed (`TEST SUCCEEDED`). Strict formatting lint, AppCore tests,
-  `AppUITests/WindowTests` on iPhone 17e / iOS 27.2, and the DesignSystem, Launch and Welcome suites
+  the original window smoke on iPhone 17e / iOS 27.2, and the DesignSystem, Launch and Welcome suites
   all passed. This verifies XcodeGen output through a complete build and app launch.
-- `AppUITests/WindowTests` on iPhone Duo / its iPhone19-4 iOS 27.2 runtime, selected by device ID:
+- The original window smoke on iPhone Duo / its iPhone19-4 iOS 27.2 runtime, selected by device ID:
   passed. The window frame equals the app frame, and the window screenshot size equals the screen
   screenshot size. Two Duo simulators were installed; one was used for this run. The name/OS
   destination failed to match as described above; the new `make duo` command resolves the ID dynamically.
@@ -411,7 +501,7 @@ while IFS= read -r destination; do
   make snapshots DESTINATION="$destination" || exit 1
   xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData \
     -onlyUsePackageVersionsFromResolvedFile -scheme ChronoFlow \
-    -destination "$destination" -only-testing:AppUITests/WindowTests test || exit 1
+    -destination "$destination" -only-testing:AppUITests/LaunchToWelcomeTests test || exit 1
 done < build/phase-1-destinations.txt
 ```
 
@@ -450,7 +540,7 @@ first pixel outside tolerance (x/y, RGBA channel, actual and expected bytes).
 The orchestrator verified Phase 2 on **2026-11-06**: the launch matrix passed on all seven
 D1c devices (iPhone SE 3rd gen, 17e, 17, Air, 18 Pro, 18 Pro Max and iPhone Duo), and
 `make check` and `make duo` passed. This includes the hosted storyboard/frame tests,
-WindowTests and DesignSystemTests at each running device's own display scale.
+the original window smoke and DesignSystemTests at each running device's own display scale.
 
 Hosted `AppTests` depends only on `ChronoFlow`, with `TEST_HOST` / `BUNDLE_LOADER` resolving
 the package symbols already in the app. Linking package products into the hosted bundle again
@@ -471,7 +561,7 @@ restarts the simulator to invalidate the launch cache, then runs:
 xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData \
   -onlyUsePackageVersionsFromResolvedFile -scheme ChronoFlow \
   -destination "platform=iOS Simulator,id=$device" \
-  -only-testing:AppTests -only-testing:AppUITests/WindowTests -only-testing:DesignSystemTests test
+  -only-testing:AppTests -only-testing:AppUITests/LaunchToWelcomeTests -only-testing:DesignSystemTests test
 ```
 
 It continues after failed tests, missing devices or preparation errors and reports PASS/FAIL
@@ -592,7 +682,7 @@ and runtimes, clears the launch cache as in Phase 2, and executes this command p
 xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData \
   -onlyUsePackageVersionsFromResolvedFile -scheme ChronoFlow \
   -destination "platform=iOS Simulator,id=$device" \
-  -only-testing:AppTests -only-testing:AppUITests/WindowTests \
+  -only-testing:AppTests -only-testing:AppUITests/LaunchToWelcomeTests \
   -only-testing:DesignSystemTests -only-testing:AppCoreTests -only-testing:LaunchTests test
 ```
 
@@ -681,7 +771,7 @@ clears their launch caches, and runs this command for each resolved destination:
 xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData \
   -onlyUsePackageVersionsFromResolvedFile -scheme ChronoFlow \
   -destination "platform=iOS Simulator,id=$device" \
-  -only-testing:AppTests -only-testing:AppUITests/WindowTests \
+  -only-testing:AppTests -only-testing:AppUITests/LaunchToWelcomeTests \
   -only-testing:DesignSystemTests -only-testing:AppCoreTests -only-testing:LaunchTests \
   -only-testing:AppUITests/LaunchSceneTests test
 ```
@@ -834,7 +924,7 @@ xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData \
   -onlyUsePackageVersionsFromResolvedFile -scheme ChronoFlow \
   -destination "platform=iOS Simulator,id=$device" -testLanguage en -testRegion US \
   -only-testing:AppTests -only-testing:AppCoreTests -only-testing:LaunchTests \
-  -only-testing:DesignSystemTests -only-testing:AppUITests/WindowTests \
+  -only-testing:DesignSystemTests -only-testing:AppUITests/LaunchToWelcomeTests \
   -only-testing:AppUITests/LaunchSceneTests -only-testing:AppUITests/ReadinessTests test
 make check
 make duo
@@ -1600,4 +1690,36 @@ make targeted DEVICES="17e" ONLY="AppTests/SessionReadinessTests"
 make targeted DEVICES="17e" ONLY="AppTests/AccountWipeTests"
 make targeted DEVICES="17e" ONLY="AppTests/LaunchConnectionTests"
 make targeted DEVICES="17e" ONLY="AppTests/ReleaseReadinessTests"
+```
+
+
+## Test-tier port onto Phase 9a–9d (6 November 2026)
+
+Eight patches preserve the source tier commits one-to-one on reviewed stack tip `f373dde`.
+The standalone PNG-reference commit `ff50e24` is excluded. Only the source commits' 278 old
+reference deletions are included; no replacement PNG is generated or changed. Apply that reference
+commit separately before running profile comparison or check.
+
+All 42 AppCore/LocalStore/DataAccess/Sync suites remain host-only. The eight hosted service suites
+stay in logic; LaunchConnectionTests keeps its live-lifecycle policy and ReleaseReadinessTests its
+isolated Release policy. Check runs all ten on 17e. The compatibility host script uses the shared
+SwiftPM runner, so quick includes the complete store, data-access and sync package tests.
+Matrix S/A now state the tier decision directly. Phase implementation and review results above
+remain historical; the port does not claim new simulator or device acceptance.
+
+Port validation: `make quick` passes in **21.76 s** with strict lint, **266 package tests**
+(262 Swift Testing + 4 XCTest), **7 TokenGen**, **3 AssetGen**, **51 runner fixtures** and
+**10 resource checks**. The package totals include **80 AppCore, 21 LocalStore, 54 DataAccess and
+56 Sync tests**. `make generators-check` passes, including all **6 font/cache fixtures**.
+Runner fixtures assert each Phase 9a–9d hosted selector appears exactly once in check's actual
+17e test commands, with the intended Debug/Release configuration and no profile classification.
+No xcodebuild, simulator, recording or git commit ran for this port.
+
+After applying the patches and the separate reference commit, run outside the sandbox:
+
+```sh
+make generate
+make targeted DEVICES="17e" ONLY="AppTests/AccountStorageLifecycleTests AppTests/SessionLifecycleTests AppTests/KeychainSessionStoreTests AppTests/DataSourceBuildSettingTests AppTests/DataSourceFactoryHostedTests AppTests/SyncLifecycleTests AppTests/AccountWipeTests AppTests/SessionReadinessTests AppTests/LaunchConnectionTests"
+make targeted DEVICES="17e" ONLY="AppTests/ReleaseReadinessTests"
+make check
 ```

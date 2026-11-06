@@ -131,6 +131,25 @@ class ClassificationTests(unittest.TestCase):
         ]}
         self.assertEqual([n['target'] for n in runner.result_nodes(value)], ['AppTests', 'AppUITests'])
 
+    def test_ui_suite_named_like_package_target_matches_unqualified_and_qualified_identifiers(self):
+        method = 'testDutchAX5TextCanScrollToBothActions()'
+        for identifier in ['WelcomeTests/' + method, 'AppUITests/WelcomeTests/' + method]:
+            value = {'testNodes': [
+                {'nodeType': 'UI test bundle', 'name': 'AppUITests', 'children': [
+                    {'nodeType': 'Test Case', 'nodeIdentifier': identifier, 'result': 'Passed'},
+                    {'nodeType': 'Test Case', 'nodeIdentifier': 'WelcomeLogicTests/testSignIn()', 'result': 'Passed'},
+                    {'nodeType': 'Test Case', 'nodeIdentifier': 'WelcomeEnglishAccessibilityTests/testAudit()', 'result': 'Passed'}]},
+                {'nodeType': 'Unit test bundle', 'name': 'WelcomeTests', 'children': [
+                    {'nodeType': 'Test Case', 'nodeIdentifier': 'SmokeTests/testSmoke()', 'result': 'Passed'}]},
+            ]}
+            nodes = list(runner.result_nodes(value))
+            for selector in ['AppUITests/WelcomeTests', 'AppUITests/WelcomeTests/' + method]:
+                matches = runner.matching_nodes(nodes, selector)
+                self.assertEqual(len(matches), 1, identifier)
+                self.assertEqual(matches[0]['nodeIdentifier'], identifier)
+            self.assertEqual(runner.matching_nodes(nodes, 'WelcomeTests/WelcomeTests'), [])
+            self.assertEqual(len(runner.matching_nodes(nodes, 'WelcomeTests/SmokeTests')), 1)
+
     def test_release_only_configuration_is_isolated(self):
         result = runner.configurations(['AppTests/ReleaseReadinessTests', 'AppUITests/WelcomeTests'])
         self.assertEqual(result, {'Debug': ['AppUITests/WelcomeTests'], 'Release': ['AppTests/ReleaseReadinessTests']})
@@ -269,9 +288,11 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(status, 0, output)
         recorded = [c for c,e in zip(self.commands,self.environments) if e.get('TEST_RUNNER_SNAPSHOT_RECORD')]
         self.assertEqual(len(recorded), 1)
-        for selector in runner.SNAPSHOTS:
+        for selector in runner.SNAPSHOTS[:2]:
             self.assertIn('-only-testing:' + selector, recorded[0])
         self.assertEqual(recorded[0][recorded[0].index('-parallel-testing-worker-count') + 1], '1')
+        self.assertNotIn('-only-testing:RenderTests/WelcomeRenderingTests', recorded[0])
+        self.assertNotIn('-only-testing:AppTests/WelcomeSnapshotGuardTests', recorded[0])
 
     def test_resolves_aliases_by_type_and_runtime_never_name(self):
         self.devices[runner.REGULAR_RUNTIME].insert(0, dict(self.devices[runner.DUO_RUNTIME][0], udid='wrong-runtime'))
@@ -301,6 +322,19 @@ class RunnerTests(unittest.TestCase):
             self.assertTrue(any(p.endswith(expected) for p in paths))
             self.assertIn(f'PASS {alias} Debug-compare AppTests/DeviceGeometrySmokeTests', output)
 
+    def test_passed_ui_suite_with_package_target_name_is_reported_and_timed(self):
+        self.nodes = [{'nodeType': 'UI test bundle', 'name': 'AppUITests', 'children': [
+            {'nodeType': 'Test Case', 'nodeIdentifier': 'WelcomeTests/testDutchAX5TextCanScrollToBothActions()',
+             'nodeIdentifierURL': 'test://com.apple.xcode/ChronoFlow/AppUITests/WelcomeTests/testDutchAX5TextCanScrollToBothActions',
+             'durationInSeconds': 8.557, 'result': 'Passed'},
+            {'nodeType': 'Test Case', 'nodeIdentifier': 'WelcomeEnglishAccessibilityTests/testAudit()', 'result': 'Passed'},
+        ]}]
+        status, output = self.execute(aliases=['17e'], only=['AppUITests/WelcomeTests'])
+        self.assertEqual(status, 0, output)
+        self.assertIn('PASS 17e Debug-compare AppUITests/WelcomeTests', output)
+        timings = json.loads((self.scratch / 'build/test-results/timings.json').read_text())
+        self.assertEqual(timings['devices']['17e']['suites']['AppUITests/WelcomeTests'], 8.557)
+
     def test_successful_run_learns_numeric_xcresult_durations(self):
         status, output = self.execute(aliases=['se'], only=['AppUITests/WelcomeTests'])
         self.assertEqual(status, 0, output)
@@ -319,6 +353,16 @@ class RunnerTests(unittest.TestCase):
         self.assertIn('FAIL se Debug-compare AppUITests/WelcomeTests: AppUITests/WelcomeTests/testExample()', output)
         self.assertRegex(output, r'PASS \w+ Release-compare AppTests/ReleaseReadinessTests')
         self.assertIn('PASS duo Debug-compare AppTests/DeviceGeometrySmokeTests', output)
+
+    def test_failed_case_durations_are_kept_without_turning_failures_into_passes(self):
+        self.result_fail = 'AppUITests/WelcomeTests'
+        status, output = self.execute(aliases=['17e'], only=['AppUITests/WelcomeTests', 'AppUITests/WelcomeLogicTests'])
+        self.assertEqual(status, 1, output)
+        self.assertIn('FAIL 17e Debug-compare AppUITests/WelcomeTests', output)
+        timings = json.loads((self.scratch / 'build/test-results/timings.json').read_text())
+        suites = timings['devices']['17e']['suites']
+        self.assertEqual(suites['AppUITests/WelcomeTests'], 2.25)
+        self.assertEqual(suites['AppUITests/WelcomeLogicTests'], 2.25)
 
     def test_empty_results_never_report_a_pass(self):
         self.nodes = []
@@ -504,6 +548,21 @@ class SchedulerTests(unittest.TestCase):
         with patch.object(runner.subprocess, 'run', side_effect=OSError):
             self.assertEqual(runner.machine_resources()[1], 0)
 
+    def test_clone_log_timings_resolve_exact_suites_and_include_failed_work(self):
+        content = """+ xcodebuild -only-testing:AppUITests/WelcomeTests -only-testing:AppUITests/WelcomeLogicTests -only-testing:AppTests/WelcomeSnapshotTests -only-testing:RenderTests/WelcomeRenderingTests
+Test case 'WelcomeTests.testDutchAX5TextCanScrollToBothActions()' passed on 'Clone 2 of iPhone 17e - AppUITests-Runner (23904)' (8.557 seconds)
+Test case 'WelcomeLogicTests.testSignIn()' passed on 'Clone 2 of iPhone 17e - AppUITests-Runner (23904)' (7.155 seconds)
+Test case 'WelcomeSnapshotTests/finalWelcome()' failed on 'Clone 1 of iPhone 17e - ChronoFlow (23428)' (34.192 seconds)
+Test case 'WelcomeRenderingTests/frozenIntroPixelsStayFixedAcrossClockAndRenderPasses()' passed on 'Clone 1 of iPhone 17e - ChronoFlow (23428)' (84.536 seconds)
+335.593 elapsed -- Testing started completed.
+"""
+        value = runner.log_timings(content)
+        self.assertEqual(value['suites'], {
+            'AppUITests/WelcomeTests': 8.557, 'AppUITests/WelcomeLogicTests': 7.155,
+            'AppTests/WelcomeSnapshotTests': 34.192, 'RenderTests/WelcomeRenderingTests': 84.536})
+        self.assertEqual(value['tests']['AppUITests/WelcomeTests/testDutchAX5TextCanScrollToBothActions()'], 8.557)
+        self.assertEqual(value['wall'], 335.593)
+
     def test_bootstrap_log_durations_and_persistence(self):
         content = """+ xcodebuild -only-testing:AppTests/WelcomeSnapshotTests -only-testing:AppUITests/WelcomeTests
 Test Suite 'AppTests.xctest' started
@@ -538,8 +597,8 @@ Test Case '-[AppUITests.WelcomeTests testB]' passed (3.000 seconds).
 
 class ParallelTests(unittest.TestCase):
     def test_method_and_suite_serial_split_preserves_all_selectors(self):
-        selected = ['AppTests/WelcomeSnapshotTests', 'AppUITests/WelcomeTests', 'AppUITests/WindowTests']
-        serial = ['AppUITests/WelcomeTests/testSystemAppearance', 'AppUITests/WindowTests']
+        selected = ['AppTests/WelcomeSnapshotTests', 'AppUITests/WelcomeTests', 'AppUITests/LaunchToWelcomeTests']
+        serial = ['AppUITests/WelcomeTests/testSystemAppearance', 'AppUITests/LaunchToWelcomeTests']
         parts = runner.split_passes('Debug', selected, 2, serial=serial)
         self.assertEqual(parts[0].selected, tuple(selected[:2]))
         self.assertEqual(parts[0].skipped, (serial[0],))

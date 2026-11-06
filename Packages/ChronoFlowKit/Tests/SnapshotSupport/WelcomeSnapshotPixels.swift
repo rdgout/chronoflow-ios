@@ -29,9 +29,20 @@ public nonisolated enum WelcomeSnapshotPixels {
 
     public static func differ(_ lhs: [UInt8], _ rhs: [UInt8]) -> Bool {
         guard lhs.count == rhs.count, !lhs.isEmpty else { return false }
-        let different = zip(lhs, rhs).reduce(into: 0) { count, pair in
-            if abs(Int(pair.0) - Int(pair.1)) > 8 { count += 1 }
+        return lhs.withUnsafeBufferPointer { left in
+            rhs.withUnsafeBufferPointer { right in
+                let left = left.baseAddress!
+                let right = right.baseAddress!
+                let limit = lhs.count / 1000
+                var different = 0
+                for index in 0..<lhs.count {
+                    if abs(Int(left[index]) - Int(right[index])) > 8 {
+                        different += 1
+                        if different > limit { return true }
+                    }
+                }
+                return false
+            }
         }
-        return Double(different) / Double(lhs.count) > 0.001
     }
 }

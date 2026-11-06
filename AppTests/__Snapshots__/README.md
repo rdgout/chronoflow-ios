@@ -27,3 +27,8 @@ SNAPSHOT_RECORD=0 /usr/bin/time -p make check
 ```
 
 Recording uses one 17e process and one worker. `make matrix` is opt-in and is unnecessary for recording.
+
+Second fix round (2026-11-06): Welcome capture now uses CPU layer rendering instead of drawHierarchy.
+The user's 792 recorded PNGs are retained unchanged. Re-record the 320 Welcome references with
+`SNAPSHOT_RECORD=1 make targeted DEVICES=17e ONLY=AppTests/WelcomeSnapshotTests`; its comparison follows
+automatically. The 472 splash references retain their existing capture path. Comparison remains exact.

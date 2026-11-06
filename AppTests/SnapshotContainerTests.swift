@@ -20,6 +20,26 @@ nonisolated final class SnapshotContainerTests: XCTestCase {
         }
     }
 
+    @MainActor func testFreshAndReusedWelcomeHaveIdenticalPixels() async throws {
+        try await FontRegistry.register()
+        for device in try SnapshotDevice.all() {
+            let reused = WelcomeTestWindow(style: .dark, device: device)
+            defer { reused.close() }
+            try await reused.layout()
+            for style in [UIUserInterfaceStyle.light, .dark] {
+                reused.configure(style: style, language: "nl")
+                let image = try await reused.layout()
+                let actual = try SnapshotRaster(image: XCTUnwrap(image.cgImage))
+                let frames = reused.frames
+                let fresh = WelcomeTestWindow(style: style, language: "nl", device: device)
+                let reference = try await fresh.layout()
+                XCTAssertTrue(actual == (try SnapshotRaster(image: XCTUnwrap(reference.cgImage))), device.alias)
+                XCTAssertEqual(frames, fresh.frames, device.alias)
+                fresh.close()
+            }
+        }
+    }
+
     @MainActor private func assertFixture(_ host: WelcomeTestWindow, device: SnapshotDevice) async throws {
         let image = try await host.layout()
         let expected = WelcomeGeometry(size: device.size, insets: device.insets)

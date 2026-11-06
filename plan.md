@@ -955,7 +955,8 @@ Round 1 measured check 603 s and matrix 865 s at concurrency four; targets remai
 
 ### Tooling round 3: test tiers (user decision, 2026-11-06)
 
-Outside the phase sequence on `feat/phase-9-session-store`. No Phase 9 work is started.
+Originally outside the phase sequence on `feat/phase-9-session-store`; ported onto the reviewed
+Phase 9a–9d stack on `feat/test-tiers`. The port preserves those phase implementations and records.
 The user explicitly requests skipping the seven-simulator matrix unless asked.
 Implementation ticks below describe code and host verification; simulator acceptance stays open separately.
 
@@ -966,7 +967,7 @@ Implementation ticks below describe code and host verification; simulator accept
 
   | Removed UI assertion | Replacement coverage |
   |---|---|
-  | AX5 vs xxLarge frames/pixels, large differs; eyebrow intrinsic width/clipping | `WelcomeSnapshotTests.accessibilitySizesRenderTheSameWelcomeAsXXLarge`, `trackedEyebrowKeepsItsIntrinsicWidthThroughTheCap`, all-profile `finalWelcome`; `ContentSizeCapTests` |
+  | AX5 vs xxLarge frames/pixels, large differs; eyebrow intrinsic width/clipping | all-profile `WelcomeSnapshotTests.finalWelcome` (actual 17e cap equivalence), `WelcomeRenderingTests.trackedEyebrowKeepsItsIntrinsicWidthThroughTheCap`; `ContentSizeCapTests` |
   | Wordmark/eyebrow labels, reading order and translations | `WelcomeSnapshotTests.explicitLocalesResolveTheCatalog`, all-profile `finalWelcome` measured heading-order guards; Mac `WelcomeGeometryTests`; `CatalogTests`; strict UI language audits |
   | Frozen moon landing at default/AX5 | `WelcomeHandOverTests.testMeasuredWelcomeLandingAtDefaultAndAX5`, existing real-coordinator anchor test, `WelcomeTimelineTests` |
   | Full-window screenshot and localized opening image | Serial frozen `LaunchSceneTests` retains the opening image/label/full-frame checks and `LaunchToWelcomeTests` checks window/screen size; `LaunchConnectionTests` and `CatalogTests` retain modal/localization checks |
@@ -986,7 +987,9 @@ with all 792 reference filenames retained. The user's failed 1111 s recording an
 acceptance. No replacement simulator timing or order-determinism pass is claimed; the fixes above require
 the targeted container suite first, then recording/comparison/check on 17e. See Docs/tooling.md.
 
-- [ ] Record and visually accept the new profile references on 17e, compare them, and confirm check <300 s / targeted <180 s. Requires the orchestrator; no simulator result is claimed.
+- [x] 7. Second fix round: preserve the user's 792 recorded references; diagnose the sky-only ±1 channel drift at the exact reported byte offsets, bypass render-server capture with CPU layer rendering and retain byte-exact/blank/opposite-variant guards. Add a fresh/reconfigured-window regression; split rendering invariants into the independently schedulable RenderTests bundle; integrate cap and opposite-variant assertions into finalWelcome, retain all full/compact categories, bound frozen fresh-mount repetition at two per time and reuse layout's returned raster. Fix the AppUITests WelcomeTests/package-target-name collision and learn clone-log/passed-case timings from failed runs. Prune noncompetitive launch parity shift candidates with exhaustive-search regression coverage. Host quick passes in 16.82 s (47 runner and 9 resource fixtures); generator/font freshness passes in 7.72 s, direct iOS 17 Debug/Release/type checks and project generation pass. These code changes require Welcome re-recording; no PNG is changed here. See Docs/tooling.md for diagnosis, host evidence, stage estimates and commands. Simulator capture/worker/timing acceptance remains open.
+
+- [ ] Re-record and visually accept Welcome after the CPU capture change, compare all 792 references, and confirm check <300 s / targeted <180 s. The user recorded all profiles and passed the first container suite; immediate comparison failed finalWelcome only and check took 552 s. No second-fix simulator pass is claimed. Splash references remain valid; the new fresh/reuse container regression must run before recording.
 
 
 ### Phase 6: Audit (`feat/phase-6-audit`)

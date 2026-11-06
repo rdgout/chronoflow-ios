@@ -41,4 +41,43 @@ nonisolated final class LaunchImageComparisonTests: XCTestCase {
             XCTAssertTrue(LaunchImageComparison.measure(dithered, expected, width: width, region: region).passes)
         }
     }
+    func testPrunedShiftSearchMatchesExhaustiveSearchIncludingTiesAndClampedEdges() {
+        let width = 9
+        let height = 7
+        let region = CGRect(x: 0, y: 0, width: width, height: height)
+        let radius = 2
+        for seed in 0..<5 {
+            let expected = (0..<(width * height * 4)).map { UInt8(($0 * seed * 17) % 255) }
+            let actual = (0..<(width * height * 4)).map { UInt8(($0 * seed * 13 + seed) % 255) }
+            var exhaustive = (x: 0, y: 0)
+            var minimum = Int.max
+            for dy in -radius...radius {
+                for dx in -radius...radius {
+                    var error = 0
+                    for y in 0..<height {
+                        for x in 0..<width {
+                            let px = min(width - 1, max(0, x + dx))
+                            let py = min(height - 1, max(0, y + dy))
+                            for channel in 0..<3 {
+                                error += abs(
+                                    Int(actual[(py * width + px) * 4 + channel])
+                                        - Int(expected[(y * width + x) * 4 + channel]))
+                            }
+                        }
+                    }
+                    if error < minimum
+                        || (error == minimum && abs(dx) + abs(dy) < abs(exhaustive.x) + abs(exhaustive.y))
+                    {
+                        minimum = error
+                        exhaustive = (dx, dy)
+                    }
+                }
+            }
+            let actualShift = LaunchImageComparison.bestShift(
+                actual, expected, width: width, region: region, radius: radius)
+            XCTAssertEqual(actualShift.x, exhaustive.x)
+            XCTAssertEqual(actualShift.y, exhaustive.y)
+        }
+    }
+
 }

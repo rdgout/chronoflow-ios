@@ -58,6 +58,7 @@ SUITES = {'AppTests': {'logic': ('LaunchArgumentLogicTests',
               'profiles': ('LaunchSnapshotTests', 'WelcomeSnapshotTests'),
               'reference': ('LaunchFrameParityTests', 'LaunchStoryboardTests'),
               'release': ('ReleaseReadinessTests',)},
+ 'RenderTests': {'profiles': ('WelcomeRenderingTests',)},
  'AppUITests': {'logic': ('ReadinessTests', 'WelcomeLogicTests'),
                 'reference': ('LaunchToWelcomeTests', 'LaunchSceneTests', 'LaunchSceneDarkTests'),
                 'matrix': ('WelcomeTests', 'WelcomeEnglishAccessibilityTests', 'WelcomeDutchAccessibilityTests')},
@@ -121,13 +122,13 @@ SUITES = {'AppTests': {'logic': ('LaunchArgumentLogicTests',
                               'SessionAccountDatabaseTests',
                               'AccountWiperTests',
                               'AccountReadinessTests')}}
-SNAPSHOTS = ("AppTests/LaunchSnapshotTests", "AppTests/WelcomeSnapshotTests", "AppTests/WelcomeSnapshotGuardTests")
+SNAPSHOTS = ("AppTests/LaunchSnapshotTests", "AppTests/WelcomeSnapshotTests", "AppTests/WelcomeSnapshotGuardTests", "RenderTests/WelcomeRenderingTests")
 XCODEBUILD_COMMON = ["xcodebuild", "-project", "ChronoFlow.xcodeproj", "-derivedDataPath", "build/DerivedData",
                      "-onlyUsePackageVersionsFromResolvedFile"]
 
 # Device-wide mutations must be registered here; launch/window-scoped traits are clone-safe.
 SERIAL_TESTS = ("AppUITests/LaunchSceneTests", "AppUITests/LaunchSceneDarkTests", "AppUITests/LaunchToWelcomeTests")
-PARALLEL_TARGETS = {"AppTests", "AppUITests"}
+PARALLEL_TARGETS = {"AppTests", "AppUITests", "RenderTests"}
 
 
 @dataclass(frozen=True)
@@ -194,7 +195,7 @@ STATIC_MATRIX_WALL = dict(se=271, **{"17e": 490, "17": 328, "air": 341, "18pro":
 STATIC_SUITE_SECONDS = {
     "AppUITests/ReadinessTests": 75, "AppUITests/WelcomeLogicTests": 15,
     "AppUITests/WelcomeTests": 110, "AppUITests/LaunchSceneTests": 55,
-    "AppUITests/WindowTests": 12, "AppTests/WelcomeSnapshotTests": 180,
+    "AppUITests/LaunchToWelcomeTests": 12, "AppTests/WelcomeSnapshotTests": 180,
     "AppTests/LaunchFrameParityTests": 16, "AppTests/LaunchSceneTests": 12,
     "AppTests/LaunchPlaybackTests": 10, "AppTests/LaunchStoryboardTests": 6,
     "DesignSystemTests/ExactLineTextLayoutTests": 8,
@@ -269,6 +270,19 @@ def log_timings(content):
             duration = float(case[4])
             suites[name] = suites.get(name, 0) + duration
             tests[name + "/" + case[3]] = duration
+        clone = re.search(r"Test case '([^']+)' (?:passed|failed) on '[^']+ - ([^']+?) \(\d+\)' \(([\d.]+) seconds\)", line)
+        if clone:
+            path = clone[1].replace('.', '/', 1).split('/')
+            process = clone[2]
+            candidates = {s.split('/')[0] + '/' + path[0] for s in selected
+                          if len(s.split('/')) >= 2 and s.split('/')[1] == path[0]}
+            if process.endswith('-Runner'):
+                candidates = {s for s in candidates if s.startswith(process.removesuffix('-Runner') + '/')}
+            if len(path) == 2 and len(candidates) == 1:
+                name = candidates.pop()
+                duration = float(clone[3])
+                suites[name] = suites.get(name, 0) + duration
+                tests[name + '/' + path[1]] = duration
         swift = re.search(r"[✔✓] Suite (\w+) passed after ([\d.]+) seconds", line)
         if swift:
             name = f"{target}/{swift[1]}"
@@ -479,7 +493,7 @@ def result_nodes(value, target=None):
             target = name if name in SUITES else target
         if kind == "Test Case":
             identifier = str(value.get("nodeIdentifier", ""))
-            qualified = next((s.split("/")[0] for s in selectors("logic") + selectors("matrix") + selectors("release") + selectors("host")
+            qualified = next((s.split("/")[0] for s in selectors("logic") + selectors("matrix") + selectors("release") + selectors("profiles")
                               if identifier.startswith(s + "/")), target)
             yield dict(value, target=qualified)
         for child in value.values():
@@ -495,7 +509,7 @@ def matching_nodes(nodes, selector):
     for node in nodes:
         path = str(node.get("nodeIdentifier", "")).split("/")
         target = node.get("target")
-        if path[0] in SUITES:
+        if len(path) >= 3 and path[0] in SUITES:
             target = path.pop(0)
         if target != requested[0] or not path or path[0] != requested[1]:
             continue
@@ -529,14 +543,14 @@ def read_results(destination, label, selected, bundle, returncode, log, timing=N
         if not nodes:
             raise RuntimeError("xcresult contains no executed test cases")
         results = []
-        if timing is not None and returncode == 0:
+        if timing is not None:
             for suite in selected:
                 matches = matching_nodes(nodes, suite)
-                durations = [positive_seconds(n.get("durationInSeconds", n.get("duration"))) for n in matches if n.get("result") == "Passed"]
+                executed = [n for n in matches if n.get("result") in ("Passed", "Failed", "Expected Failure")]
+                durations = [positive_seconds(n.get("durationInSeconds", n.get("duration"))) for n in executed]
                 if durations and all(d is not None for d in durations):
                     timing.setdefault("suites", {})[suite] = sum(durations)
-                    passed_nodes = [n for n in matches if n.get("result") == "Passed"]
-                    for node, duration in zip(passed_nodes, durations):
+                    for node, duration in zip(executed, durations):
                         identifier = str(node.get("nodeIdentifier"))
                         target = suite.split("/")[0]
                         if not identifier.startswith(target + "/"):
@@ -579,7 +593,7 @@ def test_pass(destination, configuration, selected, label, record=False, intro_o
 
 
 def recording_selection(selected, mode, recording):
-    candidates = SNAPSHOTS if recording == "all" or (recording == "1" and mode == "snapshots") else SNAPSHOTS[:1] if recording == "launch" or mode == "launch-snapshots" else SNAPSHOTS[1:]
+    candidates = SNAPSHOTS[:2] if recording == "all" or (recording == "1" and mode == "snapshots") else SNAPSHOTS[:1] if recording == "launch" or mode == "launch-snapshots" else SNAPSHOTS[1:2]
     return [s for s in selected if any(s == c or s.startswith(c + "/") for c in candidates)]
 
 

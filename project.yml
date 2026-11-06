@@ -74,6 +74,25 @@ targets:
       BUNDLE_LOADER: "$(TEST_HOST)"
     dependencies:
       - target: ChronoFlow
+  RenderTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: RenderTests
+      - path: AppTests/WelcomeTestWindow.swift
+      - path: AppTests/SnapshotContainer.swift
+      - path: AppTests/RasterPixels.swift
+      - path: Packages/ChronoFlowKit/Tests/SnapshotSupport
+        excludes: [profiles.json]
+    settings:
+      TARGETED_DEVICE_FAMILY: "1"
+      SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO
+      PRODUCT_BUNDLE_IDENTIFIER: net.chronoflow.app.native.rendertests
+      GENERATE_INFOPLIST_FILE: YES
+      TEST_HOST: "$(BUILT_PRODUCTS_DIR)/ChronoFlow.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ChronoFlow"
+      BUNDLE_LOADER: "$(TEST_HOST)"
+    dependencies:
+      - target: ChronoFlow
   AppUITests:
     type: bundle.ui-testing
     platform: iOS
@@ -113,6 +132,8 @@ schemes:
       config: Debug
       targets:
         - name: AppTests
+          parallelizable: true
+        - name: RenderTests
           parallelizable: true
         - name: AppUITests
           parallelizable: true
