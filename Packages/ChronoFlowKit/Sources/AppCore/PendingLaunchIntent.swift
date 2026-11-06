@@ -7,6 +7,17 @@ public struct PendingLaunchIntent: Sendable, Equatable {
         public let userInfoJSON: Data?
         public let userText: String?
 
+        public static func capture(
+            identifier: String, actionIdentifier: String, userInfo: [AnyHashable: Any], userText: String?
+        ) -> Self {
+            let json =
+                JSONSerialization.isValidJSONObject(userInfo)
+                ? try? JSONSerialization.data(withJSONObject: userInfo, options: .sortedKeys) : nil
+            return Self(
+                requestIdentifier: identifier, actionIdentifier: actionIdentifier, userInfoJSON: json,
+                userText: userText)
+        }
+
         public init(requestIdentifier: String, actionIdentifier: String, userInfoJSON: Data?, userText: String?) {
             self.requestIdentifier = requestIdentifier
             self.actionIdentifier = actionIdentifier

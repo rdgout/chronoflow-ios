@@ -25,11 +25,9 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         pendingIntent = PendingLaunchIntent(
             urls: Set(connectionOptions.urlContexts.map(\.url)),
             notification: response.map {
-                PendingLaunchIntent.Notification(
-                    requestIdentifier: $0.notification.request.identifier, actionIdentifier: $0.actionIdentifier,
-                    userInfoJSON: try? JSONSerialization.data(
-                        withJSONObject: $0.notification.request.content.userInfo,
-                        options: .sortedKeys),
+                PendingLaunchIntent.Notification.capture(
+                    identifier: $0.notification.request.identifier, actionIdentifier: $0.actionIdentifier,
+                    userInfo: $0.notification.request.content.userInfo,
                     userText: ($0 as? UNTextInputNotificationResponse)?.userText)
             })
     }

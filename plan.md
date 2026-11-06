@@ -436,6 +436,11 @@ Device runs need OQ 4 (team) and OQ 14 (device). Phase 3c remains gated on the p
 - [x] Document the committed snapshot entry point, explicit recording/language rules, geometry limits and the orchestrator's dated results.
   Files: `Docs/tooling.md`.
 
+### Phase 3b review fixes
+
+- [x] Guard notification payloads with `JSONSerialization.isValidJSONObject` before serialization. Capture identifier/action/payload/text through a testable AppCore function; Date, Data, non-string keys, nested invalid values and nonfinite numbers retain response metadata with nil JSON. Host tests also cover valid JSON and empty payloads.
+  Files: `App/SceneDelegate.swift`, `Sources/AppCore/PendingLaunchIntent.swift`, `Tests/AppCoreTests/LaunchLifecycleTests.swift`.
+
 ### Phase 4: Readiness and hand-off (`feat/phase-4-readiness`)
 
 Blocked by OQ 7, 8, 9, 15, 16.
