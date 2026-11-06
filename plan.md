@@ -548,6 +548,12 @@ OQ 10 scaling settled by the user on 2026-11-06: cap at xxLarge. Defaults author
 - [x] Flag settled short-screen sun/moon/wordmark/status collisions with geometry tests and height-scoped known issues; assert the status text-frame/replicator union against the path apex, including the 874 pt S1 crossing. Record exact affected baselines, OQ 11 and the materialised risk. Keep Phase 3c visual acceptance open for a user/design decision.
   Files: `Tests/LaunchTests/LaunchSnapshotTests.swift`, `plan.md`.
 
+### Phase 4 review fixes (after Phase 5)
+
+- [x] Keep `-cf.mode ready` and validated `-cf.mainThreadStall` diagnostics in Release for the D3 procedure. Keep slow/Welcome modes, freeze, readyAt and all readiness overrides Debug-only; Release readiness remains signed out without Keychain access or route-name placeholders. Extend the isolated Release tests and document why the device proof can observe the 500 ms stall.
+  Files: `App/LaunchArguments.swift`, `AppTests/ReleaseReadinessTests.swift`, `Docs/perf/2026-11-06-d3-spike.md`.
+  Test: iOS 17 Debug/Release type-check and SIL compilation; revised Release execution awaits the simulator runner. The D3 trace remains (needs a device; open).
+
 ### Phase 6: Audit (`feat/phase-6-audit`)
 
 Reduce Motion, dark mode, VoiceOver and strings are built in the phases above; this phase only audits.

@@ -27,13 +27,12 @@ struct LaunchArguments: Equatable {
             mode = value("-cf.mode").flatMap(Mode.init(rawValue:))
             freezeAt = milliseconds("-cf.freezeAt")
             readyAt = milliseconds("-cf.readyAt") ?? .milliseconds(4600)
-            mainThreadStall = milliseconds("-cf.mainThreadStall")
         #else
-            mode = nil
+            mode = value("-cf.mode") == Mode.ready.rawValue ? .ready : nil
             freezeAt = nil
             readyAt = .milliseconds(4600)
-            mainThreadStall = nil
         #endif
+        mainThreadStall = milliseconds("-cf.mainThreadStall")
         reduceMotion = arguments.contains("-cf.reduceMotion")
         #if DEBUG
             let presence: StubReadiness.Session
