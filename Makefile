@@ -8,7 +8,7 @@ XCODEBUILD := xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/De
 SWIFT_PATHS := App AppTests AppUITests PerfUITests Packages/ChronoFlowKit/Package.swift Packages/ChronoFlowKit/Sources Packages/ChronoFlowKit/Tests $(wildcard Tools/*/Package.swift Tools/*/Sources Tools/*/Tests)
 UI_SUITES := DesignSystemTests LaunchTests WelcomeTests AppTests/WelcomeSnapshotTests AppTests/WelcomeSnapshotGuardTests
 
-.PHONY: generate format lint test snapshots duo perf tokens fonts assets generators-check launch-resources-check check
+.PHONY: matrix generate format lint test snapshots duo perf tokens fonts assets generators-check launch-resources-check check
 
 generate:
 	$(XCODEGEN) generate
@@ -54,3 +54,6 @@ launch-resources-check:
 	python3 -I Tests/test_launch_simulators.py
 
 check: lint generators-check launch-resources-check test snapshots
+
+matrix:
+	SIM_CONCURRENCY=$${SIM_CONCURRENCY:-4} python3 -I Scripts/launch-simulators.py --welcome

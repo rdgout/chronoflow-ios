@@ -1006,3 +1006,6 @@ After disconnect/reconnect it requires a new mounted window without overlay/intr
 its pixels with an explicit final Welcome reference immediately and after 500 ms. A separate
 Reduce Motion regression requires the root window to mount before checking that no intro exists.
 All mounting/claim waits are bounded and assert their outcome; UIKit execution remains open.
+
+Test-speed tooling (2026-11-06): perf(test): parallelize simulator destinations.
+Use the committed simulator runner; implementation/validation notes are in plan.md.

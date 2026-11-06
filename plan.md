@@ -52,6 +52,15 @@ ChronoFlow plans sleep, light and caffeine for each trip. Two apps exist, both r
 | D26 | **I/O ordering extends D3/D11/D12:** the overlay is shown and `CATransaction.flush()` completes **before** constructing services that touch disk/Keychain, registering fonts, opening SQLite, migrations, preference/mock-state loads or URL cache work. Run all these on non-MainActor workers/actors; GRDB uses async reads/writes and background fetching for observation. MainActor receives immutable values and navigation only. | An `async` declaration alone does not move synchronous work off-main. No eager singleton/static initializer performs I/O. Add ordering and executor assertions with a suspended store to retain the 500 ms stall proof and first-commit budget. The DB opens after the overlay commits, not after overlay teardown. |
 | D27 | **Auth follows D1c and the 6 Nov plain-sky decision.** One native Auth shell and controls from the boards; no dot pattern. All four insets, scrolling, root xxLarge cap, en/nl and both appearances are required. Today/terms/walkthrough stay D17 seams; email-update (`changed`) is designed but out of scope. | No invented loading, offline, sync-failure, confirmation or inbox screen. Defaults in new OQs are proposals unless explicitly described as authorized decisions; a blocking OQ must be settled before its sub-phase begins. |
 
+### Test speed (user decision 2026-11-06)
+
+Tooling work, outside the phase sequence: build Debug and isolated ReadinessRelease once per run,
+then use up to four concurrent D1c destinations (`SIM_CONCURRENCY=4`) without cleaning/rebooting.
+Logic runs on 17e; running-window, scale, geometry, screenshot and audit suites run on all seven.
+SE, 17e, Duo and Pro Max retain full snapshot/type/intro coverage; 17, Air and 18 Pro use the committed
+compact profile. Existing retained PNG bytes stay unchanged. `make check` combines tests/snapshots;
+`make targeted` selects aliases/suites. Timings and the fresh/warmed-process intro proof await simulator execution.
+
 ### How conflicts between design sources are settled
 
 SplashSpec's prose gives the rule; keyframes fill what the prose leaves out. Where RN chose otherwise, it is recorded. All listed in OQ 5.
@@ -889,6 +898,12 @@ mismatch on iPhone18,4. This round's revised comparison, make check and make duo
 - [x] Split the reconnect and Reduce Motion regressions. First connect signed out with motion, require a mounted root and non-nil intro at the coordinator's exit start + 700 ms, then require Welcome to claim it once. Disconnect/reconnect without first-connection privileges, require a new mounted window, no overlay/intro, and pixels matching a final Welcome reference immediately and after 500 ms. Separately require a mounted Reduce Motion Welcome with no intro. Use bounded waits that fail if mounting/claiming never happens and restore the prior key window. Host checks pass; the UIKit regressions are written for the full Phase 5 D1c matrix, with execution still open.
   Files: `AppTests/WelcomeHandOverTests.swift`, `Docs/tooling.md`.
 
+### Tooling: test speed (user request, 2026-11-06)
+
+This work runs on `feat/phase-9-session-store` without starting Phase 9 or closing existing design/device gates.
+
+- [x] Run up to four destinations in a bounded pool with configurable SIM_CONCURRENCY, dynamic type/runtime resolution (including Duo), fresh-app uninstall without reboot, separate device/pass logs and xcresults, per-suite PASS/FAIL and failing-test identifiers. Recording is serialized within each device and parallel only across distinct model namespaces. Host runner fixtures pass; simulator execution remains open.
+  Files: `Scripts/launch-simulators.py`, `Tests/test_launch_simulators.py`, command documentation.
 ### Phase 6: Audit (`feat/phase-6-audit`)
 
 Reduce Motion, dark mode, VoiceOver and strings are built in the phases above; this phase only audits.
