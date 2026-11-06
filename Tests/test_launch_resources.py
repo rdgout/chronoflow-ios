@@ -16,6 +16,27 @@ class LaunchResourcesTests(unittest.TestCase):
         self.document = ET.parse(ROOT / "App/LaunchScreen.storyboard").getroot()
         self.view = self.document.find(".//viewController/view")
 
+    def test_app_icon_reuses_the_opaque_1024_rn_source_without_variants(self):
+        directory = ROOT / "App/Assets.xcassets/AppIcon.appiconset"
+        catalog = json.loads((directory / "Contents.json").read_text())
+        self.assertEqual(catalog["images"], [{
+            "filename": "icon.png", "idiom": "universal", "platform": "ios", "size": "1024x1024",
+        }])
+        image = (directory / "icon.png").read_bytes()
+        source = ROOT.parent / "chronoflow-mobile/assets/images/icon.png"
+        self.assertEqual(image, source.read_bytes())
+        self.assertEqual(image[:8], b"\x89PNG\r\n\x1a\n")
+        self.assertEqual(struct.unpack(">II", image[16:24]), (1024, 1024))
+        self.assertEqual(image[25], 2, "RGB PNG must have no alpha channel")
+        offset = 8
+        while offset < len(image):
+            length = struct.unpack(">I", image[offset:offset + 4])[0]
+            self.assertNotEqual(image[offset + 4:offset + 8], b"tRNS", "Icon must be opaque")
+            offset += length + 12
+        project = (ROOT / "project.yml").read_text().split("\n  AppTests:", 1)[0]
+        self.assertIn("ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon", project)
+        self.assertIn('TARGETED_DEVICE_FAMILY: "1"', project)
+
     def test_make_test_and_snapshots_pin_the_snapshot_language(self):
         for target in ["test", "snapshots"]:
             with self.subTest(target=target):

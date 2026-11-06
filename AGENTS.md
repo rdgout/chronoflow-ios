@@ -53,7 +53,7 @@ Simulators: Xcode 27.2 with iOS 27.2 runtimes (iPhone SE 3rd gen, 17e, 17, Air, 
 - `*.xcodeproj` is generated; edit `project.yml`, never the project file.
 - Hosted `AppTests` must depend only on `ChronoFlow`, using `TEST_HOST` / `BUNDLE_LOADER`; linking its package products again duplicates resource-bundle accessors and crashes package test processes.
 - XcodeGen target presets override project-level settings. Set `TARGETED_DEVICE_FAMILY: "1"` and `SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO` on every iOS target to keep it iPhone only.
-- XcodeGen defaults to an `AppIcon` asset; its setting stays empty until OQ 18 resolves the icon design.
+- AppIcon reuses RN's opaque 1024 px icon; dark/tinted variants and a layered Liquid Glass icon need design assets (OQ 18).
 - Fonts are registered from the package with `CTFontManagerRegisterFontsForURLs`, not `UIAppFonts`.
 - The launch storyboard is not localised.
 - `make snapshots` runs the DesignSystem, Launch and Welcome test suites; Phase 1 has four approved primitive baselines, with launch image baselines added in Phase 3c.

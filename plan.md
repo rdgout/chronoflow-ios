@@ -497,6 +497,9 @@ Blocked by OQ 10, 12 (and OQ 6 for the moon cross-fade).
 - [x] Cap Dynamic Type at xxLarge once at RootView and on both production windows. Clamp explicit font traits and MoonTarget fallback row metrics through shared ContentSizeCap; the status layer uses the capped font and scaled line height. Tests compare AX5 with xxLarge for fonts, status pixels, row height, Welcome frames/pixels and action reachability, retaining different large-size output. The moon UI landing test uses AX5 with the existing 0.5 pt tolerance. OQ 10's scaling part is settled by the user; simulator execution remains open.
   Files: `App/RootView.swift`, `App/SceneDelegate.swift`, `App/LaunchArguments.swift`, `Sources/DesignSystem/ContentSizeCap.swift`, `Sources/DesignSystem/Typography.swift`, `Sources/Launch/StatusLineLayer.swift`, `AppTests/ContentSizeCapTests.swift`, `AppUITests/WelcomeTests.swift`, `AGENTS.md`.
 
+- [x] Reuse RN's opaque 1024 px icon unchanged in the universal iOS AppIcon asset and enable AppIcon compilation for the iPhone app. Host tests check dimensions, absence of alpha/transparency and exact RN bytes; a hosted test checks the built CFBundleIcons primary name. OQ 18 icon settled by the user on 2026-11-06. (OQ 18 default assumed, confirm). No distinguishing Debug display name. Dark/tinted variants and a layered Liquid Glass icon need design assets; those remain Open. Built-icon validation remains open.
+  Files: `App/Assets.xcassets/AppIcon.appiconset/**`, `project.yml`, `Tests/test_launch_resources.py`, `AppTests/AppIconTests.swift`, `AGENTS.md`.
+
 ### Phase 6: Audit (`feat/phase-6-audit`)
 
 Reduce Motion, dark mode, VoiceOver and strings are built in the phases above; this phase only audits.
@@ -588,5 +591,5 @@ The design sets the floor: hand-off ends at 1900 ms (ready) and Welcome is fully
 | 15 | **URL scheme:** register `chronoflow` natively (clashes with RN side by side)? | None in this slice | Phase 4 |
 | 16 | **Cold start after a background kill:** always the splash, or state restoration? | Always the splash | Phase 4 |
 | 17 | **Guest-draft recovery** pushing Welcome away during the moon flight: no board. | Out of slice; seam reserved | Later |
-| 18 | **App icon and Debug display name:** reuse RN's icon or wait for a board; distinguish the Debug build on the home screen? | No icon and no distinguishing name until you decide | Phase 0 (non-blocking) |
+| 18 | **Icon settled by the user 2026-11-06:** reuse RN's opaque 1024 px `assets/images/icon.png` unchanged. **Open:** dark/tinted variants and a layered Liquid Glass icon need design assets; Debug display name distinction. | No distinguishing Debug name; system-derived dark/tinted appearances until designed | Non-blocking |
 | 19 | **Android:** does RN keep Android, and stay the shipping iOS app until native reaches parity? | Yes | Not blocking |
