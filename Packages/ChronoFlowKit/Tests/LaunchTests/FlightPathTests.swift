@@ -20,17 +20,17 @@ struct FlightPathTests {
         #expect(flight.point(atFraction: 2) == flight.end)
     }
 
-    @Test func bottomAnchoringAndWidthScaling() {
+    @Test func boardCompositionAndWidthScaling() {
         for size in [CGSize(width: 375, height: 667), CGSize(width: 402, height: 874), CGSize(width: 590, height: 900)]
         {
             let flight = FlightPath(size: size)
-            #expect(flight.start.y == size.height - 204)
-            #expect(flight.control1.y == size.height - 374)
-            #expect(flight.control2.y == size.height - 374)
+            #expect(flight.start.y == size.height / 2 + (422 - 204))
+            #expect(flight.control1.y == size.height / 2 + (422 - 374))
+            #expect(flight.control2.y == size.height / 2 + (422 - 374))
             #expect(flight.end.x == size.width + 10)
             #expect(flight.control1.x == 90 * size.width / 390)
             #expect(flight.control2.x == 300 * size.width / 390)
-            #expect(abs(flight.point(atFraction: 0.5).y - (size.height - 331.5)) < 1e-8)
+            #expect(abs(flight.point(atFraction: 0.5).y - (size.height / 2 + (422 - 331.5))) < 1e-8)
         }
     }
 

@@ -14,8 +14,8 @@ nonisolated final class TimelineWindowTests: XCTestCase {
         let safe = controller.view.safeAreaInsets
         let opening = LaunchTimeline.opening(size: size, reduceMotion: false)
         let path = FlightPath(size: size)
-        XCTAssertEqual(path.start.y, size.height - 204)
-        XCTAssertEqual(path.end.y, size.height - 204)
+        XCTAssertEqual(path.start.y, size.height / 2 + (422 - 204))
+        XCTAssertEqual(path.end.y, size.height / 2 + (422 - 204))
         for rowHeight: CGFloat in [28, 40, 96] {
             let target = MoonTarget.fallback(
                 size: size,

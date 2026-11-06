@@ -39,14 +39,16 @@
                     scene.container.removeFromSuperlayer()
                     #expect(image.cgImage?.width == Int((size.width * scale).rounded()))
                     #expect(image.cgImage?.height == Int((size.height * scale).rounded()))
+                    let preservesBoardReference = size.height == 844
+                    let recordingFrame = record && !preservesBoardReference
                     let result = verifySnapshot(
                         of: image, as: .image,
                         named: "\(device)-\(style == .dark ? "dark" : "light")-\(frame.name)",
-                        record: record ? .all : .never, testName: "sampledSplashFrames")
-                    if record {
+                        record: recordingFrame ? .all : .never, testName: "sampledSplashFrames")
+                    if recordingFrame {
                         #expect(result?.hasPrefix("Record mode is on.") == true, "\(result ?? "No recording result")")
                     } else {
-                        #expect(result == nil, "\(result ?? "")")
+                        #expect(result == nil, "844 pt board frames must remain unchanged: \(result ?? "")")
                     }
                 }
             }
@@ -88,34 +90,43 @@
                     let disc = sun.convert(sun.bounds, to: scene.container)
                     let path = try #require(scene.layer(.path) as? CAShapeLayer)
                     let apex = try #require(path.path).boundingBoxOfPath.minY
-                    let short = size.height < 700
-                    #expect(!intersectsDisc(glyph, disc: disc))
-                    withKnownIssue(
-                        "OQ 11: short-screen wordmark overlaps the sun; needs a design decision",
-                        { #expect(!intersectsDisc(wordmarkInk, disc: disc)) }, when: { short })
-                    withKnownIssue(
-                        "OQ 11: short-screen path apex touches the moon glyph; needs a design decision",
-                        { #expect(glyph.maxY < apex) }, when: { short })
-                    withKnownIssue(
-                        "OQ 11: short-screen path apex is above the wordmark; needs a design decision",
-                        { #expect(wordmarkInk.maxY < apex) }, when: { short })
+                    let board = LaunchScene(
+                        size: CGSize(width: size.width, height: 844), traits: traits, reduceMotion: false)
+                    try prepareEnglishStatus(board)
+                    board.apply(board.timeline.withStatus(at: .seconds(2)).sample(at: .milliseconds(milliseconds)))
+                    let boardMoon = board.layer(.moon)
+                    let boardGlyph = boardMoon.convert(boardMoon.bounds.insetBy(dx: 92, dy: 92), to: board.container)
+                    let boardWordmark = board.layer(.wordmark)
+                    let boardWordmarkInk = boardWordmark.convert(boardWordmark.bounds, to: board.container)
+                    let boardStatus = board.statusLine
+                    let boardStatusInk = boardStatus.convert(
+                        try #require(boardStatus.text).frame.union(boardStatus.replicator.frame), to: board.container)
+                    let boardSun = board.layer(.sun)
+                    let boardDisc = boardSun.convert(boardSun.bounds, to: board.container)
+                    let boardPath = try #require(board.layer(.path) as? CAShapeLayer)
+                    let boardApex = try #require(boardPath.path).boundingBoxOfPath.minY
+                    for (ink, reference) in [(glyph, boardGlyph), (wordmarkInk, boardWordmarkInk)] {
+                        #expect(discClearance(ink, disc: disc) >= discClearance(reference, disc: boardDisc) - 1e-9)
+                        #expect(apex - ink.maxY >= boardApex - reference.maxY - 1e-9)
+                        #expect(ink.maxY < apex)
+                    }
                     if milliseconds == 2600 {
-                        withKnownIssue(
-                            "OQ 11: short-screen status ink overlaps the sun; needs a design decision",
-                            { #expect(!intersectsDisc(statusInk, disc: disc)) }, when: { short })
-                        withKnownIssue(
-                            "S1: path crosses the status text at 874; needs board review",
-                            { #expect(statusInk.maxY < apex || statusInk.minY > apex) },
-                            when: { abs(size.height - 874) < 0.5 })
+                        #expect(
+                            discClearance(statusInk, disc: disc) >= discClearance(boardStatusInk, disc: boardDisc)
+                                - 1e-9)
+                        #expect(statusInk.minY - apex >= boardStatusInk.minY - boardApex - 1e-9)
+                        #expect(statusInk.minY > apex)
                     }
                 }
             }
         }
 
-        private func intersectsDisc(_ ink: CGRect, disc: CGRect) -> Bool {
+        private func discClearance(_ ink: CGRect, disc: CGRect) -> CGFloat {
             let nearest = CGPoint(
                 x: min(ink.maxX, max(ink.minX, disc.midX)), y: min(ink.maxY, max(ink.minY, disc.midY)))
-            return hypot((nearest.x - disc.midX) / (disc.width / 2), (nearest.y - disc.midY) / (disc.height / 2)) < 1
+            let clearance = hypot(nearest.x - disc.midX, nearest.y - disc.midY) - disc.width / 2
+            #expect(clearance > 0)
+            return clearance
         }
 
         @Test func geometryInRunningWindow() async throws {
@@ -123,7 +134,7 @@
             let host = SnapshotWindow()
             defer { host.close() }
             #expect(host.window.bounds.size == host.window.screen.bounds.size)
-            for (height, statusTop, apex) in [(844.0, 518.0, 512.5), (874, 533, 542.5)] {
+            for (height, statusTop, apex) in [(844.0, 518.0, 512.5), (874, 533, 527.5)] {
                 let scene = LaunchScene(
                     size: CGSize(width: 390, height: height), traits: host.window.traitCollection, reduceMotion: false)
                 let path = try #require(scene.layer(.path) as? CAShapeLayer)
@@ -166,9 +177,16 @@
                         default: bounds = layer.bounds
                         }
                         let rect = layer.convert(bounds, to: host.controller.view.layer)
-                        #expect(
-                            safe.insetBy(dx: -0.5, dy: -0.5).contains(rect),
-                            "\(frame.name) \(id): \(rect), horizontal safe bounds \(safe)")
+                        if id == .sun {
+                            #expect(
+                                LaunchSnapshotGeometry.containsSun(rect, in: safe),
+                                "\(frame.name) sun: \(rect), horizontal safe bounds \(safe); at least a third must be visible"
+                            )
+                        } else {
+                            #expect(
+                                safe.insetBy(dx: -0.5, dy: -0.5).contains(rect),
+                                "\(frame.name) \(id): \(rect), horizontal safe bounds \(safe)")
+                        }
                     }
                     let path = try #require(scene.layer(.path) as? CAShapeLayer)
                     let bounds = try #require(path.path).boundingBoxOfPath

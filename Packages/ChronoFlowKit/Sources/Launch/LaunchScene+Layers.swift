@@ -4,11 +4,12 @@
 
     extension LaunchScene {
         func buildLayers() {
+            let layout = LaunchLayout(size: size)
             let appearance: TokenAppearance = traits.userInterfaceStyle == .dark ? .dark : .light
             let dawn = ColorToken.dawn.components(for: appearance).cgColor
             let horizon = ColorToken.skyHorizon.components(for: appearance).cgColor
             let white = LaunchPaint.white.cgColor
-            container.bounds = CGRect(origin: .zero, size: size)
+            container.bounds = layout.bounds
             container.anchorPoint = CGPoint(x: 0.5, y: 0.4)
             container.position = CGPoint(x: size.width / 2, y: size.height * 0.4)
             container.backgroundColor = ColorToken.skyTop.components(for: appearance).cgColor
@@ -28,7 +29,7 @@
             stars.backgroundColor = UIColor(patternImage: tile).cgColor
             add(stars, as: .stars)
 
-            let centre = CGPoint(x: size.width / 2, y: size.height - 194)
+            let centre = layout.sunCentre
             let halo = LaunchRadialLayer(
                 size: 500, centre: centre, radius: 250, color: dawn,
                 stops: LaunchGlow.haloStops, scale: traits.displayScale)
@@ -40,7 +41,7 @@
             sun.masksToBounds = true
             add(sun, as: .sun)
             let band = CAGradientLayer()
-            band.frame = CGRect(x: 0, y: size.height - 374, width: size.width, height: 374)
+            band.frame = layout.band
             band.colors = [0, 0.22, 0.70, 1].map { horizon.copy(alpha: $0)! }
             band.locations = [0, 0.4, 0.75, 1]
             add(band, as: .band)
@@ -67,10 +68,10 @@
             let wordmark = CALayer()
             let wordmarkImage = LaunchImages.wordmark(compatibleWith: traits)
             wordmark.bounds = CGRect(origin: .zero, size: wordmarkImage.size)
-            wordmark.position = CGPoint(x: size.width / 2, y: size.height / 2 + 60)
+            wordmark.position = layout.wordmarkCentre
             wordmark.contents = wordmarkImage.cgImage
             add(wordmark, as: .wordmark)
-            statusLine.frame = CGRect(x: 0, y: size.height / 2 + 96, width: size.width, height: 20)
+            statusLine.frame = layout.status
             statusLine.configure(
                 color: ColorToken.skyTitle.components(for: appearance).cgColor,
                 scale: traits.displayScale)

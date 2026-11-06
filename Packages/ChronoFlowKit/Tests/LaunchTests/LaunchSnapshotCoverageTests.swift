@@ -36,13 +36,13 @@ import Testing
     }
 
     @Test func statusAndPathApexRelationS1() {
-        for (height, statusTop, apex, below) in [(844.0, 518.0, 512.5, true), (874, 533, 542.5, false)] {
+        for (height, statusTop, apex) in [(844.0, 518.0, 512.5), (874, 533, 527.5)] {
             let size = CGSize(width: 390, height: height)
             let path = FlightPath(size: size)
             let middle = path.point(atFraction: 0.5)
             #expect(abs(middle.y - apex) < 0.001)
             #expect(abs(size.height / 2 + 96 - CGFloat(statusTop)) < 1e-9)
-            #expect((statusTop > middle.y) == below)
+            #expect(abs(statusTop - middle.y - 5.5) < 0.001)
         }
     }
 }

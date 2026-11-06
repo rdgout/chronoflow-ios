@@ -53,12 +53,13 @@ nonisolated public struct LaunchTimeline: Sendable, Equatable {
 
     public static func opening(size: CGSize, reduceMotion: Bool) -> Self {
         precondition(size.width > 0 && size.height > 0 && size.width.isFinite && size.height.isFinite)
+        let layout = LaunchLayout(size: size)
         var timeline = Self(tracks: [], size: size, reduceMotion: reduceMotion)
         for layer in LayerID.allCases {
             timeline.set(layer, "opacity", times: [0], scalars: [layer == .container || layer == .moon ? 1 : 0])
         }
         timeline.set(.container, "transform.scale", times: [0], scalars: [1])
-        timeline.set(.moon, "position", times: [0], points: [CGPoint(x: size.width / 2, y: size.height / 2)])
+        timeline.set(.moon, "position", times: [0], points: [layout.moonCentre])
         timeline.set(.moon, "transform.scale", times: [0], scalars: [1])
         timeline.set(.wordmark, "transform.translation.y", times: [0], scalars: [8])
         timeline.set(.path, "strokeEnd", times: [0], scalars: [0])
@@ -85,8 +86,8 @@ nonisolated public struct LaunchTimeline: Sendable, Equatable {
         timeline.set(
             .moon, "position", times: [0, 0.3, 1.1],
             points: [
-                CGPoint(x: size.width / 2, y: size.height / 2), CGPoint(x: size.width / 2, y: size.height / 2),
-                CGPoint(x: size.width / 2, y: size.height / 2 - 28),
+                layout.moonCentre, layout.moonCentre,
+                CGPoint(x: layout.moonCentre.x, y: layout.moonCentre.y - 28),
             ], curves: [.linear, .easeOut])
         timeline.set(
             .moon, "transform.scale", times: [0, 0.3, 1.1], scalars: [1, 1, 0.86], curves: [.linear, .easeOut])

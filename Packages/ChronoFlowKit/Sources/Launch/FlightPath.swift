@@ -13,10 +13,11 @@ nonisolated public struct FlightPath: Sendable, Equatable {
     public init(size: CGSize) {
         precondition(size.width > 0 && size.height > 0 && size.width.isFinite && size.height.isFinite)
         self.size = size
-        start = CGPoint(x: -10, y: size.height - 204)
-        control1 = CGPoint(x: 90 * size.width / 390, y: size.height - 374)
-        control2 = CGPoint(x: 300 * size.width / 390, y: size.height - 374)
-        end = CGPoint(x: size.width + 10, y: size.height - 204)
+        let layout = LaunchLayout(size: size)
+        start = layout.pathStart
+        control1 = layout.pathControl1
+        control2 = layout.pathControl2
+        end = layout.pathEnd
         var table = [0.0]
         var previous = start
         for index in 1..<1024 {

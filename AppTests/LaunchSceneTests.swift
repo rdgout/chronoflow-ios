@@ -31,7 +31,7 @@ nonisolated final class LaunchSceneTests: XCTestCase {
             XCTAssertEqual(scene.statusLine.replicator.instanceCount, 3)
             XCTAssertEqual(scene.statusLine.replicator.instanceDelay, 0.2)
             XCTAssertEqual(scene.layer(.stars).bounds.height, scene.size.height * 0.6)
-            XCTAssertEqual(scene.layer(.sun).position.y, scene.size.height - 194)
+            XCTAssertEqual(scene.layer(.sun).position.y, scene.size.height / 2 + (422 - 194))
             XCTAssertEqual(scene.layer(.moon).bounds.size, CGSize(width: 288, height: 288))
             XCTAssertEqual(scene.layer(.moon).minificationFilter, .trilinear)
             func check(_ layer: CALayer) {
