@@ -402,9 +402,9 @@ OQ 5 follows the settled S1/S2 and listed S3–S6 rules. OQ 11 uses its default 
 
 ### Phase 3b: Core Animation scene (`feat/phase-3b-scene`)
 
-Device runs need OQ 4 (team) and OQ 14 (device).
+Device runs need OQ 4 (team) and OQ 14 (device). Phase 3c remains gated on the physical-device D3 proof below.
 
-- [ ] `LaunchScene` layers, one commit each: sky/stars/band; sun/halo; path/plane; moon/wordmark; status (text created lazily + replicated dots). `apply(_:)` sets model values from `sample`.
+- [x] `LaunchScene` layers, one commit each: sky/stars/band; sun/halo; path/plane; moon/wordmark; status (text created lazily + replicated dots). `apply(_:)` sets model values from `sample`. (OQ 6 default assumed, confirm). Stars retain the board geometry; Reduce Motion dots hold at 1.0, with the existing ease-out fade and no moon cross-fade. Complete layer tree, radial sun/clipped halo with generated alpha ramps, sampled path, baked plane glow, generated moon/wordmark and lazy localized status are implemented. Round 1 corrects the halo’s zero vertical radius and sets the sun’s designed 127.3 pt radius on both axes; host pixel tests verify both gradients at 2×/3×. Sampled scale transforms retain Z = 1 so render(in:) draws the moon and container at their sampled sizes. Frame geometry uses 1e-9 accuracy for anchor arithmetic residuals. Host tests and iOS 17 type-check pass; revised simulator verification remains for the orchestrator.
   Files: `Sources/Launch/LaunchScene.swift`, `Sources/Launch/LaunchScene+Layers.swift`, `Sources/Launch/StatusLineLayer.swift`.
   Test: layer list equals the spec; no layer has `mask`, `filters`, `compositingFilter` or `shadowOpacity > 0`.
 - [ ] `LaunchOverlayController` + `SceneDelegate` order (D3, D14): overlay window (root VC `preferredStatusBarStyle = .lightContent`, VoiceOver element "ChronoFlow is opening" with its `nl` in the same commit), `isHidden = false`, opening tracks added, `CATransaction.flush()`, `t0` recorded; main window + root next run-loop turn; font registration detached; capture `connectionOptions` into `PendingLaunchIntent`. Verify which window drives the status bar; if not the overlay, set it on the main hosting controller until hand-off.

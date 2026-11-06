@@ -11,6 +11,7 @@ final class LaunchTestHost {
             UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
         previousKeyWindow = scene.windows.first(where: \.isKeyWindow)
         window = UIWindow(windowScene: scene)
+        window.windowLevel = .normal + 2
         window.overrideUserInterfaceStyle = style
         window.rootViewController = controller
         window.isHidden = false

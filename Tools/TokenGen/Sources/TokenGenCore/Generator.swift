@@ -90,9 +90,44 @@ public func tokenOutputs(root: URL) throws -> [String: Data] {
     guard radius == "1", fade == "1.5", tile == "7", alpha == "16" else {
         throw GenerationError.invalid("pattern-dots differs from plan")
     }
+    let splashBoard = try String(
+        contentsOf: root.appending(path: "_design/canvas/SplashScreen.dc.html"), encoding: .utf8)
+    guard splashBoard.contains("background: #fff;"),
+        splashBoard.contains("box-shadow: 0 0 80px 20px"),
+        splashBoard.contains("box-shadow: 0 0 10px 2px rgba(255,255,255,0.8)")
+    else {
+        throw GenerationError.invalid("splash plane white differs from plan")
+    }
+    let halo =
+        [(0.0, 0.0), (90.0 / 250, 0.0)]
+        + stride(from: 90.01, through: 250, by: 2).map {
+            ($0 / 250, blurredDisc(radius: $0, disc: 110, sigma: 40) * 0.45)
+        } + [(1.0, 0.0)]
+    let plane = stride(from: 0.0, through: 24, by: 0.5).map {
+        blurredDisc(radius: $0, disc: 6, sigma: 5) * 0.8
+    }
+    code +=
+        "nonisolated public enum LaunchPaint {\npublic static var white: TokenRGBA { TokenRGBA(red: 1, green: 1, blue: 1, alpha: 1) }\n"
+    code +=
+        "public static var haloStops: [(Double, Double)] { ["
+        + halo.map { "(\(number($0.0)), \(number($0.1)))" }.joined(separator: ",") + "] }\n"
+    code += "public static var planeAlphas: [Double] { [" + plane.map(number).joined(separator: ",") + "] }\n}\n"
     code +=
         "nonisolated public enum PatternTokens { public static var radius: Double { \(radius) }; public static var fadeRadius: Double { \(fade) }; public static var tile: Double { \(tile) }; public static var alpha: Double { \(alpha) / 100 } }\n"
     outputs["Packages/ChronoFlowKit/Sources/DesignSystem/CfSky.generated.swift"] = try formattedSwift(code, root: root)
     outputs["Tools/TokenGen/TokenGenReport.md"] = Data(report.utf8)
     return outputs
+}
+
+private func blurredDisc(radius: Double, disc: Double, sigma: Double) -> Double {
+    let step = disc / 256
+    return (0..<256).reduce(0) { result, index in
+        let y = (Double(index) + 0.5) * step
+        let edge = sqrt(disc * disc - y * y)
+        let horizontal =
+            (erf((edge - radius) / (sqrt(2) * sigma))
+                - erf((-edge - radius) / (sqrt(2) * sigma))) / 2
+        return result + horizontal * exp(-y * y / (2 * sigma * sigma))
+            / (sqrt(2 * .pi) * sigma) * step * 2
+    }
 }
