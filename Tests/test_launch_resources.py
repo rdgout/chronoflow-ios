@@ -117,6 +117,7 @@ class LaunchResourcesTests(unittest.TestCase):
         self.assertNotRegex(project, r'(?m)^\s+CODE_SIGN_IDENTITY:')
         self.assertNotRegex(project, r'(?m)^\s+DEVELOPMENT_TEAM:')
         self.assertEqual((ROOT / "Config/Base.xcconfig").read_text().splitlines(), [
+            "CHRONOFLOW_READINESS = native",
             "CHRONOFLOW_DATA_SOURCE = mock",
             "CHRONOFLOW_API_BASE_URL = https:/$()/api.chronoflow.net/v1",
             '#include? "Local.xcconfig"',

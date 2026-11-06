@@ -34,9 +34,10 @@ public final class LaunchCoordinator {
                 if case .signedIn = session {
                     tasks.append(
                         Task { [weak self, readiness] in
-                            let gate = await readiness.gate()
-                            guard !Task.isCancelled else { return }
-                            self?.send(.gate(gate))
+                            for await gate in await readiness.gateUpdates() {
+                                guard !Task.isCancelled else { return }
+                                self?.send(.gate(gate))
+                            }
                         })
                     tasks.append(
                         Task { [weak self, readiness] in

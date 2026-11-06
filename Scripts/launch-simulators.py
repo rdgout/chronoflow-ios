@@ -26,7 +26,7 @@ MATRIX = {
 # Each suite has one scheduling policy. Fixed geometry fixtures are logic; running-window/scale assertions are matrix.
 SUITES = {
     "AppTests": {
-        "logic": ("LaunchArgumentLogicTests", "RasterPixelLogicTests", "ContentSizeCapLogicTests", "AppIconTests", "KeychainSessionStoreTests", "AccountStorageLifecycleTests", "DataSourceBuildSettingTests", "DataSourceFactoryHostedTests", "SessionLifecycleTests", "SyncLifecycleTests", "AccountWipeTests", "RootNavigationTests", "StubReadinessTests", "WelcomeSnapshotGuardTests"),
+        "logic": ("LaunchArgumentLogicTests", "RasterPixelLogicTests", "ContentSizeCapLogicTests", "AppIconTests", "KeychainSessionStoreTests", "AccountStorageLifecycleTests", "DataSourceBuildSettingTests", "DataSourceFactoryHostedTests", "SessionLifecycleTests", "SyncLifecycleTests", "AccountWipeTests", "SessionReadinessTests", "RootNavigationTests", "StubReadinessTests", "WelcomeSnapshotGuardTests"),
         "matrix": ("ContentSizeCapTests", "LaunchArgumentsTests", "LaunchConnectionTests", "LaunchFrameParityTests",
                    "LaunchHandOffTests", "LaunchPlaybackTests", "LaunchSceneTests", "LaunchStoryboardTests", "LaunchTestHostTests",
                    "MoonTargetWindowTests", "TimelineWindowTests", "WelcomeHandOverTests", "WelcomeSnapshotTests"),
@@ -37,10 +37,10 @@ SUITES = {
         "matrix": ("WindowTests", "LaunchSceneTests", "WelcomeTests"),
     },
     "AppCoreTests": {"host": ("CatalogTests", "CubicBezierTests", "LaunchCoordinatorTests", "LaunchIntroTests", "LaunchLifecycleTests",
-                                 "LaunchReadinessTests", "LaunchSignpostsTests", "MoonAnchorStoreTests", "MoonTargetTests", "SessionStoreTests", "SessionControllerTests", "SignOutTests", "DeviceIdentityTests", "SmokeTests")},
+                                 "LaunchReadinessTests", "LaunchSignpostsTests", "MoonAnchorStoreTests", "MoonTargetTests", "SessionStoreTests", "SessionControllerTests", "SignOutTests", "StoredDataReadinessTests", "DeviceIdentityTests", "SmokeTests")},
     "DataAccessTests": {"host": ("ContractsTests", "DataSourceSelectionTests", "APIClientTests", "APICookieTests", "APIDataSourceTests", "MockAuthTests", "MockAccountTripsTests", "MockPersistenceTests", "DataSourceParityTests")},
     "SyncTests": {"host": ("LocalMutationsTests", "OutboxFlusherTests", "FullPullTests", "PendingProtectionTests", "PlanRetentionTests", "CheckOffReconcilerTests", "SyncEngineTests", "DataSourceIntegrationTests", "SyncTriggerTests", "SessionWipeTests")},
-    "LocalStoreTests": {"host": ("SchemaV1Tests", "AccountDatabaseTests", "RecordsTests", "RepositoryObservationTests", "SessionAccountDatabaseTests", "AccountWiperTests")},
+    "LocalStoreTests": {"host": ("SchemaV1Tests", "AccountDatabaseTests", "RecordsTests", "RepositoryObservationTests", "SessionAccountDatabaseTests", "AccountWiperTests", "AccountReadinessTests")},
     "DesignSystemTests": {"logic": ("ExactLineTextLayoutTests", "PrimitiveTests", "SmokeTests", "TypographyTests"),
                           "matrix": ("LaunchImagesTests",)},
     "LaunchTests": {"logic": ("FlightPathTests", "LaunchGlowTests", "LaunchLayoutTests", "LaunchRadialLayerTests", "LaunchSnapshotCoverageTests",

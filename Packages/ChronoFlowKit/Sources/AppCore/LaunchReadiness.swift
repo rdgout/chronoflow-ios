@@ -22,12 +22,25 @@ public enum Gate: String, Sendable, Equatable, CaseIterable {
 public protocol LaunchReadiness: Sendable {
     func session() async -> SessionPresence
     func gate() async -> Gate
+    func gateUpdates() async -> AsyncStream<Gate>
     func hasStoredData() async -> Bool
     func storedDataUpdates() async -> AsyncStream<Bool>
     func allowFirstLoad() async
 }
 
 extension LaunchReadiness {
+    public func gateUpdates() async -> AsyncStream<Gate> {
+        AsyncStream { continuation in
+            let task = Task {
+                let gate = await gate()
+                guard !Task.isCancelled else { return }
+                continuation.yield(gate)
+                continuation.finish()
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
+
     public func storedDataUpdates() async -> AsyncStream<Bool> {
         AsyncStream { continuation in
             let task = Task {

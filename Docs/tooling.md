@@ -1330,3 +1330,88 @@ Packaging: `build/commits/1.patch` through `3.patch` each contain their matching
 Conventional Commit message in `messages.txt`. The first patch independently passes its 6 Sync
 tests, and the first two patches together pass 22 Sync tests in a separate host checkout. Replay against HEAD with `git apply --index`
 verified the index tree and every tracked file byte against the final worktree.
+
+
+## Phase 9d: sync lifecycle, wipe and readiness (6 November 2026)
+
+All three tasks are implemented without UI. SyncLifecycle in the pure Swift Sync target owns the
+outbox-ID observation, injected path stream, retry scheduler and sanitized engine events. Open/sign-in,
+scene activation and reconnect debounce through the same engine; committed outbox additions request
+work, while acknowledgements/retry metadata do not form a feedback loop. Transient failures back off
+1/2/4…300 seconds, successful pulls reset the series, and a larger retry-after deadline also constrains
+explicit refresh. Offline waits for a trigger. Unverified accounts probe identity before protected work;
+continuous SQLite gate observation lets a newly discovered verify gate release launch without a marker.
+Background/disconnect stops the monitor, observers, timers and requests; activation resumes the current
+session only. The future refresh API is NativeSessionController.refreshNow().
+
+Sign-out shares SessionController's restore/accept queue and coalesces concurrent callers. A voluntary
+flush returning pending rows yields needsConfirmation and leaves the session/rows intact; explicit discard
+and current-epoch 401 wipe, with 401 skipping flush/logout. The old token is captured for logout only,
+with an injected 3-second cancellation deadline. Teardown drains sync/observations, detaches the model,
+routes Sign in, closes the pool and removes the entire account directory and session. The marker contains
+only a validated account UUID, is namespace-scoped, backup-excluded and protected on iOS; it remains
+until directory and credential cleanup succeed. Restore/accept retries it before opening any account.
+An immutable session/epoch snapshot is unavailable during replacement, preventing activation from
+recreating old-token work. Engine teardown releases its source and retained plan leases. Device ID,
+language and appearance are outside the wipe. Mock fake-server persistence stays separate from the
+account cache, as in 9b.
+
+Ordinary Release uses CHRONOFLOW_READINESS=native and restores the selected data source's native
+session. The Perf scheme now uses a separate Perf build configuration with
+CHRONOFLOW_READINESS=signed-out; it constructs no account controller, SQLite store or data source.
+Launch arguments cannot select this setting. Release still accepts only its existing ready-playback,
+stall and Reduce Motion diagnostics; readiness overrides remain Debug-only. Configuration loading runs
+on a detached worker after CATransaction.flush; account/Keychain/migration/observation work stays on
+workers/actors. The suspended-store first-flush proof remains in SessionLifecycleTests. Launch preserves
+external session navigation while keeping the existing 2/8-second rules. No splash geometry, assets,
+fonts, strings or Duo-specific behavior changed.
+
+Verification in this worktree:
+
+- sh Scripts/host-tests.sh: **235 passed** (76 AppCore, 21 LocalStore, 41 Sync, 54 DataAccess,
+  34 Launch, 8 DesignSystem, 1 Welcome), **23 new** compared with committed 9c.
+- sh Scripts/host-tests.sh -c release: the same **235 passed**. New service tests use injected
+  schedulers/gates, mock sources and inherited URLProtocol fixtures; no live network or real sleeps.
+- make lint, make generate and make generators-check: passed (7 TokenGen, 6 font/cache, 3 AssetGen).
+- python3 -I Tests/test_launch_simulators.py: **22 passed**; python3 -I Tests/test_launch_resources.py:
+  **10 passed**. New pure suites are host-classified; hosted classes run only on 17e by default.
+- SwiftPM --build-tests for arm64-apple-ios17.0-simulator: passed. Direct Swift 6/MainActor app module
+  and app/hosted-test SIL compilation: **Debug and Release passed**. Compilation does not execute UIKit,
+  Keychain, path-monitor callbacks or the render-server stall proof.
+
+The ordered files build/commits/1.patch, 2.patch and 3.patch each carry one 9d task tick; messages.txt
+contains the corresponding Conventional Commit subjects without trailers. Replay with git apply --index
+from HEAD is verified against the final tree. No git commit, xcodebuild, simulator or live API
+request was run. Dependency/generator tooling may use its normal network-backed caches.
+
+The orchestrator runs these exact commands on **one iPhone 17e** after applying the patches. Each
+new/changed hosted class has its own selector; ReleaseReadinessTests automatically selects the isolated
+ReadinessRelease/Release build. Run make generate first.
+
+```sh
+make generate
+make targeted DEVICES="17e" ONLY="AppTests/SyncLifecycleTests"
+make targeted DEVICES="17e" ONLY="AppTests/AccountWipeTests"
+make targeted DEVICES="17e" ONLY="AppTests/SessionReadinessTests"
+make targeted DEVICES="17e" ONLY="AppTests/LaunchConnectionTests"
+make targeted DEVICES="17e" ONLY="AppTests/ReleaseReadinessTests"
+```
+
+To build each configuration once and run the selection together:
+
+```sh
+make targeted DEVICES="17e" ONLY="AppTests/SyncLifecycleTests AppTests/AccountWipeTests AppTests/SessionReadinessTests AppTests/LaunchConnectionTests AppTests/ReleaseReadinessTests AppTests/SessionLifecycleTests"
+```
+
+make check remains an orchestrator-only integrated check on 17e. **make duo is not needed** for 9d:
+there is no Duo-specific change, and the user replaced Matrix S with host tests for this phase. No
+seven-device matrix is requested. Physical-device locked/protected-data behavior, launch budgets and
+the 500 ms render-server proof still require actual hardware/hosted execution; no measured result is claimed.
+
+Defaults retained/assumed: OQ 7 (unknown at 8 seconds uses the existing signed-out fallback without
+credential deletion), OQ 9 (native-only storage; RN migration deferred), OQ 24 (destination seams keep
+ordinary Release non-shipping), OQ 26 (development backup exclusion; shipping confirmation open),
+OQ 29 (needsConfirmation result only, explicit Verify exit may discard) and OQ 30 (typed store/sync
+failures, no new UI). Each relevant task note records “OQ n default assumed, confirm”. Auth copy/design,
+link delivery, Apple team/device proof and later feature/shipping OQs remain open; this phase does not
+settle them.

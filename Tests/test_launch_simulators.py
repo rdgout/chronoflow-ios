@@ -70,8 +70,19 @@ class ClassificationTests(unittest.TestCase):
             self.assertFalse(set(runner.selection('welcome', alias)) & host)
         makefile = (ROOT / 'Makefile').read_text()
         self.assertIn('host-tests:\n\tsh Scripts/host-tests.sh', makefile)
-        for suite in ('SessionLifecycleTests', 'AccountStorageLifecycleTests', 'KeychainSessionStoreTests'):
+        for suite in ('SessionLifecycleTests', 'SyncLifecycleTests', 'AccountWipeTests', 'SessionReadinessTests', 'AccountStorageLifecycleTests', 'KeychainSessionStoreTests'):
             self.assertIn('AppTests/' + suite, runner.selection('welcome', '17e'))
+
+    def test_perf_configuration_is_explicit_and_ordinary_release_restores_native(self):
+        project = (ROOT / 'project.yml').read_text()
+        self.assertIn('Perf:\n          CHRONOFLOW_READINESS: signed-out', project)
+        self.assertIn('CHRONOFLOW_READINESS = native', (ROOT / 'Config/Base.xcconfig').read_text())
+        perf = project.split('\n  Perf:\n    build:')[1]
+        self.assertEqual(perf.count('config: Perf'), 3)
+        self.assertIn('-configuration Perf test', (ROOT / 'Makefile').read_text())
+        for suite in ('AppCoreTests/SignOutTests', 'AppCoreTests/StoredDataReadinessTests',
+                      'SyncTests/SyncTriggerTests', 'SyncTests/SessionWipeTests', 'LocalStoreTests/AccountWiperTests', 'LocalStoreTests/AccountReadinessTests'):
+            self.assertIn(suite, runner.selectors('host'))
 
     def test_target_and_method_selection_is_explicit_and_validated(self):
         self.assertEqual(runner.expand(['AppTests/WelcomeSnapshotTests/frozenIntro']), ['AppTests/WelcomeSnapshotTests/frozenIntro'])

@@ -72,6 +72,52 @@ nonisolated final class LaunchConnectionTests: XCTestCase {
     }
 
     @MainActor
+    func testPerfServicesLoadOffMainAfterFlushAndDoNotConstructAccountServices() async throws {
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let previousKey = scene.windows.first(where: \.isKeyWindow)
+        let delegate = SceneDelegate()
+        let loaded = expectation(description: "off-main service configuration")
+        delegate.serviceConfigurationFactory = {
+            XCTAssertFalse(Thread.isMainThread)
+            loaded.fulfill()
+            return (try AppServices(info: ["CHRONOFLOW_READINESS": "signed-out"], testing: true), nil)
+        }
+        delegate.connect(to: scene, firstConnection: true, arguments: LaunchArguments([]))
+        defer {
+            delegate.sceneDidDisconnect(scene)
+            previousKey?.makeKey()
+        }
+        XCTAssertEqual(delegate.signposts.events, [.sceneConnect, .overlayFirstCommit])
+        XCTAssertNotNil(delegate.overlayWindow)
+        await fulfillment(of: [loaded], timeout: 5)
+        let deadline = ContinuousClock.now + .seconds(5)
+        while delegate.coordinator?.state.session == nil, ContinuousClock.now < deadline { await Task.yield() }
+        XCTAssertEqual(delegate.coordinator?.state.session, .signedOut)
+        XCTAssertNil(delegate.nativeSession)
+    }
+
+    @MainActor
+    func testLaunchDoesNotOverwriteSessionNavigation() async throws {
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let previousKey = scene.windows.first(where: \.isKeyWindow)
+        let delegate = SceneDelegate()
+        delegate.readinessFactory = { _, clock in
+            StubReadiness(
+                configuration: .init(session: .signedIn, stored: .never), store: KeychainSessionStore(), clock: clock)
+        }
+        delegate.connect(to: scene, firstConnection: true, arguments: LaunchArguments([]))
+        defer {
+            delegate.sceneDidDisconnect(scene)
+            previousKey?.makeKey()
+        }
+        let deadline = ContinuousClock.now + .seconds(5)
+        while delegate.coordinator?.state.gate == nil, ContinuousClock.now < deadline { await Task.yield() }
+        delegate.navigator.navigate(to: .signIn)
+        delegate.coordinator?.send(.storedData(true))
+        XCTAssertEqual(delegate.navigator.route, .signIn)
+    }
+
+    @MainActor
     private func waitForRoot(of delegate: SceneDelegate) async throws -> UIWindow {
         let deadline = ContinuousClock.now + .seconds(5)
         while delegate.window == nil, ContinuousClock.now < deadline {

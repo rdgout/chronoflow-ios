@@ -9,6 +9,10 @@ final class NativeSessionController {
     let model: AccountModel
     let sync: SessionSync?
     let wiper: AccountWiper
+    lazy var readiness = StoredDataReadiness(controller: controller) { [accounts] id in
+        guard let database = await accounts.activeDatabase() else { throw StoreFailure.closed }
+        return try await AccountReadinessRepository(database: database).values(accountID: id)
+    }
     private var subscription: Task<Void, Never>?
 
     init(
@@ -72,6 +76,18 @@ final class NativeSessionController {
             })
         reference.set(controller)
     }
+
+    func setActive(_ active: Bool) async {
+        await sync?.setEnabled(active)
+        if active {
+            await readiness.retry()
+            if let current = await controller.activeSession() {
+                await sync?.resume(session: current.session, epoch: current.epoch)
+            }
+        }
+    }
+
+    func refreshNow() async throws { _ = try await sync?.refreshNow() }
 
     func observe() {
         guard subscription == nil else { return }

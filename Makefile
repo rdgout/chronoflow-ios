@@ -41,7 +41,7 @@ targeted:
 	$(SIM_RUNNER) --no-generate --devices $(DEVICES) --only $(ONLY) $(if $(filter 1,$(REUSE_BUILD)),--reuse-build,)
 
 perf:
-	$(XCODEBUILD) -destination '$(DESTINATION)' -scheme Perf -configuration Release test
+	$(XCODEBUILD) -destination '$(DESTINATION)' -scheme Perf -configuration Perf test
 
 tokens:
 	sh Scripts/swiftpm.sh run TokenGen TokenGen
