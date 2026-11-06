@@ -39,7 +39,7 @@ private var root: URL {
         ],
     ]
     for (t, theme) in ["light", "dark"].enumerated() {
-        for (i, name) in DesignSource.names.enumerated() {
+        for (i, name) in DesignSource.names.prefix(9).enumerated() {
             let color = try source.color(name, theme)
             #expect(color.rgb(p3: false).hex == hexes[t][i])
             #expect(zip(color.rgb(p3: true).values, p3[t][i]).allSatisfy { abs($0 - $1) <= 1 / 255.0 })
@@ -161,4 +161,43 @@ private var root: URL {
     try theme.replacingOccurrences(of: "--dawn: oklch(0.72 0.14 55)", with: "--dawn: oklch(0.73 0.14 55)")
         .write(to: directory.appending(path: themePath), atomically: true, encoding: .utf8)
     #expect(throws: GenerationError.self) { try DesignSource(root: directory) }
+}
+
+@Test func authMixUsesOKLabAndPreservesBothAppearances() throws {
+    let source = try DesignSource(root: root)
+    func contrast(_ a: OKLab, _ b: OKLab) -> Double {
+        func luminance(_ color: OKLab) -> Double {
+            let channels = color.rgb(p3: false).values.map {
+                $0 <= 0.04045 ? $0 / 12.92 : pow(($0 + 0.055) / 1.055, 2.4)
+            }
+            return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722
+        }
+        let first = luminance(a)
+        let second = luminance(b)
+        return (max(first, second) + 0.05) / (min(first, second) + 0.05)
+    }
+    for theme in ["light", "dark"] {
+        for (text, background) in [
+            ("card-foreground", "card"), ("card-foreground", "auth-error-background"),
+            ("muted-foreground", "card"), ("primary-foreground", "primary"), ("dawn-text", "card"),
+            ("destructive", "card"),
+        ] {
+            #expect(
+                try contrast(source.color(text, theme), source.color(background, theme)) >= 4.5,
+                "\(text) on \(background), \(theme)")
+        }
+        #expect(
+            try contrast(source.color("input", theme), source.color("card", theme)) < 3,
+            "The source's control-border contrast conflict remains a design review item")
+        let mixed = try source.color("auth-error-background", theme)
+        let expected = try source.color("card", theme).mixed(with: source.color("destructive", theme), fraction: 0.1)
+        #expect(mixed.rgb(p3: true) == expected.rgb(p3: true))
+        #expect(try source.color("auth-error-border", theme).alpha == 0.35)
+        #expect(try source.color("card", theme).rgb(p3: true) != source.color("card-foreground", theme).rgb(p3: true))
+    }
+    #expect(
+        try authTokens(root: root)
+            == Data(
+                contentsOf: root.appending(
+                    path: "Packages/ChronoFlowKit/Sources/DesignSystem/AuthTokens.generated.swift")))
 }

@@ -54,7 +54,7 @@ targets:
           CHRONOFLOW_READINESS: signed-out
     dependencies:
       - package: ChronoFlowKit
-        products: [DesignSystem, AppCore, LocalStore, DataAccess, Sync, Launch, Welcome]
+        products: [DesignSystem, AppCore, LocalStore, DataAccess, Sync, Launch, Welcome, Auth]
   AppTests:
     type: bundle.unit-test
     platform: iOS
@@ -143,6 +143,7 @@ schemes:
         - package: ChronoFlowKit/DataAccessTests
         - package: ChronoFlowKit/LaunchTests
         - package: ChronoFlowKit/WelcomeTests
+        - package: ChronoFlowKit/AuthTests
   ReadinessRelease:
     build:
       targets:

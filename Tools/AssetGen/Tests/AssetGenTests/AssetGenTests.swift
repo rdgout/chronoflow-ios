@@ -170,3 +170,17 @@ extension Int { fileprivate var double: Double { Double(self) } }
     #expect(throws: GenerationError.self) { try MoonGeometry(svgPath: "M12 3a6 7 0 0 0 9 9Z") }
     #expect(throws: GenerationError.self) { try MoonGeometry(svgPath: "M12 3L21 12Z") }
 }
+
+@Test func authGlyphsRetainBoardPathsAndTemplateRendering() throws {
+    let outputs = try authGlyphOutputs(root: root)
+    #expect(outputs.count == 13)
+    for name in ["AuthBack", "AuthEye", "AuthAlert", "AuthInfo", "AuthCheck", "AuthKey"] {
+        let directory = "Packages/ChronoFlowKit/Sources/DesignSystem/Resources/Auth.xcassets/\(name).imageset"
+        let svg = String(decoding: try #require(outputs["\(directory)/\(name).svg"]), as: UTF8.self)
+        #expect(svg.contains("viewBox=\"0 0 24 24\""))
+        #expect(!svg.contains("<filter") && !svg.contains("style="))
+        let contents = String(decoding: try #require(outputs["\(directory)/Contents.json"]), as: UTF8.self)
+        #expect(contents.contains("template") && contents.contains("preserves-vector-representation"))
+    }
+    try writeOutputs(outputs, root: root, check: true)
+}

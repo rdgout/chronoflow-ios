@@ -14,6 +14,7 @@ let package = Package(
         .library(name: "Sync", targets: ["Sync"]),
         .library(name: "Launch", targets: ["Launch"]),
         .library(name: "Welcome", targets: ["Welcome"]),
+        .library(name: "Auth", targets: ["Auth"]),
     ],
     dependencies: [
         .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", .upToNextMinor(from: "1.19.0")),
@@ -54,6 +55,12 @@ let package = Package(
             resources: [.process("Resources")],
             swiftSettings: [.defaultIsolation(MainActor.self)]
         ),
+        .target(
+            name: "Auth", dependencies: ["DesignSystem", "AppCore"], resources: [.process("Resources")],
+            swiftSettings: [.defaultIsolation(MainActor.self)]),
+        .testTarget(
+            name: "AuthTests", dependencies: ["Auth", "DataAccess", "SnapshotSupport"],
+            swiftSettings: [.defaultIsolation(nil)]),
         .testTarget(
             name: "DesignSystemTests",
             dependencies: ["DesignSystem", "SnapshotSupport"],

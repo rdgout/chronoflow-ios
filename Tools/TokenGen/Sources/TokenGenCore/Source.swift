@@ -3,7 +3,8 @@ import Foundation
 public struct DesignSource {
     public static let names = [
         "sky-top", "sky-mid", "sky-horizon", "sky-title", "sky-copy", "sky-copy-background", "dawn", "dawn-foreground",
-        "background",
+        "background", "foreground", "card", "card-foreground", "input", "border", "ring",
+        "muted-foreground", "primary", "primary-foreground", "accent", "accent-foreground", "destructive", "dawn-text",
     ]
     public let root: URL
     public let tokens: [String: Any]
@@ -49,8 +50,24 @@ public struct DesignSource {
         }
     }
 
+    public static var authDerivedNames: [String] { ["auth-error-background", "auth-error-border", "auth-shadow"] }
+
     public func color(_ name: String, _ appearance: String) throws -> OKLab {
-        try OKLab(css: resolved(name, appearance, visited: []))
+        if name == "auth-error-background" {
+            return try color("card", appearance).mixed(with: color("destructive", appearance), fraction: 0.1)
+        }
+        if name == "auth-error-border" {
+            let value = try color("destructive", appearance)
+            return OKLab(lightness: value.lightness, a: value.a, b: value.b, alpha: 0.35)
+        }
+        if name == "auth-shadow" {
+            let data = try Data(contentsOf: root.appending(path: "_design/canvas/ds/chronoflow/tokens.json"))
+            let json = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+            let shadow =
+                ((json["shadow"] as! [String: Any])["tokens"] as! [[String: Any]])[0]["value"] as! [String: String]
+            return try OKLab(css: captures(#"(oklch\([^)]+\))"#, in: shadow[appearance]!)[0])
+        }
+        return try OKLab(css: resolved(name, appearance, visited: []))
     }
 
     private func resolved(_ name: String, _ appearance: String, visited: Set<String>) throws -> String {

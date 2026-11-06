@@ -22,6 +22,22 @@ nonisolated public enum ColorToken: String, CaseIterable, Sendable {
     case dawn = "dawn"
     case dawnForeground = "dawnForeground"
     case background = "background"
+    case foreground = "foreground"
+    case card = "card"
+    case cardForeground = "cardForeground"
+    case input = "input"
+    case border = "border"
+    case ring = "ring"
+    case mutedForeground = "mutedForeground"
+    case primary = "primary"
+    case primaryForeground = "primaryForeground"
+    case accent = "accent"
+    case accentForeground = "accentForeground"
+    case destructive = "destructive"
+    case dawnText = "dawnText"
+    case authErrorBackground = "authErrorBackground"
+    case authErrorBorder = "authErrorBorder"
+    case authShadow = "authShadow"
     public func components(for appearance: TokenAppearance) -> TokenRGBA {
         switch (self, appearance) {
         case (.skyTop, .light):
@@ -58,6 +74,65 @@ nonisolated public enum ColorToken: String, CaseIterable, Sendable {
             TokenRGBA(red: 0.9554061387, green: 0.9691773029, blue: 0.9866671639, alpha: 1.0000000000)
         case (.background, .dark):
             TokenRGBA(red: 0.0426907083, green: 0.0547508757, blue: 0.1152662036, alpha: 1.0000000000)
+        case (.foreground, .light):
+            TokenRGBA(red: 0.0746269467, green: 0.0960047157, blue: 0.1879246112, alpha: 1.0000000000)
+        case (.foreground, .dark):
+            TokenRGBA(red: 0.9039299719, green: 0.9230007624, blue: 0.9590599670, alpha: 1.0000000000)
+        case (.card, .light): TokenRGBA(red: 0.9875284642, green: 0.9944507892, blue: 1.0000000000, alpha: 1.0000000000)
+        case (.card, .dark): TokenRGBA(red: 0.0738749503, green: 0.0888589702, blue: 0.1614974134, alpha: 1.0000000000)
+        case (.cardForeground, .light):
+            TokenRGBA(red: 0.0746269467, green: 0.0960047157, blue: 0.1879246112, alpha: 1.0000000000)
+        case (.cardForeground, .dark):
+            TokenRGBA(red: 0.9039299719, green: 0.9230007624, blue: 0.9590599670, alpha: 1.0000000000)
+        case (.input, .light):
+            TokenRGBA(red: 0.7957949595, green: 0.8205984472, blue: 0.8676110093, alpha: 1.0000000000)
+        case (.input, .dark): TokenRGBA(red: 0.1948903555, green: 0.2140156383, blue: 0.2948370182, alpha: 1.0000000000)
+        case (.border, .light):
+            TokenRGBA(red: 0.8211388330, green: 0.8460900141, blue: 0.8933739997, alpha: 1.0000000000)
+        case (.border, .dark):
+            TokenRGBA(red: 0.1752787083, green: 0.1939081730, blue: 0.2735978295, alpha: 1.0000000000)
+        case (.ring, .light): TokenRGBA(red: 0.3645206452, green: 0.4185556439, blue: 0.6977120782, alpha: 1.0000000000)
+        case (.ring, .dark): TokenRGBA(red: 0.9082625891, green: 0.6882337800, blue: 0.4860896207, alpha: 1.0000000000)
+        case (.mutedForeground, .light):
+            TokenRGBA(red: 0.1869636350, green: 0.2171898301, blue: 0.2950788692, alpha: 1.0000000000)
+        case (.mutedForeground, .dark):
+            TokenRGBA(red: 0.6375961962, green: 0.6705691372, blue: 0.7395835961, alpha: 1.0000000000)
+        case (.primary, .light):
+            TokenRGBA(red: 0.1470827174, green: 0.1772967846, blue: 0.3636789079, alpha: 1.0000000000)
+        case (.primary, .dark):
+            TokenRGBA(red: 0.9082625891, green: 0.6882337800, blue: 0.4860896207, alpha: 1.0000000000)
+        case (.primaryForeground, .light):
+            TokenRGBA(red: 0.9589967179, green: 0.9762308201, blue: 0.9981208152, alpha: 1.0000000000)
+        case (.primaryForeground, .dark):
+            TokenRGBA(red: 0.0652879355, green: 0.0798151287, blue: 0.1517375932, alpha: 1.0000000000)
+        case (.accent, .light):
+            TokenRGBA(red: 0.9448381158, green: 0.8828879941, blue: 0.8273601857, alpha: 1.0000000000)
+        case (.accent, .dark):
+            TokenRGBA(red: 0.1616753004, green: 0.1673871736, blue: 0.2684732767, alpha: 1.0000000000)
+        case (.accentForeground, .light):
+            TokenRGBA(red: 0.2564323963, green: 0.1440294533, blue: 0.0855683693, alpha: 1.0000000000)
+        case (.accentForeground, .dark):
+            TokenRGBA(red: 0.9039299719, green: 0.9230007624, blue: 0.9590599670, alpha: 1.0000000000)
+        case (.destructive, .light):
+            TokenRGBA(red: 0.7371999640, green: 0.2219507677, blue: 0.1916518386, alpha: 1.0000000000)
+        case (.destructive, .dark):
+            TokenRGBA(red: 0.8716579884, green: 0.4339229238, blue: 0.3994597746, alpha: 1.0000000000)
+        case (.dawnText, .light):
+            TokenRGBA(red: 0.5985280056, green: 0.3425317969, blue: 0.1200431821, alpha: 1.0000000000)
+        case (.dawnText, .dark):
+            TokenRGBA(red: 0.9082625891, green: 0.6882337800, blue: 0.4860896207, alpha: 1.0000000000)
+        case (.authErrorBackground, .light):
+            TokenRGBA(red: 0.9709899420, green: 0.9208542994, blue: 0.9185687559, alpha: 1.0000000000)
+        case (.authErrorBackground, .dark):
+            TokenRGBA(red: 0.1438725536, green: 0.1248280674, blue: 0.1876677391, alpha: 1.0000000000)
+        case (.authErrorBorder, .light):
+            TokenRGBA(red: 0.7371999640, green: 0.2219507677, blue: 0.1916518386, alpha: 0.3500000000)
+        case (.authErrorBorder, .dark):
+            TokenRGBA(red: 0.8716579884, green: 0.4339229238, blue: 0.3994597746, alpha: 0.3500000000)
+        case (.authShadow, .light):
+            TokenRGBA(red: 0.1337445013, green: 0.1612771621, blue: 0.3235156231, alpha: 0.2500000000)
+        case (.authShadow, .dark):
+            TokenRGBA(red: 0.0000000000, green: 0.0000000000, blue: 0.0000000000, alpha: 0.6000000000)
         }
     }
 }
