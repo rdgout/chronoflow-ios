@@ -3,6 +3,24 @@ import SwiftUI
 #if canImport(UIKit)
     import UIKit
 
+    public enum AuthControlPart: Hashable { case content, glyph, spinner, label, input, errorGlyph, errorText }
+
+    extension View {
+        @ViewBuilder fileprivate func authControlMeasure(
+            _ part: AuthControlPart, _ measure: ((AuthControlPart, CGRect) -> Void)?
+        ) -> some View {
+            if let measure {
+                onGeometryChange(for: CGRect.self) {
+                    $0.frame(in: .global)
+                } action: {
+                    measure(part, $0)
+                }
+            } else {
+                self
+            }
+        }
+    }
+
     public enum AuthGlyph: String, CaseIterable {
         case back = "AuthBack"
         case eye = "AuthEye"
@@ -20,15 +38,18 @@ import SwiftUI
         let kind: Kind
         let busy: Bool
         let glyph: AuthGlyph?
+        let measure: ((AuthControlPart, CGRect) -> Void)?
         let action: () -> Void
         public init(
             _ title: String, kind: Kind = .primary, busy: Bool = false, glyph: AuthGlyph? = nil,
+            measure: ((AuthControlPart, CGRect) -> Void)? = nil,
             action: @escaping () -> Void
         ) {
             self.title = title
             self.kind = kind
             self.busy = busy
             self.glyph = glyph
+            self.measure = measure
             self.action = action
         }
         private var foreground: ColorToken {
@@ -41,21 +62,23 @@ import SwiftUI
         public var body: some View {
             Button(action: action) {
                 HStack(spacing: AuthTokens.fieldGap) {
+                    if busy {
+                        ProgressView().controlSize(.mini).tint(foreground.color)
+                            .frame(width: AuthTokens.icon, height: AuthTokens.icon)
+                            .authControlMeasure(.spinner, measure).accessibilityHidden(true)
+                    }
                     if let glyph {
                         glyph.image.resizable().frame(width: AuthTokens.icon, height: AuthTokens.icon)
+                            .foregroundStyle(foreground.color).authControlMeasure(.glyph, measure)
                             .accessibilityHidden(true)
                     }
                     WelcomeText(title, style: Typography.authLabel, color: foreground).multilineTextAlignment(.center)
+                        .authControlMeasure(.label, measure)
                 }
+                .authControlMeasure(.content, measure)
                 .padding(.horizontal, AuthTokens.spacer)
                 .padding(.vertical, AuthTokens.fieldGap)
                 .frame(maxWidth: .infinity, minHeight: kind == .footer ? AuthTokens.footerHeight : AuthTokens.touch)
-                .overlay(alignment: .leading) {
-                    if busy {
-                        ProgressView().controlSize(.small).tint(foreground.color).padding(.leading, AuthTokens.fieldGap)
-                            .accessibilityHidden(true)
-                    }
-                }
                 .background {
                     switch kind {
                     case .primary: Capsule().fill(ColorToken.primary.color)
@@ -90,11 +113,13 @@ import SwiftUI
         let submitLabel: SubmitLabel
         let focus: FocusState<String?>.Binding
         let submit: () -> Void
+        let measure: ((AuthControlPart, CGRect) -> Void)?
 
         public init(
             _ title: String, text: Binding<String>, secure: Bool = false, error: String? = nil, hint: String? = nil,
             identifier: String, contentType: UITextContentType, keyboard: UIKeyboardType = .default,
-            submitLabel: SubmitLabel = .next, focus: FocusState<String?>.Binding, submit: @escaping () -> Void
+            submitLabel: SubmitLabel = .next, focus: FocusState<String?>.Binding,
+            measure: ((AuthControlPart, CGRect) -> Void)? = nil, submit: @escaping () -> Void
         ) {
             self.title = title
             _text = text
@@ -107,15 +132,16 @@ import SwiftUI
             self.submitLabel = submitLabel
             self.focus = focus
             self.submit = submit
+            self.measure = measure
         }
         public var body: some View {
             VStack(alignment: .leading, spacing: AuthTokens.fieldGap) {
                 WelcomeText(title, style: Typography.authLabel, color: .cardForeground).accessibilityHidden(true)
                 Group {
                     if secure {
-                        SecureField(text: $text) { Text(verbatim: title) }
+                        SecureField(text: $text, prompt: Text(verbatim: "")) { Text(verbatim: title) }
                     } else {
-                        TextField(text: $text) { Text(verbatim: title) }
+                        TextField(text: $text, prompt: Text(verbatim: "")) { Text(verbatim: title) }
                     }
                 }
                 .font(Typography.authBody.font)
@@ -136,19 +162,27 @@ import SwiftUI
                         .strokeBorder(
                             (error != nil ? ColorToken.destructive : focus.wrappedValue == identifier ? .ring : .input)
                                 .color,
-                            lineWidth: focus.wrappedValue == identifier ? AuthTokens.focusWidth : AuthTokens.borderWidth
+                            lineWidth: AuthTokens.borderWidth
                         )
+                    if focus.wrappedValue == identifier {
+                        RoundedRectangle(cornerRadius: AuthTokens.fieldRadius)
+                            .inset(by: -AuthTokens.focusWidth)
+                            .strokeBorder(ColorToken.ring.color, lineWidth: AuthTokens.focusWidth)
+                    }
                 }
+                .authControlMeasure(.input, measure)
                 .opacity(isEnabled ? 1 : AuthTokens.disabledOpacity)
                 .contentShape(RoundedRectangle(cornerRadius: AuthTokens.fieldRadius))
                 .accessibilityIdentifier(identifier)
                 .accessibilityLabel(Text(verbatim: title))
                 .accessibilityHint(Text(verbatim: error ?? hint ?? ""))
                 if let error {
-                    HStack(alignment: .top, spacing: AuthTokens.brandGap) {
+                    HStack(alignment: .center, spacing: AuthTokens.brandGap) {
                         AuthGlyph.alert.image.resizable().frame(width: AuthTokens.icon, height: AuthTokens.icon)
+                            .authControlMeasure(.errorGlyph, measure)
                             .accessibilityHidden(true)
                         WelcomeText(error, style: Typography.authHint, color: .destructive)
+                            .authControlMeasure(.errorText, measure)
                     }.foregroundStyle(ColorToken.destructive.color).accessibilityHidden(true)
                 } else if let hint {
                     WelcomeText(hint, style: Typography.authHint, color: .mutedForeground).accessibilityHidden(true)
