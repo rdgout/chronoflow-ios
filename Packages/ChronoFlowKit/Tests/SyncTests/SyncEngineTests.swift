@@ -168,6 +168,9 @@ import Testing
     ])
     func sanitizedResultsRetainTransientWork(_ failure: DataFailure) async throws {
         let store = try await SyncStore()
+        try await AccountRepository(database: store.database).upsert(
+            AccountRecord(id: syncAccount, name: "Local", email: "demo@example.com", hasVerifiedEmail: true))
+        #expect(try await AccountRepository(database: store.database).account()?.hasVerifiedEmail == true)
         let source = ScriptedSource()
         _ = try await store.enqueue(.walkthrough)
         await source.configure(failures: [failure])
@@ -181,6 +184,9 @@ import Testing
         default: state = .idle
         }
         #expect(result.state == state)
+        if case .emailUnverified = failure {
+            #expect(try await AccountRepository(database: store.database).account()?.hasVerifiedEmail == false)
+        }
         #expect(result.pendingCount == 1)
         if case .server = failure { #expect(result.retryAfter == 1) }
         await engine.cancelAndWait()

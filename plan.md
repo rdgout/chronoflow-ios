@@ -1039,6 +1039,8 @@ Stack on 9b. No UI; scope is the documented engine/repositories, not Settings/To
 
 - [x] Review fix: cover stale check-off 409 and both backend 422 shapes with retained-row/no-refusal assertions, plus final refusal for a non-stale 422; disabling validation staleness fails the regressions.
 
+- [x] Review fix: seed a verified account and assert that engine email-unverified handling persists the verification gate; a no-op account update fails the regression.
+
 #### Phase 9d: Sync lifecycle, sign-out wipe and launch readiness (`feat/phase-9d-session-lifecycle`)
 
 Stack on 9c. No UI. OQ 29 leaves voluntary pending-change confirmation as a return value only; no new dialog. D25 forced wipe is required regardless of that UI decision.
