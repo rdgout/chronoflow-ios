@@ -1,6 +1,22 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "ChronoFlow is opening": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChronoFlow is opening"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChronoFlow wordt geopend"
+          }
+        }
+      }
+    },
     "Getting your plan ready": {
       "localizations": {
         "en": {

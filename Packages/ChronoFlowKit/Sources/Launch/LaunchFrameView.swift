@@ -21,6 +21,13 @@
             ])
         }
 
+        func install(_ scene: LaunchScene) {
+            for view in subviews { view.isHidden = true }
+            backgroundColor = .clear
+            isOpaque = false
+            layer.addSublayer(scene.container)
+        }
+
         @available(*, unavailable)
         public required init?(coder: NSCoder) { return nil }
     }
