@@ -56,7 +56,7 @@ Simulator signing is disabled independently of that setting.
 
 ## Phase 0 verified results
 
-The orchestrator ran the following outside the implementation sandbox on 5 November 2026 with
+The orchestrator ran the following on 5 November 2026 with
 Xcode 27.2:
 
 - `make generate && make check`: passed (`TEST SUCCEEDED`). Strict formatting lint, AppCore tests,
@@ -88,14 +88,13 @@ Additional checks from the implementation environment:
   subclasses are explicitly nonisolated, with MainActor test methods, to match XCTest's initializers
   under Swift 6.4's default MainActor isolation.
 - Host package test run: passed, five Swift Testing tests across all four modules. The test command
-  used `--disable-sandbox` to avoid SwiftPM's nested sandbox, repo-local caches, and
+  used `--disable-sandbox`, repo-local caches, and
   `--triple arm64-apple-macosx14.0`. This is additional compile/test evidence, not simulator validation.
 - Catalog guard proof: inserted `Phase 0 catalog guard probe` into `App/InfoPlist.xcstrings` with only
   an English value. `CatalogTests` failed with exit 1 and
   `Missing nl value for 'Phase 0 catalog guard probe'`. Restored the original catalog bytes; the same
   test passed with exit 0. The probe is absent from the committed catalogs.
 
-Local command logs are under ignored `build/Logs/`.
 
 ## Instruments templates
 
@@ -179,7 +178,7 @@ metrics and grow/shrink as expected; default and splash sizes must exactly match
 
 ## Phase 1 verification
 
-The orchestrator verified the committed Phase 1 state outside the implementation sandbox on
+The orchestrator verified the committed Phase 1 state on
 2026-11-05 with Xcode 27.2:
 
 - `make generate`: passed.
@@ -201,7 +200,7 @@ exclude the UIKit font and primitive snapshot functions; they do not replace sim
 Mutation probes regenerated wordmarks with smoothing enabled and with left-aligned advances;
 the alpha-coverage and midpoint assertions respectively rejected them. Both probes were restored.
 
-For the revised tree, the orchestrator should run these outside the implementation sandbox:
+For the revised tree, run:
 
 ```sh
 make generate check
@@ -248,14 +247,13 @@ Hosted launch-screen parity tests belong to Phase 2. The completed runs above co
 and Duo; the remaining D1c devices have no recorded Phase 1 matrix pass. Font API deprecation follows
 D11's specified registration API. CoreText may log already-registered fonts when registration is
 repeated; the registry accepts that condition.
-After applying the review patches and committing them, regeneration should leave the checkout clean:
+Regeneration should leave the checkout clean:
 
 ```sh
 make tokens fonts assets
 git diff --exit-code
 ```
 
-Local command logs are under ignored `build/Logs/`.
 
 ## Phase 2 system launch screen
 
@@ -277,33 +275,25 @@ using ambient traits. The hosted moon's traits and resolved image are checked ag
 separately from its rendered pixels. Pixel failures report the style, maximum channel error and the
 first pixel outside tolerance (x/y, RGBA channel, actual and expected bytes).
 
-The orchestrator reports all `AppTests` (including the reference meta-test) and `WindowTests` pass
-on all seven D1c devices, and `make duo` passes. The reference meta-test uses the host window's scale,
-checks both appearances under opposite ambient traits and confirms their pixels differ. Its diagnostic
-fixture checks first-pixel coordinates and maximum-error reporting independently.
+The orchestrator verified Phase 2 on **2026-11-06**: the launch matrix passed on all seven
+D1c devices (iPhone SE 3rd gen, 17e, 17, Air, 18 Pro, 18 Pro Max and iPhone Duo), and
+`make check` and `make duo` passed. This includes the hosted storyboard/frame tests,
+WindowTests and DesignSystemTests at each running device's own display scale.
 
-Fix round 4 preserves the orchestrator's dependency correction in `project.yml`: hosted `AppTests`
-depends only on `ChronoFlow`, with `TEST_HOST` / `BUNDLE_LOADER` resolving the package symbols already
-in the app. Linking DesignSystem and Launch into the test bundle again duplicated the package resource
-accessors and crashed package test processes with `unable to find bundle named ChronoFlowKit_DesignSystem`.
-The trap is recorded in `AGENTS.md`. A host regression guard rejects duplicate dependencies or a missing
-bundle loader; both failure mutations were verified without changing the source configuration.
+Hosted `AppTests` depends only on `ChronoFlow`, with `TEST_HOST` / `BUNDLE_LOADER` resolving
+the package symbols already in the app. Linking package products into the hosted bundle again
+duplicates resource accessors and can crash package test processes. A host regression guard
+rejects duplicate dependencies or a missing bundle loader. The trap is recorded in `AGENTS.md`.
 
-Run the generated handoff script from the repo root:
-
-```sh
-sh build/commits/simulators.sh
-```
-
-It invokes the committed runner, which can also be run directly:
+Run the committed matrix runner from the repo root:
 
 ```sh
 python3 -I Scripts/launch-simulators.py
 ```
 
-The runner executes `make generate`, cleans the build folder, then resolves each D1c device by type
-and runtime (Duo on iPhone19-4). For each device it deletes the installed app if present and restarts
-the simulator to invalidate the launch cache, then runs the hosted, window and DesignSystem suites:
+The runner executes `make generate`, cleans the build folder, then resolves each D1c device by
+type and runtime (Duo on iPhone19-4). For each device it deletes the installed app if present and
+restarts the simulator to invalidate the launch cache, then runs:
 
 ```sh
 xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData \
@@ -312,56 +302,33 @@ xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData \
   -only-testing:AppTests -only-testing:AppUITests/WindowTests -only-testing:DesignSystemTests test
 ```
 
-It continues after failed tests, missing devices or preparation errors and reports PASS/FAIL for every
-device. It always attempts the final `make check` and `make duo` after the matrix and exits nonzero
-if any step failed. Generation failure stops before simulator work. Host fixtures verify continuation,
-aggregate status, runtime/type filtering, first-available selection, cache clearing, already booted
-simulators and missing apps. No real simulator command runs in those fixture tests.
-
-This checks an instantiated storyboard. The system launch screen itself is a cached snapshot;
-screen-recorded last-system-frame/first-app-frame verification remains in Phase 8.
-
-Phase 2 task 1 host verification (2026-11-06, fix round 4): `make generate`, `make lint`,
-`make launch-resources-check` (4 resource tests and 8 runner tests), `make generators-check`
-(6 TokenGen, 6 Python font/cache, 3 AssetGen tests), plist lint and `git diff --check` passed.
-All hosted tests pass a direct Swift 6 type-check against the installed simulator SDK targeting iOS 17.0;
-this does not run UIKit or replace the matrix commands above. Full `make check` remains for the orchestrator.
+It continues after failed tests, missing devices or preparation errors and reports PASS/FAIL
+for every device. It attempts both final commands, `make check` and `make duo`, and exits nonzero
+if any step failed. Generation failure stops before simulator work. Host fixtures verify
+continuation, aggregate status, runtime/type filtering, first-available selection, cache clearing,
+already booted simulators and missing apps without executing real simulator commands.
 
 `LaunchFrameView(frame:traits:)` draws the generated skyTop and natural-size moon with the same
-superview centring constraints as the storyboard. UIKit lays out the intrinsic image at display scale;
-the hosted resize test checks that its origin is on the pixel grid, including odd pixel dimensions.
-The supplied scene traits capture the launch appearance; the view keeps that appearance while the
-underlying window changes. The frame is reusable by the overlay and Reduce Motion path in Phase 3b;
-no scene-connection or animation code is introduced in Phase 2.
+superview centring as the storyboard. The supplied scene traits capture the launch appearance,
+which stays fixed while the underlying window changes. UIKit lays out the intrinsic image at
+display scale, including windows with odd pixel dimensions.
 
-`LaunchFrameParityTests` renders both the app storyboard and the package-backed frame into 8-bit
-Display P3 buffers at the running window's scale. Every channel of every pixel must differ by no
-more than 2 bytes (2/255); alpha must be opaque and the moon must appear in the rendered buffer.
-Both frame views are hosted in windows, so neither has the unattached-reference trait trap. Each
-moon's resolved image and rendered pixels are also compared independently with the explicitly
-resolved main-bundle asset, so matching wrong appearances cannot pass whole-frame parity alone.
-Whole-frame and moon comparisons share the style and first-pixel diagnostics above.
-Further tests exercise resizing, asymmetric insets, accessibility text size, captured appearance and
-an animation-free layer tree without masks, filters or shadows. `LaunchImagesTests` checks natural
-size, image scale and bitmap dimensions in both appearances at the running device's scale. Simulator
-builds retain only that scale (`actool --filter-for-thinning-device-configuration`), so requesting both
-2× and 3× in one process fails even though the source assets contain both. The package test reads
-`UIScreen.main.scale` because a package runner may have no connected scene. The matrix runner now runs
-DesignSystemTests on every device, exercising 2× on SE and 3× on the other devices. Generator host tests
-continue to verify every uncompiled 2×/3× source PNG in both appearances. The revised package image test
-needs execution outside this sandbox.
+`LaunchFrameParityTests` renders the storyboard and package-backed frame into 8-bit Display P3
+buffers at the running window's scale. Every channel must differ by no more than 2/255; alpha
+must be opaque and the moon must appear. Both frames are hosted in windows. Independent image
+and moon-pixel checks use the explicitly resolved main-bundle reference, with first-pixel and
+maximum-error diagnostics. Further tests cover resizing, asymmetric insets, accessibility text
+size, captured appearance and a tree without animations, masks, filters or shadows.
 
-Phase 2 task 2 host verification (2026-11-06, fix round 4):
+`LaunchImagesTests` checks natural size, image scale and bitmap dimensions in both appearances
+at the running device's scale. Simulator builds thin compiled catalogs to that scale; the SE
+matrix run exercises 2× and the other devices exercise 3×. Generator tests verify all uncompiled
+source PNG variants. Host SwiftPM, generators, resource checks, plist lint, strict formatting and
+direct Swift 6 compilation/type-check against the iOS 17 simulator SDK also passed.
 
-- Host SwiftPM suite with `--disable-sandbox`, repo-local scratch/cache/config/security/temp paths
-  and `--triple arm64-apple-macosx14.0`: 11 tests passed. UIKit-specific tests are excluded on macOS.
-- Direct compilation of DesignSystem and Launch and type-check of all hosted AppTests and the UIKit
-  asset test against the installed simulator SDK targeting iOS 17.0: passed. Only D11's existing
-  CoreText deprecation warning remains.
-
-There are no Phase 2 OQ defaults to assume and no undesigned states to defer. Package simulator tests,
-full `make check` and the updated D1c matrix runner remain for the orchestrator; the cached system-frame
-recording remains in Phase 8. No physical-device task belongs to this phase.
+There are no Phase 2 defaults or undesigned states to defer. The cached system launch screen's
+last-frame/first-app-frame recording remains in Phase 8; the completed matrix checks an instantiated
+storyboard rather than that system-owned cached snapshot.
 
 ## Phase 3a pure timeline — 6 November 2026
 
@@ -425,8 +392,7 @@ Host verification for the final Phase 3a tree:
   AppTests, AppCoreTests and LaunchTests against `arm64-apple-ios17.0-simulator`: passed.
   This invokes swiftc, not xcodebuild, and does not execute UIKit tests. D11's existing CoreText
   registration deprecation is the only warning.
-- `git diff --check`: passed. Six atomic patches are replayed with `git apply --index` against HEAD
-  and checked against the final source tree byte for byte, including executable modes.
+- `git diff --check`: passed.
 
 Reproduce the host package run without writing caches outside the repo:
 
@@ -440,13 +406,7 @@ swift test --disable-sandbox --package-path Packages/ChronoFlowKit \
   --triple arm64-apple-macosx14.0
 ```
 
-The orchestrator must run the simulator matrix and complete `make check` outside the sandbox:
-
-```sh
-sh build/commits/simulators.sh
-```
-
-The wrapper invokes the committed runner, so it can also be run directly:
+Run the simulator matrix and complete `make check` using the committed runner:
 
 ```sh
 python3 -I Scripts/launch-simulators.py --timeline
@@ -480,4 +440,111 @@ AppTests still depends only on ChronoFlow with TEST_HOST/BUNDLE_LOADER.
 Simulator execution and full `make check` are pending for the orchestrator. No physical-device or
 Apple-team-dependent task belongs to Phase 3a, and no undesigned state was introduced or deferred.
 The presentation-layer solver comparison remains in Phase 3b; snapshot approval remains in Phase 3c.
-Logs from host verification are in ignored `build/phase3a-*.log`.
+
+## Phase 3b Core Animation scene — 6 November 2026
+
+`LaunchScene` maps the pure timeline to a single layer tree. Its model sampler uses separate
+static dots for the three replica opacities; live playback uses one CAReplicatorLayer with a
+200 ms instance delay. The status text is created only after font registration and only when
+requested. Both status strings use the Launch String Catalog with the specified Dutch copy.
+The launch palette's white and glow alpha ramps come from TokenGen, guarded against the splash board.
+No Gaussian integration runs while constructing the overlay.
+
+The first process connection mounts the overlay before scheduling the main window on the
+next run-loop turn. A process-owned `LaunchProcessState` gates later connections. Cold-start
+URLs and notification request/action/payload/text are captured without routing. Both the
+overlay controller and main hosting controller request a light status bar during the splash.
+The overlay uses the Phase 2 frame view as its host, replacing the static moon with the layer
+tree and allowing transparency for the eventual hand-off. Readiness, removal and Welcome
+remain in their planned phases; an ordinary launch holds the settled opening until Phase 4.
+
+Diagnostic arguments (milliseconds, nonnegative finite values up to 60000):
+
+- `-cf.mode ready`: ready exit at 1500 ms.
+- `-cf.mode slow`: status at 2000 ms, exit at `-cf.readyAt` (default 4600 ms).
+- `-cf.mode welcome`: flight from 1600 ms to the safe-area/row-height fallback, using the captured text size.
+- `-cf.freezeAt 700`: freeze the live tree at 700 ms without evaluating model samples.
+- `-cf.mainThreadStall 500`: block main once at 300 ms for the device D3 proof.
+- `-cf.reduceMotion`: force the static opening and motion-free ending.
+
+All animations keep a nonzero absolute `beginTime = t0`. Consequently the paused container's
+`timeOffset` is **t0 + elapsed seconds**, not elapsed seconds alone: the latter would precede
+the tracks' begin times. Rebuilding while frozen preserves that same epoch and animation keys.
+The hosted presentation test compares every tracked property every 100 ms from 0 to 3200 ms,
+for ready, slow, welcome and Reduce Motion, in both appearances. Position tolerance is 0.5 pt
+(including pixel alignment); scalar tolerance is 0.003. XCUITest renders the 700 ms model
+sample independently and compares normalized sRGB screenshot pixels, retaining both references and
+the live screenshot as attachments. It excludes the system status bar; tolerance remains a mean
+channel error of 1/255 with at most 0.5% of channels differing by more than 8/255. The same limits
+apply away from reference edges (adjacent channel change >8, dilated by one pixel). The best moon
+alignment shift must be ≤0.5 pt, and the moon region must retain mean error ≤1/255, including away
+from edges. No alignment is applied to the compared images. Synthetic 2×/3×
+fixtures and mutations of the real sampled moon verify rejection of a 1 pt offset and a 20% opacity
+error. No encoded image bytes are compared. Approved launch image baselines belong to Phase 3c.
+
+The orchestrator’s initial Phase 3b matrix on 2026-11-06 failed on all seven D1c devices;
+`make check` and `make duo` also failed. Round 1 addresses the four common failures:
+
+- The intro solver’s 0.95 sample is 0.9997243836889174, confirmed independently by de Casteljau
+  evaluation with bisection inversion to 1e-12. The timing comparison uses position and an
+  interior opacity range (0.1→0.9). The round-2 report below explains their precision limit.
+- A radial end point of (1, 0.5) gives a zero vertical radius. The halo was invisible. The
+  corrected end point supplies a 250 pt radius on each axis; the sun uses 127.3 pt, matching
+  the design’s farthest-corner gradient radius. Native CA pixel tests verify transparency
+  inside the halo’s 90 pt clip, visible outer glow, axis symmetry and sun falloff at 2×/3×.
+- Full-window anchor arithmetic leaves origin residuals around 1e-14 pt, including after
+  assigning frame again. Geometry assertions use 1e-9 accuracy; storyboard pixel parity
+  keeps its existing 2/255 limit.
+- The saved frozen screenshot’s moon was smaller than its model reference. A host probe
+  confirms that KVC transform.scale also scales Z, making the transform non-affine; render(in:)
+  ignores that transform. The sampler now preserves Z = 1 for planar scales. Live tracks keep
+  their specified scale key paths. Hosted tests check the actual rendered moon width and an
+  affine container during the lift-away. The screenshot tolerances are unchanged.
+
+The orchestrator’s round-2 report on 2026-11-06 confirms that all other failures are fixed;
+the CA timing comparison still fails on all seven devices. At intro(0.95), position yields
+1.0 and normalized interior opacity yields 0.9999999701976776. Both differ from the exact
+0.9997243836889174 reference, so the result is consistent with CA’s duration-dependent solver
+precision. The comparison now allows 0.0005 for CA’s solver epsilon at a 1 s duration, recorded
+in both assertion messages. Position and interior-opacity comparisons remain. Independent
+host bisection checks all four presets at 1001 progress values with a 0.0001 limit, plus the
+near-endpoint intro regression at 1e-12. The production solver and screenshot tolerances are unchanged.
+
+Run the committed runner from a clean clone:
+
+```sh
+python3 -I Scripts/launch-simulators.py --scene
+```
+
+The runner cleans and resolves all seven D1c devices by type/runtime, including Duo on iPhone19-4,
+clears their launch caches, and runs this command for each resolved destination:
+
+```sh
+xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData \
+  -onlyUsePackageVersionsFromResolvedFile -scheme ChronoFlow \
+  -destination "platform=iOS Simulator,id=$device" \
+  -only-testing:AppTests -only-testing:AppUITests/WindowTests \
+  -only-testing:DesignSystemTests -only-testing:AppCoreTests -only-testing:LaunchTests \
+  -only-testing:AppUITests/LaunchSceneTests test
+```
+
+It continues past failures, reports PASS/FAIL per device and then attempts both `make check`
+and `make duo`. The Duo target now also includes the launch scene UI test. AppTests still
+links only the app through TEST_HOST/BUNDLE_LOADER. The separate UI-test runner links Launch
+and DesignSystem to render its independent model reference; it does not inject duplicate
+package code into the hosted unit-test bundle. Assets use only the current device's scale.
+
+Host verification uses repo-local caches and the same SwiftPM invocation as Phase 3a, with
+`--scratch-path build/Phase3bHost`: **47 tests pass**. The portable screenshot-comparison XCTest
+also passes on the host, exercising 2×/3× offsets, opacity and one-byte dithering. `make format lint`,
+`make generators-check` (6 TokenGen, 6 Python font/cache, 3 AssetGen tests) and
+`make launch-resources-check` (4 resource tests, 14 runner fixtures) pass. Direct Swift 6
+module compilation and type-check of the app, all hosted tests, AppCoreTests, LaunchTests
+and AppUITests against `arm64-apple-ios17.0-simulator` pass. These commands invoke swiftc,
+not xcodebuild, and do not run UIKit. The existing D11 CoreText deprecation remains.
+
+The revised Phase 3b simulator matrix, `make check` and `make duo` await the orchestrator; no passing
+rerun is recorded. The device D3 proof remains open in `Docs/perf/2026-11-06-d3-spike.md`; no performance result is claimed.
+Defaults carried into this phase: OQ 6 dots/fade/no moon cross-fade/stars as drawn;
+OQ 10 RN fallback padding/row height; OQ 11 width-scaled bottom anchoring;
+OQ 14 proposed device budget. There are no additional undesigned screens or states.
