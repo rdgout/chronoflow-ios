@@ -256,6 +256,17 @@ class RunnerTests(unittest.TestCase):
         for value in [0, -1, 5, 'invalid']:
             with self.assertRaises(ValueError): self.execute(concurrency=value)
 
+    def test_intro_order_regression_uses_two_processes_and_separate_results(self):
+        with patch.dict(os.environ, {'SNAPSHOT_RECORD': 'all', 'TEST_RUNNER_CF_INTRO_ORDER': 'invalid'}):
+            status, output = self.execute(aliases=['se'], intro_order_check=True, reuse_build=True)
+        self.assertEqual(status, 0, output)
+        tests = self.commands_for_tests()
+        self.assertEqual(len(tests), 2)
+        environments = [e for c, e in zip(self.commands, self.environments) if c[-1] == 'test-without-building']
+        self.assertEqual([e.get('TEST_RUNNER_CF_INTRO_ORDER') for e in environments], ['fresh', 'warm'])
+        self.assertTrue(all('TEST_RUNNER_SNAPSHOT_RECORD' not in e for e in environments))
+        paths = [c[c.index('-resultBundlePath') + 1] for c in tests]
+        self.assertNotEqual(*paths)
 
 
 class ProfileTests(unittest.TestCase):

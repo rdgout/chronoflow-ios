@@ -41,7 +41,7 @@ SUITES = {
     "DesignSystemTests": {"logic": ("ExactLineTextLayoutTests", "PrimitiveTests", "SmokeTests", "TypographyTests"),
                           "matrix": ("LaunchImagesTests",)},
     "LaunchTests": {"logic": ("FlightPathTests", "LaunchGlowTests", "LaunchLayoutTests", "LaunchRadialLayerTests", "LaunchSnapshotCoverageTests",
-                              "SnapshotProfileTests", "LaunchSnapshotGeometryTests", "LaunchTimelineTests", "ReadyTimelineTests", "SmokeTests", "WelcomeTimelineTests"),
+                              "SnapshotReferenceTests", "SnapshotProfileTests", "LaunchSnapshotGeometryTests", "LaunchTimelineTests", "ReadyTimelineTests", "SmokeTests", "WelcomeTimelineTests"),
                     "matrix": ("LaunchSnapshotTests",)},
     "WelcomeTests": {"logic": ("SmokeTests",)},
     "PerfUITests": {"perf": ("LaunchPerfTests",)},
@@ -74,18 +74,20 @@ class Result:
     detail: str = ""
 
 
-def environment(record=False):
+def environment(record=False, intro_order=None):
     result = os.environ.copy()
-    for key in ("SNAPSHOT_RECORD", "TEST_RUNNER_SNAPSHOT_RECORD"):
+    for key in ("SNAPSHOT_RECORD", "TEST_RUNNER_SNAPSHOT_RECORD", "CF_INTRO_ORDER", "TEST_RUNNER_CF_INTRO_ORDER"):
         result.pop(key, None)
     if record:
         result["TEST_RUNNER_SNAPSHOT_RECORD"] = "1"
+    if intro_order:
+        result["TEST_RUNNER_CF_INTRO_ORDER"] = intro_order
     return result
 
 
-def run(command, *, log=None, capture=False, record=False, check=True):
+def run(command, *, log=None, capture=False, record=False, check=True, intro_order=None):
     print("+ " + shlex.join(map(str, command)), flush=True)
-    kwargs = dict(cwd=ROOT, text=True, env=environment(record), check=check)
+    kwargs = dict(cwd=ROOT, text=True, env=environment(record, intro_order), check=check)
     if log is None:
         return subprocess.run(command, capture_output=capture, **kwargs)
     log.parent.mkdir(parents=True, exist_ok=True)
@@ -221,14 +223,14 @@ def read_results(destination, label, selected, bundle, returncode, log):
                    "; ".join(names) or detail + "; see " + str(log.relative_to(ROOT))) for suite in selected]
 
 
-def test_pass(destination, configuration, selected, label, record=False):
+def test_pass(destination, configuration, selected, label, record=False, intro_order=None):
     bundle = destination.directory / (label + ".xcresult")
     log = destination.directory / (label + ".log")
     if bundle.exists():
         shutil.rmtree(bundle)
     log.unlink(missing_ok=True)
     try:
-        completed = run(test_command(destination, configuration, selected, bundle), log=log, record=record, check=False)
+        completed = run(test_command(destination, configuration, selected, bundle), log=log, record=record, check=False, intro_order=intro_order)
         return read_results(destination, label, selected, bundle, completed.returncode, log)
     except (subprocess.CalledProcessError, OSError) as error:
         return [Result(destination.alias, label + " " + suite, False, str(error)) for suite in selected]
@@ -239,12 +241,18 @@ def recording_selection(selected, mode, recording):
     return [s for s in selected if any(s == c or s.startswith(c + "/") for c in candidates)]
 
 
-def test_device(destination, selected, mode, recording, ready):
+def test_device(destination, selected, mode, recording, ready, intro_order_check=False):
     results = []
     try:
         prepare(destination)
     except (subprocess.CalledProcessError, OSError) as error:
         return [Result(destination.alias, suite, False, "Preparation: " + str(error)) for suite in selected]
+    if intro_order_check:
+        if not ready.get("Debug"):
+            return [Result(destination.alias, s, False, "Debug build unavailable") for s in selected]
+        for order in ("fresh", "warm"):
+            results += test_pass(destination, "Debug", selected, "order-" + order, intro_order=order)
+        return results
     record_suites = recording_selection(selected, mode, recording) if recording else []
     if record_suites and ready.get("Debug"):
         results += test_pass(destination, "Debug", record_suites, "record", record=True)
@@ -256,7 +264,7 @@ def test_device(destination, selected, mode, recording, ready):
     return results
 
 
-def main(mode="welcome", aliases=None, only=(), concurrency=None, reuse_build=False, generate=True):
+def main(mode="welcome", aliases=None, only=(), concurrency=None, reuse_build=False, generate=True, intro_order_check=False):
     started = time.monotonic()
     concurrency = int(concurrency if concurrency is not None else os.environ.get("SIM_CONCURRENCY", "4"))
     if not 1 <= concurrency <= 4:
@@ -264,6 +272,8 @@ def main(mode="welcome", aliases=None, only=(), concurrency=None, reuse_build=Fa
     aliases = list(dict.fromkeys(aliases or MATRIX))
     if set(aliases) - MATRIX.keys():
         raise ValueError("Unknown device aliases: " + " ".join(sorted(set(aliases) - MATRIX.keys())))
+    if intro_order_check:
+        only = ["AppTests/WelcomeSnapshotTests/frozenIntroOrderIndependence"]
     selections = {alias: selection(mode, alias, only) for alias in aliases}
     results = []
     if generate:
@@ -288,7 +298,7 @@ def main(mode="welcome", aliases=None, only=(), concurrency=None, reuse_build=Fa
     if recording not in ("0", "1", "launch", "all"):
         raise ValueError("SNAPSHOT_RECORD must be 0, 1, launch or all")
     with ThreadPoolExecutor(max_workers=min(concurrency, len(destinations) or 1)) as pool:
-        futures = [pool.submit(test_device, d, selections[d.alias], mode, recording if recording != "0" else None, ready) for d in destinations]
+        futures = [pool.submit(test_device, d, selections[d.alias], mode, recording if recording != "0" else None, ready, intro_order_check) for d in destinations]
         for future in futures:
             results.extend(future.result())
     print("\nSimulator results:", flush=True)
@@ -303,6 +313,7 @@ if __name__ == "__main__":
     parser.add_argument("--devices", nargs="+", choices=MATRIX, help="device aliases (default: all seven)")
     parser.add_argument("--only", nargs="+", help="target[/suite[/test]] selectors; targeted runs execute these on every requested device")
     parser.add_argument("--reuse-build", action="store_true", help="reuse the last build-for-testing products; rebuild after source/project changes")
+    parser.add_argument("--intro-order-check", action="store_true", help="compare the 2700 ms frame in fresh and warmed test processes; never overwrite baselines")
     parser.add_argument("--no-generate", action="store_true")
     parser.add_argument("--mode", choices=("welcome", "test", "snapshots"), default="welcome")
     for flag in ("timeline", "scene", "snapshots", "readiness", "welcome"):
@@ -310,6 +321,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
     mode = "launch-snapshots" if args.snapshots and not args.scene else args.mode
     try:
-        raise SystemExit(main(mode, args.devices, args.only or (), reuse_build=args.reuse_build, generate=not args.no_generate))
+        raise SystemExit(main(mode, args.devices, args.only or (), reuse_build=args.reuse_build, generate=not args.no_generate, intro_order_check=args.intro_order_check))
     except (subprocess.CalledProcessError, OSError, ValueError, KeyError, RuntimeError) as error:
         parser.exit(1, str(error) + "\n")

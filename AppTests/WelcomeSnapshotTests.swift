@@ -48,6 +48,56 @@
             }
         }
 
+        @Test(.enabled(if: ProcessInfo.processInfo.environment["CF_INTRO_ORDER"] != nil))
+        func frozenIntroOrderIndependence() async throws {
+            let order = try #require(ProcessInfo.processInfo.environment["CF_INTRO_ORDER"])
+            try #require(["fresh", "warm"].contains(order))
+            if order == "warm" {
+                try await finalWelcome()
+                try await accessibilitySizesRenderTheSameWelcomeAsXXLarge()
+                try await trackedEyebrowKeepsItsIntrinsicWidthThroughTheCap()
+                try await boardGeometryAndAsymmetricInsets()
+                try await headlineUsesTheScaledBoardPitchInBothLanguages()
+                try await positiveLeadingStylesKeepTheirExistingPixels()
+                explicitLocalesResolveTheCatalog()
+                try await renderedWelcomeContainsTextAndChangesWithAppearanceAndLanguage()
+                try await laterAppearanceAndReduceMotionShowTheFinalScreen()
+                try await frozenIntroPixelsStayFixedAcrossClockAndRenderPasses()
+                try await frozenIntro()
+            }
+            try await FontRegistry.register()
+            let intro = LaunchIntro(
+                start: .milliseconds(2300), clock: ManualLaunchClock(), frozenTime: .milliseconds(2700))
+            let host = WelcomeTestWindow(style: .light, language: "en", intro: intro)
+            defer { host.close() }
+            try await host.layout()
+            let image = try host.image()
+            let png = try #require(image.pngData())
+            let model = try #require(ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"])
+            let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            let directory = root.appendingPathComponent("build/test-results/intro-order/\(model)")
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            try png.write(to: directory.appendingPathComponent("\(order).png"), options: .atomic)
+            let memory = pixels(image)
+            let decoded = try SnapshotRaster(png: png).bytes
+            let different = zip(memory, decoded).filter { $0 != $1 }.count
+            print(
+                "Frozen intro \(order): memory-vs-PNG differing channels=\(different), bits=\(image.cgImage?.bitsPerComponent ?? 0), space=\(String(describing: image.cgImage?.colorSpace))"
+            )
+            let size = host.window.bounds.size
+            let name = "\(model)-\(Int(size.width))x\(Int(size.height))-\(Int(host.window.screen.scale))x-light-en-2700"
+            #expect(try verifyWelcomeSnapshot(of: image, named: name, record: false, testName: "frozenIntro") == nil)
+            if order == "fresh" {
+                let recorded = try verifyWelcomeSnapshot(
+                    of: image, named: "order", record: true, testName: "frame", directory: directory)
+                #expect(recorded?.hasPrefix("Record mode") == true)
+            } else {
+                #expect(
+                    try verifyWelcomeSnapshot(
+                        of: image, named: "order", record: false, testName: "frame", directory: directory) == nil)
+            }
+        }
+
         @Test func frozenIntroPixelsStayFixedAcrossClockAndRenderPasses() async throws {
             try await FontRegistry.register()
             for style in [UIUserInterfaceStyle.light, .dark] {

@@ -13,8 +13,15 @@ Codex's `workspace-write` sandbox cannot run `xcodebuild` (nested `sandbox-exec`
 ## Commands
 
 `make generate` creates the ignored Xcode project. `make format` formats owned Swift sources;
-`make check` runs lint, tests and the snapshot suites on iPhone 17e / iOS 27.2, with derived data in
-`build/DerivedData`. `Scripts/ci.sh` runs `make generate check`.
+`make check` runs lint and host checks, builds Debug and isolated Release once, then runs the combined
+test/snapshot selection on iPhone 17e / iOS 27.2 without rebuilding, with derived data in `build/DerivedData`. `Scripts/ci.sh` runs `make generate check`.
+
+Use `make matrix` for all seven D1c devices, `make duo` for Duo matrix suites, or
+`make targeted DEVICES="se duo" ONLY="AppTests/WelcomeSnapshotTests"` for fix rounds. Set
+`SIM_CONCURRENCY` to 1–4 (default 4); `REUSE_BUILD=1` skips building unchanged products for targeted runs.
+Logs/xcresults are under `build/test-results/<alias>/`. The runner uninstalls for fresh app state without
+cleaning/rebooting; logic runs only on 17e. Device profiles reduce mid-size intro/snapshot coverage,
+with full coverage on SE/17e/Duo/Pro Max. Recording remains opt-in; timing commands are in `Docs/tooling.md`.
 
 Use `make lint`, `make test` or `make snapshots` for an individual check and `make perf` for the Release
 launch metric scaffold. Phase 1's four dot-bearing primitive baselines were removed by the user's 2026-11-06 no-pattern
@@ -26,6 +33,3 @@ limitations are recorded in `Docs/tooling.md`.
 Simulators use ad-hoc signing without a team so hosted Keychain tests can run. Device signing comes from ignored `Config/Local.xcconfig`, included
 by `Config/Base.xcconfig`; copy `Config/Local.xcconfig.example` to get started. All working rules and traps,
 including the no-trailer commit rule, are inherited from `AGENTS.md`.
-
-Test-speed tooling (2026-11-06): perf(test): parallelize simulator destinations perf(test): build simulator test products once test(tooling): classify device and logic suites perf(snapshots): reduce mid-size coverage feat(tooling): add targeted simulator runs.
-Use the committed simulator runner; implementation/validation notes are in plan.md.
