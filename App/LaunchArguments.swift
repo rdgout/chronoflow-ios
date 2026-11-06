@@ -11,6 +11,7 @@ struct LaunchArguments: Equatable {
     let readyAt: Duration
     let mainThreadStall: Duration?
     let reduceMotion: Bool
+    let readiness: StubReadiness.Configuration
 
     init(_ arguments: [String] = ProcessInfo.processInfo.arguments) {
         func value(_ key: String) -> String? {
@@ -22,11 +23,34 @@ struct LaunchArguments: Equatable {
             else { return nil }
             return .seconds(number / 1000)
         }
-        mode = value("-cf.mode").flatMap(Mode.init(rawValue:))
-        freezeAt = milliseconds("-cf.freezeAt")
-        readyAt = milliseconds("-cf.readyAt") ?? .milliseconds(4600)
-        mainThreadStall = milliseconds("-cf.mainThreadStall")
+        #if DEBUG
+            mode = value("-cf.mode").flatMap(Mode.init(rawValue:))
+            freezeAt = milliseconds("-cf.freezeAt")
+            readyAt = milliseconds("-cf.readyAt") ?? .milliseconds(4600)
+            mainThreadStall = milliseconds("-cf.mainThreadStall")
+        #else
+            mode = nil
+            freezeAt = nil
+            readyAt = .milliseconds(4600)
+            mainThreadStall = nil
+        #endif
         reduceMotion = arguments.contains("-cf.reduceMotion")
+        #if DEBUG
+            let presence: StubReadiness.Session
+            switch value("-cf.session") {
+            case "in", "signedIn": presence = .signedIn
+            case "out", "signedOut": presence = .signedOut
+            case "never": presence = .never
+            default: presence = .native
+            }
+            let delay = value("-cf.readyDelay").flatMap(Double.init)
+            readiness = .init(
+                session: presence, gate: value("-cf.gate").flatMap(Gate.init(rawValue:)) ?? .app,
+                stored: value("-cf.stored").flatMap(StubReadiness.Stored.init(rawValue:)) ?? .yes,
+                readyDelay: .seconds(delay.flatMap { $0.isFinite && (0...60).contains($0) ? $0 : nil } ?? 0))
+        #else
+            readiness = .init(session: .signedOut)
+        #endif
     }
 
     static func fallbackRowHeight(compatibleWith traits: UITraitCollection) -> CGFloat {

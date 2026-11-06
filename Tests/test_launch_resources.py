@@ -54,6 +54,20 @@ class LaunchResourcesTests(unittest.TestCase):
         dependencies = configuration.split("    dependencies:\n", 1)[1]
         self.assertEqual(dependencies.strip(), "- target: ChronoFlow")
 
+    def test_simulator_keychain_host_uses_adhoc_signing_without_a_team(self):
+        project = (ROOT / "project.yml").read_text()
+        base = project.split("\nsettings:\n  base:\n", 1)[1].split("\npackages:\n", 1)[0]
+        self.assertIn('CODE_SIGN_STYLE: Automatic', base)
+        self.assertIn('"CODE_SIGNING_ALLOWED[sdk=iphonesimulator*]": YES', base)
+        self.assertIn('"CODE_SIGN_IDENTITY[sdk=iphonesimulator*]": "-"', base)
+        self.assertIn('"DEVELOPMENT_TEAM[sdk=iphonesimulator*]": ""', base)
+        app = project.split("\n  ChronoFlow:\n", 1)[1].split("\n  AppTests:\n", 1)[0]
+        self.assertIn('"CODE_SIGN_IDENTITY[sdk=iphonesimulator*]": "-"', app)
+        self.assertNotRegex(project, r'(?m)^\s+CODE_SIGNING_ALLOWED:')
+        self.assertNotRegex(project, r'(?m)^\s+CODE_SIGN_IDENTITY:')
+        self.assertNotRegex(project, r'(?m)^\s+DEVELOPMENT_TEAM:')
+        self.assertEqual((ROOT / "Config/Base.xcconfig").read_text().strip(), '#include? "Local.xcconfig"')
+
     def test_launch_is_an_unlocalised_storyboard_without_text_or_custom_code(self):
         with (ROOT / "App/Info.plist").open("rb") as source:
             info = plistlib.load(source)
