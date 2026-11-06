@@ -34,7 +34,7 @@ let package = Package(
             resources: [
                 .copy("Fixtures/auth"), .copy("Fixtures/account"), .copy("Fixtures/trips"), .copy("Fixtures/errors"),
             ],
-            swiftSettings: [.defaultIsolation(nil)]),
+            swiftSettings: [.defaultIsolation(nil), .define("CHRONOFLOW_MOCK_SCENARIOS")]),
         .target(
             name: "LocalStore", dependencies: ["AppCore", .product(name: "GRDB", package: "GRDB.swift")],
             swiftSettings: [.defaultIsolation(nil)]),

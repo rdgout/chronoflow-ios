@@ -1,5 +1,6 @@
 #if !DEBUG
     import AppCore
+    import DataAccess
     import Foundation
     import Launch
     import UIKit
@@ -24,6 +25,19 @@
     }
 
     nonisolated final class ReleaseReadinessTests: XCTestCase {
+        func testReleaseDefaultMockDoesNotSeedAccounts() async throws {
+            let store = MemoryMockStateStore()
+            let source = MockDataSource(store: store, sleep: { _ in })
+            _ = try await source.inbox()
+            XCTAssertTrue(store.load()?.accounts.isEmpty ?? true)
+            let session = try await source.signUp(
+                RegisterInput(
+                    name: "Release test", email: "release@example.test", password: "ReleasePassword12!",
+                    passwordConfirmation: "ReleasePassword12!", deviceID: UUID().uuidString, deviceName: "iPhone"))
+            let accounts = try XCTUnwrap(store.load()?.accounts)
+            XCTAssertEqual(Set(accounts.keys), [session.account.id])
+        }
+
         @MainActor
         func testReleaseKeepsOnlyReadyPlaybackAndStallDiagnostics() {
             let parsed = LaunchArguments([

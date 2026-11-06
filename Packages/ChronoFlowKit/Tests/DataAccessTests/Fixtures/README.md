@@ -1,6 +1,6 @@
 # Sanitized response fixtures
 
-Derived from read-only chronoflow-new PHP DTOs, request rules, controller responses and API feature assertions on 6 November 2026, including branch feat/mobile-api-passkeys at 841be4bd. No live API capture. Tokens, passwords, signed inputs, email addresses and credential assertions are artificial test values. RN fixture credentials appear only in named test scenarios.
+Derived from read-only chronoflow-new PHP DTOs, request rules, controller responses and API feature assertions on 6 November 2026, including branch feat/mobile-api-passkeys at 841be4bd. No live API capture. Tokens, passwords, signed inputs, email addresses and credential assertions are artificial test values. RN fixture credentials are shared by named test scenarios and the Debug app mock seed.
 
 Sources: app/Data/Api/Api{Session,Account,AccountSnapshot,AccountSettings,TripListItem,TripDetail,TripCheckResult,Passkey*}.php; app/Http/Requests/Api/V1; tests/Feature/Api; docs/ui-plan/phase-18-mobile-api-passkeys.md (iOS handoff).
 
@@ -13,6 +13,6 @@ Exact assertion references:
 - `ErrorEnvelopeTest` and the passkey handoff supply error codes, fields and arguments. Error fixture messages are artificial except where a sentence key itself is under test; no real response body or secret has been captured.
 - `errors/wrong_credentials.json` combines `Actions/Api/VerifyLoginCredentials.php`'s exact email-field key with `ApiExceptionResponse.php`'s 422 envelope. The wrong-password parity regression requires API and mock to produce the same `DataFailure`.
 - `DataSourceParityTests.invalidSettingsReturnEveryField` synthesizes multi-field 422 envelopes from `PatchRemindersRequest`, `PatchPreferencesRequest` and `BodyClockRules::messageKeys`, using the invalid values lead_min=45/light="x", time_format="13"/show_optional_items="x" and malformed bedtime/wake times. Both API and mock must retain all failing fields.
-- `Fixtures/MockScenarios.swift` explicitly names RN's `password`, two-factor code and recovery code as test scenario values. Production mock starts empty, with no built-in credential or assertion provider that accepts sign-in.
+- `Sources/DataAccess/Mock/MockScenarioValues.swift` owns RN's sign-in scenario values, shared with tests through the fixture symlink. The Debug app mock seeds RN's verified demo/two-factor accounts and seven trips; Release excludes the seed. `Fixtures/MockScenarios.swift` deliberately overlays these credentials on the sanitized API snapshots/trip subsets for contract parity tests. The default mock assertion provider still accepts no passkeys.
 
 Mock verification uses an independent fake-server HMAC key, persisted across restart; these inputs are never valid production links. Mock passkey assertions are accepted only by the injected scenario provider and do not exercise WebAuthn cryptography. Production policy's uncompromised-password service is deliberately not called by mock tests.

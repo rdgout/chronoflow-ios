@@ -4,6 +4,46 @@ Toolchain: Xcode 27.2 (27B52), Apple Swift 6.4.2, XcodeGen 2.46.0 at `/opt/homeb
 The app and package use Swift 6 language mode and an iOS 17.0 deployment target. UI modules default to
 MainActor; AppCore is nonisolated.
 
+## Trying the app on a simulator
+
+Run the Debug app with the default `CHRONOFLOW_DATA_SOURCE = mock`. Its fake server starts with
+the same accounts, settings and seven trip/plan fixtures as RN's mock:
+
+| Account | Email | Password | Two-factor code | Recovery code |
+|---|---|---|---|---|
+| Verified demo | `demo@example.com` | `password` | — | — |
+| Verified two-factor | `twofactor@example.com` | `password` | `123456` | `AbCdEf1234-GhIjKl5678` |
+
+Enter these values on Sign in; the form starts empty. Two-factor sign-in reaches its route seam
+until Phase 10b's screen is implemented. Both accounts start with walkthrough unseen and the RN
+accepted policy versions. Trip dates stay exactly as RN defines them (October 2026); progress
+and offline eligibility are calculated at initial seeding time.
+
+The seed and its fixture payload compile only in Debug; Release/Perf contain neither. API selection
+never constructs the mock. The seed loads lazily on the mock actor after the splash commit and is
+saved in `Application Support/ChronoFlowMock/Server/state.json`. Missing, empty, incompatible or
+unreadable JSON from an older shape reseeds, as in RN; filesystem errors still fail the request.
+Current saved accounts, settings, sessions and consumed recovery codes survive relaunch. Explicit
+empty/custom test seeds retain their existing persistence behavior and never acquire demo accounts.
+
+`Sources/DataAccess/Mock/MockScenarioValues.swift` owns the shared sign-in values. The test fixture
+path symlinks that file and enables `CHRONOFLOW_MOCK_SCENARIOS` only for DataAccessTests, so Release
+host tests can use the scenarios without compiling credentials into the Release library.
+`MockAppSeed+Fixtures.swift` embeds RN's `fixture-data.ts` default settings (including
+`createMockAccount`'s optional-items override), `fixtures/trips.ts` and all seven `fixtures/plans`
+payloads, read on 6 November 2026. They are mock data, separate from the sanitized API contract
+fixtures. Seed trip details retain the native optional form seam; no wizard is implemented here.
+
+Verify on the host with `sh Scripts/host-tests.sh --filter DataSourceSelectionTests`.
+Hosted composition: `make targeted DEVICES="17e" ONLY="AppTests/DataSourceFactoryHostedTests"`.
+Release seed exclusion runs with `ReleaseReadinessTests` in `make check`'s isolated Release pass.
+Verification in this worktree: `make quick` passed (307 Swift tests, three signing checks, ten
+resource checks and 53 runner fixtures); the final focused suite passed nine host tests, including
+recovery-code consumption across restart. Four Release host selection tests passed. All 14 Release
+DataAccess object files were checked for absent demo identities, recovery code, trip fixture data
+and seed symbols. New Debug/Release hosted tests type-check for iOS 17 against the existing app
+modules; hosted execution remains open. No xcodebuild or simulator was run for this fix.
+
 ## Test tiers — user decision 2026-11-06
 
 The user requests **skipping the seven-simulator matrix unless asked**. This section supersedes
