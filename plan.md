@@ -565,6 +565,9 @@ mismatch on iPhone18,4. This round's revised comparison, make check and make duo
   Files: `Sources/Welcome/IntroItem.swift`, `Sources/Welcome/WelcomeView.swift`, `AppTests/WelcomeSnapshotTests.swift`.
   Test: repeated frozen pixel regression written; simulator execution remains open.
 
+- [x] Extend the committed Welcome matrix runner's opt-in recording: `SNAPSHOT_RECORD=1` records Welcome only, `launch` records launch only, `all` records both. Keep all seven record passes before comparison, isolated Release comparison after Debug failures, cleared recording flags and final make check/make duo. Add selection and failure-continuation fixtures.
+  Files: `Scripts/launch-simulators.py`, `Tests/test_launch_simulators.py`.
+
 ### Phase 4 review fixes (after Phase 5)
 
 - [x] Keep `-cf.mode ready` and validated `-cf.mainThreadStall` diagnostics in Release for the D3 procedure. Keep slow/Welcome modes, freeze, readyAt and all readiness overrides Debug-only; Release readiness remains signed out without Keychain access or route-name placeholders. Extend the isolated Release tests and document why the device proof can observe the 500 ms stall.

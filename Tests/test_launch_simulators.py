@@ -332,6 +332,43 @@ class LaunchSimulatorsTests(unittest.TestCase):
                 self.assertNotIn("TEST_RUNNER_SNAPSHOT_RECORD", environment)
         self.assertEqual(self.commands[-2:], [["make", "check"], ["make", "duo"]])
 
+    def test_welcome_supports_launch_only_and_combined_recording(self):
+        for mode in ["launch", "all"]:
+            with self.subTest(mode=mode):
+                self.setUp()
+                with patch.dict(os.environ, {"SNAPSHOT_RECORD": mode, "TEST_RUNNER_SNAPSHOT_RECORD": "1"}):
+                    status, output = self.execute(welcome=True)
+                self.assertEqual(status, 0)
+                tests = [(c, e) for c, e in zip(self.commands, self.environments) if c[0] == "xcodebuild" and c[-1] == "test"]
+                self.assertEqual(len(tests), 21)
+                for index, (command, environment) in enumerate(tests):
+                    selected = [c for c in command if c.startswith("-only-testing:")]
+                    if index < 7:
+                        expected = ["-only-testing:LaunchTests/LaunchSnapshotTests"]
+                        if mode == "all":
+                            expected += ["-only-testing:AppTests/WelcomeSnapshotTests", "-only-testing:AppTests/WelcomeSnapshotGuardTests"]
+                        self.assertEqual(selected, expected)
+                        self.assertIn("platform=iOS Simulator,id=device-" + str(index), command)
+                    self.assertEqual(environment.get("TEST_RUNNER_SNAPSHOT_RECORD"), "1" if index < 7 else None)
+                    self.assertNotIn("SNAPSHOT_RECORD", environment)
+                for label, _, _ in runner.MATRIX:
+                    self.assertIn("PASS " + label + " record\n", output)
+                    self.assertIn("PASS " + label + " compare\n", output)
+                self.assertEqual(self.commands[-2:], [["make", "check"], ["make", "duo"]])
+
+    def test_combined_record_failure_continues_comparison_release_and_final_checks(self):
+        self.failure = lambda c: c[0] == "xcodebuild" and c[-1] == "test" and "platform=iOS Simulator,id=device-0" in c and "ChronoFlow" in c
+        with patch.dict(os.environ, {"SNAPSHOT_RECORD": "all"}):
+            status, output = self.execute(welcome=True)
+        self.assertEqual(status, 1)
+        self.assertIn("FAIL iPhone SE (3rd gen) record:", output)
+        self.assertIn("FAIL iPhone SE (3rd gen) compare:", output)
+        self.assertIn("PASS iPhone Duo record\n", output)
+        self.assertIn("PASS iPhone Duo compare\n", output)
+        releases = [c for c in self.commands if "ReadinessRelease" in c and c[-1] == "test"]
+        self.assertEqual(len(releases), 7)
+        self.assertEqual(self.commands[-2:], [["make", "check"], ["make", "duo"]])
+
     def test_welcome_debug_failure_still_runs_isolated_release_for_that_device(self):
         self.failure = lambda c: c[0] == "xcodebuild" and c[-1] == "test" and "platform=iOS Simulator,id=device-0" in c and "ChronoFlow" in c
         with patch.dict(os.environ, {"SNAPSHOT_RECORD": "0"}):

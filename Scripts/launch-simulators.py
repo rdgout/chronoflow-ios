@@ -60,10 +60,15 @@ def test_device(device_type, runtime, devices, timeline=False, scene=False, snap
     device["state"] = "Booted"
     run(["xcrun", "simctl", "bootstatus", udid, "-b"])
     if welcome and snapshot_record:
+        suites = []
+        if snapshot_record in ("launch", "all"):
+            suites.append("-only-testing:LaunchTests/LaunchSnapshotTests")
+        if snapshot_record not in ("launch",):
+            suites.extend(["-only-testing:AppTests/WelcomeSnapshotTests", "-only-testing:AppTests/WelcomeSnapshotGuardTests"])
         run(XCODEBUILD + [
             "-destination", "platform=iOS Simulator,id=" + udid,
-            "-testLanguage", "en", "-testRegion", "US", "-only-testing:AppTests/WelcomeSnapshotTests", "-only-testing:AppTests/WelcomeSnapshotGuardTests", "test",
-        ], snapshot_record=True)
+            "-testLanguage", "en", "-testRegion", "US",
+        ] + suites + ["test"], snapshot_record=True)
         return
     if readiness or welcome:
         destination = [
@@ -132,8 +137,9 @@ def main(timeline=False, scene=False, snapshots=False, readiness=False, welcome=
 
     record("list simulators", discover)
     passes = [("compare", False)] if snapshots or welcome else [("", False)]
-    if (snapshots or welcome) and os.environ.get("SNAPSHOT_RECORD") == "1":
-        passes.insert(0, ("record", True))
+    recording = os.environ.get("SNAPSHOT_RECORD")
+    if (snapshots or welcome) and recording in ("1", "launch", "all"):
+        passes.insert(0, ("record", recording))
     for pass_name, snapshot_record in passes:
         for label, device_type, runtime in MATRIX:
             result_label = f"{label} {pass_name}" if pass_name else label
@@ -152,7 +158,7 @@ if __name__ == "__main__":
     parser.add_argument("--scene", action="store_true", help="also run Phase 3b scene presentation and UI suites on each device")
     parser.add_argument("--snapshots", action="store_true", help="compare Phase 3c snapshots on every D1c device (SNAPSHOT_RECORD=1 records first)")
     parser.add_argument("--readiness", action="store_true", help="run Phase 4 hand-off, readiness and existing scene suites on every D1c device")
-    parser.add_argument("--welcome", action="store_true", help="compare Phase 5 Welcome and intro snapshots plus hosted/UI checks on every D1c device (SNAPSHOT_RECORD=1 records Welcome only first)")
+    parser.add_argument("--welcome", action="store_true", help="compare Phase 5 Welcome and intro snapshots plus hosted/UI checks on every D1c device (SNAPSHOT_RECORD=1 records Welcome; launch records launch; all records both)")
     args = parser.parse_args()
     if args.welcome and (args.readiness or args.snapshots):
         parser.error("--welcome includes its own snapshot and readiness comparison suites")
