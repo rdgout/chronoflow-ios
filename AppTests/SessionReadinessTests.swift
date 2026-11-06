@@ -38,4 +38,36 @@ nonisolated final class SessionReadinessTests: XCTestCase {
         _ = try await native.controller.signOut(discardPending: true, unauthorized: true)
         await native.stopObserving()
     }
+    @MainActor
+    func testClosedAccountCannotSilentlyDiscardPendingChanges() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("closed-outbox-" + UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let credentials = KeychainSessionStore(service: "net.chronoflow.tests.closed." + UUID().uuidString)
+        let native = NativeSessionController(applicationSupport: root, namespace: .mock, credentials: credentials)
+        let id = "019a562b-8000-7000-8000-000000000001"
+        let account = SessionAccount(
+            id: id, name: "Test", email: "a@example.test", hasVerifiedEmail: true,
+            policies: AccountPolicies(termsVersion: "1", privacyVersion: "1"), walkthroughSeen: false)
+        try await native.controller.accept(SessionResult(token: "test-token", account: account))
+        let active = await native.accounts.activeDatabase()
+        let database = try XCTUnwrap(active)
+        _ = try await OutboxRepository(database: database).enqueue(.walkthrough)
+        try await native.accounts.close()
+        // A new controller with credentials but no restored account also takes the closed-store path.
+        let unrestored = NativeSessionController(applicationSupport: root, namespace: .mock, credentials: credentials)
+        do {
+            _ = try await unrestored.controller.signOut(discardPending: false)
+            XCTFail("An unknown pending count must prevent voluntary deletion")
+        } catch { XCTAssertEqual(error as? StoreFailure, .closed) }
+        let stored = try await credentials.readStoredSession()
+        XCTAssertEqual(stored?.accountId, id)
+        try await native.accounts.open(accountID: AccountID(id))
+        let reopenedActive = await native.accounts.activeDatabase()
+        let reopened = try XCTUnwrap(reopenedActive)
+        let pending = try await OutboxRepository(database: reopened).pending()
+        XCTAssertEqual(pending.count, 1)
+        try await native.accounts.close()
+        _ = try await unrestored.controller.signOut(discardPending: true)
+    }
+
 }

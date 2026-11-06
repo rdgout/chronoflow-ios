@@ -52,7 +52,7 @@ final class NativeSessionController {
             try await wiper.recover()
         }
         teardown.pendingCount = {
-            guard let database = await accounts.activeDatabase() else { return 0 }
+            guard let database = await accounts.activeDatabase() else { throw StoreFailure.closed }
             return try await OutboxRepository(database: database).pending().count
         }
         teardown.flush = { _ = try await sync?.refreshNow() }
