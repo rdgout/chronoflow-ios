@@ -75,7 +75,6 @@ import Observation
     private func accept(_ result: SessionResult) async throws {
         try Task.checkCancellation()
         try await session.accept(result)
-        try Task.checkCancellation()
         password = ""
         await route(AuthNavigation.route(for: result.account))
     }

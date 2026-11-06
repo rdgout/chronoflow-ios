@@ -126,6 +126,68 @@ func authTestSource(verified: Bool = true, twoFactor: Bool = false) throws -> Mo
         #expect(AuthNavigation.route(for: account(verified: true, accepted: "2", seen: false)) == .walkthrough)
         #expect(AuthNavigation.route(for: account(verified: true, accepted: "2", seen: true)) == .today)
     }
+
+    @Test(arguments: [true, false]) func cancellationDuringCommittedSessionSyncStillRoutes(_ verified: Bool)
+        async throws
+    {
+        let gate = AcceptedSessionSyncGate()
+        let credentials = AcceptedSessionCredentials()
+        let session = SessionController(
+            credentials: credentials, accounts: AcceptedSessionAccounts(), requestSync: { _ in await gate.wait() })
+        var routes: [Route] = []
+        let model = SignInModel(
+            source: try authTestSource(verified: verified), session: session,
+            deviceIdentity: { "0199a3c0-0000-7000-8000-000000000001" }, deviceName: "test",
+            route: { routes.append($0) })
+        model.editEmail("demo@example.com")
+        model.editPassword("Password123!")
+        let request = Task { await model.submitPassword() }
+        await gate.waitUntilEntered()
+        let data = try #require(await credentials.data)
+        let stored = try #require(StoredSession.parse(data))
+        #expect(await session.presence == .signedIn(accountID: stored.accountId))
+        #expect(routes.isEmpty)
+        request.cancel()
+        await gate.release()
+        await request.value
+        #expect(routes == [verified ? .today : .verify])
+        #expect(model.password.isEmpty && !model.form.busy && model.form.banner == nil)
+        #expect(model.sessionFailure == nil)
+        #expect(await session.storedSession == stored)
+    }
+}
+
+private actor AcceptedSessionCredentials: SessionStore {
+    private(set) var data: Data?
+    func read() -> Data? { data }
+    func write(_ data: Data) { self.data = data }
+    func delete() { data = nil }
+}
+
+private actor AcceptedSessionAccounts: SessionAccountStore {
+    func open(accountID: AccountID) {}
+    func upsert(_ account: SessionAccount) {}
+    func close() {}
+}
+
+private actor AcceptedSessionSyncGate {
+    private var entered = false
+    private var released = false
+    private var entryWaiter: CheckedContinuation<Void, Never>?
+    private var releaseWaiter: CheckedContinuation<Void, Never>?
+    func wait() async {
+        entered = true
+        entryWaiter?.resume()
+        if !released { await withCheckedContinuation { releaseWaiter = $0 } }
+    }
+    func waitUntilEntered() async {
+        if !entered { await withCheckedContinuation { entryWaiter = $0 } }
+    }
+    func release() {
+        released = true
+        releaseWaiter?.resume()
+        releaseWaiter = nil
+    }
 }
 
 actor IdentityGate {
