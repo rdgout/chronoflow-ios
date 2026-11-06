@@ -59,6 +59,7 @@ let package = Package(
             dependencies: ["DesignSystem", "SnapshotSupport"],
             swiftSettings: [.defaultIsolation(MainActor.self)]
         ),
+        .testTarget(name: "ToolingTests", swiftSettings: [.defaultIsolation(nil)]),
         .testTarget(name: "AppCoreTests", dependencies: ["AppCore"], swiftSettings: [.defaultIsolation(nil)]),
         .testTarget(
             name: "LaunchTests",

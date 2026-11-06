@@ -89,6 +89,34 @@ nonisolated final class WelcomeHandOverTests: XCTestCase {
     }
 
     @MainActor
+    func testMeasuredWelcomeLandingAtDefaultAndAX5() async throws {
+        try await FontRegistry.register()
+        for size in [DynamicTypeSize.large, .accessibility5] {
+            let host = WelcomeTestWindow(style: .light, typeSize: size)
+            defer { host.close() }
+            try await host.layout()
+            let target = try XCTUnwrap(host.moonAnchor.frame)
+            let launch = LaunchScene(
+                size: host.window.bounds.size, traits: host.controller.traitCollection, reduceMotion: false)
+            host.controller.view.layer.addSublayer(launch.container)
+            launch.play(
+                launch.timeline.withWelcomeExit(at: .milliseconds(1600), size: launch.size, moonTarget: target),
+                at: CACurrentMediaTime())
+            launch.freeze(at: .milliseconds(2300))
+            CATransaction.flush()
+            let deadline = ContinuousClock.now + .seconds(10)
+            while launch.layer(.moon).presentation() == nil, ContinuousClock.now < deadline {
+                try await Task.sleep(for: .milliseconds(10))
+            }
+            let moon = try XCTUnwrap(launch.layer(.moon).presentation())
+            XCTAssertEqual(moon.position.x, target.midX, accuracy: 0.5)
+            XCTAssertEqual(moon.position.y, target.midY, accuracy: 0.5)
+            XCTAssertEqual(
+                (moon.value(forKeyPath: "transform.scale.x") as? Double ?? 0) * 104, target.width, accuracy: 0.5)
+        }
+    }
+
+    @MainActor
     private func waitForRoot(of delegate: SceneDelegate) async throws -> UIWindow {
         try await waitUntil("Root window did not mount after font registration") { delegate.window != nil }
         let window = try XCTUnwrap(delegate.window)

@@ -55,11 +55,18 @@ SUITES = {'AppTests': {'logic': ('LaunchArgumentLogicTests',
                          'WelcomeHandOverTests',
                          'WelcomeSnapshotTests',
                          'DeviceGeometrySmokeTests',
+                         'LaunchImageMutationTests',
                          'LaunchSnapshotTests',
-                         'SnapshotContainerTests'),
+                         'SnapshotContainerTests',
+                         'WelcomeAuditPolicyTests'),
               'release': ('ReleaseReadinessTests',)},
- 'AppUITests': {'logic': ('ReadinessTests', 'WelcomeLogicTests', 'LaunchImageComparisonTests', 'UIWaitTests'),
-                'matrix': ('WindowTests', 'LaunchSceneTests', 'LaunchSceneDarkTests', 'WelcomeTests')},
+ 'AppUITests': {'logic': ('ReadinessTests', 'WelcomeLogicTests'),
+                'matrix': ('LaunchSceneTests',
+                           'LaunchSceneDarkTests',
+                           'WelcomeTests',
+                           'WelcomeEnglishAccessibilityTests',
+                           'WelcomeDutchAccessibilityTests',
+                           'LaunchToWelcomeTests')},
  'AppCoreTests': {'host': ('CatalogTests',
                            'CubicBezierTests',
                            'LaunchCoordinatorTests',
@@ -92,6 +99,7 @@ SUITES = {'AppTests': {'logic': ('LaunchArgumentLogicTests',
                            'DeviceGeometryTests')},
  'WelcomeTests': {'logic': ('SmokeTests', 'WelcomeGeometryTests')},
  'PerfUITests': {'perf': ('LaunchPerfTests',)},
+ 'ToolingTests': {'host': ('LaunchImageComparisonTests', 'UIWaitTests')},
  'DataAccessTests': {'host': ('ContractsTests',
                               'DataSourceSelectionTests',
                               'APIClientTests',
@@ -124,7 +132,7 @@ XCODEBUILD_COMMON = ["xcodebuild", "-project", "ChronoFlow.xcodeproj", "-derived
                      "-onlyUsePackageVersionsFromResolvedFile"]
 
 # Device-wide mutations must be registered here; launch/window-scoped traits are clone-safe.
-SERIAL_TESTS = ('AppUITests/LaunchSceneTests', 'AppUITests/LaunchSceneDarkTests', 'AppUITests/WelcomeTests', 'AppUITests/WelcomeLogicTests')
+SERIAL_TESTS = ('AppUITests/LaunchSceneTests', 'AppUITests/LaunchSceneDarkTests', 'AppUITests/LaunchToWelcomeTests')
 PARALLEL_TARGETS = {"AppTests", "AppUITests"}
 
 

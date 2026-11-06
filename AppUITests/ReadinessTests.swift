@@ -2,27 +2,10 @@ import XCTest
 
 nonisolated final class ReadinessTests: XCTestCase {
     @MainActor
-    func testSignedOutHandsOffToWelcome() {
-        let app = launch(["-cf.session", "out"])
-        XCTAssertTrue(app.staticTexts["welcome.wordmark"].waitForExistence(timeout: 6))
-        XCTAssertFalse(app.images["launch.opening"].exists)
-    }
-
-    @MainActor
     func testSignedInReadyHandsOffToToday() {
         let app = launch(["-cf.session", "in", "-cf.stored", "yes"])
         XCTAssertTrue(app.staticTexts["route.today"].waitForExistence(timeout: 6))
         XCTAssertFalse(app.images["launch.opening"].exists)
-    }
-
-    @MainActor
-    func testResolvedGatesDoNotWaitForData() {
-        for gate in ["terms", "verify", "walkthrough"] {
-            let app = launch(["-cf.session", "in", "-cf.gate", gate, "-cf.stored", "never"])
-            XCTAssertTrue(app.staticTexts["route.\(gate)"].waitForExistence(timeout: 6))
-            XCTAssertFalse(app.images["launch.opening"].exists)
-            app.terminate()
-        }
     }
 
     @MainActor
@@ -55,13 +38,11 @@ nonisolated final class ReadinessTests: XCTestCase {
     }
 
     @MainActor
-    func testUnknownSessionDefaultsToWelcomeAndReduceMotionCanSkipTheOpeningWait() {
+    func testUnknownSessionDefaultsToWelcome() {
         let unknown = launch(["-cf.session", "never"])
         XCTAssertTrue(unknown.staticTexts["welcome.wordmark"].waitForExistence(timeout: 12))
         unknown.terminate()
-        let reduced = launch(["-cf.session", "out", "-cf.reduceMotion"])
-        XCTAssertTrue(reduced.staticTexts["welcome.wordmark"].waitForExistence(timeout: 4))
-        XCTAssertFalse(reduced.images["launch.opening"].exists)
+
     }
 
     @MainActor

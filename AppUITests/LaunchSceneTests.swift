@@ -27,7 +27,8 @@ nonisolated final class LaunchSceneTests: XCTestCase {
         app.launch()
         let opening = app.images["launch.opening"]
         XCTAssertTrue(opening.waitForExistence(timeout: 10))
-        XCTAssertFalse(opening.label.isEmpty)
+        XCTAssertEqual(opening.label, "ChronoFlow is opening")
+        XCTAssertEqual(opening.frame, app.frame)
         let screenshot = opening.screenshot()
         let actual = try XCTUnwrap(screenshot.image.cgImage)
         let size = opening.frame.size
@@ -75,31 +76,6 @@ nonisolated final class LaunchSceneTests: XCTestCase {
                 XCTAssertFalse(metrics.passes, "The opposite appearance must fail parity")
                 XCTAssertGreaterThan(
                     metrics.mean, 8, "The opposite appearance must differ clearly: \(metrics.description)")
-            }
-            if style == expectedStyle {
-                let reference = scene.timeline.sample(at: .milliseconds(700))
-                for key in ["position", "opacity"] {
-                    scene.apply(reference)
-                    if key == "position" { moon.position.x += 1 } else { moon.opacity *= 0.8 }
-                    let mutant = UIGraphicsImageRenderer(size: size, format: format).image { context in
-                        scene.container.render(in: context.cgContext)
-                    }
-                    let mutantBytes = try pixels(XCTUnwrap(mutant.cgImage))
-                    let mutation = LaunchImageComparison.measure(
-                        mutantBytes, expected, width: actual.width, region: moonRegion)
-                    XCTAssertFalse(
-                        mutation.passes, "The real sampled moon must reject a 1 pt offset or 20% opacity error: \(key)")
-                    if key == "opacity" {
-                        XCTAssertGreaterThan(
-                            mutation.mean, 1, "The actual moon-region mean assertion must reject wrong opacity")
-                    }
-                    if key == "position" {
-                        let offset = LaunchImageComparison.bestShift(
-                            mutantBytes, expected, width: actual.width, region: moonRegion,
-                            radius: Int(ceil(1.5 * scale)))
-                        XCTAssertEqual(CGFloat(offset.x) / scale, 1, accuracy: 0.5 / scale)
-                    }
-                }
             }
             let attachment = XCTAttachment(image: model)
             attachment.name = "sample-700-\(style == .dark ? "dark" : "light")"

@@ -61,6 +61,7 @@ targets:
     sources:
       - path: AppTests
         excludes: [__Snapshots__]
+      - path: Packages/ChronoFlowKit/Tests/ToolingTests/LaunchImageComparison.swift
       - path: Packages/ChronoFlowKit/Tests/LaunchTests/LaunchSnapshotCase.swift
       - path: Packages/ChronoFlowKit/Tests/SnapshotSupport
         excludes: [profiles.json]
@@ -76,7 +77,11 @@ targets:
   AppUITests:
     type: bundle.ui-testing
     platform: iOS
-    sources: [AppUITests]
+    sources:
+      - path: AppUITests
+      - path: Packages/ChronoFlowKit/Tests/ToolingTests/LaunchImageComparison.swift
+      - path: Packages/ChronoFlowKit/Tests/ToolingTests/FrameStability.swift
+      - path: AppTests/WelcomeAuditPolicy.swift
     settings:
       TARGETED_DEVICE_FAMILY: "1"
       SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO
