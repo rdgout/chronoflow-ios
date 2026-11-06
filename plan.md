@@ -1154,172 +1154,39 @@ Stack on 9c. No UI. OQ 29 leaves voluntary pending-change confirmation as a retu
 
 ### Phase 10: Sign in and two-factor (`feat/phase-10-sign-in`)
 
-Originally ported early onto 9a/9b by user authorization on 2026-11-06; now integrated onto completed 9a–9d and the test tiers. OQ 23/24/30 defaults are explicitly assumed for this round, recorded per task below; this does not settle those questions. OQ 28 is resolved by the user 2026-11-06 with the RN → backend → translated copy rule. Two rounds. OQ 20 is settled: retain the designed passkey button/divider and implement native sign-in. Resolve OQ 23 (offline variant), 24 (unfinished destination) and 30 (hidden-field notices) **before 10a**; the copy blocker OQ 28 is resolved. No default permits an invented state. A `.verify` result may use its existing route seam until 11d. Verified success goes to `.today` seam; Today implementation is excluded.
+Integrated onto completed 9a–9d and the test tiers. OQ 23/30: default kept (user informed 2026-11-06); OQ 24's unfinished-destination seam remains the assumed policy. OQ 28 is resolved with RN → backend → translated Dutch copy. OQ 20 retains the designed passkey button/divider and native sign-in. No default permits an invented state. Unverified success uses `.verify` until 11d; eligible verified success uses `.today`. Today implementation is excluded.
 
 #### Phase 10a: Native Auth shell, controls and Sign in (`feat/phase-10-sign-in`)
 
 - [ ] Export AuthSignIn none/wrong/locked/server, AuthStates banner references and Field/Button/Notice states, both appearances. Extend generated tokens/metrics/typography/shadow output; add `Auth` UI target with `AuthScreen`, `AuthBrand`, `AuthField`, `AuthButton`, `AuthBanner`, `AuthNotice` using native controls. Implement scroll/focus/error/submit handling and `AuthFormModel` classification/lock. Catalog includes every introduced English/Dutch string together; no sample credentials.
-  Implementation note (2026-11-06): shared native controls, generated semantic colors/OKLab banner mixes, metrics/type/shadow and board glyphs; plain-sky safe-area scroll shell, measured keyboard reveal, form lock/classification and announcement deduplication implemented. Standalone HTML references exported; the user has now supplied host Chrome PNG exports and recorded native references (see the visual-acceptance fix round below). Host tests cover form, mapping, catalog and geometry; corrected hosted execution, re-recording and final visual acceptance remain orchestrator work. (OQ 23 default assumed, confirm): offline has no banner and submit stays enabled. (OQ 30 default assumed, confirm): hidden/unknown field failures use the designed server banner, no notice. OQ 28 resolved (user 2026-11-06): all six shared rows now ship with exact backend en/nl catalog values and displayed-field mapping; tests cover both languages and retain the hidden-field fallback. The task stays unticked for corrected visual/snapshot acceptance, hosted checks and keyboard overflow acceptance (OQ 32); OQ 23/30 policies remain assumed, not settled. Later-phase copy is recorded below and ships with its phase; other design/contract blockers still apply.
+  Implementation note (2026-11-07): shared native controls, generated tokens/type/shadow/glyphs, plain-sky safe-area scroll shell, measured keyboard reveal, form lock/error mapping and announcement deduplication are implemented. English/Dutch catalogs include OQ 28's six shared backend messages. OQ 23 and OQ 30: **default kept (user informed 2026-11-06)** — no offline banner, submit stays enabled; hidden/unknown-field failures use the designed server banner. Board exports, 896 recorded references, hosted checks and visual acceptance are complete (results below). **Only the SE/Duo real-keyboard run at xxLarge remains for this task (OQ 32); leave unticked.**
   Files: `_design/frames/auth/**`, `_design/frames/README.md`, `Tools/TokenGen/**`, `Tools/AssetGen/**`, `Sources/DesignSystem/Resources/Auth.xcassets/**`, `Sources/DesignSystem/{AuthTokens.generated,AuthTypography,AuthControls}.swift`, `Sources/Auth/{AuthScreen,AuthBrand,AuthFormModel}.swift`, `Sources/Auth/Resources/Localizable.xcstrings`, `Packages/ChronoFlowKit/Package.swift`, `project.yml`.
   Test: `Tests/AuthTests/{AuthFormModel,AuthFailureMapping,Catalog}Tests.swift`, TokenGen/AssetGen freshness, glyph and OKLab mix tests, `AppTests/{AuthControl,AuthLayout,AuthSnapshot}Tests.swift`: busy double-submit lock/edit clearing/field binding, contrast tokens, keyboard/focus, accessible labels and announcement deduplication. Verify **Matrix A** against 375 × 812 zero-inset board plus actual safe-area fixtures; no cap bypass, dots or glass imitation.
 - [x] Implement `SignInView`/model and Auth navigation stack; mount it for existing `.signIn` from Welcome. Password attempt always clears password, error variants match AuthStates, links enter guest/Forgot/Sign up seams. Two-factor result holds challenge and pushes a route seam until 10b; session result calls the one session controller, honors verify/terms/walkthrough/app gates and OQ 24's `.today` destination policy.
-  Implementation note (2026-11-06): password flow mounts from Welcome, starts empty, clears password on attempts, serializes submissions, maps designed failures, retains email, keeps challenge/navigation in memory and accepts through the existing SessionController once. Forgot/Sign up/Two-factor remain Debug route diagnostics and Release seams. The auth composition reuses the scene’s NativeSessionController for acceptance, sync, restore and wipe. Post-accept routing reads its SQLite readiness gate; verification uses AppDelegate.verificationRequired, with terms before walkthrough before Today. Integration tests cover these routes, restoration and sign-out. (OQ 24 default assumed, confirm): eligible verified → .today, unverified → .verify. Shared (OQ 23 default assumed, confirm), OQ 28 resolved (user 2026-11-06), (OQ 30 default assumed, confirm) policies apply. Host model tests pass; multi-size en/nl/light/dark snapshots, AX5 equality, native layout/control tests and small UI/audit suites are written but unexecuted/unrecorded. Orchestrator reviews/records once; keyboard overflow acceptance (OQ 32) remains open until real frame checks run.
+  Implementation note (2026-11-07): password flow starts empty, clears password after attempts, retains email, serializes submissions and maps designed failures. Auth reuses the scene's NativeSessionController for acceptance, sync, restore and wipe, honoring SQLite verify/terms/walkthrough/app gates. Forgot/Sign up/Two-factor remain Debug diagnostics and Release seams; OQ 24's `.today`/`.verify` default remains assumed. OQ 23/30 defaults are kept (user informed 2026-11-06). Host model tests and the 17e controls/layout/snapshots, SignInTests and serial AuthAuditTests pass; all 896 references and visual review are complete. Shared keyboard acceptance awaits the SE/Duo run under OQ 32.
   Files: `Sources/Auth/{SignInView,SignInModel,AuthNavigation}.swift`, `App/RootView.swift`, `App/Session/AppServices.swift`.
   Test: `Tests/AuthTests/SignInModelTests.swift`, `AppUITests/SignInTests.swift`: Welcome/back/guest/forgot/signup routing, blank/server field/credential/throttle/server/offline cases (approved OQ 23), banner cleared on edit, return chain, password cleared on success/failure, two-factor gets no early session, verified/unverified routing, no splash replay. Verify **Matrix A**, recording/accepting all sign-in state snapshots and audits in en/nl/both appearances.
 
 - [x] Implement native passkey sign-in with AuthenticationServices `ASAuthorizationPlatformPublicKeyCredentialProvider`: `passkeyOptions()` → decode challenge and request a required-user-verification assertion for the returned RP ID → `passkeyLogin(_:)` → the one session controller. Serialize assertion credential ID, raw ID, clientDataJSON, authenticatorData, signature and optional userHandle using unpadded base64url (including id/clientDataJSON); never UTF-8-decode binary bytes. Handle canceled authorization without an error banner; map credential/challenge validation and field args to approved existing banner/field patterns, 429 to lock/retry-after and server/offline to the existing approved patterns (OQ 23/30). Fetch fresh options for retry after a consumed/expired challenge. Retain the board button/divider for both sources; mock uses an injected deterministic assertion provider with no system credential prompt/network and tests verified/unverified/2FA-session outcomes. Add `com.apple.developer.associated-domains` = `webcredentials:app.chronoflow.net` on the **device-signed configuration only**, never simulator/ad-hoc builds.
-  Implementation note (2026-11-06): AuthenticationServices assertion provider uses the returned RP/challenge and required user verification; binary fields serialize as unpadded base64url. One shared model/session acceptance path; cancellation is silent, every retry requests fresh options. Mock never prompts: deterministic providers drive host success/cancellation/consumed-challenge tests; the app mock reports designed server failure through its unavailable assertion provider. (OQ 23 default assumed, confirm): typed offline stays silent/enabled. (OQ 30 default assumed, confirm): credential/challenge/hidden-field failures map to the existing generic server banner; no new notices/copy. DeviceSigned configuration alone enables webcredentials on iphoneos; a pre-build guard rejects simulator/ad-hoc/unsigned use, and normal Debug/Release have no entitlement. Physical-device verification, team/bundle confirmation and deployed AASA/CDN remain open.
+  Implementation note (2026-11-06): AuthenticationServices assertion provider uses the returned RP/challenge and required user verification; binary fields serialize as unpadded base64url. One shared model/session acceptance path; cancellation is silent, every retry requests fresh options. Mock never prompts: deterministic providers drive host success/cancellation/consumed-challenge tests; the app mock reports designed server failure through its unavailable assertion provider. (OQ 23 default kept, user informed 2026-11-06): typed offline stays silent/enabled. (OQ 30 default kept, user informed 2026-11-06): credential/challenge/hidden-field failures map to the existing generic server banner; no new notices/copy. DeviceSigned configuration alone enables webcredentials on iphoneos; a pre-build guard rejects simulator/ad-hoc/unsigned use, and normal Debug/Release have no entitlement. Physical-device verification, team/bundle confirmation and deployed AASA/CDN remain open.
   Files: `Sources/Auth/{PasskeySignIn,SignInModel}.swift`, `Sources/Auth/Resources/Localizable.xcstrings`, device entitlements/configuration in `Config/` and `project.yml`.
   Test: host DTO/base64url/error mapping tests and mock/UI cancellation/retry/success tests; no live passkey requests. **Open: device-only verification** needs the confirmed Apple team/bundle IDs (OQ 4), a team-signed build and deployed AASA over public HTTPS, including Apple CDN delivery. Backend branch is not deployed; simulator/mock acceptance does not close this check.
 
-#### Phase 10a second fix round (2026-11-06)
+#### Phase 10a fixes and acceptance (2026-11-07)
 
-- [x] Simulator mock parity fix: seed Debug's default app mock with RN's verified demo and two-factor
-  accounts, settings, security state and seven trips/plans. Share scenario sign-in values with host
-  tests; reseed missing/empty/older saved shapes without changing explicit test seeds. Exclude seed
-  data from Release and bypass mock construction for API selection. Document sign-in values only in
-  `Docs/tooling.md`; forms remain empty. Host tests cover demo sign-in, two-factor/code/recovery,
-  persistence/reseeding, explicit seeds and API selection. Hosted AppServices overload coverage and
-  Release seed exclusion are written; execution remains open for the orchestrator.
+- [x] Restore Debug mock demo parity without Release seeds, repair loading-control geometry assertions and preserve stored verify/terms/walkthrough gates after cancellation.
+- [x] Guard the exact 896-reference Auth inventory; resolve OQ 28's Dutch copy and pin OQ 33's accepted board values with only `(sign-in.guest, .contrast)` exempted from audits.
+- [x] Match circular capsule ends and outline hairlines; keep the contrast-safe `dawnText` account link. Rasterize the board card shadow with the correct downward Quartz offset; Mac and hosted guards cover both capture paths. Historical measurements: `Docs/auth-shadow-round-{3,4}.md`.
 
-Hosted 17e results supplied by the user: AuthLayoutTests and SignInTests pass. AuthControlTests
-reported a 195 vs 187.5 centre; all 24 Auth audits identified only `sign-in.guest` contrast.
+User's host results (2026-11-07): `make auth-board-pngs` complete; all **896 Auth references** re-recorded on 17e at `04a8e8b` and committed in `8e2d542`. `AuthControlTests`, `AuthLayoutTests`, `AuthSnapshotTests` (D1c profiles and AX5 equality), `SignInTests` and serial `AuthAuditTests` **PASS** on 17e; `DesignSystemTests/AuthBoardContrastTests` **PASS**. Final visual acceptance round 3 marks all eight Sign in pairs (none/wrong→credentials/locked/server × light/dark) **acceptable-adaptation**, with no defects: capsules, outline hairline and card shadow match. Accepted adaptations: 44 pt controls, empty native fields, dawn-text link, plain sky and banner wrapping one word earlier (nit). Details: `_design/frames/README.md`.
 
-- [x] Repair the loading-button test's stale initial host measurements: always lay out after the
-  390-point scene window is resized to the 375-point fixture, wait for stable geometry without
-  waiting for spinner pixels, and compare the inline spinner/glyph/label group with the button
-  frame in the same global coordinate space. Assert the resized button width and retain both
-  token gaps and group-edge checks. AuthButton already centres the board's inline loading group.
-  Files: `AppTests/AuthControlTests.swift`. Hosted execution remains open.
+OQ 32 remains open: `SignInKeyboardTests` requires real keyboard frames and full focused-input/submit visibility for email and password at xxLarge, with email/password field errors and the server banner, in English/Dutch. It saves measured frames and screenshots. `make quick` and the suite's iOS 17 type-check pass; simulator execution awaits the user's host run:
 
-- [x] Confirm the only reported audit element, `sign-in.guest`, matches AuthSignIn's footer:
-  Figtree 500, 14/20, `skyCopy` on `skyCopyBackground` (90% opacity) on `cf-sky`. Preserve these
-  colors. Allow only `(sign-in.guest, .contrast)` using Welcome's explicit board-pair policy;
-  retain diagnostics and fail every other element/type, including combined types. Pin both
-  appearances' generated RGBA values, typography and composited contrast ratios; guard the board
-  declarations and native footer ink/surface pixels. Register the ratio guard in the simulator
-  runner. Board values are accepted, OQ 33 (user 2026-11-06); retain this exact allow-list and strict text contrast checks. Rendered visual review remains open.
-  Files: `AppUITests/AuthAuditTests.swift`, `AppTests/AuthControlTests.swift`,
-  `Tests/DesignSystemTests/AuthBoardContrastTests.swift`, `Tools/TokenGen/Tests/TokenGenTests/TokenGenTests.swift`,
-  `Scripts/launch-simulators.py`. Host ratio/token guards and iOS 17 type-checks pass; revised hosted execution remains open.
+```sh
+make targeted DEVICES="se duo" ONLY="AppUITests/SignInKeyboardTests"
+```
 
-#### Phase 10a port fix round (2026-11-06)
-
-The user's hosted 17e run passes AuthBoardContrastTests, AuthControlTests, AuthLayoutTests,
-SignInTests and serial AuthAuditTests. SessionReadinessTests exposed canceled post-commit gate
-reads falling back to Today for verify, terms and walkthrough. Hosted rerun remains open.
-
-- [x] Read the committed session's stored gate independently of request cancellation, retaining
-  the active-session/epoch re-check and verification callback. Share the production router with
-  host SignInModelTests: password/passkey × all four stored gates × canceled/uncanceled requests,
-  plus sign-out during the gate read. Removing the isolated read reproduces the reported gated
-  routing failures on the host. Files: `App/Session/NativeSessionController.swift`,
-  `Sources/AppCore/StoredDataReadiness.swift`, `Tests/AuthTests/SignInModelTests.swift`.
-
-- [x] Extend the host baseline inventory guard to `AppTests/__Snapshots__/Auth`: exact board
-  and catalog device/style/language/profile Dynamic Type/banner names, totaling 896 PNGs
-  (32 board + 4 full × 192 + 3 compact × 32). A wholly unrecorded directory stays pending;
-  partial recordings, stale extras and suffix drift fail. Files: `Tests/test_launch_simulators.py`.
-  The user records and reviews Auth references after this round; no PNGs or visual acceptance
-  are supplied here, and the shared Auth shell acceptance task remains unticked.
-
-#### Phase 10a decision round (user 2026-11-06)
-
-- [x] Resolve OQ 28 with RN → backend → translated Dutch copy, replace all 15 pending plan rows with source-tagged values, and ship the six shared backend messages in the en/nl catalog and field mapping. Both-language mapping/localization regressions cover every message and preserve hidden-field fallback. Nine later-phase prose translations stay in this plan until their screens ship. Shared-shell acceptance remains open for the items listed above.
-  Verification: `make quick` passes (25 Auth tests, all remaining package/TokenGen/AssetGen host tests, strict lint, 3 signing guards, 10 resource checks and 53 runner fixtures); hosted checks remain for the user. Existing `AuthSnapshotTests` renders only none/credentials/locked/server banners, so these added field messages change no existing reference pixels and need no re-recording. Compare existing board/profile references and rerun native controls/layout and Sign in UI on 17e; no simulator run is claimed here.
-
-- [x] Record board input/outline-button borders, divider lines and guest pill/sky values as accepted, OQ 33 (user 2026-11-06). Update audit/ratio-guard rationale and documentation; retain all colors, pinned ratios and the sole `(sign-in.guest, .contrast)` audit allow-list entry. Text checks stay strict; this decision does not complete rendered visual review.
-
-#### Phase 10a visual-acceptance fix round (user 2026-11-06)
-
-The user supplied host Chrome PNG exports (all 12 in ignored `build/board-png/`) and recorded
-Auth references. Review of all eight 375 × 812 en/large Sign in pairs found exterior outline-button
-hairlines and continuous rather than semicircular button/footer ends. Codex inspected all eight
-pairs before editing and confirmed both defects. The light Create an account color difference is
-the explicitly accepted text-contrast adaptation below. Existing 44-point control growth, upward
-card growth, empty native fields and text wrapping remain documented adaptations. Final visual
-acceptance awaits the corrected hosted renders; the shared-shell task stays unticked.
-
-- [x] Set AuthButton's designed fills, outline stroke and hit shape to `Capsule(style: .circular)`.
-  The previous `Capsule()` default uses continuous corners; the native Button already uses
-  PressStyle, with no system bordered-button bezel. Circular paths keep radius = height/2 as
-  controls grow. Add rendered-control end-cap tests against analytic circles in both appearances,
-  at 2×/3× and large/xxLarge: reject exterior ink, require interior fill and both outline caps.
-  Files: `Sources/DesignSystem/AuthControls.swift`, `AppTests/AuthControlTests.swift`.
-- [x] Keep Create an account on base `dawnText` in both appearances and document the board
-  deviation under **WCAG 1.4.3**, following the web's dawn-text text-contrast correction
-  (`chronoflow-new/resources/css/app.css`, `docs/ui/claude-design/DESIGN-SYSTEM.md`). The board's
-  `.cf-sky` override makes `--dawn-text: var(--dawn)` even over its card, contrary to tokens.json's
-  rule for text on light surfaces. From generated P3 tokens, converted to linear sRGB with gamut
-  clipping, **dawn/card = 2.5456:1 light / 9.2888:1 dark**; **dawn-text/card = 5.4441:1 / 9.2888:1**.
-  Dawn fails the strict 4.5:1 text threshold on the light card. Both dark tokens are identical.
-  Pin all four ratios in host AuthBoardContrastTests and actual link ink in en/nl/light/dark in
-  hosted AuthControlTests. No token or audit-exemption changes; OQ 33 remains as accepted.
-- [x] Record the user's exact host headless Chrome command and visual review in
-  `_design/frames/README.md`; add `make auth-board-pngs` / `Scripts/export-auth-pngs.sh` for all
-  eight Sign in, two 1900-point banners and two 1200-point controls exports at 375 points / 3×.
-  Outputs stay ignored in `build/`; committed HTML and read-only canvas sources retain board colors.
-
-Verification: `make quick` passes (strict lint, all package/TokenGen/AssetGen host tests, including
-the four link contrast ratios, and 3 signing / 10 resource / 53 runner fixtures). Export-script
-command checks pass for all 12 names/heights with a stub Chrome; no PNGs overwritten.
-Current DesignSystem iOS 17 type-checks pass; Debug/Release app and hosted-test type-checks
-pass against the current built modules, as do UI-test type-checks. An isolated Mac SwiftUI render fails the new circle guard with continuous
-corners and passes with circular corners; corrected native iOS rendering is still pending.
-Hosted execution remains the user's work: run
-`AppTests/AuthControlTests`, `AppTests/AuthLayoutTests`, `AppTests/AuthSnapshotTests` (all D1c
-profiles and AX5 equality), `AppUITests/SignInTests` and serial `AppUITests/AuthAuditTests` on 17e.
-**All 896 Auth references must be re-recorded** for the capsule pixels, then compared and visually
-reviewed. This round does not record references or claim final acceptance/keyboard closure (OQ 32).
-No Duo-specific runtime change; no seven-simulator matrix requested.
-
-#### Phase 10a visual round 3: card shadow (user 2026-11-06)
-
-The user supplied 896 uncommitted Auth references recorded after `5228ba3`; preserve them.
-All eight board/native en/large pairs show missing below-card shadow ink in both appearances.
-Full RGB means, red ranges, sample coordinates and validation are in
-`Docs/auth-shadow-round-3.md`. Shared-shell/final visual acceptance remains open.
-
-- [x] Replace AuthScreen's blurred SwiftUI shadow shape with a Core Graphics raster behind
-  the existing card fill, using only generated light/dark shadow colors and metrics. Include
-  the halo beyond the card bounds and update for bounds, appearance and display scale.
-  Files: `Sources/Auth/AuthScreen.swift`, `Sources/Auth/AuthCardShadowLayer.swift`.
-- [x] Add a Mac rendered guard for the production shadow and a hosted guard for all eight
-  Sign in states. Compare below/beside RGB with board means within four sRGB levels and
-  require measurable ink relative to plain sky in each region. Register the host suite;
-  removing shadow ink fails the guard. Files: `Tests/AuthTests/AuthCardShadowTests.swift`,
-  `Tests/SnapshotSupport/AuthShadowBoard.swift`, `AppTests/AuthControlTests.swift`,
-  `Scripts/launch-simulators.py`.
-
-Verification: `make quick` passes; the production Auth module and hosted AppTests type-check
-for iOS 17. Mac rendered means are within 1.54 levels of the board in light and 1.50 in dark.
-CoreSimulator is inaccessible in this sandbox; hosted execution remains pending. All 896
-reference hashes remain unchanged, and PNGs are excluded from the patch. **Re-record all
-896 Auth references** after this fix, then review all eight board pairs on 17e. No final
-visual acceptance, keyboard closure, Duo runtime or seven-simulator matrix is claimed.
-
-#### Phase 10a visual round 4: shadow orientation (user 2026-11-06)
-
-The user's hosted round-3 guard failed in all eight Sign in states; its new recording
-was discarded. Round 3's Mac layer composition hid the bitmap's inverted vertical offset.
-Full reproduction, fixed image measurements and hosted commands are in
-`Docs/auth-shadow-round-4.md`. Shared-shell/final visual acceptance stays open.
-
-- [x] Convert the generated downward shadow offset to Quartz bitmap coordinates. Direct
-  image-row composition with the old offset reproduces every reported below-card RGB
-  channel and the 0.74/2.68 red attenuation exactly. Preserve generated shadow metrics,
-  colors, opacity, raster extent and card layout.
-- [x] Correct the Mac board guard's image orientation, cover 2×/3× plus raw downward
-  alpha across bounds/appearance/scale changes, and reject the old-direction mutation.
-  Extend the unchanged hosted board/ink thresholds to both CPU layer capture and UIKit
-  hierarchy capture in all eight states, with per-path plain-sky controls and RGB logs.
-
-Verification: `make quick` passes; Auth and all hosted AppTests type-check for iOS 17.
-The old-direction mutation fails both Mac tests (32 issues). Existing 896 Auth reference
-hashes are unchanged; no PNGs are included in the patch. CoreSimulator remains inaccessible
-in the sandbox. Run the controls/layout guard before re-recording, then all Auth profile
-comparisons, sign-in smoke and the serial audit on 17e. Hosted execution, visual acceptance
-and OQ 32 closure remain pending; no Duo runtime or seven-simulator matrix is claimed.
+If either pair cannot fit, record that undesigned keyboard state and defer it under OQ 32; do not change the layout to force acceptance. No seven-simulator matrix is requested. Device passkey verification remains separately open under OQ 4.
 
 #### Phase 10b: Two-factor code/recovery and auth acceptance (`feat/phase-10b-two-factor`)
 
@@ -1338,7 +1205,7 @@ Stack on 10b. Four bounded rounds, with independent copy/link gates. The API met
 
 #### Phase 11a: Forgot password (`feat/phase-11-account`)
 
-OQ 28's Forgot translations are resolved and recorded; ship them with this phase. Resolve the shared offline/notice policy before this round. Live endpoint is implemented, but tests never use it.
+OQ 28's Forgot translations are resolved and recorded; ship them with this phase. Use the kept OQ 23/30 defaults for shared offline/hidden-field presentation. Live endpoint is implemented, but tests never use it.
 
 - [ ] Wire Forgot email form → `requestPasswordReset` (`POST auth/forgot-password`) and the designed sent Notice with interpolated submitted email, Open email app and Back to sign in. Preserve non-enumeration and correct throttle/server/field states. Connect Sign in's Forgot seam; send-new-link from future resetExpired enters the same form with prefilled email.
   Files: `Sources/Auth/{ForgotPasswordView,ForgotPasswordModel,AuthNavigation}.swift`, `Sources/Auth/Resources/Localizable.xcstrings`, `_design/frames/auth/**`.
@@ -1439,14 +1306,14 @@ User decision 2026-11-06: implement these when the named states exist; this roun
 | 20 | **Settled by user 2026-11-06: build native passkey sign-in in Phase 10.** Backend branch `feat/mobile-api-passkeys` at `841be4bd` provides the options/login contract (not deployed). | Retain AuthSignIn passkey button/divider; AuthenticationServices options → assertion → login; 9b builds DTOs and source methods. Registration stays out of scope. | No Phase 9 blocker; **Open device verification** requires confirmed team/bundle IDs (OQ 4), team-signed build and deployed public AASA. |
 | 21 | **Password policy/hint:** board/RN says “At least 10 characters”; production requires 12+, mixed case, letters, numbers, symbols, uncompromised. Should native use server `passwordRules`? Security summary/RegisterPage expose it, but no public native rules endpoint exists. | Server validation wins; approve en/nl hint and board amendment for the production policy. Apply returned `passwordRules` to native password fields when available; do not call protected account APIs before login or scrape RegisterPage. Agree a public rules source or reviewed build-time AutoFill rules for unauthenticated Register/Reset. No client validation or reduced server policy. | **11b / 11c**; 9b decodes/contracts only |
 | 22 | **ResetDone says “Other devices stay signed in.”** W ResetUserPassword invokes RevokeUserTokens; all tokens are revoked. | Correct the board and both languages to describe revocation; preserve real server behavior in mock/API tests. Do not ship the existing sentence even though RN has its nl translation. | **11b** done state |
-| 23 | **Offline auth banner:** RN has “Needs a connection” with no body; AuthStates and all screen boards have no offline variant. | Propose that RN title in the existing AuthStates banner style after an approved board variant; until then defer offline presentation. Keep typed offline failures/test coverage; submit remains enabled offline. No ad-hoc popup/toast. | **10a** shared error UI and every dependent auth sub-phase; not 9 |
+| 23 | **Offline auth banner — default kept (user informed 2026-11-06).** No offline variant exists in the boards. | No offline banner; submit stays enabled. Keep typed offline failures/test coverage; defer any new presentation until designed. | No remaining **10a** blocker under the kept default |
 | 24 | **Destination while Today is unbuilt:** successful sign-in must go to `.today`; no Today implementation is included. What may simulator/Release users see? | Existing `.today` route seam and Debug-only D17 diagnostic; unverified → `.verify` seam until 11d; preserve terms/walkthrough precedence. Never invent a temporary Today/empty success screen. Ordinary Release must remain non-shipping until real destination UI exists. | **10a** navigation acceptance; shipping to that route; not 9 |
 | 25 | **Verify-email link parameters and delivery:** RN/mock `{token,email}` differs from W `{id,hash,expires,signature}`; emails open web pages today and app.chronoflow.net universal links are deferred. What exact URL/path/encoding will deliver signed inputs, and what should “Open it on this phone to finish” promise meanwhile? | Use authenticated signed API DTO now, typed inputs/mock inbox in tests; recheck users/me after web verification on activation. Defer native URL/universal-link entry, pending approved URL contract/server association and production copy. No RN token-shaped API or colliding scheme. | **11d** production copy/entry policy; actual link delivery deferred; **11b** real reset-link entry only (typed/mock Reset remains possible); OQ 15 remains |
 | 26 | **DB backup exclusion:** exclude all account files including unsent outbox/drafts, or preserve unsent changes across device restore? Device-only Keychain session cannot restore with a backed-up DB. | D19 proposed development default: exclude the entire account directory and sidecars from backup, keep unsent rows durable on this device; document that device loss/restore loses unsent changes. A backup/recovery product flow has no board, so defer it rather than silently back up tokens or split live WAL files. | Non-blocking **9a development** under proposed default; **Release shipping** awaits confirmation |
 | 27 | **Reset promises automatic sign-in:** AuthTwoFactor reset says “You'll be signed in…”/“Save and sign in”; resetDone says “You're signed in…” and Continue links Today. API returns 204, and RN correctly returns to Sign in without a session. | Preserve no-session API behavior; propose RN's “Save new password” / “Password updated. Sign in with your new password.” and Continue → Sign in. Require approved reset/done board copy with nl under the OQ 28 rule before implementing; do not silently add a login request or retain a password. | **11b** reset/done |
 | 28 | **Resolved by the user 2026-11-06 — Dutch copy source order:** exact RN English match (`src/i18n/locales/en.json` → `nl.json`), else exact backend English key (`lang/nl.json`), else a natural Dutch translation matching RN je/jij tone and terminology and the clock-shift copy rule. | All 15 formerly pending rows have values and source tags above: six exact backend shared field messages ship in 10a; nine translated later-phase rows are recorded now and ship with their phases. Unknown server English still cannot leak into Dutch. Resolving translation does not approve conflicting reset/verification/password-policy claims (OQ 21/22/25/27). | No remaining translation blocker in 10a/10b/11a–11d; other OQs remain |
 | 29 | **Pending changes on voluntary sign-out:** RN asks before discarding, but no sign-out confirmation board is committed. | 9d returns needsConfirmation and preserves rows; defer the voluntary discard UI until designed. Forced authenticated 401 wipes immediately. Verify Back/Use a different email explicitly discards the unverified account queue, matching RN. | Future voluntary sign-out confirmation UI; not **9d** service or explicit Verify exit |
-| 30 | **Undesigned failure states:** AuthStates has no arbitrary hidden-field notice, exhausted-challenge screen, store-open failure, sync-failure toast or mock inbox. | Reuse only an approved existing banner/notice variant with approved copy for hidden-field/challenge messages; obtain that mapping before 10a. Store/sync/inbox remain typed test seams with no product UI. Never build a mock inbox list, DB-error screen or new toast from RN alone. | **10a** hidden-field banner policy and **10b** challenge failures; store/sync/inbox UI deferred, not 9 service work |
+| 30 | **Undesigned failure states — default kept (user informed 2026-11-06)** for hidden-field failures. | Hidden/unknown-field failures use the designed server banner, with no new notice/copy. Separate exhausted-challenge states need a mapping in 10b; store/sync/inbox remain typed test seams without product UI. | No remaining **10a** hidden-field blocker; **10b** separate challenge states and store/sync/inbox UI remain deferred |
 | 31 | **Outbox parity vs absent endpoints:** RN final schema includes complete-trip/data-export/security kinds; W routes have no complete-trip or data-export endpoints, and RN's API adapters still defer them. How should future producers behave? | Preserve schema/kind decoding. Implement supported check-off/settings (including policy acceptance)/profile/walkthrough handlers now; do not create unsupported producers, fake endpoints or discard parked rows. Security features and unsupported writes need their own later scope/contracts. Mock may retain RN behaviors as isolated test values. | Future completion/export/security feature phases; not **9c** supported sync; no claim of full RN feature parity |
-| 32 | **Keyboard overflow if measured:** can a focused input and submit both fit above the native keyboard on SE/Duo at xxLarge in every auth form? The static boards do not draw an overflowing keyboard state. | Require measured focus/submit visibility and the native return-key chain. If the matrix proves the pair cannot fit, request that state's design and defer it; do not add an undesigned sticky action, shrink text or accept a hidden submit. | Conditional **10a/10b/11 UI acceptance** for the failing state only; not Phase 9 |
-| 33 | **Resolved — Auth board values accepted, OQ 33 (user 2026-11-06):** keep input borders, outline-button borders, divider lines and the guest pill over the sky exactly as the board and tokens draw them. RN never changed these values; the web P8-D16 scope is WCAG 1.4.3 text contrast only. `tokens.json:167` records “Kept exact, flagged”. TokenGen computes `input` / `card` at **1.5076:1 light / 1.5051:1 dark**, `input` / `background` at **1.4243:1 / 1.6222:1**, and decorative `border` / `card` at **1.4140:1 / 1.3951:1**. All 24 hosted audits identify only `sign-in.guest`. Native exactly matches AuthSignIn: Figtree 500 14/20, `skyCopy` on 90%-opaque `skyCopyBackground`. From generated P3 tokens, composited at the board footer centre (764/812), text/pill is **14.9260:1 / 15.0953:1** and pill/sky **2.3128:1 / 2.9450:1**, below the 3:1 boundary threshold. Across the entire generated sky ramp, text/pill spans **13.4635–15.0882:1 / 14.9473–16.1298:1** and pill/sky **2.0004–10.7434:1 / 1.0001–3.4997:1**. | Preserve the accepted board tokens. Per the user's second-round instruction, use Welcome's explicit board-pair policy only for `(sign-in.guest, .contrast)`; pin generated colors, alpha, typography and ratios so drift fails. Every other Auth element/type still fails; input/outline/divider pairs have no exemption. Keep identifier/label/type diagnostics and native color guards. | No remaining OQ 33 blocker; strict text contrast and pinned audit/color/ratio guards remain, with rendered visual review still open |
+| 32 | **Keyboard overflow — host run pending:** can focused input and submit both fit above the real keyboard on SE/Duo at xxLarge? | Run `AppUITests/SignInKeyboardTests` on `se duo`: email/password focus with field errors and server banner, en/nl, measured frames and screenshots. If the pair cannot fit, record an undesigned keyboard state and defer; no sticky action, smaller text or hidden submit. | Only remaining first **10a** task acceptance check; later **10b/11** forms need their own checks |
+| 33 | **Resolved — Auth board values accepted, OQ 33 (user 2026-11-06):** keep input borders, outline-button borders, divider lines and the guest pill over the sky exactly as the board and tokens draw them. RN never changed these values; the web P8-D16 scope is WCAG 1.4.3 text contrast only. `tokens.json:167` records “Kept exact, flagged”. TokenGen computes `input` / `card` at **1.5076:1 light / 1.5051:1 dark**, `input` / `background` at **1.4243:1 / 1.6222:1**, and decorative `border` / `card` at **1.4140:1 / 1.3951:1**. All 24 hosted audits identify only `sign-in.guest`. Native exactly matches AuthSignIn: Figtree 500 14/20, `skyCopy` on 90%-opaque `skyCopyBackground`. From generated P3 tokens, composited at the board footer centre (764/812), text/pill is **14.9260:1 / 15.0953:1** and pill/sky **2.3128:1 / 2.9450:1**, below the 3:1 boundary threshold. Across the entire generated sky ramp, text/pill spans **13.4635–15.0882:1 / 14.9473–16.1298:1** and pill/sky **2.0004–10.7434:1 / 1.0001–3.4997:1**. | Preserve the accepted board tokens. Per the user's second-round instruction, use Welcome's explicit board-pair policy only for `(sign-in.guest, .contrast)`; pin generated colors, alpha, typography and ratios so drift fails. Every other Auth element/type still fails; input/outline/divider pairs have no exemption. Keep identifier/label/type diagnostics and native color guards. | No remaining OQ 33 blocker; strict text contrast and pinned audit/color/ratio guards remain, with rendered visual review accepted 2026-11-07 |

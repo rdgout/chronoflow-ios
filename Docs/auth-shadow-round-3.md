@@ -82,8 +82,8 @@ It captures plain sky first and never writes references.
 and hosted AppTests type-check against the iOS 17 deployment target. The new host rendered
 test passes and its missing-shadow mutation fails as expected.
 
-CoreSimulator access is unavailable in this sandbox, so corrected full iOS renders and
-the new hosted guard remain pending. No final visual acceptance is claimed. Run the hosted
-Auth controls/layout/profile suites on 17e, re-record **all 896 Auth references**, and review
-all eight board pairs again. Existing references remain untouched and uncommitted. No
-seven-simulator matrix or Duo runtime run is needed for this change.
+Close-out (user's host report, 2026-11-07): corrected controls/layout/snapshots,
+SignInTests and serial AuthAuditTests PASS on 17e. All 896 Auth references were re-recorded
+at `04a8e8b` and committed in `8e2d542`; all eight board pairs are accepted with documented
+adaptations and no defects. Only the shared-shell SE/Duo keyboard run remains under OQ 32;
+see `plan.md` and `_design/frames/README.md`.

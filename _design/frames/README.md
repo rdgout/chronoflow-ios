@@ -24,15 +24,10 @@ headless Chrome (375 points wide at 3×). The exact command used, substituting t
 heights through `Scripts/export-auth-pngs.sh`. Run it on the host: Chrome headless exits 134 in this
 sandbox. PNG outputs stay in `build/` and are not committed.
 
-Visual review on 2026-11-06 compared all eight Sign in board/native pairs (none/wrong/locked/server,
-light/dark; native wrong = credentials) against recorded `AppTests/__Snapshots__/Auth/board-*.png`.
-Codex confirmed the reported differences by inspecting each pair before editing. All eight had
-outline-button exterior hairlines and continuous rather than semicircular button/footer ends.
-AuthButton's fills, outline `strokeBorder` and hit shape now explicitly use `Capsule(style: .circular)`;
-the old code used SwiftUI's default continuous capsule. There is no second system bordered style:
-the native Button uses PressStyle. New hosted pixel guards check both end caps against analytic
-circles of radius height/2, require their fill/outline, and reject exterior ink at 2×/3×, large/xxLarge,
-in both appearances. Final visual acceptance remains pending the corrected hosted renders.
+Final visual acceptance round 3 (user's host report, 2026-11-07): all eight Sign in pairs
+(none/wrong→credentials/locked/server × light/dark) are **acceptable-adaptation**, with no defects.
+Capsules, outline hairline and card shadow match. Hosted guards pin circular end caps, reject
+exterior outline ink and compare the downward card shadow against the board in both capture paths.
 
 The darker light-mode **Create an account** link is an intentional text-contrast adaptation. The
 board's `.cf-sky` scope overrides `--dawn-text` with `var(--dawn)` even inside the card. Native keeps
@@ -50,14 +45,17 @@ with gamut clipping, on the actual `card` token:
 | Dark | 9.2888:1 (passes) | 9.2888:1 (passes; same token value) |
 
 Host contrast tests pin these four ratios; a hosted pixel test pins the actual link ink to `dawnText`
-in en/nl and both appearances. The other differences remain the documented 44-point control growth
-(card grows upward with its bottom anchored), empty native fields, safe-area/scroll adaptation and
-allowed text wrapping. Header, typography, sky, banners and control colors otherwise match the
-reviewed boards within those adaptations.
+in en/nl and both appearances. Accepted adaptations are 44-point controls (card grows upward with
+its bottom anchored), empty native fields, the dawn-text link, plain sky, safe-area/scroll handling
+and a banner wrapping one word earlier (nit).
 
-The **896 Auth references must be re-recorded** on 17e after the capsule change, then compared again
-and visually reviewed. Recording remains the user's work; this fix round does not update PNGs.
-Run `AppTests/AuthControlTests`, `AppTests/AuthLayoutTests` and `AppTests/AuthSnapshotTests`
-(all D1c sizes and AX5 equality), then `AppUITests/SignInTests` and serial `AppUITests/AuthAuditTests`.
-`DesignSystemTests/AuthBoardContrastTests` also runs in `make quick`. The shared-shell acceptance
-task stays open until corrected visual/snapshot and remaining keyboard acceptance are complete.
+All **896 Auth references** were re-recorded on 17e at `04a8e8b` and committed in `8e2d542`.
+User's host runs PASS: `AppTests/AuthControlTests`, `AuthLayoutTests`, `AuthSnapshotTests`
+(all D1c sizes and AX5 equality), `AppUITests/SignInTests`, serial `AuthAuditTests` and
+`DesignSystemTests/AuthBoardContrastTests`.
+
+Only the shared-shell SE/Duo keyboard acceptance remains open (OQ 32). Run
+`make targeted DEVICES="se duo" ONLY="AppUITests/SignInKeyboardTests"` on the host. The suite
+checks email/password focus at xxLarge with field errors and the server banner in en/nl, using
+real keyboard frames and retaining geometry/screenshots. If the pair cannot fit, record the
+undesigned keyboard state and defer under OQ 32 without changing the layout.

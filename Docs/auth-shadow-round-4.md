@@ -60,18 +60,8 @@ is unchanged.
 Production Auth and all hosted AppTests type-check for the iOS 17 deployment target.
 All 896 existing Auth PNG SHA-256 hashes are unchanged; none is delivered in the patch.
 
-CoreSimulator is inaccessible in this sandbox, so hosted execution and visual acceptance
-remain pending. Run outside the sandbox, from this repo, with the first command passing
-before recording:
-
-```sh
-make targeted DEVICES="17e" ONLY="AppTests/AuthControlTests AppTests/AuthLayoutTests"
-SNAPSHOT_RECORD=1 make targeted DEVICES="17e" ONLY="AppTests/AuthSnapshotTests" REUSE_BUILD=1
-make targeted DEVICES="17e" ONLY="AppTests/AuthControlTests AppTests/AuthLayoutTests AppTests/AuthSnapshotTests AppUITests/SignInTests AppUITests/AuthAuditTests" REUSE_BUILD=1
-```
-
-The recording command records all 896 Auth references and runs their comparison. The
-last command repeats the controls/layout/profile comparisons and runs sign-in smoke and
-the serial appearance audit. `REUSE_BUILD=1` assumes no source changes after the first
-command. Review all eight board pairs after recording. Logs and results are under
-`build/test-results/17e/`. No seven-simulator matrix or Duo-specific runtime change.
+Close-out (user's host report, 2026-11-07): corrected controls/layout/snapshots,
+SignInTests and serial AuthAuditTests PASS on 17e. All 896 Auth references were re-recorded
+at `04a8e8b` and committed in `8e2d542`; all eight board pairs are accepted with documented
+adaptations and no defects. Only the shared-shell SE/Duo keyboard run remains under OQ 32;
+see `plan.md` and `_design/frames/README.md`.
