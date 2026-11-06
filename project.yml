@@ -53,6 +53,8 @@ targets:
     sources:
       - path: AppTests
         excludes: [__Snapshots__]
+      - path: Packages/ChronoFlowKit/Tests/SnapshotSupport
+        excludes: [profiles.json]
     settings:
       TARGETED_DEVICE_FAMILY: "1"
       SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO

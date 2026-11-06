@@ -13,7 +13,7 @@
             try await FontRegistry.register()
             for style in [UIUserInterfaceStyle.light, .dark] {
                 for language in ["en", "nl"] {
-                    for time in [2400, 2450, 2700, 3200, 3300] {
+                    for time in try SnapshotProfile.current().introTimes {
                         func capture() async throws -> (image: UIImage, size: CGSize, scale: CGFloat) {
                             let intro = LaunchIntro(
                                 start: .milliseconds(2300), clock: ManualLaunchClock(), frozenTime: .milliseconds(time))
@@ -52,7 +52,7 @@
             try await FontRegistry.register()
             for style in [UIUserInterfaceStyle.light, .dark] {
                 for language in ["en", "nl"] {
-                    for time in [2400, 2450, 2700, 3200, 3300] {
+                    for time in try SnapshotProfile.current().introTimes {
                         var previousMount: [UInt8]?
                         for _ in 0..<(time == 2400 ? 10 : 2) {
                             let clock = ManualLaunchClock()
@@ -160,7 +160,7 @@
         @Test func trackedEyebrowKeepsItsIntrinsicWidthThroughTheCap() async throws {
             try await FontRegistry.register()
             for language in ["en", "nl"] {
-                for size in DynamicTypeSize.allCases {
+                for size in try profileSizes() {
                     let host = WelcomeTestWindow(style: .light, language: language, typeSize: size)
                     defer { host.close() }
                     try await host.layout()
@@ -199,7 +199,7 @@
                 if let height { #expect(abs(rect.height - height) <= 0.5, "\(element): \(rect)") }
             }
             for language in ["en", "nl"] {
-                for size in DynamicTypeSize.allCases {
+                for size in try profileSizes() {
                     let host = WelcomeTestWindow(style: .dark, language: language, typeSize: size)
                     defer { host.close() }
                     host.controller.additionalSafeAreaInsets = UIEdgeInsets(top: 7, left: 19, bottom: 11, right: 31)
@@ -330,6 +330,11 @@
             }
         }
 
+    }
+
+    @MainActor private func profileSizes() throws -> [DynamicTypeSize] {
+        let names = try SnapshotProfile.current().dynamicType
+        return DynamicTypeSize.allCases.filter { names.contains(String(describing: $0)) }
     }
 
     @MainActor final class WelcomeTestWindow {

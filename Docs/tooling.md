@@ -1007,5 +1007,5 @@ its pixels with an explicit final Welcome reference immediately and after 500 ms
 Reduce Motion regression requires the root window to mount before checking that no intro exists.
 All mounting/claim waits are bounded and assert their outcome; UIKit execution remains open.
 
-Test-speed tooling (2026-11-06): perf(test): parallelize simulator destinations perf(test): build simulator test products once test(tooling): classify device and logic suites.
+Test-speed tooling (2026-11-06): perf(test): parallelize simulator destinations perf(test): build simulator test products once test(tooling): classify device and logic suites perf(snapshots): reduce mid-size coverage.
 Use the committed simulator runner; implementation/validation notes are in plan.md.

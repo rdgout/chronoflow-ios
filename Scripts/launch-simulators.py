@@ -41,7 +41,7 @@ SUITES = {
     "DesignSystemTests": {"logic": ("ExactLineTextLayoutTests", "PrimitiveTests", "SmokeTests", "TypographyTests"),
                           "matrix": ("LaunchImagesTests",)},
     "LaunchTests": {"logic": ("FlightPathTests", "LaunchGlowTests", "LaunchLayoutTests", "LaunchRadialLayerTests", "LaunchSnapshotCoverageTests",
-                              "LaunchSnapshotGeometryTests", "LaunchTimelineTests", "ReadyTimelineTests", "SmokeTests", "WelcomeTimelineTests"),
+                              "SnapshotProfileTests", "LaunchSnapshotGeometryTests", "LaunchTimelineTests", "ReadyTimelineTests", "SmokeTests", "WelcomeTimelineTests"),
                     "matrix": ("LaunchSnapshotTests",)},
     "WelcomeTests": {"logic": ("SmokeTests",)},
     "PerfUITests": {"perf": ("LaunchPerfTests",)},

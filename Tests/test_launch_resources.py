@@ -76,7 +76,10 @@ class LaunchResourcesTests(unittest.TestCase):
             self.assertEqual(data[:8], b"\x89PNG\r\n\x1a\n")
             self.assertEqual(struct.unpack(">II", data[16:24]), (int(width) * int(scale), int(height) * int(scale)))
         self.assertEqual(set(devices), {"iPhone14-6", "iPhone18-5", "iPhone18-3", "iPhone18-4", "iPhone19-2", "iPhone19-3", "iPhone19-4"})
+        catalog = json.loads((ROOT / "Packages/ChronoFlowKit/Tests/SnapshotSupport/profiles.json").read_text())
         for model, (_, coverage) in devices.items():
+            device = catalog["devices"][model.replace("-", ",", 1)]
+            frames = catalog["profiles"][device["profile"]]["launchFrames"]
             self.assertEqual(coverage, {(style, frame) for style in ["light", "dark"] for frame in frames}, model)
 
     def test_hosted_tests_reuse_the_apps_package_products(self):

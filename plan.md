@@ -908,6 +908,8 @@ This work runs on `feat/phase-9-session-store` without starting Phase 9 or closi
   Files: `Scripts/launch-simulators.py`, `Makefile`, command documentation.
 - [x] Classify every target/suite in one runner table with a discovery guard; split mixed UI policy/routing tests from layout/audits and hosted argument/pixel/cap logic from running-window checks. Give top-level Swift Testing tests named suites for explicit selectors. Run logic and Release readiness on 17e, matrix checks on every destination; explicit targeted selectors override scheduling. Pure fixed-fixture timeline/geometry tests remain logic; running-scale image tests remain matrix.
   Files: test suites, `Scripts/launch-simulators.py`, `Tests/test_launch_simulators.py`.
+- [x] Select snapshot coverage from one per-model profile shared by the runner's host tests and Swift capture suites. Keep full coverage on SE/17e/Duo/Pro Max; compact devices keep large/xxLarge layout checks, intro 2700/3300 and launch ready-0/ready-1400/slow-2600/welcome-2400/reduceMotion-0. Both appearances/languages remain on Welcome. Remove 72 obsolete PNGs; retained PNGs are byte-identical to HEAD. Launch's existing PNGs cover large/English only; preserve those combinations under the no-re-record instruction and retain type/localization geometry checks. Adding Dutch/xxLarge launch PNGs needs a separately authorized recording, so that requested extension remains open below.
+  Files: `Tests/SnapshotSupport/**`, snapshot suites/references, `Package.swift`, `project.yml`, host coverage tests.
 ### Phase 6: Audit (`feat/phase-6-audit`)
 
 Reduce Motion, dark mode, VoiceOver and strings are built in the phases above; this phase only audits.

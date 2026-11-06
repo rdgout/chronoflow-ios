@@ -251,6 +251,35 @@ class RunnerTests(unittest.TestCase):
 
 
 
+class ProfileTests(unittest.TestCase):
+    def test_profiles_have_one_model_and_one_unique_output_namespace_per_alias(self):
+        catalog = json.loads((ROOT / 'Packages/ChronoFlowKit/Tests/SnapshotSupport/profiles.json').read_text())
+        aliases = [device['alias'] for device in catalog['devices'].values()]
+        self.assertEqual(set(aliases), set(runner.MATRIX))
+        self.assertEqual(len(aliases), len(set(aliases)))
+        for device in catalog['devices'].values():
+            profile = catalog['profiles'][device['profile']]
+            self.assertIn('large', profile['dynamicType'])
+            self.assertIn('xxLarge', profile['dynamicType'])
+            self.assertTrue(profile['introTimes'])
+            self.assertTrue(profile['launchFrames'])
+
+    def test_welcome_baselines_exactly_match_device_profiles(self):
+        catalog = json.loads((ROOT / 'Packages/ChronoFlowKit/Tests/SnapshotSupport/profiles.json').read_text())
+        directory = ROOT / 'AppTests/__Snapshots__/WelcomeSnapshotTests'
+        expected = set()
+        for model, device in catalog['devices'].items():
+            for kind, variants in [('finalWelcome', ['large', 'xxLarge']), ('frozenIntro', catalog['profiles'][device['profile']]['introTimes'])]:
+                for style in ['light', 'dark']:
+                    for language in ['en', 'nl']:
+                        for variant in variants:
+                            expected.add((kind, model, style, language, str(variant)))
+        actual = set()
+        for image in directory.glob('*.png'):
+            match = re.fullmatch(r'(finalWelcome|frozenIntro)\.(iPhone\d+,\d+)-\d+x\d+-[23]x-(light|dark)-(en|nl)-(.+)\.png', image.name)
+            self.assertIsNotNone(match, image.name)
+            actual.add(match.groups())
+        self.assertEqual(actual, expected)
 
 
 if __name__ == '__main__':
