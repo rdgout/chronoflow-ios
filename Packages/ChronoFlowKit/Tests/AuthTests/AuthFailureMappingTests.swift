@@ -26,6 +26,14 @@ struct AuthFailureMappingTests {
         let throttle = AuthFailureMapping(.throttled(retryAfterSeconds: 73, status: 429), displayedFields: [])
         #expect(throttle.banner == .locked && throttle.retryAfterSeconds == 73)
     }
+    @Test func obsoleteCredentialsKeyUsesTheServerFallback() {
+        let mapped = AuthFailureMapping(
+            .validation(
+                fields: ["email": FieldMessage(key: "These credentials do not match our records.")], status: 422),
+            displayedFields: ["email", "password"])
+        #expect(mapped.banner == .server)
+        #expect(mapped.fields.isEmpty)
+    }
     @Test func fieldArgumentsAreWhitelistedAndNeverExposeUnknownEnglish() {
         for (locale, expected) in [
             ("en", "Use no more than 255 characters."), ("nl", "Gebruik niet meer dan 255 tekens."),

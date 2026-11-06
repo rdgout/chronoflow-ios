@@ -33,8 +33,7 @@ nonisolated public struct AuthFailureMapping: Sendable, Equatable {
             retryAfterSeconds = seconds
         case .validation(let messages, _):
             if messages.values.contains(where: {
-                ["These sign-in details don't match our records.", "These credentials do not match our records."]
-                    .contains($0.key)
+                $0.key == "These sign-in details don't match our records."
             }) {
                 banner = .credentials
                 return
