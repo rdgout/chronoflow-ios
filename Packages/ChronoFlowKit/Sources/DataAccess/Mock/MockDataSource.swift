@@ -109,21 +109,23 @@ public actor MockDataSource: DataSource {
         }
     }
     private func password(_ value: String, confirmation: String) throws {
-        guard value == confirmation else { throw validation("password", "The passwords don't match yet.") }
+        var fields: [String: FieldMessage] = [:]
+        if value != confirmation {
+            fields["password_confirmation"] = FieldMessage(key: "The passwords don't match yet.")
+        }
         // Mock cannot query the production uncompromised-password service.
-        guard value.count >= 12 else {
-            throw validation("password", "Use at least :min characters.", args: ["min": .number(12)])
+        if value.count < 12 {
+            fields["password"] = FieldMessage(key: "Use at least :min characters.", arguments: ["min": .number(12)])
+        } else if value.rangeOfCharacter(from: .uppercaseLetters) == nil
+            || value.rangeOfCharacter(from: .lowercaseLetters) == nil
+        {
+            fields["password"] = FieldMessage(key: "Use both uppercase and lowercase letters.")
+        } else if value.rangeOfCharacter(from: .decimalDigits) == nil {
+            fields["password"] = FieldMessage(key: "Use at least one number.")
+        } else if value.rangeOfCharacter(from: .symbols.union(.punctuationCharacters)) == nil {
+            fields["password"] = FieldMessage(key: "Use at least one symbol.")
         }
-        guard value.rangeOfCharacter(from: .uppercaseLetters) != nil,
-            value.rangeOfCharacter(from: .lowercaseLetters) != nil
-        else { throw validation("password", "Use both uppercase and lowercase letters.") }
-        guard value.rangeOfCharacter(from: .decimalDigits) != nil else {
-            throw validation("password", "Use at least one number.")
-        }
-        guard value.rangeOfCharacter(from: .symbols.union(.punctuationCharacters)) != nil else {
-            throw validation("password", "Use at least one symbol.")
-        }
-
+        if !fields.isEmpty { throw DataFailure.validation(fields: fields, status: 422) }
     }
     private func authenticate(accountID: String, deviceID: String, draft: String? = nil, secret: String? = nil) throws
         -> SessionResult

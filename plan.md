@@ -1014,6 +1014,7 @@ Implementation complete (2026-11-06): all three tasks are ticked. Host verificat
 - [x] Review fix: exercise URLSession redirect callbacks for 301/302/307/308 and same/foreign hosts, with a following control session; verify effective cookie/cache/header configuration and real host-only loopback cookie handling. Delegate and security-configuration mutations fail the host regressions.
 - [x] Review fix: replace Phase 9b's stale no-commits tooling note with its three implementation commits; a host regression checks the record against git history.
 - [x] Review fix: use the backend's exact wrong-credentials email key in mock sign-in. Failure-path parity compares mock and API against the backend 422 envelope; the regression fails before the fix and passes after it.
+- [x] Review fix: report password mismatch on `password_confirmation` and keep independent password-rule errors on `password`. Exact register/reset regressions cover valid, short, mixed-case, number and symbol cases; the reset expiry test now asserts the exact confirmation field/key.
 
 #### Phase 9c: Full pull and durable outbox (`feat/phase-9c-sync`)
 

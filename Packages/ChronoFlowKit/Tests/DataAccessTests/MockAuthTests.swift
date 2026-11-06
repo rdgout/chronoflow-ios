@@ -124,7 +124,10 @@ import Testing
         }
         input.password = newPassword
         input.passwordConfirmation = "mismatch"
-        await #expect(throws: (any Error).self) { try await source.resetPassword(input) }
+        await #expect(
+            throws: DataFailure.validation(
+                fields: ["password_confirmation": FieldMessage(key: "The passwords don't match yet.")], status: 422)
+        ) { try await source.resetPassword(input) }
         input.passwordConfirmation = newPassword
         clock.advance(3600)
         await #expect(
@@ -233,6 +236,38 @@ import Testing
 }
 
 extension MockAuthTests {
+    @Test(arguments: [
+        (newPassword, FieldMessage?.none),
+        ("short", FieldMessage(key: "Use at least :min characters.", arguments: ["min": .number(12)])),
+        ("alllowercase12!", FieldMessage(key: "Use both uppercase and lowercase letters.")),
+        ("ALLUPPERCASE12!", FieldMessage(key: "Use both uppercase and lowercase letters.")),
+        ("NoNumbersHere!", FieldMessage(key: "Use at least one number.")),
+        ("NoSymbolsHere12", FieldMessage(key: "Use at least one symbol.")),
+    ])
+    func confirmationKeepsIndependentPasswordErrors(value: String, passwordError: FieldMessage?) async throws {
+        let source = try mockSource()
+        var fields = ["password_confirmation": FieldMessage(key: "The passwords don't match yet.")]
+        fields["password"] = passwordError
+        let expected = DataFailure.validation(fields: fields, status: 422)
+        var input = registration()
+        input.password = value
+        input.passwordConfirmation = "mismatch"
+        await #expect(throws: expected) { try await source.signUp(input) }
+        #expect(try await source.inbox().isEmpty)
+
+        try await source.requestPasswordReset(email: "demo@example.com")
+        guard case .passwordReset(_, _, _, var reset) = try #require(await source.inbox().last) else {
+            Issue.record("Expected reset input")
+            return
+        }
+        reset.password = value
+        reset.passwordConfirmation = "mismatch"
+        await #expect(throws: expected) { try await source.resetPassword(reset) }
+        reset.password = newPassword
+        reset.passwordConfirmation = newPassword
+        try await source.resetPassword(reset)
+    }
+
     @Test func passkeyHourlyFailureLimiterCountsOnlyValidationFailures() async throws {
         let clock = MockClock()
         let source = try mockSource(clock: clock)
