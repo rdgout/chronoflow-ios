@@ -5,6 +5,19 @@ import Testing
 @testable import DataAccess
 
 @Suite struct DataSourceParityTests {
+    @Test func wrongCredentialsMatchBackendValidation() async throws {
+        let server = StubServer { _ in
+            .init(422, try fixtureText("errors/wrong_credentials.json"))
+        }
+        let api = APIDataSource(client: try server.client())
+        let mock = try mockSource()
+        let expected = DataFailure.validation(
+            fields: ["email": FieldMessage(key: "These sign-in details don't match our records.")], status: 422)
+        for source: any DataSource in [api, mock] {
+            await #expect(throws: expected) { try await source.signIn(passwordInput(password: "wrong")) }
+        }
+    }
+
     @Test func sharedRecordedContract() async throws {
         let server = StubServer { request in
             switch request.url!.path {

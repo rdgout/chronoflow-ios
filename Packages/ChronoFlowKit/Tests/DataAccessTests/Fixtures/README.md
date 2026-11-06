@@ -11,6 +11,7 @@ Exact assertion references:
 - `LoginTest`, `TwoFactorTest`, `RegistrationTest`, `PasswordRecoveryTest` and `EmailVerificationTest` supply result discriminators, no-content responses, reset revocation and signed verification rules.
 - `TripIndexTest`, `TripShowTest` and `TripCheckOffTest` supply list/detail/check envelopes and replay behavior. Trip presentation objects here are intentionally structural subsets: no full planner result is recorded or asserted.
 - `ErrorEnvelopeTest` and the passkey handoff supply error codes, fields and arguments. Error fixture messages are artificial except where a sentence key itself is under test; no real response body or secret has been captured.
+- `errors/wrong_credentials.json` combines `Actions/Api/VerifyLoginCredentials.php`'s exact email-field key with `ApiExceptionResponse.php`'s 422 envelope. The wrong-password parity regression requires API and mock to produce the same `DataFailure`.
 - `Fixtures/MockScenarios.swift` explicitly names RN's `password`, two-factor code and recovery code as test scenario values. Production mock starts empty, with no built-in credential or assertion provider that accepts sign-in.
 
 Mock verification uses an independent fake-server HMAC key, persisted across restart; these inputs are never valid production links. Mock passkey assertions are accepted only by the injected scenario provider and do not exercise WebAuthn cryptography. Production policy's uncompromised-password service is deliberately not called by mock tests.

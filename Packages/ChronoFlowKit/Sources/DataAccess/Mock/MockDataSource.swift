@@ -155,7 +155,7 @@ public actor MockDataSource: DataSource {
         if input.password.isEmpty { throw validation("password", "Please fill this in.") }
         guard let accountID = find(email: input.email), let account = state!.accounts[accountID],
             account.password == input.password
-        else { throw validation("email", "These credentials do not match our records.") }
+        else { throw validation("email", "These sign-in details don't match our records.") }
         if account.twoFactorCode != nil {
             let challenge = id().replacingOccurrences(of: "-", with: "") + id().replacingOccurrences(of: "-", with: "")
             try update {
