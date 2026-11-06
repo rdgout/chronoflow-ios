@@ -21,4 +21,20 @@ struct AppServices {
             baseURL: info["CHRONOFLOW_API_BASE_URL"] as? String ?? "https://api.chronoflow.net/v1",
             release: release, testing: testing)
     }
+    func makeDataSource(applicationSupport: URL, credentials: any SessionStore) -> any DataSource {
+        factory.make {
+            MockDataSource(
+                store: FileMockStateStore(applicationSupport: applicationSupport),
+                bearer: {
+                    try await credentials.readStoredSession()?.token
+                })
+        } api: {
+            APIDataSource(
+                client: APIClient(
+                    baseURL: factory.baseURL,
+                    bearer: {
+                        try await credentials.readStoredSession()?.token
+                    }))
+        }
+    }
 }

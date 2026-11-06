@@ -25,3 +25,26 @@ import Testing
         }
     }
 }
+
+@MainActor @Suite struct DataSourceFactoryHostedTests {
+    @Test func sourceConstructionIsLazyAndMockOnly() async throws {
+        let credentials = FactoryCredentialProbe()
+        let services = try AppServices(
+            info: ["CHRONOFLOW_DATA_SOURCE": "api", "CHRONOFLOW_API_BASE_URL": "https://api.example.invalid/v1"],
+            testing: true)
+        let source = services.makeDataSource(
+            applicationSupport: URL(fileURLWithPath: "/unused-factory-test"), credentials: credentials)
+        #expect(source is MockDataSource)
+        #expect(await credentials.readCount == 0)
+    }
+}
+
+private actor FactoryCredentialProbe: SessionStore {
+    var readCount = 0
+    func read() -> Data? {
+        readCount += 1
+        return nil
+    }
+    func write(_ data: Data) {}
+    func delete() {}
+}

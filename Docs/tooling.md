@@ -1122,3 +1122,81 @@ xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData \
   -testLanguage en -testRegion US -parallel-testing-enabled NO ENABLE_TESTABILITY=YES \
   -only-testing:AppTests/ReleaseReadinessTests test
 ```
+
+## Phase 9b: data-source contracts, API and mock (6 November 2026)
+
+The `DataAccess` package implements the one `AppCore.DataSource` contract. Auth wire DTOs use explicit
+coding keys, session/two-factor discriminators, optional guest fields and signed verification inputs.
+Account/trip synchronization metadata and check keys are typed; unconsumed presentation objects retain
+unknown members as JSON values. Outbox commands distinguish supported receipts from parked unsupported
+kinds. API error mapping preserves HTTP status and field sentence keys/arguments; Laravel and RN argument
+syntax normalizes to String Catalog format placeholders without displaying arbitrary server English.
+
+`CHRONOFLOW_DATA_SOURCE` defaults to `mock` in Base.xcconfig, including Release. An explicit `api` selects
+the API in either configuration; unknown values fail. Tests always select mock. The default base URL is
+`https://api.chronoflow.net/v1`; Release rejects HTTP and every configuration rejects relative URLs,
+credentials/query/fragment and path traversal. Local.xcconfig is included last so explicit overrides work.
+API account storage/Keychain retain Phase 9a's namespace; mock uses ChronoFlowMock and the mock Keychain
+service. `api.deviceId` remains outside both. `AppServices` exposes construction only; ordinary launch
+still uses the Phase 4 composition until 9d, and no auth UI or sync lifecycle is mounted here.
+
+The API client lazily creates an ephemeral URLSession on its actor. It disables cookies, URL credentials
+and persistent caching, refuses every redirect, excludes bearer on all public auth routes and cancels
+requests at injected 15/90/3-second deadlines. All tests inject a deny-by-default URLProtocol; fixtures
+are synthesized from backend DTOs and assertions, with source/provenance notes alongside them. No live
+API or production credential was used.
+
+Mock state is separate fake-server JSON at `ChronoFlowMock/Server/state.json`, loaded only on the actor's
+first operation, and never the local account DB. The default seed is empty; RN demo credentials and
+accepted fake assertions exist only in named test scenarios. Tests inject memory/repo-local file stores,
+clocks, identifiers and latency. Assumed mock defaults: 300–800 ms latency; five attempts per minute;
+300-second/five-failure two-factor challenges; 60-second verification resend window; one-hour reset and
+signed verification inputs; 90-day sliding device sessions. Passkey challenges use the backend's
+120-second single-use lifetime and 10/min options, 5/min credential, 20/min IP and 20/hour failed-credential
+limits. An injected assertion provider models acceptance; the default rejects all credentials. Mock checks
+the production password shape (12/mixed case/number/symbol) without contacting the uncompromised-password
+service. Mock signatures and credentials have no production meaning. Settings/readiness follow RN fake-server
+behavior; planner presentation objects are fixture values rather than a native planner implementation.
+
+The backend handoff at `841be4bd` takes precedence over the stale RN passkey TODO and token/email verify
+shape. Passkeys return sessions for 2FA and unverified accounts, verification takes authenticated signed
+fields, and reset revokes sessions without issuing a new session. AuthenticationServices, associated-domain
+entitlements, confirmed Apple identifiers and actual device passkey verification belong to Phase 10.
+The backend branch is not deployed; no deployment or AASA verification is claimed.
+
+Verification in this worktree:
+
+- `make host-tests`: **164 passed**, including **49 DataAccess tests** across eight suites. Parameterized
+  cases additionally cover every error code, redirects, retry-after precedence and deadline values.
+- `make lint`, `make generate`, `make generators-check`: passed (7 TokenGen, 6 font/cache, 3 AssetGen
+  tests; generated assets unchanged).
+- `make launch-resources-check`: passed (9 resource checks, 21 simulator-runner fixtures).
+- SwiftPM `swift build --build-tests` for `arm64-apple-ios17.0-simulator` and direct Swift 6/MainActor
+  Debug/Release app and hosted-test module/SIL compilation: passed. Compilation does not execute UIKit.
+- Three ordered patches, each with its task tick, replayed using `git apply --index` against HEAD and
+  compared byte-for-byte with the final versioned tree. No commits were made in this worktree.
+
+Run these exact targeted checks outside the sandbox on **one iPhone 17e**, without a matrix:
+
+```sh
+make generate
+xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData \
+  -onlyUsePackageVersionsFromResolvedFile -scheme ChronoFlow -configuration Debug \
+  -destination 'platform=iOS Simulator,id=D788B715-AA0A-4B5A-882B-323E1F984769' \
+  -testLanguage en -testRegion US -parallel-testing-enabled NO \
+  -only-testing:AppTests/DataSourceBuildSettingTests \
+  -only-testing:AppTests/DataSourceFactoryHostedTests test
+
+xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData \
+  -onlyUsePackageVersionsFromResolvedFile -scheme ReadinessRelease -configuration Release \
+  -destination 'platform=iOS Simulator,id=D788B715-AA0A-4B5A-882B-323E1F984769' \
+  -testLanguage en -testRegion US -parallel-testing-enabled NO ENABLE_TESTABILITY=YES \
+  -only-testing:AppTests/DataSourceBuildSettingTests \
+  -only-testing:AppTests/DataSourceFactoryHostedTests test
+```
+
+These new hosted classes verify built Info.plist substitutions, mock-only factory selection and lazy
+source construction. Their execution and the integrated `make check` remain **Open: orchestrator**.
+The seven-simulator matrix runs only when requested. Existing physical-device protection/performance,
+Apple team/bundle confirmation, deployed AASA and later UI/copy/shipping questions remain open;
+none blocks this service-only 9b implementation.
