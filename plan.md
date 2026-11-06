@@ -512,6 +512,9 @@ OQ 10 scaling settled by the user on 2026-11-06: cap at xxLarge. Defaults author
 
 - [ ] Record and accept replacement Welcome baselines after the cap and hosted capture changes on every D1c device, including SE, 17e and Duo. Compare all references, pass the strict audits, make check and make duo; visual approval remains open. Only the four confirmed board-contrast identifiers (eyebrow, headline, copy, signIn) are allowed; all other issues fail.
 
+- [x] Replace 50 ms launch-connection sleeps with a bounded wait for the root window after async font registration. Freeze diagnostic Welcome at zero so overlay teardown cannot race the accessibility/order assertions. Retain the synchronous no-root/flush checks, flush-before-root-layout ordering, modal accessibility, and reconnect-no-replay assertions; disconnect both test delegates deterministically. Simulator validation remains open.
+  Files: `AppTests/LaunchConnectionTests.swift`.
+
 ### Phase 5 fix round 1
 
 - [x] Log every accessibility issue's audit type, optional identifier/label and compact description to the console and retained attachments. Ignore only the five confirmed `(identifier, .contrast)` pairs listed below, whose token assignments and font weights match `Main.dc.html`, plus round 5's partial-visibility contrast rule; fail unknown/nil identifiers on fully visible elements, combined audit types, clipping and every other issue. Add exception-policy tests. Preserve the designed colours.

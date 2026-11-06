@@ -28,10 +28,10 @@ nonisolated final class LaunchConnectionTests: XCTestCase {
         var process = LaunchProcessState()
         let first = SceneDelegate()
         first.connect(
-            to: scene, firstConnection: process.claimOverlay(), arguments: LaunchArguments(["-cf.session", "out"]))
+            to: scene, firstConnection: process.claimOverlay(),
+            arguments: LaunchArguments(["-cf.mode", "welcome", "-cf.freezeAt", "0"]))
         defer {
-            first.overlayWindow?.isHidden = true
-            first.window?.isHidden = true
+            first.sceneDidDisconnect(scene)
             previousKey?.makeKey()
         }
         XCTAssertNil(first.window)
@@ -49,8 +49,7 @@ nonisolated final class LaunchConnectionTests: XCTestCase {
         XCTAssertTrue(controller.view.accessibilityTraits.contains(.image))
         XCTAssertEqual(controller.preferredStatusBarStyle, .lightContent)
         XCTAssertGreaterThan(try XCTUnwrap(controller.launchScene.t0), 0)
-        try await Task.sleep(for: .milliseconds(50))
-        let window = try XCTUnwrap(first.window)
+        let window = try await waitForRoot(of: first)
         window.layoutIfNeeded()
         let root = try XCTUnwrap(window.rootViewController)
         XCTAssertTrue(root.view.accessibilityElementsHidden)
@@ -62,12 +61,22 @@ nonisolated final class LaunchConnectionTests: XCTestCase {
         XCTAssertFalse(first.signposts.activeIntervals.contains(.firstCommit))
         let second = SceneDelegate()
         second.connect(
-            to: scene, firstConnection: process.claimOverlay(), arguments: LaunchArguments(["-cf.session", "out"]))
-        defer { second.window?.isHidden = true }
+            to: scene, firstConnection: process.claimOverlay(),
+            arguments: LaunchArguments(["-cf.mode", "welcome", "-cf.freezeAt", "0"]))
+        defer { second.sceneDidDisconnect(scene) }
         XCTAssertNil(second.overlayWindow)
         XCTAssertNil(second.overlayController)
-        try await Task.sleep(for: .milliseconds(50))
-        XCTAssertFalse(try XCTUnwrap(second.window?.rootViewController?.view).accessibilityElementsHidden)
+        let secondWindow = try await waitForRoot(of: second)
+        XCTAssertFalse(try XCTUnwrap(secondWindow.rootViewController?.view).accessibilityElementsHidden)
         XCTAssertEqual(second.window?.rootViewController?.preferredStatusBarStyle, .default)
+    }
+
+    @MainActor
+    private func waitForRoot(of delegate: SceneDelegate) async throws -> UIWindow {
+        let deadline = ContinuousClock.now + .seconds(5)
+        while delegate.window == nil, ContinuousClock.now < deadline {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        return try XCTUnwrap(delegate.window, "Root window did not mount after font registration")
     }
 }
