@@ -554,6 +554,10 @@ OQ 10 scaling settled by the user on 2026-11-06: cap at xxLarge. Defaults author
   Files: `App/LaunchArguments.swift`, `AppTests/ReleaseReadinessTests.swift`, `Docs/perf/2026-11-06-d3-spike.md`.
   Test: iOS 17 Debug/Release type-check and SIL compilation; revised Release execution awaits the simulator runner. The D3 trace remains (needs a device; open).
 
+- [x] Prove `stop()` cancels work before any clock advance: bounded registration waits for two signed-in timers or three signed-out timers, drains to zero on stop and observes no state/callback change after eight seconds. Separately suspend session resolution and require its task to observe cancellation, with no later callback/forced readiness.
+  Files: `Tests/AppCoreTests/LaunchCoordinatorTests.swift`.
+  Test: host SwiftPM passes all 42 AppCore tests (77 package tests total, plus two portable capture guards), including both timer cases and unresolved-session cancellation.
+
 ### Phase 6: Audit (`feat/phase-6-audit`)
 
 Reduce Motion, dark mode, VoiceOver and strings are built in the phases above; this phase only audits.

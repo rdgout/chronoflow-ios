@@ -36,6 +36,25 @@ private struct UpdatingReadiness: LaunchReadiness {
     }
 }
 
+private actor SuspendedSessionReadiness: LaunchReadiness {
+    private(set) var waiting = false
+    private(set) var cancelled = false
+
+    func session() async -> SessionPresence {
+        waiting = true
+        do {
+            while true { try await Task.sleep(for: .seconds(3600)) }
+        } catch {
+            cancelled = Task.isCancelled
+        }
+        return .signedOut
+    }
+
+    func gate() -> Gate { .app }
+    func hasStoredData() -> Bool { false }
+    func allowFirstLoad() { Issue.record("Stopped coordinator forced readiness") }
+}
+
 @MainActor
 struct LaunchCoordinatorTests {
     @Test func manualClockResumesAtDeadlinesAndCancelsSleep() async throws {
@@ -56,7 +75,7 @@ struct LaunchCoordinatorTests {
         #expect(clock.pendingSleeps == 0)
     }
 
-    @Test func coordinatorForcesOnlyItsSourceOnceAndStopCancelsTimers() async {
+    @Test func coordinatorForcesOnlyItsSourceOnce() async {
         let clock = ManualLaunchClock()
         let source = TestReadiness()
         var exits = 0
@@ -76,6 +95,57 @@ struct LaunchCoordinatorTests {
         coordinator.stop()
         for _ in 0..<200 where clock.pendingSleeps > 0 { await Task.yield() }
         #expect(clock.pendingSleeps == 0)
+    }
+
+    @Test(arguments: [false, true])
+    func stopCancelsPendingTimersBeforeAnyDeadline(signedOut: Bool) async throws {
+        let clock = ManualLaunchClock()
+        var changes = 0
+        let coordinator = LaunchCoordinator(
+            readiness: TestReadiness(signedOut ? .signedOut : .signedIn(accountID: "a")),
+            clock: clock, reduceMotion: false
+        ) { _, _ in changes += 1 }
+        defer { coordinator.stop() }
+        coordinator.start()
+        let expectedSleeps = signedOut ? 3 : 2
+        for _ in 0..<2000 where clock.pendingSleeps != expectedSleeps || coordinator.state.session == nil {
+            await Task.yield()
+        }
+        try #require(coordinator.state.session != nil)
+        try #require(clock.pendingSleeps == expectedSleeps)
+        #expect(clock.now == .zero)
+        coordinator.stop()
+        let changesAtStop = changes
+        let stateAtStop = coordinator.state
+        for _ in 0..<2000 where clock.pendingSleeps != 0 { await Task.yield() }
+        try #require(clock.pendingSleeps == 0)
+        clock.advance(to: .seconds(8))
+        for _ in 0..<200 { await Task.yield() }
+        #expect(changes == changesAtStop)
+        #expect(coordinator.state == stateAtStop)
+    }
+
+    @Test func stopCancelsAnUnresolvedSessionTask() async throws {
+        let clock = ManualLaunchClock()
+        let source = SuspendedSessionReadiness()
+        var changes = 0
+        let coordinator = LaunchCoordinator(readiness: source, clock: clock, reduceMotion: false) { _, _ in
+            changes += 1
+        }
+        defer { coordinator.stop() }
+        coordinator.start()
+        for _ in 0..<2000 where !(await source.waiting) || clock.pendingSleeps != 2 { await Task.yield() }
+        try #require(await source.waiting)
+        try #require(clock.pendingSleeps == 2)
+        #expect(coordinator.state.session == nil)
+        coordinator.stop()
+        for _ in 0..<2000 where !(await source.cancelled) || clock.pendingSleeps != 0 { await Task.yield() }
+        try #require(await source.cancelled)
+        try #require(clock.pendingSleeps == 0)
+        clock.advance(to: .seconds(8))
+        for _ in 0..<200 { await Task.yield() }
+        #expect(changes == 0)
+        #expect(coordinator.state.session == nil)
     }
 
     @Test func signedOutUsesFallbackAtDeadlineAndFinishesOnce() async {
