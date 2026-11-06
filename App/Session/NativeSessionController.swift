@@ -80,6 +80,7 @@ final class NativeSessionController {
     func setActive(_ active: Bool) async {
         await sync?.setEnabled(active)
         if active {
+            do { try await controller.retryUnauthorized() } catch { return }
             await readiness.retry()
             if let current = await controller.activeSession() {
                 await sync?.resume(session: current.session, epoch: current.epoch)

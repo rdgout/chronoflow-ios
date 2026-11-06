@@ -104,6 +104,7 @@ public actor SessionController: SessionControlling {
     private var unconditionalSignOutRequested = false
     private var discardRequested = false
     private var unauthorizedRequested = false
+    public private(set) var pendingUnauthorizedEpoch: UInt64?
     private let stopSync: @Sendable () async -> Void
     private let requestSync: @Sendable (UInt64) async -> Void
     private var tail: Task<Void, Never>?
@@ -183,7 +184,20 @@ public actor SessionController: SessionControlling {
     }
 
     public func unauthorized(epoch: UInt64) async throws -> SignOutResult {
-        try await enqueueSignOut(discardPending: true, unauthorized: true, expectedEpoch: epoch)
+        guard self.epoch == epoch else { return .signedOut }
+        pendingUnauthorizedEpoch = epoch
+        let result = try await enqueueSignOut(discardPending: true, unauthorized: true, expectedEpoch: epoch)
+        if pendingUnauthorizedEpoch == epoch { pendingUnauthorizedEpoch = nil }
+        return result
+    }
+
+    public func retryUnauthorized() async throws {
+        guard let epoch = pendingUnauthorizedEpoch else { return }
+        if self.epoch != epoch {
+            pendingUnauthorizedEpoch = nil
+            return
+        }
+        _ = try await unauthorized(epoch: epoch)
     }
 
     private func enqueueSignOut(

@@ -1049,6 +1049,8 @@ Stack on 9b. No UI; scope is the documented engine/repositories, not Settings/To
 
 #### Phase 9d: Sync lifecycle, sign-out wipe and launch readiness (`feat/phase-9d-session-lifecycle`)
 
+- [x] Review fix: retain failed forced-sign-out epochs and retry before activation resumes sync; marker-failure regression verifies cleanup and idempotence.
+
 - [x] Review fix: fail voluntary sign-out when the pending count is unavailable; hosted regression verifies credentials and persisted outbox rows survive an unrestored account.
 
 - [x] Review fix: upgrade epoch-scoped sign-out flights for explicit requests and supersede pending accepts; gated credential-write regression covers the race.

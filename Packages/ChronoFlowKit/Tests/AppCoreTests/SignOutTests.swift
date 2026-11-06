@@ -274,3 +274,34 @@ extension SignOutTests {
         #expect(await credentials.data == nil)
     }
 }
+
+extension SignOutTests {
+    @Test func failedForcedMarkerIsRetriedOnActivation() async throws {
+        let log = SessionEventLog()
+        let credentials = ControllerMemoryStore(log: log)
+        let attempts = PendingChanges()
+        await attempts.setCount(0)
+        var hooks = SessionTeardown()
+        hooks.beginWipe = { _ in
+            await attempts.flush()
+            if await attempts.flushes == 1 { throw SessionTestFailure.unavailable }
+        }
+        hooks.flush = { await log.record("flush") }
+        hooks.logout = { _ in await log.record("logout") }
+        let controller = SessionController(
+            credentials: credentials, accounts: ControllerAccountStore(log: log), teardown: hooks)
+        try await controller.accept(wipeSession())
+        let epoch = await controller.epoch
+        await #expect(throws: SessionTestFailure.unavailable) { try await controller.unauthorized(epoch: epoch) }
+        #expect(await controller.pendingUnauthorizedEpoch == epoch)
+        try await controller.retryUnauthorized()
+        #expect(await attempts.flushes == 2)
+        #expect(await controller.presence == .signedOut)
+        #expect(await controller.pendingUnauthorizedEpoch == nil)
+        #expect(await credentials.data == nil)
+        #expect(!(await log.events).contains("flush"))
+        #expect(!(await log.events).contains("logout"))
+        try await controller.retryUnauthorized()
+        #expect(await attempts.flushes == 2)
+    }
+}
