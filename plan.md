@@ -428,7 +428,7 @@ Verified by the orchestrator on 2026-11-06: all seven D1c devices, make check an
   ready 0, 700, 1400, 1700 (↔ board 1900), 1900; slow 2600, 4900 (readyAt 4600); welcome 1500, 1950, 2400 (fallback target); Reduce Motion 0.
   Files: `Tests/LaunchTests/LaunchSnapshotTests.swift`, `Tests/LaunchTests/__Snapshots__/**`.
   Test: recorded, reviewed side by side with `_design/frames/`, then pass. Status vs path apex: assert and record the relation on 844 and 874 (S1).
-  Note: implementation and recorded baselines are complete above; this acceptance task stays open for PNG/board-frame approval and revised UI validation. `_design/frames/` is absent. Full path containment conflicts with the designed endpoints, which bleed 10 pt beyond both edges; no inset redesign/default is provided. Tests preserve the bleed and assert vertical bounds/clipping. S1: status top 518 is below apex 512.5 at height 844; top 533 is above apex 542.5 at height 874.
+  Note: implementation and recorded baselines are complete above; this acceptance task stays open for PNG/board-frame approval, the short-screen collision decision and the 874 pt S1 board review. `_design/frames/` is absent. Full path containment conflicts with the designed endpoints, which bleed 10 pt beyond both edges; no inset redesign/default is provided. Tests preserve the bleed and assert vertical bounds/clipping. S1: status top 518 is below apex 512.5 at height 844; **path crosses the status text at 874** (top 533, apex 542.5, text-frame/replicator maxY below the apex), visible in `sampledSplashFrames.iPhone18-3-402x874-3x-{light,dark}-slow-2600.png`; Air: `sampledSplashFrames.iPhone19-2-402x874-3x-{light,dark}-slow-2600.png`; iPhone 17 and Air need board review. Short-screen acceptance also needs a user or design decision: `sampledSplashFrames.iPhone14-6-375x667-2x-{light,dark}-{ready-1400,slow-2600}.png` and `sampledSplashFrames.iPhone19-4-466x678-3x-{light,dark}-{ready-1400,slow-2600}.png` show the ChronoFlow wordmark/status over the sun disc and path apex touching the moon glyph. Scoped `withKnownIssue` checks for heights below 700 pt flag these overlaps and report unexpected passes after a fix; all other sizes retain ordinary assertions. No redesigned layout is assumed.
 
 - [x] Add the `--snapshots` D1c runner mode with compare-only default, optional record pass only under `SNAPSHOT_RECORD=1`, explicit en/US, failure continuation and final `make check` / `make duo`. Fixture tests cover recording isolation, all devices, failures and Duo runtime selection.
   Files: `Scripts/launch-simulators.py`, `Tests/test_launch_simulators.py`.
@@ -543,6 +543,11 @@ OQ 10 scaling settled by the user on 2026-11-06: cap at xxLarge. Defaults author
   Files: `Scripts/launch-simulators.py`, `Tests/test_launch_simulators.py`.
   Test: all 28 runner fixtures pass on the host; simulator execution remains open.
 
+### Phase 3c review fixes (after Phase 5)
+
+- [x] Flag settled short-screen sun/moon/wordmark/status collisions with geometry tests and height-scoped known issues; assert the status text-frame/replicator union against the path apex, including the 874 pt S1 crossing. Record exact affected baselines, OQ 11 and the materialised risk. Keep Phase 3c visual acceptance open for a user/design decision.
+  Files: `Tests/LaunchTests/LaunchSnapshotTests.swift`, `plan.md`.
+
 ### Phase 6: Audit (`feat/phase-6-audit`)
 
 Reduce Motion, dark mode, VoiceOver and strings are built in the phases above; this phase only audits.
@@ -610,7 +615,7 @@ The design sets the floor: hand-off ends at 1900 ms (ready) and Welcome is fully
 - **Fraunces static cuts** look slightly off at sizes other than 20/32/48. Mitigation: OQ 10.
 - **XcodeGen vs Xcode 27 formats.** Mitigation: Phase 0 check, synchronized-folder fallback.
 - **Unfair RN comparison** (debug build, device state, signed-in data). Mitigation: Phase 7 protocol; signed-out only.
-- **Short 667 pt screens**: bottom-anchored sun/band may overlap the centred moon. OQ 11.
+- **Short 667 pt screens** (also Duo 466 × 678): the OQ 11 risk has materialised. In SE/Duo light/dark `ready-1400` and `slow-2600` baselines, the wordmark/status overlap the sun disc and the path apex touches the moon glyph. Needs a user or design decision; acceptance remains open. Scoped known-issue tests retain the current geometry and flag fixes/regressions.
 - **Bundle ID / Keychain.** Carry-over only possible under the final ID; migration is its own phase.
 
 ## Open questions for the user

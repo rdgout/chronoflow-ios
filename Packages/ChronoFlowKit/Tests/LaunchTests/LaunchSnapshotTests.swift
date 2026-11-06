@@ -62,6 +62,62 @@
             #expect(text.string == string)
         }
 
+        @Test func settledInkClearsTheSunAndPathApex() async throws {
+            try await FontRegistry.register()
+            let host = SnapshotWindow()
+            defer { host.close() }
+            let size = host.window.bounds.size
+            for style in [UIUserInterfaceStyle.light, .dark] {
+                let traits = UITraitCollection {
+                    $0.userInterfaceStyle = style
+                    $0.displayScale = host.window.screen.scale
+                }
+                for milliseconds in [1400, 2600] {
+                    let scene = LaunchScene(size: size, traits: traits, reduceMotion: false)
+                    try prepareEnglishStatus(scene)
+                    let timeline = milliseconds == 2600 ? scene.timeline.withStatus(at: .seconds(2)) : scene.timeline
+                    scene.apply(timeline.sample(at: .milliseconds(milliseconds)))
+                    let moon = scene.layer(.moon)
+                    let glyph = moon.convert(moon.bounds.insetBy(dx: 92, dy: 92), to: scene.container)
+                    let wordmark = scene.layer(.wordmark)
+                    let wordmarkInk = wordmark.convert(wordmark.bounds, to: scene.container)
+                    let status = scene.statusLine
+                    let statusInk = status.convert(
+                        try #require(status.text).frame.union(status.replicator.frame), to: scene.container)
+                    let sun = scene.layer(.sun)
+                    let disc = sun.convert(sun.bounds, to: scene.container)
+                    let path = try #require(scene.layer(.path) as? CAShapeLayer)
+                    let apex = try #require(path.path).boundingBoxOfPath.minY
+                    let short = size.height < 700
+                    #expect(!intersectsDisc(glyph, disc: disc))
+                    withKnownIssue(
+                        "OQ 11: short-screen wordmark overlaps the sun; needs a design decision",
+                        { #expect(!intersectsDisc(wordmarkInk, disc: disc)) }, when: { short })
+                    withKnownIssue(
+                        "OQ 11: short-screen path apex touches the moon glyph; needs a design decision",
+                        { #expect(glyph.maxY < apex) }, when: { short })
+                    withKnownIssue(
+                        "OQ 11: short-screen path apex is above the wordmark; needs a design decision",
+                        { #expect(wordmarkInk.maxY < apex) }, when: { short })
+                    if milliseconds == 2600 {
+                        withKnownIssue(
+                            "OQ 11: short-screen status ink overlaps the sun; needs a design decision",
+                            { #expect(!intersectsDisc(statusInk, disc: disc)) }, when: { short })
+                        withKnownIssue(
+                            "S1: path crosses the status text at 874; needs board review",
+                            { #expect(statusInk.maxY < apex || statusInk.minY > apex) },
+                            when: { abs(size.height - 874) < 0.5 })
+                    }
+                }
+            }
+        }
+
+        private func intersectsDisc(_ ink: CGRect, disc: CGRect) -> Bool {
+            let nearest = CGPoint(
+                x: min(ink.maxX, max(ink.minX, disc.midX)), y: min(ink.maxY, max(ink.minY, disc.midY)))
+            return hypot((nearest.x - disc.midX) / (disc.width / 2), (nearest.y - disc.midY) / (disc.height / 2)) < 1
+        }
+
         @Test func geometryInRunningWindow() async throws {
             try await FontRegistry.register()
             let host = SnapshotWindow()
