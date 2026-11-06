@@ -16,6 +16,13 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 (ROOT / 'build').mkdir(exist_ok=True)
 runner = SimpleNamespace(**runpy.run_path(str(ROOT / 'Scripts/launch-simulators.py')))
+PHASE9_HOSTED = (
+    'AppTests/AccountStorageLifecycleTests', 'AppTests/SessionLifecycleTests',
+    'AppTests/KeychainSessionStoreTests', 'AppTests/DataSourceBuildSettingTests',
+    'AppTests/DataSourceFactoryHostedTests', 'AppTests/SyncLifecycleTests',
+    'AppTests/AccountWipeTests', 'AppTests/SessionReadinessTests',
+    'AppTests/LaunchConnectionTests', 'AppTests/ReleaseReadinessTests',
+)
 
 
 def discovered_suites(directory):
@@ -80,11 +87,22 @@ class ClassificationTests(unittest.TestCase):
         self.assertTrue(any(s.startswith('DataAccessTests/') for s in host))
         self.assertTrue(any(s.startswith('SyncTests/') for s in host))
         for alias in runner.MATRIX:
-            self.assertFalse(set(runner.selection('welcome', alias)) & host)
+            self.assertFalse(set(runner.selection('check', alias)) & host)
         makefile = (ROOT / 'Makefile').read_text()
-        self.assertIn('host-tests:\n\tsh Scripts/host-tests.sh', makefile)
-        for suite in ('SessionLifecycleTests', 'SyncLifecycleTests', 'AccountWipeTests', 'SessionReadinessTests', 'AccountStorageLifecycleTests', 'KeychainSessionStoreTests'):
-            self.assertIn('AppTests/' + suite, runner.selection('welcome', '17e'))
+        self.assertIn('host-tests: package-tests token-tests asset-tests launch-resources-check', makefile)
+        self.assertIn('package-tests:\n\tsh Scripts/swiftpm.sh test ChronoFlowKit', makefile)
+        self.assertIn('exec sh "$(dirname "$0")/swiftpm.sh" test ChronoFlowKit "$@"',
+                      (ROOT / 'Scripts/host-tests.sh').read_text())
+
+    def test_check_keeps_every_phase9_hosted_suite_in_its_configuration(self):
+        selected = runner.selection('check', '17e')
+        configurations = runner.configurations(selected)
+        for suite in PHASE9_HOSTED:
+            self.assertEqual(selected.count(suite), 1, suite)
+            configuration = 'Release' if suite.endswith('/ReleaseReadinessTests') else 'Debug'
+            self.assertIn(suite, configurations[configuration])
+            self.assertNotIn(suite, runner.selectors('profiles') + runner.selectors('reference'))
+        self.assertTrue(set(PHASE9_HOSTED[:8]) <= set(runner.selectors('logic')))
 
     def test_perf_configuration_is_explicit_and_ordinary_release_restores_native(self):
         project = (ROOT / 'project.yml').read_text()
@@ -121,9 +139,26 @@ class ClassificationTests(unittest.TestCase):
         self.assertIn('targets: [AppTests]', scheme)
         self.assertNotIn('ENABLE_TESTABILITY', project)
 
+    def test_tiers_never_select_the_matrix_in_any_default_flow(self):
+        for target in ['quick', 'check']:
+            command = subprocess.check_output(['make', '-n', target], cwd=ROOT, text=True)
+            self.assertNotIn('--matrix', command)
+            self.assertNotIn('--devices duo', command)
+            self.assertIn('test ChronoFlowKit', command)
+            self.assertIn('test TokenGen', command)
+            self.assertIn('test AssetGen', command)
+            self.assertEqual(command.count('test ChronoFlowKit'), 1)
+            if target == 'quick':
+                self.assertNotIn('launch-simulators.py --', command)
+                self.assertNotIn('xcodebuild', command)
+            else:
+                self.assertEqual(command.count('--devices 17e'), 1)
+        self.assertIn('--matrix', subprocess.check_output(['make', '-n', 'matrix'], cwd=ROOT, text=True))
+        self.assertEqual((ROOT / 'Scripts/ci.sh').read_text().strip().splitlines()[-1], 'exec make generate check')
+
     def test_make_check_runs_combined_pass_and_individual_targets_share_runner(self):
         makefile = (ROOT / 'Makefile').read_text()
-        self.assertIn('check: lint generators-check launch-resources-check host-tests simulator-check', makefile)
+        self.assertIn('check: quick generators-check simulator-check', makefile)
         self.assertNotIn('test snapshots', makefile.split('check:')[-1])
         self.assertIn("--devices $(DEVICES) --only $(foreach selector,$(ONLY),'$(selector)')", makefile)
         self.assertIn('--devices duo', makefile)
@@ -174,6 +209,7 @@ class RunnerTests(unittest.TestCase):
             return subprocess.CompletedProcess(command, status, '')
         output = io.StringIO()
         with patch.dict(runner.main.__globals__, ROOT=self.scratch, TIMINGS_PATH=self.scratch / 'build/test-results/timings.json', machine_resources=lambda: (14, 36 * 1024**3)), patch.object(runner.subprocess, 'run', side_effect=fake_run), contextlib.redirect_stdout(output):
+            kwargs.setdefault("mode", "matrix")
             result = runner.main(**kwargs)
         return result, output.getvalue()
 
@@ -187,10 +223,7 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(len(builds), 2)
         self.assertEqual([c[c.index('-configuration') + 1] for c in builds], ['Debug', 'Release'])
         self.assertIn('ENABLE_TESTABILITY=YES', builds[1])
-        selections, _ = runner.schedule('welcome', list(runner.MATRIX))
-        expected = sum(len(runner.split_passes(config, suites, runner.workers_for(alias, selected, {})))
-                       for alias, selected in selections.items() for config, suites in runner.configurations(selected).items())
-        self.assertEqual(len(self.commands_for_tests()), expected)
+        self.assertEqual(len(self.commands_for_tests()), 9)
         self.assertFalse(any('clean' in c or 'shutdown' in c or 'erase' in c or 'boot' in c for c in self.commands))
         self.assertEqual(sum('uninstall' in c for c in self.commands), 7)
         self.assertNotIn(['make', 'check'], self.commands)
@@ -200,6 +233,45 @@ class RunnerTests(unittest.TestCase):
             self.assertEqual(c[c.index('-testLanguage') + 1], 'en')
             self.assertEqual(c[c.index('-testRegion') + 1], 'US')
             self.assertEqual(c[c.index('-maximum-concurrent-test-simulator-destinations') + 1], '1')
+
+    def test_default_gate_uses_only_17e_and_serializes_device_appearance(self):
+        status, output = self.execute(mode='check')
+        self.assertEqual(status, 0, output)
+        commands = self.commands_for_tests()
+        self.assertEqual({c[c.index('-destination') + 1] for c in commands}, {'platform=iOS Simulator,id=device-1'})
+        self.assertEqual(sum('uninstall' in c for c in self.commands), 1)
+        self.assertEqual(len(commands), 3)
+        serial = next(c for c in commands if c[c.index('-resultBundlePath') + 1].endswith('Debug-serial.xcresult'))
+        for selector in runner.SERIAL_TESTS:
+            self.assertIn('-only-testing:' + selector, serial)
+        self.assertEqual(serial[serial.index('-parallel-testing-enabled') + 1], 'NO')
+        self.assertTrue(any('-only-testing:AppTests/LaunchSnapshotTests' in c for c in commands))
+        self.assertFalse(any('-only-testing:AppCoreTests/LaunchCoordinatorTests' in c for c in commands))
+
+    def test_check_executes_all_phase9_hosted_suites_once_on_17e(self):
+        status, output = self.execute(mode='check')
+        self.assertEqual(status, 0, output)
+        for suite in PHASE9_HOSTED:
+            matches = [c for c in self.commands_for_tests() if '-only-testing:' + suite in c]
+            self.assertEqual(len(matches), 1, suite)
+            command = matches[0]
+            self.assertEqual(command[command.index('-destination') + 1],
+                             'platform=iOS Simulator,id=device-1')
+            configuration = 'Release' if suite.endswith('/ReleaseReadinessTests') else 'Debug'
+            self.assertEqual(command[command.index('-configuration') + 1], configuration)
+            self.assertNotIn('-skip-testing:' + suite, command)
+            self.assertIn('PASS 17e ', output)
+            self.assertIn(' ' + suite, output)
+
+    def test_snapshot_record_one_records_both_screens_once_on_17e(self):
+        with patch.dict(os.environ, SNAPSHOT_RECORD='1'):
+            status, output = self.execute(mode='snapshots')
+        self.assertEqual(status, 0, output)
+        recorded = [c for c,e in zip(self.commands,self.environments) if e.get('TEST_RUNNER_SNAPSHOT_RECORD')]
+        self.assertEqual(len(recorded), 1)
+        for selector in runner.SNAPSHOTS:
+            self.assertIn('-only-testing:' + selector, recorded[0])
+        self.assertEqual(recorded[0][recorded[0].index('-parallel-testing-worker-count') + 1], '1')
 
     def test_resolves_aliases_by_type_and_runtime_never_name(self):
         self.devices[runner.REGULAR_RUNTIME].insert(0, dict(self.devices[runner.DUO_RUNTIME][0], udid='wrong-runtime'))
@@ -227,7 +299,7 @@ class RunnerTests(unittest.TestCase):
         for alias in runner.MATRIX:
             expected = f'build/test-results/{alias}/Debug-compare.xcresult'
             self.assertTrue(any(p.endswith(expected) for p in paths))
-            self.assertIn(f'PASS {alias} Debug-compare AppTests/WelcomeSnapshotTests', output)
+            self.assertIn(f'PASS {alias} Debug-compare AppTests/DeviceGeometrySmokeTests', output)
 
     def test_successful_run_learns_numeric_xcresult_durations(self):
         status, output = self.execute(aliases=['se'], only=['AppUITests/WelcomeTests'])
@@ -246,7 +318,7 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(status, 1)
         self.assertIn('FAIL se Debug-compare AppUITests/WelcomeTests: AppUITests/WelcomeTests/testExample()', output)
         self.assertRegex(output, r'PASS \w+ Release-compare AppTests/ReleaseReadinessTests')
-        self.assertIn('PASS duo Debug-compare AppTests/WelcomeSnapshotTests', output)
+        self.assertIn('PASS duo Debug-compare AppTests/DeviceGeometrySmokeTests', output)
 
     def test_empty_results_never_report_a_pass(self):
         self.nodes = []
@@ -445,7 +517,7 @@ Test Case '-[AppUITests.WelcomeTests testB]' passed (3.000 seconds).
     def test_modes_filter_before_balancing_and_targeting_keeps_explicit_repetition(self):
         for mode in ['test', 'snapshots', 'launch-snapshots']:
             selected, _ = runner.schedule(mode, ['se', 'duo'])
-            expected = set(runner.selection(mode, '17e'))
+            expected = {s for alias in ['se', 'duo'] for s in runner.selection(mode, alias)}
             self.assertEqual(set(s for values in selected.values() for s in values), expected)
         selected, _ = runner.schedule('welcome', ['se', 'duo'], ['AppUITests/ReadinessTests'])
         self.assertEqual(selected, {a: ['AppUITests/ReadinessTests'] for a in ['se', 'duo']})
@@ -498,6 +570,10 @@ class ParallelTests(unittest.TestCase):
                     for suite in discovered_suites(file.parent):
                         if re.search(r'(?:class|struct)\s+' + suite + r'\b', source):
                             self.assertIn(target + '/' + suite, runner.SERIAL_TESTS, file)
+        self.assertNotIn('"-AppleInterfaceStyle"', (ROOT / 'AppUITests/LaunchSceneTests.swift').read_text())
+        self.assertIn('DeviceAppearance.set', (ROOT / 'AppUITests/LaunchSceneTests.swift').read_text())
+        self.assertIn('AppUITests/LaunchToWelcomeTests', runner.SERIAL_TESTS)
+        self.assertIn('"-AppleInterfaceStyle"', (ROOT / 'AppUITests/WelcomeTests.swift').read_text())
         self.assertIn('@Suite(.serialized)', (ROOT / 'AppTests/WelcomeSnapshotTests.swift').read_text())
 
     def test_worker_budget_restores_slots_after_failure_and_bounds_clones(self):

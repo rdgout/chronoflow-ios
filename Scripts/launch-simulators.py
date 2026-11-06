@@ -36,6 +36,7 @@ SUITES = {'AppTests': {'logic': ('LaunchArgumentLogicTests',
                         'RootNavigationTests',
                         'StubReadinessTests',
                         'WelcomeSnapshotGuardTests',
+                        'WelcomeAuditPolicyTests',
                         'AccountStorageLifecycleTests',
                         'DataSourceBuildSettingTests',
                         'DataSourceFactoryHostedTests',
@@ -46,27 +47,20 @@ SUITES = {'AppTests': {'logic': ('LaunchArgumentLogicTests',
               'matrix': ('ContentSizeCapTests',
                          'LaunchArgumentsTests',
                          'LaunchConnectionTests',
-                         'LaunchFrameParityTests',
                          'LaunchHandOffTests',
                          'LaunchPlaybackTests',
                          'LaunchSceneTests',
-                         'LaunchStoryboardTests',
                          'LaunchTestHostTests',
-                         'WelcomeHandOverTests',
-                         'WelcomeSnapshotTests',
                          'DeviceGeometrySmokeTests',
+                         'WelcomeHandOverTests',
                          'LaunchImageMutationTests',
-                         'LaunchSnapshotTests',
-                         'SnapshotContainerTests',
-                         'WelcomeAuditPolicyTests'),
+                         'SnapshotContainerTests'),
+              'profiles': ('LaunchSnapshotTests', 'WelcomeSnapshotTests'),
+              'reference': ('LaunchFrameParityTests', 'LaunchStoryboardTests'),
               'release': ('ReleaseReadinessTests',)},
  'AppUITests': {'logic': ('ReadinessTests', 'WelcomeLogicTests'),
-                'matrix': ('LaunchSceneTests',
-                           'LaunchSceneDarkTests',
-                           'WelcomeTests',
-                           'WelcomeEnglishAccessibilityTests',
-                           'WelcomeDutchAccessibilityTests',
-                           'LaunchToWelcomeTests')},
+                'reference': ('LaunchToWelcomeTests', 'LaunchSceneTests', 'LaunchSceneDarkTests'),
+                'matrix': ('WelcomeTests', 'WelcomeEnglishAccessibilityTests', 'WelcomeDutchAccessibilityTests')},
  'AppCoreTests': {'host': ('CatalogTests',
                            'CubicBezierTests',
                            'LaunchCoordinatorTests',
@@ -87,6 +81,7 @@ SUITES = {'AppTests': {'logic': ('LaunchArgumentLogicTests',
  'LaunchTests': {'logic': ('FlightPathTests',
                            'LaunchGlowTests',
                            'LaunchLayoutTests',
+                           'DeviceGeometryTests',
                            'LaunchRadialLayerTests',
                            'LaunchSnapshotCoverageTests',
                            'SnapshotReferenceTests',
@@ -95,11 +90,10 @@ SUITES = {'AppTests': {'logic': ('LaunchArgumentLogicTests',
                            'LaunchTimelineTests',
                            'ReadyTimelineTests',
                            'SmokeTests',
-                           'WelcomeTimelineTests',
-                           'DeviceGeometryTests')},
+                           'WelcomeTimelineTests')},
  'WelcomeTests': {'logic': ('SmokeTests', 'WelcomeGeometryTests')},
- 'PerfUITests': {'perf': ('LaunchPerfTests',)},
  'ToolingTests': {'host': ('LaunchImageComparisonTests', 'UIWaitTests')},
+ 'PerfUITests': {'perf': ('LaunchPerfTests',)},
  'DataAccessTests': {'host': ('ContractsTests',
                               'DataSourceSelectionTests',
                               'APIClientTests',
@@ -132,7 +126,7 @@ XCODEBUILD_COMMON = ["xcodebuild", "-project", "ChronoFlow.xcodeproj", "-derived
                      "-onlyUsePackageVersionsFromResolvedFile"]
 
 # Device-wide mutations must be registered here; launch/window-scoped traits are clone-safe.
-SERIAL_TESTS = ('AppUITests/LaunchSceneTests', 'AppUITests/LaunchSceneDarkTests', 'AppUITests/LaunchToWelcomeTests')
+SERIAL_TESTS = ("AppUITests/LaunchSceneTests", "AppUITests/LaunchSceneDarkTests", "AppUITests/LaunchToWelcomeTests")
 PARALLEL_TARGETS = {"AppTests", "AppUITests"}
 
 
@@ -321,7 +315,9 @@ def estimated_seconds(alias, selected, timings):
 def schedule(mode, aliases, only=(), timings=None):
     timings = timings or {"devices": {}}
     if only:
-        selections = {a: expand(only) for a in aliases}
+        return {a: expand(only) for a in aliases}, list(aliases)
+    if mode not in ("matrix", "welcome"):
+        return {a: selection(mode, a) for a in aliases}, list(aliases)
     else:
         selections = {a: selection(mode, a, include_logic=False) for a in aliases}
         logic = selection(mode, aliases[0], include_matrix=False)
@@ -329,6 +325,8 @@ def schedule(mode, aliases, only=(), timings=None):
         for suite in sorted(logic, key=lambda s: (-max(suite_seconds(s, a, timings) for a in aliases), s)):
             alias = min(aliases, key=lambda a: (estimated_seconds(a, selections[a], timings) + suite_seconds(suite, a, timings), aliases.index(a)))
             selections[alias].append(suite)
+    if "17e" in aliases:
+        selections["17e"] += selectors("profiles") + selectors("reference")
     order = sorted(aliases, key=lambda a: (-estimated_seconds(a, selections[a], timings), aliases.index(a)))
     return selections, order
 
@@ -404,7 +402,7 @@ def selectors(policy):
 
 
 def expand(only):
-    known = set(selectors("logic") + selectors("matrix") + selectors("release") + selectors("host"))
+    known = set(selectors("logic") + selectors("matrix") + selectors("release") + selectors("profiles") + selectors("reference"))
     result = []
     for item in only:
         matches = sorted(s for s in known if s == item or s.startswith(item + "/") or item.startswith(s + "/"))
@@ -414,20 +412,35 @@ def expand(only):
     return list(dict.fromkeys(result))
 
 
+IOS_METHODS = (
+    "DesignSystemTests/LaunchImagesTests",
+    "DesignSystemTests/TypographyTests/uiFontsUseTheExactFacesAndKeepTheSplashFixed()",
+    "DesignSystemTests/ExactLineTextLayoutTests/scaledHeadlinePitchAndGlyphsFitNaturalLabels()",
+    "DesignSystemTests/ExactLineTextLayoutTests/glyphCanvasDetectsClippingOutsideTheLineBox()",
+)
+
+
 def selection(mode, alias, only=(), include_logic=True, include_matrix=True):
     if only:
         return expand(only)
+    if mode == "snapshots":
+        return list(SNAPSHOTS) + ["AppTests/SnapshotContainerTests"]
+    if mode in ("check", "test", "runtime"):
+        result = [s for policy in ("logic", "matrix") for s in selectors(policy)
+                  if s.startswith(("AppTests/", "AppUITests/"))]
+        result += list(IOS_METHODS)
+        if alias == "17e":
+            result += selectors("reference")
+        if mode == "check":
+            result += selectors("profiles")
+        if mode != "test":
+            result += selectors("release")
+        return list(dict.fromkeys(result))
     result = selectors("matrix") if include_matrix else []
     if include_logic:
-        result += selectors("logic")
-        if mode not in ("test", "snapshots"):
-            result += selectors("release")
+        result += selectors("logic") + selectors("release")
     if mode == "launch-snapshots":
-        return [s for s in result if s.startswith("LaunchTests/")]
-    if mode == "snapshots":
-        return [s for s in result if s in SNAPSHOTS or s.startswith(("DesignSystemTests/", "WelcomeTests/", "LaunchTests/"))]
-    if mode == "test":
-        return [s for s in result if s not in SNAPSHOTS and not s.startswith(("DesignSystemTests/", "WelcomeTests/", "LaunchTests/"))]
+        return [SNAPSHOTS[0]]
     return result
 
 
@@ -607,12 +620,12 @@ def test_device(destination, selected, mode, recording, ready, intro_order_check
     return results
 
 
-def main(mode="welcome", aliases=None, only=(), concurrency=None, reuse_build=False, generate=True, intro_order_check=False):
+def main(mode="check", aliases=None, only=(), concurrency=None, reuse_build=False, generate=True, intro_order_check=False):
     started = time.monotonic()
     resources = machine_resources()
     concurrency = concurrency_limit(concurrency, resources)
     print(f"Host: {resources[0]} logical cores, {resources[1] / 1024**3:.1f} GiB available; destination limit={concurrency}", flush=True)
-    aliases = list(dict.fromkeys(aliases or MATRIX))
+    aliases = list(dict.fromkeys(aliases or (MATRIX if mode in ("matrix", "welcome") else ["17e"])))
     if set(aliases) - MATRIX.keys():
         raise ValueError("Unknown device aliases: " + " ".join(sorted(set(aliases) - MATRIX.keys())))
     if intro_order_check:
@@ -665,16 +678,18 @@ def main(mode="welcome", aliases=None, only=(), concurrency=None, reuse_build=Fa
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Build once, then run classified suites in parallel on the D1c simulators.")
-    parser.add_argument("--devices", nargs="+", choices=MATRIX, help="device aliases (default: all seven)")
+    parser.add_argument("--devices", nargs="+", choices=MATRIX, help="device aliases (default: 17e; --matrix explicitly requests all seven)")
     parser.add_argument("--only", nargs="+", help="target[/suite[/test]] selectors; targeted runs execute these on every requested device")
     parser.add_argument("--reuse-build", action="store_true", help="reuse the last build-for-testing products; rebuild after source/project changes")
     parser.add_argument("--intro-order-check", action="store_true", help="compare the 2700 ms frame in fresh and warmed test processes; never overwrite baselines")
     parser.add_argument("--no-generate", action="store_true")
-    parser.add_argument("--mode", choices=("welcome", "test", "snapshots"), default="welcome")
+    parser.add_argument("--mode", choices=("check", "test", "snapshots", "runtime"), default="check")
+    parser.add_argument("--matrix", action="store_true", help="explicitly request the seven-device matrix")
     for flag in ("timeline", "scene", "snapshots", "readiness", "welcome"):
         parser.add_argument("--" + flag, action="store_true", help="compatibility matrix entry point; uses the suite classification")
     args = parser.parse_args()
-    mode = "launch-snapshots" if args.snapshots and not args.scene else args.mode
+    matrix_requested = args.matrix or args.timeline or args.scene or args.readiness or args.welcome
+    mode = "launch-snapshots" if args.snapshots and not args.scene else "matrix" if matrix_requested else args.mode
     try:
         raise SystemExit(main(mode, args.devices, args.only or (), reuse_build=args.reuse_build, generate=not args.no_generate, intro_order_check=args.intro_order_check))
     except (subprocess.CalledProcessError, OSError, ValueError, KeyError, RuntimeError) as error:

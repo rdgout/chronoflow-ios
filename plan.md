@@ -964,7 +964,7 @@ Implementation ticks below describe code and host verification; simulator accept
   | Audit allow-list, nil/partial/empty frames, combined/non-contrast audit types and root-cap selection | Hosted `WelcomeAuditPolicyTests` shares `WelcomeAuditPolicy` with UI smoke |
   | Frame-stability missing/change/reset and screenshot displacement/opacity/dithering | SwiftPM `ToolingTests/UIWaitTests` and `LaunchImageComparisonTests`; real sampled-scene mutations in hosted `LaunchImageMutationTests` |
 
-- [ ] 4. Add quick, targeted, commit-gate, Duo and opt-in matrix tiers with runner regressions.
+- [x] 4. Add `make quick` (strict lint, every SwiftPM host suite, runner/resource fixtures), retain targeted selection/reuse, and make the commit gate run host checks/generators then only 17e Debug hosted/profile/UI smoke plus isolated Release. Default runner invocation also selects only 17e; `make matrix` explicitly requests LPT scheduling across seven destinations. `make duo` selects runtime smoke on its dedicated runtime and is opt-in. Build each configuration once; reuse test-without-building and parallel workers with serial device-appearance passes. Host fixtures cover tier graph/default destination/build counts/recording isolation/failure aggregation. Time targets remain unverified below.
 - [ ] 5. Update shared rules, D1c and tooling documentation for the dated decision.
 - [ ] 6. Retain LPT matrix scheduling, isolated parallel workers, event-driven waits and the exact intro-order selector with host regressions.
 - [ ] Record and visually accept the new profile references on 17e, compare them, and confirm check <300 s / quick <60 s / targeted <180 s. Requires the orchestrator; no simulator result is claimed.
