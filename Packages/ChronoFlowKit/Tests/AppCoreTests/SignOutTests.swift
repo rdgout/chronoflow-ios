@@ -220,3 +220,25 @@ extension SignOutTests {
         #expect(await controller.activeSession() == current)
     }
 }
+
+extension SignOutTests {
+    @Test func emptyOutboxSkipsFlushBeforeLogoutAndWipe() async throws {
+        let log = SessionEventLog()
+        let credentials = ControllerMemoryStore(log: log)
+        var hooks = SessionTeardown()
+        hooks.pendingCount = { await log.record("pending"); return 0 }
+        hooks.flush = { await log.record("flush") }
+        hooks.beginWipe = { _ in await log.record("marker") }
+        hooks.logout = { _ in await log.record("logout") }
+        let controller = SessionController(
+            credentials: credentials, accounts: ControllerAccountStore(log: log), teardown: hooks)
+        try await controller.accept(wipeSession())
+        #expect(try await controller.signOut(discardPending: false) == .signedOut)
+        let events = await log.events
+        #expect(!events.contains("flush"))
+        #expect(events.filter { $0 == "pending" }.count == 1)
+        #expect(events.contains("marker"))
+        #expect(events.contains("logout"))
+        #expect(await credentials.data == nil)
+    }
+}

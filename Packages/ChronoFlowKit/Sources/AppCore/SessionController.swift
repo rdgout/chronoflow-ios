@@ -226,8 +226,11 @@ public actor SessionController: SessionControlling {
             return .signedOut
         }
         if !unauthorizedRequested, !discardRequested {
-            try? await teardown.flush()
-            let count = try await teardown.pendingCount()
+            var count = try await teardown.pendingCount()
+            if count > 0 {
+                try? await teardown.flush()
+                count = try await teardown.pendingCount()
+            }
             if count > 0, !discardRequested, !unauthorizedRequested {
                 return .needsConfirmation(pendingCount: count)
             }

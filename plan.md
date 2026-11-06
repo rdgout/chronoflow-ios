@@ -1049,6 +1049,8 @@ Stack on 9b. No UI; scope is the documented engine/repositories, not Settings/To
 
 #### Phase 9d: Sync lifecycle, sign-out wipe and launch readiness (`feat/phase-9d-session-lifecycle`)
 
+- [x] Review fix: skip voluntary flush when the outbox is empty; regression asserts immediate wipe/logout without a flush.
+
 Stack on 9c. No UI. OQ 29 leaves voluntary pending-change confirmation as a return value only; no new dialog. D25 forced wipe is required regardless of that UI decision.
 
 - [x] Wire activation/reconnect/sign-in/DB-open/outbox triggers, 1 s debounce, capped exponential backoff and retry-after, cancellation on detach, path-monitor shutdown and epoch-scoped unauthorized handling. Expose future pull-to-refresh API; do not add its screen.
