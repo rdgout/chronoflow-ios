@@ -12,20 +12,21 @@ import Observation
     private let deviceIdentity: @Sendable () async throws -> String
     private let deviceName: String
     private let route: @MainActor (Route) async -> Void
-    private let passkey: @MainActor () async throws -> SessionResult
+    private let passkey: PasskeySignIn
     public private(set) var sessionFailure: SessionFailure?
 
     public init(
         source: any DataSource, session: any SessionControlling,
         deviceIdentity: @escaping @Sendable () async throws -> String, deviceName: String,
-        passkey: @escaping @MainActor () async throws -> SessionResult = { throw CancellationError() },
+        assertionProvider: any PasskeyAssertionProviding = DeterministicAssertionProvider(),
         route: @escaping @MainActor (Route) async -> Void
     ) {
         self.source = source
         self.session = session
         self.deviceIdentity = deviceIdentity
         self.deviceName = deviceName
-        self.passkey = passkey
+        self.passkey = PasskeySignIn(
+            source: source, provider: assertionProvider, identity: deviceIdentity, deviceName: deviceName)
         self.route = route
         form = AuthFormModel()
         navigation = AuthNavigation()
@@ -67,7 +68,7 @@ import Observation
             form.finish()
         }
         do {
-            let result = try await passkey()
+            let result = try await passkey.signIn()
             try await accept(result)
         } catch { receive(error) }
     }
@@ -79,7 +80,7 @@ import Observation
         await route(AuthNavigation.route(for: result.account))
     }
     private func receive(_ error: any Error) {
-        guard !(error is CancellationError) else { return }
+        guard !(error is CancellationError), error as? PasskeyFailure != .canceled else { return }
         // Storage errors have no board and remain a typed service seam without a designed presentation.
         if let failure = error as? SessionFailure {
             sessionFailure = failure

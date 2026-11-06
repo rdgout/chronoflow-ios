@@ -283,7 +283,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                     if nativeSessionFactory == nil, app?.authServices == nil {
                         app?.authServices = AuthSessionServices(
                             services: services, applicationSupport: root, nativeSession: native,
-                            navigator: navigator,
+                            navigator: navigator, anchor: { [weak app] in app?.authWindow },
                             verification: { [weak app] epoch in
                                 await app?.verificationRequired(epoch: epoch)
                             })
@@ -299,6 +299,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 window.rootViewController = controller
                 controller.view.accessibilityElementsHidden = overlayWindow != nil
                 self.window = window
+                app?.authWindow = window
                 window.makeKeyAndVisible()
             }
         }

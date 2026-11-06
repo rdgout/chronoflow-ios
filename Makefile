@@ -70,6 +70,7 @@ generators-check: token-tests asset-tests
 	build/fonttools-venv/bin/python3 -I Tools/test_fonts.py
 
 launch-resources-check:
+	python3 -I Tests/test_auth_signing.py
 	python3 -I Tests/test_launch_resources.py
 	python3 -I Tests/test_launch_simulators.py
 

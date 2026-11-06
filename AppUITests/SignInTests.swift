@@ -45,6 +45,20 @@ nonisolated final class SignInTests: XCTestCase {
         XCTAssertFalse((password.value as? String ?? "").contains("•"))
         XCTAssertEqual(email.value as? String, "test@example.com")
     }
+    @MainActor func testMockPasskeyFailureUsesDesignedBannerWithoutSystemPrompt() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-cf.session", "out", "-cf.reduceMotion"]
+        app.launch()
+        defer { app.terminate() }
+        openSignIn(app)
+        let passkey = app.buttons["sign-in.passkey"]
+        reveal(passkey, app)
+        passkey.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["auth.banner"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.sheets.count, 0)
+        XCTAssertTrue(app.textFields["sign-in.email"].isEnabled)
+    }
+
     @MainActor private func openSignIn(_ app: XCUIApplication) {
         let button = app.buttons["welcome.signIn"]
         XCTAssertTrue(button.waitForExistence(timeout: 6))

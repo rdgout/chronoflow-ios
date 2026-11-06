@@ -1723,3 +1723,42 @@ make targeted DEVICES="17e" ONLY="AppTests/AccountStorageLifecycleTests AppTests
 make targeted DEVICES="17e" ONLY="AppTests/ReleaseReadinessTests"
 make check
 ```
+
+## Phase 10a: native Auth and passkey sign-in (6 November 2026)
+
+See `Docs/auth-gate.md` for implementation, defaults, missing Dutch rows, snapshot helper integration
+and open acceptance. The original early-stack verification below predates 9c/9d; the integrated stack retains both phases.
+No simulator execution or Auth reference recording is claimed for this port.
+Original early-stack host verification: 185 SwiftPM tests (21 Auth) pass; strict lint, XcodeGen, generator freshness
+(8 TokenGen / 4 AssetGen / 6 font/cache), 3 signing-guard, 9 resource and 22 runner tests pass.
+SwiftPM package/test compilation for the iOS 17 simulator floor and direct Swift 6/MainActor
+app/hosted/UI module compilation pass. No UIKit test has executed in this sandbox.
+
+Run on the one pinned 17e after applying patches:
+
+```sh
+make generate
+make targeted DEVICES="17e" ONLY="AppTests/AuthControlTests AppTests/AuthLayoutTests AppTests/SessionReadinessTests AppUITests/SignInTests AppUITests/AuthAuditTests"
+```
+
+Record only after review, then compare (the runner records and compares in that first command):
+
+```sh
+SNAPSHOT_RECORD=1 make targeted DEVICES="17e" ONLY="AppTests/AuthSnapshotTests"
+REUSE_BUILD=1 make targeted DEVICES="17e" ONLY="AppTests/AuthSnapshotTests"
+```
+
+The Auth host suites run in quick; controls/layout and UI are logic suites in check, with the
+appearance-switching audit isolated serially. AuthSnapshotTests uses the profiles policy and SNAPSHOTS.
+Its SnapshotContainer windows reuse the shared profile fixtures, exact four insets and CPU layer
+capture used by Welcome. Full SE/17e/Duo/Pro Max and compact 17/Air/18 Pro categories remain covered,
+alongside the zero-inset board and AX5 cap equality. No Auth reference PNGs are included.
+For explicit xcodebuild recording, set TEST_RUNNER_SNAPSHOT_RECORD=1 and select only
+AppTests/AuthSnapshotTests. Normal comparisons never record implicitly. make host-tests runs all Auth
+models/mapping/catalog/encoding and mock-provider logic on macOS.
+
+For later physical passkey verification, supply a confirmed team in ignored Local.xcconfig and build
+the app with -scheme ChronoFlow -configuration DeviceSigned -destination 'generic/platform=iOS'.
+This config adds webcredentials:app.chronoflow.net only on iphoneos for the app target; the signing
+guard requires an actual certificate/team. Debug/Release/simulator/ad-hoc builds have no association.
+AASA deployment/CDN/team/real-device checks remain open.
