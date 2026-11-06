@@ -491,9 +491,10 @@ OQ 10 scaling settled by the user on 2026-11-06: cap at xxLarge. Defaults author
   Files: `Sources/Welcome/IntroItem.swift`, `Sources/AppCore/LaunchIntro.swift`.
   Test: offsets; snapshots at 2400, 2450, 2700, 3200, 3300; second appearance has no intro.
   Note: all six stagger offsets share the overlay media clock, including late session resolution; frozen sampling uses the same intro bezier. The moon stays fixed. A claimed intro survives overlay teardown, while route revisits, reconnects and Reduce Motion render the final screen. The intro signpost spans W+700 through W+1600 independently of overlay removal. Host timing/claim tests and en/nl light/dark frozen snapshots at all five times are written; simulator comparison remains open.
-- [ ] Buttons → `Navigator`: "Plan my trip" → `.guestWizard`, "Sign in" → `.signIn`; `PressStyle`; 52 pt.
+- [x] Buttons → `Navigator`: "Plan my trip" → `.guestWizard`, "Sign in" → `.signIn`; `PressStyle`; 52 pt.
   Files: `Sources/Welcome/WelcomeView.swift`.
   Test: UI tests for both routes; `performAccessibilityAudit()` on Welcome.
+  Note: native SwiftUI Buttons retain the board's dawn/sky pills, generated 52 pt minimum height, scalable labels and shared PressStyle, including the diagnostic Reduce Motion override. Both route UI tests, Dutch AX5 scroll reachability, reading-order geometry and full accessibility audits in en/nl and both appearances are written; simulator execution remains open. Fix round 4: audit at the top, then swipe up at most eight times until Sign in is hittable and fully inside the window; assert both actions are fully visible before the second audit. Both passes share the same handler and five board-contrast pairs, including Plan my trip. Partial/empty/outside frame regression tests are included. Fix round 5: keep the partial-visibility rule: the handler ignores exact `.contrast` issues only for explicit board pairs or an element whose current frame fails `isFullyVisible` against the app window; a nil element and every other issue still fail. Diagnostics include `partiallyVisible` and the ignore decision. Decision regressions cover partial contrast, fully visible non-board contrast, partial non-contrast/combined types, nil elements and all explicit board pairs. Fix round 6: the orchestrator confirms the SE Dutch Plan button is fully visible in both appearances, correcting round 5's partial-visibility explanation for that failure. The audit's element screenshot measures text 6.76:1 on the dawn pill and pill 1.40:1 against the sky. Add `(welcome.plan, .contrast)` to the explicit board pairs; preserve the designed dawn/dawn-foreground tokens. The second pass still requires both actions fully visible. Revised simulator execution remains open; fold rounds 5/6 into the action/audit-scroll commit that introduced the allow-list. Scrolling with the long Dutch headline is by design. (OQ 10 default assumed, confirm). RN scrolling/padding retained. (OQ 12 default assumed, confirm). Plan my trip opens `.guestWizard` (WizardWhereGuest); the stale board link still needs a designer update. Destination screens remain the existing OQ 8 seams.
 
 ### Phase 5 user decisions and fix round 2 (2026-11-06)
 
@@ -503,6 +504,20 @@ OQ 10 scaling settled by the user on 2026-11-06: cap at xxLarge. Defaults author
 - [x] Reuse RN's opaque 1024 px icon unchanged in the universal iOS AppIcon asset and enable AppIcon compilation for the iPhone app. Host tests check dimensions, absence of alpha/transparency and exact RN bytes; a hosted test checks the built CFBundleIcons primary name. OQ 18 icon settled by the user on 2026-11-06. (OQ 18 default assumed, confirm). No distinguishing Debug display name. Dark/tinted variants and a layered Liquid Glass icon need design assets; those remain Open. Built-icon validation remains open.
   Files: `App/Assets.xcassets/AppIcon.appiconset/**`, `project.yml`, `Tests/test_launch_resources.py`, `AppTests/AppIconTests.swift`, `AGENTS.md`.
 
+### Phase 5 fix round 1
+
+- [x] Log every accessibility issue's audit type, optional identifier/label and compact description to the console and retained attachments. Ignore only the five confirmed `(identifier, .contrast)` pairs listed below, whose token assignments and font weights match `Main.dc.html`, plus round 5's partial-visibility contrast rule; fail unknown/nil identifiers on fully visible elements, combined audit types, clipping and every other issue. Add exception-policy tests. Preserve the designed colours.
+  Files: `AppUITests/WelcomeTests.swift`.
+  Test: iOS 17 type-check passes; simulator diagnostics and revised audit results remain open.
+
+- [ ] Welcome contrast per board tokens: `welcome.eyebrow`, needs design decision. Open pair: `(welcome.eyebrow, .contrast)`, Figtree 600, `dawn` on `cf-sky`; no corrective design/default exists.
+
+- [ ] Welcome contrast per board tokens: `welcome.headline`, needs design decision. Open pair: `(welcome.headline, .contrast)`, Fraunces 400, `skyTitle` on `cf-sky`; no corrective design/default exists.
+
+- [ ] Welcome contrast per board tokens: `welcome.copy`, needs design decision. Open pair: `(welcome.copy, .contrast)`, Figtree 400, `skyCopy` on `skyCopyBackground`; no corrective design/default exists.
+
+- [ ] Welcome contrast per board tokens: `welcome.signIn`, needs design decision. Open pair: `(welcome.signIn, .contrast)`, Figtree 500, `skyCopy` on `skyCopyBackground`; no corrective design/default exists.
+- [ ] Welcome contrast per board tokens: `welcome.plan`, needs design decision. Measured on SE nl: text 6.76:1 on the pill, pill 1.40:1 against the sky (the audit flags it). No corrective design/default exists.
 ### Phase 6: Audit (`feat/phase-6-audit`)
 
 Reduce Motion, dark mode, VoiceOver and strings are built in the phases above; this phase only audits.

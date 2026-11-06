@@ -31,6 +31,7 @@ struct RootView: View {
         if let route = navigator.route {
             if route == .welcome {
                 WelcomeView()
+                    .environment(\.welcomeNavigator, navigator)
                     .environment(\.moonAnchorStore, moonAnchorStore)
                     .environment(\.launchIntro, launchIntro)
                     .environment(\.forcesReduceMotion, forcesReduceMotion)

@@ -128,7 +128,7 @@ nonisolated final class LaunchSceneTests: XCTestCase {
     }
 
     @MainActor
-    private static func waitForAppearance(_ appearance: XCUIDevice.Appearance) async throws -> Bool {
+    static func waitForAppearance(_ appearance: XCUIDevice.Appearance) async throws -> Bool {
         let deadline = ContinuousClock.now.advanced(by: .seconds(10))
         while XCUIDevice.shared.appearance != appearance {
             guard ContinuousClock.now < deadline else { return false }

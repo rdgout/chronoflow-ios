@@ -8,6 +8,7 @@ import SwiftUI
         @Environment(\.launchIntro) private var launchIntro
         @Environment(\.accessibilityReduceMotion) private var reduceMotion
         @Environment(\.forcesReduceMotion) private var forcesReduceMotion
+        @Environment(\.welcomeNavigator) private var navigator
         @State private var activeIntro: LaunchIntro?
         @State private var initialized = false
         private var onFrame: (@MainActor (WelcomeElement, CGRect) -> Void)?
@@ -91,11 +92,11 @@ import SwiftUI
                 .modifier(IntroItem(index: 3))
                 .padding(.bottom, WelcomeTokens.actionGap)
                 .accessibilityIdentifier("welcome.copy")
-                WelcomeButton(copy("Plan my trip"), kind: .primary) {}
+                WelcomeButton(copy("Plan my trip"), kind: .primary) { navigator?.navigate(to: .guestWizard) }
                     .accessibilityIdentifier("welcome.plan")
                     .reportWelcomeFrame(.plan)
                     .modifier(IntroItem(index: 4))
-                WelcomeButton(copy("Sign in"), kind: .secondary) {}
+                WelcomeButton(copy("Sign in"), kind: .secondary) { navigator?.navigate(to: .signIn) }
                     .accessibilityIdentifier("welcome.signIn")
                     .reportWelcomeFrame(.signIn)
                     .modifier(IntroItem(index: 5))
