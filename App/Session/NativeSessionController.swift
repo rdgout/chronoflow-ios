@@ -70,8 +70,8 @@ final class NativeSessionController {
         controller = SessionController(
             credentials: credentials, accounts: accounts, teardown: teardown, stopSync: { await sync?.stop() },
             requestSync: { epoch in
-                if let current = await reference.value()?.activeSession(), current.epoch == epoch {
-                    await sync?.start(session: current.session, epoch: epoch)
+                if let controller = reference.value() {
+                    await sync?.requestStart(controller: controller, epoch: epoch)
                 }
                 await requestSync(epoch)
             })

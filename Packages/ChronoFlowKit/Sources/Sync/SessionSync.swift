@@ -34,6 +34,11 @@ public actor SessionSync {
         self.verification = verification
     }
 
+    public nonisolated func requestStart(controller: SessionController, epoch: UInt64) async {
+        guard let current = await controller.activeSession(), current.epoch == epoch else { return }
+        Task { await self.start(session: current.session, epoch: epoch) }
+    }
+
     public func start(session: StoredSession, epoch: UInt64) async {
         let current = await isCurrent(session, epoch)
         guard enabled, current else { return }

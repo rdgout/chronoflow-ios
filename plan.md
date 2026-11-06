@@ -1049,6 +1049,8 @@ Stack on 9b. No UI; scope is the documented engine/repositories, not Settings/To
 
 #### Phase 9d: Sync lifecycle, sign-out wipe and launch readiness (`feat/phase-9d-session-lifecycle`)
 
+- [x] Review fix: schedule sync startup after session publication without awaiting data-source/path setup; suspended production source-factory host regression proves StoredDataReadiness.session resolves independently.
+
 - [x] Review fix: let activation, reconnect and outbox commits preempt exponential backoff while preserving true server retry-after deadlines; literal call-sequence regressions cover all three triggers.
 
 - [x] Review fix: preserve retry deadlines and failure counts per session epoch across background pauses and seed backoff from stored attempts; host regressions exercise production SessionSync.
