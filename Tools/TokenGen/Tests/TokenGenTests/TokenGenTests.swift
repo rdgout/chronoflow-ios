@@ -201,3 +201,69 @@ private var root: URL {
                 contentsOf: root.appending(
                     path: "Packages/ChronoFlowKit/Sources/DesignSystem/AuthTokens.generated.swift")))
 }
+
+@Test func authSourceChangesCannotHideBehindUnrelatedDeclarations() throws {
+    func read(_ path: String) throws -> String {
+        try String(contentsOf: root.appending(path: path), encoding: .utf8)
+    }
+    let board = try read("_design/canvas/AuthSignIn.dc.html")
+    let bundle = try read("_design/canvas/ds/chronoflow/components/bundle.js")
+    let css = try read("_design/canvas/ds/chronoflow/components/bundle.css")
+    let json =
+        try JSONSerialization.jsonObject(
+            with: Data(contentsOf: root.appending(path: "_design/canvas/ds/chronoflow/tokens.json"))) as! [String: Any]
+    let original = try authTokens(root: root, board: board, bundle: bundle, css: css, json: json)
+    for (source, before, after) in [
+        ("board", "column; gap: 8px; margin-top: 32px", "column; gap: 10px; margin-top: 32px"),
+        ("board", "space-between; gap: 8px", "space-between; gap: 10px"),
+        ("board", "space-between; height: 44px", "space-between; height: 46px"),
+        ("board", "width: 44px; height: 44px", "width: 46px; height: 44px"),
+        ("board", "gap: 6px; font-family", "gap: 7px; font-family"),
+        ("board", "width=\"16\" height=\"16\"", "width=\"17\" height=\"16\""),
+        ("board", "padding: 20px; border-radius: 26px", "padding: 21px; border-radius: 26px"),
+        ("board", "margin-top: 1px; color", "margin-top: 3px; color"),
+        ("board", "font-size: 18px; line-height: 24px", "font-size: 19px; line-height: 24px"),
+        ("board", "font-size: 36px; line-height: 40px", "font-size: 38px; line-height: 40px"),
+        ("board", "font-size: 16px; line-height: 24px", "font-size: 17px; line-height: 24px"),
+        (
+            "board", "font-size: 14px; line-height: 20px; font-weight: 500",
+            "font-size: 14px; line-height: 22px; font-weight: 500"
+        ),
+        ("board", "font-weight: 600; color: var(--dawn-text)", "font-weight: 700; color: var(--dawn-text)"),
+        ("board", "font-size: 12px; line-height: 16px", "font-size: 13px; line-height: 16px"),
+        ("board", "letter-spacing: -0.01em", "letter-spacing: -0.02em"),
+        (
+            "board", "font-family: var(--font-display); font-weight: 400",
+            "font-family: var(--font-display); font-weight: 500"
+        ),
+        ("board", "font-family: var(--font-sans)", "font-family: var(--font-display)"),
+        ("bundle", "focus-visible:ring-2 focus-visible:ring-ring", "focus-visible:ring-3 focus-visible:ring-ring"),
+        ("bundle", "mt-0.5 size-4 shrink-0", "mt-1 size-4 shrink-0"),
+        ("bundle", "disabled:opacity-50", "disabled:opacity-40"),
+        (
+            "bundle", "flex items-center gap-1.5 text-sm text-destructive",
+            "flex items-center gap-2 text-sm text-destructive"
+        ),
+        ("css", "--font-weight-normal:400", "--font-weight-normal:500"),
+    ] {
+        let input = source == "board" ? board : source == "bundle" ? bundle : css
+        #expect(input.contains(before), "Mutation must change its source: \(before)")
+        let changed = input.replacingOccurrences(of: before, with: after)
+        do {
+            let output = try authTokens(
+                root: root, board: source == "board" ? changed : board,
+                bundle: source == "bundle" ? changed : bundle, css: source == "css" ? changed : css, json: json)
+            #expect(output != original, "Undetected auth drift: \(before)")
+        } catch is GenerationError {
+        }
+    }
+    for (before, after) in [("'Figtree',", "'OtherSans',"), ("'Fraunces',", "'OtherDisplay',")] {
+        let text = String(decoding: try JSONSerialization.data(withJSONObject: json), as: UTF8.self)
+        let changed =
+            try JSONSerialization.jsonObject(
+                with: Data(text.replacingOccurrences(of: before, with: after).utf8)) as! [String: Any]
+        #expect(throws: GenerationError.self) {
+            try authTokens(root: root, board: board, bundle: bundle, css: css, json: changed)
+        }
+    }
+}

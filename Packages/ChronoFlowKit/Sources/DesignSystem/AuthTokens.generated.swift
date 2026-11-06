@@ -22,19 +22,19 @@ nonisolated public enum AuthTokens {
     public static var bannerGlyph: CGFloat { 18 }
     public static var bannerIconTop: CGFloat { 1 }
     public static var icon: CGFloat { 16 }
-    public static var spacer: CGFloat { 24.0 }
-    public static var inset: CGFloat { 12.0 }
-    public static var fieldRadius: CGFloat { 12.0 }
-    public static var noticeRadius: CGFloat { 22.0 }
+    public static var spacer: CGFloat { 24 }
+    public static var inset: CGFloat { 12 }
+    public static var fieldRadius: CGFloat { 12 }
+    public static var noticeRadius: CGFloat { 22 }
     public static var noticeIconTop: CGFloat { 2 }
     public static var borderWidth: CGFloat { 1 }
     public static var focusWidth: CGFloat { 2 }
     public static var disabledOpacity: Double { 0.5 }
     public static var lightShadowY: CGFloat { 10 }
-    public static var lightShadowRadius: CGFloat { 15.0 }
+    public static var lightShadowRadius: CGFloat { 15 }
     public static var lightShadowSpread: CGFloat { -12 }
     public static var darkShadowY: CGFloat { 12 }
-    public static var darkShadowRadius: CGFloat { 20.0 }
+    public static var darkShadowRadius: CGFloat { 20 }
     public static var darkShadowSpread: CGFloat { -14 }
 }
 extension Typography {
