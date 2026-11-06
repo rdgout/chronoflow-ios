@@ -25,6 +25,7 @@ public enum Typography {
 
         #if canImport(UIKit)
             public func uiFont(compatibleWith traits: UITraitCollection) -> UIFont {
+                let traits = ContentSizeCap.traits(traits)
                 let base = UIFont(name: face.rawValue, size: size)!
                 guard let relativeTo else { return base }
                 // Metrics can perturb the design size even at the default category.

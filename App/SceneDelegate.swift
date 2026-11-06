@@ -48,6 +48,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             signposts.begin(.session)
             signposts.begin(.ready)
             let overlay = UIWindow(windowScene: windowScene)
+            overlay.maximumContentSizeCategory = ContentSizeCap.maximumCategory
             let traits = windowScene.traitCollection.modifyingTraits {
                 $0.displayScale = windowScene.screen.scale
             }
@@ -140,6 +141,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         DispatchQueue.main.async { [weak self] in
             guard let self, self.connectionGeneration == generation else { return }
             let window = UIWindow(windowScene: windowScene)
+            window.maximumContentSizeCategory = ContentSizeCap.maximumCategory
             let controller = LaunchHostingController(rootView: RootView(navigator: navigator), signposts: signposts)
             controller.launchIsVisible = overlayWindow != nil
             window.rootViewController = controller

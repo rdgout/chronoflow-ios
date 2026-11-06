@@ -35,11 +35,14 @@
         }
 
         @MainActor
-        public func prepareText(_ string: String) {
+        public func prepareText(_ string: String, compatibleWith traits: UITraitCollection) {
             guard text == nil else { return }
             CATransaction.begin()
             CATransaction.setDisableActions(true)
-            let font = Typography.status.coreTextFont
+            let uiFont = Typography.status.uiFont(compatibleWith: traits)
+            let font = CTFontCreateWithName(uiFont.fontName as CFString, uiFont.pointSize, nil)
+            let height = Typography.status.lineHeight! * uiFont.pointSize / Typography.status.size
+            frame.size.height = height
             let attributed = NSAttributedString(
                 string: string,
                 attributes: [
@@ -54,13 +57,13 @@
             let label = CATextLayer()
             label.contentsScale = contentsScale
             label.string = attributed
-            label.frame = CGRect(x: left, y: (20 - ascent - descent) / 2, width: width, height: 20)
+            label.frame = CGRect(x: left, y: (height - ascent - descent) / 2, width: width, height: height)
             addSublayer(label)
             text = label
-            replicator.frame = CGRect(x: left + width + 6, y: 0, width: 18, height: 20)
-            dot.position = CGPoint(x: 2, y: 10)
+            replicator.frame = CGRect(x: left + width + 6, y: 0, width: 18, height: height)
+            dot.position = CGPoint(x: 2, y: height / 2)
             for (index, layer) in sampledDots.enumerated() {
-                layer.position = CGPoint(x: replicator.frame.minX + 2 + CGFloat(index) * 7, y: 10)
+                layer.position = CGPoint(x: replicator.frame.minX + 2 + CGFloat(index) * 7, y: height / 2)
             }
             CATransaction.commit()
         }

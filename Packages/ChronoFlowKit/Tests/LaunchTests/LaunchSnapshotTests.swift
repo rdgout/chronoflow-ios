@@ -57,7 +57,7 @@
             let bundle = try #require(Bundle(path: path))
             let string = bundle.localizedString(forKey: "Getting your plan ready", value: nil, table: nil)
             #expect(string == "Getting your plan ready")
-            scene.statusLine.prepareText(string)
+            scene.statusLine.prepareText(string, compatibleWith: scene.traits)
             let text = try #require(scene.statusLine.text?.string as? NSAttributedString)
             #expect(text.string == string)
         }

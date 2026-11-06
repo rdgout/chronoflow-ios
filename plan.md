@@ -139,7 +139,7 @@ TokenGen samples each segment separately, always emits a stop exactly at the mid
 | "Plan my trip" | Figtree 600 | 16 / normal | 0 | dawnForeground on dawn | Height 52 at default size, pill, full width |
 | "Sign in" | Figtree 500 | 16 / normal | 0 | skyCopy on skyCopyBackground | Height 52 at default size, pill, full width |
 
-Fraunces is never bold. Growth beyond 52 pt belongs to OQ 10.
+Fraunces is never bold. Dynamic Type grows through xxLarge; xxxLarge and AX1–AX5 clamp to xxLarge (user, 2026-11-06; OQ 10).
 
 ### Splash layer tree and geometry (any `w × h`)
 
@@ -218,7 +218,7 @@ Last item lands at 3200. Welcome's moon is not animated; it sits under the overl
 - Column `space-between` inside a scroll view (RN). Top group gap 16: moon row (Lucide moon 28 × 28, stroke 2 → 2.33 pt, dawn, no glow; gap 8; wordmark), eyebrow (+56 margin above), headline. Bottom group gap 12: copy card (+12 margin below), "Plan my trip", "Sign in".
 - Board geometry on 390 × 844: moon row y 64–92, eyebrow 164–180, headline from 196, "Plan my trip" 688–740, "Sign in" 752–804.
 - Moon anchor: `onGeometryChange(for: CGRect.self) { $0.frame(in: .global) }` → `MoonAnchorStore`.
-- Fallback target centre: x = 24 + 14, y = max(safeTop + 16, 64) + rowHeight / 2, where rowHeight = max(28, wordmark line height at current size).
+- Fallback target centre: x = 24 + 14, y = max(safeTop + 16, 64) + rowHeight / 2, where rowHeight = max(28, wordmark line height at the capped current size).
 
 ### Readiness rules (RN Phase 21, with the RN bug fixed)
 
@@ -492,6 +492,11 @@ Blocked by OQ 10, 12 (and OQ 6 for the moon cross-fade).
   Files: `Sources/Welcome/WelcomeView.swift`.
   Test: UI tests for both routes; `performAccessibilityAudit()` on Welcome.
 
+### Phase 5 user decisions and fix round 2 (2026-11-06)
+
+- [x] Cap Dynamic Type at xxLarge once at RootView and on both production windows. Clamp explicit font traits and MoonTarget fallback row metrics through shared ContentSizeCap; the status layer uses the capped font and scaled line height. Tests compare AX5 with xxLarge for fonts, status pixels, row height, Welcome frames/pixels and action reachability, retaining different large-size output. The moon UI landing test uses AX5 with the existing 0.5 pt tolerance. OQ 10's scaling part is settled by the user; simulator execution remains open.
+  Files: `App/RootView.swift`, `App/SceneDelegate.swift`, `App/LaunchArguments.swift`, `Sources/DesignSystem/ContentSizeCap.swift`, `Sources/DesignSystem/Typography.swift`, `Sources/Launch/StatusLineLayer.swift`, `AppTests/ContentSizeCapTests.swift`, `AppUITests/WelcomeTests.swift`, `AGENTS.md`.
+
 ### Phase 6: Audit (`feat/phase-6-audit`)
 
 Reduce Motion, dark mode, VoiceOver and strings are built in the phases above; this phase only audits.
@@ -575,7 +580,7 @@ The design sets the floor: hand-off ends at 1900 ms (ready) and Welcome is fully
 | 7 | **Late or unknown session:** signed out known after 1600 → welcome ending at that moment, or the `ready` lift-away? Session unknown at 8 s → signed out? | Start at resolution; signed out | Phase 4 |
 | 8 | **Stub destinations:** (a) Debug-only route-name screens, (b) inert buttons, (c) route seam only, (d) bring `AuthSignIn` / `TodayLoading` in. | (c) + (a), never in Release | Phase 4 |
 | 9 | **Session source and migration.** Is the RN app live with real users? If native later ships as `net.chronoflow.app`, should it read the RN Keychain item (`app:no-auth` / `session`) and migrate SQLite, kv-store, `api.deviceId`? | Native-only key now; decide at bundle switch | Phase 4 (shape only) |
-| 10 | **Welcome at large Dynamic Type, 667 pt screens, long Dutch headline; safe-area padding** (`max(safeTop+16, 64)` gives ~78 on Dynamic Island phones vs board 64). | Scroll as RN; RN padding rule; scaling capped as RN | Phase 5 |
+| 10 | **Scaling settled by the user 2026-11-06:** maximum xxLarge; xxxLarge and accessibility sizes AX1–AX5 clamp to it. Smaller sizes scale normally. Still open: scrolling on 667 pt screens, long Dutch headline and safe-area padding (`max(safeTop+16, 64)` gives ~78 on Dynamic Island phones vs board 64). | Scroll as RN; RN padding rule | Phase 5 |
 | 11 | **Short, wide and iPad screens:** every iPhone including iPhone Duo must fit (D1c, settled). Still open: iPhone portrait only (does Duo need its other postures)? Sun, band and path on 667 pt and wide widths? | RN rule: x control points × w/390, bottom-anchored | Phase 3a |
 | 12 | **Stale board link:** `Main` links "Plan my trip" to superseded `GuestFlight`; target is the new guest wizard (`WizardWhereGuest`)? | Yes; designer fixes the link | Phase 5 |
 | 13 | **Translations source:** RN `en.json` / `nl.json` as single source generating `.xcstrings`, or iOS owns its strings? | Entered by hand for this slice | Later |

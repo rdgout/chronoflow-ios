@@ -23,7 +23,8 @@
         }
 
         public func prepareStatus() {
-            statusLine.prepareText(String(localized: "Getting your plan ready", bundle: .module))
+            statusLine.prepareText(
+                String(localized: "Getting your plan ready", bundle: .module), compatibleWith: traits)
         }
 
         public func layer(_ id: LayerID) -> CALayer { layers[id]! }

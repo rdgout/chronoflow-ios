@@ -15,6 +15,7 @@ ChronoFlow is a jet-lag planner. It plans sleep, light and caffeine for a trip. 
 - **No design, no invention.** If a screen or state has no board, stop and say so. Deferring beats inventing.
 - **Values only from generated tokens and assets**, light and dark. No hard-coded colours or 390 × 844 geometry.
 - **Every iPhone, iPhone Duo included.** Splash and Welcome geometry is computed from the window size and all four safe-area insets (Duo has a side rail). Verify on the device matrix in `plan.md` D1c.
+- Dynamic Type is capped at xxLarge at the root; never add per-view caps or bypass the cap.
 - **Minimum iOS 17.0.** No `#available` checks below 17.
 - **Liquid Glass on iOS 26+.** Never set `UIDesignRequiresCompatibility`. Use system controls so they pick up Liquid Glass automatically. Explicit glass APIs only behind `if #available(iOS 26, *)` with the plain system default as fallback, never a hand-drawn imitation. Designed surfaces stay as drawn.
 - **Native components** over hand-built look-alikes of system controls.

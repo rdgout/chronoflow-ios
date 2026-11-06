@@ -54,6 +54,7 @@ struct LaunchArguments: Equatable {
     }
 
     static func fallbackRowHeight(compatibleWith traits: UITraitCollection) -> CGFloat {
+        let traits = ContentSizeCap.traits(traits)
         let base = CGFloat(Typography.welcomeWordmark.lineHeight!)
         guard traits.preferredContentSizeCategory != .large else { return base }
         return max(28, UIFontMetrics(forTextStyle: .title3).scaledValue(for: base, compatibleWith: traits))

@@ -60,7 +60,7 @@ import Testing
                     #expect(font.fontName == style.face.rawValue)
                     if let textStyle, categoryTraits != normal {
                         let expected = UIFontMetrics(forTextStyle: textStyle).scaledFont(
-                            for: base, compatibleWith: traits)
+                            for: base, compatibleWith: ContentSizeCap.traits(traits))
                         #expect(font.pointSize == expected.pointSize)
                         if categoryTraits == smaller {
                             #expect(font.pointSize < CGFloat(style.size))

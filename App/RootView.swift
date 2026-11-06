@@ -1,4 +1,5 @@
 import AppCore
+import DesignSystem
 import Observation
 import SwiftUI
 
@@ -19,6 +20,10 @@ struct RootView: View {
     var navigator = RootNavigator()
 
     var body: some View {
+        content.dynamicTypeSize(...ContentSizeCap.maximum)
+    }
+
+    @ViewBuilder private var content: some View {
         if let route = navigator.route {
             #if DEBUG
                 RoutePlaceholder(route: route)
