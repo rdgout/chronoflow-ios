@@ -68,7 +68,7 @@ class ClassificationTests(unittest.TestCase):
             self.assertFalse(set(runner.selection('welcome', alias)) & host)
         makefile = (ROOT / 'Makefile').read_text()
         self.assertIn('host-tests:\n\tsh Scripts/host-tests.sh', makefile)
-        for suite in ('AccountStorageLifecycleTests', 'KeychainSessionStoreTests'):
+        for suite in ('SessionLifecycleTests', 'AccountStorageLifecycleTests', 'KeychainSessionStoreTests'):
             self.assertIn('AppTests/' + suite, runner.selection('welcome', '17e'))
 
     def test_target_and_method_selection_is_explicit_and_validated(self):

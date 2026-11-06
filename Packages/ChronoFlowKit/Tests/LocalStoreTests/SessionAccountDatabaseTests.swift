@@ -1,0 +1,69 @@
+import AppCore
+import Foundation
+import GRDB
+import Testing
+
+@testable import LocalStore
+
+private actor IntegrationCredentials: SessionStore {
+    var data: Data?
+    func read() -> Data? { data }
+    func write(_ data: Data) { self.data = data }
+    func delete() { data = nil }
+}
+
+struct SessionAccountDatabaseTests {
+    @Test func acceptancePreservesSyncedMarkerAndAccountAndSourceIsolation() async throws {
+        let root = try temporaryStoreRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        for namespace in StorageNamespace.allCases {
+            let accounts = SessionAccountDatabase(applicationSupport: root, namespace: namespace)
+            let credentials = IntegrationCredentials()
+            let controller = SessionController(credentials: credentials, accounts: accounts)
+            let policies = AccountPolicies(termsVersion: "1", privacyVersion: "2")
+            let a = SessionAccount(
+                id: accountA, name: "A", email: "a@example.test", hasVerifiedEmail: false,
+                policies: policies, walkthroughSeen: false)
+            try await controller.accept(SessionResult(token: "test", account: a))
+            let first = try #require(await accounts.activeDatabase())
+            #expect(try await AccountRepository(database: first).account()?.syncedAt == nil)
+            try await first.write { try $0.execute(sql: "UPDATE account SET synced_at=?", arguments: ["marker"]) }
+            try await controller.accept(SessionResult(token: "new", account: a))
+            #expect(try await AccountRepository(database: first).account()?.syncedAt == "marker")
+            let settings = try await SettingsRepository(database: first).settings()
+            #expect(try settings.first?.value.decode(AccountPolicies.self) == policies)
+            let second = SessionAccount(
+                id: accountB, name: "B", email: "b@example.test", hasVerifiedEmail: true,
+                policies: policies, walkthroughSeen: true)
+            try await controller.accept(SessionResult(token: "other", account: second))
+            let active = try #require(await accounts.activeDatabase())
+            #expect(try await AccountRepository(database: active).account()?.id == accountB)
+            #expect(try await AccountRepository(database: active).account()?.syncedAt == nil)
+            await #expect(throws: StoreFailure.closed) { try await AccountRepository(database: first).account() }
+            await #expect(throws: StoreFailure.invalidAccountID) { try await accounts.upsert(a) }
+            try await accounts.close()
+            #expect(try await controller.restore() == .signedIn(accountID: accountB))
+            try await accounts.close()
+        }
+    }
+    @Test func devicePreferencesSurviveDeletingAllAccountFiles() async throws {
+        let root = try temporaryStoreRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let suite = "net.chronoflow.tests.wipe-contract." + UUID().uuidString
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        defaults.set("nl", forKey: "language")
+        defaults.set("dark", forKey: "appearance")
+        let identity = try await DeviceIdentityStore(persistence: DevicePreferences(suiteName: suite)).identity()
+        let database = AccountDatabase(applicationSupport: root)
+        try await database.open(accountID: accountA)
+        let directory = await database.directory(for: try AccountID(accountA))
+        try await database.close()
+        try FileManager.default.removeItem(at: directory)
+        let afterWipe = try await DeviceIdentityStore(persistence: DevicePreferences(suiteName: suite)).identity()
+        #expect(afterWipe == identity)
+        #expect(defaults.string(forKey: "language") == "nl")
+        #expect(defaults.string(forKey: "appearance") == "dark")
+    }
+
+}

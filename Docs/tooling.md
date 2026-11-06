@@ -1038,19 +1038,87 @@ its pixels with an explicit final Welcome reference immediately and after 500 ms
 Reduce Motion regression requires the root window to mount before checking that no intro exists.
 All mounting/claim waits are bounded and assert their outcome; UIKit execution remains open.
 
-## Phase 9a: account database (6 November 2026)
+## Phase 9a: account store, sessions and device identity (6 November 2026)
 
-LocalStore pins GRDB 7.8.0 and migrates the seven-table RN final schema directly as native v1.
-Validated UUID directories isolate accounts and API/mock roots. WAL, per-connection foreign keys,
-transaction rollback, schema parity and nondestructive failure are host-tested with repo-local caches:
-`make host-tests`. OQ 26 retains the development backup-exclusion default; shipping remains open.
-The hosted AccountStorageLifecycleTests checks backup exclusion after reopen. On a physical device
-it reads back directory/DB/WAL/SHM protection; the simulator returns nil, so it asserts instead that
-setting the same class does not throw. Hosted execution on one 17e and physical lock proof remain open.
-macOS 27.2's backup URL getter reports false despite writing the exclusion xattr; host tests verify that marker.
-No simulator run is claimed. The seven-simulator matrix runs only when the user asks for it.
+`LocalStore` pins GRDB 7.8.0 in the package manifest and resolver. It opens one background-actor-owned
+WAL pool per account, at Application Support/ChronoFlow/Accounts/<UUID>/account-<UUID>.db (API) or
+ChronoFlowMock/Accounts/… (mock). UUID path components are validated and canonicalized. A database
+instance stays bound to its account across close/reopen; another account gets another instance so an old
+repository cannot read a replacement account. Native v1 creates the seven RN-final-schema tables;
+it never replays RN migrations. The independent schema fixture records the source migration hashes.
+Failure leaves files and credentials in place; no destructive recovery is implemented.
 
-Records/repositories now retain unknown JSON members and expose off-main GRDB value streams.
-AccountModel lives in LocalStore with an app alias, allowing host tests for unknown/empty/loaded/error,
-atomic delivery, cancellation and account replacement. Close cancels observers before draining the pool.
-No view is mounted and no new hosted observation suite is needed under the user's host-test override.
+The directory and DB/WAL/SHM receive completeUntilFirstUserAuthentication protection on iOS, and the
+whole account directory is excluded from backup. This includes drafts/outbox: **OQ 26 is still a shipping
+question**; device loss/restore loses unsent local changes. macOS 27.2 writes the backup-exclusion xattr
+but its Foundation resource getter returns false in this environment; host tests inspect the binary plist
+xattr itself. The hosted iOS storage lifecycle test verifies the URL flag before and after reopen. On a
+physical device it also reads back the directory/DB/WAL/SHM protection class; the simulator returns nil,
+so it instead asserts that setting the same class does not throw. Neither simulator nor host tests prove
+locked-device hardware protection; the physical lock check remains open.
+
+Records retain raw JSON text, including unknown members, nulls and number representations. Repositories
+expose cancellable GRDB value streams fetched off the main thread; database close cancels observations
+and drains readers/writer. The pure MainActor AccountModel lives in LocalStore (the app aliases it), so
+unknown/loaded-empty/loaded/error, cancellation and account replacement are host-tested without UIKit.
+No view or new destination is mounted. Local mutations, pending-value protection, sync and wipe remain
+9c/9d work.
+
+The Phase 4 StoredSession/SessionStore reader is extended with a throwing readStoredSession() shared by
+SessionController and the legacy readiness helper. The existing native Keychain service/session key/JSON
+shape and WhenUnlockedThisDeviceOnly accessibility are retained; mock has a separate service.
+SessionController serializes open/upsert/credential-write/publication, rejects stale/canceled operations,
+and exposes epoch-bearing immutable updates plus a sync-request seam. Restore errors retain credentials
+for unlock/activation retry in 9d. NativeSessionController composes the one reader and model, but ordinary
+SceneDelegate still uses Phase 4 readiness until 9d. An injectable deferred readiness factory proves
+first-flush-before-service-construction with a suspended off-main open.
+
+DeviceIdentityStore creates UUIDv7 once through a shared in-flight operation and device-scoped lazy
+DevicePreferences (`api.deviceId`), outside both account namespaces. Clock/randomness/persistence are
+injectable. A persisted malformed identity raises a typed failure instead of silently rotating it. Device names
+use a trimmed name or model fallback and the longest whole-grapheme prefix fitting **255 Unicode scalars**,
+which also fits the backend's character limit for composed emoji. No IDFA/IDFV is used. App composition
+in 9b/9d should share one identity store across sources. Tests recreate the preference/store objects and
+remove the account directory to verify persistence and the future wipe-survival contract.
+
+Verification performed in this worktree:
+
+- `make host-tests`: **115 tests passed** (57 AppCore, 15 LocalStore, 34 Launch, 8 DesignSystem, 1 Welcome;
+  30 new tests). The warmed test bodies complete in about 1.3 s total, excluding build/startup.
+- `make lint`, `make generate`, `make generators-check`: passed; generators ran 7 TokenGen, 6 Python
+  font/cache and 3 AssetGen tests with unchanged generated assets.
+- `python3 -I Tests/test_launch_simulators.py`: **21 passed**; `python3 -I Tests/test_launch_resources.py`:
+  **9 passed**. Host-classified suites are excluded from ordinary simulator selection; targeted selection
+  remains explicit. Hosted AppTests still depends only on ChronoFlow.
+- `swift build --build-tests` with the iOS 17 simulator triple/installed SDK and repo-local caches passed;
+  direct Swift 6/MainActor Debug and Release app/hosted-test module and SIL compilation passed.
+  Compilation is not simulator execution.
+
+**Open:** `make check` / hosted execution requires the orchestrator; no xcodebuild or simulator is run in
+this sandbox. The matrix runs only on user request. Hardware protection/lock testing still needs a signed
+physical device. The passkey plan is updated from the read-only backend handoff; its code belongs to 9b/10,
+and team/bundle confirmation plus deployed AASA/device verification remain open.
+
+After applying the patches, run from this worktree (the generated project/lock copy is required):
+
+```sh
+make generate
+xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData \
+  -onlyUsePackageVersionsFromResolvedFile -scheme ChronoFlow -configuration Debug \
+  -destination 'platform=iOS Simulator,id=D788B715-AA0A-4B5A-882B-323E1F984769' \
+  -testLanguage en -testRegion US -parallel-testing-enabled NO \
+  -only-testing:AppTests/AccountStorageLifecycleTests \
+  -only-testing:AppTests/SessionLifecycleTests \
+  -only-testing:AppTests/KeychainSessionStoreTests test
+```
+
+The first two classes are new; the Keychain class is extended. For the existing launch/readiness and
+Release regression coverage, run `make check` (one 17e). The exact targeted Release command is:
+
+```sh
+xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData \
+  -onlyUsePackageVersionsFromResolvedFile -scheme ReadinessRelease -configuration Release \
+  -destination 'platform=iOS Simulator,id=D788B715-AA0A-4B5A-882B-323E1F984769' \
+  -testLanguage en -testRegion US -parallel-testing-enabled NO ENABLE_TESTABILITY=YES \
+  -only-testing:AppTests/ReleaseReadinessTests test
+```

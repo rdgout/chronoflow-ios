@@ -25,13 +25,18 @@ public protocol SessionStore: Sendable {
 }
 
 extension SessionStore {
+    public func readStoredSession() async throws -> StoredSession? {
+        guard let data = try await read() else { return nil }
+        guard let session = StoredSession.parse(data) else {
+            try await delete()
+            return nil
+        }
+        return session
+    }
+
     public func loadSession() async -> SessionPresence {
         do {
-            guard let data = try await read() else { return .signedOut }
-            guard let session = StoredSession.parse(data) else {
-                try await delete()
-                return .signedOut
-            }
+            guard let session = try await readStoredSession() else { return .signedOut }
             return .signedIn(accountID: session.accountId)
         } catch { return .signedOut }
     }
