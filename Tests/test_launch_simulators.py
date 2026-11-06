@@ -29,7 +29,7 @@ class LaunchSimulatorsTests(unittest.TestCase):
         self.failure = lambda command: False
         self.installed = True
 
-    def execute(self, timeline=False, scene=False, snapshots=False):
+    def execute(self, timeline=False, scene=False, snapshots=False, readiness=False):
         output = io.StringIO()
         states = {d["udid"]: d["state"] for devices in self.devices.values() for d in devices}
 
@@ -51,7 +51,7 @@ class LaunchSimulatorsTests(unittest.TestCase):
             return subprocess.CompletedProcess(command, status, "")
 
         with patch.object(runner.subprocess, "run", side_effect=fake_run), contextlib.redirect_stdout(output):
-            status = runner.main(timeline=timeline, scene=scene, snapshots=snapshots)
+            status = runner.main(timeline=timeline, scene=scene, snapshots=snapshots, readiness=readiness)
         return status, output.getvalue()
 
     def test_all_devices_use_type_and_runtime_and_clear_the_launch_cache(self):
@@ -68,6 +68,7 @@ class LaunchSimulatorsTests(unittest.TestCase):
             self.assertIn("PASS " + label + "\n", output)
             command = runner.XCODEBUILD + [
                 "-destination", "platform=iOS Simulator,id=" + udid,
+                "-testLanguage", "en", "-testRegion", "US",
                 "-only-testing:AppTests", "-only-testing:AppUITests/WindowTests", "-only-testing:DesignSystemTests", "test",
             ]
             restart = [
@@ -268,6 +269,61 @@ class LaunchSimulatorsTests(unittest.TestCase):
         status, output = self.execute(snapshots=True)
         self.assertEqual(status, 1)
         self.assertIn("FAIL iPhone Duo compare: No available simulator:", output)
+        self.assertNotIn("platform=iOS Simulator,id=device-6", str(self.commands))
+
+    def test_readiness_runs_phase_four_and_scene_suites_with_pinned_language_on_all_devices(self):
+        status, output = self.execute(readiness=True)
+        self.assertEqual(status, 0)
+        self.assertIn("Phase 4 simulator results:", output)
+        tests = [c for c in self.commands if c[0] == "xcodebuild" and c[-1] == "test"]
+        self.assertEqual(len(tests), 14)
+        for index, command in enumerate(tests):
+            self.assertIn("platform=iOS Simulator,id=device-" + str(index // 2), command)
+            self.assertEqual(command[command.index("-testLanguage") + 1], "en")
+            self.assertEqual(command[command.index("-testRegion") + 1], "US")
+            configuration = command[command.index("-configuration") + 1]
+            if index % 2:
+                self.assertEqual(configuration, "Release")
+                self.assertEqual(command[command.index("-scheme") + 1], "ReadinessRelease")
+                self.assertIn("ENABLE_TESTABILITY=YES", command)
+                self.assertIn("-only-testing:AppTests/ReleaseReadinessTests", command)
+                self.assertNotIn("-only-testing:AppTests", command)
+                self.assertFalse(any(c.startswith("-only-testing:") and c != "-only-testing:AppTests/ReleaseReadinessTests" for c in command))
+            else:
+                self.assertEqual(configuration, "Debug")
+                self.assertEqual(command[command.index("-scheme") + 1], "ChronoFlow")
+                self.assertNotIn("ENABLE_TESTABILITY=YES", command)
+                for suite in ["AppTests", "AppCoreTests", "LaunchTests", "DesignSystemTests", "AppUITests/WindowTests",
+                              "AppUITests/LaunchSceneTests", "AppUITests/ReadinessTests"]:
+                    self.assertIn("-only-testing:" + suite, command)
+        self.assertEqual(self.commands[-2:], [["make", "check"], ["make", "duo"]])
+
+    def test_release_readiness_scheme_excludes_package_tests_and_leaves_perf_separate(self):
+        project = (ROOT / "project.yml").read_text()
+        scheme = project.split("\n  ReadinessRelease:\n", 1)[1].split("\n  Perf:\n", 1)[0]
+        self.assertIn("config: Release", scheme)
+        self.assertIn("targets: [AppTests]", scheme)
+        self.assertNotIn("package:", scheme)
+        self.assertNotIn("PerfUITests", scheme)
+        self.assertNotIn("ENABLE_TESTABILITY", project)
+        self.assertIn("targets: [PerfUITests]", project.split("\n  Perf:\n", 1)[1])
+
+    def test_readiness_continues_after_test_failure_and_attempts_both_final_checks(self):
+        self.failure = lambda c: (c[0] == "xcodebuild" and c[-1] == "test" and "platform=iOS Simulator,id=device-0" in c) or c == ["make", "check"]
+        status, output = self.execute(readiness=True)
+        self.assertEqual(status, 1)
+        self.assertIn("FAIL iPhone SE (3rd gen):", output)
+        self.assertIn("PASS iPhone Duo\n", output)
+        self.assertIn("FAIL make check:", output)
+        self.assertIn("PASS make duo\n", output)
+        first = [c for c in self.commands if c[0] == "xcodebuild" and c[-1] == "test" and "platform=iOS Simulator,id=device-0" in c]
+        self.assertEqual([c[c.index("-configuration") + 1] for c in first], ["Debug", "Release"])
+
+    def test_readiness_requires_duos_own_runtime(self):
+        self.devices[runner.REGULAR_RUNTIME].append(self.devices[runner.DUO_RUNTIME].pop())
+        status, output = self.execute(readiness=True)
+        self.assertEqual(status, 1)
+        self.assertIn("FAIL iPhone Duo: No available simulator:", output)
         self.assertNotIn("platform=iOS Simulator,id=device-6", str(self.commands))
 
 

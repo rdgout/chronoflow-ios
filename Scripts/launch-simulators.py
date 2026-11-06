@@ -18,10 +18,11 @@ MATRIX = [
     ("iPhone 18 Pro Max", "iPhone-18-Pro-Max", REGULAR_RUNTIME),
     ("iPhone Duo", "iPhone-Duo", DUO_RUNTIME),
 ]
-XCODEBUILD = [
+XCODEBUILD_COMMON = [
     "xcodebuild", "-project", "ChronoFlow.xcodeproj", "-derivedDataPath", "build/DerivedData",
-    "-onlyUsePackageVersionsFromResolvedFile", "-scheme", "ChronoFlow",
+    "-onlyUsePackageVersionsFromResolvedFile",
 ]
+XCODEBUILD = XCODEBUILD_COMMON + ["-scheme", "ChronoFlow"]
 
 
 def run(command, *, check=True, capture_output=False, snapshot_record=False):
@@ -34,7 +35,7 @@ def run(command, *, check=True, capture_output=False, snapshot_record=False):
     return subprocess.run(command, cwd=ROOT, check=check, capture_output=capture_output, text=True, env=environment)
 
 
-def test_device(device_type, runtime, devices, timeline=False, scene=False, snapshots=False, snapshot_record=False):
+def test_device(device_type, runtime, devices, timeline=False, scene=False, snapshots=False, snapshot_record=False, readiness=False):
     identifier = "com.apple.CoreSimulator.SimDeviceType." + device_type
     device = next(
         (d for d in devices.get(runtime, []) if d.get("isAvailable") and d.get("deviceTypeIdentifier") == identifier),
@@ -58,6 +59,27 @@ def test_device(device_type, runtime, devices, timeline=False, scene=False, snap
     run(["xcrun", "simctl", "boot", udid])
     device["state"] = "Booted"
     run(["xcrun", "simctl", "bootstatus", udid, "-b"])
+    if readiness:
+        destination = [
+            "-destination", "platform=iOS Simulator,id=" + udid,
+            "-testLanguage", "en", "-testRegion", "US",
+        ]
+        passes = [
+            ("Debug", XCODEBUILD, ["-only-testing:AppTests", "-only-testing:AppCoreTests", "-only-testing:LaunchTests",
+                       "-only-testing:DesignSystemTests", "-only-testing:AppUITests/WindowTests",
+                       "-only-testing:AppUITests/LaunchSceneTests", "-only-testing:AppUITests/ReadinessTests"]),
+            ("Release", XCODEBUILD_COMMON + ["-scheme", "ReadinessRelease"],
+             ["ENABLE_TESTABILITY=YES", "-only-testing:AppTests/ReleaseReadinessTests"]),
+        ]
+        errors = []
+        for configuration, command, suites in passes:
+            try:
+                run(command + destination + ["-configuration", configuration] + suites + ["test"])
+            except (subprocess.CalledProcessError, OSError) as error:
+                errors.append(configuration + ": " + str(error))
+        if errors:
+            raise RuntimeError("; ".join(errors))
+        return
     if snapshots:
         run(XCODEBUILD + [
             "-destination", "platform=iOS Simulator,id=" + udid,
@@ -66,11 +88,12 @@ def test_device(device_type, runtime, devices, timeline=False, scene=False, snap
         return
     run(XCODEBUILD + [
         "-destination", "platform=iOS Simulator,id=" + udid,
+        "-testLanguage", "en", "-testRegion", "US",
         "-only-testing:AppTests", "-only-testing:AppUITests/WindowTests", "-only-testing:DesignSystemTests",
     ] + (["-only-testing:AppCoreTests", "-only-testing:LaunchTests"] if timeline or scene else []) + (["-only-testing:AppUITests/LaunchSceneTests"] if scene else []) + ["test"])
 
 
-def main(timeline=False, scene=False, snapshots=False):
+def main(timeline=False, scene=False, snapshots=False, readiness=False):
     results = []
 
     def record(label, action):
@@ -83,7 +106,7 @@ def main(timeline=False, scene=False, snapshots=False):
         return True
 
     def report():
-        phase = "3c" if snapshots else "3b" if scene else "3a" if timeline else "2"
+        phase = "4" if readiness else "3c" if snapshots else "3b" if scene else "3a" if timeline else "2"
         print(f"\nPhase {phase} simulator results:", flush=True)
         for label, passed, detail in results:
             print(f"{'PASS' if passed else 'FAIL'} {label}" + (": " + detail if detail else ""), flush=True)
@@ -108,7 +131,7 @@ def main(timeline=False, scene=False, snapshots=False):
             result_label = f"{label} {pass_name}" if pass_name else label
             print("\nTesting " + result_label + " on " + runtime, flush=True)
             record(result_label, lambda: test_device(
-                device_type, runtime, devices, timeline, scene, snapshots, snapshot_record,
+                device_type, runtime, devices, timeline, scene, snapshots, snapshot_record, readiness,
             ))
     record("make check", lambda: run(["make", "check"]))
     record("make duo", lambda: run(["make", "duo"]))
@@ -120,5 +143,8 @@ if __name__ == "__main__":
     parser.add_argument("--timeline", action="store_true", help="also run the Phase 3a pure timeline suites on each device")
     parser.add_argument("--scene", action="store_true", help="also run Phase 3b scene presentation and UI suites on each device")
     parser.add_argument("--snapshots", action="store_true", help="compare Phase 3c snapshots on every D1c device (SNAPSHOT_RECORD=1 records first)")
+    parser.add_argument("--readiness", action="store_true", help="run Phase 4 hand-off, readiness and existing scene suites on every D1c device")
     args = parser.parse_args()
-    raise SystemExit(main(timeline=args.timeline, scene=args.scene, snapshots=args.snapshots))
+    if args.readiness and args.snapshots:
+        parser.error("--readiness and --snapshots run separate comparison suites")
+    raise SystemExit(main(timeline=args.timeline, scene=args.scene, snapshots=args.snapshots, readiness=args.readiness))
