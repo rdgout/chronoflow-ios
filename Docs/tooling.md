@@ -696,3 +696,128 @@ type-checking: region-isolation diagnostics can arise during SIL generation. The
 test consumes the stream in one detached task so its mutable iterator never crosses actor boundaries
 between reads. A sleep-registration expectation replaces yield-count polling: both concrete and
 protocol calls must use the injected clock before the test advances it.
+
+## Phase 5 Welcome, intro and moon hand-over
+
+Welcome follows `Main.dc.html` with one sky, full-height dots, the six English/Dutch catalog entries,
+board-derived generated metrics and the existing registered fonts. The content scrolls, with
+space between the heading and action groups. Padding includes all four window safe-area insets,
+including Duo's side rail. The designed pills use native SwiftUI Buttons and the shared PressStyle;
+they retain their drawn surfaces on iOS 26 and later. Plan my trip routes to `.guestWizard` and
+Sign in to `.signIn` through Navigator.
+
+The user settled OQ 10's scaling part on 2026-11-06: Dynamic Type is capped at xxLarge once at
+RootView and on the main and overlay windows. xxxLarge and AX1–AX5 render at xxLarge; smaller sizes
+scale normally. ContentSizeCap also clamps explicit Typography traits and fallback moon-row metrics.
+The status layer uses the capped font and scaled line height. Final snapshots cover large and xxLarge;
+hosted frame/pixel equality checks compare xxxLarge and AX5 with xxLarge in both locales and themes
+on every D1c device. OQ 10 still assumes RN scrolling and padding, including asymmetric insets.
+OQ 12 assumes the guest wizard destination; OQ 6 assumes no moon cross-fade. The board's stale
+GuestFlight link and the designed moon stroke/glow differences remain as recorded in the plan.
+
+The glyph publishes its global frame through MoonAnchorStore to the launch coordinator. Font
+registration completes before the root measures its text. Pre-flight anchor changes rebuild the
+merged moon track; after flight begins the reducer retains its committed target. Diagnostic
+`-cf.mode welcome -cf.freezeAt 2300` mounts Welcome and freezes the flying moon on its measured
+anchor. UI checks compare its presentation-layer centre and scale with that frame at default/AX5.
+The root stays hidden from accessibility until the overlay is removed.
+
+Intro items use W+700 and the shared launch clock, with offsets 0/100/150/300/400/450 ms, a 450 ms
+intro curve and a 14 pt rise. Frozen intro snapshots cover 2400/2450/2700/3200/3300 in both languages
+and appearances. A claimed intro remains active after overlay teardown; later appearances and
+scene reconnects do not replay it. Reduce Motion skips the intro and press scaling. The intro
+signpost ends at W+1600, after the overlay's launch/exit intervals have ended.
+
+Run the full Phase 5 D1c matrix from the repo root, including the hosted hand-over checks,
+Welcome route/landing/accessibility UI tests, existing launch comparison and readiness suites:
+
+```sh
+python3 -I Scripts/launch-simulators.py --welcome
+```
+
+For the initial Welcome baseline recording followed by comparison:
+
+```sh
+SNAPSHOT_RECORD=1 python3 -I Scripts/launch-simulators.py --welcome
+```
+
+Only AppTests/WelcomeSnapshotTests and AppTests/WelcomeSnapshotGuardTests run in the record pass. Existing launch and primitive baselines are compared
+without recording. There are 196 planned Welcome references: 56 final screens (seven devices,
+two appearances, two languages, large/xxLarge) and 140 frozen intro frames. Recording is opt-in;
+missing references fail comparison. Both locales are set explicitly in the tests, independently
+of the host language. All xcodebuild test commands pin `-testLanguage en -testRegion US`.
+
+The runner resolves each D1c device by type/runtime, including Duo on iPhone19-4, continues after
+failures, reports PASS/FAIL per device/pass, then attempts both `make check` and `make duo`.
+Each comparison pass runs the Debug suites and isolated `ReadinessRelease` tests, attempting Release
+even if Debug fails. Recording flags are cleared for both comparison configurations and final checks.
+`make duo` includes Welcome snapshots and UI tests. Appearance-changing UI tests wait for
+SpringBoard and the requested appearance, then restore it before the next test. Hosted AppTests
+continues to depend only on ChronoFlow through TEST_HOST/BUNDLE_LOADER.
+
+Phase 5 host verification: 40 SwiftPM tests passed; strict formatting and generator freshness/tests
+passed (7 TokenGen, 6 font/cache, 3 AssetGen), as did 7 launch-resource and 26 runner-fixture tests.
+Swift 6/MainActor iOS 17 compilation/type-checking passed for the modules, Debug/Release app and
+hosted tests, package tests and UI tests. Debug/Release app/hosted SIL compilation also passed.
+The existing D11 CoreText registration deprecation remains.
+
+The orchestrator's **2026-11-06** Phase 5 record passes completed on all seven devices, but all
+196 Welcome references were uniform white or transparent. Comparison, `make check` and `make duo`
+failed. Those references have been discarded. Replacement baseline recording/comparison and visual
+approval remain open. Supplied iPhone 18 Pro app screenshots show actual Welcome content in both
+themes; inspection against `Main.dc.html` confirms the board's fonts and token assignments.
+
+Welcome snapshots and capture guards run inside hosted AppTests, using ChronoFlow as TEST_HOST.
+Baselines live next to those tests under AppTests/__Snapshots__. AppTests has no additional package
+dependencies: its local reference helper compares decoded RGBA pixels with the PNG reference, rejects
+missing references in comparison mode and records only when explicitly enabled. The package WelcomeTests
+keeps its portable smoke test. make snapshots selects the hosted suites as well as the package suites.
+Welcome snapshot capture uses a key, visible hosting window with explicit appearance, content
+size and the device's own display scale. It lays out the window/controller and waits for measured
+frames before `drawHierarchy(afterScreenUpdates: true)`. A failed, uniform or transparent capture
+throws before it can be recorded. Synthetic guards reject uniform/transparent/identical captures;
+independent final-screen guards require both language and appearance changes to alter the pixels
+at large and xxLarge text. Asymmetric-inset geometry checks cover every Dynamic Type size.
+
+The first accessibility run reported 144 contrast failures, nine near failures and twelve English
+text-clipping failures without element details. The issue handler now prints and attaches each
+issue's audit type, optional element identifier/label and compact description. It ignores only
+`.contrast` on `welcome.eyebrow`, `welcome.headline`, `welcome.copy` and `welcome.signIn`, the four
+confirmed identifiers. Their font weights and `skyTitle`, `dawn`, `skyCopy` and `skyCopyBackground`
+assignments match the board. Contrast on wordmark, plan or any other identifier still fails. Each pair is an open
+design decision in `plan.md`. Unknown/nil identifiers, combined types, clipping and all other audit
+issues still fail; tests exercise those boundaries. Production colours stay as drawn. The second diagnostic run identified English welcome.eyebrow clipping.
+The tracked label now takes its intrinsic horizontal size, retaining the board typography. Hosted
+checks compare natural attributed-string dimensions through all categories; UI audits cover clipping
+at xxLarge and AX5 as well as the existing audits in both appearances/languages. Accessibility
+acceptance remains open until the revised matrix passes.
+
+Previous fix-round host verification: all 79 SwiftPM tests pass (42 AppCore, 27 Launch, 7 DesignSystem,
+3 Welcome), including both pending-timer cancellation cases, unresolved-session cancellation and
+two portable pixel-guard tests. All 28 runner fixtures pass. Strict formatting,
+generator freshness/tests (7 TokenGen, 6 font/cache, 3 AssetGen) and 7 launch-resource tests pass.
+The revised SwiftUI capture and audit tests compile for the iOS 17 deployment target; UIKit execution
+still requires the matrix commands above. Phase 3c's orchestrator-verified results cover the earlier
+tree; rerun its assertions with these changes. The short-screen collision and 874 pt board review
+remain open. The physical-device D3 proof, status-bar observation, VoiceOver/device checks and
+performance measurements remain in their existing tasks (needs a device; open).
+
+The orchestrator's second 2026-11-06 attempt rejected every Welcome capture: package tests had no
+app host/render-server connection. Those captures were not recorded. The hosted capture route and
+xxLarge cap must be validated before new baselines are accepted. The launch ordering test now waits
+for the asynchronously mounted root instead of assuming font registration completes within 50 ms.
+It freezes the overlay at zero and retains flush-before-root and reconnect assertions.
+
+The app's AppIcon asset reuses RN's opaque 1024 px icon unchanged, as requested by the user on
+2026-11-06 (OQ 18). The universal iOS slot lets Xcode derive the device sizes. Host checks require
+byte identity, dimensions and no alpha/transparency; AppIconTests checks the built app's CFBundleIcons
+primary name is AppIcon. Dark/tinted variants and a layered Liquid Glass icon need design assets and
+remain Open. iOS derives its appearances; Debug keeps the ordinary display name by default.
+
+Host verification for the hosted-capture/xxLarge revision: 77 package tests pass (42 AppCore,
+27 Launch, 7 DesignSystem, 1 Welcome); the two portable pixel guards pass separately. Strict formatting,
+7 TokenGen tests, 6 font/cache tests, 3 AssetGen tests, 9 launch-resource checks and 28 runner fixtures
+pass. XcodeGen generation passes. Direct Swift 6/MainActor compilation and type-checking for the
+modules, Debug/Release app and hosted tests, package tests and UI tests pass against the iOS 17 SDK
+floor. Debug/Release app and hosted SIL compilation passes. These are host checks; the replacement
+D1c capture, accessibility and visual acceptance results remain open until the matrix is reported.

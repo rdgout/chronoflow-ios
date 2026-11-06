@@ -499,6 +499,9 @@ OQ 10 scaling settled by the user on 2026-11-06: cap at xxLarge. Defaults author
 - [x] Add the `--welcome` D1c runner mode: optional Welcome-only record pass, full comparison/hosted/UI pass, pinned en/US, failure continuation, final `make check` and `make duo`; include Welcome checks in `make duo`. Fixtures verify recording isolation, all seven devices, Duo runtime selection and failure aggregation. Simulator validation remains open.
   Files: `Scripts/launch-simulators.py`, `Tests/test_launch_simulators.py`, `Makefile`, `Package.swift`.
 
+- [x] Document the committed Welcome matrix/recording entry points, the root xxLarge scaling policy, source translations, measured hand-over, shared-clock intro and host checks. Keep Phase 5 simulator, baseline and visual approval open until verified results are reported.
+  Files: `Docs/tooling.md`.
+
 ### Phase 5 user decisions and fix round 2 (2026-11-06)
 
 - [x] Cap Dynamic Type at xxLarge once at RootView and on both production windows. Clamp explicit font traits and MoonTarget fallback row metrics through shared ContentSizeCap; the status layer uses the capped font and scaled line height. Tests compare AX5 with xxLarge for fonts, status pixels, row height, Welcome frames/pixels and action reachability, retaining different large-size output. The moon UI landing test uses AX5 with the existing 0.5 pt tolerance. OQ 10's scaling part is settled by the user; simulator execution remains open.
@@ -516,6 +519,12 @@ OQ 10 scaling settled by the user on 2026-11-06: cap at xxLarge. Defaults author
   Files: `AppTests/LaunchConnectionTests.swift`.
 
 ### Phase 5 fix round 1
+
+The orchestrator's 2026-11-06 record passes completed on all seven D1c devices, but all 196 Welcome
+PNGs were blank. Comparison, `make check` and `make duo` failed. The accessibility audits reported
+144 contrast failures, nine near failures and twelve English clipping issues without element details.
+The supplied iPhone 18 Pro app screenshots render the actual Welcome in both themes; inspection against
+`Main.dc.html` confirms the board's typography, text, card and pill surfaces. Formal visual approval stays open.
 
 - [x] Log every accessibility issue's audit type, optional identifier/label and compact description to the console and retained attachments. Ignore only the five confirmed `(identifier, .contrast)` pairs listed below, whose token assignments and font weights match `Main.dc.html`, plus round 5's partial-visibility contrast rule; fail unknown/nil identifiers on fully visible elements, combined audit types, clipping and every other issue. Add exception-policy tests. Preserve the designed colours.
   Files: `AppUITests/WelcomeTests.swift`.
@@ -542,6 +551,9 @@ OQ 10 scaling settled by the user on 2026-11-06: cap at xxLarge. Defaults author
 - [x] Keep Welcome recording opt-in and isolated to the hosted Welcome snapshot and guard suites, and include the isolated Release readiness/diagnostics check in each device's comparison pass. Continue from Debug failure to Release and through the full D1c matrix, then attempt both `make check` and `make duo`. Fixtures cover pass ordering, recording isolation and Release execution after Debug failure.
   Files: `Scripts/launch-simulators.py`, `Tests/test_launch_simulators.py`.
   Test: all 28 runner fixtures pass on the host; simulator execution remains open.
+
+- [x] Document the corrected capture/guard contract, diagnostic audit policy, verified failed first run and pending replacement recording/accessibility acceptance through committed entry points.
+  Files: `Docs/tooling.md`.
 
 ### Phase 3c review fixes (after Phase 5)
 
