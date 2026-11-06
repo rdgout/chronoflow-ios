@@ -60,11 +60,10 @@ private func image(_ data: Data) throws -> CGImage {
     #expect(groups[0]["shadow"] as? [String: AnyHashable] == ["kind": "neutral", "opacity": 0.5])
     #expect(sky[0]["glass"] as? Bool == false)
     #expect(groups[1]["shadow"] as? [String: AnyHashable] == ["kind": "none", "opacity": 0])
-    #expect(sky[0]["image-name"] == nil, "A universal image-name suppresses appearance specializations")
+    #expect(sky[0]["image-name"] as? String == "background.png")
     #expect(
         sky[0]["image-name-specializations"] as? [[String: String]] == [
-            ["appearance": "light", "value": "background.png"],
-            ["appearance": "dark", "value": "background-dark.png"],
+            ["appearance": "dark", "value": "background-dark.png"]
         ])
     for name in ["background", "background-dark", "moon-glass"] {
         let raster = try image(#require(outputs["App/ChronoFlow.icon/Assets/\(name).png"]))
@@ -79,4 +78,26 @@ private func image(_ data: Data) throws -> CGImage {
     #expect(
         outputs["App/ChronoFlow.icon/Assets/background.png"]
             != outputs["App/ChronoFlow.icon/Assets/background-dark.png"])
+}
+
+@Test func layeredIconUsesComposerPlatformSchemaAndValidImageReferences() throws {
+    let outputs = try appIconOutputs(root: root)
+    let data = try #require(outputs["App/ChronoFlow.icon/icon.json"])
+    let document = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+    #expect(document["supported-platforms"] as? [String: String] == ["squares": "shared"])
+    let groups = try #require(document["groups"] as? [[String: Any]])
+    for group in groups {
+        let layers = try #require(group["layers"] as? [[String: Any]])
+        for layer in layers {
+            let imageName = try #require(layer["image-name"] as? String)
+            #expect(!imageName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            #expect(outputs["App/ChronoFlow.icon/Assets/\(imageName)"] != nil)
+            if let specializations = layer["image-name-specializations"] as? [[String: String]] {
+                for specialization in specializations {
+                    let name = try #require(specialization["value"])
+                    #expect(outputs["App/ChronoFlow.icon/Assets/\(name)"] != nil)
+                }
+            }
+        }
+    }
 }

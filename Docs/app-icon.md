@@ -15,15 +15,17 @@ glass images. Some board-linked layer/preview PNGs were not included in the supp
 - `App/ChronoFlow.icon`: generated JSON derived from the supplied starter and three 1024² PNG layers
   rendered with `rsvg-convert` from its sky/moon SVGs and `layers/background-dark.svg`.
   The moon keeps glass, neutral shadow (0.5) and translucency (0.4); the sky has neither glass nor
-  shadow. The dark sky is an image-name specialization. No universal image-name is emitted for the
-  sky, because that suppresses the specializations in Composer's decoder. The canvas fill comes
-  from `colors.json`. Clear and tinted treatments are left to the system.
+  shadow. Every layer has a base `image-name`; Sky uses `background.png` with a dark specialization
+  for `background-dark.png`. The document uses `supported-platforms.squares: "shared"`, matching
+  the supplied starter and Xcode's Icon Composer template. The canvas fill comes from `colors.json`.
+  Clear and tinted treatments are left to the system.
 
 Regeneration requires Homebrew `librsvg`; this run used rsvg-convert 2.63.4 / cairo 1.18.6. Flat masters
 are copied rather than reinterpreted from SVG to preserve the delivered pixels. Layer rasterization
 is deterministic and preserves the SVG canvas/alpha. AssetGen tests check all eight output files,
-freshness, exact flat-master bytes, dimensions/alpha, appearance metadata, glass settings and the
-dark sky; they reject obsolete files in generated icon directories. Existing splash outputs are unchanged.
+freshness, exact flat-master bytes, dimensions/alpha, appearance metadata, glass settings, the
+dark sky, base image names on every layer, image references and the supported-platforms schema;
+they reject obsolete files in generated icon directories. Existing splash outputs are unchanged.
 
 ## Xcode 27.2 integration
 
@@ -43,10 +45,9 @@ Offline evidence in the installed Xcode 27.2 (27B52) toolchain:
   `--app-icon` and `ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS` to `--include-all-app-icons`.
 - `Contents/Developer/usr/share/man/man1/actool.1` documents primary-icon compilation into Assets.car
   for iOS 11+, and the partial Info.plist that Xcode merges into the app.
-- The iOS Icon Composer file template contains `fill`, `groups` and `supported-platforms`.
-  The generated group's JSON was decoded and re-encoded with the installed IconComposerFoundation
-  Group.Snapshot decoder, confirming moon settings and both sky specializations survive. The
-  generated canvas fill also round-trips through its Fill decoder.
+- The Icon Composer file template contains `fill`, `groups` and `supported-platforms`, with
+  `squares` encoded as the string `"shared"`. Individual group/fill decoder round-trips do not
+  establish document validity; the host's full actool compilation remains the acceptance check.
 - The installed AssetCatalogFoundation contains `enable-icon-stack-fallback-generation` and the
   fallback-generation option. The project passes `--enable-icon-stack-fallback-generation=disabled`
   and includes all app icons to retain supplied flat renditions alongside the stack. These settings
@@ -62,18 +63,20 @@ when a compiler substitutes Composer-generated flat images. A failed audit block
 ## Verification
 
 Verified here: `make generate` produces exactly one Composer reference in Resources with
-`folder.iconcomposer.icon`; `make quick` passes (303 Swift host tests and 69 Python fixtures, plus
+`folder.iconcomposer.icon`; `make quick` passes (304 Swift host tests and 69 Python fixtures, plus
 strict formatting lint); hosted AppIconTests type-check with Swift 6, root MainActor isolation and
 an iOS 17 simulator target; flat-only actool compilation passes;
 assetutil reports `AppIcon-default.png`, `AppIcon-dark.png` (`UIAppearanceDark`) and
 `AppIcon-tinted.png` (`ISAppearanceTintable`), all opaque 1024² `Icon Image` renditions named ChronoFlow.
 The installed Composer app's own Assets.car confirms assetutil calls the layered root `IconImageStack`.
 
-Combined compilation and hosted tests remain **unverified**. The sandbox cannot run xcodebuild,
-simulators or commits. Icon Composer's helper cannot open even Xcode's untouched template because
-Launch Services cannot resolve its document type (`NSCocoaErrorDomain` 256, underlying
-`kLSDataUnavailableErr` −10813). This prevents combined actool compilation here. Do not infer
-successful older-iOS fallback or glass rendering from the passing flat-only check.
+The host's `.icon` compilation and build-for-testing **failed** with “The layer ‘Sky’ does not have
+an image name.” The generator fix restores its required base `image-name`, retains the dark
+specialization and corrects `supported-platforms.squares` from an array to `"shared"`.
+This is a document error; the earlier sandbox Launch Services failure did not identify the cause
+of the host build failure. Combined compilation, the catalog audit and hosted tests still require
+the host commands below after regeneration. Do not infer successful older-iOS fallback or glass
+rendering from the passing generator or flat-only checks.
 
 Run these from `/Users/rickgout/Sites/chronoflow-ios-icon` on the host:
 

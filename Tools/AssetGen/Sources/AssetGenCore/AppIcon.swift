@@ -14,16 +14,15 @@ public func appIconOutputs(root: URL) throws -> [String: Data] {
         var moon = groups[0]["layers"] as? [[String: Any]], moon.count == 1,
         sky[0]["name"] as? String == "Sky", moon[0]["name"] as? String == "Moon"
     else { throw GenerationError.invalid("App icon starter must contain the designed Moon and Sky groups") }
-    sky[0].removeValue(forKey: "image-name")
+    sky[0]["image-name"] = "background.png"
     sky[0]["image-name-specializations"] = [
-        ["appearance": "light", "value": "background.png"],
-        ["appearance": "dark", "value": "background-dark.png"],
+        ["appearance": "dark", "value": "background-dark.png"]
     ]
     groups[1]["layers"] = sky
     moon[0]["image-name"] = "moon-glass.png"
     groups[0]["layers"] = moon
     document["groups"] = groups
-    document["supported-platforms"] = ["squares": ["iOS"]]
+    document["supported-platforms"] = ["squares": "shared"]
     guard
         let colors = try JSONSerialization.jsonObject(
             with: Data(contentsOf: root.appending(path: "\(source)/colors.json"))) as? [String: String],

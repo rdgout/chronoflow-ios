@@ -24,11 +24,8 @@
       "layers" : [
         {
           "glass" : false,
+          "image-name" : "background.png",
           "image-name-specializations" : [
-            {
-              "appearance" : "light",
-              "value" : "background.png"
-            },
             {
               "appearance" : "dark",
               "value" : "background-dark.png"
@@ -48,8 +45,6 @@
     }
   ],
   "supported-platforms" : {
-    "squares" : [
-      "iOS"
-    ]
+    "squares" : "shared"
   }
 }
