@@ -1,0 +1,512 @@
+{
+  "account": {
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "TEXT",
+        "notnull": 1,
+        "default": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 1,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "email",
+        "type": "TEXT",
+        "notnull": 1,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 3,
+        "name": "synced_at",
+        "type": "TEXT",
+        "notnull": 0,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 4,
+        "name": "has_verified_email",
+        "type": "INTEGER",
+        "notnull": 1,
+        "default": "true",
+        "pk": 0
+      },
+      {
+        "cid": 5,
+        "name": "walkthrough_seen",
+        "type": "INTEGER",
+        "notnull": 1,
+        "default": "false",
+        "pk": 0
+      }
+    ],
+    "foreignKeys": []
+  },
+  "trips": {
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "TEXT",
+        "notnull": 1,
+        "default": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "card",
+        "type": "TEXT",
+        "notnull": 1,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "current_input_hash",
+        "type": "TEXT",
+        "notnull": 0,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 3,
+        "name": "departure_utc",
+        "type": "TEXT",
+        "notnull": 1,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 4,
+        "name": "deleted_at",
+        "type": "TEXT",
+        "notnull": 0,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 5,
+        "name": "form",
+        "type": "TEXT",
+        "notnull": 0,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 6,
+        "name": "revision",
+        "type": "TEXT",
+        "notnull": 0,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 7,
+        "name": "deleted_locally",
+        "type": "INTEGER",
+        "notnull": 1,
+        "default": "false",
+        "pk": 0
+      },
+      {
+        "cid": 8,
+        "name": "plan_start_utc",
+        "type": "TEXT",
+        "notnull": 0,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 9,
+        "name": "plan_start_zone",
+        "type": "TEXT",
+        "notnull": 0,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 10,
+        "name": "preparation_days",
+        "type": "INTEGER",
+        "notnull": 0,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 11,
+        "name": "plan_end_utc",
+        "type": "TEXT",
+        "notnull": 0,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 12,
+        "name": "plan_end_date",
+        "type": "TEXT",
+        "notnull": 0,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 13,
+        "name": "keep_offline",
+        "type": "INTEGER",
+        "notnull": 1,
+        "default": "false",
+        "pk": 0
+      },
+      {
+        "cid": 14,
+        "name": "adaptation",
+        "type": "TEXT",
+        "notnull": 0,
+        "default": null,
+        "pk": 0
+      }
+    ],
+    "foreignKeys": []
+  },
+  "plan_versions": {
+    "columns": [
+      {
+        "cid": 0,
+        "name": "trip_id",
+        "type": "TEXT",
+        "notnull": 1,
+        "default": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "input_hash",
+        "type": "TEXT",
+        "notnull": 1,
+        "default": null,
+        "pk": 2
+      },
+      {
+        "cid": 2,
+        "name": "detail",
+        "type": "TEXT",
+        "notnull": 1,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 3,
+        "name": "received_at",
+        "type": "TEXT",
+        "notnull": 1,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 4,
+        "name": "detail_version",
+        "type": "TEXT",
+        "notnull": 0,
+        "default": null,
+        "pk": 0
+      }
+    ],
+    "foreignKeys": [
+      {
+        "id": 0,
+        "seq": 0,
+        "table": "trips",
+        "from": "trip_id",
+        "to": "id",
+        "on_update": "NO ACTION",
+        "on_delete": "CASCADE",
+        "match": "NONE"
+      }
+    ]
+  },
+  "check_marks": {
+    "columns": [
+      {
+        "cid": 0,
+        "name": "trip_id",
+        "type": "TEXT",
+        "notnull": 1,
+        "default": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "input_hash",
+        "type": "TEXT",
+        "notnull": 1,
+        "default": null,
+        "pk": 2
+      },
+      {
+        "cid": 2,
+        "name": "type",
+        "type": "TEXT",
+        "notnull": 1,
+        "default": null,
+        "pk": 3
+      },
+      {
+        "cid": 3,
+        "name": "local_date",
+        "type": "TEXT",
+        "notnull": 1,
+        "default": null,
+        "pk": 4
+      },
+      {
+        "cid": 4,
+        "name": "ordinal",
+        "type": "INTEGER",
+        "notnull": 1,
+        "default": null,
+        "pk": 5
+      },
+      {
+        "cid": 5,
+        "name": "status",
+        "type": "TEXT",
+        "notnull": 1,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 6,
+        "name": "marked_at",
+        "type": "TEXT",
+        "notnull": 1,
+        "default": null,
+        "pk": 0
+      }
+    ],
+    "foreignKeys": []
+  },
+  "settings": {
+    "columns": [
+      {
+        "cid": 0,
+        "name": "section",
+        "type": "TEXT",
+        "notnull": 1,
+        "default": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "value",
+        "type": "TEXT",
+        "notnull": 1,
+        "default": null,
+        "pk": 0
+      }
+    ],
+    "foreignKeys": []
+  },
+  "drafts": {
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "TEXT",
+        "notnull": 1,
+        "default": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "trip_id",
+        "type": "TEXT",
+        "notnull": 0,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "form",
+        "type": "TEXT",
+        "notnull": 1,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 3,
+        "name": "updated_at",
+        "type": "TEXT",
+        "notnull": 1,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 4,
+        "name": "review",
+        "type": "TEXT",
+        "notnull": 0,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 5,
+        "name": "source_revision",
+        "type": "TEXT",
+        "notnull": 0,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 6,
+        "name": "save_failure",
+        "type": "TEXT",
+        "notnull": 0,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 7,
+        "name": "field_errors",
+        "type": "TEXT",
+        "notnull": 0,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 8,
+        "name": "dirty",
+        "type": "INTEGER",
+        "notnull": 1,
+        "default": "true",
+        "pk": 0
+      },
+      {
+        "cid": 9,
+        "name": "base_form",
+        "type": "TEXT",
+        "notnull": 0,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 10,
+        "name": "token",
+        "type": "TEXT",
+        "notnull": 0,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 11,
+        "name": "input_revision",
+        "type": "INTEGER",
+        "notnull": 1,
+        "default": "0",
+        "pk": 0
+      },
+      {
+        "cid": 12,
+        "name": "review_revision",
+        "type": "INTEGER",
+        "notnull": 0,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 13,
+        "name": "wizard_source_revision",
+        "type": "TEXT",
+        "notnull": 0,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 14,
+        "name": "wizard_review",
+        "type": "TEXT",
+        "notnull": 0,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 15,
+        "name": "furthest_step",
+        "type": "TEXT",
+        "notnull": 0,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 16,
+        "name": "wizard_state",
+        "type": "TEXT",
+        "notnull": 0,
+        "default": null,
+        "pk": 0
+      }
+    ],
+    "foreignKeys": []
+  },
+  "outbox": {
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "TEXT",
+        "notnull": 1,
+        "default": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "kind",
+        "type": "TEXT",
+        "notnull": 1,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "payload",
+        "type": "TEXT",
+        "notnull": 1,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 3,
+        "name": "created_at",
+        "type": "TEXT",
+        "notnull": 1,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 4,
+        "name": "attempts",
+        "type": "INTEGER",
+        "notnull": 1,
+        "default": "0",
+        "pk": 0
+      },
+      {
+        "cid": 5,
+        "name": "last_error",
+        "type": "TEXT",
+        "notnull": 0,
+        "default": null,
+        "pk": 0
+      }
+    ],
+    "foreignKeys": []
+  }
+}

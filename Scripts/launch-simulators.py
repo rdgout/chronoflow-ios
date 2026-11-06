@@ -26,7 +26,7 @@ MATRIX = {
 # Each suite has one scheduling policy. Fixed geometry fixtures are logic; running-window/scale assertions are matrix.
 SUITES = {
     "AppTests": {
-        "logic": ("LaunchArgumentLogicTests", "RasterPixelLogicTests", "ContentSizeCapLogicTests", "AppIconTests", "KeychainSessionStoreTests", "RootNavigationTests", "StubReadinessTests", "WelcomeSnapshotGuardTests"),
+        "logic": ("LaunchArgumentLogicTests", "RasterPixelLogicTests", "ContentSizeCapLogicTests", "AppIconTests", "KeychainSessionStoreTests", "AccountStorageLifecycleTests", "RootNavigationTests", "StubReadinessTests", "WelcomeSnapshotGuardTests"),
         "matrix": ("ContentSizeCapTests", "LaunchArgumentsTests", "LaunchConnectionTests", "LaunchFrameParityTests",
                    "LaunchHandOffTests", "LaunchPlaybackTests", "LaunchSceneTests", "LaunchStoryboardTests", "LaunchTestHostTests",
                    "MoonTargetWindowTests", "TimelineWindowTests", "WelcomeHandOverTests", "WelcomeSnapshotTests"),
@@ -36,8 +36,9 @@ SUITES = {
         "logic": ("ReadinessTests", "WelcomeLogicTests", "LaunchImageComparisonTests"),
         "matrix": ("WindowTests", "LaunchSceneTests", "WelcomeTests"),
     },
-    "AppCoreTests": {"logic": ("CatalogTests", "CubicBezierTests", "LaunchCoordinatorTests", "LaunchIntroTests", "LaunchLifecycleTests",
+    "AppCoreTests": {"host": ("CatalogTests", "CubicBezierTests", "LaunchCoordinatorTests", "LaunchIntroTests", "LaunchLifecycleTests",
                                  "LaunchReadinessTests", "LaunchSignpostsTests", "MoonAnchorStoreTests", "MoonTargetTests", "SessionStoreTests", "SmokeTests")},
+    "LocalStoreTests": {"host": ("SchemaV1Tests", "AccountDatabaseTests")},
     "DesignSystemTests": {"logic": ("ExactLineTextLayoutTests", "PrimitiveTests", "SmokeTests", "TypographyTests"),
                           "matrix": ("LaunchImagesTests",)},
     "LaunchTests": {"logic": ("FlightPathTests", "LaunchGlowTests", "LaunchLayoutTests", "LaunchRadialLayerTests", "LaunchSnapshotCoverageTests",
@@ -122,7 +123,7 @@ def selectors(policy):
 
 
 def expand(only):
-    known = set(selectors("logic") + selectors("matrix") + selectors("release"))
+    known = set(selectors("logic") + selectors("matrix") + selectors("release") + selectors("host"))
     result = []
     for item in only:
         matches = sorted(s for s in known if s == item or s.startswith(item + "/") or item.startswith(s + "/"))
@@ -182,7 +183,7 @@ def result_nodes(value, target=None):
             target = name if name in SUITES else target
         if kind == "Test Case":
             identifier = str(value.get("nodeIdentifier", ""))
-            qualified = next((s.split("/")[0] for s in selectors("logic") + selectors("matrix") + selectors("release")
+            qualified = next((s.split("/")[0] for s in selectors("logic") + selectors("matrix") + selectors("release") + selectors("host")
                               if identifier.startswith(s + "/")), target)
             yield dict(value, target=qualified)
         for child in value.values():

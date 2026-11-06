@@ -11,7 +11,8 @@ recipes in the dated phase history below. No phase or visual/device acceptance g
 
 | Command | Selection |
 |---|---|
-| `make check` | Lint, generators/host fixtures, then one combined 17e Debug run and isolated ReadinessRelease logic |
+| `make check` | Lint, generators/host fixtures, SwiftPM host tests, then one combined 17e Debug run and isolated ReadinessRelease logic |
+| `make host-tests` | Portable package tests on the Mac with repo-local SwiftPM caches; no simulator |
 | `make test` / `make snapshots` | Individual 17e subsets; each builds Debug once |
 | `make matrix` / `python3 -I Scripts/launch-simulators.py --welcome` | All seven D1c destinations; matrix suites everywhere, logic/Release once on 17e |
 | `make duo` | Matrix suites on Duo, resolved by type and its separate runtime |
@@ -45,7 +46,7 @@ failure. A missing or empty test result is a failure. Failed Debug runs do not p
 `SUITES` in `Scripts/launch-simulators.py` is the scheduling table. Host discovery fails if a SwiftPM/Xcode test
 target or suite is absent or duplicated. Matrix suites use the running window, safe areas, display scale, pixels,
 scrolling or accessibility audits. Pure timeline, coordinator, readiness, session, routes, catalogs and fixed-fixture
-unit tests run once on 17e. DesignSystem's running-scale image checks remain matrix suites; its other unit tests
+unit tests run once on 17e except **all AppCore and LocalStore suites**, which are classified `host` and run on the Mac through `make host-tests` / `make check`. The seven-device matrix runs only when the user requests it (2026-11-06 override). DesignSystem's running-scale image checks remain matrix suites; its other unit tests
 are logic. Perf is explicitly classified but excluded. Targeted selectors intentionally run on every requested
 device, including logic when diagnosing a specific device. The compatibility flags `--timeline`, `--scene`,
 `--readiness` and `--welcome` select the classified full matrix; `--snapshots` selects launch snapshots, and
@@ -1036,3 +1037,15 @@ After disconnect/reconnect it requires a new mounted window without overlay/intr
 its pixels with an explicit final Welcome reference immediately and after 500 ms. A separate
 Reduce Motion regression requires the root window to mount before checking that no intro exists.
 All mounting/claim waits are bounded and assert their outcome; UIKit execution remains open.
+
+## Phase 9a: account database (6 November 2026)
+
+LocalStore pins GRDB 7.8.0 and migrates the seven-table RN final schema directly as native v1.
+Validated UUID directories isolate accounts and API/mock roots. WAL, per-connection foreign keys,
+transaction rollback, schema parity and nondestructive failure are host-tested with repo-local caches:
+`make host-tests`. OQ 26 retains the development backup-exclusion default; shipping remains open.
+The hosted AccountStorageLifecycleTests checks backup exclusion after reopen. On a physical device
+it reads back directory/DB/WAL/SHM protection; the simulator returns nil, so it asserts instead that
+setting the same class does not throw. Hosted execution on one 17e and physical lock proof remain open.
+macOS 27.2's backup URL getter reports false despite writing the exclusion xattr; host tests verify that marker.
+No simulator run is claimed. The seven-simulator matrix runs only when the user asks for it.

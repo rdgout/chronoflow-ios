@@ -60,6 +60,17 @@ class ClassificationTests(unittest.TestCase):
             self.assertEqual(actual & set(runner.selectors('release')), set(runner.selectors('release')) if alias == '17e' else set())
             self.assertFalse(actual & set(runner.selectors('perf')))
 
+    def test_store_and_core_logic_run_on_host_by_default(self):
+        host = set(runner.selectors('host'))
+        self.assertTrue(any(s.startswith('LocalStoreTests/') for s in host))
+        self.assertTrue(any(s.startswith('AppCoreTests/') for s in host))
+        for alias in runner.MATRIX:
+            self.assertFalse(set(runner.selection('welcome', alias)) & host)
+        makefile = (ROOT / 'Makefile').read_text()
+        self.assertIn('host-tests:\n\tsh Scripts/host-tests.sh', makefile)
+        for suite in ('AccountStorageLifecycleTests', 'KeychainSessionStoreTests'):
+            self.assertIn('AppTests/' + suite, runner.selection('welcome', '17e'))
+
     def test_target_and_method_selection_is_explicit_and_validated(self):
         self.assertEqual(runner.expand(['AppTests/WelcomeSnapshotTests/frozenIntro']), ['AppTests/WelcomeSnapshotTests/frozenIntro'])
         self.assertIn('AppTests/WelcomeSnapshotTests', runner.expand(['AppTests']))
@@ -86,7 +97,7 @@ class ClassificationTests(unittest.TestCase):
 
     def test_make_check_runs_combined_pass_and_individual_targets_share_runner(self):
         makefile = (ROOT / 'Makefile').read_text()
-        self.assertIn('check: lint generators-check launch-resources-check simulator-check', makefile)
+        self.assertIn('check: lint generators-check launch-resources-check host-tests simulator-check', makefile)
         self.assertNotIn('test snapshots', makefile.split('check:')[-1])
         self.assertIn('--devices $(DEVICES) --only $(ONLY)', makefile)
         self.assertIn('--devices duo', makefile)

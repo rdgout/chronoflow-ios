@@ -5,15 +5,17 @@ import PackageDescription
 let package = Package(
     name: "ChronoFlowKit",
     defaultLocalization: "en",
-    platforms: [.iOS(.v17)],
+    platforms: [.iOS(.v17), .macOS(.v14)],
     products: [
         .library(name: "DesignSystem", targets: ["DesignSystem"]),
         .library(name: "AppCore", targets: ["AppCore"]),
+        .library(name: "LocalStore", targets: ["LocalStore"]),
         .library(name: "Launch", targets: ["Launch"]),
         .library(name: "Welcome", targets: ["Welcome"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", .upToNextMinor(from: "1.19.0"))
+        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", .upToNextMinor(from: "1.19.0")),
+        .package(url: "https://github.com/groue/GRDB.swift", exact: "7.8.0"),
     ],
     targets: [
         .target(name: "SnapshotSupport", path: "Tests/SnapshotSupport", exclude: ["profiles.json"]),
@@ -21,6 +23,12 @@ let package = Package(
             name: "DesignSystem", resources: [.process("Resources")], swiftSettings: [.defaultIsolation(MainActor.self)]
         ),
         .target(name: "AppCore", swiftSettings: [.defaultIsolation(nil)]),
+        .target(
+            name: "LocalStore", dependencies: ["AppCore", .product(name: "GRDB", package: "GRDB.swift")],
+            swiftSettings: [.defaultIsolation(nil)]),
+        .testTarget(
+            name: "LocalStoreTests", dependencies: ["LocalStore"], resources: [.copy("Fixtures")],
+            swiftSettings: [.defaultIsolation(nil)]),
         .target(
             name: "Launch",
             dependencies: ["DesignSystem", "AppCore"],
