@@ -27,5 +27,5 @@ Simulators use ad-hoc signing without a team so hosted Keychain tests can run. D
 by `Config/Base.xcconfig`; copy `Config/Local.xcconfig.example` to get started. All working rules and traps,
 including the no-trailer commit rule, are inherited from `AGENTS.md`.
 
-Test-speed tooling (2026-11-06): perf(test): parallelize simulator destinations perf(test): build simulator test products once.
+Test-speed tooling (2026-11-06): perf(test): parallelize simulator destinations perf(test): build simulator test products once test(tooling): classify device and logic suites.
 Use the committed simulator runner; implementation/validation notes are in plan.md.

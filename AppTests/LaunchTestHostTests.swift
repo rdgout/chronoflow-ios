@@ -34,6 +34,9 @@ nonisolated final class LaunchTestHostTests: XCTestCase {
         }
     }
 
+}
+
+nonisolated final class RasterPixelLogicTests: XCTestCase {
     @MainActor
     func testPixelDifferenceReportsFirstMismatchCoordinatesAndWorstChannel() {
         let expected = [UInt8](repeating: 0, count: 2 * 2 * 4)

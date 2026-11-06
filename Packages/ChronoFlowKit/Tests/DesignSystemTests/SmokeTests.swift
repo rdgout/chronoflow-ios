@@ -2,4 +2,6 @@ import Testing
 
 @testable import DesignSystem
 
-@Test @MainActor func designSystemModuleLoads() {}
+@Suite struct SmokeTests {
+    @Test @MainActor func designSystemModuleLoads() {}
+}

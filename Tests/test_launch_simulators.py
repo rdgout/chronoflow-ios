@@ -37,6 +37,58 @@ def discovered_suites(directory):
     return suites
 
 
+class ClassificationTests(unittest.TestCase):
+    def test_every_target_and_suite_is_classified_exactly_once(self):
+        package = (ROOT / 'Packages/ChronoFlowKit/Package.swift').read_text()
+        targets = set(re.findall(r'\.testTarget\(\s*name: "(\w+)"', package))
+        project = (ROOT / 'project.yml').read_text()
+        targets.update(re.findall(r'^  (\w+):\n    type: bundle\.(?:unit-test|ui-testing)', project, re.M))
+        self.assertEqual(targets, set(runner.SUITES))
+        for target in targets:
+            directory = ROOT / target if (ROOT / target).exists() else ROOT / 'Packages/ChronoFlowKit/Tests' / target
+            entries = [s for suites in runner.SUITES[target].values() for s in suites]
+            self.assertEqual(len(entries), len(set(entries)), target)
+            self.assertEqual(set(entries), discovered_suites(directory), target)
+
+    def test_logic_runs_only_on_17e_matrix_runs_on_all_seven(self):
+        logic = set(runner.selectors('logic'))
+        matrix = set(runner.selectors('matrix'))
+        for alias in runner.MATRIX:
+            actual = set(runner.selection('welcome', alias))
+            self.assertTrue(matrix <= actual)
+            self.assertEqual(actual & logic, logic if alias == '17e' else set())
+            self.assertEqual(actual & set(runner.selectors('release')), set(runner.selectors('release')) if alias == '17e' else set())
+            self.assertFalse(actual & set(runner.selectors('perf')))
+
+    def test_target_and_method_selection_is_explicit_and_validated(self):
+        self.assertEqual(runner.expand(['AppTests/WelcomeSnapshotTests/frozenIntro']), ['AppTests/WelcomeSnapshotTests/frozenIntro'])
+        self.assertIn('AppTests/WelcomeSnapshotTests', runner.expand(['AppTests']))
+        for selector in ['Unknown', 'PerfUITests', 'AppTests/NewTests']:
+            with self.assertRaises(ValueError): runner.expand([selector])
+        self.assertEqual(runner.selection('welcome', 'duo', ['AppUITests/ReadinessTests']), ['AppUITests/ReadinessTests'])
+
+    def test_result_nodes_keep_same_named_suites_in_their_own_targets(self):
+        value = {'testNodes': [
+            {'nodeType': 'Unit test bundle', 'name': 'AppTests', 'children': [
+                {'nodeType': 'Test Case', 'nodeIdentifier': 'LaunchSceneTests/testExample()', 'result': 'Passed'}]},
+            {'nodeType': 'UI test bundle', 'name': 'AppUITests', 'children': [
+                {'nodeType': 'Test Case', 'nodeIdentifier': 'LaunchSceneTests/testExample()', 'result': 'Failed'}]},
+        ]}
+        self.assertEqual([n['target'] for n in runner.result_nodes(value)], ['AppTests', 'AppUITests'])
+
+    def test_release_only_configuration_is_isolated(self):
+        result = runner.configurations(['AppTests/ReleaseReadinessTests', 'AppUITests/WelcomeTests'])
+        self.assertEqual(result, {'Debug': ['AppUITests/WelcomeTests'], 'Release': ['AppTests/ReleaseReadinessTests']})
+        project = (ROOT / 'project.yml').read_text()
+        scheme = project.split('\n  ReadinessRelease:\n')[1].split('\n  Perf:\n')[0]
+        self.assertIn('targets: [AppTests]', scheme)
+        self.assertNotIn('ENABLE_TESTABILITY', project)
+
+    def test_make_check_runs_combined_pass_and_individual_targets_share_runner(self):
+        makefile = (ROOT / 'Makefile').read_text()
+        self.assertIn('check: lint generators-check launch-resources-check simulator-check', makefile)
+        self.assertNotIn('test snapshots', makefile.split('check:')[-1])
+        self.assertIn('--devices duo', makefile)
 
 
 class RunnerTests(unittest.TestCase):
@@ -86,7 +138,7 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(len(builds), 2)
         self.assertEqual([c[c.index('-configuration') + 1] for c in builds], ['Debug', 'Release'])
         self.assertIn('ENABLE_TESTABILITY=YES', builds[1])
-        self.assertEqual(len(self.commands_for_tests()), 14)
+        self.assertEqual(len(self.commands_for_tests()), 8)
         self.assertFalse(any('clean' in c or 'shutdown' in c or 'erase' in c or 'boot' in c for c in self.commands))
         self.assertEqual(sum('uninstall' in c for c in self.commands), 7)
         self.assertNotIn(['make', 'check'], self.commands)
@@ -123,8 +175,16 @@ class RunnerTests(unittest.TestCase):
         for alias in runner.MATRIX:
             expected = f'build/test-results/{alias}/Debug-compare.xcresult'
             self.assertTrue(any(p.endswith(expected) for p in paths))
-            self.assertIn(f'PASS {alias} Debug-compare AppTests', output)
+            self.assertIn(f'PASS {alias} Debug-compare AppTests/WelcomeSnapshotTests', output)
 
+    def test_failing_test_names_and_nonzero_status_continue_other_devices(self):
+        self.result_fail = 'AppUITests/WelcomeTests'
+        self.fail = lambda c: c[-1] == 'test-without-building' and 'platform=iOS Simulator,id=device-0' in c
+        status, output = self.execute()
+        self.assertEqual(status, 1)
+        self.assertIn('FAIL se Debug-compare AppUITests/WelcomeTests: AppUITests/WelcomeTests/testExample()', output)
+        self.assertIn('PASS 17e Release-compare', output)
+        self.assertIn('PASS duo Debug-compare AppTests/WelcomeSnapshotTests', output)
 
     def test_empty_results_never_report_a_pass(self):
         self.nodes = []
@@ -148,6 +208,23 @@ class RunnerTests(unittest.TestCase):
             self.assertNotIn('SNAPSHOT_RECORD', e)
             self.assertNotIn('TEST_RUNNER_SNAPSHOT_RECORD', e)
 
+    def test_record_modes_are_isolated_and_paths_cannot_collide(self):
+        for mode, expected in [('1', set(runner.SNAPSHOTS[1:])), ('launch', set(runner.SNAPSHOTS[:1])), ('all', set(runner.SNAPSHOTS))]:
+            self.setUp()
+            with patch.dict(os.environ, {'SNAPSHOT_RECORD': mode, 'TEST_RUNNER_SNAPSHOT_RECORD': '1'}):
+                status, output = self.execute(aliases=['17e', 'duo'])
+            self.assertEqual(status, 0, output)
+            recorded = []
+            for c, e in zip(self.commands, self.environments):
+                self.assertNotIn('SNAPSHOT_RECORD', e)
+                if e.get('TEST_RUNNER_SNAPSHOT_RECORD'):
+                    self.assertEqual(c[-1], 'test-without-building')
+                    self.assertTrue(c[c.index('-resultBundlePath') + 1].endswith('/record.xcresult'))
+                    actual = {x.split(':',1)[1] for x in c if x.startswith('-only-testing:')}
+                    self.assertEqual(actual, expected - ({'AppTests/WelcomeSnapshotGuardTests'} if 'platform=iOS Simulator,id=device-6' in c else set()))
+                    recorded.append(c[c.index('-destination') + 1])
+            self.assertEqual(len(recorded), 2)
+            self.assertEqual(len(set(recorded)), 2)
 
 
     def test_concurrency_is_bounded_and_configurable(self):

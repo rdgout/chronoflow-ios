@@ -133,12 +133,17 @@ def expand(only):
 def selection(mode, alias, only=()):
     if only:
         return expand(only)
+    result = selectors("matrix")
+    if alias == "17e":
+        result += selectors("logic")
+        if mode not in ("test", "snapshots"):
+            result += selectors("release")
     if mode == "launch-snapshots":
-        return ["LaunchTests"]
+        return [s for s in result if s.startswith("LaunchTests/")]
     if mode == "snapshots":
-        return ["DesignSystemTests", "LaunchTests", "WelcomeTests", "AppTests/WelcomeSnapshotTests", "AppTests/WelcomeSnapshotGuardTests"]
-    result = ["AppTests", "AppUITests", "AppCoreTests", "DesignSystemTests", "LaunchTests", "WelcomeTests"]
-    if mode != "test": result.append("AppTests/ReleaseReadinessTests")
+        return [s for s in result if s in SNAPSHOTS or s.startswith(("DesignSystemTests/", "WelcomeTests/", "LaunchTests/"))]
+    if mode == "test":
+        return [s for s in result if s not in SNAPSHOTS and not s.startswith(("DesignSystemTests/", "WelcomeTests/", "LaunchTests/"))]
     return result
 
 
@@ -195,9 +200,9 @@ def read_results(destination, label, selected, bundle, returncode, log):
         results = []
         for suite in selected:
             parts = suite.split("/")
-            matches = [n for n in nodes if (len(parts) == 1 or parts[1] in str(n.get("nodeIdentifier", "")))
+            matches = [n for n in nodes if parts[1] in str(n.get("nodeIdentifier", ""))
                        and (n.get("target") is None or n["target"] == parts[0])
-                       and (len(parts) <= 2 or parts[2].removesuffix("()") in str(n.get("nodeIdentifier", "")))]
+                       and (len(parts) == 2 or parts[2].removesuffix("()") in str(n.get("nodeIdentifier", "")))]
             failed = [str(n.get("nodeIdentifier", n.get("name"))) for n in matches if n.get("result") not in ("Passed", "Skipped", "Expected Failure")]
             passed = bool(matches) and not failed
             results.append(Result(destination.alias, label + " " + suite, passed,
@@ -231,7 +236,7 @@ def test_pass(destination, configuration, selected, label, record=False):
 
 def recording_selection(selected, mode, recording):
     candidates = SNAPSHOTS if recording == "all" else SNAPSHOTS[:1] if recording == "launch" or mode == "launch-snapshots" else SNAPSHOTS[1:]
-    return [c for c in candidates if any(c == s or c.startswith(s + "/") or s.startswith(c + "/") for s in selected)]
+    return [s for s in selected if any(s == c or s.startswith(c + "/") for c in candidates)]
 
 
 def test_device(destination, selected, mode, recording, ready):

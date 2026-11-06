@@ -2,4 +2,6 @@ import Testing
 
 @testable import AppCore
 
-@Test func appCoreModuleLoads() {}
+@Suite struct SmokeTests {
+    @Test func appCoreModuleLoads() {}
+}

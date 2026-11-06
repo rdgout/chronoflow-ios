@@ -906,6 +906,8 @@ This work runs on `feat/phase-9-session-store` without starting Phase 9 or closi
   Files: `Scripts/launch-simulators.py`, `Tests/test_launch_simulators.py`, command documentation.
 - [x] Build once per needed configuration with build-for-testing into build/DerivedData, then use test-without-building. Remove matrix clean and duplicate trailing make check/make duo runs; make check runs its combined test/snapshot selection once. Preserve the isolated Release scheme/testability and separate Perf path. Host fixtures pass; build counts/timings await the orchestrator.
   Files: `Scripts/launch-simulators.py`, `Makefile`, command documentation.
+- [x] Classify every target/suite in one runner table with a discovery guard; split mixed UI policy/routing tests from layout/audits and hosted argument/pixel/cap logic from running-window checks. Give top-level Swift Testing tests named suites for explicit selectors. Run logic and Release readiness on 17e, matrix checks on every destination; explicit targeted selectors override scheduling. Pure fixed-fixture timeline/geometry tests remain logic; running-scale image tests remain matrix.
+  Files: test suites, `Scripts/launch-simulators.py`, `Tests/test_launch_simulators.py`.
 ### Phase 6: Audit (`feat/phase-6-audit`)
 
 Reduce Motion, dark mode, VoiceOver and strings are built in the phases above; this phase only audits.
