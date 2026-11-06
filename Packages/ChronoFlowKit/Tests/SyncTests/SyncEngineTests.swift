@@ -2,8 +2,9 @@ import AppCore
 import Foundation
 import GRDB
 import LocalStore
-import Sync
 import Testing
+
+@testable import Sync
 
 @Suite struct SyncEngineTests {
     @Test func concurrentRefreshesCoalesceOneRerun() async throws {
@@ -22,6 +23,30 @@ import Testing
         #expect(try await second.value.state == .idle)
         let count = await source.calls.filter { $0 == "identity" }.count
         #expect((2...3).contains(count))
+        #expect(await source.maximumActiveCalls == 1)
+        await engine.cancelAndWait()
+        try await store.close()
+    }
+    @Test(arguments: [false, true])
+    func cancellingOneWaiterPreservesSharedFlight(_ cancelStarter: Bool) async throws {
+        let store = try await SyncStore()
+        let source = ScriptedSource()
+        let gate = TestGate()
+        await source.configure(hook: { method in if method == "identity" { await gate.block() } })
+        let engine = SyncEngine(database: store.database, source: source, epoch: store.epoch)
+        let starter = Task { try await engine.refreshNow() }
+        await gate.waitUntilBlocked()
+        let joiner = Task { try await engine.refreshNow() }
+        while await engine.waitingRefreshCount != 2 { await Task.yield() }
+        let cancelled = cancelStarter ? starter : joiner
+        let remaining = cancelStarter ? joiner : starter
+        cancelled.cancel()
+        #expect(await engine.waitingRefreshCount == 1)
+        await source.configure()
+        await gate.release()
+        #expect(try await remaining.value.state == .idle)
+        await #expect(throws: CancellationError.self) { try await cancelled.value }
+        #expect(await source.calls.filter { $0 == "identity" }.count == 2)
         #expect(await source.maximumActiveCalls == 1)
         await engine.cancelAndWait()
         try await store.close()

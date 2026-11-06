@@ -11,6 +11,8 @@ public actor SyncEngine {
     private let isOnline: @Sendable () async -> Bool
     private var flight: Task<SyncResult, any Error>?
     private var flightEpoch: SyncEpoch?
+    private var flightWaiters: RefreshWaiters?
+    var waitingRefreshCount: Int { flightWaiters?.count ?? 0 }
     private var timer: Task<Void, Never>?
     private var canceledTimers: [UInt64: Task<Void, Never>] = [:]
     private var timerID: UInt64 = 0
@@ -90,13 +92,16 @@ public actor SyncEngine {
         try epoch.check()
         guard !stopped else { throw CancellationError() }
         try await database.validate(epoch: epoch)
+        try Task.checkCancellation()
         try epoch.check()
         guard !stopped else { throw CancellationError() }
         cancelTimer()
         let task: Task<SyncResult, any Error>
-        if let flight {
+        let waiters: RefreshWaiters
+        if let flight, let flightWaiters {
             rerun = true
             task = flight
+            waiters = flightWaiters
         } else {
             rerun = false
             let runEpoch = epoch.child()
@@ -104,13 +109,16 @@ public actor SyncEngine {
             let candidate = Task { try await self.runFlights(epoch: runEpoch) }
             flight = candidate
             task = candidate
+            waiters = RefreshWaiters(task: candidate, epoch: runEpoch)
+            flightWaiters = waiters
         }
-        let cancellationEpoch = flightEpoch
+        let id = UUID()
+        waiters.add(id)
+        defer { waiters.remove(id) }
         let result = try await withTaskCancellationHandler {
             try await task.value
         } onCancel: {
-            cancellationEpoch?.invalidate()
-            task.cancel()
+            waiters.cancel(id)
         }
         try Task.checkCancellation()
         try epoch.check()
@@ -121,6 +129,7 @@ public actor SyncEngine {
         defer {
             flight = nil
             flightEpoch = nil
+            flightWaiters = nil
             rerun = false
         }
         var result: SyncResult
@@ -220,5 +229,28 @@ public actor SyncEngine {
         retention.clear()
         for observer in observers.values { observer.finish() }
         observers.removeAll()
+    }
+}
+
+private final class RefreshWaiters: Sendable {
+    private let lock = NSLock()
+    nonisolated(unsafe) private var ids: Set<UUID> = []
+    private let task: Task<SyncResult, any Error>
+    private let epoch: SyncEpoch
+
+    init(task: Task<SyncResult, any Error>, epoch: SyncEpoch) {
+        self.task = task
+        self.epoch = epoch
+    }
+
+    var count: Int { lock.withLock { ids.count } }
+    func add(_ id: UUID) { lock.withLock { _ = ids.insert(id) } }
+    func remove(_ id: UUID) { lock.withLock { _ = ids.remove(id) } }
+    func cancel(_ id: UUID) {
+        lock.withLock {
+            guard ids.remove(id) != nil, ids.isEmpty else { return }
+            epoch.invalidate()
+            task.cancel()
+        }
     }
 }
