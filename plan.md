@@ -55,8 +55,8 @@ ChronoFlow plans sleep, light and caffeine for each trip. Two apps exist, both r
 ### Test speed (user decision 2026-11-06)
 
 Tooling work, outside the phase sequence: build Debug and isolated ReadinessRelease once per run,
-then use up to four concurrent D1c destinations (`SIM_CONCURRENCY=4`) without cleaning/rebooting.
-Logic runs on 17e; running-window, scale, geometry, screenshot and audit suites run on all seven.
+then use an automatically sized pool of up to seven D1c destinations (`SIM_CONCURRENCY=1…7` overrides) without cleaning/rebooting.
+Logic/Release suites are balanced once across requested devices; running-window, scale, geometry, screenshot and audit suites run on all seven.
 SE, 17e, Duo and Pro Max retain full snapshot/type/intro coverage; 17, Air and 18 Pro use the committed
 compact profile. Existing retained PNG bytes stay unchanged. `make check` combines tests/snapshots;
 `make targeted` selects aliases/suites. Timings and the fresh/warmed-process intro proof await simulator execution.
@@ -925,6 +925,38 @@ This work runs on `feat/phase-9-session-store` without starting Phase 9 or closi
 - [ ] Run --intro-order-check on SE and retained frozenIntro alone/full-suite comparisons; determine whether the remaining difference is capture state or in-memory/PNG representation from the logged channels and saved fresh/warm PNGs. The supplied two recordings are not available here; UIKit cannot run in this sandbox. Root cause and simulator confirmation remain open, not claimed fixed.
 - [ ] Confirm the full matrix ≤10 min, make check ≤5 min and targeted 1–2 devices ≤3 min after build; exact measurement commands are in Docs/tooling.md. No simulator timing is claimed.
 - [ ] Add Dutch/xxLarge launch image references only after resolving the conflict with this task's no-re-record instruction. Existing geometry/localization checks and English/large references remain active; no new baseline is invented.
+
+### Tooling round 2: test speed (user request, 2026-11-06)
+
+Outside the phase sequence on `feat/phase-9-session-store`; Phase 9 and existing design/device gates stay open.
+Round 1 measured check 603 s and matrix 865 s at concurrency four; targets remain 300/600 s.
+
+- [x] Balance the matrix using longest-processing-time scheduling: learn per-device/per-suite/test durations in `build/test-results/timings.json`, bootstrap previous logs, fall back to static estimates, place logic/Release suites once on the earliest finishing requested device, and submit the longest device jobs first. Auto-detect cores and available/reclaimable memory; cap SIM_CONCURRENCY at seven with a 1–7 environment override. Host scheduler/runner fixtures pass; simulator timing remains open.
+  Files: `Scripts/launch-simulators.py`, `Tests/test_launch_simulators.py`, `Makefile`, working-rule command docs.
+- [x] Enable two isolated AppTests/AppUITests workers on single-device and heavy (≥400 s estimated) matrix jobs, with TEST_WORKERS=1–4 override and a shared worker budget across destinations. Enable scheme parallelization; retain suite-local Swift Testing serialization. Replace device appearance changes with per-launch AppleInterfaceStyle. Serial selectors split whole suites or individual methods into their own non-parallel pass; record, Release and intro-order passes stay serial. Host split/isolation/budget fixtures and generated-scheme checks pass; clone execution awaits the orchestrator. No current UI test changes global appearance/content size/pasteboard.
+  Files: runner and fixtures, `project.yml`, `AppUITests/{LaunchSceneTests,WelcomeTests}.swift`, command docs.
+- [x] Cut waits in the slow UI tests: split independent language/appearance/landing XCTest classes so clone workers can overlap them; wait on repeated nonempty frames and the landing diagnostic value; skip splash motion for route-only checks. Keep four separate AX5/xxLarge launches, both audit positions, both appearance parity/mutation assertions and all seven matrix destinations. Avoid an unused opposite-style alignment search. Frame-stability host regression and iOS 17 UI type-check pass. Per-test before/estimated-after timings are in Docs/tooling.md; simulator measurement remains open.
+  Files: `AppUITests/{WelcomeTests,LaunchSceneTests,UIWait,UIWaitTests}.swift`, runner classification/fixtures, tooling docs.
+- [x] Fix intro-order Swift Testing selector to `AppTests/WelcomeSnapshotTests/frozenIntroOrderIndependence()`; preflight flat compiled-test enumeration, match target/suite/method exactly, reject empty or skipped diagnostics, and retain serial fresh/warm processes, artifacts and compare-only mode. Quote method selectors in make targeted. Host fixtures cover exact commands, missing enumeration, prefix/target collisions and skipped diagnostics; real enumeration/capture-state confirmation awaits the orchestrator.
+  Files: runner and fixtures, `Makefile`, tooling docs.
+- [ ] Confirm check ≤300 s, matrix ≤600 s and targeted ≤180 s after build with the orchestrator; simulator execution is unavailable in this sandbox.
+
+
+### Tooling round 3: test tiers (user decision, 2026-11-06)
+
+Outside the phase sequence on `feat/phase-9-session-store`. No Phase 9 work is started.
+The user explicitly requests skipping the seven-simulator matrix unless asked.
+Implementation ticks below describe code and host verification; simulator acceptance stays open separately.
+
+- [x] 0. Fix device-appearance parity in a serial pass, wait for three consecutive nonempty equal UI frame samples with a 60-second upper bound, and reject stale as well as missing classified suites. Host regressions cover discovery and stability. Simulator parity remains to be run.
+- [ ] 1. Move device-fit geometry into pure functions and Mac tests against every D1c profile; retain one live-window smoke.
+- [ ] 2. Render all D1c snapshot profiles in one hosted simulator with explicit size, four insets and display scale; replace old baselines.
+- [ ] 3. Reduce UI launches to smoke coverage and map every removed assertion to hosted or host coverage.
+- [ ] 4. Add quick, targeted, commit-gate, Duo and opt-in matrix tiers with runner regressions.
+- [ ] 5. Update shared rules, D1c and tooling documentation for the dated decision.
+- [ ] 6. Retain LPT matrix scheduling, isolated parallel workers, event-driven waits and the exact intro-order selector with host regressions.
+- [ ] Record and visually accept the new profile references on 17e, compare them, and confirm check <300 s / quick <60 s / targeted <180 s. Requires the orchestrator; no simulator result is claimed.
+
 
 ### Phase 6: Audit (`feat/phase-6-audit`)
 

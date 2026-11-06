@@ -106,8 +106,10 @@ schemes:
     test:
       config: Debug
       targets:
-        - AppTests
-        - AppUITests
+        - name: AppTests
+          parallelizable: true
+        - name: AppUITests
+          parallelizable: true
         - package: ChronoFlowKit/DesignSystemTests
         - package: ChronoFlowKit/AppCoreTests
         - package: ChronoFlowKit/LocalStoreTests
