@@ -1,6 +1,7 @@
 #if canImport(UIKit)
     import DesignSystem
     import SwiftUI
+    import UIKit
 
     public enum AuthElement: String, CaseIterable {
         case brand, heading, card, footer, email, password, submit, forgot, signup, forgotLabel, signupLabel
@@ -42,14 +43,7 @@
                         VStack(alignment: .leading, spacing: AuthTokens.cardGap) { card }
                             .padding(AuthTokens.cardPadding)
                             .background {
-                                let radius =
-                                    scheme == .dark ? AuthTokens.darkShadowRadius : AuthTokens.lightShadowRadius
-                                let y = scheme == .dark ? AuthTokens.darkShadowY : AuthTokens.lightShadowY
-                                let spread =
-                                    scheme == .dark ? AuthTokens.darkShadowSpread : AuthTokens.lightShadowSpread
-                                RoundedRectangle(cornerRadius: AuthTokens.cardRadius)
-                                    .inset(by: -spread).fill(ColorToken.authShadow.color).blur(radius: radius).offset(
-                                        y: y)
+                                AuthCardShadow(appearance: scheme == .dark ? .dark : .light)
                                 RoundedRectangle(cornerRadius: AuthTokens.cardRadius).fill(ColorToken.card.color)
                             }
                             .authMeasure(.card, measure)
@@ -64,6 +58,27 @@
                 .accessibilityIdentifier("auth.scroll")
             }.background { CfSky().ignoresSafeArea() }
         }
+    }
+
+    private struct AuthCardShadow: UIViewRepresentable {
+        let appearance: TokenAppearance
+        func makeUIView(context: Context) -> AuthCardShadowView {
+            let view = AuthCardShadowView()
+            view.isOpaque = false
+            view.isUserInteractionEnabled = false
+            return view
+        }
+        func updateUIView(_ view: AuthCardShadowView, context: Context) {
+            (view.layer as! AuthCardShadowLayer).appearance = appearance
+            if view.layer.contentsScale != context.environment.displayScale {
+                view.layer.contentsScale = context.environment.displayScale
+                view.layer.setNeedsLayout()
+            }
+        }
+    }
+
+    private final class AuthCardShadowView: UIView {
+        override class var layerClass: AnyClass { AuthCardShadowLayer.self }
     }
 
     extension View {

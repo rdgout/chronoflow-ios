@@ -1273,6 +1273,31 @@ profiles and AX5 equality), `AppUITests/SignInTests` and serial `AppUITests/Auth
 reviewed. This round does not record references or claim final acceptance/keyboard closure (OQ 32).
 No Duo-specific runtime change; no seven-simulator matrix requested.
 
+#### Phase 10a visual round 3: card shadow (user 2026-11-06)
+
+The user supplied 896 uncommitted Auth references recorded after `5228ba3`; preserve them.
+All eight board/native en/large pairs show missing below-card shadow ink in both appearances.
+Full RGB means, red ranges, sample coordinates and validation are in
+`Docs/auth-shadow-round-3.md`. Shared-shell/final visual acceptance remains open.
+
+- [x] Replace AuthScreen's blurred SwiftUI shadow shape with a Core Graphics raster behind
+  the existing card fill, using only generated light/dark shadow colors and metrics. Include
+  the halo beyond the card bounds and update for bounds, appearance and display scale.
+  Files: `Sources/Auth/AuthScreen.swift`, `Sources/Auth/AuthCardShadowLayer.swift`.
+- [x] Add a Mac rendered guard for the production shadow and a hosted guard for all eight
+  Sign in states. Compare below/beside RGB with board means within four sRGB levels and
+  require measurable ink relative to plain sky in each region. Register the host suite;
+  removing shadow ink fails the guard. Files: `Tests/AuthTests/AuthCardShadowTests.swift`,
+  `Tests/SnapshotSupport/AuthShadowBoard.swift`, `AppTests/AuthControlTests.swift`,
+  `Scripts/launch-simulators.py`.
+
+Verification: `make quick` passes; the production Auth module and hosted AppTests type-check
+for iOS 17. Mac rendered means are within 1.54 levels of the board in light and 1.50 in dark.
+CoreSimulator is inaccessible in this sandbox; hosted execution remains pending. All 896
+reference hashes remain unchanged, and PNGs are excluded from the patch. **Re-record all
+896 Auth references** after this fix, then review all eight board pairs on 17e. No final
+visual acceptance, keyboard closure, Duo runtime or seven-simulator matrix is claimed.
+
 #### Phase 10b: Two-factor code/recovery and auth acceptance (`feat/phase-10b-two-factor`)
 
 Stack on 10a. OQ 28's Two-factor translations are resolved and recorded; ship them with this phase. Expired challenges have no separate board: use the approved notice/banner policy or defer that visual state under OQ 30.

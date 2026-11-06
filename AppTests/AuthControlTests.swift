@@ -6,6 +6,39 @@ import UIKit
 import XCTest
 
 nonisolated final class AuthControlTests: XCTestCase {
+    @MainActor func testCardShadowMatchesBoardInkInAllEightSignInStates() async throws {
+        try await FontRegistry.register()
+        let host = try AuthTestHost(EmptyView(), size: AuthShadowBoard.size, scale: AuthShadowBoard.scale)
+        defer { host.close() }
+        for style in [UIUserInterfaceStyle.light, .dark] {
+            host.configure(CfSky(), style: style)
+            try await host.settle()
+            let sky = try SnapshotRaster(png: XCTUnwrap(host.image().pngData()))
+            for banner in [nil] + AuthBannerKind.allCases.map(Optional.some) {
+                var frames: [AuthElement: CGRect] = [:]
+                let model = authSnapshotModel()
+                if let banner { model.form.receive(snapshotFailure(banner)) }
+                host.configure(
+                    SignInView(model: model, back: {}, guest: {}, measure: { frames[$0] = $1 }), style: style)
+                try await host.settle()
+                let card = try XCTUnwrap(frames[.card])
+                XCTAssertEqual(card.maxY, 728, accuracy: 0.5)
+                let raster = try SnapshotRaster(png: XCTUnwrap(host.image().pngData()))
+                for sample in AuthShadowBoard.samples {
+                    let expected = style == .dark ? sample.dark : sample.light
+                    let actual = sample.mean(in: raster)
+                    let context = "\(style), \(banner?.rawValue ?? "none"), \(sample.name)"
+                    for (actual, expected) in zip(actual, expected) {
+                        XCTAssertEqual(actual, expected, accuracy: 4, "Board sRGB: \(context)")
+                    }
+                    let minimumInk = style == .dark ? sample.minimumDarkInk : sample.minimumLightInk
+                    XCTAssertGreaterThanOrEqual(
+                        sample.mean(in: sky)[0] - actual[0], minimumInk, "Shadow ink must survive capture: \(context)")
+                }
+            }
+        }
+    }
+
     @MainActor func testLatePasskeyAnchorQueriesUseTheAvailableWindowOrAnEmptyFallback() {
         let request = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: "app.chronoflow.net")
             .createCredentialAssertionRequest(challenge: Data([1]))
