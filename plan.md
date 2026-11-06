@@ -1035,6 +1035,8 @@ Stack on 9b. No UI; scope is the documented engine/repositories, not Settings/To
 
   Task note (2026-11-06): host SwiftPM replaces Matrix S; 35 sync tests pass (212 package tests total), including manual debounce, concurrent refresh/rerun, queued writes, cancellation at each source await, queued SQLite response rejection, same-account stale epochs, wrong-account rejection, offline restart and mock/API URLProtocol integration. `cancelAndWait` drains active work and its timer. Epoch-scoped sanitized result events carry verification/unauthorized/refusal/retry data; automatic retry/lifecycle/wipe wiring remains 9d. No new hosted tests are needed.
 
+- [x] Review fix: pin final/retryable failure classifications and retained metadata to literal expectations in flusher and direct policy tables; the 403/408/425 classification mutation fails both tables.
+
 #### Phase 9d: Sync lifecycle, sign-out wipe and launch readiness (`feat/phase-9d-session-lifecycle`)
 
 Stack on 9c. No UI. OQ 29 leaves voluntary pending-change confirmation as a return value only; no new dialog. D25 forced wipe is required regardless of that UI decision.
