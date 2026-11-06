@@ -35,7 +35,7 @@ struct AuthBoardContrastTests {
                 let color = token.components(for: appearance)
                 #expect(
                     [color.red, color.green, color.blue, color.alpha] == recorded[index][offset],
-                    "Reassess the sign-in.guest contrast exception and OQ 33 when board colors change")
+                    "Re-review board contrast accepted, OQ 33 (user 2026-11-06), when board colors change")
             }
             let ramp = appearance == .light ? SkyRamp.light : SkyRamp.dark
             #expect(ramp.contains { $0.location == (appearance == .light ? 0.55 : 0.6) })

@@ -52,6 +52,7 @@ nonisolated final class AuthAuditTests: XCTestCase {
     }
 
     @MainActor private static func isBoardContrast(identifier: String?, auditType: XCUIAccessibilityAuditType) -> Bool {
+        // Board boundary contrast is accepted, OQ 33 (user 2026-11-06); text ratios remain pinned.
         auditType == .contrast && identifier == "sign-in.guest"
     }
 

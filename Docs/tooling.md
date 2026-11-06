@@ -1845,15 +1845,17 @@ TokenGen computes sRGB relative-luminance contrast from tokens.json (unrounded c
 | `input` / `background` (outline interior) | 1.4243:1 | 1.6222:1 |
 | `border` / `card` (decorative divider lines) | 1.4140:1 | 1.3951:1 |
 
-The border pairs are board properties, recorded in plan.md OQ 33 for design review. They have not
-been confirmed as the audit's failing elements. Their colors remain as drawn and the audit remains
-strict. Decorative divider lines are reported separately from its passing text.
+The border pairs are board properties, accepted, OQ 33 (user 2026-11-06), with their colors kept
+exactly as drawn. They were not the audit's failing elements. Text contrast checks remain strict;
+decorative divider lines are reported separately from passing text. RN keeps these values, and
+the web's P8-D16 scope is WCAG 1.4.3 text contrast only (`tokens.json:167`: “Kept exact, flagged”).
 
 Final host verification: **200 package tests (23 Auth), 9 TokenGen, 4 AssetGen, 6 font/cache,
 3 signing-guard, 10 resource and 22 runner tests pass**; strict lint and generated-output freshness
 pass. SwiftPM Auth/DataAccess/Launch compilation and direct Swift 6/MainActor type checking of
 AuthControlTests/AuthLayoutTests/AuthSnapshotTests and AuthAuditTests pass at the iOS 17 simulator
-floor. Hosted execution, screenshots and contrast acceptance remain open; no references were recorded.
+floor. Hosted execution and screenshot review remained open in that round; no references were recorded.
+The board border/footer values are now accepted, OQ 33 (user 2026-11-06).
 The rebase's two explicit xcodebuild recipes above are preserved as separate complete shell blocks.
 
 Run the audit first, then the remaining requested suites on the same build:
@@ -1896,9 +1898,9 @@ Following the user's instruction and Welcome's five explicit board pairs (includ
 pill/sky precedent), Auth now allows only `(sign-in.guest, .contrast)`. It retains the issue's
 identifier, label, type, language, appearance and stage in console/attachments and records whether
 the pair was allowed. Nil/unknown identifiers, all other elements, combined audit types and every
-non-contrast issue still fail. No partial-visibility exception was added. OQ 33 explicitly remains
-**Open** for the footer alongside the input/border pairs; allowing this known board pair does not
-accept its contrast or close visual review.
+non-contrast issue still fail. No partial-visibility exception was added. The footer and input/border
+values are accepted, OQ 33 (user 2026-11-06). Keep this exact allow-list and strict text ratio guards;
+rendered visual review remains open.
 
 AuthBoardContrastTests pins both appearances' generated text/pill/sky RGBA values, alpha, label
 font/size/leading and board-centre/full-ramp ratios. TokenGen checks the board's footer declarations

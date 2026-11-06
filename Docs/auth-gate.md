@@ -85,8 +85,11 @@ hosted frame/keyboard/audit checks, record once, then compare. The second fix ro
 Generated color/alpha/typography/ratio guards fail on drift; every other element/type still fails.
 At the board footer centre, text/pill is 14.9260:1 light / 15.0953:1 dark and pill/sky is
 2.3128:1 / 2.9450:1, including the 90% pill opacity. Native colors match the board exactly.
-Footer and input/border design decisions remain Open in plan.md OQ 33; the exception does not
-establish contrast acceptance. Commands are in Docs/tooling.md. No seven-simulator run is required.
+Input/outline-button borders, decorative dividers and the guest pill over the sky are accepted,
+OQ 33 (user 2026-11-06), exactly as the board/tokens draw them. RN keeps these values; the web's
+P8-D16 correction covers WCAG 1.4.3 text contrast only. Token source notes remain “Kept exact,
+flagged.” The audit allow-list stays limited to the same pair, and text contrast checks stay strict.
+Rendered visual review remains open. Commands are in Docs/tooling.md. No seven-simulator run is required.
 
 Integrated-port verification: make quick passes (286 package host tests including 23 Auth,
 10 TokenGen, 4 AssetGen, 3 signing guards, 10 resource checks and 53 runner fixtures).

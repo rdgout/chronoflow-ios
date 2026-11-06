@@ -190,8 +190,10 @@ private var root: URL {
         }
         for (border, background) in [("input", "card"), ("input", "background"), ("border", "card")] {
             let ratio = try contrast(source.color(border, theme), source.color(background, theme))
-            print("Auth board contrast question \(theme): \(border) / \(background) = \(ratio):1")
-            #expect(ratio < 3, "Reassess OQ 33 when the source's border contrast is amended")
+            print(
+                "Auth board contrast accepted, OQ 33 (user 2026-11-06), \(theme): \(border) / \(background) = \(ratio):1"
+            )
+            #expect(ratio < 3, "Re-review contrast accepted, OQ 33 (user 2026-11-06), when board borders change")
         }
         let mixed = try source.color("auth-error-background", theme)
         let expected = try source.color("card", theme).mixed(with: source.color("destructive", theme), fraction: 0.1)
@@ -216,7 +218,8 @@ private var root: URL {
         "font-size: 14px", "line-height: 20px", "font-weight: 500",
     ] {
         #expect(
-            style.contains(declaration), "Reassess sign-in.guest's board contrast exception when its design changes")
+            style.contains(declaration),
+            "Re-review sign-in.guest contrast accepted, OQ 33 (user 2026-11-06), when its design changes")
     }
 }
 
