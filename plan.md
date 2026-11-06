@@ -420,7 +420,7 @@ Verified by the orchestrator on 2026-11-06: all seven D1c devices, make check an
 
 ### Phase 3c: Splash snapshots (`feat/phase-3c-snapshots`)
 
-- [x] Implement the sampled splash snapshot suite and commit the 154 recorded baselines: all eleven frames in light/dark on every D1c device, opt-in recording, running-window and asymmetric/side-only inset geometry, host coverage and S1 checks. Pin `make test` and `make snapshots` to en/US and resolve slow snapshot copy from the explicit English Launch catalog. Host checks cover baseline completeness and Makefile language arguments. Verified by the orchestrator on 2026-11-06: snapshot, package and hosted tests passed on all seven D1c devices. The dark frozen-screenshot UI test captured light appearance on every device except 18 Pro, also failing make check and make duo. Appearance synchronization is corrected below; revised UI validation is open.
+- [x] Implement the sampled splash snapshot suite and commit the 154 recorded baselines: all eleven frames in light/dark on every D1c device, opt-in recording, running-window and asymmetric/side-only inset geometry, host coverage and S1 checks. Pin `make test` and `make snapshots` to en/US and resolve slow snapshot copy from the explicit English Launch catalog. Host checks cover baseline completeness and Makefile language arguments. Verified by the orchestrator on 2026-11-06: all seven D1c devices passed snapshot comparison, hosted tests and both appearance UI tests; make check and make duo passed.
   Files: `Tests/LaunchTests/LaunchSnapshot*.swift`, `Tests/LaunchTests/__Snapshots__/**`, `Package.swift`, `Makefile`, `Tests/test_launch_resources.py`.
   (OQ 6 default assumed, confirm). (OQ 10 default assumed, confirm). (OQ 11 default assumed, confirm). Snapshot work proceeds before the physical-device D3 proof by user direction; re-check if that proof changes the layer tree. The D3 device task stays open (needs a device; open).
 
@@ -444,7 +444,7 @@ Verified by the orchestrator on 2026-11-06: all seven D1c devices, make check an
 - [x] Resolve the overlay opening accessibility label immediately after the first flush and first-commit signpost, keeping string-table I/O out of construction. Hosted tests check the label is absent before commit and available afterward; connection accessibility assertions are retained.
   Files: `Sources/Launch/LaunchOverlayController.swift`, `App/SceneDelegate.swift`, `AppTests/LaunchConnectionTests.swift`.
 
-- [x] Pin device appearance before launching frozen screenshot parity in separate light/dark UI tests. After setting appearance, terminate any running instance, return to SpringBoard and poll the device's reported appearance with a 10-second bound before launch. Async teardown terminates the app and waits for appearance restoration before the next test. Each appearance must match its own model and clearly differ from the opposite model; retain displacement/opacity mutation checks. Hosted connection assertions check the overlay window inherits the scene style. Revised UI validation is open.
+- [x] Pin device appearance before launching frozen screenshot parity in separate light/dark UI tests. After setting appearance, terminate any running instance, return to SpringBoard and poll the device's reported appearance with a 10-second bound before launch. Async teardown terminates the app and waits for appearance restoration before the next test. Each appearance must match its own model and clearly differ from the opposite model; retain displacement/opacity mutation checks. Hosted connection assertions check the overlay window inherits the scene style. Verified by the orchestrator on 2026-11-06: all seven D1c devices passed snapshot comparison, hosted tests and both appearance UI tests; make check and make duo passed.
   Files: `AppUITests/LaunchSceneTests.swift`, `AppTests/LaunchConnectionTests.swift`.
 
 - [x] Record the accepted single-commit delivery of the scene layers and replace superseded Phase 3a/3b simulator narratives with the dated verified results. Retain the rendering/clock/solver rationale and physical-device open items.
@@ -559,6 +559,9 @@ The supplied iPhone 18 Pro app screenshots render the actual Welcome in both the
 
 - [x] Flag settled short-screen sun/moon/wordmark/status collisions with geometry tests and height-scoped known issues; assert the status text-frame/replicator union against the path apex, including the 874 pt S1 crossing. Record exact affected baselines, OQ 11 and the materialised risk. Keep Phase 3c visual acceptance open for a user/design decision.
   Files: `Tests/LaunchTests/LaunchSnapshotTests.swift`, `plan.md`.
+
+- [x] Replace stale Phase 3c/3b review-fix validation notes with the orchestrator's verified 2026-11-06 results for all seven D1c devices, both appearance UI tests, make check and make duo. Retain PNG/board-frame approval, short-screen collisions/S1 board review and physical-device D3 proof as open.
+  Files: `plan.md`, `Docs/tooling.md`.
 
 ### Phase 4 review fixes (after Phase 5)
 

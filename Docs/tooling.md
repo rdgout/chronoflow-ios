@@ -585,28 +585,27 @@ additional insets. A zero top inset is valid on SE and Duo. Visible moon glyph, 
 and sun are checked against the window and horizontal safe area. The path's designed 10 pt bleed is
 preserved and checked for vertical bounds and container clipping; full safe-area containment lacks a
 design/default and stays open. Host tests assert the frame list, ending times, safe-area landing, all
-154 PNGs' coverage/dimensions and S1: status top 518 is below apex 512.5 at height 844; top 533 is above
-apex 542.5 at height 874.
+154 PNGs' coverage/dimensions and S1: status top 518 is below apex 512.5 at height 844;
+path crosses the status text at 874 (top 533, apex 542.5, text-frame/replicator union extends below it).
 
-The orchestrator reported on **2026-11-06**: snapshot, package and hosted tests passed on all seven
-D1c devices, including the zero-inset and explicit-language checks. The only failure was the dark
-frozen-screenshot UI test, which captured light appearance on every device except 18 Pro. This also
-failed `make check` and `make duo`. Manual 18 Pro launches with `simctl ui` setting light/dark each
-rendered the correct sky. Appearance synchronization is implemented above; revised UI validation is
-open. PNG approval and side-by-side review stay open because `_design/frames/` has not been exported.
-Snapshot work precedes the physical-device D3 proof by user direction; repeat review if that proof
-changes the layer tree. No device performance result is claimed.
+The orchestrator verified Phase 3c and the Phase 3b review fixes on **2026-11-06**:
+all seven D1c devices passed snapshot comparison, hosted tests and both light/dark appearance UI
+tests. `make check` and `make duo` passed. This includes notification-payload validation, the
+post-flush opening accessibility label, captured overlay appearance and appearance synchronization.
 
-The Phase 3b review fixes validate non-JSON notification payloads before serialization, resolve the
-opening accessibility label after the first flush, and pin the screenshot's expected appearance.
-Hosted tests also assert that the overlay window captures the scene's style. The orchestrator's
-results above cover the payload, label and hosted appearance checks; the revised UI synchronization
-still needs validation. The Phase 3b verified result predates these fixes.
-Host checks on 2026-11-06 passed: 51 SwiftPM tests (27 Launch, 16 AppCore, 7 DesignSystem, 1 Welcome),
-strict formatting, generator freshness/tests (6 TokenGen, 6 font/cache, 3 AssetGen), 6 launch resource
-tests and 19 simulator-runner fixtures. Direct module compilation and type-checking of the app, hosted
-tests, AppCoreTests, LaunchTests and AppUITests against the iOS 17 simulator SDK passed. This does not
-execute UIKit tests; the existing D11 font-registration deprecation remains.
+PNG approval and side-by-side board review remain open because `_design/frames/` is absent.
+The short-screen collision has materialised: SE 375 × 667 and Duo 466 × 678 light/dark `ready-1400`
+and `slow-2600` baselines put the wordmark/status over the sun and the path apex at the moon glyph.
+The exact PNG names are recorded in Phase 3c's acceptance note in `plan.md`. A user or design decision
+is required; the current layout is retained. Scoped known-issue tests for heights below 700 pt
+check glyph/wordmark/status separation from the sun disc and path apex, and flag unexpected passes.
+At 874 pt, the status text-frame/replicator union starts at 533 and extends below apex 542.5:
+**path crosses the status text at 874**, visible on iPhone 17 and Air. This needs board review;
+a separate known-issue assertion checks the union's maxY as well as its minY. The 844 pt relation
+remains clear (status starts at 518, below apex 512.5).
+
+The physical-device D3 proof remains open (needs a device; open). Snapshot work precedes that proof
+by user direction; repeat review if it changes the layer tree. No device performance result is claimed.
 
 ## Phase 4 readiness and hand-off
 
