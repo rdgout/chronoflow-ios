@@ -5,6 +5,7 @@
 
     public enum AuthElement: String, CaseIterable {
         case brand, heading, card, footer, email, password, submit, forgot, signup, forgotLabel, signupLabel
+        case code, modeToggle
     }
 
     public struct AuthScreen<Card: View, Footer: View>: View {
@@ -47,7 +48,9 @@
                                 RoundedRectangle(cornerRadius: AuthTokens.cardRadius).fill(ColorToken.card.color)
                             }
                             .authMeasure(.card, measure)
-                        footer.padding(.top, AuthTokens.footerGap).authMeasure(.footer, measure)
+                        if Footer.self != EmptyView.self {
+                            footer.padding(.top, AuthTokens.footerGap).authMeasure(.footer, measure)
+                        }
                     }
                     .padding(.horizontal, AuthTokens.gutter).padding(.top, AuthTokens.gutter).padding(
                         .bottom, AuthTokens.bottom

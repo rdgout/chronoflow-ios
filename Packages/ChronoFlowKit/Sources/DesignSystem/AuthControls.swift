@@ -109,7 +109,7 @@ import SwiftUI
         let error: String?
         let hint: String?
         let identifier: String
-        let contentType: UITextContentType
+        let contentType: UITextContentType?
         let keyboard: UIKeyboardType
         let submitLabel: SubmitLabel
         let focus: FocusState<String?>.Binding
@@ -118,7 +118,7 @@ import SwiftUI
 
         public init(
             _ title: String, text: Binding<String>, secure: Bool = false, error: String? = nil, hint: String? = nil,
-            identifier: String, contentType: UITextContentType, keyboard: UIKeyboardType = .default,
+            identifier: String, contentType: UITextContentType?, keyboard: UIKeyboardType = .default,
             submitLabel: SubmitLabel = .next, focus: FocusState<String?>.Binding,
             measure: ((AuthControlPart, CGRect) -> Void)? = nil, submit: @escaping () -> Void
         ) {

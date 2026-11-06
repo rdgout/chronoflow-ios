@@ -6,6 +6,7 @@ nonisolated struct AppServices: Sendable {
     enum Failure: Error { case invalidReadiness, applicationSupportUnavailable }
     let signedOutReadiness: Bool
     let factory: DataSourceFactory
+    private let isolatedMockStore: (any MockStateStore)?
     var namespace: StorageNamespace { factory.namespace }
 
     init(
@@ -13,6 +14,13 @@ nonisolated struct AppServices: Sendable {
         testing: Bool = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
             || NSClassFromString("XCTestCase") != nil
     ) throws {
+        #if DEBUG
+            isolatedMockStore =
+                ProcessInfo.processInfo.arguments.contains("-cf.isolatedMockServer")
+                ? MemoryMockStateStore() : nil
+        #else
+            isolatedMockStore = nil
+        #endif
         switch info["CHRONOFLOW_READINESS"] as? String ?? "native" {
         case "native": signedOutReadiness = false
         case "signed-out": signedOutReadiness = true
@@ -43,7 +51,9 @@ nonisolated struct AppServices: Sendable {
     func makeDataSource(applicationSupport: URL, session: StoredSession) -> any DataSource {
         assert(!Thread.isMainThread)
         return factory.make {
-            MockDataSource(store: FileMockStateStore(applicationSupport: applicationSupport), bearer: { session.token })
+            MockDataSource(
+                store: isolatedMockStore ?? FileMockStateStore(applicationSupport: applicationSupport),
+                bearer: { session.token })
         } api: {
             APIDataSource(client: APIClient(baseURL: factory.baseURL, bearer: { session.token }))
         }
@@ -52,7 +62,7 @@ nonisolated struct AppServices: Sendable {
     func makeDataSource(applicationSupport: URL, credentials: any SessionStore) -> any DataSource {
         factory.make {
             MockDataSource(
-                store: FileMockStateStore(applicationSupport: applicationSupport),
+                store: isolatedMockStore ?? FileMockStateStore(applicationSupport: applicationSupport),
                 bearer: {
                     try await credentials.readStoredSession()?.token
                 })

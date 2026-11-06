@@ -14,7 +14,7 @@ nonisolated final class SessionReadinessTests: XCTestCase {
             (false, false, false, Route.verify), (true, false, false, .terms),
             (true, true, false, .walkthrough), (true, true, true, .today),
         ] {
-            for usePasskey in [false, true] {
+            for method in ["password", "passkey", "twoFactor"] {
                 for cancelAfterCommit in [false, true] {
                     let root = FileManager.default.temporaryDirectory.appendingPathComponent(
                         "auth-session-" + UUID().uuidString)
@@ -35,7 +35,8 @@ nonisolated final class SessionReadinessTests: XCTestCase {
                         termsVersion: "2", privacyVersion: "2", acceptedTermsVersion: accepted ? "2" : "1")
                     let accountID = snapshot.id
                     let server = MockServerAccount(
-                        snapshot: snapshot, password: "Password123!", twoFactorCode: usePasskey ? "123456" : nil,
+                        snapshot: snapshot, password: "Password123!",
+                        twoFactorCode: method == "password" ? nil : "123456",
                         walkthroughSeen: seen)
                     let auth = AuthSessionServices(
                         services: try AppServices(info: ["CHRONOFLOW_DATA_SOURCE": "mock"], testing: true),
@@ -53,7 +54,23 @@ nonisolated final class SessionReadinessTests: XCTestCase {
                     auth.model.editEmail(snapshot.email)
                     auth.model.editPassword("Password123!")
                     let request = Task {
-                        if usePasskey { await auth.model.submitPasskey() } else { await auth.model.submitPassword() }
+                        if method == "passkey" {
+                            await auth.model.submitPasskey()
+                        } else {
+                            await auth.model.submitPassword()
+                        }
+                        if method == "twoFactor" {
+                            let twoFactor = try? XCTUnwrap(auth.model.twoFactor)
+                            XCTAssertNotNil(twoFactor)
+                            let earlySession = await native.controller.activeSession()
+                            XCTAssertNil(earlySession)
+                            let stored = try? await credentials.readStoredSession()
+                            XCTAssertNil(stored)
+                            twoFactor?.editCode("123456")
+                            await twoFactor?.submit()
+                            XCTAssertNil(twoFactor?.sessionFailure)
+                            XCTAssertTrue(twoFactor?.code.isEmpty == true)
+                        }
                     }
                     if cancelAfterCommit {
                         await probe.waitForRequest()

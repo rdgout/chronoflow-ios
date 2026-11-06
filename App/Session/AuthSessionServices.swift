@@ -1,5 +1,6 @@
 import AppCore
 import Auth
+import DataAccess
 import Foundation
 import UIKit
 
@@ -19,6 +20,13 @@ final class AuthSessionServices {
         let credentials = KeychainSessionStore(namespace: namespace)
         nativeSession = native
         let source = source ?? services.makeDataSource(applicationSupport: support, credentials: credentials)
+        #if DEBUG
+            if services.factory.source == .mock, let mock = source as? MockDataSource,
+                ProcessInfo.processInfo.arguments.contains("-cf.twoFactorServerFailure")
+            {
+                Task { await mock.failNext(method: .completeTwoFactor, error: .server(status: 503)) }
+            }
+        #endif
         let identity = DeviceIdentityStore(persistence: DevicePreferences())
         let assertion: any PasskeyAssertionProviding =
             assertionProvider

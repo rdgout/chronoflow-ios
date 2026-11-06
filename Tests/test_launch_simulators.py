@@ -96,6 +96,23 @@ class ClassificationTests(unittest.TestCase):
         self.assertEqual(runner.recording_selection(['AppTests/AuthSnapshotTests'], 'welcome', '1'),
                          ['AppTests/AuthSnapshotTests'])
 
+    def test_two_factor_suites_run_at_their_registered_tiers_and_record_only_on_17e(self):
+        self.assertIn('AuthTests/TwoFactorModelTests', runner.selectors('host'))
+        for suite in ['AppTests/TwoFactorControlTests', 'AppTests/TwoFactorLayoutTests', 'AppUITests/TwoFactorTests']:
+            self.assertIn(suite, runner.selectors('logic'))
+            self.assertEqual(runner.selection('check', '17e').count(suite), 1)
+        keyboard = 'AppUITests/TwoFactorKeyboardTests'
+        self.assertIn(keyboard, runner.selectors('matrix'))
+        self.assertEqual(runner.selection('check', '17e').count(keyboard), 1)
+        snapshot = 'AppTests/TwoFactorSnapshotTests'
+        self.assertIn(snapshot, runner.selectors('profiles'))
+        self.assertIn(snapshot, runner.SNAPSHOTS)
+        self.assertEqual(runner.selection('check', '17e').count(snapshot), 1)
+        self.assertEqual(runner.recording_selection([snapshot], 'check', '1'), [snapshot])
+        self.assertEqual(runner.recording_selection([snapshot], 'check', 'launch'), [])
+        for alias in ['se', 'duo']:
+            self.assertEqual(runner.selection('check', alias, only=[keyboard]), [keyboard])
+
     def test_store_and_core_logic_run_on_host_by_default(self):
         host = set(runner.selectors('host'))
         self.assertTrue(any(s.startswith('LocalStoreTests/') for s in host))

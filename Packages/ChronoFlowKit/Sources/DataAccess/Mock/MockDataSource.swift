@@ -202,11 +202,18 @@ public actor MockDataSource: DataSource {
         let field: String
         let key: String
         switch input.proof {
-        case .code:
+        case .code(let value):
             field = "code"
+            guard value.count == 6, value.allSatisfy({ $0.isASCII && $0.isNumber }) else {
+                throw validation(field, "Enter the 6-digit code from your authenticator app.")
+            }
             key = "The authentication code was not accepted. Try again."
-        case .recoveryCode:
+        case .recoveryCode(let value):
             field = "recovery_code"
+            guard !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw validation(
+                    field, "Enter one of the recovery codes you saved when you set up two-factor authentication.")
+            }
             key = "This recovery code was not accepted. Try another saved code."
         }
         guard let challenge = state!.twoFactor[input.challengeId], challenge.expiresAt > now().timeIntervalSince1970,

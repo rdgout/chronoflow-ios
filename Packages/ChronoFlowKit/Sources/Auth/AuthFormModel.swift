@@ -18,23 +18,31 @@ nonisolated public enum AuthBannerKind: String, CaseIterable, Sendable {
         case .server: "Try again in a moment."
         }
     }
+    public func body(for context: AuthFormContext) -> String {
+        if self == .locked && context == .twoFactor { return "Wait a few minutes before you try again." }
+        return body
+    }
 }
+
+nonisolated public enum AuthFormContext: Sendable { case signIn, twoFactor }
 
 nonisolated public struct AuthFailureMapping: Sendable, Equatable {
     public var banner: AuthBannerKind?
     public var fields: [String: FieldMessage] = [:]
     public var retryAfterSeconds: TimeInterval?
 
-    public init(_ failure: DataFailure, displayedFields: Set<String>) {
+    public init(_ failure: DataFailure, displayedFields: Set<String>, context: AuthFormContext = .signIn) {
         switch failure {
         case .offline: break
         case .throttled(let seconds, _):
             banner = .locked
             retryAfterSeconds = seconds
         case .validation(let messages, _):
-            if messages.values.contains(where: {
-                $0.key == "These sign-in details don't match our records."
-            }) {
+            if context == .signIn
+                && messages.values.contains(where: {
+                    $0.key == "These sign-in details don't match our records."
+                })
+            {
                 banner = .credentials
                 return
             }
@@ -51,7 +59,7 @@ nonisolated public struct AuthFailureMapping: Sendable, Equatable {
 }
 
 @MainActor @Observable public final class AuthFormModel {
-    public enum Action: Sendable { case password, passkey }
+    public enum Action: Sendable { case password, passkey, verify }
     public private(set) var pending: Action?
     public private(set) var banner: AuthBannerKind?
     public private(set) var fields: [String: FieldMessage] = [:]
@@ -59,10 +67,20 @@ nonisolated public struct AuthFailureMapping: Sendable, Equatable {
     public private(set) var retryAfterSeconds: TimeInterval?
     public private(set) var announcementRevision = 0
     private var announcedRevision = 0
-    private let displayedFields: Set<String>
+    private var displayedFields: Set<String>
+    public let context: AuthFormContext
     public var busy: Bool { pending != nil }
 
-    public init(displayedFields: Set<String> = ["email", "password"]) { self.displayedFields = displayedFields }
+    public init(displayedFields: Set<String> = ["email", "password"], context: AuthFormContext = .signIn) {
+        self.displayedFields = displayedFields
+        self.context = context
+    }
+
+    public func showFields(_ fields: Set<String>) {
+        guard !busy else { return }
+        displayedFields = fields
+        clear()
+    }
 
     public func begin(_ action: Action) -> Bool {
         guard !busy else { return false }
@@ -85,7 +103,7 @@ nonisolated public struct AuthFailureMapping: Sendable, Equatable {
     }
     public func receive(_ failure: DataFailure) {
         self.failure = failure
-        let mapped = AuthFailureMapping(failure, displayedFields: displayedFields)
+        let mapped = AuthFailureMapping(failure, displayedFields: displayedFields, context: context)
         banner = mapped.banner
         fields = mapped.fields
         retryAfterSeconds = mapped.retryAfterSeconds
@@ -94,6 +112,7 @@ nonisolated public struct AuthFailureMapping: Sendable, Equatable {
     public func takeAnnouncement(locale: Locale) -> String? {
         guard let banner, announcedRevision != announcementRevision else { return nil }
         announcedRevision = announcementRevision
-        return AuthCopy.string(banner.title, locale: locale) + " " + AuthCopy.string(banner.body, locale: locale)
+        return AuthCopy.string(banner.title, locale: locale) + " "
+            + AuthCopy.string(banner.body(for: context), locale: locale)
     }
 }

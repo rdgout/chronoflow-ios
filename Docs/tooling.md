@@ -2019,3 +2019,70 @@ Inventory probes accept absent/empty/complete Auth sets and reject partial/stale
 sets. Two ordered patches and plain Conventional Commit subjects are in `build/commits`;
 `replay.txt` records application against the starting HEAD. No git commits or reference
 recording were performed in this worktree.
+
+### Phase 10b first task: two-factor code and recovery (2026-11-07)
+
+Only the first 10b task is implemented. TwoFactorView uses the existing AuthScreen, AuthField,
+AuthButton, AuthBanner and measured keyboard reveal. Code entry is a native oneTimeCode number
+pad, limited to six ASCII digits with no auto-submit; recovery uses the regular keyboard and Go.
+Changing mode clears input and feedback. Back/disappearance discards input and the memory-only
+challenge, cancels the view request and rejects late responses. Missing challenges return to Sign in.
+Every attempt clears input, and the shared form lock covers tap and Return.
+
+The API's completion action uses `code` and `recovery_code`; these field messages are localized
+using the resolved English/Dutch values. The board's example 30-second text is retained in the
+catalog and board export, but actual failures display their backend key. Expired and five-failure
+challenges return the existing rejected-code field message, so they use that designed field-error
+pattern. There is no separate expiry screen. OQ 23/30 defaults remain kept (user informed): no
+offline banner, submit stays enabled; hidden/unknown-field failures use the designed server banner.
+Storage failures stay typed service seams. No new state presentation is added.
+
+SignInModel owns the two-factor model and sends its success through the same acceptance method
+as password sign-in, using the scene's NativeSessionController and SQLite gate. The native
+SessionReadinessTests now cover password, passkey and two-factor through all four stored gates,
+with and without cancellation after credential commit. The Debug mock account is
+`twofactor@example.com` / `password`, with `123456` or recovery `AbCdEf1234-GhIjKl5678`.
+Its seeded accepted terms and unseen walkthrough route success to the existing walkthrough seam.
+
+TwoFactorModelTests cover missing/wrong/latest codes, input filtering without submission, recovery
+success/reuse, expiry/exhaustion, throttling/server/offline, hidden-field mapping, localized messages
+and deduplicated announcements, toggles, cancellation/back, double submission and storage boundaries.
+The keyboard suite measures the focused field and Verify against the real keyboard/window/scroll
+frames in both modes and languages at xxLarge, before and after field/server errors. It retains
+SignInKeyboardTests' corrected Duo behavior when the keyboard lies outside the app window. A
+failure to fit remains OQ 32; do not change the layout or shrink the root cap to pass it.
+
+Debug-only `-cf.isolatedMockServer` gives UI launches a shared in-memory mock server for the auth
+and native sync sources, preventing cross-test throttles and recovery consumption. Debug mock-only
+`-cf.twoFactorServerFailure` injects one completion failure for keyboard coverage. Neither test seam
+changes Release API behavior. The normal Debug mock keeps its file-backed server.
+
+TwoFactorControlTests/TwoFactorLayoutTests are hosted logic, TwoFactorTests is UI logic,
+TwoFactorKeyboardTests is a runtime suite and TwoFactorSnapshotTests uses profiles. All are
+registered in the runner; targeted recording selects only the new suite. Snapshots cover both modes
+and none/field-error/attempts/server states, en/nl, light/dark, the board and all D1c profile sizes:
+1,792 new references under `AppTests/__Snapshots__/Auth/TwoFactor`. Separate AX5/xxLarge checks
+verify the existing root cap. Fourteen board HTML exports are under `_design/frames/auth/two-factor-*`;
+`node Scripts/export-auth-boards.cjs` regenerates them without changing the read-only canvas.
+
+Verification: `make quick` passes, including 54 runner fixtures, 10 resource checks and 3 signing
+checks. SwiftPM package/test compilation for the iOS 17 simulator target, direct Debug/Release app
+module/SIL compilation, and hosted/UI test type checks pass. Compilation does not execute UIKit.
+No xcodebuild, simulator, reference recording or seven-simulator matrix was run. Hosted execution,
+snapshot recording/comparison/visual acceptance and this form's OQ 32 SE/Duo checks remain pending
+the user's runs. Phase 10b's second task, including its complete auth gate/audit report, stays open.
+
+Run these commands from this repository, in order:
+
+```sh
+make generate
+make targeted DEVICES="17e" ONLY="AppTests/AuthControlTests AppTests/AuthLayoutTests AppTests/TwoFactorControlTests AppTests/TwoFactorLayoutTests AppTests/SessionReadinessTests AppUITests/TwoFactorTests AppUITests/TwoFactorKeyboardTests"
+SNAPSHOT_RECORD=1 make targeted DEVICES="17e" ONLY="AppTests/TwoFactorSnapshotTests"
+REUSE_BUILD=1 make targeted DEVICES="17e" ONLY="AppTests/TwoFactorSnapshotTests AppTests/AuthSnapshotTests"
+make targeted DEVICES="se duo" ONLY="AppUITests/TwoFactorKeyboardTests"
+```
+
+Recording runs serially on 17e and compares in a fresh test process. Review the new references
+against the exported boards; the recording itself is not visual acceptance. The SE/Duo suite keeps
+frame logs and screenshots as attachments under `build/test-results/<alias>/`. No full matrix or
+`make duo` is needed for this task; the explicit `se duo` keyboard selection is the OQ 32 check.

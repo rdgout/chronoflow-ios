@@ -124,10 +124,7 @@
             guard request == nil, !model.form.busy else { return }
             let previousFocus = focus
             request = Task {
-                switch action {
-                case .password: await model.submitPassword()
-                case .passkey: await model.submitPasskey()
-                }
+                if action == .passkey { await model.submitPasskey() } else { await model.submitPassword() }
                 if !Task.isCancelled && (model.form.failure != nil || model.sessionFailure != nil) {
                     focus =
                         model.form.fields["email"] != nil
