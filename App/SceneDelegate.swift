@@ -12,6 +12,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     private(set) var pendingIntent = PendingLaunchIntent()
     private(set) var coordinator: LaunchCoordinator?
     var navigator = RootNavigator()
+    private(set) var moonAnchorStore = MoonAnchorStore()
     let signposts = LaunchSignposts()
     private var exitSignpostTask: Task<Void, Never>?
     private var rootScheduled = false
@@ -42,6 +43,15 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         connectionGeneration += 1
         signposts.event(.sceneConnect)
         let diagnostic = arguments.mode != nil || arguments.freezeAt != nil
+        moonAnchorStore = MoonAnchorStore()
+        moonAnchorStore.onChange = { [weak self] frame in
+            guard let self else { return }
+            if diagnostic {
+                if arguments.mode == .welcome { updateDiagnosticMoon(frame, arguments: arguments) }
+            } else {
+                coordinator?.send(.moonAnchor(frame))
+            }
+        }
         if firstConnection {
             signposts.begin(.launch)
             signposts.begin(.firstCommit)
@@ -92,6 +102,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             }
         }
         if diagnostic || (!firstConnection && navigator.route != nil) {
+            if arguments.mode == .welcome { navigator.navigate(to: .welcome) }
             mountRoot(on: windowScene)
         } else {
             startReadiness(on: windowScene, arguments: arguments)
@@ -139,16 +150,44 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         rootScheduled = true
         let generation = connectionGeneration
         DispatchQueue.main.async { [weak self] in
-            guard let self, self.connectionGeneration == generation else { return }
-            let window = UIWindow(windowScene: windowScene)
-            window.maximumContentSizeCategory = ContentSizeCap.maximumCategory
-            let controller = LaunchHostingController(rootView: RootView(navigator: navigator), signposts: signposts)
-            controller.launchIsVisible = overlayWindow != nil
-            window.rootViewController = controller
-            controller.view.accessibilityElementsHidden = overlayWindow != nil
-            self.window = window
-            window.makeKeyAndVisible()
+            Task { @MainActor [weak self] in
+                try? await FontRegistry.register()
+                guard let self, self.connectionGeneration == generation else { return }
+                let window = UIWindow(windowScene: windowScene)
+                window.maximumContentSizeCategory = ContentSizeCap.maximumCategory
+                let controller = LaunchHostingController(
+                    rootView: RootView(navigator: navigator, moonAnchorStore: moonAnchorStore), signposts: signposts)
+                controller.launchIsVisible = overlayWindow != nil
+                window.rootViewController = controller
+                controller.view.accessibilityElementsHidden = overlayWindow != nil
+                self.window = window
+                window.makeKeyAndVisible()
+            }
         }
+    }
+
+    private func updateDiagnosticMoon(_ frame: CGRect, arguments: LaunchArguments) {
+        #if DEBUG
+            guard let scene = overlayController?.launchScene, let t0 = scene.t0 else { return }
+            scene.play(
+                LaunchTimeline.opening(size: scene.size, reduceMotion: scene.timeline.reduceMotion)
+                    .withWelcomeExit(at: .milliseconds(1600), size: scene.size, moonTarget: frame), at: t0)
+            if let time = arguments.freezeAt { scene.freeze(at: time) }
+            DispatchQueue.main.async { [weak self, weak scene] in
+                guard let self, let moon = scene?.layer(.moon).presentation(), let controller = overlayController else {
+                    return
+                }
+                let values: [String: [Double]] = [
+                    "target": [frame.midX, frame.midY, frame.width],
+                    "moon": [
+                        moon.position.x, moon.position.y, moon.value(forKeyPath: "transform.scale.x") as? Double ?? 0,
+                    ],
+                ]
+                if let data = try? JSONEncoder().encode(values) {
+                    controller.view.accessibilityValue = String(decoding: data, as: UTF8.self)
+                }
+            }
+        #endif
     }
 
     private func finishLaunch() {

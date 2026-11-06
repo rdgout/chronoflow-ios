@@ -19,6 +19,7 @@ final class RootNavigator: Navigator {
 
 struct RootView: View {
     var navigator = RootNavigator()
+    var moonAnchorStore: MoonAnchorStore?
 
     var body: some View {
         content.dynamicTypeSize(...ContentSizeCap.maximum)
@@ -28,6 +29,7 @@ struct RootView: View {
         if let route = navigator.route {
             if route == .welcome {
                 WelcomeView()
+                    .environment(\.moonAnchorStore, moonAnchorStore)
             } else {
                 #if DEBUG
                     RoutePlaceholder(route: route)

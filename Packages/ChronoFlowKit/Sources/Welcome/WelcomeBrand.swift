@@ -1,9 +1,11 @@
+import AppCore
 import DesignSystem
 import SwiftUI
 
 #if canImport(UIKit)
     public struct WelcomeBrand: View {
         @Environment(\.locale) private var locale
+        @Environment(\.moonAnchorStore) private var moonAnchorStore
 
         public init() {}
 
@@ -17,6 +19,11 @@ import SwiftUI
                             lineCap: .round, lineJoin: .round)
                     )
                     .frame(width: WelcomeTokens.moonSize, height: WelcomeTokens.moonSize)
+                    .onGeometryChange(for: CGRect.self) {
+                        $0.frame(in: .global)
+                    } action: {
+                        moonAnchorStore?.update($0)
+                    }
                     .accessibilityHidden(true)
                 WelcomeText(WelcomeCopy.string("ChronoFlow", locale: locale), style: Typography.welcomeWordmark)
                     .foregroundStyle(ColorToken.skyTitle.color)
