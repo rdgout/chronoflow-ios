@@ -4,7 +4,7 @@ import LocalStore
 
 public actor SyncEngine {
     private let database: AccountDatabase
-    private let source: any DataSource
+    private var source: (any DataSource)?
     private let epoch: SyncEpoch
     public let retention: PlanRetention
     private let scheduler: SyncScheduler
@@ -12,6 +12,7 @@ public actor SyncEngine {
     private var flight: Task<SyncResult, any Error>?
     private var flightEpoch: SyncEpoch?
     private var timer: Task<Void, Never>?
+    private var canceledTimers: [UInt64: Task<Void, Never>] = [:]
     private var timerID: UInt64 = 0
     private var rerun = false
     private var stopped = false
@@ -68,11 +69,21 @@ public actor SyncEngine {
     @discardableResult
     private func cancelTimer() -> Task<Void, Never>? {
         let pending = timer
+        let canceledID = timerID
         timerID &+= 1
         timer?.cancel()
+        if let pending {
+            canceledTimers[canceledID] = pending
+            Task { [weak self] in
+                await pending.value
+                await self?.timerDrained(canceledID)
+            }
+        }
         timer = nil
         return pending
     }
+
+    private func timerDrained(_ id: UInt64) { canceledTimers.removeValue(forKey: id) }
 
     public func refreshNow() async throws -> SyncResult {
         try Task.checkCancellation()
@@ -125,6 +136,7 @@ public actor SyncEngine {
     }
 
     private func runOnce(epoch: SyncEpoch) async throws -> SyncResult {
+        guard let source else { throw CancellationError() }
         var state: SyncState = .idle
         var retryAfter: TimeInterval?
         var refusals: [SyncRefusal] = []
@@ -132,6 +144,18 @@ public actor SyncEngine {
             let online = await isOnline()
             try epoch.check()
             if online {
+                if try await AccountRepository(database: database).account()?.hasVerifiedEmail == false {
+                    let identity = try await source.fetchIdentity()
+                    try epoch.check()
+                    try await database.write(epoch: epoch) { db in
+                        try StoreApplication.identity(identity, accountID: epoch.accountID, db: db)
+                    }
+                    if !identity.hasVerifiedEmail {
+                        return SyncResult(
+                            state: .verificationRequired,
+                            pendingCount: try await OutboxRepository(database: database).pending().count)
+                    }
+                }
                 let flush = try await OutboxFlusher(database: database, source: source, now: scheduler.now).run(
                     epoch: epoch)
                 try epoch.check()
@@ -189,6 +213,11 @@ public actor SyncEngine {
         let pending = flight
         _ = await pending?.result
         await pendingTimer?.value
+        let timers = canceledTimers
+        canceledTimers.removeAll()
+        for timer in timers.values { await timer.value }
+        source = nil
+        retention.clear()
         for observer in observers.values { observer.finish() }
         observers.removeAll()
     }

@@ -92,6 +92,7 @@ public struct SessionUpdate: Sendable, Equatable {
 public actor SessionController: SessionControlling {
     private let credentials: any SessionStore
     private let accounts: any SessionAccountStore
+    private let stopSync: @Sendable () async -> Void
     private let requestSync: @Sendable (UInt64) async -> Void
     private var tail: Task<Void, Never>?
     private(set) var generation: UInt64 = 0
@@ -102,11 +103,13 @@ public actor SessionController: SessionControlling {
 
     public init(
         credentials: any SessionStore, accounts: any SessionAccountStore,
+        stopSync: @escaping @Sendable () async -> Void = {},
         requestSync: @escaping @Sendable (UInt64) async -> Void = { _ in }
     ) {
         self.credentials = credentials
         self.accounts = accounts
         self.requestSync = requestSync
+        self.stopSync = stopSync
     }
 
     public func updates() -> AsyncStream<SessionUpdate> {
@@ -161,6 +164,8 @@ public actor SessionController: SessionControlling {
 
     private func performRestore(generation: UInt64) async throws -> SessionPresence {
         try check(generation)
+        await stopSync()
+        try check(generation)
         let session: StoredSession?
         do { session = try await credentials.readStoredSession() } catch is CancellationError {
             throw CancellationError()
@@ -208,6 +213,8 @@ public actor SessionController: SessionControlling {
         else {
             throw SessionFailure.invalidResult
         }
+        await stopSync()
+        try check(generation)
         if case .signedIn(let accountID) = presence, accountID != id.rawValue {
             storedSession = nil
             publish(.signedOut)

@@ -19,6 +19,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     private(set) var launchIntro: LaunchIntro?
     private var allowsIntro = false
     var readinessFactory: (@MainActor (LaunchArguments, any LaunchClock) -> any LaunchReadiness)?
+    var sessionActivity: (@MainActor (Bool) -> Void)?
     private var rootScheduled = false
     private var connectionGeneration = 0
 
@@ -243,8 +244,13 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         UIAccessibility.post(notification: .screenChanged, argument: nil)
     }
 
+    func sceneDidBecomeActive(_ scene: UIScene) { sessionActivity?(true) }
+
+    func sceneDidEnterBackground(_ scene: UIScene) { sessionActivity?(false) }
+
     func sceneDidDisconnect(_ scene: UIScene) {
         connectionGeneration += 1
+        sessionActivity?(false)
         finishLaunch()
         coordinator?.stop()
         coordinator = nil

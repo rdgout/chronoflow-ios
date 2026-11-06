@@ -7,11 +7,15 @@ final class NativeSessionController {
     let controller: SessionController
     let accounts: SessionAccountDatabase
     let model: AccountModel
+    let sync: SessionSync?
     private var subscription: Task<Void, Never>?
 
     init(
         applicationSupport: URL, namespace: StorageNamespace, credentials: (any SessionStore)? = nil,
-        requestSync: @escaping @Sendable (UInt64) async -> Void = { _ in }
+        requestSync: @escaping @Sendable (UInt64) async -> Void = { _ in },
+        source: (@Sendable (StoredSession) async -> any DataSource)? = nil,
+        unauthorized: @escaping @Sendable (UInt64) async -> Void = { _ in },
+        verification: @escaping @Sendable (UInt64) async -> Void = { _ in }
     ) {
         let model = AccountModel()
         self.model = model
@@ -19,9 +23,19 @@ final class NativeSessionController {
             await model.detach()
         }
         self.accounts = accounts
+        let credentials = credentials ?? KeychainSessionStore(namespace: namespace)
+        let sync = source.map {
+            SessionSync(accounts: accounts, source: $0, unauthorized: unauthorized, verification: verification)
+        }
+        self.sync = sync
         controller = SessionController(
-            credentials: credentials ?? KeychainSessionStore(namespace: namespace), accounts: accounts,
-            requestSync: requestSync)
+            credentials: credentials, accounts: accounts, stopSync: { await sync?.stop() },
+            requestSync: { epoch in
+                if let session = try? await credentials.readStoredSession() {
+                    await sync?.start(session: session, epoch: epoch)
+                }
+                await requestSync(epoch)
+            })
     }
 
     func observe() {
