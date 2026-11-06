@@ -1299,3 +1299,34 @@ Task 2: `sh Scripts/host-tests.sh --filter SyncTests` passes 22 tests across 6 s
 host tests over GRDB and scripted mock sources. `synced_at` commits with account/settings/cards;
 detail failures preserve it. A missing detail is tombstoned without scheduling a retry; later
 explicit pulls may rediscover the card. No hosted UIKit/Keychain tests are needed for these services.
+
+Task 3 and final checks:
+
+- `sh Scripts/host-tests.sh`: **212 passed**, including **35 Sync tests** in 8 suites.
+  The Sync suite also uses the persisted MockDataSource and an APIDataSource with a deny-by-default
+  URLProtocol; it performs no network calls or real timer sleeps. Manual gates cover each source
+  response, caller cancellation, parent epoch invalidation and a queued SQLite response write.
+- `make lint`: passed.
+- `make generators-check`: passed (7 TokenGen, 6 font/cache checks, 3 AssetGen tests); generated
+  outputs remain unchanged.
+- `python3 -I Tests/test_launch_simulators.py`: **21 passed**; Sync suites are classified as host-only.
+- `python3 -I Tests/test_launch_resources.py`: **10 passed**.
+- `git diff --check`: passed.
+
+No new hosted AppTests are added: this phase needs neither UIKit nor Keychain, so there is no new
+17e command. No xcodebuild, simulator or git commit was run. Existing 9a/9b hosted and hardware checks
+remain open, as recorded in their sections; this does not replace those results.
+
+SyncEngine owns one flight and coalesces requests into a rerun, debounces ordinary requests by
+1 second with an injectable scheduler, and exposes immediate refresh and cancellation/drain. A
+child SyncEpoch guards each flight through SQLite commit; invalidate its parent before detaching
+the session. A canceled refresh cancels the shared flight; subsequent refreshes use a fresh child.
+Result events carry only typed states, counts, sanitized refusals and relative retry delays.
+The lifecycle owner in 9d will schedule exponential/retry-after retries from these results, wire
+sign-in/activation/reconnect/outbox triggers, suspend verification pulls, and handle current-epoch
+401 sign-out outside the engine task. This phase adds no UI, production composition or wipe handler.
+
+Packaging: `build/commits/1.patch` through `3.patch` each contain their matching task tick and
+Conventional Commit message in `messages.txt`. The first patch independently passes its 6 Sync
+tests, and the first two patches together pass 22 Sync tests in a separate host checkout. Replay against HEAD with `git apply --index`
+verified the index tree and every tracked file byte against the final worktree.
