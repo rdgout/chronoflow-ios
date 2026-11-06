@@ -1,6 +1,7 @@
 import contextlib
 import io
 import json
+import os
 from pathlib import Path
 import runpy
 import subprocess
@@ -24,24 +25,33 @@ class LaunchSimulatorsTests(unittest.TestCase):
                 "udid": "device-" + str(index),
             })
         self.commands = []
+        self.environments = []
         self.failure = lambda command: False
         self.installed = True
 
-    def execute(self, timeline=False, scene=False):
+    def execute(self, timeline=False, scene=False, snapshots=False):
         output = io.StringIO()
+        states = {d["udid"]: d["state"] for devices in self.devices.values() for d in devices}
 
         def fake_run(command, **kwargs):
             self.assertEqual(kwargs["cwd"], ROOT)
             self.commands.append(command)
+            self.environments.append(kwargs.get("env", {}))
             if self.failure(command):
                 raise subprocess.CalledProcessError(65, command)
+            if command[:3] == ["xcrun", "simctl", "boot"]:
+                if states[command[3]] == "Booted":
+                    raise subprocess.CalledProcessError(149, command)
+                states[command[3]] = "Booted"
+            if command[:3] == ["xcrun", "simctl", "shutdown"]:
+                states[command[3]] = "Shutdown"
             if command == ["xcrun", "simctl", "list", "devices", "-j"]:
                 return subprocess.CompletedProcess(command, 0, json.dumps({"devices": self.devices}))
             status = 1 if "get_app_container" in command and not self.installed else 0
             return subprocess.CompletedProcess(command, status, "")
 
         with patch.object(runner.subprocess, "run", side_effect=fake_run), contextlib.redirect_stdout(output):
-            status = runner.main(timeline=timeline, scene=scene)
+            status = runner.main(timeline=timeline, scene=scene, snapshots=snapshots)
         return status, output.getvalue()
 
     def test_all_devices_use_type_and_runtime_and_clear_the_launch_cache(self):
@@ -188,6 +198,76 @@ class LaunchSimulatorsTests(unittest.TestCase):
         status, output = self.execute(scene=True)
         self.assertEqual(status, 1)
         self.assertIn("FAIL iPhone Duo: No available simulator:", output)
+        self.assertNotIn("platform=iOS Simulator,id=device-6", str(self.commands))
+
+
+    def test_snapshots_compare_by_default_even_with_an_inherited_test_runner_record_flag(self):
+        with patch.dict(os.environ, {"SNAPSHOT_RECORD": "0", "TEST_RUNNER_SNAPSHOT_RECORD": "1"}):
+            status, output = self.execute(snapshots=True)
+        self.assertEqual(status, 0)
+        tests = [(c, e) for c, e in zip(self.commands, self.environments) if c[0] == "xcodebuild" and c[-1] == "test"]
+        self.assertEqual(len(tests), 7)
+        for index, (command, environment) in enumerate(tests):
+            self.assertIn("platform=iOS Simulator,id=device-" + str(index), command)
+            self.assertIn("-only-testing:LaunchTests", command)
+            self.assertEqual(command[command.index("-testLanguage") + 1], "en")
+            self.assertEqual(command[command.index("-testRegion") + 1], "US")
+            self.assertNotIn("SNAPSHOT_RECORD", environment)
+            self.assertNotIn("TEST_RUNNER_SNAPSHOT_RECORD", environment)
+        self.assertNotIn(" record", output)
+        for label, _, _ in runner.MATRIX:
+            self.assertIn("PASS " + label + " compare\n", output)
+        self.assertEqual(self.commands[-2:], [["make", "check"], ["make", "duo"]])
+
+    def test_snapshot_scene_mode_compares_snapshots_and_runs_hosted_and_ui_fixes_on_every_device(self):
+        with patch.dict(os.environ, {"SNAPSHOT_RECORD": "1"}):
+            status, output = self.execute(snapshots=True, scene=True)
+        self.assertEqual(status, 0)
+        tests = [c for c in self.commands if c[0] == "xcodebuild" and c[-1] == "test"]
+        self.assertEqual(len(tests), 14)
+        for index, command in enumerate(tests):
+            self.assertIn("-only-testing:LaunchTests", command)
+            for suite in ["AppTests", "AppUITests/WindowTests", "AppUITests/LaunchSceneTests"]:
+                self.assertEqual("-only-testing:" + suite in command, index >= 7)
+        self.assertEqual(self.commands[-2:], [["make", "check"], ["make", "duo"]])
+
+    def test_snapshots_record_all_devices_before_comparing_and_clear_record_environment(self):
+        with patch.dict(os.environ, {"SNAPSHOT_RECORD": "1", "TEST_RUNNER_SNAPSHOT_RECORD": "1"}):
+            status, output = self.execute(snapshots=True)
+        self.assertEqual(status, 0)
+        self.assertIn("Phase 3c simulator results:", output)
+        tests = [(c, e) for c, e in zip(self.commands, self.environments) if c[0] == "xcodebuild" and c[-1] == "test"]
+        self.assertEqual(len(tests), 14)
+        for index, (command, environment) in enumerate(tests):
+            self.assertIn("platform=iOS Simulator,id=device-" + str(index % 7), command)
+            self.assertIn("-only-testing:LaunchTests", command)
+            self.assertIn("-testLanguage", command)
+            self.assertNotIn("SNAPSHOT_RECORD", environment)
+            self.assertEqual(environment.get("TEST_RUNNER_SNAPSHOT_RECORD"), "1" if index < 7 else None)
+        for command, environment in zip(self.commands, self.environments):
+            if command[0] != "xcodebuild" or command[-1] != "test":
+                self.assertNotIn("TEST_RUNNER_SNAPSHOT_RECORD", environment)
+        for label, _, _ in runner.MATRIX:
+            self.assertIn("PASS " + label + " record\n", output)
+            self.assertIn("PASS " + label + " compare\n", output)
+        self.assertEqual(self.commands[-2:], [["make", "check"], ["make", "duo"]])
+
+    def test_snapshot_record_failure_still_compares_every_device_and_runs_final_checks(self):
+        self.failure = lambda c: c[0] == "xcodebuild" and c[-1] == "test" and "platform=iOS Simulator,id=device-0" in c
+        with patch.dict(os.environ, {"SNAPSHOT_RECORD": "1"}):
+            status, output = self.execute(snapshots=True)
+        self.assertEqual(status, 1)
+        self.assertIn("FAIL iPhone SE (3rd gen) record:", output)
+        self.assertIn("FAIL iPhone SE (3rd gen) compare:", output)
+        self.assertIn("PASS iPhone Duo record\n", output)
+        self.assertIn("PASS iPhone Duo compare\n", output)
+        self.assertEqual(self.commands[-2:], [["make", "check"], ["make", "duo"]])
+
+    def test_snapshot_passes_require_duos_own_runtime(self):
+        self.devices[runner.REGULAR_RUNTIME].append(self.devices[runner.DUO_RUNTIME].pop())
+        status, output = self.execute(snapshots=True)
+        self.assertEqual(status, 1)
+        self.assertIn("FAIL iPhone Duo compare: No available simulator:", output)
         self.assertNotIn("platform=iOS Simulator,id=device-6", str(self.commands))
 
 

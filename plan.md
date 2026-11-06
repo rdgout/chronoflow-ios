@@ -430,6 +430,9 @@ Device runs need OQ 4 (team) and OQ 14 (device). Phase 3c remains gated on the p
   Test: recorded, reviewed side by side with `_design/frames/`, then pass. Status vs path apex: assert and record the relation on 844 and 874 (S1).
   Note: implementation and recorded baselines are complete above; this acceptance task stays open for PNG/board-frame approval and revised simulator validation. `_design/frames/` is absent. Full path containment conflicts with the designed endpoints, which bleed 10 pt beyond both edges; no inset redesign/default is provided. Tests preserve the bleed and assert vertical bounds/clipping. S1: status top 518 is below apex 512.5 at height 844; top 533 is above apex 542.5 at height 874.
 
+- [x] Add the `--snapshots` D1c runner mode with compare-only default, optional record pass only under `SNAPSHOT_RECORD=1`, explicit en/US, failure continuation and final `make check` / `make duo`. Fixture tests cover recording isolation, all devices, failures and Duo runtime selection.
+  Files: `Scripts/launch-simulators.py`, `Tests/test_launch_simulators.py`.
+
 ### Phase 4: Readiness and hand-off (`feat/phase-4-readiness`)
 
 Blocked by OQ 7, 8, 9, 15, 16.

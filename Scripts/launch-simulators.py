@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 from pathlib import Path
 import shlex
 import subprocess
@@ -23,12 +24,17 @@ XCODEBUILD = [
 ]
 
 
-def run(command, *, check=True, capture_output=False):
+def run(command, *, check=True, capture_output=False, snapshot_record=False):
     print("+ " + shlex.join(command), flush=True)
-    return subprocess.run(command, cwd=ROOT, check=check, capture_output=capture_output, text=True)
+    environment = os.environ.copy()
+    environment.pop("SNAPSHOT_RECORD", None)
+    environment.pop("TEST_RUNNER_SNAPSHOT_RECORD", None)
+    if snapshot_record:
+        environment["TEST_RUNNER_SNAPSHOT_RECORD"] = "1"
+    return subprocess.run(command, cwd=ROOT, check=check, capture_output=capture_output, text=True, env=environment)
 
 
-def test_device(device_type, runtime, devices, timeline=False, scene=False):
+def test_device(device_type, runtime, devices, timeline=False, scene=False, snapshots=False, snapshot_record=False):
     identifier = "com.apple.CoreSimulator.SimDeviceType." + device_type
     device = next(
         (d for d in devices.get(runtime, []) if d.get("isAvailable") and d.get("deviceTypeIdentifier") == identifier),
@@ -39,6 +45,7 @@ def test_device(device_type, runtime, devices, timeline=False, scene=False):
     udid = device["udid"]
     if device["state"] == "Shutdown":
         run(["xcrun", "simctl", "boot", udid])
+        device["state"] = "Booted"
     run(["xcrun", "simctl", "bootstatus", udid, "-b"])
     installed = run(
         ["xcrun", "simctl", "get_app_container", udid, "net.chronoflow.app.native", "app"],
@@ -47,15 +54,23 @@ def test_device(device_type, runtime, devices, timeline=False, scene=False):
     if installed.returncode == 0:
         run(["xcrun", "simctl", "uninstall", udid, "net.chronoflow.app.native"])
     run(["xcrun", "simctl", "shutdown", udid])
+    device["state"] = "Shutdown"
     run(["xcrun", "simctl", "boot", udid])
+    device["state"] = "Booted"
     run(["xcrun", "simctl", "bootstatus", udid, "-b"])
+    if snapshots:
+        run(XCODEBUILD + [
+            "-destination", "platform=iOS Simulator,id=" + udid,
+            "-testLanguage", "en", "-testRegion", "US", "-only-testing:LaunchTests",
+        ] + (["-only-testing:AppTests", "-only-testing:AppUITests/WindowTests", "-only-testing:AppUITests/LaunchSceneTests"] if scene and not snapshot_record else []) + ["test"], snapshot_record=snapshot_record)
+        return
     run(XCODEBUILD + [
         "-destination", "platform=iOS Simulator,id=" + udid,
         "-only-testing:AppTests", "-only-testing:AppUITests/WindowTests", "-only-testing:DesignSystemTests",
     ] + (["-only-testing:AppCoreTests", "-only-testing:LaunchTests"] if timeline or scene else []) + (["-only-testing:AppUITests/LaunchSceneTests"] if scene else []) + ["test"])
 
 
-def main(timeline=False, scene=False):
+def main(timeline=False, scene=False, snapshots=False):
     results = []
 
     def record(label, action):
@@ -68,7 +83,7 @@ def main(timeline=False, scene=False):
         return True
 
     def report():
-        phase = "3b" if scene else "3a" if timeline else "2"
+        phase = "3c" if snapshots else "3b" if scene else "3a" if timeline else "2"
         print(f"\nPhase {phase} simulator results:", flush=True)
         for label, passed, detail in results:
             print(f"{'PASS' if passed else 'FAIL'} {label}" + (": " + detail if detail else ""), flush=True)
@@ -85,9 +100,16 @@ def main(timeline=False, scene=False):
         devices.update(json.loads(run(["xcrun", "simctl", "list", "devices", "-j"], capture_output=True).stdout)["devices"])
 
     record("list simulators", discover)
-    for label, device_type, runtime in MATRIX:
-        print("\nTesting " + label + " on " + runtime, flush=True)
-        record(label, lambda: test_device(device_type, runtime, devices, timeline, scene))
+    passes = [("compare", False)] if snapshots else [("", False)]
+    if snapshots and os.environ.get("SNAPSHOT_RECORD") == "1":
+        passes.insert(0, ("record", True))
+    for pass_name, snapshot_record in passes:
+        for label, device_type, runtime in MATRIX:
+            result_label = f"{label} {pass_name}" if pass_name else label
+            print("\nTesting " + result_label + " on " + runtime, flush=True)
+            record(result_label, lambda: test_device(
+                device_type, runtime, devices, timeline, scene, snapshots, snapshot_record,
+            ))
     record("make check", lambda: run(["make", "check"]))
     record("make duo", lambda: run(["make", "duo"]))
     return report()
@@ -97,5 +119,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--timeline", action="store_true", help="also run the Phase 3a pure timeline suites on each device")
     parser.add_argument("--scene", action="store_true", help="also run Phase 3b scene presentation and UI suites on each device")
+    parser.add_argument("--snapshots", action="store_true", help="compare Phase 3c snapshots on every D1c device (SNAPSHOT_RECORD=1 records first)")
     args = parser.parse_args()
-    raise SystemExit(main(timeline=args.timeline, scene=args.scene))
+    raise SystemExit(main(timeline=args.timeline, scene=args.scene, snapshots=args.snapshots))
