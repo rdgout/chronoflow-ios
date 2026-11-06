@@ -368,6 +368,102 @@
           }
         }
       }
+    },
+    "Use both uppercase and lowercase letters.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use both uppercase and lowercase letters."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gebruik hoofdletters en kleine letters."
+          }
+        }
+      }
+    },
+    "Use at least one letter.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use at least one letter."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gebruik minstens één letter."
+          }
+        }
+      }
+    },
+    "Use at least one number.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use at least one number."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gebruik minstens één cijfer."
+          }
+        }
+      }
+    },
+    "Use at least one symbol.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use at least one symbol."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gebruik minstens één symbool."
+          }
+        }
+      }
+    },
+    "This password has appeared in a data leak. Choose a different password.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This password has appeared in a data leak. Choose a different password."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dit wachtwoord is gevonden in een datalek. Kies een ander wachtwoord."
+          }
+        }
+      }
+    },
+    "This email verification link is invalid or has expired.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This email verification link is invalid or has expired."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze link om je e-mailadres te verifiëren is ongeldig of verlopen."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

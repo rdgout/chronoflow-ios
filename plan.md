@@ -490,7 +490,7 @@ Scale through the existing root **xxLarge** cap; no per-view caps or smaller fon
 
 ### Auth copy (String Catalog; English sentence keys)
 
-Exact matching values below are copied from RN `nl.json`, not newly translated. `PENDING HUMAN NL` means the board's English is absent from RN (even if RN has similar wording): implementation is blocked until a person supplies/approves it (OQ 28). Dynamic email/time use catalog interpolation, not sample addresses/times; `{{…}}` denotes the RN placeholder here and becomes typed catalog arguments. Labels marked by an OQ are recorded design copy, not authorization to ship conflicting text. AuthStates explanatory documentation headings are not app copy. The designed `changed` screen is out of scope.
+**OQ 28 resolved by the user 2026-11-06:** for every English string, use RN `src/i18n/locales/nl.json` when `en.json` has the exact same English; otherwise use backend `lang/nl.json` with the exact English key; otherwise write a natural Dutch translation now, matching RN's je/jij tone and terminology (`e-mailadres`, `wachtwoord`, `inloggen`) and promising only a clock shift, never symptom relief. Similar English wording is not an exact match. Unmarked rows below are RN values; newly resolved rows carry a source tag (RN / backend / translated). Dynamic email/time use catalog interpolation, not sample addresses/times; `{{…}}` denotes the RN placeholder here and becomes typed catalog arguments. Labels marked by an OQ are recorded design copy, not authorization to ship conflicting text. AuthStates explanatory documentation headings are not app copy. The designed `changed` screen is out of scope.
 
 
 **Shared and Sign in**
@@ -516,40 +516,40 @@ Exact matching values below are copied from RN `nl.json`, not newly translated. 
 | English | Dutch / status |
 |---|---|
 | Enter your code | Voer je code in |
-| Open your authenticator app and type the 6-digit code for ChronoFlow. | **PENDING HUMAN NL — OQ 28** |
+| Open your authenticator app and type the 6-digit code for ChronoFlow. | Open je authenticator-app en voer de 6-cijferige code voor ChronoFlow in. (translated) |
 | 6-digit code | 6-cijferige code |
 | Recovery code | Herstelcode |
 | Each recovery code works once. | Elke herstelcode kun je één keer gebruiken. |
 | Verify | Bevestigen |
 | Use a recovery code instead | Gebruik een herstelcode |
-| Use your authenticator app | **PENDING HUMAN NL — OQ 28** |
-| That code didn't work. Codes change every 30 seconds, so try the newest one. | **PENDING HUMAN NL — OQ 28** |
+| Use your authenticator app | Gebruik je authenticator-app (translated) |
+| That code didn't work. Codes change every 30 seconds, so try the newest one. | Die code werkte niet. Codes veranderen elke 30 seconden, dus probeer de nieuwste. (translated) |
 
 **Recovery, reset and verification**
 
 | English | Dutch / status |
 |---|---|
 | Reset your password | Stel je wachtwoord opnieuw in |
-| Enter your email and we'll send you a link to choose a new one. | **PENDING HUMAN NL — OQ 28** |
+| Enter your email and we'll send you a link to choose a new one. | Vul je e-mailadres in. We sturen je een link om een nieuw wachtwoord te kiezen. (translated) |
 | Send reset link | Verstuur resetlink |
 | Check your inbox. | Bekijk je inbox. |
-| If {{email}} has an account, a link to choose a new password is on its way. | **PENDING HUMAN NL — OQ 28** |
+| If {{email}} has an account, a link to choose a new password is on its way. | Als er een account bestaat voor {{email}}, is er een link onderweg om een nieuw wachtwoord te kiezen. (translated) |
 | Open email app | Open je e-mailapp |
 | Choose a new password | Kies een nieuw wachtwoord |
-| You'll be signed in on this phone once it's saved. | **PENDING HUMAN NL — OQ 28** |
+| You'll be signed in on this phone once it's saved. | Je wordt op deze telefoon ingelogd zodra je wachtwoord is opgeslagen. (translated) |
 | New password | Nieuw wachtwoord |
 | At least 10 characters. | Minstens 10 tekens. |
 | Confirm new password | Bevestig je nieuwe wachtwoord |
-| Save and sign in | **PENDING HUMAN NL — OQ 28** |
+| Save and sign in | Opslaan en inloggen (translated) |
 | This link has expired | Deze link is verlopen |
 | Reset links work once and expire after an hour. We can send you a new one. | Een herstellink werkt één keer en verloopt na een uur. We kunnen je een nieuwe sturen. |
 | Send a new link | Nieuwe link sturen |
 | Password saved | Wachtwoord opgeslagen |
-| You're signed in on this phone. Use your new password next time, here and on the web. | **PENDING HUMAN NL — OQ 28** |
+| You're signed in on this phone. Use your new password next time, here and on the web. | Je bent ingelogd op deze telefoon. Gebruik de volgende keer je nieuwe wachtwoord, hier en op het web. (translated) |
 | Other devices stay signed in. If you didn't make this change, reset your password again and contact us. | Andere apparaten blijven ingelogd. Heb je dit niet zelf gedaan? Herstel je wachtwoord dan opnieuw en neem contact met ons op. |
 | Continue | Doorgaan |
 | Check your inbox | Bekijk je inbox |
-| We sent a link to {{email}}. Open it on this phone to finish. | **PENDING HUMAN NL — OQ 28** |
+| We sent a link to {{email}}. Open it on this phone to finish. | We hebben een link naar {{email}} gestuurd. Open die op deze telefoon om het af te ronden. (translated) |
 | Resend link | Link opnieuw versturen |
 | You can resend in {{time}}. | Je kunt de link over {{time}} opnieuw versturen. |
 | Use a different email | Gebruik een ander e-mailadres |
@@ -599,17 +599,17 @@ Exact matching values below are copied from RN `nl.json`, not newly translated. 
 | Use no more than :max characters. | Gebruik niet meer dan {{max}} tekens. |
 | Use at least :min characters. | Gebruik minstens {{min}} tekens. |
 | The passwords don't match yet. | De wachtwoorden komen nog niet overeen. |
-| Use both uppercase and lowercase letters. | **PENDING HUMAN NL — OQ 28** |
-| Use at least one letter. | **PENDING HUMAN NL — OQ 28** |
-| Use at least one number. | **PENDING HUMAN NL — OQ 28** |
-| Use at least one symbol. | **PENDING HUMAN NL — OQ 28** |
-| This password has appeared in a data leak. Choose a different password. | **PENDING HUMAN NL — OQ 28** |
+| Use both uppercase and lowercase letters. | Gebruik hoofdletters en kleine letters. (backend) |
+| Use at least one letter. | Gebruik minstens één letter. (backend) |
+| Use at least one number. | Gebruik minstens één cijfer. (backend) |
+| Use at least one symbol. | Gebruik minstens één symbool. (backend) |
+| This password has appeared in a data leak. Choose a different password. | Dit wachtwoord is gevonden in een datalek. Kies een ander wachtwoord. (backend) |
 | Enter the 6-digit code from your authenticator app. | Vul de 6-cijferige code uit je authenticator-app in. |
 | Enter one of the recovery codes you saved when you set up two-factor authentication. | Vul een van de herstelcodes in die je hebt bewaard bij het instellen van tweefactorauthenticatie. |
 | The authentication code was not accepted. Try again. | De verificatiecode is niet geaccepteerd. Probeer het opnieuw. |
 | This recovery code was not accepted. Try another saved code. | Deze herstelcode is niet geaccepteerd. Probeer een andere bewaarde code. |
 | This password reset link is invalid or has expired. | Deze link om je wachtwoord te herstellen is ongeldig of verlopen. |
-| This email verification link is invalid or has expired. | **PENDING HUMAN NL — OQ 28** |
+| This email verification link is invalid or has expired. | Deze link om je e-mailadres te verifiëren is ongeldig of verlopen. (backend) |
 
 Passkey/divider copy is retained under settled OQ 20; credential/challenge error translations are specified in the API contract. Password hint depends on OQ 21. Reset auto-login strings depend on OQ 27; the resetDone other-devices claim depends on OQ 22 even though RN has a Dutch value. Offline title exists in RN but **has no board variant** (OQ 23). Do not include the recovery placeholder `xxxx-xxxx` as a prefilled value; it is a sample format from the board. Credentials/emailTaken backend keys classify the named banners rather than displaying duplicate field messages.
 
@@ -1153,16 +1153,16 @@ Stack on 9c. No UI. OQ 29 leaves voluntary pending-change confirmation as a retu
 
 ### Phase 10: Sign in and two-factor (`feat/phase-10-sign-in`)
 
-Originally ported early onto 9a/9b by user authorization on 2026-11-06; now integrated onto completed 9a–9d and the test tiers. OQ 23/24/28/30 defaults are explicitly assumed for this round, recorded per task below; this does not settle those questions. Two rounds. OQ 20 is settled: retain the designed passkey button/divider and implement native sign-in. Resolve OQ 23 (offline variant), 24 (unfinished destination), 28 (Phase 10 Dutch copy) and 30 (hidden-field notices) **before 10a**. No default permits an invented state. A `.verify` result may use its existing route seam until 11d. Verified success goes to `.today` seam; Today implementation is excluded.
+Originally ported early onto 9a/9b by user authorization on 2026-11-06; now integrated onto completed 9a–9d and the test tiers. OQ 23/24/30 defaults are explicitly assumed for this round, recorded per task below; this does not settle those questions. OQ 28 is resolved by the user 2026-11-06 with the RN → backend → translated copy rule. Two rounds. OQ 20 is settled: retain the designed passkey button/divider and implement native sign-in. Resolve OQ 23 (offline variant), 24 (unfinished destination) and 30 (hidden-field notices) **before 10a**; the copy blocker OQ 28 is resolved. No default permits an invented state. A `.verify` result may use its existing route seam until 11d. Verified success goes to `.today` seam; Today implementation is excluded.
 
 #### Phase 10a: Native Auth shell, controls and Sign in (`feat/phase-10-sign-in`)
 
 - [ ] Export AuthSignIn none/wrong/locked/server, AuthStates banner references and Field/Button/Notice states, both appearances. Extend generated tokens/metrics/typography/shadow output; add `Auth` UI target with `AuthScreen`, `AuthBrand`, `AuthField`, `AuthButton`, `AuthBanner`, `AuthNotice` using native controls. Implement scroll/focus/error/submit handling and `AuthFormModel` classification/lock. Catalog includes every introduced English/Dutch string together; no sample credentials.
-  Implementation note (2026-11-06): shared native controls, generated semantic colors/OKLab banner mixes, metrics/type/shadow and board glyphs; plain-sky safe-area scroll shell, measured keyboard reveal, form lock/classification and announcement deduplication implemented. Standalone HTML references exported; PNG browser exports/visual acceptance remain open (headless Chrome exits 134 in sandbox). Host tests cover form, mapping, catalog and geometry; hosted execution and unrecorded snapshots remain orchestrator work. (OQ 23 default assumed, confirm): offline has no banner and submit stays enabled. (OQ 30 default assumed, confirm): hidden/unknown field failures use the designed server banner, no notice. (OQ 28 default assumed, confirm): exact existing en/nl only; task stays unticked for missing shared rows: “Use both uppercase and lowercase letters.”, “Use at least one letter.”, “Use at least one number.”, “Use at least one symbol.”, “This password has appeared in a data leak. Choose a different password.”, “This email verification link is invalid or has expired.”. These rows are not shipped; later forms remain blocked.
+  Implementation note (2026-11-06): shared native controls, generated semantic colors/OKLab banner mixes, metrics/type/shadow and board glyphs; plain-sky safe-area scroll shell, measured keyboard reveal, form lock/classification and announcement deduplication implemented. Standalone HTML references exported; PNG browser exports/visual acceptance remain open (headless Chrome exits 134 in sandbox). Host tests cover form, mapping, catalog and geometry; hosted execution and unrecorded snapshots remain orchestrator work. (OQ 23 default assumed, confirm): offline has no banner and submit stays enabled. (OQ 30 default assumed, confirm): hidden/unknown field failures use the designed server banner, no notice. OQ 28 resolved (user 2026-11-06): all six shared rows now ship with exact backend en/nl catalog values and displayed-field mapping; tests cover both languages and retain the hidden-field fallback. The task stays unticked for browser PNG exports and visual/snapshot acceptance, hosted checks and keyboard overflow acceptance (OQ 32); OQ 23/30 policies remain assumed, not settled. Later-phase copy is recorded below and ships with its phase; other design/contract blockers still apply.
   Files: `_design/frames/auth/**`, `_design/frames/README.md`, `Tools/TokenGen/**`, `Tools/AssetGen/**`, `Sources/DesignSystem/Resources/Auth.xcassets/**`, `Sources/DesignSystem/{AuthTokens.generated,AuthTypography,AuthControls}.swift`, `Sources/Auth/{AuthScreen,AuthBrand,AuthFormModel}.swift`, `Sources/Auth/Resources/Localizable.xcstrings`, `Packages/ChronoFlowKit/Package.swift`, `project.yml`.
   Test: `Tests/AuthTests/{AuthFormModel,AuthFailureMapping,Catalog}Tests.swift`, TokenGen/AssetGen freshness, glyph and OKLab mix tests, `AppTests/{AuthControl,AuthLayout,AuthSnapshot}Tests.swift`: busy double-submit lock/edit clearing/field binding, contrast tokens, keyboard/focus, accessible labels and announcement deduplication. Verify **Matrix A** against 375 × 812 zero-inset board plus actual safe-area fixtures; no cap bypass, dots or glass imitation.
 - [x] Implement `SignInView`/model and Auth navigation stack; mount it for existing `.signIn` from Welcome. Password attempt always clears password, error variants match AuthStates, links enter guest/Forgot/Sign up seams. Two-factor result holds challenge and pushes a route seam until 10b; session result calls the one session controller, honors verify/terms/walkthrough/app gates and OQ 24's `.today` destination policy.
-  Implementation note (2026-11-06): password flow mounts from Welcome, starts empty, clears password on attempts, serializes submissions, maps designed failures, retains email, keeps challenge/navigation in memory and accepts through the existing SessionController once. Forgot/Sign up/Two-factor remain Debug route diagnostics and Release seams. The auth composition reuses the scene’s NativeSessionController for acceptance, sync, restore and wipe. Post-accept routing reads its SQLite readiness gate; verification uses AppDelegate.verificationRequired, with terms before walkthrough before Today. Integration tests cover these routes, restoration and sign-out. (OQ 24 default assumed, confirm): eligible verified → .today, unverified → .verify. Shared (OQ 23 default assumed, confirm), (OQ 28 default assumed, confirm), (OQ 30 default assumed, confirm) policies apply. Host model tests pass; multi-size en/nl/light/dark snapshots, AX5 equality, native layout/control tests and small UI/audit suites are written but unexecuted/unrecorded. Orchestrator reviews/records once; keyboard overflow acceptance (OQ 32) remains open until real frame checks run.
+  Implementation note (2026-11-06): password flow mounts from Welcome, starts empty, clears password on attempts, serializes submissions, maps designed failures, retains email, keeps challenge/navigation in memory and accepts through the existing SessionController once. Forgot/Sign up/Two-factor remain Debug route diagnostics and Release seams. The auth composition reuses the scene’s NativeSessionController for acceptance, sync, restore and wipe. Post-accept routing reads its SQLite readiness gate; verification uses AppDelegate.verificationRequired, with terms before walkthrough before Today. Integration tests cover these routes, restoration and sign-out. (OQ 24 default assumed, confirm): eligible verified → .today, unverified → .verify. Shared (OQ 23 default assumed, confirm), OQ 28 resolved (user 2026-11-06), (OQ 30 default assumed, confirm) policies apply. Host model tests pass; multi-size en/nl/light/dark snapshots, AX5 equality, native layout/control tests and small UI/audit suites are written but unexecuted/unrecorded. Orchestrator reviews/records once; keyboard overflow acceptance (OQ 32) remains open until real frame checks run.
   Files: `Sources/Auth/{SignInView,SignInModel,AuthNavigation}.swift`, `App/RootView.swift`, `App/Session/AppServices.swift`.
   Test: `Tests/AuthTests/SignInModelTests.swift`, `AppUITests/SignInTests.swift`: Welcome/back/guest/forgot/signup routing, blank/server field/credential/throttle/server/offline cases (approved OQ 23), banner cleared on edit, return chain, password cleared on success/failure, two-factor gets no early session, verified/unverified routing, no splash replay. Verify **Matrix A**, recording/accepting all sign-in state snapshots and audits in en/nl/both appearances.
 
@@ -1222,9 +1222,14 @@ reads falling back to Today for verify, terms and walkthrough. Hosted rerun rema
   The user records and reviews Auth references after this round; no PNGs or visual acceptance
   are supplied here, and the shared Auth shell acceptance task remains unticked.
 
+#### Phase 10a decision round (user 2026-11-06)
+
+- [x] Resolve OQ 28 with RN → backend → translated Dutch copy, replace all 15 pending plan rows with source-tagged values, and ship the six shared backend messages in the en/nl catalog and field mapping. Both-language mapping/localization regressions cover every message and preserve hidden-field fallback. Nine later-phase prose translations stay in this plan until their screens ship. Shared-shell acceptance remains open for the items listed above.
+  Verification: `make quick` passes (25 Auth tests, all remaining package/TokenGen/AssetGen host tests, strict lint, 3 signing guards, 10 resource checks and 53 runner fixtures); hosted checks remain for the user. Existing `AuthSnapshotTests` renders only none/credentials/locked/server banners, so these added field messages change no existing reference pixels and need no re-recording. Compare existing board/profile references and rerun native controls/layout and Sign in UI on 17e; no simulator run is claimed here.
+
 #### Phase 10b: Two-factor code/recovery and auth acceptance (`feat/phase-10b-two-factor`)
 
-Stack on 10a. OQ 28's Two-factor strings must be resolved. Expired challenges have no separate board: use the approved notice/banner policy or defer that visual state under OQ 30.
+Stack on 10a. OQ 28's Two-factor translations are resolved and recorded; ship them with this phase. Expired challenges have no separate board: use the approved notice/banner policy or defer that visual state under OQ 30.
 
 - [ ] Implement TwoFactor with code and recovery modes from AuthTwoFactor, shared form controls/model, oneTimeCode number pad (max six digits), mode toggle clears code/errors, every attempt clears code, correct field-error mapping and back cancellation. Session acceptance/routing uses 9d; challenge ID is memory-only and absent challenges return to Sign in.
   Files: `Sources/Auth/{TwoFactorView,TwoFactorModel,AuthNavigation}.swift`, `Sources/Auth/Resources/Localizable.xcstrings`, `_design/frames/auth/**`.
@@ -1239,7 +1244,7 @@ Stack on 10b. Four bounded rounds, with independent copy/link gates. The API met
 
 #### Phase 11a: Forgot password (`feat/phase-11-account`)
 
-Resolve OQ 28's Forgot heading/notice translation and shared offline/notice policy before this round. Live endpoint is implemented, but tests never use it.
+OQ 28's Forgot translations are resolved and recorded; ship them with this phase. Resolve the shared offline/notice policy before this round. Live endpoint is implemented, but tests never use it.
 
 - [ ] Wire Forgot email form → `requestPasswordReset` (`POST auth/forgot-password`) and the designed sent Notice with interpolated submitted email, Open email app and Back to sign in. Preserve non-enumeration and correct throttle/server/field states. Connect Sign in's Forgot seam; send-new-link from future resetExpired enters the same form with prefilled email.
   Files: `Sources/Auth/{ForgotPasswordView,ForgotPasswordModel,AuthNavigation}.swift`, `Sources/Auth/Resources/Localizable.xcstrings`, `_design/frames/auth/**`.
@@ -1247,7 +1252,7 @@ Resolve OQ 28's Forgot heading/notice translation and shared offline/notice poli
 
 #### Phase 11b: Reset, expired and done (`feat/phase-11b-reset`)
 
-Resolve OQ 21 (password rules/hint), 22 (all-token revocation copy), 27 (board promises auto-login), 28 (Reset Dutch copy) **before this round**. OQ 25/15 block real link entry, not typed-input/mock-inbox exercise.
+Resolve OQ 21 (password rules/hint), 22 (all-token revocation copy), 27 (board promises auto-login) **before this round**. Reset translations are recorded under resolved OQ 28; that does not approve the conflicting auto-login/revocation copy. OQ 25/15 block real link entry, not typed-input/mock-inbox exercise.
 
 - [ ] Add typed Reset input routing seam and Reset/resetExpired/resetDone state machine. Missing/invalid/expired/reused token selects designed expired view; confirmation and password use server field messages; clear both after every attempt. Successful 204 goes to the approved done copy/action and never fabricates a session. Send a new link wires 11a; Continue returns to Sign in under proposed OQ 27 default.
   Files: `Sources/AppCore/ResetPasswordInput.swift`, `Sources/Auth/{ResetPasswordView,ResetPasswordModel,ResetLinkExpiredView,AuthNavigation}.swift`, `Sources/Auth/Resources/Localizable.xcstrings`, `_design/frames/auth/**`.
@@ -1255,7 +1260,7 @@ Resolve OQ 21 (password rules/hint), 22 (all-token revocation copy), 27 (board p
 
 #### Phase 11c: Sign up (`feat/phase-11c-sign-up`)
 
-Resolve OQ 21 and 28's Sign up copy/field-message translations before this round; verify gate remains the existing seam until 11d.
+Resolve OQ 21's password policy/hint before this round; OQ 28's shared field messages now ship in the catalog. The verify gate remains the existing seam until 11d.
 
 - [ ] Build AuthSignUp name/email/password/confirmation, one native shared Show/Hide Toggle, consent web links, Create account and existing-account footer. Wire `signUp`, language/device identity, taken/server/field errors; clear passwords after every attempt and save unverified session through the same controller, then `.verify`. Do not implement guest claim recovery, reminders, policy reader or walkthrough here.
   Files: `Sources/Auth/{SignUpView,SignUpModel,AuthNavigation}.swift`, `Sources/Auth/Resources/Localizable.xcstrings`, `_design/frames/auth/**`.
@@ -1263,7 +1268,7 @@ Resolve OQ 21 and 28's Sign up copy/field-message translations before this round
 
 #### Phase 11d: Verify email waiting/failed and recovery acceptance (`feat/phase-11d-verify`)
 
-Resolve OQ 25's native link parameters/production copy decision and OQ 28's Verify Dutch copy before this round. Default is signed API input plus test/mock entry, not universal-link delivery; a production link integration remains deferred even if the screen is implemented. OQ 29 permits only the explicit Back/different-email discard behavior here.
+Resolve OQ 25's native link parameters/production copy decision before this round. OQ 28's Verify translations are resolved and recorded; ship the prose with this phase. Default is signed API input plus test/mock entry, not universal-link delivery; a production link integration remains deferred even if the screen is implemented. OQ 29 permits only the explicit Back/different-email discard behavior here.
 
 - [ ] Mount AuthVerify waiting and verifyFailed for `.verify`; authenticated signed verify request when typed input exists, otherwise users/me check. Recheck on activation/email-app return, guard account/email/epoch, persist verified status and request sync, then existing gate route. Resend deadline uses server seconds; 429/reset of deadline cannot be bypassed by backgrounding. Back/Use a different email calls explicit discard/wipe; no mock inbox, toast or email-changed UI.
   Files: `Sources/Auth/{VerifyEmailView,VerifyEmailModel,AuthNavigation}.swift`, `App/RootView.swift`, `App/Session/SyncLifecycle.swift`, `Sources/Auth/Resources/Localizable.xcstrings`, `_design/frames/auth/**`.
@@ -1336,8 +1341,8 @@ The design sets the floor: hand-off ends at 1900 ms (ready) and Welcome is fully
 | 24 | **Destination while Today is unbuilt:** successful sign-in must go to `.today`; no Today implementation is included. What may simulator/Release users see? | Existing `.today` route seam and Debug-only D17 diagnostic; unverified → `.verify` seam until 11d; preserve terms/walkthrough precedence. Never invent a temporary Today/empty success screen. Ordinary Release must remain non-shipping until real destination UI exists. | **10a** navigation acceptance; shipping to that route; not 9 |
 | 25 | **Verify-email link parameters and delivery:** RN/mock `{token,email}` differs from W `{id,hash,expires,signature}`; emails open web pages today and app.chronoflow.net universal links are deferred. What exact URL/path/encoding will deliver signed inputs, and what should “Open it on this phone to finish” promise meanwhile? | Use authenticated signed API DTO now, typed inputs/mock inbox in tests; recheck users/me after web verification on activation. Defer native URL/universal-link entry, pending approved URL contract/server association and production copy. No RN token-shaped API or colliding scheme. | **11d** production copy/entry policy; actual link delivery deferred; **11b** real reset-link entry only (typed/mock Reset remains possible); OQ 15 remains |
 | 26 | **DB backup exclusion:** exclude all account files including unsent outbox/drafts, or preserve unsent changes across device restore? Device-only Keychain session cannot restore with a backed-up DB. | D19 proposed development default: exclude the entire account directory and sidecars from backup, keep unsent rows durable on this device; document that device loss/restore loses unsent changes. A backup/recovery product flow has no board, so defer it rather than silently back up tokens or split live WAL files. | Non-blocking **9a development** under proposed default; **Release shipping** awaits confirmation |
-| 27 | **Reset promises automatic sign-in:** AuthTwoFactor reset says “You'll be signed in…”/“Save and sign in”; resetDone says “You're signed in…” and Continue links Today. API returns 204, and RN correctly returns to Sign in without a session. | Preserve no-session API behavior; propose RN's “Save new password” / “Password updated. Sign in with your new password.” and Continue → Sign in. Require approved reset/done board copy and human en/nl before implementing; do not silently add a login request or retain a password. | **11b** reset/done |
-| 28 | **Exact-board translations and server field keys:** copy table marks missing exact English matches (Two-factor “type” vs RN “enter”, recovery toggle, Forgot/Verify prose, reset promises and production password messages). | A person supplies/approves nl for unchanged English, or approves a board/RN-copy amendment with its existing nl. Use exact existing values elsewhere; never machine-translate or let unknown server English leak into Dutch. This is not permission to ship `PENDING` strings. | **10a** shared field strings; **10b** Two-factor; **11a** Forgot; **11b** Reset; **11c** production password fields; **11d** Verify, each only for its missing rows |
+| 27 | **Reset promises automatic sign-in:** AuthTwoFactor reset says “You'll be signed in…”/“Save and sign in”; resetDone says “You're signed in…” and Continue links Today. API returns 204, and RN correctly returns to Sign in without a session. | Preserve no-session API behavior; propose RN's “Save new password” / “Password updated. Sign in with your new password.” and Continue → Sign in. Require approved reset/done board copy with nl under the OQ 28 rule before implementing; do not silently add a login request or retain a password. | **11b** reset/done |
+| 28 | **Resolved by the user 2026-11-06 — Dutch copy source order:** exact RN English match (`src/i18n/locales/en.json` → `nl.json`), else exact backend English key (`lang/nl.json`), else a natural Dutch translation matching RN je/jij tone and terminology and the clock-shift copy rule. | All 15 formerly pending rows have values and source tags above: six exact backend shared field messages ship in 10a; nine translated later-phase rows are recorded now and ship with their phases. Unknown server English still cannot leak into Dutch. Resolving translation does not approve conflicting reset/verification/password-policy claims (OQ 21/22/25/27). | No remaining translation blocker in 10a/10b/11a–11d; other OQs remain |
 | 29 | **Pending changes on voluntary sign-out:** RN asks before discarding, but no sign-out confirmation board is committed. | 9d returns needsConfirmation and preserves rows; defer the voluntary discard UI until designed. Forced authenticated 401 wipes immediately. Verify Back/Use a different email explicitly discards the unverified account queue, matching RN. | Future voluntary sign-out confirmation UI; not **9d** service or explicit Verify exit |
 | 30 | **Undesigned failure states:** AuthStates has no arbitrary hidden-field notice, exhausted-challenge screen, store-open failure, sync-failure toast or mock inbox. | Reuse only an approved existing banner/notice variant with approved copy for hidden-field/challenge messages; obtain that mapping before 10a. Store/sync/inbox remain typed test seams with no product UI. Never build a mock inbox list, DB-error screen or new toast from RN alone. | **10a** hidden-field banner policy and **10b** challenge failures; store/sync/inbox UI deferred, not 9 service work |
 | 31 | **Outbox parity vs absent endpoints:** RN final schema includes complete-trip/data-export/security kinds; W routes have no complete-trip or data-export endpoints, and RN's API adapters still defer them. How should future producers behave? | Preserve schema/kind decoding. Implement supported check-off/settings (including policy acceptance)/profile/walkthrough handlers now; do not create unsupported producers, fake endpoints or discard parked rows. Security features and unsupported writes need their own later scope/contracts. Mock may retain RN behaviors as isolated test values. | Future completion/export/security feature phases; not **9c** supported sync; no claim of full RN feature parity |

@@ -49,6 +49,35 @@ struct AuthFailureMappingTests {
         )
         #expect(
             !AuthCopy.supports(FieldMessage(key: "Use at least :min characters.", arguments: ["min": .number(0.5)])))
-        #expect(!AuthCopy.supports(FieldMessage(key: "Use both uppercase and lowercase letters.")))
+    }
+
+    @Test func backendFieldMessagesMapAndLocalizeInBothLanguages() {
+        let rows = [
+            ("Use both uppercase and lowercase letters.", "Gebruik hoofdletters en kleine letters.", "password"),
+            ("Use at least one letter.", "Gebruik minstens één letter.", "password"),
+            ("Use at least one number.", "Gebruik minstens één cijfer.", "password"),
+            ("Use at least one symbol.", "Gebruik minstens één symbool.", "password"),
+            (
+                "This password has appeared in a data leak. Choose a different password.",
+                "Dit wachtwoord is gevonden in een datalek. Kies een ander wachtwoord.", "password"
+            ),
+            (
+                "This email verification link is invalid or has expired.",
+                "Deze link om je e-mailadres te verifiëren is ongeldig of verlopen.", "email"
+            ),
+        ]
+        for (english, dutch, field) in rows {
+            let message = FieldMessage(key: english)
+            let failure = DataFailure.validation(fields: [field: message], status: 422)
+            let mapped = AuthFailureMapping(failure, displayedFields: ["email", "password"])
+            #expect(AuthCopy.supports(message))
+            #expect(mapped.fields == [field: message])
+            #expect(mapped.banner == nil)
+            for (language, expected) in [("en", english), ("nl", dutch)] {
+                #expect(AuthCopy.field(message, locale: Locale(identifier: language)) == expected)
+            }
+            let hidden = AuthFailureMapping(failure, displayedFields: [])
+            #expect(hidden.fields.isEmpty && hidden.banner == .server)
+        }
     }
 }

@@ -14,7 +14,10 @@ nonisolated public enum AuthCopy {
     public static func field(_ message: FieldMessage, locale: Locale) -> String? {
         switch message.key {
         case "Please fill this in.", "Enter a valid email address, like name@example.com.",
-            "The passwords don't match yet.":
+            "The passwords don't match yet.", "Use both uppercase and lowercase letters.",
+            "Use at least one letter.", "Use at least one number.", "Use at least one symbol.",
+            "This password has appeared in a data leak. Choose a different password.",
+            "This email verification link is invalid or has expired.":
             return string(message.key, locale: locale)
         case "Use no more than :max characters.", "Use at least :min characters.",
             "Use no more than {{max}} characters.", "Use at least {{min}} characters.":

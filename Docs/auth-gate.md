@@ -2,7 +2,7 @@
 
 Implementation was originally stacked early on Phase 9b by user direction; this port integrates
 Phase 9a–9d, the test tiers and recorded Launch/Welcome references.
-The first task stays unticked for missing shared Dutch rows and browser PNG/visual acceptance;
+The first task stays unticked for browser PNG/visual acceptance and hosted checks;
 password and passkey implementation tasks are ticked with their remaining acceptance limits.
 
 Auth uses native TextField/SecureField, Buttons and ProgressView, generated board typography,
@@ -23,11 +23,14 @@ Assumed defaults, not settled questions:
 
 - **OQ 23:** no offline banner or disabled-offline submit. Typed failures remain tested.
 - **OQ 24:** eligible verified success → `.today`; unverified → `.verify`.
-- **OQ 28:** exact approved en/nl only. No machine translation, pending row or arbitrary server English.
 - **OQ 30:** hidden/unknown field and passkey credential/challenge errors use the designed generic server
   banner; no hidden-field notice. Returned passkey fields/deadlines remain typed in the form model.
 
-Shared Dutch rows still missing, omitted from the catalog and left open in the first task:
+OQ 28 is resolved by the user 2026-11-06: use RN Dutch for an exact English match, otherwise
+backend `lang/nl.json` for the exact English key, otherwise write natural Dutch matching RN's
+je/jij tone and terminology and the clock-shift copy rule. All 15 pending plan rows now have
+source-tagged values. These six shared rows have exact backend values and now ship in the catalog
+and displayed-field mapping, with en/nl regressions and the existing hidden-field fallback:
 
 - Use both uppercase and lowercase letters.
 - Use at least one letter.
@@ -36,10 +39,14 @@ Shared Dutch rows still missing, omitted from the catalog and left open in the f
 - This password has appeared in a data leak. Choose a different password.
 - This email verification link is invalid or has expired.
 
-Later-phase Two-factor/Forgot/Reset/Verify prose remains blocked exactly as listed in plan.md.
-Every introduced product string has its exact RN Dutch value; numeric field arguments use catalog
-interpolation. Passkey-specific backend sentences classify failures, with only the approved generic
+Later-phase Two-factor/Forgot/Reset/Verify translations are recorded in plan.md and ship with their
+phases. OQ 21/22/25/27 still block the conflicting password-policy/reset/verification claims.
+Numeric field arguments use catalog interpolation. Passkey-specific backend sentences classify failures, with only the approved generic
 banner rendered; no new translation is needed for an undisplayed server sentence.
+
+Existing Auth snapshots render none/credentials/locked/server, without these added field messages;
+no existing references change or need re-recording in this decision round. Hosted comparison and
+native control/layout/UI checks remain for the user; no simulator execution is claimed here.
 
 Real passkeys use AuthenticationServices required user verification and serialize binary bytes as
 unpadded base64url, including ID and clientDataJSON. Every retry fetches new options; cancellation
