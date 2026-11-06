@@ -20,6 +20,8 @@ final class RootNavigator: Navigator {
 struct RootView: View {
     var navigator = RootNavigator()
     var moonAnchorStore: MoonAnchorStore?
+    var launchIntro: LaunchIntro?
+    var forcesReduceMotion = false
 
     var body: some View {
         content.dynamicTypeSize(...ContentSizeCap.maximum)
@@ -30,6 +32,8 @@ struct RootView: View {
             if route == .welcome {
                 WelcomeView()
                     .environment(\.moonAnchorStore, moonAnchorStore)
+                    .environment(\.launchIntro, launchIntro)
+                    .environment(\.forcesReduceMotion, forcesReduceMotion)
             } else {
                 #if DEBUG
                     RoutePlaceholder(route: route)

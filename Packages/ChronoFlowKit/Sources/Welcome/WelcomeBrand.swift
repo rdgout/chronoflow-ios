@@ -28,6 +28,7 @@ import SwiftUI
                 WelcomeText(WelcomeCopy.string("ChronoFlow", locale: locale), style: Typography.welcomeWordmark)
                     .foregroundStyle(ColorToken.skyTitle.color)
                     .accessibilityIdentifier("welcome.wordmark")
+                    .modifier(IntroItem(index: 0))
             }
         }
     }

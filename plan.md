@@ -487,9 +487,10 @@ OQ 10 scaling settled by the user on 2026-11-06: cap at xxLarge. Defaults author
   Files: `Sources/AppCore/MoonAnchorStore.swift`, `Sources/Welcome/WelcomeBrand.swift`.
   Test: UI test at `-cf.freezeAt 2300`: flying moon centre within 0.5 pt of Welcome's moon on every D1c device (iPhone Duo required), and at the largest agreed text size.
   Note: Welcome publishes the glyph's actual global frame through a validated, deduplicating store into the coordinator; pre-flight updates rebuild the merged track. Root layout waits for detached font registration. Diagnostic Welcome now mounts the real screen and exposes presentation/measurement values for the frozen UI test. Default/AX5 UI and real-coordinator hosted landing tests are written; simulator validation remains open. (OQ 6 default assumed, confirm). Keep the flying moon's stroke/glow and the unanimated Welcome glyph as drawn, with no cross-fade. (OQ 10 default assumed, confirm). RN padding/scrolling and the root xxLarge cap apply; the measured frame replaces fallback geometry.
-- [ ] `IntroItem` (index, `LaunchIntro` from environment: start, clock, optional frozen time); live `.timingCurve(0.2, 0.8, 0.2, 1, duration: 0.45).delay(start + offset − now)`; first launch of the process only.
+- [x] `IntroItem` (index, `LaunchIntro` from environment: start, clock, optional frozen time); live `.timingCurve(0.2, 0.8, 0.2, 1, duration: 0.45).delay(start + offset − now)`; first launch of the process only.
   Files: `Sources/Welcome/IntroItem.swift`, `Sources/AppCore/LaunchIntro.swift`.
   Test: offsets; snapshots at 2400, 2450, 2700, 3200, 3300; second appearance has no intro.
+  Note: all six stagger offsets share the overlay media clock, including late session resolution; frozen sampling uses the same intro bezier. The moon stays fixed. A claimed intro survives overlay teardown, while route revisits, reconnects and Reduce Motion render the final screen. The intro signpost spans W+700 through W+1600 independently of overlay removal. Host timing/claim tests and en/nl light/dark frozen snapshots at all five times are written; simulator comparison remains open.
 - [ ] Buttons → `Navigator`: "Plan my trip" → `.guestWizard`, "Sign in" → `.signIn`; `PressStyle`; 52 pt.
   Files: `Sources/Welcome/WelcomeView.swift`.
   Test: UI tests for both routes; `performAccessibilityAudit()` on Welcome.

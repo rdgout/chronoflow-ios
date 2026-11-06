@@ -15,6 +15,9 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     private(set) var moonAnchorStore = MoonAnchorStore()
     let signposts = LaunchSignposts()
     private var exitSignpostTask: Task<Void, Never>?
+    private var introSignpostTask: Task<Void, Never>?
+    private(set) var launchIntro: LaunchIntro?
+    private var allowsIntro = false
     private var rootScheduled = false
     private var connectionGeneration = 0
 
@@ -43,6 +46,8 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         connectionGeneration += 1
         signposts.event(.sceneConnect)
         let diagnostic = arguments.mode != nil || arguments.freezeAt != nil
+        allowsIntro = firstConnection && !(arguments.reduceMotion || UIAccessibility.isReduceMotionEnabled)
+        launchIntro = nil
         moonAnchorStore = MoonAnchorStore()
         moonAnchorStore.onChange = { [weak self] frame in
             guard let self else { return }
@@ -102,7 +107,15 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             }
         }
         if diagnostic || (!firstConnection && navigator.route != nil) {
-            if arguments.mode == .welcome { navigator.navigate(to: .welcome) }
+            if arguments.mode == .welcome {
+                navigator.navigate(to: .welcome)
+                if allowsIntro {
+                    launchIntro = LaunchIntro(
+                        start: .milliseconds(2300),
+                        clock: MediaLaunchClock(t0: overlayController?.launchScene.t0 ?? CACurrentMediaTime()),
+                        frozenTime: arguments.freezeAt)
+                }
+            }
             mountRoot(on: windowScene)
         } else {
             startReadiness(on: windowScene, arguments: arguments)
@@ -126,6 +139,10 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             if state.session != nil { signposts.end(.session) }
             if state.isReady { signposts.end(.ready) }
             if let route = state.route {
+                if route == .welcome, allowsIntro, launchIntro == nil, let start = state.exitStart {
+                    launchIntro = LaunchIntro(start: start + .milliseconds(700), clock: clock)
+                    scheduleIntroSignpost(clock: clock, start: start + .milliseconds(700))
+                }
                 navigator.navigate(to: route)
                 mountRoot(on: windowScene)
             }
@@ -156,13 +173,27 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 let window = UIWindow(windowScene: windowScene)
                 window.maximumContentSizeCategory = ContentSizeCap.maximumCategory
                 let controller = LaunchHostingController(
-                    rootView: RootView(navigator: navigator, moonAnchorStore: moonAnchorStore), signposts: signposts)
+                    rootView: RootView(
+                        navigator: navigator, moonAnchorStore: moonAnchorStore, launchIntro: launchIntro,
+                        forcesReduceMotion: overlayController?.launchScene.timeline.reduceMotion ?? false),
+                    signposts: signposts)
                 controller.launchIsVisible = overlayWindow != nil
                 window.rootViewController = controller
                 controller.view.accessibilityElementsHidden = overlayWindow != nil
                 self.window = window
                 window.makeKeyAndVisible()
             }
+        }
+    }
+
+    private func scheduleIntroSignpost(clock: any LaunchClock, start: Duration) {
+        introSignpostTask = Task { [weak self] in
+            do {
+                try await clock.sleep(until: start)
+                self?.signposts.begin(.intro)
+                try await clock.sleep(until: start + .milliseconds(900))
+                self?.signposts.end(.intro)
+            } catch { self?.signposts.end(.intro) }
         }
     }
 
@@ -216,6 +247,9 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         coordinator = nil
         exitSignpostTask?.cancel()
         exitSignpostTask = nil
+        introSignpostTask?.cancel()
+        introSignpostTask = nil
+        launchIntro = nil
         window?.isHidden = true
         window = nil
         rootScheduled = false

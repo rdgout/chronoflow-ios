@@ -1,7 +1,19 @@
 import SwiftUI
 
+private struct ForcedReduceMotionKey: EnvironmentKey {
+    static var defaultValue: Bool { false }
+}
+
+extension EnvironmentValues {
+    public var forcesReduceMotion: Bool {
+        get { self[ForcedReduceMotionKey.self] }
+        set { self[ForcedReduceMotionKey.self] = newValue }
+    }
+}
+
 public struct PressStyle: ButtonStyle {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.forcesReduceMotion) private var forcesReduceMotion
 
     nonisolated public struct Values: Equatable, Sendable {
         public let scale: Double
@@ -19,6 +31,7 @@ public struct PressStyle: ButtonStyle {
     }
 
     public func makeBody(configuration: Configuration) -> some View {
+        let reduceMotion = reduceMotion || forcesReduceMotion
         let values = Self.values(isPressed: configuration.isPressed, reduceMotion: reduceMotion)
         let curve = PressTokens.curve
         configuration.label

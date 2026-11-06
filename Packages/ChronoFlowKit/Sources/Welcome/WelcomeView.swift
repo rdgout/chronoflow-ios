@@ -5,6 +5,11 @@ import SwiftUI
 #if canImport(UIKit)
     public struct WelcomeView: View {
         @Environment(\.locale) private var locale
+        @Environment(\.launchIntro) private var launchIntro
+        @Environment(\.accessibilityReduceMotion) private var reduceMotion
+        @Environment(\.forcesReduceMotion) private var forcesReduceMotion
+        @State private var activeIntro: LaunchIntro?
+        @State private var initialized = false
         private var onFrame: (@MainActor (WelcomeElement, CGRect) -> Void)?
 
         public init() {}
@@ -36,8 +41,15 @@ import SwiftUI
                     }
                 }
                 .ignoresSafeArea()
+                .environment(\.launchIntro, activeIntro)
             }
             .environment(\.welcomeLayoutObserver, onFrame)
+            .onAppear {
+                guard !initialized else { return }
+                initialized = true
+                if !reduceMotion && !forcesReduceMotion, launchIntro?.claim() == true { activeIntro = launchIntro }
+            }
+            .onDisappear { activeIntro = nil }
         }
 
         private var heading: some View {
@@ -47,6 +59,7 @@ import SwiftUI
                 WelcomeText(copy("Jet-lag planner").uppercased(with: locale), style: Typography.eyebrow)
                     .foregroundStyle(ColorToken.dawn.color)
                     .reportWelcomeFrame(.eyebrow)
+                    .modifier(IntroItem(index: 1))
                     .padding(.top, WelcomeTokens.eyebrowMargin)
                     .accessibilityIdentifier("welcome.eyebrow")
                 WelcomeText(copy("Plan your clock shift for your next trip"), style: Typography.headline)
@@ -54,6 +67,7 @@ import SwiftUI
                     .accessibilityAddTraits(.isHeader)
                     .accessibilityIdentifier("welcome.headline")
                     .reportWelcomeFrame(.headline)
+                    .modifier(IntroItem(index: 2))
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -74,14 +88,17 @@ import SwiftUI
                     in: RoundedRectangle(cornerRadius: WelcomeTokens.cardRadius)
                 )
                 .reportWelcomeFrame(.copy)
+                .modifier(IntroItem(index: 3))
                 .padding(.bottom, WelcomeTokens.actionGap)
                 .accessibilityIdentifier("welcome.copy")
                 WelcomeButton(copy("Plan my trip"), kind: .primary) {}
                     .accessibilityIdentifier("welcome.plan")
                     .reportWelcomeFrame(.plan)
+                    .modifier(IntroItem(index: 4))
                 WelcomeButton(copy("Sign in"), kind: .secondary) {}
                     .accessibilityIdentifier("welcome.signIn")
                     .reportWelcomeFrame(.signIn)
+                    .modifier(IntroItem(index: 5))
             }
         }
 
