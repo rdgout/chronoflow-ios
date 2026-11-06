@@ -7,11 +7,24 @@ public nonisolated struct SnapshotRaster: Equatable, Sendable {
     public let height: Int
     public let bytes: [UInt8]
 
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        guard lhs.width == rhs.width, lhs.height == rhs.height else { return false }
+        return lhs.bytes.withUnsafeBytes { left in
+            rhs.bytes.withUnsafeBytes { right in
+                memcmp(left.baseAddress!, right.baseAddress!, left.count) == 0
+            }
+        }
+    }
+
     public init(png: Data) throws {
         guard let source = CGImageSourceCreateWithData(png as CFData, nil),
             let image = CGImageSourceCreateImageAtIndex(
                 source, 0, [kCGImageSourceShouldCacheImmediately: true] as CFDictionary)
         else { throw RasterError.invalidPNG }
+        try self.init(image: image)
+    }
+
+    public init(image: CGImage) throws {
         let width = image.width
         let height = image.height
         var bytes = [UInt8](repeating: 0, count: width * height * 4)
@@ -35,15 +48,40 @@ public nonisolated struct SnapshotRaster: Equatable, Sendable {
 }
 
 public nonisolated enum SnapshotReference {
-    public static func verify(png: Data, reference: URL, record: Bool) throws -> String? {
-        let actual = try SnapshotRaster(png: png)
-        guard WelcomeSnapshotPixels.hasVisibleVariation(actual.bytes) else {
-            return "Welcome capture is uniform or transparent; refusing snapshot"
+    public enum Content { case visible, fullyTransparent }
+
+    public struct Sample {
+        public let png: Data
+        public let raster: SnapshotRaster
+
+        public init(png: Data) throws {
+            self.png = png
+            raster = try SnapshotRaster(png: png)
+        }
+    }
+
+    public static func verify(png: Data, reference: URL, record: Bool, content: Content = .visible) throws -> String? {
+        try verify(sample: Sample(png: png), reference: reference, record: record, content: content)
+    }
+
+    public static func verify(sample: Sample, reference: URL, record: Bool, content: Content = .visible) throws
+        -> String?
+    {
+        let actual = sample.raster
+        switch content {
+        case .visible:
+            guard WelcomeSnapshotPixels.hasVisibleVariation(actual.bytes) else {
+                return "Welcome capture is uniform or transparent; refusing snapshot"
+            }
+        case .fullyTransparent:
+            guard WelcomeSnapshotPixels.isFullyTransparent(actual.bytes) else {
+                return "Exited splash still contains visible pixels; refusing snapshot"
+            }
         }
         if record {
             try FileManager.default.createDirectory(
                 at: reference.deletingLastPathComponent(), withIntermediateDirectories: true)
-            try png.write(to: reference, options: .atomic)
+            try sample.png.write(to: reference, options: .atomic)
             return "Record mode is on. Recorded \(reference.lastPathComponent)"
         }
         guard FileManager.default.fileExists(atPath: reference.path) else {

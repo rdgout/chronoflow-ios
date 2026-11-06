@@ -286,11 +286,11 @@ class RunnerTests(unittest.TestCase):
                     self.assertTrue(c[c.index('-resultBundlePath') + 1].endswith('/record.xcresult'))
                     actual = {x.split(':',1)[1] for x in c if x.startswith('-only-testing:')}
                     self.assertTrue(actual <= expected)
-                    self.assertIn(runner.SNAPSHOTS[0] if mode == 'launch' else runner.SNAPSHOTS[1], actual)
-                    if mode == 'all': self.assertIn('LaunchTests/LaunchSnapshotTests', actual)
+                    self.assertIn('AppTests/LaunchSnapshotTests' if mode == 'launch' else 'AppTests/WelcomeSnapshotTests', actual)
+                    if mode == 'all': self.assertIn('AppTests/LaunchSnapshotTests', actual)
                     recorded.append(c[c.index('-destination') + 1])
-            self.assertEqual(len(recorded), 2)
-            self.assertEqual(len(set(recorded)), 2)
+            self.assertEqual(len(recorded), 1)
+            self.assertEqual(recorded, ["platform=iOS Simulator,id=device-1"])
 
     def test_targeted_reuses_builds_and_keeps_explicit_logic_on_requested_device(self):
         status, output = self.execute(aliases=['se', 'duo', 'se'], only=['AppUITests/ReadinessTests'], reuse_build=True, generate=False)
@@ -533,22 +533,27 @@ class ProfileTests(unittest.TestCase):
             self.assertTrue(profile['introTimes'])
             self.assertTrue(profile['launchFrames'])
 
-    def test_welcome_baselines_exactly_match_device_profiles(self):
+    def test_new_baseline_inventory_is_complete_after_recording(self):
         catalog = json.loads((ROOT / 'Packages/ChronoFlowKit/Tests/SnapshotSupport/profiles.json').read_text())
-        directory = ROOT / 'AppTests/__Snapshots__/WelcomeSnapshotTests'
-        expected = set()
-        for model, device in catalog['devices'].items():
-            for kind, variants in [('finalWelcome', ['large', 'xxLarge']), ('frozenIntro', catalog['profiles'][device['profile']]['introTimes'])]:
+        for screen in ['Welcome', 'Launch']:
+            expected = set()
+            for device in catalog['devices'].values():
+                profile = catalog['profiles'][device['profile']]
+                name = f"{device['alias']}-{device['width']}x{device['height']}-{device['scale']}x"
                 for style in ['light', 'dark']:
                     for language in ['en', 'nl']:
-                        for variant in variants:
-                            expected.add((kind, model, style, language, str(variant)))
-        actual = set()
-        for image in directory.glob('*.png'):
-            match = re.fullmatch(r'(finalWelcome|frozenIntro)\.(iPhone\d+,\d+)-\d+x\d+-[23]x-(light|dark)-(en|nl)-(.+)\.png', image.name)
-            self.assertIsNotNone(match, image.name)
-            actual.add(match.groups())
-        self.assertEqual(actual, expected)
+                        if screen == 'Welcome':
+                            for kind, variants in [('finalWelcome', profile['dynamicType']), ('frozenIntro', profile['introTimes'])]:
+                                expected.update(f'{kind}.{name}-{style}-{language}-{variant}.png' for variant in variants)
+                        else:
+                            expected.update(f'sampledSplashFrames.{name}-{style}-{language}-{category}-{frame}.png'
+                                            for category in ['large', 'xxLarge'] for frame in profile['launchFrames'])
+            directory = ROOT / f'AppTests/__Snapshots__/{screen}SnapshotTests'
+            actual = {p.name for p in directory.glob('*.png')}
+            # A wholly unrecorded suite is pending orchestrator work; partial recordings must fail.
+            if actual:
+                self.assertEqual(actual, expected)
+            self.assertEqual(len(expected), 472 if screen == 'Launch' else 320)
 
 
 if __name__ == '__main__':

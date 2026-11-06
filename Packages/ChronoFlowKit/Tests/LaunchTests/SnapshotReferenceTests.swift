@@ -21,8 +21,14 @@ import UniformTypeIdentifiers
         #expect(
             try SnapshotReference.verify(png: first, reference: reference, record: true)?.hasPrefix("Record mode")
                 == true)
-        for sample in [first, second] {
-            #expect(try SnapshotReference.verify(png: sample, reference: reference, record: false) == nil)
+        for png in [first, second] {
+            let sample = try SnapshotReference.Sample(png: png)
+            #expect(try SnapshotReference.verify(sample: sample, reference: reference, record: false) == nil)
+            let duplicate = directory.appendingPathComponent("equivalent.png")
+            #expect(
+                try SnapshotReference.verify(sample: sample, reference: duplicate, record: true)?.hasPrefix(
+                    "Record mode") == true)
+            #expect(try SnapshotReference.verify(sample: sample, reference: duplicate, record: false) == nil)
         }
         let mutation = try fixture(comment: "changed pixel", compressed: true, changed: true)
         #expect(
@@ -35,9 +41,40 @@ import UniformTypeIdentifiers
         #expect(throws: (any Error).self) { try SnapshotRaster(png: Data("invalid".utf8)) }
     }
 
-    private func fixture(comment: String, compressed: Bool, changed: Bool = false) throws -> Data {
+    @Test func transparentExitIsExplicitAndRejectsAnyVisiblePixel() throws {
+        let directory = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+            .appendingPathComponent("../../../../build/SnapshotReferenceTests/\(UUID().uuidString)").standardizedFileURL
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let reference = directory.appendingPathComponent("exited.png")
+        let transparent = try fixture(comment: "fully exited", compressed: true, transparent: true)
+        #expect(
+            try SnapshotReference.verify(png: transparent, reference: reference, record: true)?
+                .contains("uniform or transparent") == true)
+        #expect(!FileManager.default.fileExists(atPath: reference.path))
+        #expect(
+            try SnapshotReference.verify(
+                png: transparent, reference: reference, record: true, content: .fullyTransparent)?
+                .hasPrefix("Record mode") == true)
+        #expect(
+            try SnapshotReference.verify(
+                png: transparent, reference: reference, record: false, content: .fullyTransparent) == nil)
+        let visible = try fixture(comment: "visible", compressed: true)
+        #expect(
+            try SnapshotReference.verify(png: visible, reference: reference, record: true, content: .fullyTransparent)?
+                .contains("still contains visible pixels") == true)
+        #expect(try Data(contentsOf: reference) == transparent)
+        #expect(!WelcomeSnapshotPixels.isFullyTransparent([]))
+        #expect(!WelcomeSnapshotPixels.isFullyTransparent([0, 0, 0]))
+        #expect(!WelcomeSnapshotPixels.isFullyTransparent([0, 0, 0, 1]))
+        #expect(WelcomeSnapshotPixels.isFullyTransparent([255, 255, 255, 0]))
+    }
+
+    private func fixture(comment: String, compressed: Bool, changed: Bool = false, transparent: Bool = false) throws
+        -> Data
+    {
         var bytes: [UInt8] = [0, 0, 0, 255, 128, 128, 128, 255, 0, 0, 0, 0, 12, 24, 36, 100]
         if changed { bytes[4] += 1 }
+        if transparent { bytes = Array(repeating: 0, count: bytes.count) }
         let image = try bytes.withUnsafeMutableBytes { buffer in
             let context = try #require(
                 CGContext(

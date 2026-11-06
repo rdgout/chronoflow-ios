@@ -11,11 +11,15 @@ import SwiftUI
         @Environment(\.welcomeNavigator) private var navigator
         @State private var activeIntro: LaunchIntro?
         @State private var initialized = false
+        private var snapshotInsets: MoonTarget.Insets?
         private var onFrame: (@MainActor (WelcomeElement, CGRect) -> Void)?
 
         public init() {}
 
-        init(onFrame: @escaping @MainActor (WelcomeElement, CGRect) -> Void) { self.onFrame = onFrame }
+        init(safeAreaInsets: MoonTarget.Insets? = nil, onFrame: @escaping @MainActor (WelcomeElement, CGRect) -> Void) {
+            snapshotInsets = safeAreaInsets
+            self.onFrame = onFrame
+        }
 
         public var body: some View {
             GeometryReader { safeGeometry in
@@ -23,8 +27,9 @@ import SwiftUI
                     let insets = safeGeometry.safeAreaInsets
                     let layout = WelcomeGeometry(
                         size: geometry.size,
-                        insets: .init(
-                            top: insets.top, left: insets.leading, bottom: insets.bottom, right: insets.trailing))
+                        insets: snapshotInsets
+                            ?? .init(
+                                top: insets.top, left: insets.leading, bottom: insets.bottom, right: insets.trailing))
                     ZStack {
                         CfSky()
                         ScrollView {

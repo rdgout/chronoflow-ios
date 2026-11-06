@@ -1,22 +1,29 @@
-Welcome-only baselines are recorded with `SNAPSHOT_RECORD=1 python3 -I Scripts/launch-simulators.py --welcome`
-from the repository root. The record pass selects only AppTests/WelcomeSnapshotTests and AppTests/WelcomeSnapshotGuardTests; comparisons and final checks clear
-recording flags. It uses each D1c device's own display scale, including Duo on its separate runtime.
+# Hosted profile snapshots
 
-The 196 initial recordings were blank and have been discarded. Replacement recording and comparison
-remain open after the subsequent composition/plain-sky decisions. The orchestrator reported that hosted
-recording succeeded on all seven devices, with one intermittent 2400 ms comparison mismatch.
-Use `SNAPSHOT_RECORD=all python3 -I Scripts/launch-simulators.py --welcome` to replace both launch
-and Welcome references for the new decisions (`launch` records only launch). Every capture must come from a key, visible window, succeed through drawHierarchy, and
-contain visible pixel variation. Independent final-screen guards require appearance and language
-changes to produce different pixels, so a background-only or blank recording cannot pass.
+All seven D1c profiles render inside one 17e simulator using explicit point size, four safe-area
+insets and display scale from `Tests/SnapshotSupport/profiles.json` in ChronoFlowKit.
+`SnapshotContainerTests` checks rendered fixture geometry, bounds, scale and pixels under normal and
+larger parent insets. Profile Welcome hosts disable system safe-area injection and pass all four fixture
+insets directly to the shared `WelcomeGeometry`; the UIKit safeAreaInsets getter is not the fixture.
 
-Snapshots and capture guards require the ChronoFlow app host. Baselines stay beside the hosted tests.
-Final references cover large and xxLarge; an AX5/XXXL equality guard compares both frames and pixels
-with xxLarge in both languages and appearances on every D1c device. Missing baselines fail unless
-recording is explicitly enabled. Comparison uses decoded RGBA pixels, not PNG byte identity.
+References are named by profile alias, geometry and scale, never the executing simulator model.
+Welcome covers both languages/appearances, the profile's Dynamic Type categories and intro times.
+Splash covers the profile's frames in both languages/appearances at large and xxLarge.
+Image capture guards reject uniform/transparent/failed Welcome images; comparison uses identical
+immutable PNG → sRGB RGBA decoding on both sides, with exact channel equality. The fully exited
+`ready-1900` splash explicitly requires zero alpha everywhere; every other splash requires visible content.
+One window is reused per profile, with fresh SwiftUI identities for distinct states and matching committed
+rasters/frames before capture. Equivalent landed/capped/non-localized frames reuse their raster.
 
-Test-speed decision (2026-11-06): the current per-model profiles are in
-`Packages/ChronoFlowKit/Tests/SnapshotSupport/profiles.json`. Full coverage stays on SE/17e/Duo/Pro Max;
-17/Air/18 Pro keep the compact selection. There are 160 retained references. Retained PNGs have
-not been re-recorded; visual acceptance and the SE fresh/warmed-process comparison remain open.
-Use the current commands at the top of `Docs/tooling.md`; earlier recording notes above are historical.
+The old per-simulator references were deleted for tooling round 3 (2026-11-06).
+The failed recording's 708 partial PNGs were removed. New baselines are deliberately absent until the orchestrator records and visually reviews them:
+
+```sh
+make generate
+SNAPSHOT_RECORD=0 make targeted DEVICES="17e" ONLY="AppTests/SnapshotContainerTests"
+SNAPSHOT_RECORD=1 /usr/bin/time -p make snapshots
+SNAPSHOT_RECORD=0 make snapshots
+SNAPSHOT_RECORD=0 /usr/bin/time -p make check
+```
+
+Recording uses one 17e process and one worker. `make matrix` is opt-in and is unnecessary for recording.

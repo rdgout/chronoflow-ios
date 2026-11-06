@@ -11,41 +11,57 @@
     @Suite(.serialized) @MainActor struct WelcomeSnapshotTests {
         @Test func frozenIntro() async throws {
             try await FontRegistry.register()
-            for style in [UIUserInterfaceStyle.light, .dark] {
-                for language in ["en", "nl"] {
-                    for time in try SnapshotProfile.current().introTimes {
-                        func capture() async throws -> (image: UIImage, size: CGSize, scale: CGFloat) {
-                            let intro = LaunchIntro(
-                                start: .milliseconds(2300), clock: ManualLaunchClock(), frozenTime: .milliseconds(time))
-                            let host = WelcomeTestWindow(style: style, language: language, intro: intro)
-                            defer { host.close() }
-                            try await host.layout()
-                            #expect(intro.hasPlayed)
-                            return (try host.image(), host.window.bounds.size, host.window.screen.scale)
-                        }
-                        let sample = try await capture()
-                        if time >= 2450 {
-                            let repeated = try await capture()
-                            try #require(
-                                pixels(sample.image) == pixels(repeated.image),
-                                "Fresh frozen hosts differ at \(time), \(style), \(language); refusing snapshot")
-                        }
-                        let size = sample.size
-                        let device = ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] ?? "iPhone"
-                        let record = ProcessInfo.processInfo.environment["SNAPSHOT_RECORD"] == "1"
-                        let result = try verifyWelcomeSnapshot(
-                            of: sample.image,
-                            named:
-                                "\(device)-\(Int(size.width))x\(Int(size.height))-\(Int(sample.scale))x-\(style == .dark ? "dark" : "light")-\(language)-\(time)",
-                            record: record, testName: "frozenIntro")
-                        if record {
-                            #expect(result?.hasPrefix("Record mode is on.") == true, "\(result ?? "")")
-                        } else {
-                            #expect(result == nil, "\(result ?? "")")
+            let start = ContinuousClock.now
+            var captures = 0
+            for device in try SnapshotDevice.all() {
+                let host = WelcomeTestWindow(style: .light, device: device)
+                defer { host.close() }
+                for style in [UIUserInterfaceStyle.light, .dark] {
+                    for language in ["en", "nl"] {
+                        var landed: SnapshotReference.Sample?
+                        for time in try device.coverage.introTimes {
+                            let sample: SnapshotReference.Sample
+                            if time >= 3200, let landed {
+                                sample = landed
+                            } else {
+                                func capture() async throws -> UIImage {
+                                    let intro = LaunchIntro(
+                                        start: .milliseconds(2300), clock: ManualLaunchClock(),
+                                        frozenTime: .milliseconds(time))
+                                    host.configure(style: style, language: language, intro: intro)
+                                    let image = try await host.layout()
+                                    try #require(intro.hasPlayed)
+                                    captures += 1
+                                    return image
+                                }
+                                let image = try await capture()
+                                if time >= 2450 {
+                                    let repeated = try await capture()
+                                    let actual = try SnapshotRaster(image: #require(image.cgImage))
+                                    let expected = try SnapshotRaster(image: #require(repeated.cgImage))
+                                    try #require(
+                                        actual == expected,
+                                        "Fresh frozen roots differ at \(time), \(device.alias), \(style), \(language); refusing snapshot"
+                                    )
+                                }
+                                sample = try SnapshotReference.Sample(png: #require(image.pngData()))
+                                if time >= 3200 { landed = sample }
+                            }
+                            let record = ProcessInfo.processInfo.environment["SNAPSHOT_RECORD"] == "1"
+                            let result = try verifyWelcomeSnapshot(
+                                of: sample,
+                                named: "\(device.name)-\(style == .dark ? "dark" : "light")-\(language)-\(time)",
+                                record: record, testName: "frozenIntro")
+                            if record {
+                                #expect(result?.hasPrefix("Record mode is on.") == true, "\(result ?? "")")
+                            } else {
+                                #expect(result == nil, "\(result ?? "")")
+                            }
                         }
                     }
                 }
             }
+            print("frozenIntro: \(captures) captures, \(start.duration(to: .now))")
         }
 
         @Test(.enabled(if: ProcessInfo.processInfo.environment["CF_INTRO_ORDER"] != nil))
@@ -66,7 +82,8 @@
             try await FontRegistry.register()
             let intro = LaunchIntro(
                 start: .milliseconds(2300), clock: ManualLaunchClock(), frozenTime: .milliseconds(2700))
-            let host = WelcomeTestWindow(style: .light, language: "en", intro: intro)
+            let device = try #require(SnapshotDevice.all().first { $0.alias == "17e" })
+            let host = WelcomeTestWindow(style: .light, language: "en", intro: intro, device: device)
             defer { host.close() }
             try await host.layout()
             let image = try host.image()
@@ -82,8 +99,7 @@
             print(
                 "Frozen intro \(order): memory-vs-PNG differing channels=\(different), bits=\(image.cgImage?.bitsPerComponent ?? 0), space=\(String(describing: image.cgImage?.colorSpace))"
             )
-            let size = host.window.bounds.size
-            let name = "\(model)-\(Int(size.width))x\(Int(size.height))-\(Int(host.window.screen.scale))x-light-en-2700"
+            let name = "\(device.name)-light-en-2700"
             #expect(try verifyWelcomeSnapshot(of: image, named: name, record: false, testName: "frozenIntro") == nil)
             if order == "fresh" {
                 let recorded = try verifyWelcomeSnapshot(
@@ -155,30 +171,46 @@
 
         @Test func finalWelcome() async throws {
             try await FontRegistry.register()
-            for style in [UIUserInterfaceStyle.light, .dark] {
-                for language in ["en", "nl"] {
-                    for typeSize in [DynamicTypeSize.large, .xxLarge] {
-                        let host = WelcomeTestWindow(style: style, language: language, typeSize: typeSize)
-                        defer { host.close() }
-                        try await host.layout()
-                        try host.assertHorizontalInsets()
-                        let image = try host.image()
-                        let size = host.window.bounds.size
-                        let device = ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] ?? "iPhone"
-                        let name = "\(device)-\(Int(size.width))x\(Int(size.height))-\(Int(host.window.screen.scale))x"
-                        let record = ProcessInfo.processInfo.environment["SNAPSHOT_RECORD"] == "1"
-                        let result = try verifyWelcomeSnapshot(
-                            of: image,
-                            named: "\(name)-\(style == .dark ? "dark" : "light")-\(language)-\(typeSize)",
-                            record: record, testName: "finalWelcome")
-                        if record {
-                            #expect(result?.hasPrefix("Record mode is on.") == true, "\(result ?? "")")
-                        } else {
-                            #expect(result == nil, "\(result ?? "")")
+            let start = ContinuousClock.now
+            var captures = 0
+            for device in try SnapshotDevice.all() {
+                let host = WelcomeTestWindow(style: .light, device: device)
+                defer { host.close() }
+                for style in [UIUserInterfaceStyle.light, .dark] {
+                    for language in ["en", "nl"] {
+                        var images: [DynamicTypeSize: SnapshotReference.Sample] = [:]
+                        for typeSize in try profileSizes(device.coverage) {
+                            let effective = min(typeSize, ContentSizeCap.maximum)
+                            let sample: SnapshotReference.Sample
+                            if let cached = images[effective] {
+                                sample = cached
+                            } else {
+                                host.configure(style: style, language: language, typeSize: typeSize)
+                                let image = try await host.layout()
+                                sample = try SnapshotReference.Sample(png: #require(image.pngData()))
+                                captures += 1
+                                try host.assertHorizontalInsets()
+                                let brand = try #require(host.frames[.brand])
+                                let eyebrow = try #require(host.frames[.eyebrow])
+                                let headline = try #require(host.frames[.headline])
+                                #expect(brand.maxY < eyebrow.minY && eyebrow.maxY < headline.minY)
+                                images[effective] = sample
+                            }
+                            let record = ProcessInfo.processInfo.environment["SNAPSHOT_RECORD"] == "1"
+                            let result = try verifyWelcomeSnapshot(
+                                of: sample,
+                                named: "\(device.name)-\(style == .dark ? "dark" : "light")-\(language)-\(typeSize)",
+                                record: record, testName: "finalWelcome")
+                            if record {
+                                #expect(result?.hasPrefix("Record mode is on.") == true, "\(result ?? "")")
+                            } else {
+                                #expect(result == nil, "\(result ?? "")")
+                            }
                         }
                     }
                 }
             }
+            print("finalWelcome: \(captures) captures, \(start.duration(to: .now))")
         }
 
         @Test func accessibilitySizesRenderTheSameWelcomeAsXXLarge() async throws {
@@ -190,7 +222,7 @@
                     let reference = try pixels(capped.image())
                     let frames = capped.frames
                     capped.close()
-                    for size in [DynamicTypeSize.xxxLarge, .accessibility5] {
+                    for size in DynamicTypeSize.allCases where size > ContentSizeCap.maximum {
                         let host = WelcomeTestWindow(style: style, language: language, typeSize: size)
                         defer { host.close() }
                         try await host.layout()
@@ -285,6 +317,13 @@
         }
 
         @Test func explicitLocalesResolveTheCatalog() {
+            for language in ["en", "nl"] {
+                let locale = Locale(identifier: language)
+                #expect(WelcomeCopy.string("ChronoFlow", locale: locale) == "ChronoFlow")
+                #expect(
+                    WelcomeCopy.string("Jet-lag planner", locale: locale).uppercased(with: locale)
+                        == (language == "nl" ? "JETLAGPLANNER" : "JET-LAG PLANNER"))
+            }
             #expect(WelcomeCopy.string("Plan my trip", locale: Locale(identifier: "en")) == "Plan my trip")
             #expect(WelcomeCopy.string("Plan my trip", locale: Locale(identifier: "nl")) == "Plan mijn reis")
             #expect(WelcomeCopy.string("Sign in", locale: Locale(identifier: "nl")) == "Inloggen")
@@ -320,8 +359,8 @@
 
     }
 
-    @MainActor private func profileSizes() throws -> [DynamicTypeSize] {
-        let names = try SnapshotProfile.current().dynamicType
+    @MainActor private func profileSizes(_ profile: SnapshotProfile? = nil) throws -> [DynamicTypeSize] {
+        let names = try (profile ?? SnapshotProfile.current()).dynamicType
         return DynamicTypeSize.allCases.filter { names.contains(String(describing: $0)) }
     }
 
@@ -329,69 +368,93 @@
         let window: UIWindow
         let controller: UIHostingController<AnyView>
         var frames: [WelcomeElement: CGRect] = [:]
-        private weak var previousKeyWindow: UIWindow?
-        private let expectedIntro: LaunchIntro?
+        private(set) var moonAnchor = MoonAnchorStore()
+        let container: SnapshotContainer
+        let scale: CGFloat
+        private let fixture: SnapshotDevice?
+        private var expectedIntro: LaunchIntro?
+        private var revision = 0
 
         init(
             style: UIUserInterfaceStyle, language: String = "en", typeSize: DynamicTypeSize = .large,
-            size: CGSize? = nil, intro: LaunchIntro? = nil, reduceMotion: Bool = false
+            size: CGSize? = nil, intro: LaunchIntro? = nil, reduceMotion: Bool = false, device: SnapshotDevice? = nil
         ) {
-            expectedIntro = reduceMotion ? nil : intro
-            let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
-            if let scene = scenes.first(where: { $0.activationState == .foregroundActive }) ?? scenes.first {
-                previousKeyWindow = scene.keyWindow
-                window = UIWindow(windowScene: scene)
-                window.frame = scene.coordinateSpace.bounds
-            } else {
-                preconditionFailure("Welcome snapshots require an app-hosted window scene")
-            }
-            if let size { window.frame = CGRect(origin: .zero, size: size) }
+            fixture = device
+            container = SnapshotContainer(size: device?.size ?? size, insets: device?.insets, scale: device?.scale)
+            window = container.window
+            scale = container.scale
             window.maximumContentSizeCategory = ContentSizeCap.maximumCategory
             window.overrideUserInterfaceStyle = style
             controller = UIHostingController(rootView: AnyView(EmptyView()))
-            controller.traitOverrides.preferredContentSizeCategory = UIContentSizeCategory(typeSize)
-            controller.traitOverrides.displayScale = window.screen.scale
-            controller.overrideUserInterfaceStyle = style
-            controller.rootView = AnyView(
-                WelcomeView { [weak self] element, rect in self?.frames[element] = rect }
-                    .dynamicTypeSize(...ContentSizeCap.maximum)
-                    .environment(\.locale, Locale(identifier: language))
-                    .environment(\.dynamicTypeSize, typeSize)
-                    .environment(\.displayScale, window.screen.scale)
-                    .environment(\.launchIntro, intro)
-                    .environment(\.forcesReduceMotion, reduceMotion)
-                    .environment(\.colorScheme, style == .dark ? .dark : .light))
-            window.rootViewController = controller
-            window.makeKeyAndVisible()
+            if device != nil { controller.safeAreaRegions = [] }
+            container.host(controller)
+            configure(style: style, language: language, typeSize: typeSize, intro: intro, reduceMotion: reduceMotion)
         }
 
-        func layout() async throws {
-            window.makeKeyAndVisible()
-            window.setNeedsLayout()
-            window.layoutIfNeeded()
-            controller.view.setNeedsLayout()
-            controller.view.layoutIfNeeded()
-            for _ in 0..<100 where frames.count < WelcomeElement.allCases.count || expectedIntro?.hasPlayed == false {
-                try await Task.sleep(for: .milliseconds(10))
-            }
-            try #require(frames.count == WelcomeElement.allCases.count)
-            try #require(expectedIntro?.hasPlayed != false)
-            // Geometry callbacks precede UIViewRepresentable label drawing and the render-server commit.
-            var previous: [UInt8]?
+        func configure(
+            style: UIUserInterfaceStyle, language: String = "en", typeSize: DynamicTypeSize = .large,
+            intro: LaunchIntro? = nil, reduceMotion: Bool = false
+        ) {
+            expectedIntro = reduceMotion ? nil : intro
+            frames = [:]
+            moonAnchor = MoonAnchorStore()
+            revision += 1
+            window.overrideUserInterfaceStyle = style
+            controller.traitOverrides.preferredContentSizeCategory = UIContentSizeCategory(typeSize)
+            controller.traitOverrides.displayScale = scale
+            controller.overrideUserInterfaceStyle = style
+            controller.rootView = AnyView(
+                WelcomeView(safeAreaInsets: container.insets) { [weak self, revision] element, rect in
+                    guard let self, self.revision == revision else { return }
+                    self.frames[element] = rect
+                }
+                .dynamicTypeSize(...ContentSizeCap.maximum)
+                .environment(\.locale, Locale(identifier: language))
+                .environment(\.dynamicTypeSize, typeSize)
+                .environment(\.displayScale, scale)
+                .environment(\.moonAnchorStore, moonAnchor)
+                .environment(\.launchIntro, intro)
+                .environment(\.forcesReduceMotion, reduceMotion)
+                .environment(\.colorScheme, style == .dark ? .dark : .light)
+                .id(revision))
+        }
+
+        @discardableResult func layout() async throws -> UIImage {
+            var previous: SnapshotRaster?
             var previousFrames: [WelcomeElement: CGRect] = [:]
-            var matchingPasses = 0
-            for _ in 0..<100 {
-                try await Task.sleep(for: .milliseconds(10))
-                let current = try pixels(image())
-                matchingPasses = current == previous && frames == previousFrames ? matchingPasses + 1 : 0
-                if matchingPasses == 2 { break }
+            // A main-queue turn commits onAppear and representable updates before the pixel comparison.
+            for _ in 0..<8 {
+                await withCheckedContinuation { continuation in
+                    DispatchQueue.main.async { continuation.resume() }
+                }
+                let image = try image()
+                let current = try SnapshotRaster(image: #require(image.cgImage))
+                let ready = frames.count == WelcomeElement.allCases.count && expectedIntro?.hasPlayed != false
+                if ready && current == previous && frames == previousFrames {
+                    try #require(
+                        WelcomeSnapshotPixels.hasVisibleVariation(current.bytes),
+                        "Welcome capture is uniform or transparent; refusing snapshot")
+                    if let fixture {
+                        #expect(window.bounds.size == fixture.size)
+                        #expect(controller.view.bounds.size == fixture.size)
+                        #expect(controller.safeAreaRegions.isEmpty)
+                        #expect(controller.traitCollection.displayScale == fixture.scale)
+                        let geometry = WelcomeGeometry(size: fixture.size, insets: fixture.insets)
+                        let brand = try #require(frames[.brand])
+                        #expect(abs(brand.minX - geometry.leading) < 0.5)
+                        #expect(abs(brand.minY - geometry.top) < 0.5)
+                    }
+                    #expect(window.isKeyWindow)
+                    #expect(controller.view.window === window)
+                    return image
+                }
                 previous = current
                 previousFrames = frames
             }
-            try #require(matchingPasses == 2, "Welcome pixels/layout did not settle within the capture bound")
-            #expect(window.isKeyWindow)
-            #expect(controller.view.window === window)
+            throw CaptureError.didNotSettle
         }
+
+        private enum CaptureError: Error { case didNotSettle }
 
         var hasAnimations: Bool {
             func animated(_ layer: CALayer) -> Bool {
@@ -401,10 +464,10 @@
         }
 
         func assertHorizontalInsets() throws {
-            let insets = controller.view.safeAreaInsets
-            let content = MoonTarget.contentBounds(
-                size: window.bounds.size,
-                safeAreaInsets: .init(top: insets.top, left: insets.left, bottom: insets.bottom, right: insets.right))
+            let native = controller.view.safeAreaInsets
+            let insets =
+                fixture?.insets ?? .init(top: native.top, left: native.left, bottom: native.bottom, right: native.right)
+            let content = MoonTarget.contentBounds(size: window.bounds.size, safeAreaInsets: insets)
             for element in WelcomeElement.allCases {
                 let frame = try #require(frames[element])
                 #expect(frame.minX >= content.minX - 0.5, "\(element): \(frame), \(content)")
@@ -429,7 +492,7 @@
                 CATransaction.flush()
             }
             let format = UIGraphicsImageRendererFormat()
-            format.scale = window.screen.scale
+            format.scale = scale
             format.opaque = false
             format.preferredRange = .standard
             var rendered = false
@@ -437,16 +500,11 @@
                 rendered = window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
             }
             try #require(rendered, "drawHierarchy did not capture the Welcome window")
-            try #require(
-                WelcomeSnapshotPixels.hasVisibleVariation(pixels(image)),
-                "Welcome capture is uniform or transparent; refusing snapshot")
             return image
         }
 
         func close() {
-            window.isHidden = true
-            window.rootViewController = nil
-            previousKeyWindow?.makeKey()
+            container.close()
         }
     }
 #endif

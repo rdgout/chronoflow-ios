@@ -54,7 +54,9 @@ SUITES = {'AppTests': {'logic': ('LaunchArgumentLogicTests',
                          'LaunchTestHostTests',
                          'WelcomeHandOverTests',
                          'WelcomeSnapshotTests',
-                         'DeviceGeometrySmokeTests'),
+                         'DeviceGeometrySmokeTests',
+                         'LaunchSnapshotTests',
+                         'SnapshotContainerTests'),
               'release': ('ReleaseReadinessTests',)},
  'AppUITests': {'logic': ('ReadinessTests', 'WelcomeLogicTests', 'LaunchImageComparisonTests', 'UIWaitTests'),
                 'matrix': ('WindowTests', 'LaunchSceneTests', 'LaunchSceneDarkTests', 'WelcomeTests')},
@@ -87,8 +89,7 @@ SUITES = {'AppTests': {'logic': ('LaunchArgumentLogicTests',
                            'ReadyTimelineTests',
                            'SmokeTests',
                            'WelcomeTimelineTests',
-                           'DeviceGeometryTests'),
-                 'matrix': ('LaunchSnapshotTests',)},
+                           'DeviceGeometryTests')},
  'WelcomeTests': {'logic': ('SmokeTests', 'WelcomeGeometryTests')},
  'PerfUITests': {'perf': ('LaunchPerfTests',)},
  'DataAccessTests': {'host': ('ContractsTests',
@@ -118,7 +119,7 @@ SUITES = {'AppTests': {'logic': ('LaunchArgumentLogicTests',
                               'SessionAccountDatabaseTests',
                               'AccountWiperTests',
                               'AccountReadinessTests')}}
-SNAPSHOTS = ("LaunchTests/LaunchSnapshotTests", "AppTests/WelcomeSnapshotTests", "AppTests/WelcomeSnapshotGuardTests")
+SNAPSHOTS = ("AppTests/LaunchSnapshotTests", "AppTests/WelcomeSnapshotTests", "AppTests/WelcomeSnapshotGuardTests")
 XCODEBUILD_COMMON = ["xcodebuild", "-project", "ChronoFlow.xcodeproj", "-derivedDataPath", "build/DerivedData",
                      "-onlyUsePackageVersionsFromResolvedFile"]
 
@@ -557,7 +558,7 @@ def test_pass(destination, configuration, selected, label, record=False, intro_o
 
 
 def recording_selection(selected, mode, recording):
-    candidates = SNAPSHOTS if recording == "all" else SNAPSHOTS[:1] if recording == "launch" or mode == "launch-snapshots" else SNAPSHOTS[1:]
+    candidates = SNAPSHOTS if recording == "all" or (recording == "1" and mode == "snapshots") else SNAPSHOTS[:1] if recording == "launch" or mode == "launch-snapshots" else SNAPSHOTS[1:]
     return [s for s in selected if any(s == c or s.startswith(c + "/") for c in candidates)]
 
 
@@ -578,7 +579,7 @@ def test_device(destination, selected, mode, recording, ready, intro_order_check
         for order in ("fresh", "warm"):
             results += test_pass(destination, "Debug", selected, "order-" + order, intro_order=order)
         return results
-    record_suites = recording_selection(selected, mode, recording) if recording else []
+    record_suites = recording_selection(selected, mode, recording) if recording and destination.alias == "17e" else []
     if record_suites and ready.get("Debug"):
         results += test_pass(destination, "Debug", record_suites, "record", record=True)
     for configuration, suites in configurations(selected).items():

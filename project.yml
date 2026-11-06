@@ -61,6 +61,7 @@ targets:
     sources:
       - path: AppTests
         excludes: [__Snapshots__]
+      - path: Packages/ChronoFlowKit/Tests/LaunchTests/LaunchSnapshotCase.swift
       - path: Packages/ChronoFlowKit/Tests/SnapshotSupport
         excludes: [profiles.json]
     settings:
