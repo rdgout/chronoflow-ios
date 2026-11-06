@@ -308,3 +308,40 @@ extension SignOutTests {
         #expect(await attempts.flushes == 2)
     }
 }
+
+extension SignOutTests {
+    @Test func staleForcedFlightPreservesReplacementPendingRowsWithoutExplicitDiscard() async throws {
+        let log = SessionEventLog()
+        let credentials = ControllerMemoryStore(log: log)
+        var hooks = SessionTeardown()
+        hooks.pendingCount = { 2 }
+        hooks.flush = { throw DataFailure.offline }
+        hooks.beginWipe = { _ in await log.record("marker") }
+        let controller = SessionController(
+            credentials: credentials, accounts: ControllerAccountStore(log: log), teardown: hooks)
+        try await controller.accept(wipeSession())
+        let oldEpoch = await controller.epoch
+        let write = SessionTestGate()
+        await credentials.configure(writeGate: write)
+        let replacement = Task {
+            try await controller.accept(SessionResult(token: "replacement-token", account: wipeSession().account))
+        }
+        await write.waitUntilEntered()
+        let forced = Task { try await controller.unauthorized(epoch: oldEpoch) }
+        let deadline = ContinuousClock.now + .seconds(5)
+        while await controller.signOutFlight == nil, ContinuousClock.now < deadline { await Task.yield() }
+        try #require(await controller.signOutFlight != nil)
+        let generation = await controller.generation
+        let explicit = Task { try await controller.signOut(discardPending: false) }
+        while await controller.generation == generation, ContinuousClock.now < deadline { await Task.yield() }
+        #expect(await controller.generation > generation)
+        await write.release()
+        try await replacement.value
+        #expect(try await explicit.value == .needsConfirmation(pendingCount: 2))
+        _ = try await forced.value
+        #expect(await controller.presence == .signedIn(accountID: wipeID))
+        #expect(await controller.storedSession?.token == "replacement-token")
+        #expect(await credentials.data != nil)
+        #expect(!(await log.events).contains("marker"))
+    }
+}

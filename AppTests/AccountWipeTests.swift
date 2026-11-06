@@ -49,4 +49,43 @@ nonisolated final class AccountWipeTests: XCTestCase {
         XCTAssertEqual(defaults.string(forKey: "appearance"), "dark")
         await native.stopObserving()
     }
+    @MainActor
+    func testActivationRetriesForcedWipeAfterMarkerWriteFailure() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("retry-wipe-" + UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let credentials = KeychainSessionStore(service: "net.chronoflow.tests.retry-wipe." + UUID().uuidString)
+        let native = NativeSessionController(applicationSupport: root, namespace: .mock, credentials: credentials)
+        let id = "019a562b-8000-7000-8000-000000000001"
+        try await native.controller.accept(
+            SessionResult(
+                token: "test-token",
+                account: SessionAccount(
+                    id: id, name: "Test", email: "test@example.test", hasVerifiedEmail: true,
+                    policies: AccountPolicies(termsVersion: "1", privacyVersion: "1"), walkthroughSeen: true)))
+        let epoch = await native.controller.epoch
+        let marker = root.appendingPathComponent(StorageNamespace.mock.directoryName).appendingPathComponent(
+            "pending-wipe.json")
+        try await Task.detached {
+            try FileManager.default.createDirectory(at: marker, withIntermediateDirectories: true)
+        }.value
+        var refused = false
+        do { _ = try await native.controller.unauthorized(epoch: epoch) } catch { refused = true }
+        XCTAssertTrue(refused)
+        let pending = await native.controller.pendingUnauthorizedEpoch
+        XCTAssertEqual(pending, epoch)
+        try await Task.detached { try FileManager.default.removeItem(at: marker) }.value
+        await native.setActive(true)
+        let presence = await native.controller.presence
+        let stored = try await credentials.readStoredSession()
+        XCTAssertEqual(presence, .signedOut)
+        XCTAssertNil(stored)
+        let remaining = await native.controller.pendingUnauthorizedEpoch
+        XCTAssertNil(remaining)
+        await native.setActive(true)
+        let repeated = await native.controller.presence
+        XCTAssertEqual(repeated, .signedOut)
+        await native.stopObserving()
+        try await native.accounts.close()
+    }
+
 }

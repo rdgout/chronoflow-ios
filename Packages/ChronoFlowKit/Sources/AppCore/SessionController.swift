@@ -101,7 +101,7 @@ public actor SessionController: SessionControlling {
     private var transitioning = false
     private let teardown: SessionTeardown
     private(set) var signOutFlight: Task<SignOutResult, any Error>?
-    private var unconditionalSignOutRequested = false
+    private var unconditionalSignOut: (discardPending: Bool, unauthorized: Bool)?
     private var discardRequested = false
     private var unauthorizedRequested = false
     public private(set) var pendingUnauthorizedEpoch: UInt64?
@@ -208,7 +208,10 @@ public actor SessionController: SessionControlling {
         unauthorizedRequested = unauthorizedRequested || unauthorized
         if expectedEpoch == nil {
             generation &+= 1
-            unconditionalSignOutRequested = true
+            unconditionalSignOut = (
+                (unconditionalSignOut?.discardPending ?? false) || discardPending,
+                (unconditionalSignOut?.unauthorized ?? false) || unauthorized
+            )
         }
         if let signOutFlight { return try await signOutFlight.value }
         let previous = tail
@@ -226,11 +229,15 @@ public actor SessionController: SessionControlling {
     private func performSignOut(expectedEpoch: UInt64?) async throws -> SignOutResult {
         defer {
             signOutFlight = nil
-            unconditionalSignOutRequested = false
+            unconditionalSignOut = nil
             discardRequested = false
             unauthorizedRequested = false
         }
-        if let expectedEpoch, epoch != expectedEpoch, !unconditionalSignOutRequested { return .signedOut }
+        if let expectedEpoch, epoch != expectedEpoch {
+            guard let unconditionalSignOut else { return .signedOut }
+            discardRequested = unconditionalSignOut.discardPending
+            unauthorizedRequested = unconditionalSignOut.unauthorized
+        }
         var captured = storedSession
         if captured == nil {
             await stopSync()

@@ -1049,6 +1049,8 @@ Stack on 9b. No UI; scope is the documented engine/repositories, not Settings/To
 
 #### Phase 9d: Sync lifecycle, sign-out wipe and launch readiness (`feat/phase-9d-session-lifecycle`)
 
+- [x] Review fix: preserve replacement-session pending rows when an explicit non-discard sign-out upgrades a stale forced flight; regress the race, add native marker-failure activation coverage and record review validation.
+
 - [x] Review fix: advance the lifecycle debounce and assert literal single-cycle/reconnect call sequences, no offline retry timer, and native scene start/stop/resume through production sync; register the portable startup suite with the host runner.
 
 - [x] Review fix: drive the production native SceneDelegate and StoredDataReadiness path with literal cached/fresh/unverified outcomes, off-main credential/open assertions and a suspended real SQLite open; correct the earlier tooling proof claim.

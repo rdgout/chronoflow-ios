@@ -1370,7 +1370,7 @@ seam alone did not cover this production composition. Launch preserves
 external session navigation while keeping the existing 2/8-second rules. No splash geometry, assets,
 fonts, strings or Duo-specific behavior changed.
 
-Verification in this worktree:
+Original Phase 9d verification before review fixes:
 
 - sh Scripts/host-tests.sh: **235 passed** (76 AppCore, 21 LocalStore, 41 Sync, 54 DataAccess,
   34 Launch, 8 DesignSystem, 1 Welcome), **23 new** compared with committed 9c.
@@ -1383,10 +1383,8 @@ Verification in this worktree:
   and app/hosted-test SIL compilation: **Debug and Release passed**. Compilation does not execute UIKit,
   Keychain, path-monitor callbacks or the render-server stall proof.
 
-The ordered files build/commits/1.patch, 2.patch and 3.patch each carry one 9d task tick; messages.txt
-contains the corresponding Conventional Commit subjects without trailers. Replay with git apply --index
-from HEAD is verified against the final tree. No git commit, xcodebuild, simulator or live API
-request was run. Dependency/generator tooling may use its normal network-backed caches.
+The original Phase 9d delivery used three patches. The review follow-up below supersedes those
+build artifacts. No git commit, xcodebuild, simulator or live API request was run for that delivery.
 
 The orchestrator runs these exact commands on **one iPhone 17e** after applying the patches. Each
 new/changed hosted class has its own selector; ReleaseReadinessTests automatically selects the isolated
@@ -1419,3 +1417,67 @@ OQ 29 (needsConfirmation result only, explicit Verify exit may discard) and OQ 3
 failures, no new UI). Each relevant task note records “OQ n default assumed, confirm”. Auth copy/design,
 link delivery, Apple team/device proof and later feature/shipping OQs remain open; this phase does not
 settle them.
+
+
+### Phase 9d review follow-up
+
+The review series applies to `3726b971c74e12c5a0c148e6e0c98e363fcd852a` on
+`feat/phase-9d-session-lifecycle`, preserving the committed 9a–9d history and 9c review fixes.
+`build/commits/messages.txt` maps `1.patch` through `10.patch` to Conventional Commit subjects.
+Apply each numbered patch with `git apply --index` and commit with its matching subject. Each patch
+contains its completed `plan.md` review task. An isolated index, object directory and worktree under
+this repository verify sequential indexed application and exact equality with the resulting source tree.
+
+The fixes preserve per-epoch retry state across background pauses, seed failures from durable outbox
+attempts, and allow fresh triggers to replace exponential waits. Server retry-after is tracked separately
+from local retry delays and survives coalesced engine flights. Voluntary sign-out checks the pending count
+before flushing and fails safely when the account database is closed. Explicit sign-out upgrades a queued
+401 flight and supersedes a pending accept. If that flight becomes stale, the replacement account uses
+the explicit caller's discard/force intent; it cannot inherit the old account's forced discard. A failed
+forced marker write remains pending and is retried before native activation resumes sync. Session
+readiness no longer awaits sync data-source or path startup.
+
+The readiness and trigger tests have independent literal oracles: cached/fresh/unverified account fixtures
+expect explicit gates and stored-data booleans; lifecycle tests expect explicit API call sequences,
+retry delays and start/stop sequences. They do not compute expectations with the production classifier.
+The native launch test uses `serviceConfigurationFactory` and `nativeSessionFactory`, checks exactly
+`[.sceneConnect, .overlayFirstCommit]` before service construction, and asserts the coordinator owns
+`StoredDataReadiness`. Its credential reader and suspended account opener assert off-main execution.
+After release, the opener forwards to the real SQLite open/migration and readiness repository. While
+suspended, the overlay remains mounted with its animations and a MainActor heartbeat completes.
+The scene test now observes real `NativeSessionController` / `SessionSync` source creation, path startup,
+path shutdown and timer cancellation. A reconnect with an existing Today route resumes the same epoch
+and has exactly one first-commit event across both connections.
+
+Review validation:
+
+- `sh Scripts/host-tests.sh`: **254 passed** (80 AppCore, 56 Sync, 21 LocalStore, 54 DataAccess,
+  34 Launch, 8 DesignSystem, 1 Welcome).
+- `sh Scripts/host-tests.sh -c release`: **254 passed**, with the same suites.
+- Red/green checks in `build/commits/*before.log` / `*after.log` cover empty-outbox flushes,
+  explicit/stale 401 races, replacement pending rows, lost retry state and exponent seeding,
+  ignored triggers, failed forced-cleanup retry, awaited sync startup, missing path reconnect triggering
+  and offline retry spinning. The coverage findings are checked with behavior mutations: the original
+  code had missing proofs rather than observed runtime failures. Each corresponding fixed test passes.
+- `make lint`: passed. `python3 -I Tests/test_launch_simulators.py`: **22 passed**;
+  `python3 -I Tests/test_launch_resources.py`: **10 passed**. The new portable startup suite is
+  classified as host-only.
+- SwiftPM `--build-tests` for `arm64-apple-ios17.0-simulator`: passed. Direct Swift 6/MainActor
+  module and SIL compilation of the app and all hosted tests: **Debug and Release passed**.
+  These checks use repo-local caches and invoke no xcodebuild or simulator.
+
+Hosted runtime tests, including the closed-store data-loss regression and production first-flush proof,
+are **not executed in this sandbox**. The compile results do not establish UIKit/render-server timing,
+Keychain behavior or the hosted tests' red/green runtime outcome. The following commands run the
+changed hosted suites on the pinned **iPhone 17e / iOS 27.2**. LaunchConnectionTests and isolated
+ReleaseReadinessTests also cover the affected composition. Generate the project before running them.
+
+```sh
+make generate
+make targeted DEVICES="17e" ONLY="AppTests/SessionLifecycleTests"
+make targeted DEVICES="17e" ONLY="AppTests/SyncLifecycleTests"
+make targeted DEVICES="17e" ONLY="AppTests/SessionReadinessTests"
+make targeted DEVICES="17e" ONLY="AppTests/AccountWipeTests"
+make targeted DEVICES="17e" ONLY="AppTests/LaunchConnectionTests"
+make targeted DEVICES="17e" ONLY="AppTests/ReleaseReadinessTests"
+```
