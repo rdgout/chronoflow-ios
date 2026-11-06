@@ -8,8 +8,8 @@ MainActor; AppCore is nonisolated.
 
 Run `Scripts/ci.sh` from a checkout to generate the ignored Xcode project and run `make check`.
 `make check` runs strict formatting lint, generator freshness and host tests, hosted launch and AppCore
-tests and the app window UI test, then the DesignSystem, Launch, Welcome and hosted Welcome snapshot suites. DesignSystem includes four approved
-primitive image baselines; Launch includes the Phase 3c splash baselines.
+tests and the app window UI test, then the DesignSystem, Launch, Welcome and hosted Welcome snapshot suites. DesignSystem runs primitive unit checks; its four dot-bearing image fixtures were removed by the
+user's 2026-11-06 no-pattern decision. Launch includes the Phase 3c splash baselines.
 
 A clean clone needs network access for `make check` / `Scripts/ci.sh`: SwiftPM fetches the pinned
 SnapshotTesting dependency from GitHub; `Tools/fonts.sh` installs fonttools 4.60.1 and brotli 1.1.0
@@ -116,7 +116,8 @@ were attempted in Phase 0.
 ## Phase 1 generators and design primitives
 
 TokenGen reads `tokens.json`, checks its nine selected colors against `theme.css` (including aliases),
-checks the 55% / 60% sky mid stops and the press rules, and reads the dot definition from `bundle.css`.
+checks the 55% / 60% sky mid stops and the press rules. Dot parsing and generated pattern constants
+were removed after the user dropped the pattern on 2026-11-06.
 All 18 sRGB hex values and all 22 reference sky samples match the plan exactly. Display P3 values
 match the table within its stated tolerance. Neither a source conflict nor a missing optical-size
 axis was found.
@@ -124,9 +125,8 @@ axis was found.
 Each sky has 17 stops, including the exact mid stop. Segment interpolation is checked at 1001 points
 with a 0.25/255 error budget before rasterization. A separate host Core Animation test compares its
 8-bit P3 raster against rounded 8-bit true-OKLab reference samples to within one byte per channel.
-The generated report contains the full-precision palette. Dot tiles sample the CSS radial function
-at pixel centers at the display scale; CoreGraphics' radial gradient approximation was insufficient
-for the specified fade, so no approximate gradient is used for dots.
+The generated report contains the full-precision palette. PatternDots and its tile tests are removed;
+both splash and Welcome now draw only CfSky behind their content.
 
 Google Fonts is pinned to `24ddc1f324cac5d9f5aedca126d298f56e3f1640`; source hashes, output hashes,
 licenses, face names and axis cuts are recorded in `Resources/Fonts/manifest.json` and `SOURCE.md`.
@@ -158,9 +158,8 @@ That is within Phase 2's 2/255 frame parity budget and avoids duplicate gamut re
 palette. Color sets and runtime gradients remain P3. Revisit this exception when the palette changes.
 
 Primitives accept their actual view/rectangle size and display scale. No production primitive assumes
-390 × 844 or uses a phone's fixed safe-area values. The four snapshot fixtures intentionally exercise
-isolated primitives at two arbitrary widths, rather than introduce a screen design. They use a common
-3× scale and 320 pt height across the simulator matrix.
+390 × 844 or uses a phone's fixed safe-area values. The four historical snapshot fixtures combined the sky, pattern-dots and moon. All four and their
+fixture were removed with the no-pattern decision; unit coverage of CfSky, MoonShape and PressStyle remains.
 
 
 `Scripts/swiftpm.sh` supplies `--disable-sandbox`, repo-local scratch/cache/config/security directories,
@@ -197,7 +196,7 @@ The orchestrator verified the committed Phase 1 state on
 - `make duo`: passed on iPhone Duo's iPhone19-4 iOS 27.2 runtime (24B91016s).
 - `make tokens fonts assets`: reproduced the committed generated outputs with no diff.
 
-The review corrections retain those four approved baselines. The implementation environment verifies
+Those four approved dot-bearing baselines were subsequently removed with the user's 2026-11-06 no-pattern decision. The implementation environment verifies
 wordmark alpha coverage against an explicitly unsmoothed render at both scales in both themes,
 advance-box centring within 0.01 pt, the sRGB palette round-trip bound, board-derived moon geometry,
 and font-cache recovery. `make lint`, `make generators-check` (6 TokenGen tests, 3 AssetGen tests
@@ -358,8 +357,10 @@ Status visibility is a parent opacity; it stays at 1 after its fade while the co
 
 The flight cubic's 1024-entry arc-length table gives length about 505.789 pt and apex (195, 512.5)
 on the board fixture. Its 128 moving position samples include the exact 3% fraction knot at 560 ms;
-the timeline adds one initial hold key at 0. The x controls scale with window width; all y coordinates
-are bottom-anchored. Only the test fixture uses 390 × 844 as a window size.
+the timeline adds one initial hold key at 0. The x controls scale with window width. The user's
+2026-11-06 vertical rule keeps the 844 pt composition at every height: every former `h - k` becomes
+`h/2 + (422 - k)`. LaunchLayout supplies scene, timeline and path geometry; the band stretches to the
+window bottom, and CfSky fills the whole window. Only the test fixture uses 390 × 844 as a window size.
 
 The host rendering spike found cubic `CAShapeLayer.strokeEnd` trimming drift: at fraction 0.25 the
 rendered tip was around x = 82, versus the arc-length reference x = 75.605. Although
@@ -381,11 +382,10 @@ fixtures exercise arbitrary sizes; they are not stored device-dimension assumpti
 
 Defaults assumed, recorded on the corresponding tasks (the OQ table remains open):
 
-- OQ 6: Reduce Motion dots hold at 1.0, fade uses ease-out, no flying-moon cross-fade, stars stay
-  as drawn during the dissolve. The actual star surface belongs to Phase 3b/5.
+- OQ 6: Reduce Motion dots hold at 1.0, fade uses ease-out, no flying-moon cross-fade. The user subsequently removed the splash/Welcome pattern on 2026-11-06.
 - OQ 7: a late Welcome ending starts at resolution, with W = max(1600 ms, resolution time).
 - OQ 10: the fallback uses the spec's RN safe-area padding rule; Welcome's text scaling is Phase 5.
-- OQ 11: RN width-scaled x controls and bottom anchoring, portrait iPhones including Duo.
+- OQ 11: RN width-scaled x controls, portrait iPhones including Duo. Vertical anchoring was settled by the user on 2026-11-06: centre the board composition.
 
 Host verification for the final Phase 3a tree:
 
@@ -537,8 +537,8 @@ not xcodebuild, and do not run UIKit. The existing D11 CoreText deprecation rema
 
 The orchestrator verified Phase 3b on **2026-11-06**: all seven D1c devices, `make check` and
 `make duo` passed. The device D3 proof remains open in `Docs/perf/2026-11-06-d3-spike.md`; no performance result is claimed.
-Defaults carried into this phase: OQ 6 dots/fade/no moon cross-fade/stars as drawn;
-OQ 10 RN fallback padding/row height; OQ 11 width-scaled bottom anchoring;
+Defaults carried into this phase: OQ 6 status dots/fade/no moon cross-fade (background pattern subsequently removed by the user);
+OQ 10 RN fallback padding/row height; OQ 11 width-scaled x controls (vertical composition subsequently settled);
 OQ 14 proposed device budget. There are no additional undesigned screens or states.
 
 ## Phase 3c splash snapshots
@@ -583,12 +583,16 @@ time. The sampler sets model values and static dot replicas, then renders throug
 parent so exit scale and opacity are included. Welcome content snapshots belong to Phase 5.
 
 Geometry checks use the running window and all four safe-area insets, with asymmetric and side-only
-additional insets. A zero top inset is valid on SE and Duo. Visible moon glyph, wordmark, status ink
-and sun are checked against the window and horizontal safe area. The path's designed 10 pt bleed is
+additional insets. A zero top inset is valid on SE and Duo. Visible moon glyph, wordmark and status ink
+stay fully inside the window and horizontal safe area. Per the user's 2026-11-06 composition decision,
+the sun may extend below the window like a horizon on short screens; its top and sides remain inside,
+with at least one third of its height visible. Host regressions exercise every D1c size/sample and
+reject side/top overflow and a sun with insufficient visible height. The path's designed 10 pt bleed is
 preserved and checked for vertical bounds and container clipping; full safe-area containment lacks a
 design/default and stays open. Host tests assert the frame list, ending times, safe-area landing, all
-154 PNGs' coverage/dimensions and S1: status top 518 is below apex 512.5 at height 844;
-path crosses the status text at 874 (top 533, apex 542.5, text-frame/replicator union extends below it).
+154 PNGs' coverage/dimensions and S1: status top 518 is below apex 512.5 at height 844. With the
+user's 2026-11-06 composition decision, height 874 keeps that relation: status top 533, apex 527.5.
+The status text no longer crosses the path; its top remains 5.5 pt below the apex.
 
 The orchestrator verified Phase 3c and the Phase 3b review fixes on **2026-11-06**:
 all seven D1c devices passed snapshot comparison, hosted tests and both light/dark appearance UI
@@ -596,16 +600,15 @@ tests. `make check` and `make duo` passed. This includes notification-payload va
 post-flush opening accessibility label, captured overlay appearance and appearance synchronization.
 
 PNG approval and side-by-side board review remain open because `_design/frames/` is absent.
-The short-screen collision has materialised: SE 375 × 667 and Duo 466 × 678 light/dark `ready-1400`
-and `slow-2600` baselines put the wordmark/status over the sun and the path apex at the moon glyph.
-The exact PNG names are recorded in Phase 3c's acceptance note in `plan.md`. A user or design decision
-is required; the current layout is retained. Scoped known-issue tests for heights below 700 pt
-check glyph/wordmark/status separation from the sun disc and path apex, and flag unexpected passes.
-At 874 pt, the status text-frame/replicator union starts at 533 and extends below apex 542.5:
-**path crosses the status text at 874**, visible on iPhone 17 and Air. This needs board review;
-a separate known-issue assertion checks the union's maxY as well as its minY. The 844 pt relation
-remains clear (status starts at 518, below apex 512.5).
-
+The user settled the short-screen collision on 2026-11-06: keep the 844 pt board's vertical
+relationships at every height while preserving the window-centred moon. SE and Duo now have the
+board's glyph/wordmark/status clearances from the sun disc and path apex; ordinary assertions
+replace the height-scoped known issues. At 844/874 the status starts 5.5 pt below the apex.
+Geometry and timeline checks cover the revised rule; simulator and visual acceptance remain open.
+During launch recording, unchanged 844 pt samples are compared against their existing references,
+including frame 0, rather than overwritten. The no-pattern decision changes only its two
+Welcome-exit samples (1950/2400), which may be recorded. Every non-844 device needs replacement
+launch references for the changed composition.
 The physical-device D3 proof remains open (needs a device; open). Snapshot work precedes that proof
 by user direction; repeat review if it changes the layer tree. No device performance result is claimed.
 
@@ -706,7 +709,8 @@ protocol calls must use the injected clock before the test advances it.
 
 ## Phase 5 Welcome, intro and moon hand-over
 
-Welcome follows `Main.dc.html` with one sky, full-height dots, the six English/Dutch catalog entries,
+Welcome follows `Main.dc.html` with one plain CfSky gradient (pattern-dots removed by the user on
+2026-11-06), the six English/Dutch catalog entries,
 board-derived generated metrics and the existing registered fonts. The content scrolls, with
 space between the heading and action groups. Padding includes all four window safe-area insets,
 including Duo's side rail. The designed pills use native SwiftUI Buttons and the shared PressStyle;
@@ -742,14 +746,22 @@ Welcome route/landing/accessibility UI tests, existing launch comparison and rea
 python3 -I Scripts/launch-simulators.py --welcome
 ```
 
-For the initial Welcome baseline recording followed by comparison:
+For Welcome-only baseline recording followed by comparison:
 
 ```sh
 SNAPSHOT_RECORD=1 python3 -I Scripts/launch-simulators.py --welcome
 ```
 
-Only AppTests/WelcomeSnapshotTests and AppTests/WelcomeSnapshotGuardTests run in the record pass. Existing launch and primitive baselines are compared
-without recording. There are 196 planned Welcome references: 56 final screens (seven devices,
+Only AppTests/WelcomeSnapshotTests and AppTests/WelcomeSnapshotGuardTests run with `SNAPSHOT_RECORD=1`.
+Use `launch` for launch-only recording or `all` for both sets after the composition/no-pattern decisions:
+
+```sh
+SNAPSHOT_RECORD=launch python3 -I Scripts/launch-simulators.py --welcome
+SNAPSHOT_RECORD=all python3 -I Scripts/launch-simulators.py --welcome
+```
+
+The launch record selection is LaunchTests/LaunchSnapshotTests. Each record pass stays isolated from
+UI/Release checks, then comparison runs every suite with recording disabled. There are 196 planned Welcome references: 56 final screens (seven devices,
 two appearances, two languages, large/xxLarge) and 140 frozen intro frames. Recording is opt-in;
 missing references fail comparison. Both locales are set explicitly in the tests, independently
 of the host language. All xcodebuild test commands pin `-testLanguage en -testRegion US`.
@@ -792,8 +804,10 @@ issue's audit type, optional element identifier/label and compact description. I
 `.contrast` on `welcome.eyebrow`, `welcome.headline`, `welcome.copy` and `welcome.signIn`, the four
 confirmed identifiers. Their font weights and `skyTitle`, `dawn`, `skyCopy` and `skyCopyBackground`
 assignments match the board. Contrast on wordmark, plan or any other identifier still fails. Each pair is an open
-design decision in `plan.md`. Unknown/nil identifiers, combined types, clipping and all other audit
-issues still fail; tests exercise those boundaries. Production colours stay as drawn. The second diagnostic run identified English welcome.eyebrow clipping.
+design decision in `plan.md`. The full audit selects `.all.subtracting(.dynamicType)`, matching the
+user's 2026-11-06 xxLarge cap, with an exact selection assertion naming that decision. The handler
+does not ignore Dynamic Type issues. Unknown/nil identifiers, combined types, clipping and all other
+selected audit issues still fail; tests exercise those boundaries. Production colours stay as drawn. The second diagnostic run identified English welcome.eyebrow clipping.
 The tracked label now takes its intrinsic horizontal size, retaining the board typography. Hosted
 checks compare natural attributed-string dimensions through all categories; UI audits cover clipping
 at xxLarge and AX5 as well as the existing audits in both appearances/languages. Accessibility
@@ -805,8 +819,8 @@ two portable pixel-guard tests. All 28 runner fixtures pass. Strict formatting,
 generator freshness/tests (7 TokenGen, 6 font/cache, 3 AssetGen) and 7 launch-resource tests pass.
 The revised SwiftUI capture and audit tests compile for the iOS 17 deployment target; UIKit execution
 still requires the matrix commands above. Phase 3c's orchestrator-verified results cover the earlier
-tree; rerun its assertions with these changes. The short-screen collision and 874 pt board review
-remain open. The physical-device D3 proof, status-bar observation, VoiceOver/device checks and
+tree; rerun its assertions with these changes. The short-screen collision and 874 pt crossing were subsequently settled by the user's
+2026-11-06 composition decision; revised simulator recordings and visual review remain open. The physical-device D3 proof, status-bar observation, VoiceOver/device checks and
 performance measurements remain in their existing tasks (needs a device; open).
 
 The orchestrator's second 2026-11-06 attempt rejected every Welcome capture: package tests had no
@@ -828,3 +842,57 @@ pass. XcodeGen generation passes. Direct Swift 6/MainActor compilation and type-
 modules, Debug/Release app and hosted tests, package tests and UI tests pass against the iOS 17 SDK
 floor. Debug/Release app and hosted SIL compilation passes. These are host checks; the replacement
 D1c capture, accessibility and visual acceptance results remain open until the matrix is reported.
+
+
+## Phase 5 fix round 3 and user decisions — 6 November 2026
+
+The orchestrator reports that hosted Welcome recording succeeded on all seven D1c devices. The
+remaining comparison failures were the expected Dynamic Type cap audit and one intermittent dark
+English 2400 ms intro mismatch on iPhone18,4. No revised matrix pass is claimed yet.
+
+Frozen IntroItem now takes a separate sampled branch with no live task or landed-state dependency.
+The sample time remains fixed; font registration completes before capture. The on-appear intro claim
+and frozen subtree disable animation transactions. The first body pass already presents the fixed
+sample, so the appearance claim keeps the same rendered tree instead of switching from final content. Capture waits for both the intro claim and measured frames. A regression requires unchanged
+RGBA pixels, frames and no live layer animations across ten mounts at 2400 ms, clock advances and render passes
+at all five frozen times, in both locales and appearances. Pixel comparison tolerance is unchanged.
+The simulator run must verify that this removes the intermittent mismatch.
+
+The board composition and no-pattern decisions update the launch references on non-844 devices and
+the two 844 Welcome-exit frames; all Welcome references need replacement. Run the combined recording
+command above, then compare again without recording. Board-frame export, visual approval, the four
+board-contrast design decisions and physical-device checks remain open.
+
+## Phase 5 fix round 4 — 6 November 2026
+
+The orchestrator reports `SNAPSHOT_RECORD=all` matrix passes on iPhone 17e, 17, Air, 18 Pro and
+18 Pro Max, plus a passing `make check`. SE and Duo failed the sun's old full-containment assertion;
+Duo also failed the Dutch Plan my trip contrast audit in both appearances because the action was
+partly below the window. `make duo` failed. These results cover the preceding tree.
+
+The sun test now accepts the designed bottom-edge horizon while retaining horizontal safe bounds,
+an inside top edge and at least one third visible height. Other elements keep full containment.
+Welcome audits run at the top and again after a bounded scroll until Sign in is hittable and fully
+inside the window. The second pass asserts both actions are fully visible, with the same audit
+handler/types and four board-contrast pairs. Plan my trip is never a board-contrast exception.
+Frame regressions reject partially visible and empty actions. The layout and colours are unchanged;
+scrolling at this Dutch text length follows the existing OQ 10 default.
+
+Host verification passed: 80 SwiftPM tests (42 AppCore, 31 Launch, 6 DesignSystem, 1 Welcome),
+including both sun containment regressions; strict formatting; generator freshness/tests (7 TokenGen,
+6 font/cache, 3 AssetGen); 9 launch-resource checks and 30 simulator-runner fixtures. Direct Swift 6
+compilation/type-checking passed for all modules, Debug/Release app and hosted tests, package tests
+and UI tests against the iOS 17 deployment floor. UIKit test execution remains with the orchestrator.
+
+Rerun from the repo root:
+
+```sh
+SNAPSHOT_RECORD=all sh build/commits/simulators.sh
+sh build/commits/simulators.sh
+make check
+make duo
+```
+
+The wrapper still supports `SNAPSHOT_RECORD=1` (Welcome only) and `launch` (launch only).
+The full comparison, SE/Duo audits, board-reference/visual acceptance, four contrast design decisions
+and existing physical-device checks remain open. No revised simulator pass is claimed.
