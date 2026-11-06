@@ -904,6 +904,8 @@ This work runs on `feat/phase-9-session-store` without starting Phase 9 or closi
 
 - [x] Run up to four destinations in a bounded pool with configurable SIM_CONCURRENCY, dynamic type/runtime resolution (including Duo), fresh-app uninstall without reboot, separate device/pass logs and xcresults, per-suite PASS/FAIL and failing-test identifiers. Recording is serialized within each device and parallel only across distinct model namespaces. Host runner fixtures pass; simulator execution remains open.
   Files: `Scripts/launch-simulators.py`, `Tests/test_launch_simulators.py`, command documentation.
+- [x] Build once per needed configuration with build-for-testing into build/DerivedData, then use test-without-building. Remove matrix clean and duplicate trailing make check/make duo runs; make check runs its combined test/snapshot selection once. Preserve the isolated Release scheme/testability and separate Perf path. Host fixtures pass; build counts/timings await the orchestrator.
+  Files: `Scripts/launch-simulators.py`, `Makefile`, command documentation.
 ### Phase 6: Audit (`feat/phase-6-audit`)
 
 Reduce Motion, dark mode, VoiceOver and strings are built in the phases above; this phase only audits.

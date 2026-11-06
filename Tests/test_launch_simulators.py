@@ -62,7 +62,7 @@ class RunnerTests(unittest.TestCase):
                 raise subprocess.CalledProcessError(status, command)
             if command[:4] == ['xcrun', 'simctl', 'list', 'devices']:
                 return subprocess.CompletedProcess(command, status, json.dumps({'devices': self.devices}))
-            if command[-1] == 'test':
+            if command[-1] == 'test-without-building':
                 self.selected[command[command.index('-resultBundlePath') + 1]] = [v.split(':', 1)[1] for v in command if v.startswith('-only-testing:')]
             if command[:4] == ['xcrun', 'xcresulttool', 'get', 'test-results']:
                 bundle = command[command.index('--path') + 1]
@@ -77,8 +77,25 @@ class RunnerTests(unittest.TestCase):
         return result, output.getvalue()
 
     def commands_for_tests(self):
-        return [c for c in self.commands if c[-1] == 'test']
+        return [c for c in self.commands if c[-1] == 'test-without-building']
 
+    def test_builds_debug_and_release_once_without_clean_or_reboot(self):
+        status, output = self.execute()
+        self.assertEqual(status, 0, output)
+        builds = [c for c in self.commands if c[-1] == 'build-for-testing']
+        self.assertEqual(len(builds), 2)
+        self.assertEqual([c[c.index('-configuration') + 1] for c in builds], ['Debug', 'Release'])
+        self.assertIn('ENABLE_TESTABILITY=YES', builds[1])
+        self.assertEqual(len(self.commands_for_tests()), 14)
+        self.assertFalse(any('clean' in c or 'shutdown' in c or 'erase' in c or 'boot' in c for c in self.commands))
+        self.assertEqual(sum('uninstall' in c for c in self.commands), 7)
+        self.assertNotIn(['make', 'check'], self.commands)
+        self.assertNotIn(['make', 'duo'], self.commands)
+        for c in self.commands_for_tests():
+            self.assertIn('-parallel-testing-enabled', c)
+            self.assertEqual(c[c.index('-testLanguage') + 1], 'en')
+            self.assertEqual(c[c.index('-testRegion') + 1], 'US')
+            self.assertEqual(c[c.index('-maximum-concurrent-test-simulator-destinations') + 1], '1')
 
     def test_resolves_aliases_by_type_and_runtime_never_name(self):
         self.devices[runner.REGULAR_RUNTIME].insert(0, dict(self.devices[runner.DUO_RUNTIME][0], udid='wrong-runtime'))
@@ -115,6 +132,13 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(status, 1)
         self.assertIn('no executed test cases', output)
 
+    def test_build_failure_still_attempts_other_configuration(self):
+        self.fail = lambda c: c[-1] == 'build-for-testing' and 'ChronoFlow' in c
+        status, output = self.execute(aliases=['17e'])
+        self.assertEqual(status, 1)
+        self.assertIn('Debug build unavailable', output)
+        self.assertIn('PASS 17e Release-compare', output)
+        self.assertEqual(len(self.commands_for_tests()), 1)
 
     def test_inherited_record_flags_are_cleared_from_every_compare_and_build(self):
         with patch.dict(os.environ, {'SNAPSHOT_RECORD': '0', 'TEST_RUNNER_SNAPSHOT_RECORD': '1'}):

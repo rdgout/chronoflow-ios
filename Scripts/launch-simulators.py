@@ -164,7 +164,7 @@ def build(configuration):
 def test_command(destination, configuration, selected, bundle):
     return build_command(configuration) + ["-destination", destination.flag, "-testLanguage", "en", "-testRegion", "US",
         "-parallel-testing-enabled", "NO", "-maximum-concurrent-test-simulator-destinations", "1", "-resultBundlePath", str(bundle)] + [
-        "-only-testing:" + suite for suite in selected] + (["ENABLE_TESTABILITY=YES"] if configuration == "Release" else []) + ["test"]
+        "-only-testing:" + suite for suite in selected] + ["test-without-building"]
 
 
 def result_nodes(value, target=None):
@@ -270,7 +270,15 @@ def main(mode="welcome", aliases=None, only=(), concurrency=None, reuse_build=Fa
             destinations.append(resolve(alias, devices))
         except (RuntimeError, KeyError) as error:
             results.append(Result(alias, "destination", False, str(error)))
-    ready = {"Debug": True, "Release": True}
+    ready = {}
+    for configuration in dict.fromkeys(c for alias in aliases for c in configurations(selections[alias])):
+        try:
+            if not reuse_build:
+                build(configuration)
+            ready[configuration] = True
+        except (subprocess.CalledProcessError, OSError) as error:
+            ready[configuration] = False
+            results.append(Result("build", configuration, False, str(error)))
     recording = os.environ.get("SNAPSHOT_RECORD", "0")
     if recording not in ("0", "1", "launch", "all"):
         raise ValueError("SNAPSHOT_RECORD must be 0, 1, launch or all")
