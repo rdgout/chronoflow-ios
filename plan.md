@@ -1207,6 +1207,13 @@ reads falling back to Today for verify, terms and walkthrough. Hosted rerun rema
   routing failures on the host. Files: `App/Session/NativeSessionController.swift`,
   `Sources/AppCore/StoredDataReadiness.swift`, `Tests/AuthTests/SignInModelTests.swift`.
 
+- [x] Extend the host baseline inventory guard to `AppTests/__Snapshots__/Auth`: exact board
+  and catalog device/style/language/profile Dynamic Type/banner names, totaling 896 PNGs
+  (32 board + 4 full × 192 + 3 compact × 32). A wholly unrecorded directory stays pending;
+  partial recordings, stale extras and suffix drift fail. Files: `Tests/test_launch_simulators.py`.
+  The user records and reviews Auth references after this round; no PNGs or visual acceptance
+  are supplied here, and the shared Auth shell acceptance task remains unticked.
+
 #### Phase 10b: Two-factor code/recovery and auth acceptance (`feat/phase-10b-two-factor`)
 
 Stack on 10a. OQ 28's Two-factor strings must be resolved. Expired challenges have no separate board: use the approved notice/banner policy or defer that visual state under OQ 30.

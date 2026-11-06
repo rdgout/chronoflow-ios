@@ -1948,3 +1948,32 @@ make targeted DEVICES="17e" ONLY="AppTests/SessionReadinessTests"
 
 These commands remain pending outside this sandbox. No simulator or xcodebuild execution is
 claimed for this round.
+
+The host baseline inventory now includes `AppTests/__Snapshots__/Auth`. Expected names are
+`board-{light,dark}-{en,nl}-{large,xxLarge}-{none,credentials,locked,server}.png` and
+`{device.name}-{style}-{language}-{dynamicType}-{banner}.png` for every catalog device's profile
+Dynamic Type entries. The total is 32 board + 4 full × 192 + 3 compact × 32 = **896**.
+An absent or empty Auth directory remains pending recording; once any PNG is present, the exact
+inventory is required. Partial sets, stale extras and changed suffixes at the same count fail
+the host guard. No Auth references are included, and shared Auth shell acceptance remains open.
+
+After reviewing and recording the references, compare and run the commit gate:
+
+```sh
+SNAPSHOT_RECORD=1 make targeted DEVICES="17e" ONLY="AppTests/AuthSnapshotTests"
+REUSE_BUILD=1 make targeted DEVICES="17e" ONLY="AppTests/AuthSnapshotTests"
+make check
+```
+
+The recording command builds, records serially and compares in a fresh test process; the next
+command repeats comparison with the same build. The inventory guard permits the pending state,
+but hosted Auth comparison in `make check` needs the references. The user records after this
+round, before closing the remaining acceptance task. All commands use one 17e; audits in
+`make check` retain their serial appearance pass.
+
+Round verification: `make quick` passes, including 24 Auth host tests, 53 runner fixtures,
+10 resource checks, 3 signing checks, the remaining package/generator suites and strict lint.
+Inventory probes accept absent/empty/complete Auth sets and reject partial/stale/suffix-drift
+sets. Two ordered patches and plain Conventional Commit subjects are in `build/commits`;
+`replay.txt` records application against the starting HEAD. No git commits or reference
+recording were performed in this worktree.

@@ -724,8 +724,14 @@ class ProfileTests(unittest.TestCase):
 
     def test_new_baseline_inventory_is_complete_after_recording(self):
         catalog = json.loads((ROOT / 'Packages/ChronoFlowKit/Tests/SnapshotSupport/profiles.json').read_text())
-        for screen in ['Welcome', 'Launch']:
+        for screen in ['Welcome', 'Launch', 'Auth']:
             expected = set()
+            if screen == 'Auth':
+                expected.update(f'board-{style}-{language}-{category}-{banner}.png'
+                                for style in ['light', 'dark'] for language in ['en', 'nl']
+                                for category in ['large', 'xxLarge']
+                                for banner in ['none', 'credentials', 'locked', 'server'])
+                self.assertEqual(len(expected), 32)
             for device in catalog['devices'].values():
                 profile = catalog['profiles'][device['profile']]
                 name = f"{device['alias']}-{device['width']}x{device['height']}-{device['scale']}x"
@@ -734,15 +740,19 @@ class ProfileTests(unittest.TestCase):
                         if screen == 'Welcome':
                             for kind, variants in [('finalWelcome', profile['dynamicType']), ('frozenIntro', profile['introTimes'])]:
                                 expected.update(f'{kind}.{name}-{style}-{language}-{variant}.png' for variant in variants)
+                        elif screen == 'Auth':
+                            expected.update(f'{name}-{style}-{language}-{category}-{banner}.png'
+                                            for category in profile['dynamicType']
+                                            for banner in ['none', 'credentials', 'locked', 'server'])
                         else:
                             expected.update(f'sampledSplashFrames.{name}-{style}-{language}-{category}-{frame}.png'
                                             for category in ['large', 'xxLarge'] for frame in profile['launchFrames'])
-            directory = ROOT / f'AppTests/__Snapshots__/{screen}SnapshotTests'
+            directory = ROOT / 'AppTests/__Snapshots__' / ('Auth' if screen == 'Auth' else f'{screen}SnapshotTests')
             actual = {p.name for p in directory.glob('*.png')}
             # A wholly unrecorded suite is pending orchestrator work; partial recordings must fail.
             if actual:
-                self.assertEqual(actual, expected)
-            self.assertEqual(len(expected), 472 if screen == 'Launch' else 320)
+                self.assertEqual(actual, expected, screen)
+            self.assertEqual(len(expected), {'Welcome': 320, 'Launch': 472, 'Auth': 896}[screen])
 
 
 if __name__ == '__main__':
