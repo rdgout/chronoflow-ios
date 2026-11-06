@@ -78,8 +78,9 @@ into sRGB, RGBA8, premultiplied alpha, then SHA-256 the pixel bytes:
 
 This proves the stored images are **not simply renamed designed PNGs**. Apple's documented
 behavior identifies Composer-generated replacements as the expected source. An independent
-Composer-only compilation is still required to prove that attribution by content; this sandbox
-has not run the host's compiler controls. Do not describe that remaining check as passed.
+Composer-only compilation proves that attribution by content: on 6 November 2026 `make icon-probe`
+on the host matched every combined, combined-disabled and shipped rendition to the Composer-only
+output, and only the flat-only control kept the designed PNGs.
 
 ### Reproducible host probe and audit
 
@@ -133,7 +134,8 @@ To audit the authored control explicitly, run
 The unthinned probe establishes legacy content independently of the installed simulator OS.
 The hosted suite checks primary fallback image loading, appearance keys and the glass stack;
 the host audit owns pixel provenance. No hosted assertion depends on original rendition filenames.
-Build, independent compiler controls and hosted AppIconTests remain host acceptance gates;
-passing the Mac fixtures or decoding the saved CAR does not complete those gates. Inspect the icon
+Build, independent compiler controls and hosted AppIconTests are the host acceptance gates;
+passing the Mac fixtures or decoding the saved CAR does not complete them. All three passed on
+17e on 6 November 2026. Inspect the icon
 in Icon Composer/Home Screen for default/dark/clear/tinted appearance intent. No simulator matrix
 is needed for this icon-only change. Splash assets and launch behavior are unchanged.

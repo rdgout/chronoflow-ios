@@ -44,7 +44,8 @@ resource checks and 53 runner fixtures); the final focused suite passed nine hos
 recovery-code consumption across restart. Four Release host selection tests passed. All 14 Release
 DataAccess object files were checked for absent demo identities, recovery code, trip fixture data
 and seed symbols. New Debug/Release hosted tests type-check for iOS 17 against the existing app
-modules; hosted execution remains open. No xcodebuild or simulator was run for this fix.
+modules. On 6 November 2026 the hosted DataSourceFactoryHostedTests, DataSourceBuildSettingTests
+and Release ReadinessTests passed on 17e.
 
 ## Member trip generation — Phase 13
 
@@ -120,7 +121,8 @@ Python fixtures. Logs: `build/phase12-quick.log`, `build/phase12-host-tools.log`
 The designed app icon set replaces the temporary RN icon. AssetGen emits the three flat appearances
 and the layered Composer bundle. [App icon integration and verification](app-icon.md) records the
 board's opaque-dark choice, offline Xcode/actool evidence, XcodeGen file-type adapter, generator
-dependencies and exact host/17e commands. Combined compilation and hosted verification remain pending.
+dependencies and exact host/17e commands. Combined compilation, the icon audit and hosted
+AppIconTests passed on 17e on 6 November 2026.
 
 ## Test tiers — user decision 2026-11-06
 
