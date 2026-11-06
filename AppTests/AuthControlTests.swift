@@ -1,10 +1,23 @@
 import Auth
+import AuthenticationServices
 import DesignSystem
 import SwiftUI
 import UIKit
 import XCTest
 
 nonisolated final class AuthControlTests: XCTestCase {
+    @MainActor func testLatePasskeyAnchorQueriesUseTheAvailableWindowOrAnEmptyFallback() {
+        let request = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: "app.chronoflow.net")
+            .createCredentialAssertionRequest(challenge: Data([1]))
+        let staleController = ASAuthorizationController(authorizationRequests: [request])
+        var currentWindow: UIWindow? = UIWindow()
+        let provider = SystemPasskeyAssertionProvider(anchor: { currentWindow })
+        XCTAssertTrue(provider.presentationAnchor(for: staleController) === currentWindow)
+        currentWindow = nil
+        let fallback = provider.presentationAnchor(for: staleController)
+        XCTAssertTrue(fallback.isHidden)
+        XCTAssertNil(fallback.windowScene)
+    }
     @MainActor func testNativeInputsKeepAutoFillSecureEntryAndTouchTargets() async throws {
         struct Fields: View {
             @State var email = ""

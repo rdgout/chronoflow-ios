@@ -51,8 +51,7 @@
             }
         }
         public func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-            precondition(self.controller === controller && window != nil)
-            return window!
+            window ?? anchor() ?? ASPresentationAnchor()
         }
         public func authorizationController(
             controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization
