@@ -35,7 +35,7 @@ def run(command, *, check=True, capture_output=False, snapshot_record=False):
     return subprocess.run(command, cwd=ROOT, check=check, capture_output=capture_output, text=True, env=environment)
 
 
-def test_device(device_type, runtime, devices, timeline=False, scene=False, snapshots=False, snapshot_record=False, readiness=False):
+def test_device(device_type, runtime, devices, timeline=False, scene=False, snapshots=False, snapshot_record=False, readiness=False, welcome=False):
     identifier = "com.apple.CoreSimulator.SimDeviceType." + device_type
     device = next(
         (d for d in devices.get(runtime, []) if d.get("isAvailable") and d.get("deviceTypeIdentifier") == identifier),
@@ -59,7 +59,13 @@ def test_device(device_type, runtime, devices, timeline=False, scene=False, snap
     run(["xcrun", "simctl", "boot", udid])
     device["state"] = "Booted"
     run(["xcrun", "simctl", "bootstatus", udid, "-b"])
-    if readiness:
+    if welcome and snapshot_record:
+        run(XCODEBUILD + [
+            "-destination", "platform=iOS Simulator,id=" + udid,
+            "-testLanguage", "en", "-testRegion", "US", "-only-testing:AppTests/WelcomeSnapshotTests", "-only-testing:AppTests/WelcomeSnapshotGuardTests", "test",
+        ], snapshot_record=True)
+        return
+    if readiness or welcome:
         destination = [
             "-destination", "platform=iOS Simulator,id=" + udid,
             "-testLanguage", "en", "-testRegion", "US",
@@ -71,6 +77,8 @@ def test_device(device_type, runtime, devices, timeline=False, scene=False, snap
             ("Release", XCODEBUILD_COMMON + ["-scheme", "ReadinessRelease"],
              ["ENABLE_TESTABILITY=YES", "-only-testing:AppTests/ReleaseReadinessTests"]),
         ]
+        if welcome:
+            passes[0][2].extend(["-only-testing:WelcomeTests", "-only-testing:AppUITests/WelcomeTests"])
         errors = []
         for configuration, command, suites in passes:
             try:
@@ -93,7 +101,7 @@ def test_device(device_type, runtime, devices, timeline=False, scene=False, snap
     ] + (["-only-testing:AppCoreTests", "-only-testing:LaunchTests"] if timeline or scene else []) + (["-only-testing:AppUITests/LaunchSceneTests"] if scene else []) + ["test"])
 
 
-def main(timeline=False, scene=False, snapshots=False, readiness=False):
+def main(timeline=False, scene=False, snapshots=False, readiness=False, welcome=False):
     results = []
 
     def record(label, action):
@@ -106,7 +114,7 @@ def main(timeline=False, scene=False, snapshots=False, readiness=False):
         return True
 
     def report():
-        phase = "4" if readiness else "3c" if snapshots else "3b" if scene else "3a" if timeline else "2"
+        phase = "5" if welcome else "4" if readiness else "3c" if snapshots else "3b" if scene else "3a" if timeline else "2"
         print(f"\nPhase {phase} simulator results:", flush=True)
         for label, passed, detail in results:
             print(f"{'PASS' if passed else 'FAIL'} {label}" + (": " + detail if detail else ""), flush=True)
@@ -123,15 +131,15 @@ def main(timeline=False, scene=False, snapshots=False, readiness=False):
         devices.update(json.loads(run(["xcrun", "simctl", "list", "devices", "-j"], capture_output=True).stdout)["devices"])
 
     record("list simulators", discover)
-    passes = [("compare", False)] if snapshots else [("", False)]
-    if snapshots and os.environ.get("SNAPSHOT_RECORD") == "1":
+    passes = [("compare", False)] if snapshots or welcome else [("", False)]
+    if (snapshots or welcome) and os.environ.get("SNAPSHOT_RECORD") == "1":
         passes.insert(0, ("record", True))
     for pass_name, snapshot_record in passes:
         for label, device_type, runtime in MATRIX:
             result_label = f"{label} {pass_name}" if pass_name else label
             print("\nTesting " + result_label + " on " + runtime, flush=True)
             record(result_label, lambda: test_device(
-                device_type, runtime, devices, timeline, scene, snapshots, snapshot_record, readiness,
+                device_type, runtime, devices, timeline, scene, snapshots, snapshot_record, readiness, welcome,
             ))
     record("make check", lambda: run(["make", "check"]))
     record("make duo", lambda: run(["make", "duo"]))
@@ -144,7 +152,10 @@ if __name__ == "__main__":
     parser.add_argument("--scene", action="store_true", help="also run Phase 3b scene presentation and UI suites on each device")
     parser.add_argument("--snapshots", action="store_true", help="compare Phase 3c snapshots on every D1c device (SNAPSHOT_RECORD=1 records first)")
     parser.add_argument("--readiness", action="store_true", help="run Phase 4 hand-off, readiness and existing scene suites on every D1c device")
+    parser.add_argument("--welcome", action="store_true", help="compare Phase 5 Welcome and intro snapshots plus hosted/UI checks on every D1c device (SNAPSHOT_RECORD=1 records Welcome only first)")
     args = parser.parse_args()
+    if args.welcome and (args.readiness or args.snapshots):
+        parser.error("--welcome includes its own snapshot and readiness comparison suites")
     if args.readiness and args.snapshots:
         parser.error("--readiness and --snapshots run separate comparison suites")
-    raise SystemExit(main(timeline=args.timeline, scene=args.scene, snapshots=args.snapshots, readiness=args.readiness))
+    raise SystemExit(main(timeline=args.timeline, scene=args.scene, snapshots=args.snapshots, readiness=args.readiness, welcome=args.welcome))

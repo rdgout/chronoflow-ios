@@ -29,7 +29,7 @@ class LaunchSimulatorsTests(unittest.TestCase):
         self.failure = lambda command: False
         self.installed = True
 
-    def execute(self, timeline=False, scene=False, snapshots=False, readiness=False):
+    def execute(self, timeline=False, scene=False, snapshots=False, readiness=False, welcome=False):
         output = io.StringIO()
         states = {d["udid"]: d["state"] for devices in self.devices.values() for d in devices}
 
@@ -51,7 +51,7 @@ class LaunchSimulatorsTests(unittest.TestCase):
             return subprocess.CompletedProcess(command, status, "")
 
         with patch.object(runner.subprocess, "run", side_effect=fake_run), contextlib.redirect_stdout(output):
-            status = runner.main(timeline=timeline, scene=scene, snapshots=snapshots, readiness=readiness)
+            status = runner.main(timeline=timeline, scene=scene, snapshots=snapshots, readiness=readiness, welcome=welcome)
         return status, output.getvalue()
 
     def test_all_devices_use_type_and_runtime_and_clear_the_launch_cache(self):
@@ -296,6 +296,88 @@ class LaunchSimulatorsTests(unittest.TestCase):
                 for suite in ["AppTests", "AppCoreTests", "LaunchTests", "DesignSystemTests", "AppUITests/WindowTests",
                               "AppUITests/LaunchSceneTests", "AppUITests/ReadinessTests"]:
                     self.assertIn("-only-testing:" + suite, command)
+        self.assertEqual(self.commands[-2:], [["make", "check"], ["make", "duo"]])
+
+    def test_welcome_records_only_welcome_then_compares_debug_and_release_on_every_device(self):
+        with patch.dict(os.environ, {"SNAPSHOT_RECORD": "1", "TEST_RUNNER_SNAPSHOT_RECORD": "1"}):
+            status, output = self.execute(welcome=True)
+        self.assertEqual(status, 0)
+        self.assertIn("Phase 5 simulator results:", output)
+        tests = [(c, e) for c, e in zip(self.commands, self.environments) if c[0] == "xcodebuild" and c[-1] == "test"]
+        self.assertEqual(len(tests), 21)
+        for index, (command, environment) in enumerate(tests):
+            device_index = index if index < 7 else (index - 7) // 2
+            self.assertIn("platform=iOS Simulator,id=device-" + str(device_index), command)
+            self.assertEqual(command[command.index("-testLanguage") + 1], "en")
+            self.assertEqual(command[command.index("-testRegion") + 1], "US")
+            selected = [c for c in command if c.startswith("-only-testing:")]
+            if index < 7:
+                self.assertEqual(selected, ["-only-testing:AppTests/WelcomeSnapshotTests", "-only-testing:AppTests/WelcomeSnapshotGuardTests"])
+                self.assertEqual(environment.get("TEST_RUNNER_SNAPSHOT_RECORD"), "1")
+            elif (index - 7) % 2 == 0:
+                self.assertEqual(command[command.index("-configuration") + 1], "Debug")
+                for suite in ["WelcomeTests", "LaunchTests", "DesignSystemTests", "AppCoreTests", "AppTests",
+                              "AppUITests/WelcomeTests", "AppUITests/ReadinessTests", "AppUITests/LaunchSceneTests", "AppUITests/WindowTests"]:
+                    self.assertIn("-only-testing:" + suite, selected)
+                self.assertNotIn("TEST_RUNNER_SNAPSHOT_RECORD", environment)
+            else:
+                self.assertEqual(command[command.index("-scheme") + 1], "ReadinessRelease")
+                self.assertEqual(command[command.index("-configuration") + 1], "Release")
+                self.assertEqual(selected, ["-only-testing:AppTests/ReleaseReadinessTests"])
+                self.assertIn("ENABLE_TESTABILITY=YES", command)
+                self.assertNotIn("TEST_RUNNER_SNAPSHOT_RECORD", environment)
+            self.assertNotIn("SNAPSHOT_RECORD", environment)
+        for command, environment in zip(self.commands, self.environments):
+            if command[0] != "xcodebuild" or command[-1] != "test":
+                self.assertNotIn("TEST_RUNNER_SNAPSHOT_RECORD", environment)
+        self.assertEqual(self.commands[-2:], [["make", "check"], ["make", "duo"]])
+
+    def test_welcome_debug_failure_still_runs_isolated_release_for_that_device(self):
+        self.failure = lambda c: c[0] == "xcodebuild" and c[-1] == "test" and "platform=iOS Simulator,id=device-0" in c and "ChronoFlow" in c
+        with patch.dict(os.environ, {"SNAPSHOT_RECORD": "0"}):
+            status, output = self.execute(welcome=True)
+        self.assertEqual(status, 1)
+        self.assertIn("FAIL iPhone SE (3rd gen) compare:", output)
+        first = [c for c in self.commands if c[0] == "xcodebuild" and c[-1] == "test" and "platform=iOS Simulator,id=device-0" in c]
+        self.assertEqual([c[c.index("-configuration") + 1] for c in first], ["Debug", "Release"])
+        self.assertIn("PASS iPhone Duo compare", output)
+        self.assertEqual(self.commands[-2:], [["make", "check"], ["make", "duo"]])
+
+    def test_welcome_compares_by_default_and_requires_duos_own_runtime(self):
+        self.devices[runner.REGULAR_RUNTIME].append(self.devices[runner.DUO_RUNTIME].pop())
+        with patch.dict(os.environ, {"SNAPSHOT_RECORD": "0", "TEST_RUNNER_SNAPSHOT_RECORD": "1"}):
+            status, output = self.execute(welcome=True)
+        self.assertEqual(status, 1)
+        self.assertIn("FAIL iPhone Duo compare: No available simulator:", output)
+        self.assertNotIn("platform=iOS Simulator,id=device-6", str(self.commands))
+        self.assertNotIn(" record", output)
+        self.assertTrue(all("TEST_RUNNER_SNAPSHOT_RECORD" not in e for e in self.environments))
+
+    def test_welcome_default_does_not_record_even_with_inherited_runner_flag(self):
+        with patch.dict(os.environ, {"SNAPSHOT_RECORD": "0", "TEST_RUNNER_SNAPSHOT_RECORD": "1"}):
+            status, output = self.execute(welcome=True)
+        self.assertEqual(status, 0)
+        tests = [c for c in self.commands if c[0] == "xcodebuild" and c[-1] == "test"]
+        self.assertEqual(len(tests), 14)
+        self.assertNotIn(" record", output)
+        for index, command in enumerate(tests):
+            self.assertIn("platform=iOS Simulator,id=device-" + str(index // 2), command)
+            self.assertEqual(command[command.index("-configuration") + 1], "Release" if index % 2 else "Debug")
+        for environment in self.environments:
+            self.assertNotIn("SNAPSHOT_RECORD", environment)
+            self.assertNotIn("TEST_RUNNER_SNAPSHOT_RECORD", environment)
+        for label, _, _ in runner.MATRIX:
+            self.assertIn("PASS " + label + " compare\n", output)
+        self.assertEqual(self.commands[-2:], [["make", "check"], ["make", "duo"]])
+
+    def test_welcome_record_failure_still_compares_all_devices_and_attempts_final_checks(self):
+        self.failure = lambda c: (c[0] == "xcodebuild" and c[-1] == "test" and "platform=iOS Simulator,id=device-0" in c) or c == ["make", "check"]
+        with patch.dict(os.environ, {"SNAPSHOT_RECORD": "1"}):
+            status, output = self.execute(welcome=True)
+        self.assertEqual(status, 1)
+        for label in ["FAIL iPhone SE (3rd gen) record:", "FAIL iPhone SE (3rd gen) compare:",
+                      "PASS iPhone Duo record", "PASS iPhone Duo compare", "FAIL make check:", "PASS make duo"]:
+            self.assertIn(label, output)
         self.assertEqual(self.commands[-2:], [["make", "check"], ["make", "duo"]])
 
     def test_release_readiness_scheme_excludes_package_tests_and_leaves_perf_separate(self):

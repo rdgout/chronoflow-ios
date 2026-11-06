@@ -29,7 +29,7 @@ snapshots:
 
 duo:
 	@destination="$$(python3 Scripts/duo-destination.py)" && \
-		$(XCODEBUILD) -destination "$$destination" -scheme ChronoFlow -testLanguage en -testRegion US -only-testing:AppTests -only-testing:AppUITests/WindowTests -only-testing:AppUITests/LaunchSceneTests -only-testing:AppUITests/ReadinessTests test
+		$(XCODEBUILD) -destination "$$destination" -scheme ChronoFlow -testLanguage en -testRegion US -only-testing:AppTests -only-testing:AppUITests/WindowTests -only-testing:AppUITests/LaunchSceneTests -only-testing:AppUITests/ReadinessTests -only-testing:AppUITests/WelcomeTests -only-testing:WelcomeTests test
 
 perf:
 	$(XCODEBUILD) -destination '$(DESTINATION)' -scheme Perf -configuration Release test
