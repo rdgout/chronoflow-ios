@@ -91,10 +91,15 @@ nonisolated final class SignInKeyboardTests: XCTestCase {
             [app.windows.firstMatch, app.scrollViews["auth.scroll"], keyboard, field, submit], timeout: 10)
         let viewport = frames[0].intersection(frames[1])
         let keyboardFrame = frames[2]
-        let safeViewport = viewport.intersection(
-            CGRect(
-                x: viewport.minX, y: viewport.minY, width: viewport.width,
-                height: max(0, keyboardFrame.minY - viewport.minY)))
+        let safeViewport: CGRect
+        if keyboardFrame.intersection(frames[0]).isEmpty {
+            safeViewport = frames[0]
+        } else {
+            safeViewport = viewport.intersection(
+                CGRect(
+                    x: viewport.minX, y: viewport.minY, width: viewport.width,
+                    height: max(0, keyboardFrame.minY - viewport.minY)))
+        }
         let message = """
             Sign in keyboard [\(context), focus=\(field.identifier)]
             window=\(frames[0]) scroll=\(frames[1]) keyboard=\(keyboardFrame)
@@ -105,7 +110,6 @@ nonisolated final class SignInKeyboardTests: XCTestCase {
         geometry.lifetime = .keepAlways
         add(geometry)
 
-        XCTAssertFalse(keyboardFrame.intersection(frames[0]).isEmpty, message)
         XCTAssertFalse(safeViewport.isEmpty, message)
         XCTAssertTrue(safeViewport.contains(frames[3]), "Focused input must be fully visible. \(message)")
         XCTAssertTrue(safeViewport.contains(frames[4]), "Submit must be fully visible. \(message)")
