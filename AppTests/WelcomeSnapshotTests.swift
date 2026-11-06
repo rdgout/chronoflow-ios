@@ -38,6 +38,40 @@
             }
         }
 
+        @Test func frozenIntroPixelsStayFixedAcrossClockAndRenderPasses() async throws {
+            try await FontRegistry.register()
+            for style in [UIUserInterfaceStyle.light, .dark] {
+                for language in ["en", "nl"] {
+                    for time in [2400, 2450, 2700, 3200, 3300] {
+                        var previousMount: [UInt8]?
+                        for _ in 0..<(time == 2400 ? 10 : 2) {
+                            let clock = ManualLaunchClock()
+                            let intro = LaunchIntro(
+                                start: .milliseconds(2300), clock: clock, frozenTime: .milliseconds(time))
+                            let host = WelcomeTestWindow(style: style, language: language, intro: intro)
+                            defer { host.close() }
+                            try await host.layout()
+                            #expect(intro.hasPlayed)
+                            let current = pixels(try host.image())
+                            if let previousMount {
+                                #expect(current == previousMount, "Frozen pixels changed across mounts at \(time)")
+                            }
+                            previousMount = current
+                            let reference = current
+                            let frames = host.frames
+                            for advance in [10, 20, 30] {
+                                clock.advance(to: .seconds(advance))
+                                try await host.layout()
+                                #expect(try pixels(host.image()) == reference, "Frozen \(time), \(style), \(language)")
+                                #expect(host.frames == frames)
+                                #expect(!host.hasAnimations, "Frozen intro must not install live animations")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         @Test func laterAppearanceAndReduceMotionShowTheFinalScreen() async throws {
             try await FontRegistry.register()
             let intro = LaunchIntro(
@@ -209,11 +243,13 @@
         let controller: UIHostingController<AnyView>
         var frames: [WelcomeElement: CGRect] = [:]
         private weak var previousKeyWindow: UIWindow?
+        private let expectedIntro: LaunchIntro?
 
         init(
             style: UIUserInterfaceStyle, language: String = "en", typeSize: DynamicTypeSize = .large,
             size: CGSize? = nil, intro: LaunchIntro? = nil, reduceMotion: Bool = false
         ) {
+            expectedIntro = reduceMotion ? nil : intro
             let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
             if let scene = scenes.first(where: { $0.activationState == .foregroundActive }) ?? scenes.first {
                 previousKeyWindow = scene.keyWindow
@@ -248,15 +284,23 @@
             window.layoutIfNeeded()
             controller.view.setNeedsLayout()
             controller.view.layoutIfNeeded()
-            for _ in 0..<100 where frames.count < WelcomeElement.allCases.count {
+            for _ in 0..<100 where frames.count < WelcomeElement.allCases.count || expectedIntro?.hasPlayed == false {
                 try await Task.sleep(for: .milliseconds(10))
             }
             #expect(frames.count == WelcomeElement.allCases.count)
+            #expect(expectedIntro?.hasPlayed != false)
             try await Task.sleep(for: .milliseconds(50))
             controller.view.layoutIfNeeded()
             CATransaction.flush()
             #expect(window.isKeyWindow)
             #expect(controller.view.window === window)
+        }
+
+        var hasAnimations: Bool {
+            func animated(_ layer: CALayer) -> Bool {
+                !(layer.animationKeys() ?? []).isEmpty || (layer.sublayers ?? []).contains(where: animated)
+            }
+            return animated(window.layer)
         }
 
         func assertHorizontalInsets() throws {

@@ -42,15 +42,27 @@ import SwiftUI
                     }
                 }
                 .ignoresSafeArea()
-                .environment(\.launchIntro, activeIntro)
+                .environment(\.launchIntro, presentedIntro)
             }
             .environment(\.welcomeLayoutObserver, onFrame)
             .onAppear {
                 guard !initialized else { return }
-                initialized = true
-                if !reduceMotion && !forcesReduceMotion, launchIntro?.claim() == true { activeIntro = launchIntro }
+                var transaction = Transaction(animation: nil)
+                transaction.disablesAnimations = launchIntro?.frozenTime != nil
+                withTransaction(transaction) {
+                    initialized = true
+                    if !reduceMotion && !forcesReduceMotion, launchIntro?.claim() == true { activeIntro = launchIntro }
+                }
             }
             .onDisappear { activeIntro = nil }
+        }
+
+        private var presentedIntro: LaunchIntro? {
+            if initialized { return activeIntro }
+            guard !reduceMotion && !forcesReduceMotion,
+                let launchIntro, launchIntro.frozenTime != nil, !launchIntro.hasPlayed
+            else { return nil }
+            return launchIntro
         }
 
         private var heading: some View {

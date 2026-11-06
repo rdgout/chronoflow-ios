@@ -561,6 +561,10 @@ mismatch on iPhone18,4. This round's revised comparison, make check and make duo
   Files: `AppUITests/WelcomeTests.swift`.
   Test: audit selection and exception-policy tests written; simulator execution remains open.
 
+- [x] Isolate frozen intro modifiers from live state/tasks and disable animation transactions for the sampled tree and its on-appear claim. The capture already awaits fonts and uses a fixed sample time; final content could mount before the intro claim. Present the frozen sample on the first body pass, then claim that same intro on appearance. Wait for the claim as well as measured frames; compare exact pixels/frames across clock advances, ten separate mounts at 2400 ms, and repeated render passes at every frozen sample in both locales/appearances, rejecting live layer animations. Keep pixel tolerance unchanged.
+  Files: `Sources/Welcome/IntroItem.swift`, `Sources/Welcome/WelcomeView.swift`, `AppTests/WelcomeSnapshotTests.swift`.
+  Test: repeated frozen pixel regression written; simulator execution remains open.
+
 ### Phase 4 review fixes (after Phase 5)
 
 - [x] Keep `-cf.mode ready` and validated `-cf.mainThreadStall` diagnostics in Release for the D3 procedure. Keep slow/Welcome modes, freeze, readyAt and all readiness overrides Debug-only; Release readiness remains signed out without Keychain access or route-name placeholders. Extend the isolated Release tests and document why the device proof can observe the 500 ms stall.
