@@ -139,7 +139,8 @@ Board frame 390 × 844 pt. `w`, `h` = window size; `cy = h / 2` (S1). User decis
 | dawnForeground | #2D1205 | 0.1627 0.0756 0.0303 | #101428 | 0.0653 0.0798 0.1517 |
 | background | #F3F7FC | 0.9554 0.9692 0.9867 | #0A0E1F | 0.0427 0.0548 0.1153 |
 
-Inside `cf-sky`, `dawn-text` is `dawn`.
+Inside `cf-sky`, CSS makes `dawn-text` equal `dawn`. Native card text keeps the base `dawnText`
+token even when the card is inside the sky; see Phase 10a's text-contrast adaptation below.
 
 **`cf-sky`**: vertical, skyTop 0 %, skyMid at 55 % (light) / 60 % (dark), skyHorizon 100 %. The mid stop is stated in `tokens.json`'s `sky-mid` usage text and `theme.css:53` (no structured field; TokenGen holds it as a constant checked against `theme.css`). CSS interpolates in OKLab. Reference samples:
 
@@ -1158,7 +1159,7 @@ Originally ported early onto 9a/9b by user authorization on 2026-11-06; now inte
 #### Phase 10a: Native Auth shell, controls and Sign in (`feat/phase-10-sign-in`)
 
 - [ ] Export AuthSignIn none/wrong/locked/server, AuthStates banner references and Field/Button/Notice states, both appearances. Extend generated tokens/metrics/typography/shadow output; add `Auth` UI target with `AuthScreen`, `AuthBrand`, `AuthField`, `AuthButton`, `AuthBanner`, `AuthNotice` using native controls. Implement scroll/focus/error/submit handling and `AuthFormModel` classification/lock. Catalog includes every introduced English/Dutch string together; no sample credentials.
-  Implementation note (2026-11-06): shared native controls, generated semantic colors/OKLab banner mixes, metrics/type/shadow and board glyphs; plain-sky safe-area scroll shell, measured keyboard reveal, form lock/classification and announcement deduplication implemented. Standalone HTML references exported; PNG browser exports/visual acceptance remain open (headless Chrome exits 134 in sandbox). Host tests cover form, mapping, catalog and geometry; hosted execution and unrecorded snapshots remain orchestrator work. (OQ 23 default assumed, confirm): offline has no banner and submit stays enabled. (OQ 30 default assumed, confirm): hidden/unknown field failures use the designed server banner, no notice. OQ 28 resolved (user 2026-11-06): all six shared rows now ship with exact backend en/nl catalog values and displayed-field mapping; tests cover both languages and retain the hidden-field fallback. The task stays unticked for browser PNG exports and visual/snapshot acceptance, hosted checks and keyboard overflow acceptance (OQ 32); OQ 23/30 policies remain assumed, not settled. Later-phase copy is recorded below and ships with its phase; other design/contract blockers still apply.
+  Implementation note (2026-11-06): shared native controls, generated semantic colors/OKLab banner mixes, metrics/type/shadow and board glyphs; plain-sky safe-area scroll shell, measured keyboard reveal, form lock/classification and announcement deduplication implemented. Standalone HTML references exported; the user has now supplied host Chrome PNG exports and recorded native references (see the visual-acceptance fix round below). Host tests cover form, mapping, catalog and geometry; corrected hosted execution, re-recording and final visual acceptance remain orchestrator work. (OQ 23 default assumed, confirm): offline has no banner and submit stays enabled. (OQ 30 default assumed, confirm): hidden/unknown field failures use the designed server banner, no notice. OQ 28 resolved (user 2026-11-06): all six shared rows now ship with exact backend en/nl catalog values and displayed-field mapping; tests cover both languages and retain the hidden-field fallback. The task stays unticked for corrected visual/snapshot acceptance, hosted checks and keyboard overflow acceptance (OQ 32); OQ 23/30 policies remain assumed, not settled. Later-phase copy is recorded below and ships with its phase; other design/contract blockers still apply.
   Files: `_design/frames/auth/**`, `_design/frames/README.md`, `Tools/TokenGen/**`, `Tools/AssetGen/**`, `Sources/DesignSystem/Resources/Auth.xcassets/**`, `Sources/DesignSystem/{AuthTokens.generated,AuthTypography,AuthControls}.swift`, `Sources/Auth/{AuthScreen,AuthBrand,AuthFormModel}.swift`, `Sources/Auth/Resources/Localizable.xcstrings`, `Packages/ChronoFlowKit/Package.swift`, `project.yml`.
   Test: `Tests/AuthTests/{AuthFormModel,AuthFailureMapping,Catalog}Tests.swift`, TokenGen/AssetGen freshness, glyph and OKLab mix tests, `AppTests/{AuthControl,AuthLayout,AuthSnapshot}Tests.swift`: busy double-submit lock/edit clearing/field binding, contrast tokens, keyboard/focus, accessible labels and announcement deduplication. Verify **Matrix A** against 375 × 812 zero-inset board plus actual safe-area fixtures; no cap bypass, dots or glass imitation.
 - [x] Implement `SignInView`/model and Auth navigation stack; mount it for existing `.signIn` from Welcome. Password attempt always clears password, error variants match AuthStates, links enter guest/Forgot/Sign up seams. Two-factor result holds challenge and pushes a route seam until 10b; session result calls the one session controller, honors verify/terms/walkthrough/app gates and OQ 24's `.today` destination policy.
@@ -1228,6 +1229,49 @@ reads falling back to Today for verify, terms and walkthrough. Hosted rerun rema
   Verification: `make quick` passes (25 Auth tests, all remaining package/TokenGen/AssetGen host tests, strict lint, 3 signing guards, 10 resource checks and 53 runner fixtures); hosted checks remain for the user. Existing `AuthSnapshotTests` renders only none/credentials/locked/server banners, so these added field messages change no existing reference pixels and need no re-recording. Compare existing board/profile references and rerun native controls/layout and Sign in UI on 17e; no simulator run is claimed here.
 
 - [x] Record board input/outline-button borders, divider lines and guest pill/sky values as accepted, OQ 33 (user 2026-11-06). Update audit/ratio-guard rationale and documentation; retain all colors, pinned ratios and the sole `(sign-in.guest, .contrast)` audit allow-list entry. Text checks stay strict; this decision does not complete rendered visual review.
+
+#### Phase 10a visual-acceptance fix round (user 2026-11-06)
+
+The user supplied host Chrome PNG exports (all 12 in ignored `build/board-png/`) and recorded
+Auth references. Review of all eight 375 × 812 en/large Sign in pairs found exterior outline-button
+hairlines and continuous rather than semicircular button/footer ends. Codex inspected all eight
+pairs before editing and confirmed both defects. The light Create an account color difference is
+the explicitly accepted text-contrast adaptation below. Existing 44-point control growth, upward
+card growth, empty native fields and text wrapping remain documented adaptations. Final visual
+acceptance awaits the corrected hosted renders; the shared-shell task stays unticked.
+
+- [x] Set AuthButton's designed fills, outline stroke and hit shape to `Capsule(style: .circular)`.
+  The previous `Capsule()` default uses continuous corners; the native Button already uses
+  PressStyle, with no system bordered-button bezel. Circular paths keep radius = height/2 as
+  controls grow. Add rendered-control end-cap tests against analytic circles in both appearances,
+  at 2×/3× and large/xxLarge: reject exterior ink, require interior fill and both outline caps.
+  Files: `Sources/DesignSystem/AuthControls.swift`, `AppTests/AuthControlTests.swift`.
+- [x] Keep Create an account on base `dawnText` in both appearances and document the board
+  deviation under **WCAG 1.4.3**, following the web's dawn-text text-contrast correction
+  (`chronoflow-new/resources/css/app.css`, `docs/ui/claude-design/DESIGN-SYSTEM.md`). The board's
+  `.cf-sky` override makes `--dawn-text: var(--dawn)` even over its card, contrary to tokens.json's
+  rule for text on light surfaces. From generated P3 tokens, converted to linear sRGB with gamut
+  clipping, **dawn/card = 2.5456:1 light / 9.2888:1 dark**; **dawn-text/card = 5.4441:1 / 9.2888:1**.
+  Dawn fails the strict 4.5:1 text threshold on the light card. Both dark tokens are identical.
+  Pin all four ratios in host AuthBoardContrastTests and actual link ink in en/nl/light/dark in
+  hosted AuthControlTests. No token or audit-exemption changes; OQ 33 remains as accepted.
+- [x] Record the user's exact host headless Chrome command and visual review in
+  `_design/frames/README.md`; add `make auth-board-pngs` / `Scripts/export-auth-pngs.sh` for all
+  eight Sign in, two 1900-point banners and two 1200-point controls exports at 375 points / 3×.
+  Outputs stay ignored in `build/`; committed HTML and read-only canvas sources retain board colors.
+
+Verification: `make quick` passes (strict lint, all package/TokenGen/AssetGen host tests, including
+the four link contrast ratios, and 3 signing / 10 resource / 53 runner fixtures). Export-script
+command checks pass for all 12 names/heights with a stub Chrome; no PNGs overwritten.
+Current DesignSystem iOS 17 type-checks pass; Debug/Release app and hosted-test type-checks
+pass against the current built modules, as do UI-test type-checks. An isolated Mac SwiftUI render fails the new circle guard with continuous
+corners and passes with circular corners; corrected native iOS rendering is still pending.
+Hosted execution remains the user's work: run
+`AppTests/AuthControlTests`, `AppTests/AuthLayoutTests`, `AppTests/AuthSnapshotTests` (all D1c
+profiles and AX5 equality), `AppUITests/SignInTests` and serial `AppUITests/AuthAuditTests` on 17e.
+**All 896 Auth references must be re-recorded** for the capsule pixels, then compared and visually
+reviewed. This round does not record references or claim final acceptance/keyboard closure (OQ 32).
+No Duo-specific runtime change; no seven-simulator matrix requested.
 
 #### Phase 10b: Two-factor code/recovery and auth acceptance (`feat/phase-10b-two-factor`)
 

@@ -9,7 +9,7 @@ SWIFT_PATHS := App AppTests AppUITests RenderTests PerfUITests Packages/ChronoFl
 SIM_CONCURRENCY ?=
 SIM_RUNNER := SIM_CONCURRENCY=$(SIM_CONCURRENCY) python3 -I Scripts/launch-simulators.py
 
-.PHONY: generate format lint test snapshots duo perf tokens fonts assets generators-check launch-resources-check check simulator-check matrix targeted quick host-tests package-tests token-tests asset-tests
+.PHONY: generate format lint test snapshots duo perf tokens fonts assets auth-board-pngs generators-check launch-resources-check check simulator-check matrix targeted quick host-tests package-tests token-tests asset-tests
 
 generate:
 	$(XCODEGEN) generate
@@ -51,6 +51,10 @@ fonts:
 
 assets:
 	sh Scripts/swiftpm.sh run AssetGen AssetGen
+
+auth-board-pngs:
+	node Scripts/export-auth-boards.cjs
+	sh Scripts/export-auth-pngs.sh
 
 package-tests:
 	sh Scripts/swiftpm.sh test ChronoFlowKit

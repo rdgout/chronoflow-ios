@@ -81,18 +81,19 @@ import SwiftUI
                 .frame(maxWidth: .infinity, minHeight: kind == .footer ? AuthTokens.footerHeight : AuthTokens.touch)
                 .background {
                     switch kind {
-                    case .primary: Capsule().fill(ColorToken.primary.color)
-                    case .outline: Capsule().fill(ColorToken.background.color)
-                    case .footer: Capsule().fill(ColorToken.skyCopyBackground.color)
+                    case .primary: Capsule(style: .circular).fill(ColorToken.primary.color)
+                    case .outline: Capsule(style: .circular).fill(ColorToken.background.color)
+                    case .footer: Capsule(style: .circular).fill(ColorToken.skyCopyBackground.color)
                     case .ghost: EmptyView()
                     }
                 }
                 .overlay {
                     if kind == .outline {
-                        Capsule().strokeBorder(ColorToken.input.color, lineWidth: AuthTokens.borderWidth)
+                        Capsule(style: .circular).strokeBorder(
+                            ColorToken.input.color, lineWidth: AuthTokens.borderWidth)
                     }
                 }
-                .contentShape(Capsule())
+                .contentShape(Capsule(style: .circular))
                 .opacity(isEnabled && !busy ? 1 : AuthTokens.disabledOpacity)
             }
             .buttonStyle(PressStyle())

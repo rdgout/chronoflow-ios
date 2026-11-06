@@ -4,6 +4,24 @@ import Testing
 @testable import DesignSystem
 
 struct AuthBoardContrastTests {
+    @Test func createAccountTextContrastAdaptationKeepsDawnTextOnBothCards() {
+        let recorded = [(2.54559840, 5.44405243), (9.28883594, 9.28883594)]
+        for (index, appearance) in TokenAppearance.allCases.enumerated() {
+            func channels(_ token: ColorToken) -> [Double] {
+                let color = token.components(for: appearance)
+                #expect(color.alpha == 1)
+                return [color.red, color.green, color.blue]
+            }
+            let dawn = contrast(channels(.dawn), channels(.card))
+            let dawnText = contrast(channels(.dawnText), channels(.card))
+            #expect(abs(dawn - recorded[index].0) < 0.0001)
+            #expect(abs(dawnText - recorded[index].1) < 0.0001)
+            #expect(dawnText >= 4.5, "WCAG 1.4.3 text contrast stays strict on the card")
+            if appearance == .light { #expect(dawn < 4.5) }
+            print("Auth create account contrast \(appearance): dawn/card \(dawn):1; dawnText/card \(dawnText):1")
+        }
+    }
+
     @Test func guestFooterExceptionRequiresTheRecordedBoardColorsAndRatios() {
         #expect(Typography.authLabel.face == .figtree500)
         #expect(Typography.authLabel.size == 14)

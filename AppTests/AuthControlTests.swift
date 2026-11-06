@@ -84,6 +84,130 @@ nonisolated final class AuthControlTests: XCTestCase {
         }
     }
 
+    @MainActor func testButtonEndCapsAreSemicirclesWithoutExteriorInk() async throws {
+        try await FontRegistry.register()
+        for style in [UIUserInterfaceStyle.light, .dark] {
+            for scale: CGFloat in [2, 3] {
+                for category in [UIContentSizeCategory.large, .extraExtraLarge] {
+                    for kind in [AuthButton.Kind.primary, .outline, .footer] {
+                        var button = CGRect.zero
+                        let host = try AuthTestHost(
+                            AuthButton("Sign in", kind: kind) {}
+                                .onGeometryChange(for: CGRect.self) {
+                                    $0.frame(in: .global)
+                                } action: {
+                                    button = $0
+                                }
+                                .padding(AuthTokens.cardPadding)
+                                .background(ColorToken.card.color),
+                            size: CGSize(width: 375, height: 812), style: style, category: category, scale: scale)
+                        defer { host.close() }
+                        try await host.settle()
+                        XCTAssertEqual(button.width, 375 - 2 * AuthTokens.cardPadding, accuracy: 0.5)
+                        XCTAssertGreaterThanOrEqual(button.height, AuthTokens.touch)
+                        let raster = try SnapshotRaster(png: XCTUnwrap(host.image().pngData()))
+                        let traits = host.controller.traitCollection
+                        let backdrop = try rgb(.card, traits: traits)
+                        let fill: [Double]
+                        switch kind {
+                        case .primary: fill = try rgb(.primary, traits: traits)
+                        case .outline: fill = try rgb(.background, traits: traits)
+                        default:
+                            let appearance: TokenAppearance = style == .dark ? .dark : .light
+                            let pill = ColorToken.skyCopyBackground.components(for: appearance)
+                            let card = ColorToken.card.components(for: appearance)
+                            fill = try rgb(
+                                XCTUnwrap(
+                                    CGColor(
+                                        colorSpace: CGColorSpace(name: CGColorSpace.displayP3)!,
+                                        components: [
+                                            pill.red * pill.alpha + card.red * (1 - pill.alpha),
+                                            pill.green * pill.alpha + card.green * (1 - pill.alpha),
+                                            pill.blue * pill.alpha + card.blue * (1 - pill.alpha), 1,
+                                        ].map { CGFloat($0) })))
+                        }
+                        let stroke = try rgb(.input, traits: traits)
+                        let radius = button.height / 2
+                        let margin = 1 / scale
+                        var exteriorFailures = 0
+                        var interiorFailures = 0
+                        var strokePixels = [0, 0]
+                        for y in Int((button.minY - 2) * scale)..<Int((button.maxY + 2) * scale) {
+                            for x in Int((button.minX - 2) * scale)..<Int((button.maxX + 2) * scale) {
+                                let point = CGPoint(x: (CGFloat(x) + 0.5) / scale, y: (CGFloat(y) + 0.5) / scale)
+                                let side: Int
+                                let centerX: CGFloat
+                                if point.x <= button.minX + radius {
+                                    side = 0
+                                    centerX = button.minX + radius
+                                } else if point.x >= button.maxX - radius {
+                                    side = 1
+                                    centerX = button.maxX - radius
+                                } else {
+                                    continue
+                                }
+                                let distance = hypot(point.x - centerX, point.y - button.midY) - radius
+                                let offset = (y * raster.width + x) * 4
+                                func matches(_ expected: [Double]) -> Bool {
+                                    (0..<3).allSatisfy {
+                                        abs(Double(raster.bytes[offset + $0]) / 255 - expected[$0]) < 0.02
+                                    }
+                                }
+                                // Exclude one pixel of antialiasing around the analytic circle and its inset stroke.
+                                if distance > margin && !matches(backdrop) { exteriorFailures += 1 }
+                                if distance < -AuthTokens.borderWidth - margin && !matches(fill) {
+                                    interiorFailures += 1
+                                }
+                                if distance >= -AuthTokens.borderWidth - margin && distance <= margin
+                                    && matches(stroke)
+                                {
+                                    strokePixels[side] += 1
+                                }
+                            }
+                        }
+                        let context = "\(kind), \(style), \(scale)x, \(category.rawValue)"
+                        XCTAssertEqual(exteriorFailures, 0, "No hairlines or fill outside the circular cap: \(context)")
+                        XCTAssertEqual(interiorFailures, 0, "Fill must reach the circular cap: \(context)")
+                        if kind == .outline {
+                            for count in strokePixels {
+                                XCTAssertGreaterThan(count, 5, "Both caps must retain their outline: \(context)")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @MainActor func testCreateAccountLinkUsesDawnTextOnTheCardInBothAppearances() async throws {
+        try await FontRegistry.register()
+        for style in [UIUserInterfaceStyle.light, .dark] {
+            for language in ["en", "nl"] {
+                var frames: [AuthElement: CGRect] = [:]
+                let host = try AuthTestHost(
+                    SignInView(model: authSnapshotModel(), back: {}, guest: {}, measure: { frames[$0] = $1 }),
+                    size: CGSize(width: 375, height: 812), style: style, language: language, scale: 3)
+                defer { host.close() }
+                try await host.settle()
+                let raster = try SnapshotRaster(png: XCTUnwrap(host.image().pngData()))
+                let label = try XCTUnwrap(frames[.signupLabel])
+                let expected = try rgb(.dawnText, traits: host.controller.traitCollection)
+                var matches = 0
+                for y in Int(label.minY * host.scale)..<Int(label.maxY * host.scale) {
+                    for x in Int(label.minX * host.scale)..<Int(label.maxX * host.scale) {
+                        let offset = (y * raster.width + x) * 4
+                        if zip(raster.bytes[offset..<offset + 3], expected).allSatisfy({
+                            abs(Double($0) / 255 - $1) < 0.02
+                        }) {
+                            matches += 1
+                        }
+                    }
+                }
+                XCTAssertGreaterThan(matches, 5, "Create account ink must use dawnText in \(style), \(language)")
+            }
+        }
+    }
+
     @MainActor func testBusySpinnerPrecedesGlyphAndLabelInTheCenteredContent() async throws {
         try await FontRegistry.register()
         var frames: [AuthControlPart: CGRect] = [:]
