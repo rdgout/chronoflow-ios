@@ -29,25 +29,35 @@ class LaunchResourcesTests(unittest.TestCase):
         self.document = ET.parse(ROOT / "App/LaunchScreen.storyboard").getroot()
         self.view = self.document.find(".//viewController/view")
 
-    def test_app_icon_reuses_the_opaque_1024_rn_source_without_variants(self):
-        directory = ROOT / "App/Assets.xcassets/AppIcon.appiconset"
+    def test_app_icon_uses_the_three_designed_opaque_appearances(self):
+        directory = ROOT / "App/Assets.xcassets/ChronoFlow.appiconset"
         catalog = json.loads((directory / "Contents.json").read_text())
-        self.assertEqual(catalog["images"], [{
-            "filename": "icon.png", "idiom": "universal", "platform": "ios", "size": "1024x1024",
-        }])
-        image = (directory / "icon.png").read_bytes()
-        source = ROOT.parent / "chronoflow-mobile/assets/images/icon.png"
-        self.assertEqual(image, source.read_bytes())
-        self.assertEqual(image[:8], b"\x89PNG\r\n\x1a\n")
-        self.assertEqual(struct.unpack(">II", image[16:24]), (1024, 1024))
-        self.assertEqual(image[25], 2, "RGB PNG must have no alpha channel")
-        offset = 8
-        while offset < len(image):
-            length = struct.unpack(">I", image[offset:offset + 4])[0]
-            self.assertNotEqual(image[offset + 4:offset + 8], b"tRNS", "Icon must be opaque")
-            offset += length + 12
+        self.assertEqual(len(catalog["images"]), 3)
+        for entry, appearance in zip(catalog["images"], ["default", "dark", "tinted"]):
+            expected = {
+                "filename": f"AppIcon-{appearance}.png", "idiom": "universal",
+                "platform": "ios", "size": "1024x1024",
+            }
+            if appearance != "default":
+                expected["appearances"] = [{"appearance": "luminosity", "value": appearance}]
+            self.assertEqual(entry, expected)
+            image = (directory / entry["filename"]).read_bytes()
+            self.assertEqual(image, (ROOT / "_design/icon/ios" / entry["filename"]).read_bytes())
+            self.assertEqual(image[:8], b"\x89PNG\r\n\x1a\n")
+            self.assertEqual(struct.unpack(">II", image[16:24]), (1024, 1024))
+            self.assertIn(image[25], [0, 2], "Flat icon must have no alpha channel")
+            offset = 8
+            while offset < len(image):
+                length = struct.unpack(">I", image[offset:offset + 4])[0]
+                self.assertNotEqual(image[offset + 4:offset + 8], b"tRNS", "Flat icon must be opaque")
+                offset += length + 12
+        self.assertFalse((ROOT / "App/Assets.xcassets/AppIcon.appiconset").exists())
         project = (ROOT / "project.yml").read_text().split("\n  AppTests:", 1)[0]
-        self.assertIn("ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon", project)
+        self.assertIn("ASSETCATALOG_COMPILER_APPICON_NAME: ChronoFlow", project)
+        self.assertIn("path: App/ChronoFlow.icon\n        type: file\n        buildPhase: resources", project)
+        self.assertIn("postGenCommand: python3 -I Scripts/configure-icon-project.py", project)
+        self.assertIn("ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS: YES", project)
+        self.assertIn("ASSETCATALOG_OTHER_FLAGS: --enable-icon-stack-fallback-generation=disabled", project)
         self.assertIn('TARGETED_DEVICE_FAMILY: "1"', project)
 
     def test_welcome_capture_is_hosted_without_duplicate_package_linkage(self):
