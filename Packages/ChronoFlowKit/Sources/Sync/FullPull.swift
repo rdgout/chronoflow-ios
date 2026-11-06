@@ -73,8 +73,7 @@ public struct FullPull: Sendable {
                 try epoch.check()
                 switch error {
                 case .unauthorized, .emailUnverified, .offline, .throttled: throw error
-                case .server(status: 404):
-                    try await markMissing(tripID: id, epoch: epoch)
+                case .server(status: 404): break
                 default: result.retryAfter = 1
                 }
             } catch {
@@ -96,13 +95,5 @@ public struct FullPull: Sendable {
             try TripRepository.applyDetail(value, tripID: tripID, at: at, db: db)
         }
         try epoch.check()
-    }
-
-    private func markMissing(tripID: String, epoch: SyncEpoch) async throws {
-        let at = now().ISO8601Format()
-        try await database.write(epoch: epoch) { db in
-            try db.execute(sql: "UPDATE trips SET deleted_at=? WHERE id=?", arguments: [at, tripID])
-            try retention.withHeldPlans { try TripRepository.evictPlans(held: $0, db: db) }
-        }
     }
 }

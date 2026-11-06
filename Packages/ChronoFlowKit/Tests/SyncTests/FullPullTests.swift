@@ -76,14 +76,30 @@ import Testing
         #expect(await source.calls.filter { $0 == "detail" }.count == 1)
         try await store.close()
     }
-    @Test func detail404TombstonesWithoutRetry() async throws {
+    @Test func detail404KeepsListedCardAndQueuedCheckOffWithoutRetry() async throws {
         let store = try await SyncStore()
         let source = ScriptedSource()
+        let row = try await store.enqueue(.checkOff(check()))
         await source.configure(failMethod: "detail", methodFailure: .server(status: 404))
-        let result = try await FullPull(database: store.database, source: source).run(epoch: store.epoch)
-        #expect(result.retryAfter == nil)
-        #expect(try await TripRepository(database: store.database).trips().first?.deletedAt != nil)
-        #expect(try await AccountRepository(database: store.database).account()?.syncedAt != nil)
+        let pull = FullPull(database: store.database, source: source, now: { syncDate })
+        for _ in 0..<2 {
+            let result = try await pull.run(epoch: store.epoch)
+            #expect(result.retryAfter == nil)
+            let trips = try await TripRepository(database: store.database).trips()
+            #expect(trips.count == 1)
+            #expect(trips.first?.deletedAt == nil)
+            #expect(
+                try await AccountRepository(database: store.database).account()?.syncedAt == syncDate.ISO8601Format())
+            #expect(try await OutboxRepository(database: store.database).pending().map(\.id) == [row.id])
+        }
+        let prepared = try await CheckOffReconciler(pull: pull).prepare(row, epoch: store.epoch)
+        #expect(try prepared?.change == .checkOff(check()))
+        #expect(try await OutboxRepository(database: store.database).pending().map(\.id) == [row.id])
+        #expect(
+            try await SettingsRepository(database: store.database).settings().allSatisfy { $0.section != "syncFailure" }
+        )
+        _ = try await store.enqueue(.checkOff(check(status: nil)), index: 1)
+        #expect(try await OutboxRepository(database: store.database).pending().count == 2)
         try await store.close()
     }
 }
