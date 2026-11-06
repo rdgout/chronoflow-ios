@@ -89,6 +89,34 @@ public actor AccountDatabase {
         return try await pool.write(updates)
     }
 
+    public func validate(epoch: SyncEpoch) throws {
+        try epoch.check()
+        guard accountID == epoch.accountID else { throw StoreFailure.invalidAccountID }
+        guard pool != nil else { throw StoreFailure.closed }
+    }
+
+    public func write<Value: Sendable>(
+        epoch: SyncEpoch, _ updates: @Sendable @escaping (Database) throws -> Value
+    ) async throws -> Value {
+        try epoch.check()
+        guard accountID == epoch.accountID else { throw StoreFailure.invalidAccountID }
+        guard let pool else { throw StoreFailure.closed }
+        return try await withTaskCancellationHandler {
+            try await pool.writeWithoutTransaction { db in
+                try epoch.whileValid {
+                    var result: Value?
+                    try db.inTransaction {
+                        result = try updates(db)
+                        return .commit
+                    }
+                    return result!
+                }
+            }
+        } onCancel: {
+            epoch.invalidate()
+        }
+    }
+
     public func observe<Value: Sendable>(
         _ fetch: @Sendable @escaping (Database) throws -> Value
     ) throws -> AsyncThrowingStream<Value, any Error> {

@@ -1278,3 +1278,18 @@ xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData \
   -testLanguage en -testRegion US -parallel-testing-enabled NO \
   -only-testing:AppTests/SessionLifecycleTests/testNativeCompositionObservesAndDetachesAccountsUsingOneKeychainStore test
 ```
+
+
+## Phase 9c host verification (6 November 2026)
+
+Task 1: `sh Scripts/host-tests.sh --filter 'LocalMutationsTests|OutboxFlusherTests'` passes
+6 tests, including 11 failure-classification cases. Tests use file-backed temporary account pools
+under this repository, scripted sources, injected dates/randomness, and no network or sleeps.
+Covered: restart durability, transaction rollback, FIFO/dependency progress, unsupported parked
+rows, receipt rollback/replay, supported local values, sensitive-key rejection, and final/transient
+refusal metadata. Profile email changes need a password and remain online-only.
+
+Defaults: syncFailure is a typed storage/event seam without UI (OQ 30 default assumed, confirm);
+unsupported complete-trip/data-export/security rows remain parked with no producers (OQ 31 default
+assumed, confirm). D19 backup exclusion remains inherited (OQ 26 default assumed, confirm); device
+loss/restore loses unsent account changes. Shipping approval remains open.

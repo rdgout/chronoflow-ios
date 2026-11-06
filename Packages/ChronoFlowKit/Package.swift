@@ -11,6 +11,7 @@ let package = Package(
         .library(name: "AppCore", targets: ["AppCore"]),
         .library(name: "LocalStore", targets: ["LocalStore"]),
         .library(name: "DataAccess", targets: ["DataAccess"]),
+        .library(name: "Sync", targets: ["Sync"]),
         .library(name: "Launch", targets: ["Launch"]),
         .library(name: "Welcome", targets: ["Welcome"]),
     ],
@@ -37,6 +38,8 @@ let package = Package(
         .testTarget(
             name: "LocalStoreTests", dependencies: ["LocalStore"], resources: [.copy("Fixtures")],
             swiftSettings: [.defaultIsolation(nil)]),
+        .target(name: "Sync", dependencies: ["AppCore", "LocalStore"], swiftSettings: [.defaultIsolation(nil)]),
+        .testTarget(name: "SyncTests", dependencies: ["Sync", "DataAccess"], swiftSettings: [.defaultIsolation(nil)]),
         .target(
             name: "Launch",
             dependencies: ["DesignSystem", "AppCore"],
