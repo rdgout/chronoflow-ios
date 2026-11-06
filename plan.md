@@ -910,6 +910,8 @@ This work runs on `feat/phase-9-session-store` without starting Phase 9 or closi
   Files: test suites, `Scripts/launch-simulators.py`, `Tests/test_launch_simulators.py`.
 - [x] Select snapshot coverage from one per-model profile shared by the runner's host tests and Swift capture suites. Keep full coverage on SE/17e/Duo/Pro Max; compact devices keep large/xxLarge layout checks, intro 2700/3300 and launch ready-0/ready-1400/slow-2600/welcome-2400/reduceMotion-0. Both appearances/languages remain on Welcome. Remove 72 obsolete PNGs; retained PNGs are byte-identical to HEAD. Launch's existing PNGs cover large/English only; preserve those combinations under the no-re-record instruction and retain type/localization geometry checks. Adding Dutch/xxLarge launch PNGs needs a separately authorized recording, so that requested extension remains open below.
   Files: `Tests/SnapshotSupport/**`, snapshot suites/references, `Package.swift`, `project.yml`, host coverage tests.
+- [x] Add make targeted DEVICES="se duo" ONLY="target/suite …", with optional REUSE_BUILD=1, using the same configuration grouping, device pool, fresh-app preparation and results. Resolve se/17e/17/air/18pro/18promax/duo without stored UDIDs; validate selectors/aliases before builds.
+  Files: `Makefile`, `Scripts/launch-simulators.py`, `Tests/test_launch_simulators.py`, command documentation.
 ### Phase 6: Audit (`feat/phase-6-audit`)
 
 Reduce Motion, dark mode, VoiceOver and strings are built in the phases above; this phase only audits.

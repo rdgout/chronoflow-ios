@@ -301,6 +301,8 @@ def main(mode="welcome", aliases=None, only=(), concurrency=None, reuse_build=Fa
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Build once, then run classified suites in parallel on the D1c simulators.")
     parser.add_argument("--devices", nargs="+", choices=MATRIX, help="device aliases (default: all seven)")
+    parser.add_argument("--only", nargs="+", help="target[/suite[/test]] selectors; targeted runs execute these on every requested device")
+    parser.add_argument("--reuse-build", action="store_true", help="reuse the last build-for-testing products; rebuild after source/project changes")
     parser.add_argument("--no-generate", action="store_true")
     parser.add_argument("--mode", choices=("welcome", "test", "snapshots"), default="welcome")
     for flag in ("timeline", "scene", "snapshots", "readiness", "welcome"):
@@ -308,6 +310,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
     mode = "launch-snapshots" if args.snapshots and not args.scene else args.mode
     try:
-        raise SystemExit(main(mode, args.devices, (), reuse_build=False, generate=not args.no_generate))
+        raise SystemExit(main(mode, args.devices, args.only or (), reuse_build=args.reuse_build, generate=not args.no_generate))
     except (subprocess.CalledProcessError, OSError, ValueError, KeyError, RuntimeError) as error:
         parser.exit(1, str(error) + "\n")

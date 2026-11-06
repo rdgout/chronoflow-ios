@@ -88,6 +88,7 @@ class ClassificationTests(unittest.TestCase):
         makefile = (ROOT / 'Makefile').read_text()
         self.assertIn('check: lint generators-check launch-resources-check simulator-check', makefile)
         self.assertNotIn('test snapshots', makefile.split('check:')[-1])
+        self.assertIn('--devices $(DEVICES) --only $(ONLY)', makefile)
         self.assertIn('--devices duo', makefile)
 
 
@@ -226,6 +227,12 @@ class RunnerTests(unittest.TestCase):
             self.assertEqual(len(recorded), 2)
             self.assertEqual(len(set(recorded)), 2)
 
+    def test_targeted_reuses_builds_and_keeps_explicit_logic_on_requested_device(self):
+        status, output = self.execute(aliases=['se', 'duo', 'se'], only=['AppUITests/ReadinessTests'], reuse_build=True, generate=False)
+        self.assertEqual(status, 0, output)
+        self.assertFalse(any(c[-1] == 'build-for-testing' or c == ['make', 'generate'] for c in self.commands))
+        self.assertEqual(len(self.commands_for_tests()), 2)
+        for c in self.commands_for_tests(): self.assertIn('-only-testing:AppUITests/ReadinessTests', c)
 
     def test_concurrency_is_bounded_and_configurable(self):
         active = maximum = 0

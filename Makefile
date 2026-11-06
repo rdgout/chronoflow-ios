@@ -37,6 +37,8 @@ duo:
 matrix:
 	$(SIM_RUNNER) --welcome
 
+targeted:
+	$(SIM_RUNNER) --no-generate --devices $(DEVICES) --only $(ONLY) $(if $(filter 1,$(REUSE_BUILD)),--reuse-build,)
 
 perf:
 	$(XCODEBUILD) -destination '$(DESTINATION)' -scheme Perf -configuration Release test
