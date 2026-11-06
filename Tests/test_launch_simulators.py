@@ -83,7 +83,7 @@ class ClassificationTests(unittest.TestCase):
     def test_auth_host_logic_profiles_and_serial_appearance_are_in_check(self):
         host = set(runner.selectors('host'))
         self.assertTrue(any(s.startswith('AuthTests/') for s in host))
-        logic = {'AppTests/AuthControlTests', 'AppTests/AuthLayoutTests',
+        logic = {'DesignSystemTests/AuthBoardContrastTests', 'AppTests/AuthControlTests', 'AppTests/AuthLayoutTests',
                  'AppUITests/SignInTests', 'AppUITests/AuthAuditTests'}
         self.assertTrue(logic <= set(runner.selectors('logic')))
         self.assertIn('AppTests/AuthSnapshotTests', runner.selectors('profiles'))
@@ -419,7 +419,7 @@ class RunnerTests(unittest.TestCase):
         status, output = self.execute(aliases=['17e'], mode='check')
         self.assertEqual(status, 0, output)
         commands = self.commands_for_tests()
-        for suite in ['AppTests/AuthControlTests', 'AppTests/AuthLayoutTests',
+        for suite in ['DesignSystemTests/AuthBoardContrastTests', 'AppTests/AuthControlTests', 'AppTests/AuthLayoutTests',
                       'AppTests/AuthSnapshotTests', 'AppUITests/SignInTests', 'AppUITests/AuthAuditTests']:
             matches = [c for c in commands if '-only-testing:' + suite in c]
             self.assertEqual(len(matches), 1, suite)

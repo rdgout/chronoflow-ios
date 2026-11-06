@@ -206,6 +206,20 @@ private var root: URL {
                     path: "Packages/ChronoFlowKit/Sources/DesignSystem/AuthTokens.generated.swift")))
 }
 
+@Test func authGuestFooterExceptionStillMatchesTheBoardPairAndTypography() throws {
+    let board = try String(contentsOf: root.appending(path: "_design/canvas/AuthSignIn.dc.html"), encoding: .utf8)
+    let footer = try captures(#"<a href="GuestFlight.dc.html" style="([^"]+)""#, in: board)
+    #expect(footer.count == 1)
+    let style = try #require(footer.first)
+    for declaration in [
+        "background: var(--sky-copy-background)", "color: var(--sky-copy)",
+        "font-size: 14px", "line-height: 20px", "font-weight: 500",
+    ] {
+        #expect(
+            style.contains(declaration), "Reassess sign-in.guest's board contrast exception when its design changes")
+    }
+}
+
 @Test func authSourceChangesCannotHideBehindUnrelatedDeclarations() throws {
     func read(_ path: String) throws -> String {
         try String(contentsOf: root.appending(path: path), encoding: .utf8)

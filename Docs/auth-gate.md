@@ -15,8 +15,8 @@ there is no invented pinned action if a field/submit pair does not fit (OQ 32).
 AuthSessionServices reuses the scene’s NativeSessionController. Its one SessionController accepts
 sessions, restores credentials, owns sync and signs out/wipes. Post-accept routing reads the SQLite
 readiness gate: verify through AppDelegate.verificationRequired, then current terms, walkthrough,
-and today. Hosted integration tests cover acceptance, gate precedence, restore and sign-out. Forgot, Sign up and Two-factor are memory navigation seams with
-Debug diagnostics; their UI belongs to later phases. Today and verify retain the existing root seams.
+and today. Hosted integration tests cover acceptance, gate precedence, restore and sign-out.
+Forgot, Sign up and Two-factor are memory navigation seams with Debug diagnostics; their UI belongs to later phases. Today and verify retain the existing root seams.
 Release remains non-shipping while these destinations are unbuilt. Navigation does not replay launch.
 
 Assumed defaults, not settled questions:
@@ -73,7 +73,18 @@ No Auth snapshot reference was recorded or added by this port.
 
 Standalone board/component HTML exports are in `_design/frames/auth`; browser PNG export is open:
 Chrome headless exits 134 in this sandbox. The orchestrator must review geometry/contrast, run the
-hosted frame/keyboard/audit checks, record once, then compare. There are no inherited auth contrast
-exceptions. Token tests confirm the card/banner/action text pairs pass 4.5:1; the designed input
-border remains below 3:1 in both appearances and needs design review. Commands are in
-Docs/tooling.md. No seven-simulator run is required.
+hosted frame/keyboard/audit checks, record once, then compare. The second fix round allows only
+`(sign-in.guest, .contrast)`, a confirmed board pair, following Welcome's explicit-pair policy.
+Generated color/alpha/typography/ratio guards fail on drift; every other element/type still fails.
+At the board footer centre, text/pill is 14.9260:1 light / 15.0953:1 dark and pill/sky is
+2.3128:1 / 2.9450:1, including the 90% pill opacity. Native colors match the board exactly.
+Footer and input/border design decisions remain Open in plan.md OQ 33; the exception does not
+establish contrast acceptance. Commands are in Docs/tooling.md. No seven-simulator run is required.
+
+Integrated-port verification: make quick passes (286 package host tests including 23 Auth,
+10 TokenGen, 4 AssetGen, 3 signing guards, 10 resource checks and 53 runner fixtures).
+Generator freshness, all 10 static fonts and 6 font/cache checks pass. All package/test targets
+compile for iOS 17 simulator; the app and all hosted AppTests type-check in Debug/Release,
+and all AppUITests type-check in Debug. The 16 native acceptance/gate/cancellation/restore/sign-out
+scenarios are compiled but await hosted execution. See the integrated-port commands in tooling.md;
+no Auth references, simulator results or new acceptance claims are included.

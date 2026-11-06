@@ -1826,3 +1826,99 @@ make targeted DEVICES="17e" ONLY="AppTests/AuthControlTests AppTests/AuthLayoutT
 The second command is still useful if the first fails: each issue now supplies actionable details in
 `build/test-results/17e/Debug-compare.xcresult`. This runner replaces that result on each pass; retain
 the audit bundle/log before running the second command when diagnosing a failure.
+
+## Phase 10a second fix round — 6 November 2026
+
+The user's hosted 17e rerun passes AuthLayoutTests and SignInTests. AuthControlTests collected
+its four global measurements during LaunchTestHost's initial 390-point scene layout, before
+AuthTestHost resized the fixture to 375 points. Its count-only wait could therefore skip layout
+entirely and compare the old 195-point centre with the new 187.5-point window centre. AuthButton's
+inline spinner/glyph/label HStack already matches the board. The repaired test forces layout,
+waits for stable resized geometry (without waiting for animated spinner pixels), asserts the
+button width, and compares group/button frames in the same global coordinate space.
+
+All 24 audit failures identify only `sign-in.guest`, the AuthSignIn footer at line 59. Native uses
+exactly the board's `skyCopy` text and `skyCopyBackground` capsule, Figtree 500 at 14/20. Both
+appearances retain the generated pill alpha of 0.9. The table includes compositing that pill
+in encoded Display P3 over the generated sky ramp, followed by conversion to linear sRGB for
+WCAG relative luminance. The board footer centre is y = 764 on its 812-point sky; the full-ramp
+ranges cover other window heights and scroll positions without assuming the board's geometry.
+
+| Pair | Light | Dark |
+|---|---:|---:|
+| Text / composited pill, board footer centre | 14.9260:1 | 15.0953:1 |
+| Composited pill / sky, board footer centre | 2.3128:1 | 2.9450:1 |
+| Text / composited pill, full sky range | 13.4635–15.0882:1 | 14.9473–16.1298:1 |
+| Composited pill / sky, full sky range | 2.0004–10.7434:1 | 1.0001–3.4997:1 |
+
+Text passes 4.5:1 everywhere. The board-centre boundary is below 3:1 in both appearances.
+Following the user's instruction and Welcome's five explicit board pairs (including welcome.plan's
+pill/sky precedent), Auth now allows only `(sign-in.guest, .contrast)`. It retains the issue's
+identifier, label, type, language, appearance and stage in console/attachments and records whether
+the pair was allowed. Nil/unknown identifiers, all other elements, combined audit types and every
+non-contrast issue still fail. No partial-visibility exception was added. OQ 33 explicitly remains
+**Open** for the footer alongside the input/border pairs; allowing this known board pair does not
+accept its contrast or close visual review.
+
+AuthBoardContrastTests pins both appearances' generated text/pill/sky RGBA values, alpha, label
+font/size/leading and board-centre/full-ramp ratios. TokenGen checks the board's footer declarations
+and generated freshness. AuthControlTests adds native pill/ink pixel checks in en/nl and light/dark.
+A deliberate light-pill alpha mutation from 0.90 to 0.89 fails the pinned RGBA and ratio guards;
+restoring the generated file passes. The simulator runner classifies the new guard as 17e logic.
+All 201 package host tests, 10 TokenGen tests, 22 runner checks and 10 resource checks pass,
+as do strict lint and direct iOS 17 type checks of the hosted/UI tests and new ratio guard.
+CoreSimulator is inaccessible in this sandbox; revised UIKit/audit execution
+and visual acceptance remain open. No production colors or snapshot references changed.
+
+Apply the two ordered patches in `build/commits` and commit each corresponding line of
+`messages.txt`. `replay.txt` records verification against the starting HEAD. Then run:
+
+```sh
+make generate
+make targeted DEVICES="17e" ONLY="DesignSystemTests/AuthBoardContrastTests AppTests/AuthControlTests AppTests/AuthLayoutTests AppUITests/SignInTests AppUITests/AuthAuditTests"
+```
+
+This builds once and keeps the guard, native controls and all 24 audits in one result bundle:
+`build/test-results/17e/Debug-compare.xcresult`. To repeat the same selection after an unchanged build,
+add `REUSE_BUILD=1`. No reference recording or seven-device matrix is needed for these patches.
+
+## Integrated Phase 10a port — 6 November 2026
+
+This record supersedes the early-stack composition and patch-count instructions above while retaining
+both histories. Twelve patches preserve the twelve source commit messages on fffa67d (Phase 9a–9d,
+test tiers and recorded Launch/Welcome references). AuthSessionServices receives the scene's existing
+NativeSessionController; it creates no second lifecycle composition. Password and passkey acceptance
+use its SessionController and SQLite readiness gate. Unverified results call AppDelegate.verificationRequired;
+current terms precede walkthrough, then the Today seam. SessionReadinessTests covers both methods across
+all four gates, with and without cancellation after credential commit, followed by restore and sign-out.
+Those 16 native integration scenarios are type-checked; hosted execution remains for the commands below.
+
+AuthTests suites use the host policy in quick. AuthControlTests/AuthLayoutTests are hosted logic;
+AuthBoardContrastTests remains logic and is explicitly included in check's UIKit selection.
+SignInTests is UI logic; AuthAuditTests is registered for the serial device-appearance pass.
+AuthSnapshotTests uses profiles and SNAPSHOTS, with SnapshotContainer windows, shared full/compact
+profile fixtures, exact safe-area insets, window reuse and CPU layer capture. The zero-inset board and
+AX5 cap checks remain. Reference names describe the fixture, never the executing simulator.
+No Auth PNGs are supplied; existing recorded Launch/Welcome references are unchanged.
+
+Port verification: make quick passes with 286 package host tests (23 Auth), 10 TokenGen, 4 AssetGen,
+3 signing guards, 10 resource checks and 53 runner fixtures. Strict lint and generator freshness pass;
+fonts verify all 10 static faces and all 6 font/cache tests pass. Every package/test target compiles for
+arm64 iOS 17 simulator. Direct Swift 6/MainActor checks pass for the app and all hosted AppTests in
+Debug and Release, and all AppUITests in Debug. These are compilation checks, not UIKit execution.
+No xcodebuild, simulator, git commit or reference recording ran. OQ 23/24/28/30/33 defaults and records,
+including the exact (sign-in.guest, .contrast) allow-list, remain as in the source.
+
+Run the integrated Auth selection on 17e, then record only after review:
+
+```sh
+make generate
+make targeted DEVICES="17e" ONLY="DesignSystemTests/AuthBoardContrastTests AppTests/AuthControlTests AppTests/AuthLayoutTests AppTests/SessionReadinessTests AppUITests/SignInTests AppUITests/AuthAuditTests"
+SNAPSHOT_RECORD=1 make targeted DEVICES="17e" ONLY="AppTests/AuthSnapshotTests"
+REUSE_BUILD=1 make targeted DEVICES="17e" ONLY="AppTests/AuthSnapshotTests"
+```
+
+The default two-worker Debug run writes logic to Debug-compare.xcresult and appearance audits to
+Debug-serial.xcresult under build/test-results/17e. Recording runs serially, then compares in a fresh
+test process; the final command supplies another independent comparison. All default/CI flows remain
+single-simulator; no seven-device matrix or Duo-specific runtime run is introduced.

@@ -77,7 +77,7 @@ SUITES = {'AppTests': {'logic': ('AuthControlTests', 'AuthLayoutTests', 'LaunchA
                            'StoredDataReadinessTests',
                            'DeviceIdentityTests',
                            'SmokeTests')},
- 'DesignSystemTests': {'logic': ('ExactLineTextLayoutTests', 'PrimitiveTests', 'SmokeTests', 'TypographyTests'),
+ 'DesignSystemTests': {'logic': ('AuthBoardContrastTests', 'ExactLineTextLayoutTests', 'PrimitiveTests', 'SmokeTests', 'TypographyTests'),
                        'matrix': ('LaunchImagesTests',)},
  'LaunchTests': {'logic': ('FlightPathTests',
                            'LaunchGlowTests',
@@ -428,6 +428,7 @@ def expand(only):
 
 
 IOS_METHODS = (
+    "DesignSystemTests/AuthBoardContrastTests",
     "DesignSystemTests/LaunchImagesTests",
     "DesignSystemTests/TypographyTests/uiFontsUseTheExactFacesAndKeepTheSplashFixed()",
     "DesignSystemTests/ExactLineTextLayoutTests/scaledHeadlinePitchAndGlyphsFitNaturalLabels()",

@@ -166,8 +166,69 @@ nonisolated final class AuthControlTests: XCTestCase {
         }
     }
 
+    @MainActor func testGuestFooterRendersTheBoardTextAndTranslucentPillColors() async throws {
+        try await FontRegistry.register()
+        for style in [UIUserInterfaceStyle.light, .dark] {
+            for language in ["en", "nl"] {
+                var frames: [AuthControlPart: CGRect] = [:]
+                var button = CGRect.zero
+                let host = try AuthTestHost(
+                    AuthButton(
+                        AuthCopy.string("New here? Plan a trip first", locale: Locale(identifier: language)),
+                        kind: .footer, measure: { frames[$0] = $1 }
+                    ) {}
+                    .onGeometryChange(for: CGRect.self) {
+                        $0.frame(in: .global)
+                    } action: {
+                        button = $0
+                    }
+                    .padding(AuthTokens.cardPadding)
+                    .background(ColorToken.skyHorizon.color),
+                    size: CGSize(width: 390, height: 844), style: style, language: language)
+                defer { host.close() }
+                try await host.settle()
+                let raster = try SnapshotRaster(png: XCTUnwrap(host.image().pngData()))
+                let appearance: TokenAppearance = style == .dark ? .dark : .light
+                let pill = ColorToken.skyCopyBackground.components(for: appearance)
+                let sky = ColorToken.skyHorizon.components(for: appearance)
+                let composite = try XCTUnwrap(
+                    CGColor(
+                        colorSpace: CGColorSpace(name: CGColorSpace.displayP3)!,
+                        components: [
+                            pill.red * pill.alpha + sky.red * (1 - pill.alpha),
+                            pill.green * pill.alpha + sky.green * (1 - pill.alpha),
+                            pill.blue * pill.alpha + sky.blue * (1 - pill.alpha), 1,
+                        ].map { CGFloat($0) }))
+                let expectedPill = try rgb(composite)
+                let offset =
+                    (Int(button.midY * host.scale) * raster.width + Int((button.minX + button.height / 2) * host.scale))
+                    * 4
+                for channel in 0..<3 {
+                    XCTAssertEqual(Double(raster.bytes[offset + channel]) / 255, expectedPill[channel], accuracy: 0.02)
+                }
+                let label = try XCTUnwrap(frames[.label])
+                let expectedText = try rgb(.skyCopy, traits: host.controller.traitCollection)
+                var matches = 0
+                for y in Int(label.minY * host.scale)..<Int(label.maxY * host.scale) {
+                    for x in Int(label.minX * host.scale)..<Int(label.maxX * host.scale) {
+                        let offset = (y * raster.width + x) * 4
+                        if zip(raster.bytes[offset..<offset + 3], expectedText).allSatisfy({
+                            abs(Double($0) / 255 - $1) < 0.02
+                        }) {
+                            matches += 1
+                        }
+                    }
+                }
+                XCTAssertGreaterThan(matches, 5, "Footer ink must use skyCopy in \(style), \(language)")
+            }
+        }
+    }
+
     @MainActor private func rgb(_ token: ColorToken, traits: UITraitCollection) throws -> [Double] {
-        let color = UIColor(token.color).resolvedColor(with: traits).cgColor
+        try rgb(UIColor(token.color).resolvedColor(with: traits).cgColor)
+    }
+
+    @MainActor private func rgb(_ color: CGColor) throws -> [Double] {
         let converted = try XCTUnwrap(
             color.converted(to: CGColorSpace(name: CGColorSpace.sRGB)!, intent: .defaultIntent, options: nil))
         return try XCTUnwrap(converted.components).prefix(3).map(Double.init)

@@ -35,17 +35,38 @@ nonisolated final class AuthAuditTests: XCTestCase {
         _ app: XCUIApplication, language: String, appearance: XCUIDevice.Appearance, stage: String
     ) throws {
         try app.performAccessibilityAudit(for: .all.subtracting(.dynamicType)) { issue in
+            let boardContrast = Self.isBoardContrast(identifier: issue.element?.identifier, auditType: issue.auditType)
             let message = """
                 Auth accessibility [\(language), \(appearance), \(stage)] \
                 auditType=\(issue.auditType) identifier=\(issue.element?.identifier ?? "<nil>") \
-                label=\(issue.element?.label ?? "<nil>") compactDescription=\(issue.compactDescription)
+                label=\(issue.element?.label ?? "<nil>") compactDescription=\(issue.compactDescription) \
+                boardContrast=\(boardContrast) ignored=\(boardContrast)
                 """
             print(message)
             let attachment = XCTAttachment(string: message)
             attachment.lifetime = .keepAlways
             self.add(attachment)
-            XCTFail(message)
-            return false
+            if !boardContrast { XCTFail(message) }
+            return boardContrast
+        }
+    }
+
+    @MainActor private static func isBoardContrast(identifier: String?, auditType: XCUIAccessibilityAuditType) -> Bool {
+        auditType == .contrast && identifier == "sign-in.guest"
+    }
+
+    @MainActor func testAuditAllowsOnlyTheGuestFooterBoardContrastPair() {
+        XCTAssertTrue(Self.isBoardContrast(identifier: "sign-in.guest", auditType: .contrast))
+        for type: XCUIAccessibilityAuditType in [
+            .textClipped, .dynamicType, .hitRegion, .trait, .all, [.contrast, .textClipped],
+        ] {
+            XCTAssertFalse(Self.isBoardContrast(identifier: "sign-in.guest", auditType: type))
+        }
+        for identifier in [
+            nil, "", "sign-in", "sign-in.submit", "sign-in.passkey", "sign-in.email", "sign-in.password",
+            "sign-in.forgot", "sign-in.signup", "auth.heading", "auth.banner", "welcome.plan", "sign-in.guest.new",
+        ] {
+            XCTAssertFalse(Self.isBoardContrast(identifier: identifier, auditType: .contrast))
         }
     }
 }
