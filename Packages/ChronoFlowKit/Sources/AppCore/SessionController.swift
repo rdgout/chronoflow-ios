@@ -222,11 +222,10 @@ public actor SessionController: SessionControlling {
         do { try await credentials.write(JSONEncoder().encode(session)) } catch is CancellationError {
             throw CancellationError()
         } catch { throw SessionFailure.credentialWrite }
-        try check(generation)
+        // A successful credential write commits the session, even if superseded or canceled during the write.
         storedSession = session
         publish(.signedIn(accountID: id.rawValue))
         await requestSync(epoch)
-        try check(generation)
     }
 
     private func publish(_ value: SessionPresence) {

@@ -46,9 +46,11 @@ actor ControllerMemoryStore: SessionStore {
     var deleteFails = false
     var deletes = 0
     let log: SessionEventLog
-    init(_ data: Data? = nil, log: SessionEventLog) {
+    let writeGate: SessionTestGate?
+    init(_ data: Data? = nil, log: SessionEventLog, writeGate: SessionTestGate? = nil) {
         self.data = data
         self.log = log
+        self.writeGate = writeGate
     }
     func configure(readFails: Bool = false, writeFails: Bool = false, deleteFails: Bool = false) {
         self.readFails = readFails
@@ -64,6 +66,7 @@ actor ControllerMemoryStore: SessionStore {
     func write(_ data: Data) async throws {
         #expect(!sessionTestIsMainThread())
         await log.record("write")
+        await writeGate?.wait()
         if writeFails { throw SessionTestFailure.unavailable }
         self.data = data
     }
@@ -242,5 +245,60 @@ struct SessionControllerTests {
         await #expect(throws: CancellationError.self) { try await task.value }
         #expect(await controller.presence == nil)
         #expect(await credentials.data == nil)
+    }
+
+    @Test func committedWritePublishesBeforeANewerInvalidAccept() async throws {
+        let log = SessionEventLog()
+        let gate = SessionTestGate()
+        let credentials = ControllerMemoryStore(log: log, writeGate: gate)
+        let accounts = ControllerAccountStore(log: log)
+        let controller = SessionController(credentials: credentials, accounts: accounts)
+        var updates = await controller.updates().makeAsyncIterator()
+        let first = Task { try await controller.accept(sessionResult()) }
+        await gate.waitUntilEntered()
+        let second = Task { try await controller.accept(sessionResult("invalid")) }
+        while await controller.generation < 2 { await Task.yield() }
+        await gate.release()
+        let firstResult = await first.result
+        await #expect(throws: SessionFailure.invalidResult) { try await second.value }
+        #expect(await controller.presence == .signedIn(accountID: sessionAccountA))
+        #expect(await controller.storedSession == StoredSession.parse(try #require(await credentials.data)))
+        #expect(await controller.epoch == 1)
+        try firstResult.get()
+        #expect(await updates.next() == SessionUpdate(presence: .signedIn(accountID: sessionAccountA), epoch: 1))
+    }
+
+    @Test func cancellationDuringSuccessfulWriteStillCommitsAndPublishes() async throws {
+        let log = SessionEventLog()
+        let gate = SessionTestGate()
+        let credentials = ControllerMemoryStore(log: log, writeGate: gate)
+        let controller = SessionController(credentials: credentials, accounts: ControllerAccountStore(log: log))
+        var updates = await controller.updates().makeAsyncIterator()
+        let task = Task { try await controller.accept(sessionResult()) }
+        await gate.waitUntilEntered()
+        task.cancel()
+        await gate.release()
+        let result = await task.result
+        #expect(await controller.presence == .signedIn(accountID: sessionAccountA))
+        #expect(await controller.storedSession == StoredSession.parse(try #require(await credentials.data)))
+        try result.get()
+        #expect(await updates.next() == SessionUpdate(presence: .signedIn(accountID: sessionAccountA), epoch: 1))
+    }
+
+    @Test func supersedingDuringSyncDoesNotRejectAnAlreadyCommittedAccept() async throws {
+        let log = SessionEventLog()
+        let gate = SessionTestGate()
+        let controller = SessionController(
+            credentials: ControllerMemoryStore(log: log), accounts: ControllerAccountStore(log: log)
+        ) { _ in await gate.wait() }
+        let first = Task { try await controller.accept(sessionResult()) }
+        await gate.waitUntilEntered()
+        #expect(await controller.presence == .signedIn(accountID: sessionAccountA))
+        let second = Task { try await controller.accept(sessionResult("invalid")) }
+        while await controller.generation < 2 { await Task.yield() }
+        await gate.release()
+        let firstResult = await first.result
+        await #expect(throws: SessionFailure.invalidResult) { try await second.value }
+        try firstResult.get()
     }
 }
