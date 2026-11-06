@@ -85,10 +85,12 @@ public struct TripDetail: Codable, Sendable, Equatable {
     public var timeline: JSONObject
     public var checkState: CheckState
     public var detailVersion: String
+    public var form: JSONObject?
+    public var revision: JSONObject?
 
     public init(
         trip: JSONObject, plan: JSONObject, notices: JSONObject, timeline: JSONObject, checkState: CheckState,
-        detailVersion: String
+        detailVersion: String, form: JSONObject? = nil, revision: JSONObject? = nil
     ) {
         self.trip = trip
         self.plan = plan
@@ -96,6 +98,8 @@ public struct TripDetail: Codable, Sendable, Equatable {
         self.timeline = timeline
         self.checkState = checkState
         self.detailVersion = detailVersion
+        self.form = form
+        self.revision = revision
     }
 }
 

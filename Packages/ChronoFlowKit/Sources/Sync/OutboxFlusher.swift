@@ -21,18 +21,19 @@ public struct OutboxFlusher: Sendable {
     public init(
         database: AccountDatabase, source: any DataSource,
         now: @escaping @Sendable () -> Date = { Date() },
-        prepareCheck: @escaping PrepareCheck = { row, _ in row },
-        refreshCheck: @escaping PrepareCheck = { row, _ in row }
+        prepareCheck: PrepareCheck? = nil,
+        refreshCheck: PrepareCheck? = nil
     ) {
         self.database = database
         self.source = source
         self.now = now
-        self.prepareCheck = prepareCheck
-        self.refreshCheck = refreshCheck
+        let reconciler = CheckOffReconciler(pull: FullPull(database: database, source: source, now: now))
+        self.prepareCheck = prepareCheck ?? { row, epoch in try await reconciler.prepare(row, epoch: epoch) }
+        self.refreshCheck =
+            refreshCheck ?? { row, epoch in try await reconciler.prepare(row, epoch: epoch, refresh: true) }
     }
 
     public func run(epoch: SyncEpoch) async throws -> OutboxFlushResult {
-        try await database.validate(epoch: epoch)
         try await database.validate(epoch: epoch)
         try epoch.check()
         let rows = try await OutboxRepository(database: database).pending()

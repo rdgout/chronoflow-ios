@@ -1293,3 +1293,9 @@ Defaults: syncFailure is a typed storage/event seam without UI (OQ 30 default as
 unsupported complete-trip/data-export/security rows remain parked with no producers (OQ 31 default
 assumed, confirm). D19 backup exclusion remains inherited (OQ 26 default assumed, confirm); device
 loss/restore loses unsent account changes. Shipping approval remains open.
+
+Task 2: `sh Scripts/host-tests.sh --filter SyncTests` passes 22 tests across 6 suites
+(including task 1). Full pull, pending protection, plan retention and check reconciliation are pure
+host tests over GRDB and scripted mock sources. `synced_at` commits with account/settings/cards;
+detail failures preserve it. A missing detail is tombstoned without scheduling a retry; later
+explicit pulls may rediscover the card. No hosted UIKit/Keychain tests are needed for these services.
