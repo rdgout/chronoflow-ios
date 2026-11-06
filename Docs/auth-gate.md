@@ -20,7 +20,7 @@ the app window. `SignInKeyboardTests` now uses the window as the keyboard-safe v
 the keyboard does not intersect it; when it intersects, the existing scroll/window viewport is
 clipped above the keyboard. Both paths retain software-keyboard existence, field focus,
 nonempty viewport, full input/submit containment and hittability checks, with frames/screenshots.
-No device-name condition or app layout change is needed. Status: **pending orchestrator rerun**
+No device-name condition or app layout change is needed. Status: **passed on SE and Duo (2026-11-07)**
 of `make targeted DEVICES="se duo" ONLY="AppUITests/SignInKeyboardTests"`. A passing corrected
 run settles OQ 32 for Sign in (no overflow); the first 10a task stays unticked until confirmation.
 Verification for this test correction: `make quick` passes; no simulator rerun is claimed here.
