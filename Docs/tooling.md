@@ -896,3 +896,106 @@ make duo
 The wrapper still supports `SNAPSHOT_RECORD=1` (Welcome only) and `launch` (launch only).
 The full comparison, SE/Duo audits, board-reference/visual acceptance, four contrast design decisions
 and existing physical-device checks remain open. No revised simulator pass is claimed.
+
+## Phase 5 review fixes — 6 November 2026
+
+Welcome styles with a line height smaller than the font's natural metrics now use word-wrapped,
+natural-height native labels centred on exact line boxes. Ink can overflow each box without clipping;
+the English board headline occupies three generated 48 pt lines (144 pt). Kerning, token colours,
+the single accessible headline/header and root xxLarge scaling remain. Wordmark, eyebrow and copy
+retain their SwiftUI rendering path, with a pixel-equivalence regression. Host tests cover wrapping,
+Unicode and half-leading; simulator tests cover scaled pitch, ascenders/descenders and Dutch actions.
+The measured moon anchor and all-four-inset layout are unchanged (OQ 10 padding/scrolling default).
+
+The orchestrator subsequently recorded all 196 Welcome references on all seven D1c devices.
+Comparison/UI was stopped after SE, 17e and 17: the natural-label glyph test failed on 17e at every
+category, and the SE light English 2700 ms frozen image differed immediately after recording.
+This does not establish a full comparison or UI pass. The recordings are retained.
+The delivery wrapper calls the committed, fixture-tested runner, including all seven D1c devices,
+Duo's dynamically resolved iPhone19-4 runtime, isolated Release checks and final `make check`/`make duo`:
+
+```sh
+sh build/commits/simulators.sh
+```
+
+Equivalent committed entry points (independent of delivery artifacts):
+
+```sh
+python3 -I Scripts/launch-simulators.py --welcome
+make check
+make duo
+```
+
+Simulator pixel/geometry/audit execution, board-frame/visual approval, existing contrast design
+decisions and physical-device checks remain open. Phase 9a is not started by these fixes.
+
+Host verification passes: 82 package tests; strict formatting; generator freshness with 7 TokenGen,
+6 font/cache and 3 AssetGen tests; 9 launch-resource checks and 30 simulator-runner fixtures. Direct
+Swift 6/MainActor compilation/type-checking against the iOS 17 floor passes for all modules and tests;
+Debug/Release app and hosted-test SIL compilation passes. These do not execute UIKit or replace
+`make check`, snapshots or the D1c simulator matrix. The existing D11 CoreText deprecation remains.
+
+Round 2 corrects the glyph test's capture rather than production. ExactLineTextView and its native
+labels do not clip at the exact line box; Welcome adds no headline clip. The ScrollView still clips
+at its viewport. The old test resized a UILabel and compared PNGs, confounding glyph coverage with
+UIKit's vertical centring/raster rounding. The new test keeps natural label bounds and renders the
+whole exact-line view on a transparent canvas, padded on all sides by at least the font's ascent,
+descent and leading. Independent natural-height labels at the same half-leading positions must
+match its ink bounds and every RGBA byte at 2× and 3×, for S/L/XXL/AX5 and narrow/wide widths.
+Pitch/height assertions retain their exact scaled values. A deliberately compressed line clipped
+at its bounds must lose ink, proving the padded capture detects clipping.
+
+The frozen helper previously waited for geometry/intro claim plus 50 ms, which did not establish
+that UIViewRepresentable's UILabel backing and render-server transaction were complete. Capture
+now recursively lays out views, displays pending layer contents and flushes without animations
+before drawHierarchy. A bounded 100-pass loop (10 ms yields) requires three consecutive captures
+with identical exact RGBA pixels and frames. No sample clock advances or tolerance changes occur.
+The frozen snapshot itself renders two fresh hosts at 2450, 2700, 3200 and 3300 ms in both locales
+and appearances and refuses recording/comparison if they differ. The existing independent repeated
+mount/clock/render test remains. Production rendering is unchanged from the orchestrator's recorded
+tree: **the recorded baselines stay valid; do not re-record for round 2**. Targeted simulator execution
+is still required to verify both fixes.
+
+From the repo root, prove the two fixes without the full matrix (recording explicitly cleared):
+
+```sh
+make generate
+unset SNAPSHOT_RECORD
+xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData \
+  -onlyUsePackageVersionsFromResolvedFile -scheme ChronoFlow -configuration Debug \
+  -destination 'platform=iOS Simulator,id=D788B715-AA0A-4B5A-882B-323E1F984769' \
+  -testLanguage en -testRegion US \
+  -only-testing:DesignSystemTests \
+  -only-testing:AppTests/WelcomeSnapshotTests/finalWelcome \
+  -only-testing:AppTests/WelcomeSnapshotTests/frozenIntro \
+  -only-testing:AppTests/WelcomeSnapshotTests/frozenIntroPixelsStayFixedAcrossClockAndRenderPasses test
+xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData \
+  -onlyUsePackageVersionsFromResolvedFile -scheme ChronoFlow -configuration Debug \
+  -destination 'platform=iOS Simulator,id=3474E42A-6602-49F8-8E1B-45177B845A3E' \
+  -testLanguage en -testRegion US \
+  -only-testing:DesignSystemTests \
+  -only-testing:AppTests/WelcomeSnapshotTests/finalWelcome \
+  -only-testing:AppTests/WelcomeSnapshotTests/frozenIntro \
+  -only-testing:AppTests/WelcomeSnapshotTests/frozenIntroPixelsStayFixedAcrossClockAndRenderPasses test
+```
+
+DesignSystemTests includes scaledHeadlinePitchAndGlyphsFitNaturalLabels and its clipping mutation;
+the hosted tests compare final/frozen baselines and repeat fresh hosts at all headline sample times.
+All categories, widths, locales and appearances are covered internally. Both invocations must report
+executed tests. After these targeted checks, the outstanding matrix/acceptance commands remain:
+
+```sh
+python3 -I Scripts/launch-simulators.py --welcome
+make check
+make duo
+```
+
+OQ 10's RN padding/scrolling default remains assumed on the task. No additional defaults or new
+states are introduced. Board-frame exports/visual approval, five board-contrast design decisions and
+the existing physical-device/Apple-team work remain open. Device work remains (needs a device; open).
+
+Round 2 host checks pass: 82 SwiftPM tests, two portable capture guards, strict formatting,
+7 TokenGen / 6 font-cache / 3 AssetGen tests and generator freshness, 9 launch-resource checks,
+30 simulator-runner fixtures and XcodeGen generation. Direct Swift 6/MainActor iOS 17 module/test
+type-checking and Debug/Release app/hosted-test SIL compilation pass; only the existing D11 CoreText
+deprecation remains. These checks do not execute UIKit; revised SE/17e and matrix validation stay open.

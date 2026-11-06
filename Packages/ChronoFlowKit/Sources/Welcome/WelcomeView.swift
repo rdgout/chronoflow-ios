@@ -68,18 +68,18 @@ import SwiftUI
             VStack(alignment: .leading, spacing: WelcomeTokens.groupGap) {
                 WelcomeBrand()
                     .reportWelcomeFrame(.brand)
-                WelcomeText(copy("Jet-lag planner").uppercased(with: locale), style: Typography.eyebrow)
-                    .foregroundStyle(ColorToken.dawn.color)
+                WelcomeText(copy("Jet-lag planner").uppercased(with: locale), style: Typography.eyebrow, color: .dawn)
                     .reportWelcomeFrame(.eyebrow)
                     .modifier(IntroItem(index: 1))
                     .padding(.top, WelcomeTokens.eyebrowMargin)
                     .accessibilityIdentifier("welcome.eyebrow")
-                WelcomeText(copy("Plan your clock shift for your next trip"), style: Typography.headline)
-                    .foregroundStyle(ColorToken.skyTitle.color)
-                    .accessibilityAddTraits(.isHeader)
-                    .accessibilityIdentifier("welcome.headline")
-                    .reportWelcomeFrame(.headline)
-                    .modifier(IntroItem(index: 2))
+                WelcomeText(
+                    copy("Plan your clock shift for your next trip"), style: Typography.headline, color: .skyTitle
+                )
+                .accessibilityAddTraits(.isHeader)
+                .accessibilityIdentifier("welcome.headline")
+                .reportWelcomeFrame(.headline)
+                .modifier(IntroItem(index: 2))
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -89,9 +89,8 @@ import SwiftUI
                 WelcomeText(
                     copy(
                         "Tell us your flights and how you sleep. You get a day-by-day plan for sleep, light and caffeine that helps your body clock shift."
-                    ), style: Typography.copy
+                    ), style: Typography.copy, color: .skyCopy
                 )
-                .foregroundStyle(ColorToken.skyCopy.color)
                 .padding(.vertical, WelcomeTokens.cardVerticalPadding)
                 .padding(.horizontal, WelcomeTokens.cardHorizontalPadding)
                 .frame(maxWidth: .infinity, alignment: .leading)

@@ -31,9 +31,14 @@ nonisolated final class WelcomeTests: XCTestCase {
         app.launch()
         defer { app.terminate() }
         XCTAssertTrue(app.staticTexts["welcome.wordmark"].waitForExistence(timeout: 6))
+        XCTAssertEqual(
+            app.staticTexts["welcome.headline"].label,
+            "Plan de verschuiving van je biologische klok voor je volgende reis")
+        scrollTo(app.buttons["welcome.signIn"], in: app)
         for (identifier, label) in [("welcome.plan", "Plan mijn reis"), ("welcome.signIn", "Inloggen")] {
             let button = app.buttons[identifier]
-            scrollTo(button, in: app)
+            XCTAssertTrue(button.isHittable)
+            XCTAssertTrue(Self.isFullyVisible(button.frame, in: app.windows.firstMatch.frame))
             XCTAssertEqual(button.label, label)
             XCTAssertGreaterThanOrEqual(button.frame.height, 52)
         }

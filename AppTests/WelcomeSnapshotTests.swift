@@ -14,19 +14,29 @@
             for style in [UIUserInterfaceStyle.light, .dark] {
                 for language in ["en", "nl"] {
                     for time in [2400, 2450, 2700, 3200, 3300] {
-                        let intro = LaunchIntro(
-                            start: .milliseconds(2300), clock: ManualLaunchClock(), frozenTime: .milliseconds(time))
-                        let host = WelcomeTestWindow(style: style, language: language, intro: intro)
-                        defer { host.close() }
-                        try await host.layout()
-                        #expect(intro.hasPlayed)
-                        let size = host.window.bounds.size
+                        func capture() async throws -> (image: UIImage, size: CGSize, scale: CGFloat) {
+                            let intro = LaunchIntro(
+                                start: .milliseconds(2300), clock: ManualLaunchClock(), frozenTime: .milliseconds(time))
+                            let host = WelcomeTestWindow(style: style, language: language, intro: intro)
+                            defer { host.close() }
+                            try await host.layout()
+                            #expect(intro.hasPlayed)
+                            return (try host.image(), host.window.bounds.size, host.window.screen.scale)
+                        }
+                        let sample = try await capture()
+                        if time >= 2450 {
+                            let repeated = try await capture()
+                            try #require(
+                                pixels(sample.image) == pixels(repeated.image),
+                                "Fresh frozen hosts differ at \(time), \(style), \(language); refusing snapshot")
+                        }
+                        let size = sample.size
                         let device = ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] ?? "iPhone"
                         let record = ProcessInfo.processInfo.environment["SNAPSHOT_RECORD"] == "1"
                         let result = try verifyWelcomeSnapshot(
-                            of: try host.image(),
+                            of: sample.image,
                             named:
-                                "\(device)-\(Int(size.width))x\(Int(size.height))-\(Int(host.window.screen.scale))x-\(style == .dark ? "dark" : "light")-\(language)-\(time)",
+                                "\(device)-\(Int(size.width))x\(Int(size.height))-\(Int(sample.scale))x-\(style == .dark ? "dark" : "light")-\(language)-\(time)",
                             record: record, testName: "frozenIntro")
                         if record {
                             #expect(result?.hasPrefix("Record mode is on.") == true, "\(result ?? "")")
@@ -178,7 +188,8 @@
             board.controller.safeAreaRegions = []
             try await board.layout()
             let expected: [(WelcomeElement, CGFloat, CGFloat?)] = [
-                (.brand, 64, 28), (.eyebrow, 164, 16), (.headline, 196, nil),
+                (.brand, 64, 28), (.eyebrow, 164, 16),
+                (.headline, 196, 3 * CGFloat(try #require(Typography.headline.lineHeight))),
                 (.plan, 688, 52), (.signIn, 752, 52),
             ]
             for (element, top, height) in expected {
@@ -198,6 +209,89 @@
                     let card = try #require(host.frames[.copy])
                     #expect(card.minY - headline.maxY >= 23.5)
                     #expect(try #require(host.frames[.signIn]).height >= 52)
+                }
+            }
+        }
+
+        @Test func headlineUsesTheScaledBoardPitchInBothLanguages() async throws {
+            try await FontRegistry.register()
+            for language in ["en", "nl"] {
+                for size in [DynamicTypeSize.large, .xxLarge, .accessibility5] {
+                    let host = WelcomeTestWindow(style: .light, language: language, typeSize: size)
+                    defer { host.close() }
+                    try await host.layout()
+                    let headline = try #require(host.frames[.headline])
+                    let font = Typography.headline.uiFont(
+                        compatibleWith: UITraitCollection(preferredContentSizeCategory: UIContentSizeCategory(size)))
+                    let pitch = try #require(Typography.headline.lineHeight) * font.pointSize / Typography.headline.size
+                    func labels(in view: UIView) -> [UILabel] {
+                        view.subviews.flatMap { child in (child as? UILabel).map { [$0] } ?? labels(in: child) }
+                    }
+                    let lines = labels(in: host.controller.view).sorted {
+                        $0.convert($0.bounds, to: host.window).minY < $1.convert($1.bounds, to: host.window).minY
+                    }
+                    #expect(lines.count > 1)
+                    #expect(abs(headline.height - CGFloat(lines.count) * pitch) <= 0.5)
+                    for (first, second) in zip(lines, lines.dropFirst()) {
+                        let a = first.convert(first.bounds, to: host.window)
+                        let b = second.convert(second.bounds, to: host.window)
+                        #expect(abs(b.minY - a.minY - pitch) <= 0.5, "\(language), \(size): \(a), \(b)")
+                    }
+                }
+            }
+        }
+
+        @Test func positiveLeadingStylesKeepTheirExistingPixels() async throws {
+            try await FontRegistry.register()
+            for appearance in [UIUserInterfaceStyle.light, .dark] {
+                for language in ["en", "nl"] {
+                    for size in [DynamicTypeSize.large, .xxLarge] {
+                        let host = WelcomeTestWindow(style: appearance, language: language, typeSize: size)
+                        defer { host.close() }
+                        let styles: [(String, Typography.Style, ColorToken)] = [
+                            ("ChronoFlow", Typography.welcomeWordmark, .skyTitle),
+                            ("Jet-lag planner", Typography.eyebrow, .dawn),
+                            (
+                                "Tell us your flights and how you sleep. You get a day-by-day plan for sleep, light and caffeine that helps your body clock shift.",
+                                Typography.copy, .skyCopy
+                            ),
+                        ]
+                        var reference: [UInt8]?
+                        for legacy in [true, false] {
+                            host.controller.rootView = AnyView(
+                                VStack(alignment: .leading) {
+                                    ForEach(styles.indices, id: \.self) { index in
+                                        let (key, style, color) = styles[index]
+                                        let text = WelcomeCopy.string(key, locale: Locale(identifier: language))
+                                        let font = style.uiFont(
+                                            compatibleWith: UITraitCollection(
+                                                preferredContentSizeCategory: UIContentSizeCategory(size)))
+                                        let ratio = font.pointSize / style.size
+                                        let leading = (style.lineHeight ?? font.lineHeight) * ratio - font.lineHeight
+                                        if legacy {
+                                            Text(verbatim: text)
+                                                .font(.custom(style.face.rawValue, fixedSize: font.pointSize))
+                                                .tracking(style.tracking * ratio)
+                                                .lineSpacing(leading)
+                                                .padding(.vertical, leading / 2)
+                                                .fixedSize(horizontal: style == Typography.eyebrow, vertical: true)
+                                                .foregroundStyle(color.color)
+                                        } else {
+                                            WelcomeText(text, style: style, color: color)
+                                        }
+                                    }
+                                }
+                                .padding(WelcomeTokens.gutter)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                                .background(CfSky())
+                                .environment(\.dynamicTypeSize, size)
+                                .environment(\.colorScheme, appearance == .dark ? .dark : .light))
+                            host.window.layoutIfNeeded()
+                            try await Task.sleep(for: .milliseconds(50))
+                            let rendered = try pixels(host.image())
+                            if let reference { #expect(rendered == reference) } else { reference = rendered }
+                        }
+                    }
                 }
             }
         }
@@ -287,11 +381,21 @@
             for _ in 0..<100 where frames.count < WelcomeElement.allCases.count || expectedIntro?.hasPlayed == false {
                 try await Task.sleep(for: .milliseconds(10))
             }
-            #expect(frames.count == WelcomeElement.allCases.count)
-            #expect(expectedIntro?.hasPlayed != false)
-            try await Task.sleep(for: .milliseconds(50))
-            controller.view.layoutIfNeeded()
-            CATransaction.flush()
+            try #require(frames.count == WelcomeElement.allCases.count)
+            try #require(expectedIntro?.hasPlayed != false)
+            // Geometry callbacks precede UIViewRepresentable label drawing and the render-server commit.
+            var previous: [UInt8]?
+            var previousFrames: [WelcomeElement: CGRect] = [:]
+            var matchingPasses = 0
+            for _ in 0..<100 {
+                try await Task.sleep(for: .milliseconds(10))
+                let current = try pixels(image())
+                matchingPasses = current == previous && frames == previousFrames ? matchingPasses + 1 : 0
+                if matchingPasses == 2 { break }
+                previous = current
+                previousFrames = frames
+            }
+            try #require(matchingPasses == 2, "Welcome pixels/layout did not settle within the capture bound")
             #expect(window.isKeyWindow)
             #expect(controller.view.window === window)
         }
@@ -317,8 +421,20 @@
 
         func image() throws -> UIImage {
             window.makeKeyAndVisible()
-            window.layoutIfNeeded()
-            controller.view.layoutIfNeeded()
+            UIView.performWithoutAnimation {
+                @MainActor
+                func layout(_ view: UIView) {
+                    view.layoutIfNeeded()
+                    view.subviews.forEach(layout)
+                }
+                func display(_ layer: CALayer) {
+                    layer.displayIfNeeded()
+                    layer.sublayers?.forEach(display)
+                }
+                layout(window)
+                display(window.layer)
+                CATransaction.flush()
+            }
             let format = UIGraphicsImageRendererFormat()
             format.scale = window.screen.scale
             format.opaque = false

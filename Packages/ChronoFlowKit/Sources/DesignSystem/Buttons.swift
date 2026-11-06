@@ -15,14 +15,16 @@ import SwiftUI
 
         public var body: some View {
             Button(action: action) {
-                WelcomeText(title, style: kind == .primary ? Typography.primaryButton : Typography.secondaryButton)
-                    .multilineTextAlignment(.center)
-                    .foregroundStyle((kind == .primary ? ColorToken.dawnForeground : .skyCopy).color)
-                    .padding(.horizontal, WelcomeTokens.cardHorizontalPadding)
-                    .padding(.vertical, WelcomeTokens.brandGap)
-                    .frame(maxWidth: .infinity, minHeight: WelcomeTokens.buttonHeight)
-                    .background((kind == .primary ? ColorToken.dawn : .skyCopyBackground).color, in: Capsule())
-                    .contentShape(Capsule())
+                WelcomeText(
+                    title, style: kind == .primary ? Typography.primaryButton : Typography.secondaryButton,
+                    color: kind == .primary ? .dawnForeground : .skyCopy
+                )
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, WelcomeTokens.cardHorizontalPadding)
+                .padding(.vertical, WelcomeTokens.brandGap)
+                .frame(maxWidth: .infinity, minHeight: WelcomeTokens.buttonHeight)
+                .background((kind == .primary ? ColorToken.dawn : .skyCopyBackground).color, in: Capsule())
+                .contentShape(Capsule())
             }
             .buttonStyle(PressStyle())
         }
