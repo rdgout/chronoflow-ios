@@ -993,6 +993,7 @@ Implementation complete (2026-11-06); 115 host SwiftPM tests pass (30 new), plus
 
 - [x] Review fix: make a successful credential write the accept commit point; reject superseded/canceled accepts only before that point. Host regressions suspend the write and sync request, covering a newer invalid accept and caller cancellation without losing the committed publication.
 - [x] Review fix: retain the published session during same-account refresh; publish signed-out before switching databases. Host regressions cover open, upsert and Keychain failures after sign-in, including the suspended refresh write, and compare presence, credentials, stored session and observer epoch.
+- [x] Review fix: clear AccountModel on normal observation completion, hide a closing database from new lookups, and validate an attachment token captured before native actor hops. Host regressions close an attached database and suspend close after detach, rejecting delayed attachments and preserving a newer account's model.
 
 #### Phase 9b: Data-source contract, mock and API (`feat/phase-9b-data-source`)
 

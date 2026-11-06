@@ -6,6 +6,7 @@ public actor SessionAccountDatabase: SessionAccountStore {
     private let applicationSupport: URL
     private let namespace: StorageNamespace
     private var database: AccountDatabase?
+    private var isClosing = false
     private let detach: @Sendable () async -> Void
 
     public init(applicationSupport: URL, namespace: StorageNamespace, detach: @escaping @Sendable () async -> Void = {})
@@ -15,7 +16,7 @@ public actor SessionAccountDatabase: SessionAccountStore {
         self.detach = detach
     }
 
-    public func activeDatabase() -> AccountDatabase? { database }
+    public func activeDatabase() -> AccountDatabase? { isClosing ? nil : database }
 
     public func open(accountID: AccountID) async throws {
         if let database, await database.accountID == accountID { return }
@@ -44,6 +45,8 @@ public actor SessionAccountDatabase: SessionAccountStore {
     }
 
     public func close() async throws {
+        isClosing = true
+        defer { isClosing = false }
         await detach()
         try await database?.close()
         database = nil

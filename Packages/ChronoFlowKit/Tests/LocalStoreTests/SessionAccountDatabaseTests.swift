@@ -17,7 +17,77 @@ private actor IntegrationCredentials: SessionStore {
     func delete() { data = nil }
 }
 
+private actor AccountDetachGate {
+    private var armed = false
+    private var entered = false
+    private var released = false
+    private var entryWaiter: CheckedContinuation<Void, Never>?
+    private var releaseWaiter: CheckedContinuation<Void, Never>?
+
+    func arm() { armed = true }
+    func waitIfArmed() async {
+        guard armed else { return }
+        armed = false
+        entered = true
+        entryWaiter?.resume()
+        entryWaiter = nil
+        if !released { await withCheckedContinuation { releaseWaiter = $0 } }
+    }
+    func waitUntilEntered() async {
+        if !entered { await withCheckedContinuation { entryWaiter = $0 } }
+    }
+    func release() {
+        released = true
+        releaseWaiter?.resume()
+        releaseWaiter = nil
+    }
+}
+
 struct SessionAccountDatabaseTests {
+    @Test @MainActor func closeRejectsAnAttachmentResolvedBeforeDetachAndHidesTheClosingDatabase() async throws {
+        let root = try temporaryStoreRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let model = AccountModel()
+        let gate = AccountDetachGate()
+        let accounts = SessionAccountDatabase(applicationSupport: root, namespace: .mock) {
+            await model.detach()
+            await gate.waitIfArmed()
+        }
+        try await accounts.open(accountID: AccountID(accountA))
+        let first = try #require(await accounts.activeDatabase())
+        let repository = AccountRepository(database: first)
+        let a = AccountRecord(id: accountA, name: "A", email: "a")
+        try await repository.upsert(a)
+        await model.attach(to: repository, epoch: 1)
+        await waitForModel(model, state: .loaded(a))
+        let token = model.attachmentToken
+
+        await gate.arm()
+        let close = Task { try await accounts.close() }
+        await gate.waitUntilEntered()
+        #expect(model.state == .unknown)
+        #expect(await accounts.activeDatabase() == nil)
+        #expect(await first.accountID?.rawValue == accountA)
+        await model.attach(to: repository, epoch: 99, ifCurrent: token)
+        #expect(model.epoch == 1)
+        #expect(model.state == .unknown)
+        #expect(await first.observationCount == 0)
+        await gate.release()
+        try await close.value
+
+        try await accounts.open(accountID: AccountID(accountB))
+        let second = try #require(await accounts.activeDatabase())
+        let b = AccountRecord(id: accountB, name: "B", email: "b")
+        try await AccountRepository(database: second).upsert(b)
+        await model.attach(to: AccountRepository(database: second), epoch: 2, ifCurrent: model.attachmentToken)
+        await waitForModel(model, state: .loaded(b))
+        await model.attach(to: repository, epoch: 99, ifCurrent: token)
+        #expect(model.epoch == 2)
+        #expect(model.state == .loaded(b))
+        try await accounts.close()
+        #expect(model.state == .unknown)
+    }
+
     @Test(arguments: [accountA, accountB])
     func failedAcceptanceAfterSignInMatchesThePublishedStateAndDatabase(_ nextID: String) async throws {
         let root = try temporaryStoreRoot()
@@ -113,4 +183,9 @@ struct SessionAccountDatabaseTests {
         #expect(defaults.string(forKey: "appearance") == "dark")
     }
 
+    @MainActor private func waitForModel(_ model: AccountModel, state: AccountModel.LoadState) async {
+        let deadline = ContinuousClock.now + .seconds(5)
+        while model.state != state, ContinuousClock.now < deadline { await Task.yield() }
+        #expect(model.state == state)
+    }
 }

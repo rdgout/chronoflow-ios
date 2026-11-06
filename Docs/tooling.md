@@ -1200,3 +1200,44 @@ source construction. Their execution and the integrated `make check` remain **Op
 The seven-simulator matrix runs only when requested. Existing physical-device protection/performance,
 Apple team/bundle confirmation, deployed AASA and later UI/copy/shipping questions remain open;
 none blocks this service-only 9b implementation.
+
+## Phase 9a review corrections (6 November 2026)
+
+Accept's successful credential write is its commit point. Supersession and cancellation before the
+write still reject the operation; after a successful write it publishes and returns success, including
+when a newer invalid accept is queued or sync is still suspended. A same-account refresh retains the
+previous published presence/token until commit. Switching accounts publishes signed-out before the
+database transition; failure retains the previous credentials on disk for a later restore.
+
+AccountModel resets to unknown when its observation ends normally. Native observation captures an
+attachment token before its actor hops and checks it on the MainActor before attaching or detaching.
+An intervening detach invalidates that token. SessionAccountDatabase also hides its active database
+throughout close, including while waiting for detach, so a new lookup cannot attach to a closing pool.
+
+Regression proof and host verification:
+
+- The three write/sync race tests failed before fix 1 and passed afterward. They suspend credential
+  writes and sync, preserving the existing test that rejects supersession before the write.
+- The two parameterized post-sign-in failure tests failed before fix 2 and passed afterward, covering
+  open/upsert/credential-write failures for the same and different accounts. Real database integration
+  additionally verifies retained same-account credentials and closure of the replaced database.
+- Closing an attached database left its record loaded before fix 3; the regression passes afterward.
+  A suspended-close test rejects an attachment captured before detach, hides the still-open closing
+  database, and proves that a stale attachment cannot replace a newer account's loaded model.
+- `sh Scripts/host-tests.sh`: **172 passed** (62 AppCore, 18 LocalStore, 49 DataAccess, 34 Launch,
+  8 DesignSystem, 1 Welcome), using `--disable-sandbox` and repo-local caches/temp paths.
+- `make lint`: passed. `python3 -I Tests/test_launch_simulators.py`: **21 passed**.
+  `python3 -I Tests/test_launch_resources.py`: **9 passed**. `git diff --check`: passed.
+
+No xcodebuild, simulator or git commit ran in this sandbox. Three ordered patches and their Conventional
+Commit messages are in `build/commits/`; apply each with `git apply --index` and commit its corresponding
+message. The native observe-loop integration still needs this existing hosted test on iPhone 17e:
+
+```sh
+make generate
+xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData \
+  -onlyUsePackageVersionsFromResolvedFile -scheme ChronoFlow -configuration Debug \
+  -destination 'platform=iOS Simulator,id=D788B715-AA0A-4B5A-882B-323E1F984769' \
+  -testLanguage en -testRegion US -parallel-testing-enabled NO \
+  -only-testing:AppTests/SessionLifecycleTests/testNativeCompositionObservesAndDetachesAccountsUsingOneKeychainStore test
+```

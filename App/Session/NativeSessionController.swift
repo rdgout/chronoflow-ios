@@ -29,14 +29,16 @@ final class NativeSessionController {
         subscription = Task { [weak self, controller, accounts, model] in
             for await update in await controller.updates() {
                 guard !Task.isCancelled, self != nil else { return }
+                let attachmentToken = model.attachmentToken
                 guard await controller.epoch == update.epoch, await controller.presence == update.presence else {
                     continue
                 }
                 if case .signedIn(let id) = update.presence, let database = await accounts.activeDatabase(),
                     await database.accountID?.rawValue == id, await controller.epoch == update.epoch
                 {
-                    await model.attach(to: AccountRepository(database: database), epoch: update.epoch)
-                } else {
+                    await model.attach(
+                        to: AccountRepository(database: database), epoch: update.epoch, ifCurrent: attachmentToken)
+                } else if model.attachmentToken == attachmentToken {
                     await model.detach()
                 }
             }
