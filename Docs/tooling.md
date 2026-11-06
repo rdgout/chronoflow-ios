@@ -332,8 +332,8 @@ storyboard rather than that system-owned cached snapshot.
 
 ## Phase 3a pure timeline — 6 November 2026
 
-All six implementation tasks are complete. The app still uses the Phase 2 shell; scene playback,
-Core Animation presentation-layer comparison and overlay wiring belong to Phase 3b.
+All six implementation tasks are complete. Scene playback, Core Animation presentation-layer
+comparison and overlay wiring are covered by Phase 3b.
 
 `CubicBezier`, `MoonTarget`, `FlightPath`, `LaunchTimeline`, tracks and sampled values are pure Sendable
 values. The UI target's default MainActor isolation does not apply to these launch value types.
@@ -437,9 +437,9 @@ continuation, aggregate failure status and Duo runtime filtering. As before, gen
 stops before simulator work. Each asset test uses the running device's own displayScale, and hosted
 AppTests still depends only on ChronoFlow with TEST_HOST/BUNDLE_LOADER.
 
-Simulator execution and full `make check` are pending for the orchestrator. No physical-device or
-Apple-team-dependent task belongs to Phase 3a, and no undesigned state was introduced or deferred.
-The presentation-layer solver comparison remains in Phase 3b; snapshot approval remains in Phase 3c.
+The orchestrator verified Phase 3a on **2026-11-06**: all seven D1c devices, `make check` and
+`make duo` passed. No physical-device or Apple-team-dependent task belongs to Phase 3a. The
+presentation-layer solver comparison is covered by Phase 3b; snapshot approval belongs to Phase 3c.
 
 ## Phase 3b Core Animation scene — 6 November 2026
 
@@ -472,9 +472,12 @@ All animations keep a nonzero absolute `beginTime = t0`. Consequently the paused
 the tracks' begin times. Rebuilding while frozen preserves that same epoch and animation keys.
 The hosted presentation test compares every tracked property every 100 ms from 0 to 3200 ms,
 for ready, slow, welcome and Reduce Motion, in both appearances. Position tolerance is 0.5 pt
-(including pixel alignment); scalar tolerance is 0.003. XCUITest renders the 700 ms model
-sample independently and compares normalized sRGB screenshot pixels, retaining both references and
-the live screenshot as attachments. It excludes the system status bar; tolerance remains a mean
+(including pixel alignment); scalar tolerance is 0.003. Separate light/dark XCUITests set device
+appearance, terminate the app, return to SpringBoard, and poll the reported appearance for up to
+10 seconds before launch. Async teardown terminates the app and waits for appearance restoration
+before the next test. Each frozen 700 ms screenshot must match its own independently rendered model
+and clearly differ from the opposite appearance. Both references and the live screenshot are retained
+as attachments. It excludes the system status bar; tolerance remains a mean
 channel error of 1/255 with at most 0.5% of channels differing by more than 8/255. The same limits
 apply away from reference edges (adjacent channel change >8, dilated by one pixel). The best moon
 alignment shift must be ≤0.5 pt, and the moon region must retain mean error ≤1/255, including away
@@ -482,33 +485,15 @@ from edges. No alignment is applied to the compared images. Synthetic 2×/3×
 fixtures and mutations of the real sampled moon verify rejection of a 1 pt offset and a 20% opacity
 error. No encoded image bytes are compared. Approved launch image baselines belong to Phase 3c.
 
-The orchestrator’s initial Phase 3b matrix on 2026-11-06 failed on all seven D1c devices;
-`make check` and `make duo` also failed. Round 1 addresses the four common failures:
+Sampled transforms retain Z = 1: scaling Z makes an otherwise planar transform non-affine,
+which `render(in:)` ignores. Hosted tests check the rendered moon width and affine container during
+lift-away. The live tracks keep their specified scale key paths. Anchor arithmetic uses a 1e-9 pt
+geometry tolerance for floating-point residuals; storyboard pixel parity retains its 2/255 limit.
 
-- The intro solver’s 0.95 sample is 0.9997243836889174, confirmed independently by de Casteljau
-  evaluation with bisection inversion to 1e-12. The timing comparison uses position and an
-  interior opacity range (0.1→0.9). The round-2 report below explains their precision limit.
-- A radial end point of (1, 0.5) gives a zero vertical radius. The halo was invisible. The
-  corrected end point supplies a 250 pt radius on each axis; the sun uses 127.3 pt, matching
-  the design’s farthest-corner gradient radius. Native CA pixel tests verify transparency
-  inside the halo’s 90 pt clip, visible outer glow, axis symmetry and sun falloff at 2×/3×.
-- Full-window anchor arithmetic leaves origin residuals around 1e-14 pt, including after
-  assigning frame again. Geometry assertions use 1e-9 accuracy; storyboard pixel parity
-  keeps its existing 2/255 limit.
-- The saved frozen screenshot’s moon was smaller than its model reference. A host probe
-  confirms that KVC transform.scale also scales Z, making the transform non-affine; render(in:)
-  ignores that transform. The sampler now preserves Z = 1 for planar scales. Live tracks keep
-  their specified scale key paths. Hosted tests check the actual rendered moon width and an
-  affine container during the lift-away. The screenshot tolerances are unchanged.
-
-The orchestrator’s round-2 report on 2026-11-06 confirms that all other failures are fixed;
-the CA timing comparison still fails on all seven devices. At intro(0.95), position yields
-1.0 and normalized interior opacity yields 0.9999999701976776. Both differ from the exact
-0.9997243836889174 reference, so the result is consistent with CA’s duration-dependent solver
-precision. The comparison now allows 0.0005 for CA’s solver epsilon at a 1 s duration, recorded
-in both assertion messages. Position and interior-opacity comparisons remain. Independent
-host bisection checks all four presets at 1001 progress values with a 0.0001 limit, plus the
-near-endpoint intro regression at 1e-12. The production solver and screenshot tolerances are unchanged.
+The CA timing comparison retains position and interior-opacity checks with a 0.0005 tolerance for
+CA's duration-dependent solver epsilon at a 1 s duration. An independent host bisection reference
+checks all four presets at 1001 progress values to 0.0001, with intro(0.95) = 0.9997243836889174
+checked to 1e-12. Production solver precision and screenshot tolerances are unchanged.
 
 Run the committed runner from a clean clone:
 
@@ -543,8 +528,8 @@ module compilation and type-check of the app, all hosted tests, AppCoreTests, La
 and AppUITests against `arm64-apple-ios17.0-simulator` pass. These commands invoke swiftc,
 not xcodebuild, and do not run UIKit. The existing D11 CoreText deprecation remains.
 
-The revised Phase 3b simulator matrix, `make check` and `make duo` await the orchestrator; no passing
-rerun is recorded. The device D3 proof remains open in `Docs/perf/2026-11-06-d3-spike.md`; no performance result is claimed.
+The orchestrator verified Phase 3b on **2026-11-06**: all seven D1c devices, `make check` and
+`make duo` passed. The device D3 proof remains open in `Docs/perf/2026-11-06-d3-spike.md`; no performance result is claimed.
 Defaults carried into this phase: OQ 6 dots/fade/no moon cross-fade/stars as drawn;
 OQ 10 RN fallback padding/row height; OQ 11 width-scaled bottom anchoring;
 OQ 14 proposed device budget. There are no additional undesigned screens or states.
@@ -558,7 +543,15 @@ python3 -I Scripts/launch-simulators.py --snapshots
 ```
 
 The runner resolves each device by type/runtime (Duo uses iPhone19-4), continues after failures,
-reports PASS/FAIL per device, then attempts both `make check` and `make duo`. It compares existing
+reports PASS/FAIL per device, then attempts both `make check` and `make duo`. Add `--scene` to also
+run hosted connection tests, window UI tests and both appearance parity UI tests in each comparison
+pass. For the snapshot suite and Phase 3b review fixes together, run:
+
+```sh
+python3 -I Scripts/launch-simulators.py --snapshots --scene
+```
+
+It compares existing
 baselines by default. To deliberately record before the comparison pass:
 
 ```sh
@@ -590,10 +583,22 @@ design/default and stays open. Host tests assert the frame list, ending times, s
 154 PNGs' coverage/dimensions and S1: status top 518 is below apex 512.5 at height 844; top 533 is above
 apex 542.5 at height 874.
 
-The orchestrator reported on **2026-11-06**: 154 baselines recorded; record/comparison passed on 17e,
-17, Air, 18 Pro and 18 Pro Max. SE and Duo snapshots matched, but geometry failed on the top-inset
-assumption. `make duo` passed. `make check` failed on four 17e slow frames because the host selected
-Dutch. The zero-inset and explicit-language corrections are implemented; revised simulator validation
-is open. PNG approval and side-by-side review stay open because `_design/frames/` has not been exported.
+The orchestrator reported on **2026-11-06**: snapshot, package and hosted tests passed on all seven
+D1c devices, including the zero-inset and explicit-language checks. The only failure was the dark
+frozen-screenshot UI test, which captured light appearance on every device except 18 Pro. This also
+failed `make check` and `make duo`. Manual 18 Pro launches with `simctl ui` setting light/dark each
+rendered the correct sky. Appearance synchronization is implemented above; revised UI validation is
+open. PNG approval and side-by-side review stay open because `_design/frames/` has not been exported.
 Snapshot work precedes the physical-device D3 proof by user direction; repeat review if that proof
 changes the layer tree. No device performance result is claimed.
+
+The Phase 3b review fixes validate non-JSON notification payloads before serialization, resolve the
+opening accessibility label after the first flush, and pin the screenshot's expected appearance.
+Hosted tests also assert that the overlay window captures the scene's style. The orchestrator's
+results above cover the payload, label and hosted appearance checks; the revised UI synchronization
+still needs validation. The Phase 3b verified result predates these fixes.
+Host checks on 2026-11-06 passed: 51 SwiftPM tests (27 Launch, 16 AppCore, 7 DesignSystem, 1 Welcome),
+strict formatting, generator freshness/tests (6 TokenGen, 6 font/cache, 3 AssetGen), 6 launch resource
+tests and 19 simulator-runner fixtures. Direct module compilation and type-checking of the app, hosted
+tests, AppCoreTests, LaunchTests and AppUITests against the iOS 17 simulator SDK passed. This does not
+execute UIKit tests; the existing D11 font-registration deprecation remains.
