@@ -8,6 +8,7 @@ final class NativeSessionController {
     let accounts: SessionAccountDatabase
     let model: AccountModel
     let sync: SessionSync?
+    let wiper: AccountWiper
     private var subscription: Task<Void, Never>?
 
     init(
@@ -15,7 +16,8 @@ final class NativeSessionController {
         requestSync: @escaping @Sendable (UInt64) async -> Void = { _ in },
         source: (@Sendable (StoredSession) async -> any DataSource)? = nil,
         unauthorized: @escaping @Sendable (UInt64) async -> Void = { _ in },
-        verification: @escaping @Sendable (UInt64) async -> Void = { _ in }
+        verification: @escaping @Sendable (UInt64) async -> Void = { _ in },
+        signedOut: @escaping @MainActor @Sendable () -> Void = {}
     ) {
         let model = AccountModel()
         self.model = model
@@ -24,18 +26,51 @@ final class NativeSessionController {
         }
         self.accounts = accounts
         let credentials = credentials ?? KeychainSessionStore(namespace: namespace)
+        let reference = SessionControllerReference()
         let sync = source.map {
-            SessionSync(accounts: accounts, source: $0, unauthorized: unauthorized, verification: verification)
+            SessionSync(
+                accounts: accounts, source: $0,
+                isCurrent: { session, epoch in
+                    guard let current = await reference.value()?.activeSession() else { return false }
+                    return current.session == session && current.epoch == epoch
+                },
+                unauthorized: { epoch in
+                    if let controller = reference.value() { _ = try? await controller.unauthorized(epoch: epoch) }
+                    await unauthorized(epoch)
+                }, verification: verification)
         }
         self.sync = sync
+        let wiper = AccountWiper(applicationSupport: applicationSupport, namespace: namespace, credentials: credentials)
+        self.wiper = wiper
+        var teardown = SessionTeardown()
+        teardown.prepare = {
+            try await accounts.close()
+            try await wiper.recover()
+        }
+        teardown.pendingCount = {
+            guard let database = await accounts.activeDatabase() else { return 0 }
+            return try await OutboxRepository(database: database).pending().count
+        }
+        teardown.flush = { _ = try await sync?.refreshNow() }
+        teardown.beginWipe = { try await wiper.begin($0) }
+        teardown.erase = { try await wiper.erase($0) }
+        teardown.finishWipe = { try await wiper.finish() }
+        teardown.logout = { session in
+            if let source { try await source(session).signOut() }
+        }
+        teardown.detach = {
+            await model.detach()
+            await signedOut()
+        }
         controller = SessionController(
-            credentials: credentials, accounts: accounts, stopSync: { await sync?.stop() },
+            credentials: credentials, accounts: accounts, teardown: teardown, stopSync: { await sync?.stop() },
             requestSync: { epoch in
-                if let session = try? await credentials.readStoredSession() {
-                    await sync?.start(session: session, epoch: epoch)
+                if let current = await reference.value()?.activeSession(), current.epoch == epoch {
+                    await sync?.start(session: current.session, epoch: epoch)
                 }
                 await requestSync(epoch)
             })
+        reference.set(controller)
     }
 
     func observe() {
@@ -68,4 +103,11 @@ final class NativeSessionController {
     }
 
     deinit { subscription?.cancel() }
+}
+
+nonisolated private final class SessionControllerReference: @unchecked Sendable {
+    private let lock = NSLock()
+    private weak var controller: SessionController?
+    func set(_ value: SessionController) { lock.withLock { controller = value } }
+    func value() -> SessionController? { lock.withLock { controller } }
 }
