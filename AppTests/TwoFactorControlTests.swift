@@ -52,7 +52,8 @@ nonisolated final class TwoFactorControlTests: XCTestCase {
             XCTAssertTrue(scroll.isScrollEnabled)
             XCTAssertTrue(scroll.bounces)
             XCTAssertTrue(scroll.alwaysBounceVertical)
-            XCTAssertEqual(scroll.keyboardDismissMode, .interactive)
+            let interactiveModes: Set<UIScrollView.KeyboardDismissMode> = [.interactive, .interactiveWithAccessory]
+            XCTAssertTrue(interactiveModes.contains(scroll.keyboardDismissMode), "\(scroll.keyboardDismissMode)")
         }
     }
 

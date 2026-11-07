@@ -50,7 +50,23 @@ nonisolated final class TwoFactorTests: XCTestCase {
         let scroll = app.scrollViews["auth.scroll"]
         XCTAssertEqual(app.scrollViews.matching(identifier: "auth.scroll").count, 1)
         XCTAssertTrue(scroll.isHittable)
-        scroll.swipeDown(velocity: .slow)
+        let window = app.windows.firstMatch
+        let frames = try UIWait.stableFrames([window, scroll, app.keyboards.firstMatch], timeout: 10)
+        let viewport = frames[0].intersection(frames[1])
+        let contentAboveKeyboard = viewport.intersection(
+            CGRect(
+                x: viewport.minX, y: viewport.minY, width: viewport.width,
+                height: max(0, min(viewport.maxY, frames[2].minY) - viewport.minY)))
+        XCTAssertFalse(contentAboveKeyboard.isEmpty)
+        let origin = window.coordinate(withNormalizedOffset: .zero)
+        let start = origin.withOffset(
+            CGVector(dx: contentAboveKeyboard.midX - frames[0].minX, dy: contentAboveKeyboard.midY - frames[0].minY))
+        // Duo's keyboard can sit below the app window; the drag must reach it in screen coordinates.
+        let end = origin.withOffset(
+            CGVector(
+                dx: contentAboveKeyboard.midX - frames[0].minX,
+                dy: max(frames[0].maxY, frames[2].maxY) - frames[0].minY - 1))
+        start.press(forDuration: 0.1, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.1)
         let dismissed = XCTNSPredicateExpectation(
             predicate: NSPredicate { _, _ in !app.keyboards.firstMatch.exists }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
