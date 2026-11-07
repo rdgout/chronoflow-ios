@@ -6,6 +6,7 @@
     public struct TwoFactorView: View {
         @Environment(\.locale) private var locale
         @FocusState private var focus: String?
+        @State private var text: String
         @State private var request: Task<Void, Never>?
         @State private var frames: [AuthElement: CGRect] = [:]
         let model: TwoFactorModel
@@ -13,6 +14,7 @@
 
         public init(model: TwoFactorModel, measure: @escaping (AuthElement, CGRect) -> Void = { _, _ in }) {
             self.model = model
+            _text = State(initialValue: model.code)
             self.measure = measure
         }
 
@@ -31,7 +33,7 @@
                     }
                     AuthField(
                         copy(model.mode == .code ? "6-digit code" : "Recovery code"),
-                        text: Binding(get: { model.code }, set: model.editCode),
+                        text: $text,
                         error: model.form.fields[model.field].flatMap { AuthCopy.field($0, locale: locale) },
                         hint: model.mode == .recovery ? copy("Each recovery code works once.") : nil,
                         identifier: identifier, contentType: model.mode == .code ? .oneTimeCode : nil,
@@ -59,6 +61,12 @@
                 model.validateChallenge()
                 UIAccessibility.post(notification: .screenChanged, argument: nil)
             }
+            .onChange(of: text) {
+                guard text != model.code else { return }
+                model.editCode(text)
+                text = model.code
+            }
+            .onChange(of: model.code) { text = model.code }
             .onChange(of: model.form.fields) {
                 if model.form.fields[model.field] != nil { focus = identifier }
             }
