@@ -66,6 +66,27 @@ Generate the project after manifest/project changes. Debug/ChronoFlow and isolat
 build once each into `build/DerivedData`, with pinned resolution, then use `test-without-building`.
 Only the Release verification build gets `ENABLE_TESTABILITY=YES`. Perf stays separate.
 
+Each `test-without-building` pass watches its combined stdout/stderr log for byte growth. A pass
+may run for more than the former 1,200-second limit while it keeps producing output:
+
+| Environment override | Default | Meaning |
+|---|---|---|
+| `TEST_RUN_IDLE_TIMEOUT` | 600 seconds | Terminate after this long without log growth; each increase resets the inactivity deadline |
+| `TEST_RUN_TIMEOUT` | 3,600 seconds; `make duo` keeps 600 | Overall cap per pass, even while output continues |
+
+Both overrides require positive finite seconds. For example,
+`TEST_RUN_IDLE_TIMEOUT=900 TEST_RUN_TIMEOUT=5400 make check` changes both limits. Merely touching
+the log does not reset inactivity. The log and failed-suite details distinguish inactivity from
+the overall cap. Either timeout sends SIGTERM to the process group, allows up to five seconds to
+exit, then sends SIGKILL to the group, including lingering descendants. The log is retained and
+later passes for that destination stop. SIGINT/SIGTERM forwarding and prompt worker cancellation
+remain in effect. Build and simulator-preparation commands do not use these per-test-pass limits.
+
+Timeout fix verification (2026-11-07): `make quick` passes, including all 72 runner fixtures.
+Coverage includes a progressing 1,800-second simulated pass, stalled output, timestamp-only log
+changes, the overall cap, override validation, Duo's cap, descendant cleanup and signal forwarding.
+Log: `build/tooling-timeout-quick.log`. No simulator run was needed for this runner change.
+
 After `bootstatus` completes, every runner destination receives `xcrun simctl spawn <udid> defaults write com.apple.keyboard.preferences AutomaticMinimizationEnabled -bool false` before testing, including already-booted devices and reused builds. This idempotent device preference prevents headless simulators with an attached hardware keyboard from minimizing the software keyboard; host-global Simulator.app preferences are untouched. Check, targeted, Duo, matrix and the separate Perf scheme all share this preparation. Keyboard helpers require a stable keyboard intersection of at least 100 × 100 points inside the app window, rejecting accessory strips and off-screen frames with “software keyboard not visible — check AutomaticMinimizationEnabled”.
 
 Host package execution uses `Scripts/swiftpm.sh test ChronoFlowKit`, macOS 14 or later,
@@ -2236,8 +2257,10 @@ steps. No tier restructuring or new speed claim is made.
 `make duo` now selects exactly DeviceGeometrySmokeTests, LaunchHandOffTests, WelcomeHandOverTests,
 LaunchToWelcomeTests, SignInKeyboardTests, TwoFactorKeyboardTests, SignInTests and TwoFactorTests.
 It resolves the same separate Duo runtime. It performs no profile, full audit/session, service or
-Release gate. Its per-test-run timeout is **600 seconds**; other test passes default to **1,200**.
-`TEST_RUN_TIMEOUT=<seconds>` overrides either limit. On timeout the runner terminates the process
+Release gate. Its per-test-run overall timeout remains **600 seconds**; other test passes now use
+the **600-second inactivity / 3,600-second overall** policy documented in Test tiers above.
+`TEST_RUN_TIMEOUT=<seconds>` overrides the overall cap; `TEST_RUN_IDLE_TIMEOUT=<seconds>` overrides
+inactivity. On timeout the runner terminates the process
 group, escalates to kill after at most five seconds, retains the log, fails selected suites and
 stops subsequent passes for that destination. Timeout/selection fixtures use temporary directories.
 An initial timeout fixture accidentally removed Duo's ignored Debug-compare log/xcresult; it was

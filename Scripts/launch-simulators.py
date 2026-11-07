@@ -424,7 +424,14 @@ def forward_run_signals():
         _RUN_SIGNAL = None
 
 
-def run(command, *, log=None, capture=False, record=False, check=True, intro_order=None, timeout=None):
+class TestRunTimeout(subprocess.TimeoutExpired):
+    def __init__(self, command, timeout, *, inactive=False):
+        super().__init__(command, timeout)
+        reason = "of log inactivity" if inactive else "overall"
+        self.detail = f"Test run timed out after {timeout:g}s {reason}"
+
+
+def run(command, *, log=None, capture=False, record=False, check=True, intro_order=None, timeout=None, idle_timeout=None):
     print("+ " + shlex.join(map(str, command)), flush=True)
     kwargs = dict(cwd=ROOT, text=True, env=environment(record, intro_order), check=check)
     if log is None:
@@ -433,22 +440,32 @@ def run(command, *, log=None, capture=False, record=False, check=True, intro_ord
     with log.open("a") as output:
         output.write("+ " + shlex.join(map(str, command)) + "\n")
         output.flush()
-        if timeout is None:
+        if timeout is None and idle_timeout is None:
             return subprocess.run(command, stdout=output, stderr=subprocess.STDOUT, **kwargs)
         options = {key: value for key, value in kwargs.items() if key != "check"}
         if _RUN_SIGNAL is not None:
             raise SystemExit(128 + _RUN_SIGNAL)
+        log_size = os.fstat(output.fileno()).st_size
         with subprocess.Popen(command, stdout=output, stderr=subprocess.STDOUT, start_new_session=True, **options) as process:
             with _RUN_LOCK:
                 _ACTIVE_RUNS.add(process)
-            deadline = time.monotonic() + timeout
+            started = time.monotonic()
+            deadline = started + timeout if timeout is not None else math.inf
+            idle_deadline = started + idle_timeout if idle_timeout is not None else math.inf
             try:
                 while True:
                     if _RUN_SIGNAL is not None:
                         raise SystemExit(128 + _RUN_SIGNAL)
-                    remaining = deadline - time.monotonic()
-                    if remaining <= 0:
-                        raise subprocess.TimeoutExpired(command, timeout)
+                    now = time.monotonic()
+                    size = os.fstat(output.fileno()).st_size
+                    if size > log_size and idle_timeout is not None:
+                        idle_deadline = now + idle_timeout
+                    log_size = size
+                    if now >= deadline:
+                        raise TestRunTimeout(command, timeout)
+                    if now >= idle_deadline:
+                        raise TestRunTimeout(command, idle_timeout, inactive=True)
+                    remaining = min(deadline, idle_deadline) - now
                     try:
                         process.communicate(timeout=min(0.1, remaining))
                         break
@@ -465,8 +482,8 @@ def run(command, *, log=None, capture=False, record=False, check=True, intro_ord
                 # Kill descendants even when xcodebuild exits before its test workers.
                 signal_group(process, signal.SIGKILL)
                 process.communicate()
-                if isinstance(error, subprocess.TimeoutExpired):
-                    output.write(f"Test run timed out after {timeout:g}s; terminated process group\n")
+                if isinstance(error, TestRunTimeout):
+                    output.write(error.detail + "; terminated process group\n")
                 raise
             finally:
                 with _RUN_LOCK:
@@ -689,14 +706,17 @@ def test_pass(destination, configuration, selected, label, record=False, intro_o
         shutil.rmtree(bundle)
     log.unlink(missing_ok=True)
     try:
-        timeout = float(os.environ.get("TEST_RUN_TIMEOUT", "1200"))
+        timeout = float(os.environ.get("TEST_RUN_TIMEOUT", "3600"))
         if not math.isfinite(timeout) or timeout <= 0:
             raise ValueError("TEST_RUN_TIMEOUT must be a positive finite number of seconds")
-        completed = run(test_command(destination, configuration, selected, bundle, workers, skipped), log=log, record=record, check=False, intro_order=intro_order, timeout=timeout)
+        idle_timeout = float(os.environ.get("TEST_RUN_IDLE_TIMEOUT", "600"))
+        if not math.isfinite(idle_timeout) or idle_timeout <= 0:
+            raise ValueError("TEST_RUN_IDLE_TIMEOUT must be a positive finite number of seconds")
+        completed = run(test_command(destination, configuration, selected, bundle, workers, skipped), log=log, record=record, check=False, intro_order=intro_order, timeout=timeout, idle_timeout=idle_timeout)
         return read_results(destination, label, selected, bundle, completed.returncode, log, timing, require_executed=intro_order is not None)
-    except subprocess.TimeoutExpired as error:
+    except TestRunTimeout as error:
         return [Result(destination.alias, label + " " + suite, False,
-                       f"Test run timed out after {error.timeout:g}s; see {log.relative_to(ROOT)}") for suite in selected]
+                       error.detail + f"; see {log.relative_to(ROOT)}") for suite in selected]
     except (subprocess.CalledProcessError, OSError) as error:
         return [Result(destination.alias, label + " " + suite, False, str(error)) for suite in selected]
 

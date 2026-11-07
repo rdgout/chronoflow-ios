@@ -60,12 +60,130 @@ def discovered_suites(directory):
 
 
 class TimeoutTests(unittest.TestCase):
+    @contextlib.contextmanager
+    def output_schedule(self, steps):
+        now = [0]
+        steps = iter(steps)
+        process = Mock(returncode=0)
+        with tempfile.TemporaryDirectory(dir=ROOT / 'build') as directory:
+            log = Path(directory) / 'test.log'
+
+            def communicate(timeout=None):
+                if process.returncode:
+                    return None, None
+                step = next(steps, None)
+                if step is None:
+                    return None, None
+                now[0], content = step
+                if content:
+                    with log.open('ab') as output:
+                        output.write(content)
+                else:
+                    os.utime(log, None)
+                raise subprocess.TimeoutExpired('test', timeout)
+
+            def terminate(process, signum):
+                process.returncode = -signum
+
+            process.communicate.side_effect = communicate
+            with patch.object(runner.subprocess, 'Popen', return_value=contextlib.nullcontext(process)), \
+                 patch.object(runner.time, 'monotonic', side_effect=lambda: now[0]), \
+                 patch.dict(runner.run.__globals__, signal_group=Mock(side_effect=terminate)):
+                yield log, now
+
+    def test_growing_log_can_run_past_old_wall_clock_limit(self):
+        with self.output_schedule([(second, b'progress\n') for second in range(300, 1801, 300)]) as (log, now):
+            completed = runner.run(['test'], log=log, timeout=3600, idle_timeout=600)
+            self.assertEqual(completed.returncode, 0)
+            self.assertEqual(now[0], 1800)
+            self.assertNotIn('timed out', log.read_text())
+
+    def test_inactivity_deadline_restarts_on_growth_but_not_timestamp_changes(self):
+        with self.output_schedule([(500, b'progress\n'), (1000, b''), (1101, b'')]) as (log, _):
+            with self.assertRaises(runner.TestRunTimeout) as raised:
+                runner.run(['test'], log=log, timeout=3600, idle_timeout=600)
+            self.assertEqual(raised.exception.detail, 'Test run timed out after 600s of log inactivity')
+            self.assertIn(raised.exception.detail + '; terminated process group', log.read_text())
+
+    def test_growing_log_still_hits_overall_cap(self):
+        with self.output_schedule([(second, b'progress\n') for second in range(300, 3601, 300)]) as (log, _):
+            with self.assertRaises(runner.TestRunTimeout) as raised:
+                runner.run(['test'], log=log, timeout=3600, idle_timeout=600)
+            self.assertEqual(raised.exception.detail, 'Test run timed out after 3600s overall')
+            self.assertIn(raised.exception.detail + '; terminated process group', log.read_text())
+
     def test_run_timeout_kills_process_group_and_keeps_log(self):
         with tempfile.TemporaryDirectory(dir=ROOT / 'build') as directory:
             log = Path(directory) / 'timeout.log'
             with self.assertRaises(subprocess.TimeoutExpired):
                 runner.run(['python3', '-c', 'import time; time.sleep(30)'], log=log, timeout=0.1)
-            self.assertIn('Test run timed out after 0.1s', log.read_text())
+            self.assertIn('Test run timed out after 0.1s overall', log.read_text())
+
+    def test_inactivity_kills_descendants_that_ignore_termination_and_keeps_output(self):
+        with tempfile.TemporaryDirectory(dir=ROOT / 'build') as directory:
+            scratch = Path(directory)
+            log = scratch / 'timeout.log'
+            child = scratch / 'child.py'
+            child.write_text("""import os
+from pathlib import Path
+import signal
+import sys
+import time
+root = Path(sys.argv[1])
+if os.fork() == 0:
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
+    (root / 'child.pid').write_text(str(os.getpid()))
+    while True:
+        (root / 'heartbeat').write_text(str(time.monotonic()))
+        time.sleep(0.02)
+while not (root / 'heartbeat').exists():
+    time.sleep(0.01)
+print('ready', file=sys.stderr, flush=True)
+while True:
+    time.sleep(30)
+""")
+            try:
+                with self.assertRaises(runner.TestRunTimeout) as raised:
+                    runner.run([sys.executable, str(child), str(scratch)], log=log, timeout=10, idle_timeout=0.5)
+                self.assertIn('of log inactivity', raised.exception.detail)
+                self.assertIn('\nready\n', log.read_text())
+                self.assertIn('terminated process group', log.read_text())
+                heartbeat = (scratch / 'heartbeat').read_text()
+                time.sleep(0.15)
+                self.assertEqual(heartbeat, (scratch / 'heartbeat').read_text())
+            finally:
+                pid = scratch / 'child.pid'
+                if pid.exists():
+                    try:
+                        os.kill(int(pid.read_text()), signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+
+    def test_test_pass_uses_default_limits_and_environment_overrides(self):
+        for overrides, expected in [({}, (3600, 600)), ({'TEST_RUN_TIMEOUT': '900'}, (900, 600)),
+                                    ({'TEST_RUN_IDLE_TIMEOUT': '45'}, (3600, 45))]:
+            with self.subTest(overrides=overrides), tempfile.TemporaryDirectory(dir=ROOT / 'build') as directory:
+                execute = Mock(return_value=subprocess.CompletedProcess('test', 0))
+                with patch.dict(os.environ, overrides, clear=True), \
+                     patch.dict(runner.test_pass.__globals__, ROOT=Path(directory), run=execute, read_results=Mock(return_value=[])):
+                    runner.test_pass(runner.Destination('17e', 'test', 'Booted'), 'Debug', ['AppTests/AuthControlTests'], 'Debug-compare')
+                self.assertEqual((execute.call_args.kwargs['timeout'], execute.call_args.kwargs['idle_timeout']), expected)
+
+    def test_test_pass_rejects_invalid_timeout_overrides(self):
+        for key in ('TEST_RUN_TIMEOUT', 'TEST_RUN_IDLE_TIMEOUT'):
+            for value in ('0', '-1', 'nan', 'inf', 'invalid'):
+                with self.subTest(key=key, value=value), tempfile.TemporaryDirectory(dir=ROOT / 'build') as directory, \
+                     patch.dict(os.environ, {key: value}, clear=True), \
+                     patch.dict(runner.test_pass.__globals__, ROOT=Path(directory), run=Mock()) as namespace:
+                    with self.assertRaises(ValueError):
+                        runner.test_pass(runner.Destination('17e', 'test', 'Booted'), 'Debug', ['AppTests/AuthControlTests'], 'Debug-compare')
+                    namespace['run'].assert_not_called()
+
+    def test_make_duo_preserves_its_overall_cap_and_override(self):
+        for value, expected in [('', '600'), ('900', '900')]:
+            with self.subTest(value=value):
+                command = subprocess.check_output(['make', '-n', 'duo', 'TEST_RUN_TIMEOUT=' + value], cwd=ROOT, text=True)
+                self.assertIn('TEST_RUN_TIMEOUT=' + expected + ' ', command)
 
     def test_interrupts_forward_to_worker_process_groups_and_exit_promptly(self):
         for signum in (signal.SIGINT, signal.SIGTERM):
@@ -100,7 +218,7 @@ scratch = Path(sys.argv[2])
 with runner['forward_run_signals']():
     with ThreadPoolExecutor(max_workers=2) as pool:
         futures = [pool.submit(runner['run'], [sys.executable, str(scratch / 'child.py'), str(scratch), str(i)],
-                               log=scratch / (str(i) + '.log'), timeout=30) for i in range(2)]
+                               log=scratch / (str(i) + '.log'), timeout=30, idle_timeout=10) for i in range(2)]
         for future in futures:
             future.result()
 """)
@@ -135,14 +253,16 @@ with runner['forward_run_signals']():
         destination = runner.Destination('duo', 'test', 'Booted')
         selected = ['AppUITests/SignInTests', 'AppUITests/AuthSessionTests', 'AppTests/ReleaseReadinessTests']
         namespace = runner.test_pass.__globals__
-        with tempfile.TemporaryDirectory(dir=ROOT / 'build') as directory, \
-             patch.dict(namespace, ROOT=Path(directory), prepare=lambda _: None), patch.dict(os.environ, TEST_RUN_TIMEOUT='0.1'), \
-             patch.dict(namespace, run=lambda *args, **kwargs: (_ for _ in ()).throw(subprocess.TimeoutExpired('test', 0.1))):
-            results = runner.test_device(destination, selected, 'runtime', None, {'Debug': True, 'Release': True}, workers=2)
-        self.assertEqual(len(results), 3)
-        self.assertTrue(all(not r.passed for r in results))
-        self.assertTrue(results[0].detail.startswith('Test run timed out'))
-        self.assertTrue(all(r.detail == 'Not run after timeout' for r in results[1:]))
+        for inactive in (False, True):
+            execute = Mock(side_effect=runner.TestRunTimeout('test', 0.1, inactive=inactive))
+            with self.subTest(inactive=inactive), tempfile.TemporaryDirectory(dir=ROOT / 'build') as directory, \
+                 patch.dict(namespace, ROOT=Path(directory), prepare=lambda _: None, run=execute):
+                results = runner.test_device(destination, selected, 'runtime', None, {'Debug': True, 'Release': True}, workers=2)
+            self.assertEqual(len(results), 3)
+            self.assertTrue(all(not r.passed for r in results))
+            self.assertIn('of log inactivity' if inactive else 'overall', results[0].detail)
+            self.assertTrue(all(r.detail == 'Not run after timeout' for r in results[1:]))
+            execute.assert_called_once()
 
 
 class ClassificationTests(unittest.TestCase):
