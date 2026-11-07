@@ -49,6 +49,50 @@ nonisolated final class AuthAuditTests: XCTestCase {
         }
     }
 
+    @MainActor func testForgotStatesInBothLanguagesAppearancesAndSizes() async throws {
+        try await FontRegistry.register()
+        let device = XCUIDevice.shared
+        let previous = device.appearance
+        defer { device.appearance = previous }
+        for language in ["en", "nl"] {
+            for appearance in [XCUIDevice.Appearance.light, .dark] {
+                for xxLarge in [false, true] {
+                    for state in ["form", "sent", "field", "server", "throttle", "offline"] {
+                        try DeviceAppearance.set(appearance)
+                        let app = launchForgotApp(
+                            language: language, xxLarge: xxLarge, failure: state, offline: state == "offline")
+                        defer { app.terminate() }
+                        openForgot(app)
+                        if state != "form" {
+                            let field = app.textFields["forgot.email"]
+                            field.tap()
+                            field.typeText(state == "field" ? "invalid\n" : "unknown@example.com\n")
+                            if state == "sent" {
+                                XCTAssertTrue(AuthUIFlow.control("forgot.notice", in: app).waitForExistence(timeout: 6))
+                            } else if state == "server" || state == "throttle" {
+                                XCTAssertTrue(AuthUIFlow.control("auth.banner", in: app).waitForExistence(timeout: 6))
+                            } else {
+                                let received = XCTNSPredicateExpectation(
+                                    predicate: NSPredicate { _, _ in
+                                        field.isEnabled && field.value(forKey: "hasKeyboardFocus") as? Bool == true
+                                    }, object: nil)
+                                XCTAssertEqual(XCTWaiter.wait(for: [received], timeout: 6), .completed)
+                            }
+                        }
+                        let identifiers =
+                            state == "sent"
+                            ? ["auth.back", "forgot.notice", "forgot.open-email", "forgot.back"]
+                            : ["auth.back", "forgot.email", "forgot.submit"]
+                                + (["server", "throttle"].contains(state) ? ["auth.banner"] : [])
+                        auditControls(
+                            app, identifiers: identifiers, language: "\(language), \(state)", appearance: appearance,
+                            xxLarge: xxLarge)
+                    }
+                }
+            }
+        }
+    }
+
     @MainActor private func auditControls(
         _ app: XCUIApplication, identifiers: [String], language: String, appearance: XCUIDevice.Appearance,
         xxLarge: Bool
@@ -70,7 +114,9 @@ nonisolated final class AuthAuditTests: XCTestCase {
                     identifier: issue.element?.identifier, auditType: issue.auditType)
                 var minimum: Double?
                 var measurement = "not eligible"
-                if issue.auditType == .contrast, let element = issue.element, element.identifier == "auth.subtitle" {
+                if issue.auditType == .contrast, let element = issue.element, element.identifier == "auth.subtitle",
+                    ["sign-in.scroll", "two-factor.scroll"].contains(AuthUIFlow.scroll(in: app).identifier)
+                {
                     (minimum, measurement) = self.subtitleContrast(
                         element, in: app, appearance: appearance, xxLarge: xxLarge)
                 }
@@ -168,7 +214,8 @@ nonisolated final class AuthAuditTests: XCTestCase {
         for identifier in [
             nil, "", "sign-in", "sign-in.submit", "sign-in.passkey", "sign-in.email", "sign-in.password",
             "sign-in.forgot", "sign-in.signup", "two-factor.code", "two-factor.recovery_code",
-            "two-factor.submit", "two-factor.toggle", "auth.back", "auth.heading", "auth.banner", "welcome.plan",
+            "two-factor.submit", "two-factor.toggle", "forgot.email", "forgot.submit", "forgot.notice",
+            "forgot.open-email", "forgot.back", "auth.back", "auth.heading", "auth.banner", "welcome.plan",
             "sign-in.guest.new", "auth.subtitle",
         ] {
             XCTAssertFalse(Self.isBoardContrast(identifier: identifier, auditType: .contrast))

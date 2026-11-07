@@ -6,6 +6,7 @@
     public enum AuthElement: String, CaseIterable {
         case brand, heading, card, footer, email, password, submit, forgot, signup, forgotLabel, signupLabel
         case code, modeToggle, passkey, subtitle
+        case notice, openEmail, backToSignIn
     }
 
     public struct AuthScreen<Card: View, Footer: View>: View {

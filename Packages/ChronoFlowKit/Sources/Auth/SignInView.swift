@@ -99,7 +99,7 @@
             }
         }
         private var forgot: some View {
-            link("Forgot your password?", id: "sign-in.forgot", color: .foreground) { model.navigation.push(.forgot) }
+            link("Forgot your password?", id: "sign-in.forgot", color: .foreground) { model.navigation.forgot() }
         }
         private var signup: some View {
             link("Create an account", id: "sign-in.signup", color: .dawnText) { model.navigation.push(.signUp) }

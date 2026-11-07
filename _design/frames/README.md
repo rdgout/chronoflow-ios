@@ -87,3 +87,10 @@ in en/nl, light/dark and every existing D1c profile/category. The user will reco
 compare them in a fresh process and rerun the updated simulator gates before pushing. No new
 simulator/reference comparison pass is claimed here; the implementation and board-review work is
 complete under the user's task-2 closeout instruction.
+
+Phase 11a adds ten `forgot-{none,sent,field,attempts,server}-{light,dark}.html` exports, from the
+AuthTwoFactor Forgot variant (also used by the AuthForgot wrapper), shared Field error and
+AuthStates' Forgot throttle/server banners. The sent Notice retains the board's sample email;
+native copy interpolates the submitted address. Offline keeps the form unchanged under OQ 23.
+`make auth-board-pngs` exports these names too. HTML generation succeeded here; Chrome again
+exited 134, leaving PNG export and the new native references/visual acceptance for the host.

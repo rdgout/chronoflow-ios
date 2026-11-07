@@ -205,3 +205,41 @@ Swift 6 iOS 17 simulator compilation passes for the changed DesignSystem/Auth mo
 tests (`build/phase-10b-round4-typecheck.log`); this does not execute UIKit. The quick log is
 `build/phase-10b-round4-quick.log`. No native reference PNG changed. Task 2's implementation/report is complete under the user's
 instruction; their 17e recording/comparison and updated `make check` / `make duo` remain before push.
+
+## Phase 11a — Forgot password (2026-11-07)
+
+Forgot now uses the shared AuthScreen, native email field, primary button, measured keyboard reveal,
+request lock and catalog. The form calls `requestPasswordReset`; a 204 shows the same sent Notice
+for existing and unknown accounts, interpolating the captured submitted address. It opens the
+system `message://` URL; no handler leaves the Notice intact. Back returns to Sign in without
+replaying launch. `AuthNavigation.forgot(email:)` prefills a fresh form for the future expired-link
+entry. There is no client email validation, offline pre-check, session acceptance or inbox UI.
+
+Server field messages stay under Email. Throttling uses AuthStates' “Too many requests.” / link
+request body; server/hidden/unknown-field failures use the shared server banner. The kept OQ 23
+offline behavior preserves the form and enabled submit without adding an undesigned banner.
+Busy edits and duplicate tap/Return are ignored; leaving/cancellation rejects late results.
+English and Dutch ship together, following the recorded OQ 28 source order.
+
+The ten Forgot exports cover form/sent/Field error/AuthStates throttle/server in both appearances,
+using AuthTwoFactor's Forgot variant and the component bundle. The field error comes from the
+shared Field design; offline is visually the unchanged form. `make auth-board-pngs` generated the
+HTML but Chrome exited 134 in this sandbox; the PNG export remains for the user's host.
+
+Coverage added: eight portable model tests (including two cancellation cases); hosted native
+control/focus/lock, D1c layout and six-state snapshots (1,344 references expected), root-cap equality,
+and all-state/asymmetric-safe-area scroll/ink guards; ForgotPasswordTests and en/nl xxLarge
+ForgotPasswordKeyboardTests; strict audits of all six states in both languages/appearances/sizes.
+The existing subtitle exception remains limited to Sign in/Two-factor and requires a measured
+passing minimum. Forgot adds no exception. Runner tiers, strict failure/skip handling, 17e-only
+opt-in recording and per-device AutomaticMinimizationEnabled fixtures include the new suites.
+
+`make quick` passes. Direct iOS 17 compilation/typechecking is recorded in
+`build/phase-11a-typecheck.log`; it executes no UIKit, simulator or xcodebuild. No native PNG
+reference was recorded here. Hosted/UI execution, SE/Duo visible-keyboard checks, reference
+recording/comparison and visual board acceptance remain open for the user's exact outputs.
+The commands are in `Docs/tooling.md`. Real mail receipt is not simulator acceptance.
+
+OQ 21/22/25/27 and the four trips decisions are recorded in plan.md. Password-rule/copy amendments
+ship with 11b/11c, and native reset/verify universal-link entry with 11b/11d. Real link opening also
+requires server AASA with the confirmed team/bundle ID; team ID remains pending. Trips follow 11d.

@@ -28,6 +28,8 @@ import XCTest
     }
 
     static func scroll(in app: XCUIApplication) -> XCUIElement {
+        let forgot = app.scrollViews["forgot.scroll"]
+        if forgot.exists { return forgot }
         let twoFactor = app.scrollViews["two-factor.scroll"]
         return twoFactor.exists ? twoFactor : app.scrollViews["sign-in.scroll"]
     }
@@ -58,7 +60,8 @@ import XCTest
             ?? (element.identifier.hasPrefix("sign-in.")
                 ? app.scrollViews["sign-in.scroll"]
                 : element.identifier.hasPrefix("two-factor.")
-                    ? app.scrollViews["two-factor.scroll"] : self.scroll(in: app))
+                    ? app.scrollViews["two-factor.scroll"]
+                    : element.identifier.hasPrefix("forgot.") ? app.scrollViews["forgot.scroll"] : self.scroll(in: app))
         for _ in 0..<12 {
             do {
                 if app.keyboards.firstMatch.exists

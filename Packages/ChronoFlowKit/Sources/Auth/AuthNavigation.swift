@@ -9,8 +9,13 @@ nonisolated public enum AuthDestination: Hashable, Sendable {
 @MainActor @Observable public final class AuthNavigation {
     public var path: [AuthDestination] = []
     public private(set) var challengeID: String?
+    public private(set) var forgotEmail = ""
     public init() {}
     public func push(_ destination: AuthDestination) { path.append(destination) }
+    public func forgot(email: String = "") {
+        forgotEmail = email
+        path.append(.forgot)
+    }
     public func twoFactor(challengeID: String) {
         guard !challengeID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             cancelTwoFactor()
@@ -27,6 +32,7 @@ nonisolated public enum AuthDestination: Hashable, Sendable {
     public func reset() {
         path = []
         challengeID = nil
+        forgotEmail = ""
     }
 
     public static func route(for account: SessionAccount) -> Route {

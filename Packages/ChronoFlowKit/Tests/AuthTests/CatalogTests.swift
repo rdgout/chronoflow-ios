@@ -17,7 +17,10 @@ struct AuthCatalogTests {
                 let value = try #require(unit["value"])
                 #expect(unit["state"] == "translated" && !value.isEmpty)
                 #expect(!value.contains("PENDING") && !value.contains("rick@example.com"))
-                #expect(value.components(separatedBy: "%lld").count == key.components(separatedBy: "%lld").count)
+                for argument in ["%lld", "%@"] {
+                    #expect(
+                        value.components(separatedBy: argument).count == key.components(separatedBy: argument).count)
+                }
             }
         }
     }

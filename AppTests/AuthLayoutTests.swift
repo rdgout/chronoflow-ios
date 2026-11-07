@@ -18,7 +18,9 @@ nonisolated final class AuthLayoutTests: XCTestCase {
                         insets: fixture.insets, language: language, category: category, scale: fixture.scale)
                     defer { host.close() }
                     try await host.settle()
-                    XCTAssertEqual(Set(frames.keys), Set(AuthElement.allCases).subtracting([.code, .modeToggle]))
+                    XCTAssertEqual(
+                        Set(frames.keys),
+                        Set(AuthElement.allCases).subtracting([.code, .modeToggle, .notice, .openEmail, .backToSignIn]))
                     let brand = try XCTUnwrap(frames[.brand])
                     XCTAssertEqual(brand.minY, fixture.insets.top + AuthTokens.gutter, accuracy: 0.5)
                     XCTAssertEqual(brand.minX, fixture.insets.left + AuthTokens.gutter, accuracy: 0.5)

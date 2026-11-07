@@ -36,7 +36,9 @@ nonisolated final class AuthSnapshotTests: XCTestCase {
                                 viewport: CGRect(origin: .zero, size: fixture.size).inset(by: fixture.insets),
                                 frames: Dictionary(uniqueKeysWithValues: frames.map { ($0.key.rawValue, $0.value) }),
                                 required: Set(
-                                    (Set(AuthElement.allCases).subtracting([.code, .modeToggle])).map(\.rawValue)),
+                                    (Set(AuthElement.allCases).subtracting([
+                                        .code, .modeToggle, .notice, .openEmail, .backToSignIn,
+                                    ])).map(\.rawValue)),
                                 reference: reference,
                                 record: ProcessInfo.processInfo.environment["SNAPSHOT_RECORD"] == "1")
                             if ProcessInfo.processInfo.environment["SNAPSHOT_RECORD"] == "1" {

@@ -29,7 +29,7 @@ MATRIX = {
     "duo": ("iPhone Duo", "iPhone-Duo", DUO_RUNTIME),
 }
 # Each suite has one scheduling policy. Fixed geometry fixtures are logic; running-window/scale assertions are matrix.
-SUITES = {'AppTests': {'logic': ('AuthControlTests', 'AuthLayoutTests', 'AuthSnapshotGuardTests', 'AuthSubtitleContrastTests', 'TwoFactorControlTests', 'TwoFactorLayoutTests', 'LaunchArgumentLogicTests',
+SUITES = {'AppTests': {'logic': ('AuthControlTests', 'AuthLayoutTests', 'AuthSnapshotGuardTests', 'AuthSubtitleContrastTests', 'TwoFactorControlTests', 'TwoFactorLayoutTests', 'ForgotPasswordControlTests', 'ForgotPasswordLayoutTests', 'LaunchArgumentLogicTests',
                         'RasterPixelLogicTests',
                         'ContentSizeCapLogicTests',
                         'AppIconTests',
@@ -56,13 +56,13 @@ SUITES = {'AppTests': {'logic': ('AuthControlTests', 'AuthLayoutTests', 'AuthSna
                          'WelcomeHandOverTests',
                          'LaunchImageMutationTests',
                          'SnapshotContainerTests'),
-              'profiles': ('LaunchSnapshotTests', 'WelcomeSnapshotTests', 'AuthSnapshotTests', 'TwoFactorSnapshotTests'),
+              'profiles': ('LaunchSnapshotTests', 'WelcomeSnapshotTests', 'AuthSnapshotTests', 'TwoFactorSnapshotTests', 'ForgotPasswordSnapshotTests'),
               'reference': ('LaunchFrameParityTests', 'LaunchStoryboardTests'),
               'release': ('ReleaseReadinessTests',)},
  'RenderTests': {'profiles': ('WelcomeRenderingTests',)},
- 'AppUITests': {'logic': ('SignInTests', 'TwoFactorTests', 'AuthSessionTests', 'AuthAuditTests', 'ReadinessTests', 'WelcomeLogicTests'),
+ 'AppUITests': {'logic': ('SignInTests', 'TwoFactorTests', 'ForgotPasswordTests', 'AuthSessionTests', 'AuthAuditTests', 'ReadinessTests', 'WelcomeLogicTests'),
                 'reference': ('LaunchToWelcomeTests', 'LaunchSceneTests', 'LaunchSceneDarkTests'),
-                'matrix': ('SignInKeyboardTests', 'TwoFactorKeyboardTests', 'WelcomeTests', 'WelcomeEnglishAccessibilityTests', 'WelcomeDutchAccessibilityTests')},
+                'matrix': ('SignInKeyboardTests', 'TwoFactorKeyboardTests', 'ForgotPasswordKeyboardTests', 'WelcomeTests', 'WelcomeEnglishAccessibilityTests', 'WelcomeDutchAccessibilityTests')},
  'AppCoreTests': {'host': ('CatalogTests',
                            'CubicBezierTests',
                            'LaunchCoordinatorTests',
@@ -93,7 +93,7 @@ SUITES = {'AppTests': {'logic': ('AuthControlTests', 'AuthLayoutTests', 'AuthSna
                            'ReadyTimelineTests',
                            'SmokeTests',
                            'WelcomeTimelineTests')},
- 'AuthTests': {'host': ('AuthFormModelTests', 'AuthFailureMappingTests', 'AuthSnapshotCaptureTests', 'AuthCatalogTests', 'AuthLayoutTests', 'AuthCardShadowTests', 'SignInModelTests', 'TwoFactorModelTests', 'PasskeyEncodingTests', 'PasskeySignInTests')},
+ 'AuthTests': {'host': ('AuthFormModelTests', 'AuthFailureMappingTests', 'AuthSnapshotCaptureTests', 'AuthCatalogTests', 'AuthLayoutTests', 'AuthCardShadowTests', 'SignInModelTests', 'TwoFactorModelTests', 'ForgotPasswordModelTests', 'PasskeyEncodingTests', 'PasskeySignInTests')},
  'WelcomeTests': {'logic': ('SmokeTests', 'WelcomeGeometryTests')},
  'ToolingTests': {'host': ('LaunchImageComparisonTests', 'UIWaitTests', 'AuthScrollGestureTests')},
  'PerfUITests': {'perf': ('LaunchPerfTests',)},
@@ -124,7 +124,7 @@ SUITES = {'AppTests': {'logic': ('AuthControlTests', 'AuthLayoutTests', 'AuthSna
                               'SessionAccountDatabaseTests',
                               'AccountWiperTests',
                               'AccountReadinessTests')}}
-SNAPSHOTS = ("AppTests/LaunchSnapshotTests", "AppTests/WelcomeSnapshotTests", "AppTests/WelcomeSnapshotGuardTests", "RenderTests/WelcomeRenderingTests", "AppTests/AuthSnapshotTests", "AppTests/TwoFactorSnapshotTests", "AppTests/AuthSnapshotGuardTests")
+SNAPSHOTS = ("AppTests/LaunchSnapshotTests", "AppTests/WelcomeSnapshotTests", "AppTests/WelcomeSnapshotGuardTests", "RenderTests/WelcomeRenderingTests", "AppTests/AuthSnapshotTests", "AppTests/TwoFactorSnapshotTests", "AppTests/ForgotPasswordSnapshotTests", "AppTests/AuthSnapshotGuardTests")
 XCODEBUILD_COMMON = ["xcodebuild", "-project", "ChronoFlow.xcodeproj", "-derivedDataPath", "build/DerivedData",
                      "-onlyUsePackageVersionsFromResolvedFile"]
 
@@ -136,7 +136,7 @@ PARALLEL_TARGETS = {"AppTests", "AppUITests", "RenderTests"}
 RUNTIME_SMOKE = (
     "AppTests/DeviceGeometrySmokeTests", "AppTests/LaunchHandOffTests", "AppTests/WelcomeHandOverTests",
     "AppUITests/LaunchToWelcomeTests", "AppUITests/SignInKeyboardTests", "AppUITests/TwoFactorKeyboardTests",
-    "AppUITests/SignInTests", "AppUITests/TwoFactorTests",
+    "AppUITests/SignInTests", "AppUITests/TwoFactorTests", "AppUITests/ForgotPasswordTests", "AppUITests/ForgotPasswordKeyboardTests",
 )
 
 
@@ -675,7 +675,7 @@ def read_results(destination, label, selected, bundle, returncode, log, timing=N
                         timing.setdefault("tests", {})[identifier] = duration
         for suite in selected:
             matches = matching_nodes(nodes, suite)
-            strict_auth = suite.split("/")[1].startswith(("Auth", "SignIn", "TwoFactor"))
+            strict_auth = suite.split("/")[1].startswith(("Auth", "SignIn", "TwoFactor", "ForgotPassword"))
             allowed = ("Passed",) if strict_auth else ("Passed", "Skipped", "Expected Failure")
             failed = [str(n.get("nodeIdentifier", n.get("name"))) + ": " + str(n.get("result"))
                       for n in matches if n.get("result") not in allowed]
@@ -722,7 +722,7 @@ def test_pass(destination, configuration, selected, label, record=False, intro_o
 
 
 def recording_selection(selected, mode, recording):
-    baseline = (SNAPSHOTS[0], SNAPSHOTS[1], "AppTests/AuthSnapshotTests", "AppTests/TwoFactorSnapshotTests")
+    baseline = (SNAPSHOTS[0], SNAPSHOTS[1], "AppTests/AuthSnapshotTests", "AppTests/TwoFactorSnapshotTests", "AppTests/ForgotPasswordSnapshotTests")
     candidates = baseline if recording == "all" or (recording == "1" and mode == "snapshots") else baseline[:1] if recording == "launch" or mode == "launch-snapshots" else baseline[1:]
     return [s for s in selected if any(s == c or s.startswith(c + "/") for c in candidates)]
 

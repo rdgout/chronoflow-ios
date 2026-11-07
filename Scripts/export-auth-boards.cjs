@@ -41,10 +41,12 @@ const twoFactorSource = read('_design/canvas/AuthTwoFactor.dc.html');
 const twoFactorContext = {DCLogic: class { constructor(props) { this.props = props; } }};
 vm.createContext(twoFactorContext);
 vm.runInContext(twoFactorSource.match(/<script type="text\/x-dc"[^>]*>([\s\S]*?)<\/script>/)[1] + '\nthis.Board = Component;', twoFactorContext);
-function twoFactor(theme, recovery, state) {
-    const board = new twoFactorContext.Board({theme, screen:'twofactor', error:state});
+function accountBoard(theme, recovery, state, screen = 'twofactor', sent = false) {
+    const board = new twoFactorContext.Board({theme, screen, error:state});
     board.state.recovery = recovery;
+    board.state.sent = sent;
     const values = board.renderVals();
+    if (screen === 'forgot' && state === 'attempts') values.err = {show:true, title:'Too many requests.', body:'Wait a few minutes before you ask for another link.'};
     const value = key => key.split('.').reduce((v,k)=>v[k], values);
     let html = twoFactorSource.split('</helmet>')[1].split('</x-dc>')[0];
     html = html.replace(/<div class="pattern-dots"[^>]*><\/div>/g,'');
@@ -54,13 +56,17 @@ function twoFactor(theme, recovery, state) {
     }
     if (state !== 'field') html = html.replace(/ default-value="482913" error="[^"]*"/,'');
     html = html.replace(/\s+on-[\w-]+="[^"]*"/g, '');
+    if (screen === 'forgot' && state === 'field') html = html.replace('autocomplete="email"', 'autocomplete="email" error="Enter a valid email address, like name@example.com."');
     return imports(html.replace(/\{\{([^}]+)\}\}/g, (_, key) => escape(value(key))));
 }
 function save(name,html) { fs.writeFileSync(path.join(root,'_design/frames/auth',name+'.html'),`<!doctype html><meta charset="utf-8"><style>${css}</style>${html}`.replace(/[ \t]+$/gm, '')); }
 for (const theme of ['light','dark']) {
+    for (const state of ['none','sent','field','attempts','server']) {
+        save(`forgot-${state}-${theme}`, accountBoard(theme,false,state === 'sent' ? 'none' : state,'forgot',state === 'sent'));
+    }
     for (const recovery of [false,true]) {
         for (const state of recovery ? ['none','attempts','server'] : ['none','field','attempts','server']) {
-            save(`two-factor-${recovery?'recovery':'code'}-${state}-${theme}`,twoFactor(theme,recovery,state));
+            save(`two-factor-${recovery?'recovery':'code'}-${state}-${theme}`,accountBoard(theme,recovery,state));
         }
     }
     for (const [state,error] of Object.entries(errors)) {

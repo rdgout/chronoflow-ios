@@ -11,7 +11,12 @@ nonisolated final class SignInTests: XCTestCase {
         app.buttons["auth.back"].tap()
         XCTAssertTrue(app.staticTexts["welcome.wordmark"].waitForExistence(timeout: 3))
         openSignIn(app)
-        for (button, route) in [("sign-in.forgot", "forgot"), ("sign-in.signup", "signUp")] {
+        reveal(app.buttons["sign-in.forgot"], app)
+        app.buttons["sign-in.forgot"].tap()
+        XCTAssertTrue(app.textFields["forgot.email"].waitForExistence(timeout: 3))
+        AuthUIFlow.reveal(AuthUIFlow.control("auth.back", in: app), in: app)
+        AuthUIFlow.control("auth.back", in: app).tap()
+        for (button, route) in [("sign-in.signup", "signUp")] {
             reveal(app.buttons[button], app)
             app.buttons[button].tap()
             XCTAssertTrue(app.staticTexts["route.\(route)"].waitForExistence(timeout: 3))

@@ -31,6 +31,16 @@ final class AuthSessionServices {
             {
                 Task { await mock.failNext(method: .completeTwoFactor, error: .server(status: 503)) }
             }
+            if services.factory.source == .mock, let mock = source as? MockDataSource {
+                if ProcessInfo.processInfo.arguments.contains("-cf.forgotServerFailure") {
+                    Task { await mock.failNext(method: .requestPasswordReset, error: .server(status: 503)) }
+                } else if ProcessInfo.processInfo.arguments.contains("-cf.forgotThrottleFailure") {
+                    Task {
+                        await mock.failNext(
+                            method: .requestPasswordReset, error: .throttled(retryAfterSeconds: 60, status: 429))
+                    }
+                }
+            }
         #endif
         let identity = DeviceIdentityStore(persistence: DevicePreferences())
         let assertion: any PasskeyAssertionProviding =

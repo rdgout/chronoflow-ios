@@ -2328,3 +2328,34 @@ make targeted DEVICES="se duo" ONLY="AppTests/TwoFactorLayoutTests/testLastContr
 
 The seven-runtime matrix is not requested. Task 2 remains unticked for revised runtime acceptance
 and the existing Two-factor side-by-side board review; device-only gates retain their original scope.
+
+### Phase 11a Forgot acceptance
+
+Run in this worktree. No seven-simulator matrix or simulator clean/reboot is needed.
+The runner disables automatic software-keyboard minimization on each UI destination after boot.
+Recording is restricted to 17e; the targeted recording invocation records the Forgot suite once,
+then compares it. It cannot record guards, UI or Release tests.
+
+```sh
+make generate
+make auth-board-pngs
+SNAPSHOT_RECORD=1 make targeted DEVICES="17e" ONLY="AppTests/ForgotPasswordSnapshotTests"
+make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppTests/ForgotPasswordControlTests AppTests/ForgotPasswordLayoutTests AppTests/ForgotPasswordSnapshotTests AppTests/AuthSnapshotGuardTests AppTests/AuthLayoutTests AppTests/AuthSnapshotTests"
+make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppUITests/ForgotPasswordTests AppUITests/ForgotPasswordKeyboardTests AppUITests/SignInTests AppUITests/AuthAuditTests"
+make targeted DEVICES="se duo" REUSE_BUILD=1 ONLY="AppUITests/ForgotPasswordKeyboardTests"
+```
+
+Compare the 375 × 812 `board-*` Forgot references in `AppTests/__Snapshots__/Auth/Forgot/` with
+`build/board-png/forgot-{none,sent,field,attempts,server}-{light,dark}.png`. Review all device/language/
+size adaptations too. The offline reference matches the unchanged form. There should be 1,344
+Forgot PNGs after a complete recording; partial sets fail the host inventory fixture. Send the
+exact runner output and screenshots for any failures. Logs and xcresults are in
+`build/test-results/<alias>/`. After resolving failures and accepting the references, run `make check`.
+SE/Duo keyboard tests require visible stable keyboard/window intersection, focus, full field/submit
+visibility and interactive dismissal; an off-screen or minimized keyboard cannot pass.
+
+Patches for this round are in ignored `build/commits/1.patch` and `2.patch`, with subjects in
+`messages.txt`, because Git's worktree index is outside this sandbox's writable roots. The patches
+are sequential against c345470; the working tree already contains them. Do not apply them again
+on top of these files. The first contains only plan decisions; the second contains the implementation,
+tests, exports and acceptance notes. Hosted/UI results and reference acceptance remain pending.

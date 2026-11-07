@@ -29,13 +29,13 @@ PHASE9_HOSTED = (
 AUTH_HOSTED = (
     'AppTests/AuthControlTests', 'AppTests/AuthLayoutTests', 'AppTests/AuthSnapshotGuardTests',
     'AppTests/AuthSnapshotTests', 'AppTests/TwoFactorControlTests', 'AppTests/TwoFactorLayoutTests',
-    'AppTests/TwoFactorSnapshotTests',
+    'AppTests/TwoFactorSnapshotTests', 'AppTests/ForgotPasswordControlTests', 'AppTests/ForgotPasswordLayoutTests', 'AppTests/ForgotPasswordSnapshotTests',
 )
 AUTH_UI = (
     'AppUITests/SignInTests', 'AppUITests/SignInKeyboardTests', 'AppUITests/TwoFactorTests',
-    'AppUITests/TwoFactorKeyboardTests', 'AppUITests/AuthSessionTests', 'AppUITests/AuthAuditTests',
+    'AppUITests/TwoFactorKeyboardTests', 'AppUITests/ForgotPasswordTests', 'AppUITests/ForgotPasswordKeyboardTests', 'AppUITests/AuthSessionTests', 'AppUITests/AuthAuditTests',
 )
-AUTH_SNAPSHOTS = ('AppTests/AuthSnapshotTests', 'AppTests/TwoFactorSnapshotTests')
+AUTH_SNAPSHOTS = ('AppTests/AuthSnapshotTests', 'AppTests/TwoFactorSnapshotTests', 'AppTests/ForgotPasswordSnapshotTests')
 
 
 def discovered_suites(directory):
@@ -324,6 +324,23 @@ class ClassificationTests(unittest.TestCase):
         self.assertIn(keyboard, runner.selectors('matrix'))
         self.assertEqual(runner.selection('check', '17e').count(keyboard), 1)
         snapshot = 'AppTests/TwoFactorSnapshotTests'
+        self.assertIn(snapshot, runner.selectors('profiles'))
+        self.assertIn(snapshot, runner.SNAPSHOTS)
+        self.assertEqual(runner.selection('check', '17e').count(snapshot), 1)
+        self.assertEqual(runner.recording_selection([snapshot], 'check', '1'), [snapshot])
+        self.assertEqual(runner.recording_selection([snapshot], 'check', 'launch'), [])
+        for alias in ['se', 'duo']:
+            self.assertEqual(runner.selection('check', alias, only=[keyboard]), [keyboard])
+
+    def test_forgot_suites_register_at_their_tiers_and_record_only_on_17e(self):
+        self.assertIn('AuthTests/ForgotPasswordModelTests', runner.selectors('host'))
+        for suite in ['AppTests/ForgotPasswordControlTests', 'AppTests/ForgotPasswordLayoutTests', 'AppUITests/ForgotPasswordTests']:
+            self.assertIn(suite, runner.selectors('logic'))
+            self.assertEqual(runner.selection('check', '17e').count(suite), 1)
+        keyboard = 'AppUITests/ForgotPasswordKeyboardTests'
+        self.assertIn(keyboard, runner.selectors('matrix'))
+        self.assertEqual(runner.selection('check', '17e').count(keyboard), 1)
+        snapshot = 'AppTests/ForgotPasswordSnapshotTests'
         self.assertIn(snapshot, runner.selectors('profiles'))
         self.assertIn(snapshot, runner.SNAPSHOTS)
         self.assertEqual(runner.selection('check', '17e').count(snapshot), 1)
@@ -651,6 +668,7 @@ class RunnerTests(unittest.TestCase):
             ('check', ['17e'], (), False),
             ('runtime', ['duo'], (), False),
             ('check', ['se', 'duo'], ['AppUITests/TwoFactorKeyboardTests'], True),
+            ('check', ['se', 'duo'], ['AppUITests/ForgotPasswordTests', 'AppUITests/ForgotPasswordKeyboardTests'], True),
             ('matrix', list(runner.MATRIX), (), False),
         ]:
             for state in ('Shutdown', 'Booted'):
@@ -1100,7 +1118,7 @@ class ProfileTests(unittest.TestCase):
 
     def test_new_baseline_inventory_is_complete_after_recording(self):
         catalog = json.loads((ROOT / 'Packages/ChronoFlowKit/Tests/SnapshotSupport/profiles.json').read_text())
-        for screen in ['Welcome', 'Launch', 'Auth', 'TwoFactor']:
+        for screen in ['Welcome', 'Launch', 'Auth', 'TwoFactor', 'ForgotPassword']:
             expected = set()
             if screen == 'Auth':
                 expected.update(f'board-{style}-{language}-{category}-{banner}.png'
@@ -1114,6 +1132,13 @@ class ProfileTests(unittest.TestCase):
                                 for category in ['large', 'xxLarge'] for mode in ['code', 'recovery']
                                 for state in ['none', 'fieldError', 'attempts', 'server'])
                 self.assertEqual(len(expected), 64)
+            if screen == 'ForgotPassword':
+                expected.update(f'board-{style}-{language}-{category}-{mode}-{state}.png'
+                                for style in ['light', 'dark'] for language in ['en', 'nl']
+                                for category in ['large', 'xxLarge']
+                                for mode, states in [('form', ['none', 'fieldError', 'attempts', 'server', 'offline']), ('sent', ['none'])]
+                                for state in states)
+                self.assertEqual(len(expected), 48)
             for device in catalog['devices'].values():
                 profile = catalog['profiles'][device['profile']]
                 name = f"{device['alias']}-{device['width']}x{device['height']}-{device['scale']}x"
@@ -1130,15 +1155,20 @@ class ProfileTests(unittest.TestCase):
                             expected.update(f'{name}-{style}-{language}-{category}-{mode}-{state}.png'
                                             for category in profile['dynamicType'] for mode in ['code', 'recovery']
                                             for state in ['none', 'fieldError', 'attempts', 'server'])
+                        elif screen == 'ForgotPassword':
+                            expected.update(f'{name}-{style}-{language}-{category}-{mode}-{state}.png'
+                                            for category in profile['dynamicType']
+                                            for mode, states in [('form', ['none', 'fieldError', 'attempts', 'server', 'offline']), ('sent', ['none'])]
+                                            for state in states)
                         else:
                             expected.update(f'sampledSplashFrames.{name}-{style}-{language}-{category}-{frame}.png'
                                             for category in ['large', 'xxLarge'] for frame in profile['launchFrames'])
-            directory = ROOT / 'AppTests/__Snapshots__' / ({'Auth': 'Auth', 'TwoFactor': 'Auth/TwoFactor'}.get(screen, f'{screen}SnapshotTests'))
+            directory = ROOT / 'AppTests/__Snapshots__' / ({'Auth': 'Auth', 'TwoFactor': 'Auth/TwoFactor', 'ForgotPassword': 'Auth/Forgot'}.get(screen, f'{screen}SnapshotTests'))
             actual = {p.name for p in directory.glob('*.png')}
             # A wholly unrecorded suite is pending orchestrator work; partial recordings must fail.
             if actual:
                 self.assertEqual(actual, expected, screen)
-            self.assertEqual(len(expected), {'Welcome': 320, 'Launch': 472, 'Auth': 896, 'TwoFactor': 1792}[screen])
+            self.assertEqual(len(expected), {'Welcome': 320, 'Launch': 472, 'Auth': 896, 'TwoFactor': 1792, 'ForgotPassword': 1344}[screen])
 
 
 if __name__ == '__main__':
