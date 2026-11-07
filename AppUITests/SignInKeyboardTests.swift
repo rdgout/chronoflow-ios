@@ -80,29 +80,21 @@ nonisolated final class SignInKeyboardTests: XCTestCase {
             screenshot.lifetime = .keepAlways
             add(screenshot)
         }
-        let keyboard = app.keyboards.firstMatch
         // Inspect keyboard focus without editing away the error state.
         let focused = XCTNSPredicateExpectation(
             predicate: NSPredicate { _, _ in field.value(forKey: "hasKeyboardFocus") as? Bool == true }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [focused], timeout: 5), .completed, "\(context): \(field.identifier) focus")
-        XCTAssertTrue(keyboard.waitForExistence(timeout: 5), "\(context): requires the software keyboard")
         let submit = app.buttons["sign-in.submit"]
-        let frames = try UIWait.stableFrames(
-            [app.windows.firstMatch, app.scrollViews["auth.scroll"], keyboard, field, submit], timeout: 10)
-        let viewport = frames[0].intersection(frames[1])
-        let keyboardFrame = frames[2]
-        let safeViewport: CGRect
-        if keyboardFrame.intersection(frames[0]).isEmpty {
-            safeViewport = frames[0]
-        } else {
-            safeViewport = viewport.intersection(
-                CGRect(
-                    x: viewport.minX, y: viewport.minY, width: viewport.width,
-                    height: max(0, keyboardFrame.minY - viewport.minY)))
-        }
+        let frames = try UIWait.keyboardFrames(in: app, including: [app.scrollViews["auth.scroll"], field, submit])
+        let viewport = frames[0].intersection(frames[2])
+        let keyboardFrame = frames[1]
+        let safeViewport = viewport.intersection(
+            CGRect(
+                x: viewport.minX, y: viewport.minY, width: viewport.width,
+                height: max(0, keyboardFrame.minY - viewport.minY)))
         let message = """
             Sign in keyboard [\(context), focus=\(field.identifier)]
-            window=\(frames[0]) scroll=\(frames[1]) keyboard=\(keyboardFrame)
+            window=\(frames[0]) scroll=\(frames[2]) keyboard=\(keyboardFrame)
             keyboardSafeViewport=\(safeViewport) field=\(frames[3]) submit=\(frames[4])
             """
         print(message)

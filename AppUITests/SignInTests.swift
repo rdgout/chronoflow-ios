@@ -23,7 +23,7 @@ nonisolated final class SignInTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["route.guestWizard"].waitForExistence(timeout: 3))
         XCTAssertFalse(app.images["launch.opening"].exists)
     }
-    @MainActor func testReturnChainKeyboardSubmitAndPasswordClearing() {
+    @MainActor func testReturnChainKeyboardSubmitAndPasswordClearing() throws {
         let app = XCUIApplication()
         app.launchArguments = ["-cf.session", "out", "-cf.reduceMotion"]
         app.launch()
@@ -37,9 +37,9 @@ nonisolated final class SignInTests: XCTestCase {
         XCTAssertTrue(password.waitForExistence(timeout: 3))
         password.typeText("wrong")
         let submit = app.buttons["sign-in.submit"]
-        let keyboard = app.keyboards.firstMatch
         XCTAssertTrue(submit.isHittable)
-        if keyboard.exists { XCTAssertLessThanOrEqual(submit.frame.maxY, keyboard.frame.minY) }
+        let frames = try UIWait.keyboardFrames(in: app, including: [submit])
+        XCTAssertLessThanOrEqual(frames[2].maxY, frames[1].minY)
         password.typeText("\n")
         XCTAssertTrue(app.descendants(matching: .any)["auth.banner"].waitForExistence(timeout: 5))
         XCTAssertFalse((password.value as? String ?? "").contains("•"))

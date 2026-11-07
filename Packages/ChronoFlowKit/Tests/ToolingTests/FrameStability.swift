@@ -1,5 +1,14 @@
 import Foundation
 
+nonisolated enum SoftwareKeyboardVisibility {
+    static func isVisible(_ keyboard: CGRect, in window: CGRect) -> Bool {
+        guard [keyboard, window].allSatisfy({ !$0.isEmpty && !$0.isInfinite && !$0.isNull }) else { return false }
+        let visible = keyboard.intersection(window)
+        // Hardware-keyboard accessory strips and clipped slivers must not count as a software keyboard.
+        return visible.width >= 100 && visible.height >= 100
+    }
+}
+
 nonisolated struct FrameStability {
     private var previous: [CGRect]?
     private var equalSamples = 0

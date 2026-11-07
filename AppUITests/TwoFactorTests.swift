@@ -46,26 +46,24 @@ nonisolated final class TwoFactorTests: XCTestCase {
         let code = app.textFields["two-factor.code"]
         code.tap()
         code.typeText("123")
-        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 3))
         let scroll = app.scrollViews["auth.scroll"]
         XCTAssertEqual(app.scrollViews.matching(identifier: "auth.scroll").count, 1)
         XCTAssertTrue(scroll.isHittable)
         let window = app.windows.firstMatch
-        let frames = try UIWait.stableFrames([window, scroll, app.keyboards.firstMatch], timeout: 10)
-        let viewport = frames[0].intersection(frames[1])
+        let frames = try UIWait.keyboardFrames(in: app, including: [scroll])
+        let viewport = frames[0].intersection(frames[2])
         let contentAboveKeyboard = viewport.intersection(
             CGRect(
                 x: viewport.minX, y: viewport.minY, width: viewport.width,
-                height: max(0, min(viewport.maxY, frames[2].minY) - viewport.minY)))
+                height: max(0, min(viewport.maxY, frames[1].minY) - viewport.minY)))
         XCTAssertFalse(contentAboveKeyboard.isEmpty)
         let origin = window.coordinate(withNormalizedOffset: .zero)
         let start = origin.withOffset(
             CGVector(dx: contentAboveKeyboard.midX - frames[0].minX, dy: contentAboveKeyboard.midY - frames[0].minY))
-        // Duo's keyboard can sit below the app window; the drag must reach it in screen coordinates.
         let end = origin.withOffset(
             CGVector(
                 dx: contentAboveKeyboard.midX - frames[0].minX,
-                dy: max(frames[0].maxY, frames[2].maxY) - frames[0].minY - 1))
+                dy: max(frames[0].maxY, frames[1].maxY) - frames[0].minY - 1))
         start.press(forDuration: 0.1, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.1)
         let dismissed = XCTNSPredicateExpectation(
             predicate: NSPredicate { _, _ in !app.keyboards.firstMatch.exists }, object: nil)
@@ -135,22 +133,16 @@ nonisolated final class TwoFactorTests: XCTestCase {
     let focused = XCTNSPredicateExpectation(
         predicate: NSPredicate { _, _ in field.value(forKey: "hasKeyboardFocus") as? Bool == true }, object: nil)
     XCTAssertEqual(XCTWaiter.wait(for: [focused], timeout: 5), .completed, "\(context): focus")
-    let keyboard = app.keyboards.firstMatch
-    XCTAssertTrue(keyboard.waitForExistence(timeout: 5), "\(context): requires software keyboard")
     let submit = app.buttons["two-factor.submit"]
-    let frames = try UIWait.stableFrames(
-        [app.windows.firstMatch, app.scrollViews["auth.scroll"], keyboard, field, submit], timeout: 10)
-    let viewport = frames[0].intersection(frames[1])
-    let safeViewport =
-        frames[2].intersection(frames[0]).isEmpty
-        ? frames[0]
-        : viewport.intersection(
-            CGRect(
-                x: viewport.minX, y: viewport.minY, width: viewport.width,
-                height: max(0, frames[2].minY - viewport.minY)))
+    let frames = try UIWait.keyboardFrames(in: app, including: [app.scrollViews["auth.scroll"], field, submit])
+    let viewport = frames[0].intersection(frames[2])
+    let safeViewport = viewport.intersection(
+        CGRect(
+            x: viewport.minX, y: viewport.minY, width: viewport.width,
+            height: max(0, frames[1].minY - viewport.minY)))
     let message = """
         Two-factor keyboard [\(context), focus=\(field.identifier)]
-        window=\(frames[0]) scroll=\(frames[1]) keyboard=\(frames[2])
+        window=\(frames[0]) scroll=\(frames[2]) keyboard=\(frames[1])
         keyboardSafeViewport=\(safeViewport) field=\(frames[3]) submit=\(frames[4])
         """
     print(message)
