@@ -1202,6 +1202,10 @@ Stack on 10a. OQ 28's Two-factor translations are resolved and recorded; ship th
   Files: `AppTests/AuthSnapshot*.swift`, `AppTests/__Snapshots__/Auth/**`, `AppUITests/AuthAuditTests.swift`, `Scripts/launch-simulators.py`, `Tests/test_launch_simulators.py`, `Makefile`, `Docs/auth-gate.md`, `Docs/tooling.md`.
   Test: auth runner fixture/failure/record-isolation tests; `AppUITests/AuthSessionTests.swift` covers verified, two-factor and unverified accounts plus offline cached restore. Verify full **Matrix A** with side-by-side board review, AX5 equality, all controls audited after scrolling, `make check` and `make duo`; only the pinned auth board pair accepted under OQ 33, with strict text contrast checks.
 
+#### Phase 10b fix round 4 (2026-11-07)
+
+- [x] Make every system navigation back tap in AppUITests wait for either the navigation-bar button or the system `BackButton`, preferring the navigation-bar query. Duo exposes the latter under a toolbar; keep the fix in the shared UI-test helper and leave the app and snapshot references unchanged. Validation: `make quick`.
+
 ### Phase 11: Recovery and account creation (`feat/phase-11-account`)
 
 Stack on 10b. Four bounded rounds, with independent copy/link gates. The API methods already exist and are unit-tested in 9b; this phase wires the screens. Typed input/mock inbox drives Reset/Verify in tests. Production universal-link handling is deferred server-side, so no claim that a real email opens these native screens; mark that limit in the gate report.

@@ -1,7 +1,7 @@
 import XCTest
 
 nonisolated final class SignInTests: XCTestCase {
-    @MainActor func testWelcomeBackGuestAndAuthLinkSeams() {
+    @MainActor func testWelcomeBackGuestAndAuthLinkSeams() throws {
         let app = XCUIApplication()
         app.launchArguments = ["-cf.session", "out", "-cf.reduceMotion"]
         app.launch()
@@ -15,7 +15,7 @@ nonisolated final class SignInTests: XCTestCase {
             reveal(app.buttons[button], app)
             app.buttons[button].tap()
             XCTAssertTrue(app.staticTexts["route.\(route)"].waitForExistence(timeout: 3))
-            app.navigationBars.buttons.firstMatch.tap()
+            try SystemNavigation.tapBack(in: app)
             XCTAssertTrue(app.staticTexts["auth.heading"].waitForExistence(timeout: 3))
         }
         reveal(app.buttons["sign-in.guest"], app)
