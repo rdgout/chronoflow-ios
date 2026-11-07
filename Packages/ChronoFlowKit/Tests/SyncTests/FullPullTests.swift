@@ -37,7 +37,7 @@ import Testing
         let store = try await SyncStore()
         let source = ScriptedSource()
         var invalid = card()
-        invalid.card["departureUtc"] = nil
+        invalid.card.departureUtc = ""
         await source.configure(trips: [invalid])
         await #expect(throws: (any Error).self) {
             try await FullPull(database: store.database, source: source).run(epoch: store.epoch)

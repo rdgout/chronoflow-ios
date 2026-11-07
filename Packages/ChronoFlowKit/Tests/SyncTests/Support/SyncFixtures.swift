@@ -30,27 +30,36 @@ func check(_ hash: String = "hash", status: CheckStatus? = .done) -> CheckOffCha
 }
 func card(_ id: String = syncTrip, hash: String = "hash", version: String = "v1", keep: Bool = true) -> TripListItem {
     TripListItem(
-        card: JSONObject(["id": .string(id), "departureUtc": .string("2026-11-10T10:00:00Z")]),
+        card: TripCardView(
+            id: id, from: AirportRef(iata: "AMS", zone: "Europe/Amsterdam"),
+            to: AirportRef(iata: "JFK", zone: "America/New_York"), departLocal: "2026-11-10T11:00",
+            arriveLocal: "2026-11-10T13:00", departureUtc: "2026-11-10T10:00:00Z",
+            arrivalUtc: "2026-11-10T18:00:00Z", connections: [], offsetDifferenceMinutes: -360,
+            progress: TripProgress(status: .active), canComplete: false, canReopen: false,
+            canEdit: false, canDuplicate: false, canDelete: false),
         planInputHash: hash, planStartUtc: "2026-11-09T10:00:00Z", planStartZone: "Europe/Amsterdam",
         planEndUtc: "2026-11-12T10:00:00Z", planEndDate: "2026-11-12", preparationDays: 1, keepOffline: keep,
         detailVersion: version)
 }
 func detail(_ hash: String = "hash", version: String = "v1", blocks: Bool = true) -> TripDetail {
     TripDetail(
-        trip: JSONObject(["id": .string(syncTrip)]),
-        plan: JSONObject([
-            "meta": .object(["inputHash": .string(hash)]),
-            "blocks": .array(
-                blocks
-                    ? [
-                        .object([
-                            "actionable": .bool(true),
-                            "checkKey": .object([
-                                "type": .string("sleep"), "localDate": .string("2026-11-10"), "ordinal": .number(1),
-                            ]),
-                        ])
-                    ] : []),
-        ]), notices: JSONObject(), timeline: JSONObject(),
+        trip: TripDetailView(
+            id: syncTrip, from: card().card.from, to: card().card.to, departLocal: "2026-11-10T11:00",
+            departureUtc: "2026-11-10T10:00:00Z", endUtc: "2026-11-12T10:00:00Z", offsetDifferenceMin: -360, legs: []),
+        plan: PlanView(
+            status: .ok, reasons: [], prompts: [], meta: PlanMeta(inputHash: hash), days: [],
+            blocks: blocks
+                ? [
+                    BlockView(
+                        id: "sleep", lane: .sleep, type: .sleep, startUtc: "2026-11-10T20:00:00Z",
+                        endUtc: "2026-11-11T04:00:00Z", displayTz: "Europe/Amsterdam", priority: .core,
+                        text: CopyLine(key: "Sleep", args: []),
+                        params: .sleep(SleepParamsView(kind: .main, setting: .bed, opportunityMin: 480)),
+                        actionable: true,
+                        checkKey: CheckKey(type: .sleep, localDate: "2026-11-10", ordinal: 1))
+                ] : [], warnings: []),
+        notices: PlanNoticesView(days: [], unassignedWarningIndexes: []),
+        timeline: TimelinePresentationView(days: [], blockReasons: [], transferWarnings: []),
         checkState: CheckState(planInputHash: hash, marks: [], days: []), detailVersion: version)
 }
 
@@ -132,9 +141,9 @@ actor ScriptedSource: DataSource {
         try await record("trips")
         return tripValues
     }
-    func fetchTripDetail(id: String) async throws -> TripDetail {
+    func fetchTripDetail(id: String) async throws -> TripDetailResponse {
         try await record("detail")
-        return detailValue
+        return try TripDetailResponse(encoding: detailValue)
     }
     func send(_ change: OutboxChange) async throws -> MutationReceipt {
         changes.append(change)

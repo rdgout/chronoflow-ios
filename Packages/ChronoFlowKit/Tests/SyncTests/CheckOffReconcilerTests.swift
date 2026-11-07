@@ -129,9 +129,7 @@ import Testing
         let store = try await SyncStore()
         let source = ScriptedSource()
         _ = try await store.enqueue(.checkOff(check("old")))
-        var malformed = detail()
-        malformed.plan["blocks"] = nil
-        await source.configure(detail: malformed)
+        await source.configure(failMethod: "detail", methodFailure: .server(status: 200))
         let result = try await OutboxFlusher(database: store.database, source: source).run(epoch: store.epoch)
         #expect(result.retryAfter != nil)
         #expect(try await OutboxRepository(database: store.database).pending().count == 1)

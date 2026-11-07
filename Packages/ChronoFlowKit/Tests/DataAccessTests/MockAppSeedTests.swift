@@ -32,14 +32,14 @@ extension DataSourceSelectionTests {
             let trips = try await source.fetchTrips()
             #expect(trips.count == 7)
             #expect(
-                trips.compactMap { $0.card["to"]?.object?["iata"]?.string } == [
+                trips.map { $0.card.to.iata } == [
                     "HND", "JFK", "SYD", "LHR", "DXB", "AMS", "AMS",
                 ])
             for trip in trips {
-                let detail = try await source.fetchTripDetail(id: #require(trip.card["id"]?.string))
+                let detail = try await source.fetchTripDetail(id: trip.card.id)
                 #expect(detail.checkState.planInputHash == trip.planInputHash)
                 #expect(detail.checkState.marks.isEmpty)
-                #expect(detail.plan["blocks"] != nil)
+                #expect(!detail.plan.blocks.isEmpty)
             }
             #expect(store.load()?.mail.isEmpty == true)
             #expect(store.load()?.accounts.count == 2)

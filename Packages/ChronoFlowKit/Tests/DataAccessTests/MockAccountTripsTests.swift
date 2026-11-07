@@ -53,7 +53,7 @@ import Testing
         _ = try await login(source)
         var change = CheckOffChange(
             tripID: demoTripID, planInputHash: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-            type: .sleep, localDate: "2026-11-10", ordinal: 1, status: .done)
+            type: .sleep, localDate: "2026-10-13", ordinal: 1, status: .done)
         _ = try await source.send(.checkOff(change))
         _ = try await source.send(.checkOff(change))
         #expect(try await source.fetchTripDetail(id: demoTripID).checkState.marks.count == 1)
@@ -173,7 +173,7 @@ extension MockAccountTripsTests {
         _ = try await login(source)
         var change = CheckOffChange(
             tripID: demoTripID, planInputHash: String(repeating: "a", count: 64), type: .sleep,
-            localDate: "2026-11-10", ordinal: 1, status: .done)
+            localDate: "2026-10-13", ordinal: 1, status: .done)
         let first = try await source.send(.checkOff(change))
         clock.advance(3600)
         #expect(try await source.send(.checkOff(change)) == first)

@@ -1,3 +1,4 @@
+import AppCore
 import GRDB
 
 public struct PlanVersionRecord: Codable, FetchableRecord, PersistableRecord, Sendable, Equatable {
@@ -17,6 +18,10 @@ public struct PlanVersionRecord: Codable, FetchableRecord, PersistableRecord, Se
         self.detail = detail
         self.receivedAt = receivedAt
         self.detailVersion = detailVersion
+    }
+
+    public func decodedDetail() throws -> TripDetail {
+        try detail.decode(TripDetail.self)
     }
 
     enum CodingKeys: String, CodingKey {

@@ -9,6 +9,15 @@ public struct JSONDocument: Sendable, Equatable, Codable, DatabaseValueConvertib
         rawValue = value
     }
 
+    public init(data: Data) throws {
+        guard let value = String(data: data, encoding: .utf8) else {
+            throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Expected UTF-8 JSON"))
+        }
+        try self.init(value)
+    }
+
+    public var data: Data { Data(rawValue.utf8) }
+
     public var databaseValue: DatabaseValue { rawValue.databaseValue }
 
     public static func fromDatabaseValue(_ value: DatabaseValue) -> Self? {

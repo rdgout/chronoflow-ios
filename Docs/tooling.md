@@ -16,8 +16,10 @@ the same accounts, settings and seven trip/plan fixtures as RN's mock:
 
 Enter these values on Sign in; the form starts empty. Two-factor sign-in opens the code/recovery
 form before accepting a session. Both accounts start with walkthrough unseen and the RN
-accepted policy versions. Trip dates stay exactly as RN defines them (October 2026); progress
-and offline eligibility are calculated at initial seeding time.
+accepted policy versions. Trip dates rebase at initial seeding time to include an active, an upcoming and a completed
+trip relative to the injected clock. Instants, local dates and copy arguments move together;
+airport zones stay intact, and local times and tick offsets use the rebased dates’ DST rules.
+Progress and offline eligibility use those rebased dates.
 
 The seed and its fixture payload compile only in Debug; Release/Perf contain neither. API selection
 never constructs the mock. The seed loads lazily on the mock actor after the splash commit and is
@@ -32,7 +34,7 @@ host tests can use the scenarios without compiling credentials into the Release 
 `MockAppSeed+Fixtures.swift` embeds RN's `fixture-data.ts` default settings (including
 `createMockAccount`'s optional-items override), `fixtures/trips.ts` and all seven `fixtures/plans`
 payloads, read on 6 November 2026. They are mock data, separate from the sanitized API contract
-fixtures. Seed trip details retain the native optional form seam; no wizard is implemented here.
+fixtures. Trip detail contracts exclude mock-only form/revision; no wizard is implemented here.
 
 Verify on the host with `sh Scripts/host-tests.sh --filter DataSourceSelectionTests`.
 Hosted composition: `make targeted DEVICES="17e" ONLY="AppTests/DataSourceFactoryHostedTests"`.

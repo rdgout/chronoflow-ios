@@ -383,12 +383,12 @@ public actor MockDataSource: DataSource {
         try await begin(.fetchTrips)
         return state!.accounts[try accountID(verified: true)]!.trips
     }
-    public func fetchTripDetail(id: String) async throws -> TripDetail {
+    public func fetchTripDetail(id: String) async throws -> TripDetailResponse {
         try await begin(.fetchTripDetail)
         guard let detail = state!.accounts[try accountID(verified: true)]!.details[id] else {
             throw DataFailure.server(status: 404)
         }
-        return detail
+        return try TripDetailResponse(encoding: detail)
     }
     public func passkeyOptions() async throws -> ApiPasskeyChallenge {
         try await begin(.passkeyOptions)
@@ -522,19 +522,7 @@ public actor MockDataSource: DataSource {
                 throw validation("form", "This plan has changed. Refresh it before marking this step.")
             }
             let key = CheckKey(type: input.type, localDate: input.localDate, ordinal: input.ordinal)
-            let validKey: Bool
-            if case .array(let blocks) = detail.plan["blocks"] {
-                validKey = blocks.contains { block in
-                    guard let object = block.object, object["actionable"] == .bool(true),
-                        let candidate = object["checkKey"]?.object
-                    else { return false }
-                    return candidate["type"] == .string(key.type.rawValue)
-                        && candidate["localDate"] == .string(key.localDate)
-                        && candidate["ordinal"] == .number(Decimal(key.ordinal))
-                }
-            } else {
-                validKey = false
-            }
+            let validKey = detail.plan.blocks.contains { $0.actionable && $0.checkKey == key }
             guard validKey else {
                 throw validation("form", "This plan has changed. Refresh it before marking this step.")
             }
@@ -548,7 +536,7 @@ public actor MockDataSource: DataSource {
             detail.detailVersion = id()
             try update {
                 $0.accounts[accountID]?.details[input.tripID] = detail
-                if let index = $0.accounts[accountID]?.trips.firstIndex(where: { $0.card["id"]?.string == input.tripID }
+                if let index = $0.accounts[accountID]?.trips.firstIndex(where: { $0.card.id == input.tripID }
                 ) {
                     $0.accounts[accountID]?.trips[index].checkState = detail.checkState
                     $0.accounts[accountID]?.trips[index].detailVersion = detail.detailVersion

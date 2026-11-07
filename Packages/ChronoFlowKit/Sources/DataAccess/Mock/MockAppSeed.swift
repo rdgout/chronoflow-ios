@@ -5,19 +5,22 @@
     public enum MockAppSeed {
         struct Fixtures: Decodable {
             let settings: AccountSettings
-            let trips: [TripFixture]
+            var trips: [TripFixture]
         }
         struct TripFixture: Decodable {
-            var card: JSONObject
+            var card: TripCardView
             let detail: TripDetail
         }
 
         public static func make(now: Date, unverified: Bool = false, walkthroughSeen: Bool = false) throws
             -> MockServerState
         {
-            let fixtures = try JSONDecoder().decode(Fixtures.self, from: fixtureData())
+            var fixtures = try JSONDecoder().decode(Fixtures.self, from: fixtureData())
+            fixtures.trips = try fixtures.trips.enumerated().map {
+                try rebase($0.element, index: $0.offset, now: now)
+            }
             let trips = fixtures.trips.map { listItem($0, now: now) }
-            let details = Dictionary(uniqueKeysWithValues: fixtures.trips.map { ($0.card["id"]!.string!, $0.detail) })
+            let details = Dictionary(uniqueKeysWithValues: fixtures.trips.map { ($0.card.id, $0.detail) })
             var snapshot = AccountSnapshot.mockRegistration(
                 id: MockScenarioValues.demoID, name: "Demo Traveller", email: MockScenarioValues.demoEmail,
                 language: .en, now: now)
@@ -56,43 +59,30 @@
         private static func listItem(_ fixture: TripFixture, now: Date) -> TripListItem {
             var card = fixture.card
             let plan = fixture.detail.plan
-            guard case .array(let days) = plan["days"], case .array(let blocks) = plan["blocks"] else {
-                preconditionFailure("Mock plan fixture must have days and blocks")
+            let first = plan.days.first!
+            let last = plan.days.last!
+            let start = first.startUtc
+            let end = last.endUtc
+            let status: TripStatus = now >= instant(end) ? .completed : now < instant(start) ? .upcoming : .active
+            let next = plan.blocks.first {
+                $0.actionable && $0.checkKey != nil && instant($0.endUtc) > now
             }
-            let first = days.first!.object!
-            let last = days.last!.object!
-            let start = first["startUtc"]!.string!
-            let end = last["endUtc"]!.string!
-            let status = now >= instant(end) ? "completed" : now < instant(start) ? "upcoming" : "active"
-            let next = blocks.compactMap(\.object).first {
-                $0["actionable"] == .bool(true) && $0["checkKey"]?.object != nil
-                    && instant($0["endUtc"]!.string!) > now
-            }
-            card["progress"] = .object([
-                "status": .string(status),
-                "nextStep": next.map { .object(["text": $0["text"]!, "displayTz": $0["displayTz"]!]) } ?? .null,
-            ])
-            card["canComplete"] = .bool(status != "completed")
+            card.progress = TripProgress(
+                status: status, nextStep: next.map { TripCardNextStepView(text: $0.text, displayTz: $0.displayTz) })
+            card.canComplete = status != .completed
             let keepOffline =
-                status == "active"
-                || (status != "completed" && instant(start) >= now && instant(start) <= now + 7 * 86400)
-            let summary = plan["summary"]!.object!
-            guard case .array(let zones) = first["zones"],
-                case .number(let emitted) = summary["preparation"]!.object!["emitted"]
-            else {
-                preconditionFailure("Mock plan must have zones and preparation days")
-            }
+                status == .active
+                || (status != .completed && instant(start) >= now && instant(start) <= now + 7 * 86400)
             return TripListItem(
                 card: card, planInputHash: fixture.detail.checkState.planInputHash, planStartUtc: start,
-                planStartZone: zones.first!.object!["tz"]!.string!, planEndUtc: end,
-                planEndDate: last["labelDate"]!.string!,
-                preparationDays: NSDecimalNumber(decimal: emitted).intValue,
-                adaptation: summary["adaptation"]?.object.map(JSONObject.init), keepOffline: keepOffline,
+                planStartZone: first.zones.first!.tz, planEndUtc: end, planEndDate: last.labelDate,
+                preparationDays: plan.summary?.preparation.emitted ?? 0,
+                adaptation: plan.summary?.adaptation, keepOffline: keepOffline,
                 detailVersion: keepOffline ? fixture.detail.detailVersion : nil,
                 checkState: keepOffline ? fixture.detail.checkState : nil)
         }
 
-        private static func instant(_ value: String) -> Date {
+        static func instant(_ value: String) -> Date {
             let normalized = value.count == 17 ? value.replacingOccurrences(of: "Z", with: ":00Z") : value
             return ISO8601DateFormatter().date(from: normalized)!
         }
