@@ -80,14 +80,13 @@ nonisolated final class AuthSubtitleContrastTests: XCTestCase {
                                 let lines = measurement.lines
                                 let visible = subtitle.intersection(viewport)
                                 if !visible.isNull && !visible.isEmpty {
-                                    for y in Int(visible.minY * host.scale)..<Int(visible.maxY * host.scale) {
-                                        for channel in 0..<3 {
-                                            let pixel = y * raster.width * 4 + channel
-                                            XCTAssertLessThanOrEqual(
-                                                abs(Int(raster.bytes[pixel]) - Int(expectedSky.bytes[pixel])), 2,
-                                                "Sky must use the board ramp over the full window, row \(y)")
-                                        }
-                                    }
+                                    let difference = try XCTUnwrap(
+                                        RenderedTextContrast.maximumBackgroundDifference(
+                                            raster: raster, reference: expectedSky, frame: subtitle, scale: host.scale,
+                                            text: Array(rgb.prefix(3)).map(Double.init), viewport: viewport),
+                                        "No clean background across subtitle columns")
+                                    XCTAssertLessThanOrEqual(
+                                        difference, 2, "Sky must use the board ramp behind the subtitle: \(subtitle)")
                                 }
                                 let context =
                                     "\(fixture.name), \(language), \(style), \(category), mode=\(mode), reveal=\(target), offset=\(scroll.contentOffset.y), subtitle=\(subtitle)"

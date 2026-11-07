@@ -1,4 +1,4 @@
-# Auth subtitle contrast, Phase 10b fix round 2
+# Auth subtitle contrast, Phase 10b fix round 3
 
 User decision, 2026-11-07: **ignore Apple's contrast result only for the Sign in and Two-factor
 subtitle, and only while rendered pixels prove every visible line is at least 4.5:1.** Every other
@@ -10,8 +10,19 @@ then requires a unique static-text subtitle in the current auth scroll view with
 Inside that issue handler it captures the app screenshot, reads the live safe-area/scroll/keyboard
 viewport and subtitle frame, derives scale from the raster/app bounds, and uses the audited
 appearance and default/xxLarge category with generated `skyTitle` and `Typography.authBody`.
-`RenderedTextContrast` decodes the screenshot to sRGB, finds actual rendered ink within each visible
-line, and samples the unobstructed sky at the same pixel rows behind it. CfSky is horizontally uniform.
+`RenderedTextContrast` decodes the screenshot to sRGB and samples clean background pixels inside
+each visible line's rectangle. Samples must be far from the ink token (at least 0.1 in one sRGB
+channel) and flat across their 3 × 3 neighbourhood (within 2/255 per channel). Every visible pixel
+row needs a clean local sample; no clean background means no measurement. The minimum ratio uses
+the worst local background, including bright patches behind the subtitle, never the window edge.
+
+Ink coverage is projected against each row's local background. Pixels with at least 10% coverage
+count as ink, including antialiasing and dimmed text. At least 40% of those pixels must be within
+0.03 per channel of the token, with at least one visible line-height's worth of near-token pixels
+(and at least three). This rejects a mostly dimmed line even if some opaque pixels survive. The
+reported ink is the darkest qualifying pixel, rather than the closest match. The exception still
+requires the measured minimum to be **≥ 4.5:1** on every visible line.
+
 Every visible line must have measurable ink; missing lines, offscreen-only text, mismatched bounds,
 conversion/capture failures and minima below 4.5 fail. No ratio from a different screen, stage or
 hosted run can exempt an issue. Logs/retained attachments report context, frames, measured/expected
@@ -60,8 +71,9 @@ design Open question (board text below 4.5:1) has not been established.
 
 `AppTests/AuthSubtitleContrastTests` now renders the board and 17e fixtures, en/nl × light/dark ×
 default/xxLarge × Sign in/code/recovery. It reveals controls in the audit's order, measures the
-actual subtitle frame after each scroll, verifies the background against a full-window rendered
-board sky, samples rendered text ink and sky behind each line, and prints ratios, frames and scroll
+actual subtitle frame after each scroll, verifies clean background pixels across the subtitle's
+columns against the corresponding x/y pixels of a full-window rendered board sky, samples rendered
+text ink and background behind each line, and prints ratios, frames and scroll
 offsets. Missing ink and ratios below 4.5 fail. It never reads or writes snapshot references. The
 portable sampler has host checks for actual ink, blank lines and luminance arithmetic.
 
@@ -75,3 +87,9 @@ access is denied in this sandbox. Task 2 also retains its existing Two-factor si
 make generate
 make targeted DEVICES="17e" ONLY="AppTests/AuthSubtitleContrastTests AppTests/AuthSnapshotGuardTests AppTests/DataSourceFactoryHostedTests AppUITests/AuthSessionTests AppUITests/AuthAuditTests"
 ```
+
+Fix round 3 host fixtures cover a bright local patch with the left screen edge unchanged, the
+corresponding x/y sky mismatch, one surviving token pixel, 37.5% surviving token pixels amid dimmed
+ink, normal antialiasing, and a rectangle without clean background. Read-only remeasurement of all
+80 saved round-1 crops remains measurable and above 4.5:1; sampled background differences from the
+same-row sky stay within 2/255. This is sampler validation, not a new simulator acceptance run.

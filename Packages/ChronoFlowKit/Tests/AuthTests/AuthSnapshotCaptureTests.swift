@@ -87,6 +87,86 @@ struct AuthSnapshotCaptureTests {
         #expect(try measure(png(), visible: CGRect(x: 0, y: 30, width: 40, height: 20)).minimum == nil)
     }
 
+    @Test func contrastSamplesTheWorstLocalBackdropInsteadOfTheScreenEdge() throws {
+        let frame = CGRect(x: 4, y: 4, width: 32, height: 12)
+        let text = [Double](repeating: 240.0 / 255, count: 3)
+        let raster = try SnapshotRaster(
+            png: png { bytes in
+                for y in 4..<16 {
+                    for x in 28..<36 {
+                        for channel in 0..<3 { bytes[(y * 40 + x) * 4 + channel] = 185 }
+                    }
+                }
+            })
+        let measurement = RenderedTextContrast.measure(
+            raster: raster, frame: frame, scale: 1, lineHeight: 12, text: text, viewport: viewport)
+        let minimum = try #require(measurement.minimum)
+        #expect(minimum < 4.5)
+        #expect(abs(minimum - RenderedTextContrast.ratio(text, [Double](repeating: 185.0 / 255, count: 3))) < 0.001)
+        let reference = try SnapshotRaster(png: png())
+        #expect(
+            RenderedTextContrast.maximumBackgroundDifference(
+                raster: reference, reference: reference, frame: frame, scale: 1, text: text, viewport: viewport) == 0)
+        let difference = try #require(
+            RenderedTextContrast.maximumBackgroundDifference(
+                raster: raster, reference: reference, frame: frame, scale: 1, text: text, viewport: viewport))
+        #expect(difference > 2)
+    }
+
+    @Test func contrastRejectsMostlyDimmedInkEvenWithSomeOpaqueTokenPixels() throws {
+        let frame = CGRect(x: 4, y: 4, width: 32, height: 12)
+        for opaqueColumns in [1, 6] {
+            let raster = try SnapshotRaster(
+                png: png { bytes in
+                    for y in 6..<12 {
+                        for x in 8..<24 where x >= 8 + opaqueColumns || y != 6 && opaqueColumns == 1 {
+                            for channel in 0..<3 { bytes[(y * 40 + x) * 4 + channel] = 100 }
+                        }
+                    }
+                })
+            #expect(
+                RenderedTextContrast.measure(
+                    raster: raster, frame: frame, scale: 1, lineHeight: 12,
+                    text: [Double](repeating: 240.0 / 255, count: 3), viewport: viewport
+                ).minimum == nil)
+        }
+    }
+
+    @Test func contrastAcceptsAntialiasedInkButRequiresCleanLocalBackground() throws {
+        let frame = CGRect(x: 4, y: 4, width: 32, height: 12)
+        let text = [Double](repeating: 240.0 / 255, count: 3)
+        let antialiased = try SnapshotRaster(
+            png: png { bytes in
+                for y in 6..<12 {
+                    for x in [8, 23] {
+                        for channel in 0..<3 { bytes[(y * 40 + x) * 4 + channel] = 125 }
+                    }
+                }
+            })
+        #expect(
+            try #require(
+                RenderedTextContrast.measure(
+                    raster: antialiased, frame: frame, scale: 1, lineHeight: 12, text: text, viewport: viewport
+                ).minimum
+            ) >= 4.5)
+        let noBackground = try SnapshotRaster(
+            png: png { bytes in
+                for y in 4..<16 {
+                    for x in 4..<36 {
+                        for channel in 0..<3 { bytes[(y * 40 + x) * 4 + channel] = 240 }
+                    }
+                }
+            })
+        #expect(
+            RenderedTextContrast.measure(
+                raster: noBackground, frame: frame, scale: 1, lineHeight: 12, text: text, viewport: viewport
+            ).minimum == nil)
+        #expect(
+            RenderedTextContrast.maximumBackgroundDifference(
+                raster: noBackground, reference: antialiased, frame: frame, scale: 1, text: text, viewport: viewport)
+                == nil)
+    }
+
     @Test func rejectsBlankRecordingBeforeWritingAndKeepsComparisonReadOnly() throws {
         let root = FileManager.default.temporaryDirectory.appending(path: "auth-capture-\(UUID())")
         defer { try? FileManager.default.removeItem(at: root) }
@@ -113,7 +193,10 @@ struct AuthSnapshotCaptureTests {
             required: Set(self.frames.keys))
     }
 
-    private func png(ink: Bool = true, alpha: UInt8 = 255, headingInk: Bool = true, foreground: UInt8 = 240) throws
+    private func png(
+        ink: Bool = true, alpha: UInt8 = 255, headingInk: Bool = true, foreground: UInt8 = 240,
+        modify: ((inout [UInt8]) -> Void)? = nil
+    ) throws
         -> Data
     {
         var bytes = [UInt8](repeating: 0, count: 40 * 60 * 4)
@@ -126,6 +209,7 @@ struct AuthSnapshotCaptureTests {
                 bytes[index + 3] = alpha
             }
         }
+        modify?(&bytes)
         let provider = try #require(CGDataProvider(data: Data(bytes) as CFData))
         let image = try #require(
             CGImage(
