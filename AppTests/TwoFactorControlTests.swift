@@ -5,6 +5,26 @@ import UIKit
 import XCTest
 
 nonisolated final class TwoFactorControlTests: XCTestCase {
+    @MainActor func testBothModesKeepInteractiveKeyboardDismissalAndVerticalBouncing() async throws {
+        try await FontRegistry.register()
+        let fixture = try XCTUnwrap(AuthDeviceFixture.all().first { $0.name == "17e" })
+        for recovery in [false, true] {
+            let model = twoFactorSnapshotModel(recovery: recovery)
+            let host = try AuthTestHost(
+                TwoFactorView(model: model), size: fixture.size, insets: fixture.insets, scale: fixture.scale)
+            defer { host.close() }
+            try await host.settle()
+            let field = try XCTUnwrap(textFields(host.window).first)
+            var parent = field.superview
+            while parent != nil && !(parent is UIScrollView) { parent = parent?.superview }
+            let scroll = try XCTUnwrap(parent as? UIScrollView)
+            XCTAssertTrue(scroll.isScrollEnabled)
+            XCTAssertTrue(scroll.bounces)
+            XCTAssertTrue(scroll.alwaysBounceVertical)
+            XCTAssertEqual(scroll.keyboardDismissMode, .interactive)
+        }
+    }
+
     @MainActor func testDisplayedCodeRejectsOverflowAndNonDigitsEvenWhenTheModelDoesNotChange() async throws {
         try await FontRegistry.register()
         let model = twoFactorSnapshotModel()

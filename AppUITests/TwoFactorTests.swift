@@ -48,10 +48,13 @@ nonisolated final class TwoFactorTests: XCTestCase {
         code.typeText("123")
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 3))
         let scroll = app.scrollViews["auth.scroll"]
+        XCTAssertEqual(app.scrollViews.matching(identifier: "auth.scroll").count, 1)
+        XCTAssertTrue(scroll.isHittable)
         scroll.swipeDown(velocity: .slow)
         let dismissed = XCTNSPredicateExpectation(
             predicate: NSPredicate { _, _ in !app.keyboards.firstMatch.exists }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
+        XCTAssertEqual(code.value as? String, "123")
         revealTwoFactor(app.buttons["auth.back"], in: scroll)
         app.buttons["auth.back"].tap()
         XCTAssertTrue(app.textFields["sign-in.email"].waitForExistence(timeout: 3))

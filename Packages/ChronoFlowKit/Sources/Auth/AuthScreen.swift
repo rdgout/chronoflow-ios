@@ -57,6 +57,7 @@
                     )
                     .frame(minHeight: viewport.size.height, alignment: .top)
                 }
+                .scrollBounceBehavior(.always, axes: .vertical)
                 .scrollDismissesKeyboard(.interactively)
                 .accessibilityIdentifier("auth.scroll")
             }.background { CfSky().ignoresSafeArea() }
