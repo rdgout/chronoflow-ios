@@ -3,14 +3,37 @@ import Testing
 
 struct AuthScrollGestureTests {
     @Test func duoGestureStartsAboveTheRecordedKeyboardInsteadOfOnIt() throws {
-        let viewport = CGRect(x: 0, y: 0, width: 382, height: 414)
-        let toggle = CGRect(x: 36, y: 382, width: 310, height: 44)
+        let window = CGRect(x: 0, y: 0, width: 466, height: 678)
+        let safeArea = window.insetBy(dx: 24, dy: 20)
+        let keyboard = CGRect(x: 0, y: 414, width: 466, height: 264)
+        let toggle = CGRect(x: 36, y: 422, width: 310, height: 44)
+        let viewport = AuthScrollGesture.viewport(
+            window: window, safeArea: safeArea, scroll: window, keyboard: keyboard)
         let gesture = try #require(AuthScrollGesture.reveal(toggle, in: viewport))
+        #expect(viewport.maxY == keyboard.minY)
+        #expect(viewport.minX == safeArea.minX)
+        #expect(viewport.maxX == safeArea.maxX)
         #expect(viewport.contains(gesture.start))
         #expect(viewport.contains(gesture.end))
-        #expect(gesture.start.y < 414)
+        #expect(gesture.start.y < keyboard.minY)
         #expect(gesture.start.y - gesture.end.y >= toggle.maxY - viewport.maxY)
-        #expect(!viewport.contains(CGPoint(x: 233, y: 439)))
+        #expect(!keyboard.contains(gesture.start))
+
+        let unclipped = AuthScrollGesture.viewport(window: window, safeArea: safeArea, scroll: window, keyboard: nil)
+        #expect(unclipped.maxY == safeArea.maxY)
+        #expect(AuthScrollGesture.reveal(toggle, in: unclipped) == nil)
+        let oldStart = CGPoint(x: window.midX, y: 439)
+        #expect(keyboard.contains(oldStart))
+        #expect(!viewport.contains(oldStart))
+        #expect(oldStart.y >= keyboard.minY)
+
+        let raisedKeyboard = keyboard.offsetBy(dx: 0, dy: -60)
+        let raisedViewport = AuthScrollGesture.viewport(
+            window: window, safeArea: safeArea, scroll: window, keyboard: raisedKeyboard)
+        let raisedGesture = try #require(AuthScrollGesture.reveal(toggle, in: raisedViewport))
+        #expect(raisedViewport.maxY == raisedKeyboard.minY)
+        #expect(raisedGesture.start.y < raisedKeyboard.minY)
+        #expect(raisedGesture.start.y < gesture.start.y)
     }
 
     @Test func gesturesStayInsideShortAndAsymmetricViewportsInBothDirections() throws {

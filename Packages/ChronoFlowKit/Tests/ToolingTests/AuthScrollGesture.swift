@@ -1,6 +1,14 @@
 import CoreGraphics
 
 nonisolated enum AuthScrollGesture {
+    static func viewport(window: CGRect, safeArea: CGRect, scroll: CGRect, keyboard: CGRect?) -> CGRect {
+        var viewport = safeArea.intersection(window).intersection(scroll)
+        if let keyboard, SoftwareKeyboardVisibility.isVisible(keyboard, in: window) {
+            viewport.size.height = max(0, min(viewport.maxY, keyboard.minY) - viewport.minY)
+        }
+        return viewport
+    }
+
     static func reveal(_ frame: CGRect, in viewport: CGRect) -> (start: CGPoint, end: CGPoint)? {
         guard !viewport.isEmpty, !viewport.isInfinite, !viewport.isNull else { return nil }
         let upward = frame.maxY > viewport.maxY

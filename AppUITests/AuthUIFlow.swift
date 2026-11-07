@@ -44,13 +44,12 @@ import XCTest
             XCTFail("Missing window safe-area diagnostic")
             return .zero
         }
-        var viewport = CGRect(x: values[0], y: values[1], width: values[2], height: values[3])
-            .offsetBy(dx: window.frame.minX, dy: window.frame.minY).intersection(scrollFrame)
+        let safeArea = CGRect(x: values[0], y: values[1], width: values[2], height: values[3])
+            .offsetBy(dx: window.frame.minX, dy: window.frame.minY)
         let keyboard = app.keyboards.firstMatch
-        if keyboard.exists && SoftwareKeyboardVisibility.isVisible(keyboard.frame, in: window.frame) {
-            viewport.size.height = max(0, min(viewport.maxY, keyboard.frame.minY) - viewport.minY)
-        }
-        return viewport
+        return AuthScrollGesture.viewport(
+            window: window.frame, safeArea: safeArea, scroll: scrollFrame,
+            keyboard: keyboard.exists ? keyboard.frame : nil)
     }
 
     static func reveal(_ element: XCUIElement, in app: XCUIApplication, scroll: XCUIElement? = nil) {
