@@ -1,4 +1,4 @@
-# Plan: native iOS ChronoFlow — launch, Welcome, authentication and offline store
+# Plan: native iOS ChronoFlow — launch, authentication, offline store and trips
 
 ## Context
 
@@ -12,9 +12,9 @@ ChronoFlow plans sleep, light and caffeine for each trip. Two apps exist, both r
 - Five full-screen SVG layers in the overlay; Welcome draws `SkyBackground` twice; per-frame bezier allocation in worklets.
 - The moon landing depends on JS layout (`measureInWindow`), with a fixed fallback offset.
 
-**This plan covers:** the system launch screen; animated splash and readiness; Welcome and its intro/moon landing; sign-in and two-factor; password recovery, account creation and email verification; a GRDB account store, mock and real API data sources, sessions and offline sync; English/Dutch, both appearances and accessibility. **Phases 6–8 stay in place and run later for the splash/Welcome slice**: the existing audit, RN comparison and launch verification are not auth acceptance. Phases 9–11 have their own tests and matrix gates.
+**This plan covers:** the system launch screen; animated splash and readiness; Welcome and its intro/moon landing; sign-in and two-factor; password recovery, account creation and email verification; a GRDB account store, mock and real API data sources, sessions and offline sync; English/Dutch, both appearances and accessibility. **Phases 6–8 stay in place and run later for the splash/Welcome slice**: the existing audit, RN comparison and launch verification are not auth acceptance. Phases 9–11 have their own tests and matrix gates. The reviewed trips extension (2026-11-07) schedules Phases 12–18 after 11d; each phase lifts the UI exclusions below only for its own scope.
 
-**It deliberately does not cover:** the guest wizard, Today UI (boards exist; only the `.today` route seam is used), terms/walkthrough UI, notifications, production email deep-link delivery/universal links (server-side deferred; reset/verify input seams are covered), guest-draft recovery (OQ 17), email-change Settings flow, an in-app appearance setting, RN user migration (OQ 9), or Android. **Still not shippable to TestFlight:** unresolved auth copy/design/link OQs and unbuilt destinations must be settled first. Phase 9d replaces Phase 4's historical Release signed-out-only restriction; the `Perf` scheme retains an isolated signed-out launch path.
+**It deliberately does not cover:** the guest wizard, Today UI (boards exist; only the `.today` route seam is used), terms/walkthrough UI, notifications, guest-draft recovery (OQ 17), email-change Settings flow, an in-app appearance setting, RN user migration (OQ 9), or Android. **Still not shippable to TestFlight:** server AASA/team-ID setup, physical link acceptance and unbuilt destinations must be settled first. Phase 9d replaces Phase 4's historical Release signed-out-only restriction; the `Perf` scheme retains an isolated signed-out launch path.
 
 **Sources:** canvas boards `SplashSpec`, `SplashScreen`, `SplashSlow`, `SplashWelcome`, `Main`, `canvas.json`, `ds/chronoflow/tokens.json` (downloaded 2026-11-05, byte-identical to `chronoflow-mobile/_design/canvas/`); `cf-sky`, `cf-press` and token variables in `chronoflow-mobile/_design/canvas/theme.css`; `pattern-dots` in `ds/chronoflow/components/bundle.css`; settled rules in RN `plan.md` Phase 21. Auth extension: committed `AuthSignIn`, `AuthSignUp`, `AuthTwoFactor` (all eight `screen` variants), wrapper `Auth*.dc.html` boards and `AuthStates`; source verification recorded under the auth/store spec below (2026-11-06).
 
@@ -484,9 +484,9 @@ Scale through the existing root **xxLarge** cap; no per-view caps or smaller fon
 - Keyboard safe-area avoidance, interactive scroll dismissal, focus-driven scroll and remeasurement after errors/keyboard resizing. Keep the focused input and submit fully visible in the measured keyboard-safe viewport, revealing the field's hint/error with them where space allows; test real frames rather than a fixed keyboard height. If SE/Duo at xxLarge cannot fit that pair within the existing layout, record an undesigned keyboard state and defer it under OQ 32; hiding the submit, shrinking capped text or inventing a pinned/duplicate action is not an acceptance workaround. Return chain: Sign in email → password → go; Sign up name → email → password → confirmation → go; Reset new → confirmation → go; Forgot email → send; recovery code → go. Number pad has no return: its Verify button must remain reachable above the keyboard; no auto-submit when six digits arrive. AutoFill: email/username, currentPassword/newPassword, oneTimeCode; no autocorrect/capitalization for email/password/codes.
 - Sign in starts empty; clear password after **every** attempt, retain email and error/banner. On two-factor result push an in-memory challenge screen; no session before completion. Back → Sign in, discard code/challenge. Clear code after every attempt and on mode changes; recovery mode uses a regular keyboard and consumes each recovery code once. Missing challenge → Sign in; expired/exhausted challenge uses returned field/notice error, with no invented expiry screen. The sample board wrong-code message is a visual field-error example; use actual server keys, not its 30-second claim for every error.
 - Welcome's Sign in now mounts AuthSignIn. Forgot/Create account enter auth navigation seams until their Phase 11 screens exist; footer Plan a trip first uses `.guestWizard`. Success accepts the session once, then routes unverified → `.verify`, verified eligible account → existing `.today`; existing terms/walkthrough gate precedence remains. Today has boards but building it is outside this plan; Debug route diagnostics only under D17/OQ 24, no invented Release destination. Never replay splash/Welcome intro on auth navigation or sign-out.
-- Forgot transitions to the designed sent Notice after 204 for any address. Open email uses RN's `message://` through the system; a missing handler keeps this designed state, not a fabricated error screen. Reset input requires token+email, otherwise resetExpired; the invalid-token key also selects resetExpired. Send a new link prepopulates Forgot; done creates **no** session. Board reset/done auto-login claims and token-revocation copy need OQ 22/27 before implementation.
+- Forgot transitions to the designed sent Notice after 204 for any address. Open email uses RN's `message://` through the system; a missing handler keeps this designed state, not a fabricated error screen. Reset input requires token+email, otherwise resetExpired; the invalid-token key also selects resetExpired. Send a new link prepopulates Forgot; done creates **no** session. Settled OQ 22/27 approves RN’s honest copy: Save new password; Password updated. Sign in with your new password.; other devices are signed out; Continue → Sign in. No session is created from the 204.
 - Sign up uses one visibility control for both password fields; clears passwords after every attempt, keeps name/email. Terms/privacy open the existing web `/terms` and `/privacy` URLs (RN `src/config/web.ts:7`), not a new native policy reader. Unverified session → verify seam. Verify waiting/failed is designed; re-check users/me on scene active/return from email, resend uses the real endpoint and deadline `resendAfterSeconds` (0:42 is sample only). Matching account+email+epoch required before updating `has_verified_email`. Failed retry and resend buttons follow the failed board. Back/Use a different email explicitly signs out with discard. No toast or email-changed screen is added.
-- Email reset/verify screens may be driven by typed inputs/mock inbox events in tests. **Universal links/app.chronoflow.net delivery is deferred server-side; emails currently go to web pages.** D15/OQ 15 still registers no colliding scheme. Real Forgot/Register/Resend can be implemented and contract-tested; on-device receipt of reset and signed verify inputs cannot be promised. Mock inbox exercises end-to-end transitions without external mail; it has no in-app UI board. Verification after completing the web flow can be detected by users/me on activation. OQ 25 gates production link integration/copy.
+- **Universal links (OQ 25, user 2026-11-07: “Assume the links will automatically send you to the app”).** Implement native `NSUserActivity` universal-link entry in 11b (reset) and 11d (verify), with device associated domain `applinks:app.chronoflow.net` (simulator builds as allowed). W `FortifyServiceProvider` uses `AppUrls::web()` with `config('app.url')`; Fortify routes (no `paths` override) produce `https://app.chronoflow.net/reset-password/{token}?email={encodedEmail}` and `https://app.chronoflow.net/email/verify/{id}/{hash}?expires={expires}&signature={signature}`. Parse URL components and percent encoding exactly, preserving signed values for the authenticated API’s `{id, hash, expires, signature}`; reset takes token + email. Never substitute RN’s token-shaped verify input or re-sign a URL. No colliding custom scheme (D15/OQ 15). The server must serve an AASA for app.chronoflow.net containing the confirmed team/bundle ID before real emails open the app; team ID remains pending (OQ 4). Test typed inputs/mock inbox and simulated `NSUserActivity` URLs without mail/network. Recheck users/me on activation after web verification too. Physical mail-link acceptance stays open until server association is deployed.
 - VoiceOver order: back, brand (decorative moon hidden), heading (header trait), description, card banner, fields with labels/value/hint/error, submit/secondary links, footer. On new banner announce localized title+body once using queued `AccessibilityNotification.Announcement`; no announcement for each body redraw/edit. Announce sent notice and screen transitions; associate field errors with their input, retain focus after submit, move to first invalid field where applicable. Password visibility exposes switch state; no duplicate icon readings. Touch targets ≥44 and text/error icon supply non-color cues. Audits follow the root cap, with no inherited Welcome contrast exceptions for auth: report board conflicts and defer corrections to design.
 
 ### Auth copy (String Catalog; English sentence keys)
@@ -537,17 +537,17 @@ Scale through the existing root **xxLarge** cap; no per-view caps or smaller fon
 | If {{email}} has an account, a link to choose a new password is on its way. | Als er een account bestaat voor {{email}}, is er een link onderweg om een nieuw wachtwoord te kiezen. (translated) |
 | Open email app | Open je e-mailapp |
 | Choose a new password | Kies een nieuw wachtwoord |
-| You'll be signed in on this phone once it's saved. | Je wordt op deze telefoon ingelogd zodra je wachtwoord is opgeslagen. (translated) |
+| Sign in with your new password once it's saved. | Log in met je nieuwe wachtwoord zodra het is opgeslagen. (translated; OQ 27 approved copy amendment) |
 | New password | Nieuw wachtwoord |
-| At least 10 characters. | Minstens 10 tekens. |
+| Use at least 12 characters, with uppercase and lowercase letters, numbers and symbols. Choose a password that has not appeared in a data leak. | Gebruik minstens 12 tekens, met hoofdletters, kleine letters, cijfers en symbolen. Kies een wachtwoord dat niet in een datalek voorkomt. (translated; OQ 21 approved copy amendment supersedes “At least 10 characters”) |
 | Confirm new password | Bevestig je nieuwe wachtwoord |
-| Save and sign in | Opslaan en inloggen (translated) |
+| Save new password | Nieuw wachtwoord opslaan (RN; OQ 27) |
 | This link has expired | Deze link is verlopen |
 | Reset links work once and expire after an hour. We can send you a new one. | Een herstellink werkt één keer en verloopt na een uur. We kunnen je een nieuwe sturen. |
 | Send a new link | Nieuwe link sturen |
 | Password saved | Wachtwoord opgeslagen |
-| You're signed in on this phone. Use your new password next time, here and on the web. | Je bent ingelogd op deze telefoon. Gebruik de volgende keer je nieuwe wachtwoord, hier en op het web. (translated) |
-| Other devices stay signed in. If you didn't make this change, reset your password again and contact us. | Andere apparaten blijven ingelogd. Heb je dit niet zelf gedaan? Herstel je wachtwoord dan opnieuw en neem contact met ons op. |
+| Password updated. Sign in with your new password. | Je wachtwoord is gewijzigd. Log in met je nieuwe wachtwoord. (RN; OQ 22/27) |
+| Other devices are signed out. If you didn't make this change, reset your password again and contact us. | Andere apparaten zijn uitgelogd. Heb je dit niet zelf gedaan? Herstel je wachtwoord dan opnieuw en neem contact met ons op. (translated; OQ 22 approved copy amendment) |
 | Continue | Doorgaan |
 | Check your inbox | Bekijk je inbox |
 | We sent a link to {{email}}. Open it on this phone to finish. | We hebben een link naar {{email}} gestuurd. Open die op deze telefoon om het af te ronden. (translated) |
@@ -612,7 +612,7 @@ Scale through the existing root **xxLarge** cap; no per-view caps or smaller fon
 | This password reset link is invalid or has expired. | Deze link om je wachtwoord te herstellen is ongeldig of verlopen. |
 | This email verification link is invalid or has expired. | Deze link om je e-mailadres te verifiëren is ongeldig of verlopen. (backend) |
 
-Passkey/divider copy is retained under settled OQ 20; credential/challenge error translations are specified in the API contract. Password hint depends on OQ 21. Reset auto-login strings depend on OQ 27; the resetDone other-devices claim depends on OQ 22 even though RN has a Dutch value. Offline title exists in RN but **has no board variant** (OQ 23). Do not include the recovery placeholder `xxxx-xxxx` as a prefilled value; it is a sample format from the board. Credentials/emailTaken backend keys classify the named banners rather than displaying duplicate field messages.
+Passkey/divider copy is retained under settled OQ 20; credential/challenge error translations are specified in the API contract. OQ 21/22/27 are settled 2026-11-07: the approved copy amendments above replace board auto-login, ten-character and stay-signed-in claims. Use OQ 28’s RN → backend → translation order for Dutch. Server policy alone validates passwords; native new-password fields in 11b/11c receive reviewed iOS `passwordRules`: `minlength: 12; required: upper; required: lower; required: digit; required: special;`. Compromise checking remains on the server; AutoFill cannot encode it. No protected policy request, client validation or reduced server policy. Offline title exists in RN but **has no board variant** (OQ 23). Do not include the recovery placeholder `xxxx-xxxx` as a prefilled value; it is a sample format from the board. Credentials/emailTaken backend keys classify the named banners rather than displaying duplicate field messages.
 
 **Banner mapping (AuthStates):** Sign in wrong → credentials title + check-both body; Sign in locked → too-many-attempts + reset-now body; generic sign-in/two-factor/forgot failure → server title + try-again body; two-factor throttled → attempts + wait body; Sign up taken → account-exists title + sign-in-instead body; Sign up server → server title + details-kept body; Forgot throttled → requests title + ask-for-another-link body; Reset server → server title + password-not-saved body; Verify resend server → server title + could-not-send body. Wrong/missing codes and password errors stay under their field. AuthStates does not draw arbitrary hidden-field notices, offline or a pending-change discard prompt: those need OQ 23/29/30, not a new ad-hoc layout.
 
@@ -1210,7 +1210,7 @@ Stack on 10a. OQ 28's Two-factor translations are resolved and recorded; ship th
 
 ### Phase 11: Recovery and account creation (`feat/phase-11-account`)
 
-Stack on 10b. Four bounded rounds, with independent copy/link gates. The API methods already exist and are unit-tested in 9b; this phase wires the screens. Typed input/mock inbox drives Reset/Verify in tests. Production universal-link handling is deferred server-side, so no claim that a real email opens these native screens; mark that limit in the gate report.
+Stack on completed 10b (`c345470`); finish 11a–11d before trips (settled OQ 36). Four bounded rounds. OQ 21/22/25/27 are settled by the user 2026-11-07 as recorded below; the API methods already exist and are unit-tested in 9b. Native reset/verify universal-link entry is now in scope (11b/11d), using the exact W URL shapes specified above and associated domain `applinks:app.chronoflow.net`. Tests use typed inputs/mock inbox and simulated `NSUserActivity` URLs. Real email opening depends on server AASA with the app’s team/bundle ID; team ID is still pending. Keep that external dependency and physical acceptance open in the gate report.
 
 #### Phase 11a: Forgot password (`feat/phase-11-account`)
 
@@ -1222,15 +1222,15 @@ OQ 28's Forgot translations are resolved and recorded; ship them with this phase
 
 #### Phase 11b: Reset, expired and done (`feat/phase-11b-reset`)
 
-Resolve OQ 21 (password rules/hint), 22 (all-token revocation copy), 27 (board promises auto-login) **before this round**. Reset translations are recorded under resolved OQ 28; that does not approve the conflicting auto-login/revocation copy. OQ 25/15 block real link entry, not typed-input/mock-inbox exercise.
+OQ 21: “Server policy”; OQ 22/27: “RN's honest copy” (user 2026-11-07). Ship the approved en/nl hint, iOS AutoFill password rules and reset/done copy above. OQ 25 approves native reset universal-link entry; implement the exact W reset URL and simulated `NSUserActivity` tests in this round. Device associated-domain entitlement is required; physical email opening awaits server AASA and confirmed team ID (OQ 4), not a custom scheme.
 
-- [ ] Add typed Reset input routing seam and Reset/resetExpired/resetDone state machine. Missing/invalid/expired/reused token selects designed expired view; confirmation and password use server field messages; clear both after every attempt. Successful 204 goes to the approved done copy/action and never fabricates a session. Send a new link wires 11a; Continue returns to Sign in under proposed OQ 27 default.
-  Files: `Sources/AppCore/ResetPasswordInput.swift`, `Sources/Auth/{ResetPasswordView,ResetPasswordModel,ResetLinkExpiredView,AuthNavigation}.swift`, `Sources/Auth/Resources/Localizable.xcstrings`, `_design/frames/auth/**`.
-  Test: `Tests/AuthTests/ResetPasswordModelTests.swift`, `AppUITests/ResetPasswordTests.swift`, hosted auth snapshots: direct typed/mock-mail entry, missing/expired/used token, validation/mismatch/production password rules, server/offline, 204 no Keychain session, passwords cleared, expired→Forgot and done→Sign in. Verify **Matrix A** for form/error/expired/done, keyboard and nl copy. Test real payloads only through URLProtocol; report native email entry as deferred.
+- [ ] Add typed Reset input routing plus native universal-link/`NSUserActivity` entry, device associated-domain entitlement (simulator as allowed), and Reset/resetExpired/resetDone state machine. Missing/invalid/expired/reused token selects designed expired view; confirmation and password use server field messages; clear both after every attempt. Successful 204 goes to the approved done copy/action and never fabricates a session. Send a new link wires 11a; Continue returns to Sign in under settled OQ 27; other devices are signed out because the backend revokes all tokens.
+  Files: `App/SceneDelegate.swift`, `App/ChronoFlow.entitlements`, `project.yml`, `Sources/AppCore/ResetPasswordInput.swift`, `Sources/Auth/{ResetPasswordView,ResetPasswordModel,ResetLinkExpiredView,AuthNavigation}.swift`, `Sources/Auth/Resources/Localizable.xcstrings`, `_design/frames/auth/**`.
+  Test: `Tests/AuthTests/ResetPasswordModelTests.swift`, `AppUITests/ResetPasswordTests.swift`, hosted auth snapshots: direct typed/mock-mail entry, missing/expired/used token, validation/mismatch/production password rules, server/offline, 204 no Keychain session, passwords cleared, expired→Forgot and done→Sign in. Verify **Matrix A** for form/error/expired/done, keyboard and nl copy. Test exact W URL paths/encoding, cold/warm `NSUserActivity` routing and payloads through URLProtocol; real email opening awaits server AASA/team ID and physical acceptance.
 
 #### Phase 11c: Sign up (`feat/phase-11c-sign-up`)
 
-Resolve OQ 21's password policy/hint before this round; OQ 28's shared field messages now ship in the catalog. The verify gate remains the existing seam until 11d.
+OQ 21 is settled: “Server policy”. Ship the approved production-policy hint and native iOS AutoFill password rules, with no client validation; OQ 28’s shared field messages now ship in the catalog. The verify gate remains the existing seam until 11d.
 
 - [ ] Build AuthSignUp name/email/password/confirmation, one native shared Show/Hide Toggle, consent web links, Create account and existing-account footer. Wire `signUp`, language/device identity, taken/server/field errors; clear passwords after every attempt and save unverified session through the same controller, then `.verify`. Do not implement guest claim recovery, reminders, policy reader or walkthrough here.
   Files: `Sources/Auth/{SignUpView,SignUpModel,AuthNavigation}.swift`, `Sources/Auth/Resources/Localizable.xcstrings`, `_design/frames/auth/**`.
@@ -1238,14 +1238,407 @@ Resolve OQ 21's password policy/hint before this round; OQ 28's shared field mes
 
 #### Phase 11d: Verify email waiting/failed and recovery acceptance (`feat/phase-11d-verify`)
 
-Resolve OQ 25's native link parameters/production copy decision before this round. OQ 28's Verify translations are resolved and recorded; ship the prose with this phase. Default is signed API input plus test/mock entry, not universal-link delivery; a production link integration remains deferred even if the screen is implemented. OQ 29 permits only the explicit Back/different-email discard behavior here.
+OQ 25 is settled: “Assume the links will automatically send you to the app”. Ship the recorded Verify translations and native universal-link/`NSUserActivity` entry for W’s exact signed verify URL. Preserve `{id, hash, expires, signature}` in the authenticated request. Reuse 11b’s associated domain and entry router; test cold/warm activities and malformed/tampered links. Real email opening still requires the server AASA with the confirmed team/bundle ID (OQ 4). OQ 29 permits only the explicit Back/different-email discard behavior here.
 
-- [ ] Mount AuthVerify waiting and verifyFailed for `.verify`; authenticated signed verify request when typed input exists, otherwise users/me check. Recheck on activation/email-app return, guard account/email/epoch, persist verified status and request sync, then existing gate route. Resend deadline uses server seconds; 429/reset of deadline cannot be bypassed by backgrounding. Back/Use a different email calls explicit discard/wipe; no mock inbox, toast or email-changed UI.
-  Files: `Sources/Auth/{VerifyEmailView,VerifyEmailModel,AuthNavigation}.swift`, `App/RootView.swift`, `App/Session/SyncLifecycle.swift`, `Sources/Auth/Resources/Localizable.xcstrings`, `_design/frames/auth/**`.
+- [ ] Mount AuthVerify waiting and verifyFailed for `.verify`; authenticated signed verify request when typed/mock or universal-link input exists, otherwise users/me check. Recheck on activation/email-app return, guard account/email/epoch, persist verified status and request sync, then existing gate route. Resend deadline uses server seconds; 429/reset of deadline cannot be bypassed by backgrounding. Back/Use a different email calls explicit discard/wipe; no mock inbox, toast or email-changed UI.
+  Files: `Sources/Auth/{VerifyEmailView,VerifyEmailModel,AuthNavigation}.swift`, `App/SceneDelegate.swift`, `App/RootView.swift`, `App/Session/SyncLifecycle.swift`, `Sources/Auth/Resources/Localizable.xcstrings`, `_design/frames/auth/**`.
   Test: `Tests/AuthTests/VerifyEmailModelTests.swift`, `AppUITests/VerifyEmailTests.swift`, hosted auth snapshots: waiting/failed/resend errors/countdown, signed success/invalid/expired/foreign/tampered inputs, auth bearer required, app-active web verification, stale status after sign-out/email change ignored, unverified 403 loop prevention, Back discards/wipes. Verify **Matrix A**, en/nl/both appearances, return-from-keyboard/email and VoiceOver announcements; no live mail/network.
-- [ ] Extend auth matrix/gate documentation to all implemented Phase 11 variants and mock inbox data-driven journeys; document real Forgot/Reset/Register/Resend/Verify wire coverage separately from deferred link delivery. Revisit all blocking OQs; keep unavailable designs/production links and physical-only checks marked open, and preserve Phase 6–8 splash/Welcome work.
+- [ ] Extend auth matrix/gate documentation to all implemented Phase 11 variants and mock inbox data-driven journeys; document Forgot/Reset/Register/Resend/Verify wire and native simulated universal-link coverage separately from server AASA/physical mail acceptance. Revisit all blocking OQs; keep unavailable designs, server AASA/team ID and physical-only checks marked open, and preserve Phase 6–8 splash/Welcome work.
   Files: `AppUITests/AccountRecoveryTests.swift`, `AppTests/__Snapshots__/Auth/**`, `Scripts/launch-simulators.py`, `Tests/test_launch_simulators.py`, `Docs/auth-gate.md`, `Docs/tooling.md`, `plan.md`.
-  Test: mock forgot→mail event→reset→Sign in, sign-up→mail event→verify→gate, wrong/expired links, offline/reconnect, sign-out/wipe/relaunch and cross-account isolation; runner selects only implemented states and cannot hit network. Verify full **Matrix A**, board acceptance, `make check` and `make duo`; no universal-link or TestFlight acceptance is inferred.
+  Test: mock forgot→mail event→reset→Sign in, sign-up→mail event→verify→gate, wrong/expired links, offline/reconnect, sign-out/wipe/relaunch and cross-account isolation; runner selects only implemented states and cannot hit network. Verify full **Matrix A**, board acceptance, `make check` and `make duo`; simulated link acceptance does not infer server AASA/real email or TestFlight acceptance.
+
+### Trips source contracts and behavior (reviewed plan v2, integrated 2026-11-07)
+
+`W` = `/Users/rickgout/Sites/chronoflow-new` (read-only), pinned `origin/feat/mobile-api-trip-wizard` at `afd80dc0`; `RN` = `/Users/rickgout/Sites/chronoflow-mobile` (read-only); `Kit` = `Packages/ChronoFlowKit`. Source observations describe the reviewed baseline; tasks below remain unimplemented.
+
+#### Summary
+
+#### 1.1 How the API handles trips
+
+**Where the routes live**
+- Backend main has three trip routes: `GET trips`, `GET trips/{trip}` and `PUT trips/{trip}/checks` (`git show main:routes/api.php:68-77`). They sit behind `auth:sanctum` and `verified`, as do `auth/login` and two-factor.
+- `ApiTripDetail`, `PresentMobileTrip` and the Plan types are unchanged between main and the wizard branch. The presenter changes are refactors that keep the output shape. `ReadMobileTrips.php` changes only `canEdit`/`canDuplicate` (false on main, `main:app/Actions/Api/ReadMobileTrips.php:23`; true on the branch). `ApiSession` only gains an optional `tripId`. **Trips created on the web can therefore be listed and shown against main today.**
+- All trip writes beyond check-off live on `origin/feat/mobile-api-trip-wizard` (`afd80dc0`, 11-04, backend ui-plan Phase 17). `feat/mobile-api-passkeys` (local only, `841be4bd`) sits on top of it and adds eight passkey-only commits. Its diff against trip-wizard in `routes`, `app/Actions/Trips`, `app/Planning` and `app/Data/Api` is five `ApiPasskey*` DTOs plus four route lines, and `lang/` is identical. Neither branch is merged or deployed.
+- The branch adds four migrations: `api_trip_drafts`, `api_trip_receipts`, `api_guest_claims` and `sleep_answered_at` (`W database/migrations/2026_11_04_*`). Running them on local Valet is a user action.
+
+**Routes on `feat/mobile-api-trip-wizard`** (`W routes/api.php`; line numbers as cited from the passkeys branch, where the route block is identical apart from the passkey lines)
+
+| Route | Line | Purpose | Success | Limits and notes |
+|---|---|---|---|---|
+| `GET /v1/airports?query&limit` | 55-56 | Airport search | 200 | Public. 60/min per IP. Cacheable for 1 h. |
+| `POST /v1/guest/trips/review` | 58-61 | Guest review | 200 `ApiTripReview` | One-way only. `device_id` required. `api-guest-review`: 5/min per device+IP, 30/min per IP. |
+| `POST /v1/trips/review` | 85-86 | Review a new trip (computes the plan) | 200 `ApiTripReview` | 10/min per user. **Writes profile answers first** (see below). |
+| `POST /v1/trips` | 87 | Save the reviewed draft | 201 `{tripId}` | The body is the draft identity only. `trip-save`: 10/min per user → 429 with `retryAfterSeconds`. |
+| `POST /v1/trips/{trip}/review` | 88-89 | Review an edit | 200 | Also needs `source_revision`. |
+| `PUT /v1/trips/{trip}` | 90 | Save an edit | 200 `{tripId}` | Same `trip-save` 10/min. |
+| `PUT /v1/trips/{trip}/checks` | 91-92 | Check off a step | 200 `{checkState, detailVersion}` | Returns 200 for no-ops too. Also on main. |
+| `GET /v1/trips` | 99 | Trip list | 200 `ApiTripList` | ETag. No pagination. A trip missing from the list counts as deleted. Also on main. |
+| `GET /v1/trips/{trip}` | 100 | Trip detail | 200 `ApiTripDetail` | ETag. Never re-plans. Also on main. |
+| `GET /v1/trips/{trip}/input` | 101 | Edit snapshot | 200 `ApiTripInputSnapshot` | Branch only. |
+
+Every authenticated route above also sits under the stacked `throttle:api`, which is 60/min per user (`W app/Providers/AppServiceProvider.php`).
+
+There is no endpoint for delete, complete, reopen, duplicate, export, buying credits or a billing hand-off (`W routes/trips.php:31-40` are web-only). API cards keep `canComplete`, `canReopen` and `canDelete` false (`W app/Actions/Api/ReadMobileTrips.php:23-24`).
+
+**Review is not read-only.** When the request carries profile sections, `ReviewMobileTrip` first saves the account's body-clock and Sleep answers through `UpdateBodyClock::handleSections`, before it validates and computes. An invalid answer returns a 422 under `profile`. The write is not undone if a later step fails (`W app/Actions/Api/ReviewMobileTrip.php:19-22,36-43`).
+
+**Generation is synchronous, inside the request.**
+- Review calls `PlanRunner::compute` inline (`W app/Actions/Trips/ReviewTrip.php:61`).
+- Save recomputes the plan at the original calculation minute and stores it in one transaction (`W app/Actions/Trips/SaveTrip.php:84-95`). Before that transaction it runs, in order, the receipt check, the stale, capacity and replay checks, and the `trip-save` limiter (`SaveTrip.php:47,55`).
+- The only queued jobs are reminders and push (`W app/Jobs/RebuildUserReminders.php`, `DeliverPushNotification.php`).
+- Measured speed (untracked `W research.md`, measured on `feat/ui-phase-11-caffeine-drinks`):
+  - Planner core only (pipeline run, no Laravel): golden scenarios have a median of about 33 ms; the 20 heaviest itineraries have a median of 159 ms and a slowest of 227 ms (`:13-18`).
+  - What the user waits for (web review/save path, in-memory SQLite, S1–S6): Review POST 22–83 ms, Save POST 25–83 ms (`:22-31`). There is no request-level figure for heavy itineraries or for the mobile endpoints.
+
+**Generating a timeline is three calls:**
+1. `POST trips/review` returns `ApiTripReview`, with `status ∈ ok|modified|needs_answers|no_plan` (`W resources/js/types/App/Planner/Output/index.ts:11`), plus prompts, summary, price and `canSave`.
+2. `POST trips` returns `{tripId}`.
+3. `GET trips/{id}` returns `ApiTripDetail` (`W resources/js/types/App/Data/Api/index.ts:228-235`).
+
+**Response shapes**
+
+| Type | Fields | Source |
+|---|---|---|
+| `ApiTripListItem` | `card: TripCardView`, `planInputHash`, `planStartUtc/Zone`, `planEndUtc/Date`, `preparationDays`, `adaptation\|null`, `keepOffline`, `detailVersion\|null`, `checkState\|null`. The last two are set only when `keepOffline` is true. | `Api/index.ts:294-306`; `ReadMobileTrips.php:25-42` |
+| `TripCardView` | id, from/to `AirportRef{iata,city,zone}`, depart/arrive local and UTC, flightNumber, connections, offsetDifferenceMinutes, `progress{status, nextStep{text: CopyLine, displayTz}\|null}`, five `can*` flags | `Data/Trips/index.ts:47-64` |
+| `ApiTripDetail` | `trip: TripDetailView`, `plan: PlanView`, `notices`, `timeline: TimelinePresentationView`, `checkState`, `detailVersion` (xxh128 of trip, plan, notices and timeline; checkState is excluded) | `Api/index.ts:228-235`; `PresentMobileTrip.php:22-25` |
+| `PlanView` | `status`, `reasons`, `prompts`, `meta{inputHash, arrivalLandingUtc, assumedReturn}`, `summary`, `days: DayView[]`, `blocks: BlockView[]`, `warnings` | `Data/Plan/index.ts:206-224` |
+| `DayView` | id, labelDate, labelRange, `labelPhase`, `startUtc/endUtc`, `zones[{tz,startUtc,endUtc}]`, `phase`, postArrivalIndex, `status`, noLightText, notes, headline | `Plan/index.ts:118-137` |
+| `BlockView` | id, `lane` (travel\|sleep\|light\|caffeine\|info), `type` (17 BlockTypes), start/end UTC, `displayTz`, `secondaryTz`, `priority`, `text`/`secondaryText: CopyLine`, typed `params`, `actionable`, `checkKey{type,localDate,ordinal}\|null` | `Plan/index.ts:28-42`; `Planner/Output/index.ts:3,8,12` |
+| `BlockView.params` | A 20-member union: one variant per BlockType (17) plus three Drinks variants. `caffeine_serving`, `caffeine_ok` and `no_caffeine` have a string-amount and a Drinks variant, and API plans always use Drinks. `caffeine_routine` has a single variant whose `amountPerDrink` is a string, and the API emits it. | `Plan/index.ts:39,59-82`; `W app/Data/Plan/BlockView.php:24`; `W app/Planning/Mapping/BlockParamsMappers.php` |
+| `TimelinePresentationView` | `days[{dayId, ticks[{atUtc,tz,offsetMin}]}]`, `blockReasons`, `transferWarnings` | `Plan/index.ts:279-287` |
+| `CheckStateView` | `planInputHash`, `marks[{key,status,markedAt}]`, `days[{dayId,done,skipped,total}]` | `Plan/index.ts:93-97` |
+| `ApiTripReview` | `identity{token,inputRevision,reviewRevision,sourceRevision,guestSecret}`, status, reasons, `prompts: ApiReviewPrompt[]` (including the blocking `Screening`/`AgeBand` kinds, `W PresentMobileReview.php:77-80`), summary, `price{state,cost,balance,unlimited,freeDirections}`, `canSave`, `saveBlockedReason`, itinerary | `Api/index.ts:142-208,307-317` |
+
+**Copy.** Every visible string is a `CopyLine{key,args}` (`Plan/index.ts:98-107`). The API is language-free: it always presents in English with Drinks-style caffeine and ignores `Accept-Language` (`W .ai/rules/api.md:83`). API routes do not run `SetLocale`, which is added only to the web group (`W bootstrap/app.php:70-74`). Review copy is fixed English (`PresentMobileReview.php:43`). So every 422 `errors.*` value, review prompt, reason and `summary.line` also comes back in English. The client translates keys from `W lang/en.json` and `lang/nl.json` (1,574 lines each; not all of them are plan keys). 35 `nl` entries use `|` plurals. The caffeine ones use Laravel numbered ranges, for example `{1} een half kopje koffie|{2} één kopje koffie|{3} :amount kopje koffie|{4} twee kopjes koffie|[5,*] :amount kopjes koffie`, and `en.json:1412` is built the same way.
+
+**Three identities** (`W .ai/rules/api.md:107-109`):
+- `planInputHash` guards whether a mark is stale.
+- `detailVersion` identifies the presented content.
+- The ETag covers everything, including marks.
+
+On the server there is one `plans` row per trip, overwritten on edit (`W app/Planning/PlanRunner.php:70-93`).
+
+**Errors.** One envelope, `ApiError{code,message,errors?,args?,retryAfterSeconds?}` (`Api/index.ts:65-71`). Trip-specific `errors` keys:
+- `review_expired`: no live draft and no receipt for the token (`W app/Planning/TripDrafts.php:71-74`).
+- `credits: "Not enough credits"` (`SaveMobileTrip.php:36-37`).
+- `form: "This plan has changed. Refresh it before marking this step."`, rethrown by the API controller (`W app/Http/Controllers/Api/V1/TripCheckController.php:34`). A malformed hash returns the same text under `plan_input_hash` (`CheckOffRequest.php:57`). The web action is `MarkCheckOff.php:39-40`.
+- `review`: a past arrival, **or** "Try saving again shortly." when the owner has 50 live receipts (`TripDrafts.php:39-43`; `DatabaseTripDraftStore.php:23`).
+- `profile`: an invalid profile answer sent with a review.
+- 429 from `trip-save`, `api` or the review limiter, with `retryAfterSeconds`.
+
+**Drafts.** Server drafts last 30 minutes, with at most 5 per owner (`W app/Planning/DatabaseTripDraftStore.php:17,98,197`). Save receipts last 7 days and are checked first, so a retry with the same identity after a lost response returns the same `tripId` (`:21-23`). A fresh review needs `token` null, input revision 0 and review revision null.
+
+**Keep offline.** `keepOffline` is true when the trip is not completed and is either active or upcoming with `planStartUtc − now ≤ N` days. `planStartUtc` includes preparation days, a start exactly N days away counts, and N is `offline.mobile_prefetch_days` (env `OFFLINE_MOBILE_PREFETCH_DAYS`, default 7) (`ReadMobileTrips.php:25-31`; `W config/offline.php:4`; `W .ai/rules/api.md:105`).
+
+#### 1.2 How the RN app handles trips
+
+**Data and sync**
+- Trip methods on the `DataSource` seam: `RN src/data/source.ts:138-205`. API calls: `src/data/api/ApiDataSource.ts:88-348`.
+- `searchAirports`, `openBillingHandOff`, `deleteTrip` and `completeTrip` throw `NotOnTheApiYetError` (`:350-364`).
+- Wizard writes get a 90 s timeout; the default is 15 s. A timeout rejects with `OfflineError` (`src/data/api/client.ts:52,58-68,184-194`).
+- `syncNow` (`src/sync/engine.ts:46-113`): flush the outbox, read the account, then `upsertTripCards`. A trip missing from the list is tombstoned (456-464). Plans outside keep-offline or a screen hold are evicted (71-74). Detail is pulled when `detailVersion` changes (75-105). Marks are re-keyed by `(type,localDate,ordinal)` after a re-plan (327-443).
+- The outbox has two trip writes: `check-off` and `complete-trip` (`src/db/schema.ts:47-54`). `completeTrip` is queued offline (`src/sync/actions.ts:176-207`). In API mode it throws `NotOnTheApiYetError`, so the engine blocks the trip's whole `trip:${id}` dependency chain, later check-offs included (`engine.ts:126-131,257-266`). Native keeps OQ 31's no-producer rule so a trip's check-off chain is never blocked. Create, edit and delete are online-only.
+- RN's `isFinalDomainError` does not treat 401/408/425/429 as final refusals (`src/sync/outbox-failures.ts:24-33`).
+
+**Screens**
+- **Today** (`TodayScreen.tsx:82-137`; trip selection in `src/plan/today-trip.ts:14-54`, `lastEndedTrip` at `:56+`).
+- **My trips** (`TripsScreen.tsx`): status is re-derived on the phone (57), and the next step comes from the local plan (63-90). The entry is "Plan a trip" (`RN _design/canvas/Trips.dc.html`).
+- **Trip page** (`TripScreen.tsx`, 614 lines):
+  - One continuous `FlatList` of days with pinned day headers and a List/Timeline toggle (437-560). The view defaults to Timeline and is not persisted (180-186).
+  - Opening day: deep link (a `blockId` maps to its day), then kept day, then today, then the last day, then the first day (296-322).
+  - The remote summary and its loading and offline states render only for trips with `!keepOffline`. A keepOffline trip with no stored plan shows the loading skeleton. NotFound/Server errors show only when the trip is not keepOffline, there is no stored plan, the fetch failed and the device is online. A trip missing after a completed sync shows `TripNotOnPhone`, unless `awaitingSync` is set or the delete sheet is open. A tombstoned trip shows not-found (100-170, 232-262). The `awaitingSync` route param stops a just-created trip from being reported as missing (67-70, 140-151).
+- **StepSheet** (`StepSheet.tsx:157-240,340-376`): priority tag, a "Now" badge while running and unmarked, the interval as `{{time}} {{zone}} time` (a single instant for `zone_change`), `{{duration}} left`, `blockReasons`, and instructions (note lines for `note` blocks, otherwise text plus secondaryText). Skip/Mark as done, or Undo when marked, appear only for `actionable` blocks with a `checkKey`. `transferWarnings` are mapped into layout (`timeline.ts:97-100,224-228`) but rendered nowhere.
+- **Day notices**: `noticeItems` merges `notices.days[].warningIndexes → plan.warnings` with `day.notes` and dedupes (`src/plan/notices.ts:10-35`); `DayHeader.tsx:58-65` shows them.
+- **TripActionsSheet** (`TripActionsSheet.tsx:140-260`): Edit trip and Duplicate trip ("Same flights and answers, new dates") are always shown. They are disabled when offline, busy or the flag is false, with the reason "Needs a connection.". Add to calendar is always shown (local EventKit, no endpoint) and disabled with "Available once the plan is made" when no plan is stored. Only Complete and Delete are hidden by their flags. The header is from → to, with dates · via connections · "with return".
+- **Clock**: `usePlanNow` ticks on each minute boundary and on app foreground (`src/plan/usePlanNow.ts:6-27`). The now line, the "Now" badge, "left" and Today's "in N min" depend on it.
+- **Wizard** (`src/trips/wizard.ts:20-41`, `wizard-state.ts`, `member-wizard.ts`):
+  - Persisted in the SQLite `drafts` table under the fixed id `member-wizard`. `recoverWizard` discards it once `updatedAt` is 30 minutes old (`wizard-state.ts:42,124-145,200-220`). The guest wizard uses a separate store.
+  - A new wizard prefills From with the latest trip's origin and sets `firstTrip` (`wizard-state.ts:178-217`). Sleep appears only while `settings.sleepAnswered` is false (`wizard.ts:30`).
+  - Duplicate clears the dates, stay times, busy intervals, nights and check-out date, then starts at Outbound. Edit starts at Checking with `returnToReady` (`wizard-state.ts:222-307`).
+  - Every edit review first calls `getTripInput` again and reloads the input when `sourceRevision` changed (`member-wizard.ts:72-81,121-129`).
+  - Storing a review merges the wizard's profile answers into local bodyClock settings (`member-wizard.ts:276-288`).
+  - A Ready review is stale after 30 minutes or after the input changes (`needsReadyReview`, `member-wizard.ts:432-441`).
+  - Checking ticks progress at 400 ms and 800 ms, stays up at least 1.2 s, shows the slow state at 10 s and fails with `wizard-check-timeout` at 30 s (`wizard-checking.ts:36-44`). `requestWizardReview` has its own 30 s timeout and dedups in-flight reviews by `(instanceId, inputFingerprint, token, reviewRevision)` (`member-wizard.ts:160-203`). A throttle failure keeps `retryAt` (`member-wizard.ts:352-354`), and Ready shows "Try again in N s" (`ReadyStep.tsx:77,208-213`).
+  - **Save** (`member-wizard.ts:381-427`; `ReadyStep.tsx:431-480`): there is no automatic retry. Any save error other than expired, credits or practice mode records a save failure and returns to Ready (SaveOffline/SaveServer), and the user retries. `savedTripId` is persisted after a successful save, so a retry skips the POST. After saving, `pullCreatedTrip` runs fetchTrips, a card upsert and a detail pull with no lease, swallowing errors, then `requestSync()` (`engine.ts:529-536`). `ReviewExpiredError` clears the identity and returns to Ready with `reviewedAt: 0`. A `credits` error at save also returns to Ready.
+  - Practice mode is a client-only Preferences toggle that blocks review and save (`member-wizard.ts:46-49`; RN `plan.md:383,429`). iOS has no practice mode.
+  - No-credits: "Buy credits on the website" pushes `/billing/buy`. `BillingHandOffSheet` asks `openBillingHandOff(kind)` for a one-time signed-in link, opens it, then requests a sync. The feature is behind `EXPO_PUBLIC_BILLING_LINK_OUT`, and the sheet renders no action when it is unavailable (`ReadyStep.tsx:229-234`; `BillingHandOffSheet.tsx:30-45,165-168`; `src/settings/billing-actions.ts:17-46`).
+  - Client-side validation and request building: `src/trips/validation.ts` (265 lines), `journey.ts` (269), `form.ts` (287), `review.ts` and `wizard-presentation.ts`. Wizard dates and times are wall-clock strings at the airport, `YYYY-MM-DDTHH:mm`, with picker dates built part by part (`src/trips/date-time.ts:5-40`).
+
+**Rendering**
+- The server supplies day bounds, zones and ticks; the client never computes days.
+- `layoutDay`, `layoutPlan` and `indexTimeline` (`src/plan/timeline.ts:13-298,89,300`): lanes sleep, light, caffeine and travel; 40 pt per hour; column packing; info-lane gutter markers; zone dividers; tick thinning; the now line.
+- Other plan modules: `day-header.ts` (dayDateLabel, dayZoneLabel, summaryIntervals), `step-labels.ts`, `timeline-labels.ts` (nowLabel, localDate, utcOffset, blockInterval), `caffeine-format.ts` (Drinks amounts and the numbered-range plural, `:10-14`), `zone-label.ts:5-18`, and `intl-cases.ts` (en/nl golden cases for DST instants, dates, minutes and offsets). There are 16 test files in `src/plan/__tests__/`.
+- Optional steps are always hidden (`src/plan/optional-items.ts:3-25`), as decided in canvas note `planCompactQuestions`. Hidden categories come from preferences (`TripScreen.tsx:389-394`).
+- Category cues that do not depend on colour: hatch and dot patterns and dashed outlines (`categoryStyles.ts:36-37`; `canvasPayload.ts:194-198`).
+- Accessibility: a "Plan timeline" container and a "Now, {{time}}" element (`DayTimeline.tsx:73,265-267`). Each tile's label joins title, priority, interval, Marked done/Skipped, and "Continues from/into the previous/next plan day" (`tileModel.ts:106-123`).
+- Components: `DualClocks`, `ZoneChangeCard`, `EndOfPlanCard`, `DayNavigation`, `PriorityKey`/`PriorityTag` and the sticky header (`src/components/plan/`).
+- iOS draws each day natively (`modules/timeline-canvas/ios/*.swift`, 810 lines).
+- Copy goes through `src/plan/copy-format.ts:18-20,159-205`. English dates use the `en-GB` locale (`:54-60`). `scripts/import-plan-copy.ts` imports only the `CopyLine` keys found in RN's fixture plans and mock trips (`collectFixtureCopyKeys`, `:72-98`). It reads them from W's generated web locales `resources/js/lib/i18n/locales/{en,nl}.json`, where `:arg` is already `{{arg}}` and plurals are `_one/_other`, plus 12 caffeine keys from `lang/*.json`. It reports keys that have no Dutch (`:135-196`). The committed web locale on the branch is 69 lines, because Vite regenerates it at build start (`W vite.config.ts:13`). So a pinned-commit import must read `lang/*.json`, and a full import goes beyond what RN covers.
+
+**Fixtures.** Seven trips in `src/data/mock/fixtures/trips.ts`. The plans `S1`–`S6-RETURN-10N.json` are tracked in RN. They are byte-identical copies of W's gitignored `storage/parity/frontend-plans` output (`W .gitignore:11`; produced by a W PHPUnit run, `RN scripts/sync-web-fixtures.ts:4-16`). Each holds only `{plan, notices, timeline}`. Their `as unknown as` cast means nothing validates them at runtime.
+
+#### 1.3 What iOS already has
+
+**Store**
+- GRDB v1 has `trips`, `plan_versions(trip_id,input_hash)`, `check_marks`, `drafts` and `outbox` (`Kit/Sources/LocalStore/SchemaV1.swift:12-38`).
+- `TripRepository` (`Sources/LocalStore/TripRepository.swift`):
+  - streams: `values()`, `planValues()` and `checkValues()` (`:8-56`);
+  - `applyCards` (`:67-104`) reads `card["id"]` and `card["departureUtc"]` and mutates progress/`canComplete` for a pending complete-trip;
+  - `applyDetail` (`:106-123`) stores `detail: .encoding(value)`, a re-encoding of the decoded struct rather than the server bytes, and reads `value.plan["meta"]`;
+  - `evictPlans` (`:125-139`).
+- `DraftRepository` exists but has no callers (`Sources/LocalStore/DraftRepository.swift:7-17`).
+- Preference sections allow `time_format`, `hidden_categories` and `show_optional_items` (`Sources/LocalStore/LocalMutations.swift:146`).
+
+**Sync**
+- `FullPull.run` (`Sources/Sync/FullPull.swift:27-86`; reads `item.card["id"]` at `:56`).
+- `PlanRetention.hold(tripID:)` returns a lease (`Sources/Sync/PlanRetention.swift:8-12`). `App/` never calls it.
+- `CheckOffReconciler` (`Sources/Sync/CheckOffReconciler.swift:9-75`) decodes the stored detail and walks `detail.plan["blocks"]` for a matching `checkKey`. If none matches, it deletes the outbox row and the marks (`:29-37`).
+- `send(OutboxChange)` for check-offs (`Sources/DataAccess/API/APIDataSource.swift:83-111`).
+- `SyncPathMonitoring` is only a reconnect trigger (`SyncLifecycle.swift:89-95`). Offline comes from failed requests (`OutboxFlusher.swift:119`; `SyncEngine.swift:186-202`).
+
+**Contracts**
+- `TripListItem` and `TripDetail` (`Sources/AppCore/Contracts/AccountTripContracts.swift:49-104`). `card`, `adaptation`, `trip`, `plan`, `notices` and `timeline` are untyped `JSONObject`s.
+- `BlockType` has 17 cases (`:152-165`).
+- The `DataSource` trip surface is only `fetchTrips`, `fetchTripDetail` and `send` (`Sources/AppCore/DataSource.swift:15-17`).
+- `MockAppSeed` (`Sources/DataAccess/Mock/MockAppSeed.swift:52-92`) embeds the seven RN fixture trips with absolute October dates. It derives status, `nextStep`, `canComplete`, `keepOffline`, `detailVersion` and `checkState` against `now`. The app seeds it with `Date()` (`App/Session/AppServices.swift:69`), and D20 makes the mock the Debug default. Only trip 7 is active, and only until 2026-11-08T15:00Z. `MockAppSeed+Fixtures.swift` (about 695 KB) is a raw JSON literal and decodes unchanged.
+- Test fixtures under `Kit/Tests/DataAccessTests/Fixtures/trips/` are deliberately structural subsets ("no full planner result is recorded or asserted", `Fixtures/README.md:12`). `Package.swift` copies only `Fixtures/{auth,account,trips,errors}` into DataAccessTests; AppCoreTests has no resources.
+- `Package.swift` has no PlanCore, PlanUI or TripWizard target. Core targets use `.defaultIsolation(nil)`; UI targets default to MainActor (D1).
+
+**UI and routing**
+- There is no trip UI. `RootView` renders only Welcome and Sign in; every other route is `RoutePlaceholder` in Debug and `EmptyView` in Release (`App/RootView.swift:34-53`).
+- `AccountReadinessRepository.swift:15-23` sends any account with `walkthroughSeen == false` to `.walkthrough` before `.app`, and applies the terms gate only when policies are present. `MockAppSeed.make` defaults `walkthroughSeen` to false (`MockDataSource.swift:72`).
+
+**`plan.md` scope**
+- Context "does not cover" excludes the guest wizard, Today UI and terms/walkthrough UI. D27 keeps Today, terms and walkthrough as D17 seams. Deferred fixes give them no phase (`plan.md:1285`).
+- Two deferred fixes trigger with these screens: "Re-route on gate changes after sign-in" (`:1287`) and "Missing policies skip the terms gate" (`:1289`).
+- The reviewed baseline ended at 11d. OQs 21/22/25/27 are now settled (2026-11-07); complete Phase 11 before the trips stack. Phases 6–8 stay open in their original positions.
+- OQ 13 (`:1307`) says translations are "Entered by hand for this slice". OQ 31 (`:1325`) forbids producers for unsupported writes. The wizard-write timeout is 90 s (`:425`). D23 says connectivity is only a hint.
+- The Context "Sources" line claims the canvas copy is "byte-identical" to RN's. It no longer is (see Boards).
+
+**Boards**
+- `_design/canvas/` holds only the Auth*, Splash* and Main boards, plus `ds/` and `canvas.json`.
+- The trip, Today, Trips, Plan*, Wizard*, WizardSheet*, WizardSpec, sheet, calendar, error, Walkthrough*, Terms* and Set* boards exist only in `RN _design/canvas/`.
+- iOS `canvas.json` is newer than RN's. Note `planCompactQuestions` is marked green, and its "Done 5 Nov" section answers:
+  1. The header change is a scroll-linked transition: the compact line fades in over the last 24 pt, with an instant swap only under Reduce Motion.
+  2. The type values are confirmed in Figtree (title 600 17/22, subtitle 400 12/15, lane label 500 11/14, compact date 10/12, list line 13/18), and note `planCompactNote` records them.
+  3. PlanWide is redrawn with the timeline and list side by side and no view button, with new boards PlanWideScrolled and PlanWideDayMenu. Per `reqWideTrip`, the breakpoint is a 600 pt window width, portrait only, with a 280 pt list column that grows to 320 pt from 900 pt. Duo folded (466) and every iPhone keep the phone layout.
+  4. The SetPreferences Optional items switch is removed. RN's local `SetPreferences.dc.html` still draws it, so that copy is stale.
+  5. The day menu is the system menu titled "Go to day", with Dutch strings supplied ("Als lijst tonen", "Als tijdlijn tonen", "Ga naar dag", "Stappen", plus the VoiceOver labels).
+- PlanWideScrolled and PlanWideDayMenu have no HTML in either repo, and RN's PlanWide/PlanWideDark HTML predates the redraw.
+- Name checks: the stop-search board is `WizardStopSearch` (+`DarkNL`). The remote loading state exists only as `PlanRemoteLoadingNL`. There is no board for `TripNotOnPhone`. A loading skeleton exists as `PlanLoading`.
+
+#### Trips gaps and risks
+
+1. **Contract drift and lossless storage.**
+   - Backend types are generated by spatie (`W resources/js/types/App/...`; RN copy pinned at `afd80dc0`, `RN src/contracts/SOURCE.md:1-7`). iOS Codable types are hand-written.
+   - Decode `params` by `type`, using the Drinks variant for the three caffeine types that have one and the single string variant for `caffeine_routine`.
+   - Plan enums are tolerant: an unknown block type or lane decodes to `.unknown(raw)` and is skipped **at render time only**. `plan_versions.detail` stores the raw response bytes, so nothing is lost on disk. `CheckOffReconciler` looks up `checkKey`s on the raw block list, so an unknown actionable block never causes valid marks to be deleted.
+   - Fixtures: plan parts from RN's tracked `src/data/mock/fixtures/plans/` at a pinned RN commit; full list and detail envelopes documented in `SOURCE.md` (see 12a).
+   - A manual `make contracts-check` diffs the enum literals in `W .../Planner/Output/index.ts` and `Enums/index.ts` at the pinned trip-wizard commit against the Swift cases. It reads the sibling repo with `git show` and never writes to it.
+2. **Plan generation timing and retries.**
+   - Generation is synchronous. Wizard writes use the 90 s timeout (`plan.md:425`), and a timeout maps to offline.
+   - Following RN, there is no automatic retry. The user retries from SaveOffline/SaveServer with the same identity, and the receipt returns the same `tripId`, so there is no double charge. `savedTripId` is persisted so a retry after success skips the POST.
+   - A save 429 (`trip-save` or `api`) is `throttled(retryAfter)`, not a lost response. Ready shows the countdown, and the retry reuses the same identity.
+   - After save: pull the created trip (list plus detail, errors swallowed), start a background sync, and open the trip page in awaiting-sync mode. The UI then works unchanged if the backend later moves planning to a queue. No "generating" trip status exists, so none is invented.
+3. **Backend availability.**
+   - **Read:** works on backend main today. The live gate at the end of Phase 15 needs an account that is verified, has accepted terms and has seen the walkthrough, with web-created trips, against local Valet (settled OQ 37).
+   - **Create and edit:** need only `feat/mobile-api-trip-wizard`. Locally that means the user running the four migrations on Valet. A production claim needs the branch merged and deployed. Passkeys are irrelevant to trips.
+   - Known backend gaps from the gate doc (`W docs/ui-plan/phase-17-mobile-api-trip-wizard.md:122-128`):
+     - a login through two-factor returns `tripId` null;
+     - queued offline marks against a pre-edit hash fail with a 422;
+     - `sleepAnswered` reads false for existing profiles until Sleep is next saved, so every existing user sees WizardSleep on their first trip.
+4. **Account side effects of review.** A review with profile sections writes the server's body clock before computing. After such a review, merge the answers into the local account snapshot (RN `member-wizard.ts:276-288`) and request a sync, whether or not a save follows. A pending outbox bodyClock edit stays ahead of it in FIFO order.
+5. **Offline and keepOffline.**
+   - See §1.1 for the keep-offline rule. Remote states apply only to non-keepOffline trips without a stored plan. Opening such a trip online takes a lease and pulls.
+   - Edits re-plan on the server, so outbox marks keyed to the old hash are re-keyed by `CheckOffReconciler`. Check-off 429 and 408 stay queued and retry; they are not final refusals.
+   - Complete, delete and reopen have no endpoints. OQ 31 forbids producers for them.
+   - No pre-request offline refusal anywhere (D23). The wizard sends the request and maps transport or timeout failures to the CheckOffline/SaveOffline boards.
+6. **Time zones, DST and the clock.**
+   - Days are server-defined and can last 23, 25 or 30+ hours across a flight. Lane height comes from the UTC duration, never from 24 × 40 pt.
+   - Each block renders in its own `displayTz`/`secondaryTz`. Ticks carry `tz` and `offsetMin`. Zone dividers come from `day.zones`. `CopyLine` instant args carry a tz. 12/24 h comes from the `time_format` preference.
+   - "Now" uses a minute-aligned tick plus a foreground refresh, plus `significantTimeChangeNotification` and time-zone change. Tests inject a clock.
+   - Wizard dates and times are wall-clock values at the airport. Pickers use a fixed-zone calendar, so a DST gap at the phone's location never shifts or rejects a valid airport time.
+7. **Copy volume and source.**
+   - All plan, review, prompt, reason and validation copy arrives as English keys. Generating a catalog from `W lang/*.json` at the pinned commit is the only feasible source, approved for plan/review copy only under settled OQ 34 (exception to OQ 13).
+   - The generator turns `|` one/other plurals into plural variations. Numbered ranges (`{n}`, `[n,*]`) become a coded case, like RN `caffeine-format.ts:10-14`. Any other unsupported form fails the generator.
+   - Missing-Dutch and missing-key reports run over S1–S6 and the review fixtures.
+   - Copy must promise a clock shift. The backend copy already does; never add symptom wording. The screening and exclusion copy gets its own review (OQ 45).
+8. **Missing or stale boards.** The trip boards are not in the iOS canvas copy (OQ 35). The wide HTML is missing. `TripNotOnPhone` has no board. Delete and legend-hint copy is still sample copy (note `gapSheets`). The `planCompactNote` type values go into tokens, never as literals.
+9. **Duo.** Unfolded (669 pt) gets the wide layout from 600 pt. It is decided, and blocked only on HTML. Folding mid-screen must keep the selected day, scroll anchor, open sheet and wizard step. D16 and D1c insets and the side rail apply to both layouts.
+10. **Reachability.** New accounts and the Debug mock land on the unbuilt walkthrough seam, and a terms bump hides trips the same way. Trip UI acceptance uses walkthrough-seen, terms-accepted accounts until a walkthrough/terms phase exists (OQ 39).
+11. **Performance.** Plan JSON runs 28–185 KB per trip. Decode off-main once per `(tripId, inputHash, detailVersion)` and cache. Draw each day with one SwiftUI `Canvas`, not one view per block. Observe only the rows a screen needs (D24, D26).
+12. **Privacy.** The screening prompts write health-type answers (bipolar, pregnancy, VTE, eye disease) into the account. There is no `PrivacyInfo.xcprivacy` (OQ 45).
+
+### Trips execution order (after Phase 11d)
+
+Numbered after 11d. **Stack on completed Phase 11d** (`feat/phase-11d-verify`); user 2026-11-07: “Phase 11 first, then trips” (settled OQ 36). Each sub-phase is one Codex round on its own stacked branch, followed by an Opus review against `plan.md`, the boards, D1c and correctness. Each phase first adds its scope line to `plan.md` Context and lifts the Context/D27 exclusions only for what it builds. Every round updates `Package.swift` explicitly when it adds a target, resource or test target.
+
+Every UI round verifies Matrix A-style coverage on 17e:
+- all D1c profiles, including Duo, with asymmetric insets;
+- en/nl × light/dark × default/xxLarge (root cap only);
+- `make check` before each commit;
+- `make duo` only when Duo-specific runtime behaviour changes (wide layout, fold changes).
+
+**Milestones**
+- **M1, see a timeline (live on local Valet):** 12 → 14 → 15a–d, closed by the live read gate. Phase 13 sits between 12 and 14 because it has no blockers. Nothing in 14 or 15 depends on it.
+- **M2, create a trip via the API:** 13 (already done) → 16a–c, accepted at the end of 16c.
+- **M3, day-to-day:** 17a–d. 15e (wide) lands whenever its HTML arrives.
+
+### Phase 12: Typed trip contracts (`feat/phase-12-trip-model`), no UI, no blockers
+
+**12a: Typed trip and plan DTOs, lossless storage**
+- [ ] Replace the `JSONObject` fields in `TripListItem`/`TripDetail` with typed models:
+  - `TripCardView`, `AirportRef`, `TripProgress`, `TripDetailView`, `TripDetailLegView`;
+  - `PlanView`, `PlanMeta`, `DayView`, `DayZoneView`, `BlockView`, `BlockParams` (20 variants, chosen by `type`; Drinks for the three caffeine types with two shapes; the string variant for `caffeine_routine`), `CheckKeyView`;
+  - `CopyLine`, `CopyArg`, `CaffeineCopyArg`;
+  - `NoteView`, `SummaryView`, `PlanNoticesView`, `TimelinePresentationView`, `TickView`, `AdaptationView`.
+
+  Unknown enum values decode to `.unknown(raw)` and are never dropped from storage. Drop `form`/`revision` from the API path: they are mock-only (`RN src/data/source.ts:169-174`; `W app/Data/Api/ApiTripDetail.php:15-21`).
+- [ ] Store the raw `GET trips/{id}` response bytes in `plan_versions.detail`, and decode `TripDetail` from those bytes. The schema is unchanged; no migration. Move `CheckOffReconciler`'s `checkKey` lookup onto the raw block list. Migrate every `JSONObject` consumer.
+- [ ] Rebase `MockAppSeed`'s trips relative to `now`, shifting all instants and local dates consistently and keeping zones and DST, so Debug and simulator runs always have an active, an upcoming and a completed trip. Tests keep `MockClock`.
+  - Files: `Kit/Sources/AppCore/Contracts/{TripContracts,PlanContracts,CopyLine}.swift`, `AccountTripContracts.swift`; `LocalStore/{TripRepository,Records/PlanVersionRecord}.swift`; `Sync/{FullPull,CheckOffReconciler,StoreApplication}.swift`; `DataAccess/API/APIDataSource.swift`; `DataAccess/Mock/{MockAppSeed,MockDataSource,MockServerState}.swift`; `Tests/SyncTests/Support/SyncFixtures.swift` and the mock scenarios; `Package.swift`.
+  - Fixtures: copy `S1`–`S6-RETURN-10N.json` from RN's tracked `src/data/mock/fixtures/plans/` into `Kit/Tests/DataAccessTests/Fixtures/plans/`, with a `SOURCE.md` pinning the RN commit and its contracts pin. Replace `trips/{list,detail}.json` with full envelopes: either a sanitized capture from local Valet `GET /v1/trips[/{id}]`, or the S* parts wrapped in a `trip`/`checkState`/`detailVersion` envelope built from the W DTOs at `afd80dc0`, documented in `SOURCE.md`. Update the README's "structural subset" statement. Add `.copy("Fixtures/plans")` to DataAccessTests in `Package.swift`.
+  - Tests (in DataAccessTests): `PlanDecodingTests` decodes every S* plan, the full list and detail fixtures, a `caffeine_routine` block, an unknown block type and lane (kept in storage and skipped in the view model), and missing optional fields. Raw bytes round-trip unchanged through `applyDetail`. The reconciler keeps a mark whose block type is unknown. The mock seed has active, upcoming and completed trips for any `now`.
+- [ ] Add `Tools/contracts-check` plus a manual `make contracts-check` that compares the enum literals in W's generated TypeScript at `afd80dc0` (via `git show`) with the Swift cases. Document it in `Docs/tooling.md`.
+  - Verify: `make quick`, `make contracts-check`.
+
+### Phase 13: Plan generation through the API, no UI (`feat/phase-13-trip-generation`), no blockers
+
+Built against the trip-wizard contract with URLProtocol fixtures and the mock. Live acceptance comes with 16c.
+
+**13a: Contracts and the API client**
+- [ ] Add DTOs:
+  - `ApiTripInput` (snake_case request), with legs and stays;
+  - `ApiTripReview`, `ApiReviewIdentity`, `ApiReviewPrompt` and its kinds (including `Screening` and `AgeBand`), `ApiReviewSummary`, `ApiTripPrice`, `ApiTripItinerary`;
+  - `ApiTripSaveResult`, `ApiTripInputSnapshot`, `ApiAirportSuggestion`.
+- [ ] Add `DataSource` methods: `searchAirports`, `reviewTrip`, `reviewTripEdit(id:sourceRevision:)`, `saveTrip(identity:)`, `updateTrip(id:identity:sourceRevision:)` and `tripInput(id:)`. The guest review waits for Phase 18.
+- [ ] Map typed errors: `reviewExpired`; `notEnoughCredits`; `saveCapacity` (`review: "Try saving again shortly."`); `profileInvalid`; field errors mapped back to journey paths; `throttled(retryAfter)` for every 429 (review, `trip-save`, `api`); `emailUnverified`. Wizard writes use the 90 s timeout (`plan.md:425`), and transport or timeout failures map to `offline` with no pre-check (D23).
+  - Files: `Kit/Sources/AppCore/Contracts/TripWizardContracts.swift`, `DataSource.swift`, `DataAccess/API/APIDataSource.swift`, `Package.swift` (fixtures).
+  - Tests: URLProtocol tests with request and response fixtures hand-built from the W `TripReviewTest`/`TripStoreTest` assertions and DTOs at `afd80dc0`, documented in `SOURCE.md` (never by running W). Cover body key casing, the unknown-field 422, a save 429 with `retryAfterSeconds`, the receipt-cap 422 and the `profile` 422.
+
+**13b: Mock generation and the generation service**
+- [ ] The mock review returns a fixture plan chosen by route, with credits, a `needs_answers` prompt, a screening exclusion and `no_plan` scenarios. The mock save inserts a trip that the next `fetchTrips` returns, and a repeated identity returns the same `tripId`.
+- [ ] Add `TripGenerationService` (actor) that follows RN:
+  1. review, with in-flight dedup by `(instance, input fingerprint, token, reviewRevision)` and a 30 s review timeout;
+  2. after a review that sent profile values, merge them into the local account snapshot and request a sync;
+  3. answer prompts, then re-review;
+  4. save with the same identity. There is no automatic retry: failures surface as typed results. A retry is the caller's call with the same identity. `savedTripId` is returned and kept by the caller so a retry skips the POST;
+  5. on success, pull the created trip (list plus detail, errors swallowed) and request a background sync;
+  6. return `tripId`.
+
+  `review_expired` or `notEnoughCredits` at save clears the identity and reports "re-review needed". Recovery persistence belongs to the wizard model (16a), so 13b is not blocked by OQ 40.
+  - Files: `Kit/Sources/TripWizard/Generation/*.swift` (new nonisolated target depending on AppCore and DataAccess; `Package.swift` entry and `TripWizardTests`).
+  - Tests: same-identity retry returns the same trip with no second save; `savedTripId` skips the POST; expiry and credits return "re-review needed"; throttled carries `retryAfter`; offline comes from a failed request, never a pre-check; a profile-bearing review updates the account snapshot; the created trip appears in `TripRepository` with a plan.
+  - Verify: `make quick`.
+
+### Phase 14: Plan copy and timeline logic (`feat/phase-14-plan-logic`), no UI
+
+**14a: Plan copy catalog and formatting** (OQ 34 settled: generated plan/review catalog)
+- [ ] Create the `PlanCore` target (nonisolated, Sendable, depending only on AppCore) with resources. Add `Tools/PlanCopyGen`, which turns `W lang/en.json` and `lang/nl.json` at `afd80dc0` (read with `git show`) into `Sources/PlanCore/Resources/PlanCopy.xcstrings`:
+  - every `CopyLine`-bearing key, including plan, review prompt, reason, `summary.line`, `endCopy` and wizard validation keys;
+  - `|` one/other plurals as plural variations; numbered ranges (`{n}`, `[n,*]`) emitted as a coded case for the formatter; any other form fails the generator;
+  - `:arg` placeholders as positional format args;
+  - a missing-Dutch report that fails `generators-check`.
+
+  This goes beyond RN, which imports fixture keys only. Add `make plan-copy` and include it in `generators-check`.
+- [ ] Add `CopyLineFormatter`: arg kinds date, instant (with tz), offset, minutes, count, milligrams, place and text, plus Drinks caffeine args and `caffeine-format` amounts. English dates use `en-GB`. Zone labels come from airport cities (`RN src/plan/zone-label.ts:5-18`), and 12/24 h from `time_format`. A key missing at runtime shows the English catalog value with args. A key missing from the catalog entirely is caught by the generator check, never invented.
+  - Tests: RN `intl-cases.ts` as golden cases in en and nl; every key in S1–S6 and the review fixtures resolves in en and nl; plural forms; Dutch half/one/2–4/5+ cups; DST instants (`Europe/Amsterdam` on 2026-10-25, `America/New_York` on 2026-11-01); unknown-key fallback.
+  - Verify: `make plan-copy`, `make generators-check`, `make quick`.
+
+**14b: Timeline logic and observation models**
+- [ ] Port to pure Swift in `PlanCore`, with point sizes from tokens only:
+  - `isOptionalStep` and `withoutOptionalSteps` (always applied), and hidden-category filtering;
+  - `tripDisplayStatus` (for My trips);
+  - `noticeItems`, `day-header` (dayDateLabel, dayZoneLabel, summaryIntervals), `step-labels`, `timeline-labels` (nowLabel, localDate, utcOffset, blockInterval);
+  - `layoutDay`, `layoutPlan`, `indexTimeline`: lanes, `packLane`, info gutter markers, zone_change positions, zone dividers, tick thinning, now-line offset, continues-before/after.
+- [ ] Add the `planCompactNote` type values (title 600 17/22, subtitle 400 12/15, lane 500 11/14, compact date 10/12, list line 13/18) to the tokens through TokenGen/Typography.
+- [ ] Create the `PlanUI` target (MainActor default, depending on PlanCore and LocalStore). Add `TripsModel` and `TripPlanModel` (`@Observable`), fed by `TripRepository` streams. They decode off-main and cache per `(trip, inputHash, detailVersion)`, and take a `PlanClock` that ticks on the minute boundary, on foreground, on significant time change and on time-zone change.
+  - Files: `Kit/Sources/PlanCore/*.swift`, `Kit/Sources/PlanUI/Models/*.swift`, `Tools/TokenGen` outputs, `Package.swift` (+ `PlanCoreTests`, `PlanUITests`).
+  - Tests: port the relevant RN `src/plan/__tests__` files (timeline, day-header, step-labels, timeline-labels, caffeine-format, zone-label, notices, optional-items); 23-, 25- and 30+-hour days; multi-zone travel days; an injected clock; no main-thread decode (executor assertion); an eviction updates the model; the minute tick advances the now offset.
+  - Verify: `make quick`, `make generators-check`.
+
+### Phase 15: Shell, My trips and the trip page (`feat/phase-15-trip-page`)
+
+Blocked on OQ 35’s actual board re-export/import and OQ 38 (tabs); copy source OQ 34 is settled, with 14a a prerequisite. M1 ends with the live read gate after 15d.
+
+**15a: Board import and the tab shell**
+- [ ] After the user re-exports the trip/Today/Plan/Wizard boards (including wide) to the canvas, copy the Today*, Trips*, Plan*, ItemDetail, PlanLegend, TripActions*, SheetStates, Error*, Wizard*, WizardSheet*, WizardSpec, Calendar*, Walkthrough* and Terms* boards from the live canvas, falling back to `RN _design/canvas/`. Record the source and date, and correct the "byte-identical" claim in `plan.md` Context Sources. Never import the superseded TripEditor*, TripReview*, TripAirportSearch, TripCalculating, TripNoCredits or GuestFlight* boards as targets.
+- [ ] Replace the `.today` seam with a system `TabView` (Today, My trips, Settings) as drawn, which gets the Liquid Glass tab bar on 26+ automatically. Today and Settings show the D17 seam (Debug placeholder) until their phases, and Release stays non-shipping (OQ 38). Implement the deferred fixes "Re-route on gate changes after sign-in" (precedence verify → terms → walkthrough → Today, with epoch and cancellation guards) and "Missing policies skip the terms gate".
+  - Files: `App/RootView.swift`, `App/AppTabs.swift`, `Sources/AppCore/Route.swift`, `Sources/AppCore/StoredDataReadiness.swift`, `Sources/LocalStore/AccountReadinessRepository.swift`, `Sources/Sync/SyncLifecycle.swift`.
+  - Tests: routing on gate changes after sign-in; missing → loaded policies; a tab-bar snapshot on all profiles; UI smoke seeds a walkthrough-seen mock account.
+
+**15b: My trips** (boards: Trips, TripsEmpty, TripsLoading)
+- [ ] Sections Active, Upcoming and Completed, with status re-derived locally (`tripDisplayStatus`) and the next step taken from the local plan. Pull-to-refresh calls `SyncEngine.refreshNow()` (D23 seam). "Plan a trip" stays hidden until 16c. Tapping a row opens the trip page.
+  - Files: `Kit/Sources/PlanUI/Trips/*.swift`.
+  - Tests: list ordering; tombstoned trips vanish; snapshots per state on an injected clock; VoiceOver labels.
+
+**15c: Trip page frame and list view** (boards: Plan, PlanDark, PlanList, PlanListScrolled, PlanScrolled(Dark), PlanTimelineTop, PlanDayMenu, PlanEnd, PlanEndNoText, PlanLoading, PlanNoPlan, PlanRemote, PlanRemoteLoadingNL, PlanRemoteOffline(NL), ErrorNotFound, ErrorServer)
+- [ ] Take a `PlanRetention` lease on appear. Show the header summary and day pills that follow the scroll, in one continuous scroll (note `reqContinuousPlan`). The day title is the system `Menu` titled "Go to day", with the supplied nl strings. The compact header line fades in over the last 24 pt of scroll, with an instant swap only under Reduce Motion. Day headers show `noticeItems`.
+- [ ] Open on the deep-linked day (a `blockId` maps to its day), then the kept day, then today, then the last day, then the first.
+- [ ] States follow RN: remote states only for non-keepOffline trips without a stored plan (PlanRemote/PlanRemoteLoading/PlanRemoteOffline; the en loading copy comes from `canvas.json` or the RN strings, since only an NL board exists); `PlanLoading` skeleton for a keepOffline trip without a plan; NotFound/Server only when online, not keepOffline, with no plan and a failed fetch; PlanNoPlan only for `status == no_plan`. Add an `awaitingSync` route parameter that suppresses "missing" while a just-created trip syncs. A trip missing after sync with no `awaitingSync` falls back to ErrorNotFound until a `TripNotOnPhone` board exists (OQ 35).
+- [ ] When a newer `detailVersion`/`inputHash` arrives while the page is open, keep the selected day by `labelDate`, or clamp to the nearest day when it is gone. Keep the scroll anchor. Optimistic marks under the old hash stay visible until the reconciler re-keys them.
+- [ ] Map `DualClocks`, `ZoneChangeCard`, `EndOfPlanCard`, `DayNavigation`, `PriorityKey`/`PriorityTag` and the sticky header to their boards. Any component without a board is listed as deferred in the round report, not built.
+  - Files: `Kit/Sources/PlanUI/TripPage/{TripPageView,TripPageModel,DayHeader,DayListView}.swift`.
+  - Tests: state gating table (keepOffline × stored plan × online × fetch state × awaitingSync); opening-day order; replacement while open; snapshots.
+
+**15d: Timeline drawing**
+- [ ] Draw each day as one `Canvas`, using the 14b `DayLayout`: lanes, gutter ticks, zone dividers, now line and continuation markers. Colours come only from tokens. Category patterns and dashes stay exactly as the Plan boards draw them; the 2026-11-06 no-pattern decision covered the splash and Auth only. The lane label (500 11/14) scales with Dynamic Type up to the root xxLarge cap. Use the RN `TimelineDrawing.swift` as a reference only.
+- [ ] Timeline is the default view, with the Timeline/List toggle in the navigation bar (not persisted). Accessibility: a "Plan timeline" container, a "Now, {{time}}" element and one element per block in time order (`accessibilityChildren` or overlays), labelled title, priority, interval, mark state and continues-from/into. All strings go into the catalog in en and nl.
+  - Tests: Mac geometry tests for the S1–S6 days; the VoiceOver order and labels; profile snapshots; a frame-time budget for scrolling S3, recorded in `Docs/`.
+- [ ] **Live read gate (M1).** With the API build setting against local Valet on trip-wizard after the user runs its migrations (settled OQ 37), sign in with a verified, terms-accepted, walkthrough-seen account that has web-created trips. See the trip list, open a trip and see its timeline in en and nl. Record the result in `Docs/`, without claiming production until trip-wizard is merged and deployed.
+
+**15e: Wide trip page** (blocked on OQ 35: PlanWide, PlanWideScrolled and PlanWideDayMenu HTML)
+- [ ] From a 600 pt window width, portrait only: timeline and list side by side, a 280 pt list column growing to 320 pt from 900 pt, no view button (`reqWideTrip`). Duo folded and every iPhone keep the phone layout. Until the user re-exports the wide boards and this lands, Duo unfolded uses the phone layout at full width (settled OQ 35).
+  - Tests: wide snapshots at 669 pt; a size-change test (phone → 669 pt → phone) that keeps the day, scroll position and open sheet; `make duo`.
+
+### Phase 16: Member trip wizard, create (`feat/phase-16-wizard`), M2
+
+Boards come from page "trip", drawn to the `wizTodo1` rules. **WizardSpec is the binding spec for every 16 round** (paths, Sleep gating, Checking timing, back and swipe rules, the Calculating lockout). The superseded TripEditor*, TripReview* and GuestFlight* boards are never built. Path: Where → Outbound → Coming back? → [Your sleep] → Checking → [server questions] → [Fine-tune] → Ready → Calculating. 16a–c is the smallest unit that can create a trip, and create acceptance comes at the end of 16c. Blocked on OQ 40, plus OQs 41, 43 and 45 for the states they name.
+
+**16a: Model, Where and Outbound**
+- [ ] Add the wizard model, persisted in the `drafts` table under one fixed id as a hidden 30-minute recovery record (OQ 40). It is deleted on ×, on save and on expiry, and never listed. A new wizard prefills From with the latest trip's origin and records `firstTrip`.
+- [ ] Use a wall-clock date/time model at the airport (RN `date-time.ts`): pickers use a fixed-zone calendar, and values are stored as `YYYY-MM-DDTHH:mm`. Port `validation.ts`, `journey.ts`, `form.ts`, `review.ts` and `wizard-presentation.ts` with their unit tests. These build `ApiTripInput` and produce the Outbound Errors/Past/Overnight rules.
+- [ ] Boards: Wizard, WizardWhereEmpty, WizardWhereSame, WizardAirportFrom, WizardAirportHome, WizardStopSearch(DarkNL), WizardOutbound* (Empty, Errors, Past, Stop, StopNew, Overnight). Use a native `DatePicker` and the system search field. Airport search is debounced and respects 60/min.
+  - Files: `Kit/Sources/TripWizard/**` (MainActor UI part beside 13b's generation code, or a `TripWizardUI` target; spell it out in `Package.swift`), `Localizable.xcstrings` with nl from RN `nl.json` first, then W `lang/nl.json`, then translation (OQ 28 order).
+  - Tests: recovery within and after 30 minutes; prefill; date model across a device-zone DST change (an airport time in the phone's DST gap stays valid); ported validation cases; snapshots.
+
+**16b: Return, Sleep, Checking and Questions**
+- [ ] Boards: WizardReturn, ReturnFlight, ReturnFlightPast, ReturnWeb, WizardSleep (required: shown while `sleepAnswered` is false, which is every existing profile at first), WizardChecking plus Again, Slow, CheckOffline, CheckServer and CheckThrottle, WizardQ* (one per blocking prompt kind, Screening and AgeBand included, using the server's wording through the catalog), WizardExcluded*. CheckPractice is not built (deferred until a practice mode exists).
+- [ ] Checking: ticks at 400 and 800 ms, a 1.2 s minimum, slow at 10 s, failure at 30 s. CheckThrottle counts down from `retryAfterSeconds`. A review that sent profile values updates the account snapshot (13b).
+  - Tests: timing on an injected clock; throttle countdown; offline from a failed request; screening exclusion path; snapshots.
+
+**16c: Fine-tune, Ready, Save and create acceptance**
+- [ ] Boards: WizardFineTune*; the sheets WizardSheet, WizardSheetBlue, BlueError, Busy, Checkout, Drinks, DrinksError, FreeSleep, Light, Room and Wake (each with DarkNL); WizardReady* (Return, Unlimited, Free, OneFree, Adjusted, NoCredits); WizardCalculating; SaveOffline; SaveServer; WizardDiscard.
+- [ ] Ready re-checks after 30 minutes or when the input changes. Save follows RN: no automatic retry; a failure returns to Ready with SaveOffline/SaveServer and a "Try again in N s" countdown for 429; `savedTripId` is persisted. Expired or no credits at save clears the identity and returns to Ready for a re-check. On success, dismiss to the new trip's page with `awaitingSync`. No credits shows RN's unavailable state with no hand-off action (OQ 41). The first-trip reminders sheet is omitted (OQ 43). Show "Plan a trip" in My trips.
+  - Tests: UI smoke for create against the mock; a lost save response followed by a manual retry yields one trip; all-profile snapshots per board state; Duo fold mid-wizard keeps the step and open sheet.
+- [ ] **Create gate (M2).** Against local Valet on trip-wizard after the user runs the four migrations (OQ 37): create a trip, land on its page and see the timeline in en and nl. Record the result. Production acceptance waits for the merge and deploy.
+
+### Phase 17: Day-to-day (`feat/phase-17-day-to-day`), M3
+
+**17a: Step sheet, check-off and legend** (boards: ItemDetail, TodayRowStates, PlanLegend, SheetStates "step gone")
+- [ ] The step sheet matches RN's StepSheet: priority tag, "Now" badge, interval as `{{time}} {{zone}} time`, `{{duration}} left`, `blockReasons`, and instructions. Skip/Mark as done, or Undo, appear only for actionable blocks with a `checkKey`, through the existing outbox (`LocalMutations` plus `CheckOffReconciler`), with optimistic marks. Port `buildCheckState` (`RN src/plan/check-state.ts:12-50`) for local day progress. An open sheet whose block disappears after a re-plan shows "step gone".
+  - Tests: offline mark, then sync, then re-plan and re-key; a stale-hash 422 gets one pull and one retry; a 429 or 408 keeps the mark queued; snapshots.
+
+**17b: Today** (boards: Today, TodayEmpty, TodayFuture, TodayLoading, TodayCompleted, TodayRowStates)
+- [ ] Port `selectTodayTrip`, `todayView` (`RN src/plan/today.ts:33-106`) and `lastEndedTrip`. Replace the Today tab seam: the active card with the "Next · in N min" row on the minute tick, the hidden-steps notice linking to the Settings seam (note `gapTripPage`), and the upcoming, completed, empty and loading states. Tapping a row opens the trip page.
+  - Tests: snapshots per state on an injected clock; Dynamic Type xxLarge; VoiceOver labels; the Duo rail.
+
+**17c: Trip actions sheet** (boards: TripActions, TripActionsNoPlan)
+- [ ] Match RN and the board: header from → to with dates · via connections · "with return". Edit trip and Duplicate trip are always shown, disabled with "Needs a connection." when offline, busy or the flag is false (on main both flags are false). Complete and Delete stay hidden (flags false, no endpoints, OQ 31). The Add to calendar row follows OQ 42.
+  - Tests: flag × online × busy matrix; snapshots.
+
+**17d: Edit and Duplicate** (needs trip-wizard deployed for live use)
+- [ ] Boards: WizardEdit, EditChanged, EditNoReturn, EditReturn, EditReturnNoCredits, EditWeb, CheckingEdit, CheckOfflineEdit, CheckServerEdit, ExcludedEdit, DiscardEdit and WizardDuplicate.
+- [ ] Edit starts at Checking with an immediate review. Every edit review first calls `tripInput` again and reloads the input when `sourceRevision` changed, then saves with `source_revision`. Duplicate uses `tripInput`, clears all dates, stay times, busy intervals, nights and the check-out date, starts at Outbound and reviews fresh with no token. Wire both into 17c.
+  - Tests: model tests for the source-revision reload and Duplicate clearing; UI smoke for edit and duplicate against the mock; snapshots.
+
+### Phase 18 (later, separate decision): guest wizard and claim
+
+Boards: WizardWhereGuest, WizardOutboundGuest, WizardCheckingGuest, WizardFineTuneGuest, WizardReadyGuest and GuestSignup*. Covers `reviewGuestTrip` (5/min per device+IP, 30/min per IP), `draft_token`/`guest_secret` on register and login, and routing by `SessionResult.tripId` (`Kit/Sources/AppCore/SessionController.swift:44,52`; null after a two-factor login, a known backend gap). Depends on 11c and replaces the OQ 12/17 seams. Listed so the work is not lost, not scheduled.
+
+**Not planned (no endpoint, no board or no decision):** complete, reopen and delete (OQ 31); the billing hand-off (no endpoint); practice mode and CheckPractice; the calendar feed and Add to calendar unless OQ 42 says otherwise; Live Activity; local reminders and the reminders sheet (notifications are out of scope); `TripNotOnPhone` (no board); walkthrough and terms screens (OQ 39).
+
 
 ## Performance budget
 
@@ -1305,7 +1698,7 @@ User decision 2026-11-06: implement these when the named states exist; this roun
 | 10 | **Scaling settled by the user 2026-11-06:** maximum xxLarge; xxxLarge and accessibility sizes AX1–AX5 clamp to it. Smaller sizes scale normally. Still open: scrolling on 667 pt screens, long Dutch headline and safe-area padding (`max(safeTop+16, 64)` gives ~78 on Dynamic Island phones vs board 64). | Scroll as RN; RN padding rule | Phase 5 |
 | 11 | **Vertical composition settled by the user 2026-11-06:** keep the 844 pt board's vertical relationships at every height (`h − k` → `h/2 + (422 − k)`), stretching the band to the window bottom. The moon stays window-centred for D7/S1. This resolves SE/Duo collisions and the 874 pt status/apex crossing. Still open: Duo's other postures and path endpoint bleed vs horizontal safe areas; no redesign is provided. | RN x control points × w/390; vertical rule settled | Phase 3a (vertical unblocked) |
 | 12 | **Stale board link:** `Main` links "Plan my trip" to superseded `GuestFlight`; target is the new guest wizard (`WizardWhereGuest`)? | Yes; designer fixes the link | Phase 5 |
-| 13 | **Translations source:** RN `en.json` / `nl.json` as single source generating `.xcstrings`, or iOS owns its strings? | Entered by hand for this slice | Later |
+| 13 | **Translations source:** RN `en.json` / `nl.json` as single source generating `.xcstrings`, or iOS owns its strings? | Auth copy entered by hand; plan/review copy generated under settled OQ 34 | Later |
 | 14 | **Performance targets and reference iPhone** (ProMotion) for device runs and the RN comparison. | Budget as proposed | Phase 3b device run, 7, 8 |
 | 15 | **URL scheme:** register `chronoflow` natively (clashes with RN side by side)? | None in this slice | Phase 4 |
 | 16 | **Cold start after a background kill:** always the splash, or state restoration? | Always the splash | Phase 4 |
@@ -1313,16 +1706,28 @@ User decision 2026-11-06: implement these when the named states exist; this roun
 | 18 | **Icon settled by the user 2026-11-06:** reuse RN's opaque 1024 px `assets/images/icon.png` unchanged. **Open:** dark/tinted variants and a layered Liquid Glass icon need design assets; Debug display name distinction. | No distinguishing Debug name; system-derived dark/tinted appearances until designed | Non-blocking |
 | 19 | **Android:** does RN keep Android, and stay the shipping iOS app until native reaches parity? | Yes | Not blocking |
 | 20 | **Settled by user 2026-11-06: build native passkey sign-in in Phase 10.** Backend branch `feat/mobile-api-passkeys` at `841be4bd` provides the options/login contract (not deployed). | Retain AuthSignIn passkey button/divider; AuthenticationServices options → assertion → login; 9b builds DTOs and source methods. Registration stays out of scope. | No Phase 9 blocker; **Open device verification** requires confirmed team/bundle IDs (OQ 4), team-signed build and deployed public AASA. |
-| 21 | **Password policy/hint:** board/RN says “At least 10 characters”; production requires 12+, mixed case, letters, numbers, symbols, uncompromised. Should native use server `passwordRules`? Security summary/RegisterPage expose it, but no public native rules endpoint exists. | Server validation wins; approve en/nl hint and board amendment for the production policy. Apply returned `passwordRules` to native password fields when available; do not call protected account APIs before login or scrape RegisterPage. Agree a public rules source or reviewed build-time AutoFill rules for unauthenticated Register/Reset. No client validation or reduced server policy. | **11b / 11c**; 9b decodes/contracts only |
-| 22 | **ResetDone says “Other devices stay signed in.”** W ResetUserPassword invokes RevokeUserTokens; all tokens are revoked. | Correct the board and both languages to describe revocation; preserve real server behavior in mock/API tests. Do not ship the existing sentence even though RN has its nl translation. | **11b** done state |
+| 21 | **Settled 2026-11-07 — user: “Server policy”.** Production server validation decides: 12+ characters, mixed case, letters, numbers, symbols, not compromised. | Approved en/nl copy amendment above supersedes board “At least 10 characters”; give native new-password fields iOS `passwordRules` matching the expressible policy so suggestions pass. No client validation or reduced server policy; compromise check remains server-side. Dutch follows OQ 28. | No policy blocker for 11b/11c |
+| 22 | **Settled 2026-11-07 — user: “RN's honest copy”.** Backend revokes all tokens after reset. | Approved en/nl done copy above says other devices are signed out; Save new password; Password updated. Sign in with your new password.; Continue → Sign in. No session from 204 (OQ 27). | No copy blocker for 11b |
 | 23 | **Offline auth banner — default kept (user informed 2026-11-06).** No offline variant exists in the boards. | No offline banner; submit stays enabled. Keep typed offline failures/test coverage; defer any new presentation until designed. | No remaining **10a** blocker under the kept default |
 | 24 | **Destination while Today is unbuilt:** successful sign-in must go to `.today`; no Today implementation is included. What may simulator/Release users see? | Existing `.today` route seam and Debug-only D17 diagnostic; unverified → `.verify` seam until 11d; preserve terms/walkthrough precedence. Never invent a temporary Today/empty success screen. Ordinary Release must remain non-shipping until real destination UI exists. | **10a** navigation acceptance; shipping to that route; not 9 |
-| 25 | **Verify-email link parameters and delivery:** RN/mock `{token,email}` differs from W `{id,hash,expires,signature}`; emails open web pages today and app.chronoflow.net universal links are deferred. What exact URL/path/encoding will deliver signed inputs, and what should “Open it on this phone to finish” promise meanwhile? | Use authenticated signed API DTO now, typed inputs/mock inbox in tests; recheck users/me after web verification on activation. Defer native URL/universal-link entry, pending approved URL contract/server association and production copy. No RN token-shaped API or colliding scheme. | **11d** production copy/entry policy; actual link delivery deferred; **11b** real reset-link entry only (typed/mock Reset remains possible); OQ 15 remains |
+| 25 | **Settled 2026-11-07 — user: “Assume the links will automatically send you to the app”.** | Implement native reset/verify universal-link entry with `applinks:app.chronoflow.net`, exact W reset token+email and signed verify `{id, hash, expires, signature}` URL shapes above; typed/mock and simulated `NSUserActivity` tests. Server must serve AASA with app team/bundle ID before real emails open the app; team ID pending (OQ 4). No custom scheme. | Native entry approved for 11b/11d; server AASA/team ID and physical email acceptance remain external dependencies |
 | 26 | **DB backup exclusion:** exclude all account files including unsent outbox/drafts, or preserve unsent changes across device restore? Device-only Keychain session cannot restore with a backed-up DB. | D19 proposed development default: exclude the entire account directory and sidecars from backup, keep unsent rows durable on this device; document that device loss/restore loses unsent changes. A backup/recovery product flow has no board, so defer it rather than silently back up tokens or split live WAL files. | Non-blocking **9a development** under proposed default; **Release shipping** awaits confirmation |
-| 27 | **Reset promises automatic sign-in:** AuthTwoFactor reset says “You'll be signed in…”/“Save and sign in”; resetDone says “You're signed in…” and Continue links Today. API returns 204, and RN correctly returns to Sign in without a session. | Preserve no-session API behavior; propose RN's “Save new password” / “Password updated. Sign in with your new password.” and Continue → Sign in. Require approved reset/done board copy with nl under the OQ 28 rule before implementing; do not silently add a login request or retain a password. | **11b** reset/done |
-| 28 | **Resolved by the user 2026-11-06 — Dutch copy source order:** exact RN English match (`src/i18n/locales/en.json` → `nl.json`), else exact backend English key (`lang/nl.json`), else a natural Dutch translation matching RN je/jij tone and terminology and the clock-shift copy rule. | All 15 formerly pending rows have values and source tags above: six exact backend shared field messages ship in 10a; nine translated later-phase rows are recorded now and ship with their phases. Unknown server English still cannot leak into Dutch. Resolving translation does not approve conflicting reset/verification/password-policy claims (OQ 21/22/25/27). | No remaining translation blocker in 10a/10b/11a–11d; other OQs remain |
+| 27 | **Settled 2026-11-07 — user: “RN's honest copy”.** | “Save new password”; done “Password updated. Sign in with your new password.”; say other devices are signed out; Continue → Sign in. Approved copy amendments replace auto-login claims; no session from 204 and no added login request or retained password. Dutch follows RN → backend → translate (OQ 28). | No reset/done copy blocker for 11b |
+| 28 | **Resolved by the user 2026-11-06 — Dutch copy source order:** exact RN English match (`src/i18n/locales/en.json` → `nl.json`), else exact backend English key (`lang/nl.json`), else a natural Dutch translation matching RN je/jij tone and terminology and the clock-shift copy rule. | All 15 formerly pending rows have values and source tags above: six exact backend shared field messages ship in 10a; nine translated later-phase rows are recorded now and ship with their phases. Unknown server English still cannot leak into Dutch. The conflicting reset/verification/password-policy claims were separately settled on 2026-11-07 (OQ 21/22/25/27). | No remaining translation blocker in 10a/10b/11a–11d; other OQs remain |
 | 29 | **Pending changes on voluntary sign-out:** RN asks before discarding, but no sign-out confirmation board is committed. | 9d returns needsConfirmation and preserves rows; defer the voluntary discard UI until designed. Forced authenticated 401 wipes immediately. Verify Back/Use a different email explicitly discards the unverified account queue, matching RN. | Future voluntary sign-out confirmation UI; not **9d** service or explicit Verify exit |
 | 30 | **Undesigned failure states — default kept (user informed 2026-11-06)** for hidden-field failures. | Hidden/unknown-field failures use the designed server banner, with no new notice/copy. Separate exhausted-challenge states need a mapping in 10b; store/sync/inbox remain typed test seams without product UI. | No remaining **10a** hidden-field blocker; **10b** separate challenge states and store/sync/inbox UI remain deferred |
 | 31 | **Outbox parity vs absent endpoints:** RN final schema includes complete-trip/data-export/security kinds; W routes have no complete-trip or data-export endpoints, and RN's API adapters still defer them. How should future producers behave? | Preserve schema/kind decoding. Implement supported check-off/settings (including policy acceptance)/profile/walkthrough handlers now; do not create unsupported producers, fake endpoints or discard parked rows. Security features and unsupported writes need their own later scope/contracts. Mock may retain RN behaviors as isolated test values. | Future completion/export/security feature phases; not **9c** supported sync; no claim of full RN feature parity |
 | 32 | **Keyboard overflow — settled for Sign in and Two-factor (2026-11-07, 9505993):** earlier SE/Duo passes used minimized keyboards; after disabling minimization, visible-keyboard reruns pass on 17e/SE/Duo. | Disable automatic minimization per device after boot; require substantial stable keyboard/window intersection before viewport, focus, visibility and interactive-dismiss checks. SignInKeyboardTests, TwoFactorKeyboardTests and TwoFactorTests pass on 17e/SE/Duo, en/nl at xxLarge with errors/server banners. | **10a/10b** settled; **11** forms need their own checks |
 | 33 | **Resolved — Auth board values accepted, OQ 33 (user 2026-11-06):** keep input borders, outline-button borders, divider lines and the guest pill over the sky exactly as the board and tokens draw them. RN never changed these values; the web P8-D16 scope is WCAG 1.4.3 text contrast only. `tokens.json:167` records “Kept exact, flagged”. TokenGen computes `input` / `card` at **1.5076:1 light / 1.5051:1 dark**, `input` / `background` at **1.4243:1 / 1.6222:1**, and decorative `border` / `card` at **1.4140:1 / 1.3951:1**. The original 24 Phase 10a hosted audits identified only `sign-in.guest`. Native exactly matches AuthSignIn: Figtree 500 14/20, `skyCopy` on 90%-opaque `skyCopyBackground`. From generated P3 tokens, composited at the board footer centre (764/812), text/pill is **14.9260:1 / 15.0953:1** and pill/sky **2.3128:1 / 2.9450:1**, below the 3:1 boundary threshold. Across the entire generated sky ramp, text/pill spans **13.4635–15.0882:1 / 14.9473–16.1298:1** and pill/sky **2.0004–10.7434:1 / 1.0001–3.4997:1**. | Preserve the accepted board tokens. Keep `(sign-in.guest, .contrast)` as the only unconditional pair and pin generated colors, alpha, typography and ratios so drift fails, plus measured subtitle contrast exception, user 2026-11-07: an exact `auth.subtitle` contrast issue in Sign in or Two-factor requires every visible text line to measure ≥ 4.5:1 against the sky in the app screenshot from that same language/appearance/size/reveal stage. Reuse RenderedTextContrast; missing ink/lines, unavailable measurements or a minimum below 4.5 fail and report the measured minimum. Every other element/type stays strict; input/outline/divider pairs have no exemption. Keep identifier/label/type diagnostics and native color guards. | No remaining OQ 33 blocker; strict text contrast and pinned audit/color/ratio guards remain, with rendered visual review accepted 2026-11-07 |
+| 34 | **Settled 2026-11-07 — plan copy source:** generate `PlanCopy.xcstrings` from backend `lang/en.json`/`nl.json` at pinned `origin/feat/mobile-api-trip-wizard` `afd80dc0`, for plan/review copy only. | Generator fails on missing Dutch; includes plan/review prompt/reason/validation copy and supported plurals/arguments as specified in 14a. This is the scoped exception to OQ 13. | No source blocker; 14a precedes plan UI |
+| 35 | **Decision settled 2026-11-07 — boards:** user will re-export trip/Today/Plan/Wizard boards, including wide, to the canvas. | Import actual exports before UI; Duo unfolded uses the phone layout until wide boards exist. Preserve 15a import scope and missing TripNotOnPhone deferral; never invent absent boards. | Actual exports still gate 15a and 15e; TripNotOnPhone remains undesigned |
+| 36 | **Settled 2026-11-07 — phase order:** “Phase 11 first, then trips”. | Phases 12–18 follow 11d, stacked on completed Phase 11, not 10b. Unverified routing is implemented in 11d first. | Phase 12 starts after 11d |
+| 37 | **Settled 2026-11-07 — backend:** live checks against local Valet; user runs the trip-wizard branch’s migrations locally. | Read/create/edit acceptance uses local Valet; no production claims until the branch is merged and deployed. No merge/deploy is authorized by this plan. | Local migration/setup gates live checks; production remains unaccepted |
+| 38 | **Tab bar before Today and Settings exist.** The Today and Trips boards draw three tabs, but Today comes in M3 and Settings is unbuilt. | Build the system `TabView` with all three tabs as drawn. Today and Settings show the D17 Debug seam, and Release stays non-shipping. The hidden-steps link targets the Settings seam. | 15a |
+| 39 | **Walkthrough and terms gates.** New accounts (and the Debug mock) route to the unbuilt walkthrough seam, and a terms bump hides trips too. Boards exist (Walkthrough 1–3, WalkthroughReplay, TermsUpdate, TermsFailed). | Schedule a walkthrough/terms phase right after M1. Until then, trip acceptance uses walkthrough-seen, terms-accepted accounts, and UI tests seed one. | New-account reachability of all trip UI; TestFlight |
+| 40 | **Wizard recovery storage** versus the earlier "no drafts" remark. RN keeps a hidden 30-minute recovery row in `drafts`. | Match RN: one fixed-id `drafts` row, deleted on ×, save or expiry, and never listed. | 16a |
+| 41 | **No credits.** RN opens a one-time signed-in web link from `openBillingHandOff`, and the backend has no such endpoint. | Match RN's unavailable state: show WizardReadyNoCredits with no hand-off action until a backend hand-off endpoint exists. No static billing URL. | 16c no-credits action |
+| 42 | **Add to calendar.** The TripActions board draws it, and RN ships it locally with EventKit (boards CalendarExport, Denied, None and Failed). Is it in scope? | Defer to a separate calendar phase and leave the row out of 17c until then, noted as a known deviation from the board. | 17c calendar row; calendar phase |
+| 43 | **"Turn on reminders?" sheet** after the first saved trip, while notifications are out of scope. | Omit it until a notifications phase, and record it in Deferred fixes. | 16c |
+| 44 | **Guest wizard and claim.** Schedule Phase 18 now or later? | Later, after M2, as its own decision. | 18 |
+| 45 | **Screening questions and privacy.** The wizard asks blocking health-type screening questions (bipolar, pregnancy, VTE, eye disease) and stores the answers. There is no `PrivacyInfo.xcprivacy`, and the App Store privacy label is undecided. | Build the screening prompts with the server's wording, give the exclusion copy its own review against the clock-shift rule, and add the privacy manifest and label decision before TestFlight. | 16b copy sign-off; TestFlight |
