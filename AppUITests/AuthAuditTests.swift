@@ -70,7 +70,9 @@ nonisolated final class AuthAuditTests: XCTestCase {
                             if state == "sent" {
                                 XCTAssertTrue(AuthUIFlow.control("forgot.notice", in: app).waitForExistence(timeout: 6))
                             } else if state == "server" || state == "throttle" {
-                                XCTAssertTrue(AuthUIFlow.control("auth.banner", in: app).waitForExistence(timeout: 6))
+                                XCTAssertTrue(
+                                    AuthUIFlow.control("auth.banner", in: app).waitForExistence(timeout: 6),
+                                    "Missing Forgot \(state) banner: \(language), \(appearance), xxLarge=\(xxLarge)")
                             } else {
                                 let received = XCTNSPredicateExpectation(
                                     predicate: NSPredicate { _, _ in
@@ -114,9 +116,7 @@ nonisolated final class AuthAuditTests: XCTestCase {
                     identifier: issue.element?.identifier, auditType: issue.auditType)
                 var minimum: Double?
                 var measurement = "not eligible"
-                if issue.auditType == .contrast, let element = issue.element, element.identifier == "auth.subtitle",
-                    ["sign-in.scroll", "two-factor.scroll"].contains(AuthUIFlow.scroll(in: app).identifier)
-                {
+                if issue.auditType == .contrast, let element = issue.element, element.identifier == "auth.subtitle" {
                     (minimum, measurement) = self.subtitleContrast(
                         element, in: app, appearance: appearance, xxLarge: xxLarge)
                 }
@@ -146,9 +146,13 @@ nonisolated final class AuthAuditTests: XCTestCase {
     @MainActor private func subtitleContrast(
         _ element: XCUIElement, in app: XCUIApplication, appearance: XCUIDevice.Appearance, xxLarge: Bool
     ) -> (Double?, String) {
-        let scroll = AuthUIFlow.scroll(in: app)
-        let subtitles = scroll.staticTexts.matching(identifier: "auth.subtitle")
-        guard subtitles.count == 1, element.elementType == .staticText, subtitles.element.frame == element.frame else {
+        let scrolls = app.scrollViews.containing(.staticText, identifier: "auth.subtitle").allElementsBoundByIndex
+        let matches = scrolls.filter { scroll in
+            let subtitles = scroll.staticTexts.matching(identifier: "auth.subtitle")
+            return subtitles.count == 1 && subtitles.element.frame == element.frame
+                && subtitles.element.label == element.label
+        }
+        guard element.elementType == .staticText, matches.count == 1, let scroll = matches.first else {
             return (nil, "No unique subtitle in the current auth screen")
         }
         let appFrame = app.frame

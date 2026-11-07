@@ -1,12 +1,15 @@
-# Auth subtitle contrast, Phase 10b fix round 3
+# Auth subtitle contrast
 
-User decision, 2026-11-07: **ignore Apple's contrast result only for the Sign in and Two-factor
-subtitle, and only while rendered pixels prove every visible line is at least 4.5:1.** Every other
+User decision, 2026-11-07, extended in Phase 11a fix round 1: **ignore Apple's contrast result
+only for the shared `auth.subtitle` on every auth screen, and only while that screen’s rendered
+pixels prove every visible line is at least 4.5:1.** This covers Sign in, Two-factor and Forgot now,
+and Reset, Sign up and Verify when implemented. Every other
 text element stays strict. `(sign-in.guest, .contrast)` remains the only unconditional allow-list
 pair (OQ 33); this adds no token, design or snapshot change.
 
 `AuthAuditTests` matches the exact `auth.subtitle` accessibility identifier and `.contrast` type,
-then requires a unique static-text subtitle in the current auth scroll view with the issue's frame.
+then requires a unique static-text subtitle in a unique containing scroll view with the issue's frame.
+There is no screen-name allow-list; a new auth screen must pass its own measurement.
 Inside that issue handler it captures the app screenshot, reads the live safe-area/scroll/keyboard
 viewport and subtitle frame, derives scale from the raster/app bounds, and uses the audited
 appearance and default/xxLarge category with generated `skyTitle` and `Typography.authBody`.
@@ -70,8 +73,8 @@ for changing the token, moving the subtitle or redesigning the gradient. The con
 design Open question (board text below 4.5:1) has not been established.
 
 `AppTests/AuthSubtitleContrastTests` now renders the board and 17e fixtures, en/nl × light/dark ×
-default/xxLarge × Sign in/code/recovery. It reveals controls in the audit's order, measures the
-actual subtitle frame after each scroll, verifies clean background pixels across the subtitle's
+default/xxLarge × Sign in/code/recovery and Forgot form, field error, attempts, server, offline
+and sent. It reveals controls in the audit's order, measures the actual subtitle frame after each scroll, verifies clean background pixels across the subtitle's
 columns against the corresponding x/y pixels of a full-window rendered board sky, samples rendered
 text ink and background behind each line, and prints ratios, frames and scroll
 offsets. Missing ink and ratios below 4.5 fail. It never reads or writes snapshot references. The
@@ -93,3 +96,8 @@ corresponding x/y sky mismatch, one surviving token pixel, 37.5% surviving token
 ink, normal antialiasing, and a rectangle without clean background. Read-only remeasurement of all
 80 saved round-1 crops remains measurable and above 4.5:1; sampled background differences from the
 same-row sky stay within 2/255. This is sampler validation, not a new simulator acceptance run.
+
+Phase 11a’s supplied Forgot audit failures were excluded from measurement by the previous
+Sign in/Two-factor scroll-name gate. The gate is removed; the same unique-element, visible-line,
+finite-ratio and ≥ 4.5:1 requirements apply. This policy change does not establish a passing Forgot
+measurement: revised hosted and UI execution remains required.

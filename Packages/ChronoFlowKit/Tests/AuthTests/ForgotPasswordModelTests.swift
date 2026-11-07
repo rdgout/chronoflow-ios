@@ -39,6 +39,10 @@ import Testing
             await model.submit()
             #expect(model.form.failure == failure && model.form.banner == banner)
             #expect(model.email == "retained@example.com" && model.sentEmail == nil && !model.form.busy)
+            let fields = model.form.fields
+            model.editEmail(model.email)
+            #expect(model.form.failure == failure && model.form.banner == banner)
+            #expect(model.form.fields == fields)
             if banner == .locked {
                 #expect(model.form.retryAfterSeconds == 73)
                 #expect(
@@ -46,18 +50,22 @@ import Testing
                         == "Te veel verzoeken. Wacht een paar minuten voordat je een nieuwe link aanvraagt.")
                 #expect(model.form.takeAnnouncement(locale: Locale(identifier: "nl")) == nil)
             }
-            model.editEmail("retained@example.com")
+            model.editEmail("edited@example.com")
             #expect(model.form.failure == nil && model.form.banner == nil && model.form.fields.isEmpty)
+            model.editEmail("retained@example.com")
         }
     }
 
     @Test func serverValidatesBlankAndMalformedEmailWithoutClientValidation() async throws {
         let source = try authTestSource()
         let model = ForgotPasswordModel(source: source, navigation: AuthNavigation())
-        for email in ["", "invalid"] {
+        for (email, message) in [
+            ("", "Please fill this in."), ("   ", "Please fill this in."),
+            ("invalid", "Enter a valid email address, like name@example.com."),
+        ] {
             model.editEmail(email)
             await model.submit()
-            #expect(model.form.fields["email"]?.key == "Enter a valid email address, like name@example.com.")
+            #expect(model.form.fields["email"]?.key == message)
             #expect(model.form.banner == nil && model.sentEmail == nil)
         }
     }

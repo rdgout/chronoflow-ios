@@ -15,6 +15,7 @@ nonisolated final class ForgotPasswordSnapshotTests: XCTestCase {
             for style in [UIUserInterfaceStyle.light, .dark] {
                 for language in ["en", "nl"] {
                     for category in try fixture.categories {
+                        print("Forgot snapshots: \(fixture.snapshotName), \(style), \(language), \(category.rawValue)")
                         for sent in [false, true] {
                             for state in sent ? [.none] : ForgotPasswordSnapshotState.allCases {
                                 var frames: [AuthElement: CGRect] = [:]
@@ -80,7 +81,14 @@ nonisolated final class ForgotPasswordSnapshotTests: XCTestCase {
                                         uniqueKeysWithValues: frames.map { ($0.key.rawValue, $0.value) }),
                                     required: Set(["brand", "heading", "card"])
                                         .union(sent ? ["notice", "openEmail", "backToSignIn"] : ["email", "submit"])))
-                            if let expected { XCTAssertEqual(actual, expected) } else { expected = actual }
+                            if let expected {
+                                XCTAssertTrue(
+                                    actual == expected,
+                                    "AX5 pixels differ from xxLarge: \(fixture.snapshotName), \(style), \(language), sent=\(sent)"
+                                )
+                            } else {
+                                expected = actual
+                            }
                         }
                     }
                 }

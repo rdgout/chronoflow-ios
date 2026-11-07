@@ -35,7 +35,8 @@ import XCTest
         let insets = container.insets ?? .init(top: 0, left: 0, bottom: 0, right: 0)
         window.overrideUserInterfaceStyle = style
         controller.overrideUserInterfaceStyle = style
-        controller.traitOverrides.preferredContentSizeCategory = category
+        // Inject the system preference above the window cap, as in the app.
+        window.traitOverrides.preferredContentSizeCategory = category
         controller.traitOverrides.displayScale = scale
         controller.rootView = AnyView(
             view.dynamicTypeSize(...ContentSizeCap.maximum)

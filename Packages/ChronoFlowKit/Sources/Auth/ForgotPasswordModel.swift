@@ -17,7 +17,7 @@ import Observation
     }
 
     public func editEmail(_ value: String) {
-        guard active, !form.busy else { return }
+        guard active, !form.busy, value != email else { return }
         email = value
         form.edit("email")
     }

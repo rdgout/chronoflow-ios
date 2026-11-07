@@ -12,6 +12,7 @@ nonisolated final class AuthSnapshotGuardTests: XCTestCase {
             name: "duo-asymmetric", size: duo.size,
             insets: UIEdgeInsets(top: 20, left: 24, bottom: 20, right: 62), scale: duo.scale)
         for fixture in try AuthDeviceFixture.all() + [asymmetric] {
+            print("Auth capture guards: \(fixture.snapshotName)")
             for language in ["en", "nl"] {
                 for style in [UIUserInterfaceStyle.light, .dark] {
                     for category in [UIContentSizeCategory.large, .extraExtraLarge] {

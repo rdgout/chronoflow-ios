@@ -19,11 +19,12 @@ nonisolated final class ForgotPasswordControlTests: XCTestCase {
             XCTAssertEqual(field.keyboardType, .emailAddress)
             XCTAssertEqual(field.returnKeyType, .send)
             XCTAssertTrue(field.becomeFirstResponder())
-            for failure in [
-                DataFailure.server(status: 503),
-                .validation(fields: ["email": FieldMessage(key: "Please fill this in.")], status: 422),
-                .throttled(retryAfterSeconds: 60, status: 429), .offline,
-            ] {
+            let failures: [(DataFailure, AuthBannerKind?)] = [
+                (.server(status: 503), .server),
+                (.validation(fields: ["email": FieldMessage(key: "Please fill this in.")], status: 422), nil),
+                (.throttled(retryAfterSeconds: 60, status: 429), .locked), (.offline, nil),
+            ]
+            for (failure, banner) in failures {
                 XCTAssertTrue(model.form.begin(.sendResetLink))
                 try await host.settle()
                 XCTAssertFalse(field.isFirstResponder)
@@ -31,11 +32,31 @@ nonisolated final class ForgotPasswordControlTests: XCTestCase {
                 model.form.receive(failure)
                 model.form.finish()
                 try await host.settle()
+                model.editEmail(try XCTUnwrap(field.text))
                 XCTAssertTrue(field.isEnabled)
                 XCTAssertTrue(field.isFirstResponder)
                 XCTAssertTrue(forgotTextFields(host.window).first === field)
                 XCTAssertEqual(model.form.failure, failure)
+                XCTAssertEqual(model.form.banner, banner)
             }
+        }
+    }
+
+    @MainActor func testPrefilledNativeEmailInheritsTheWindowRootCap() async throws {
+        try await FontRegistry.register()
+        let host = try AuthTestHost(EmptyView(), size: SnapshotDevice.all()[0].size)
+        defer { host.close() }
+        for category in [UIContentSizeCategory.small, .extraExtraLarge, .accessibilityExtraExtraExtraLarge] {
+            host.configure(ForgotPasswordView(model: await forgotPasswordSnapshotModel()), category: category)
+            try await host.settle()
+            let field = try XCTUnwrap(forgotTextFields(host.window).first)
+            let effective = ContentSizeCap.clamp(category)
+            XCTAssertEqual(field.traitCollection.preferredContentSizeCategory, effective)
+            XCTAssertEqual(
+                try XCTUnwrap(field.font).pointSize,
+                Typography.authBody.uiFont(compatibleWith: UITraitCollection(preferredContentSizeCategory: effective))
+                    .pointSize, accuracy: 0.01)
+            XCTAssertEqual(field.text, "rick@example.com")
         }
     }
 

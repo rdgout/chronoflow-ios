@@ -278,6 +278,9 @@ public actor MockDataSource: DataSource {
     public func requestPasswordReset(email: String) async throws {
         try await begin(.requestPasswordReset)
         try limit("forgot")
+        guard !email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw validation("email", "Please fill this in.")
+        }
         guard email.contains("@") else {
             throw validation("email", "Enter a valid email address, like name@example.com.")
         }

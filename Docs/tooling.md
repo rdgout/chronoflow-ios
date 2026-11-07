@@ -2339,9 +2339,18 @@ then compares it. It cannot record guards, UI or Release tests.
 ```sh
 make generate
 make auth-board-pngs
-SNAPSHOT_RECORD=1 make targeted DEVICES="17e" ONLY="AppTests/ForgotPasswordSnapshotTests"
-make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppTests/ForgotPasswordControlTests AppTests/ForgotPasswordLayoutTests AppTests/ForgotPasswordSnapshotTests AppTests/AuthSnapshotGuardTests AppTests/AuthLayoutTests AppTests/AuthSnapshotTests"
-make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppUITests/ForgotPasswordTests AppUITests/ForgotPasswordKeyboardTests AppUITests/SignInTests AppUITests/AuthAuditTests"
+make targeted DEVICES="17e" ONLY="AppTests/ForgotPasswordControlTests"
+make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppTests/ForgotPasswordLayoutTests"
+make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppTests/AuthSnapshotGuardTests"
+make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppTests/AuthLayoutTests"
+make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppTests/AuthSubtitleContrastTests"
+make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppTests/ForgotPasswordSnapshotTests/testRootCapMakesAX5EqualXXLargeInBothStatesLanguagesAndAppearances"
+SNAPSHOT_RECORD=1 make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppTests/ForgotPasswordSnapshotTests"
+make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppTests/AuthSnapshotTests"
+make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppUITests/ForgotPasswordTests"
+make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppUITests/ForgotPasswordKeyboardTests"
+make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppUITests/SignInTests"
+make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppUITests/AuthAuditTests"
 make targeted DEVICES="se duo" REUSE_BUILD=1 ONLY="AppUITests/ForgotPasswordKeyboardTests"
 ```
 
@@ -2354,8 +2363,33 @@ exact runner output and screenshots for any failures. Logs and xcresults are in
 SE/Duo keyboard tests require visible stable keyboard/window intersection, focus, full field/submit
 visibility and interactive dismissal; an off-screen or minimized keyboard cannot pass.
 
-Patches for this round are in ignored `build/commits/1.patch` and `2.patch`, with subjects in
-`messages.txt`, because Git's worktree index is outside this sandbox's writable roots. The patches
-are sequential against c345470; the working tree already contains them. Do not apply them again
-on top of these files. The first contains only plan decisions; the second contains the implementation,
-tests, exports and acceptance notes. Hosted/UI results and reference acceptance remain pending.
+Phase 11a fix round 1 (2026-11-07): the supplied board export succeeds with all ten Forgot PNGs.
+Forgot layout, AuthSnapshotGuard and AuthLayout pass individually. Forgot control feedback/focus,
+server/throttle UI and visible-keyboard variants fail; the audit’s bare assertion is the same
+missing server-banner wait at `AuthAuditTests.testForgotStatesInBothLanguagesAppearancesAndSizes`.
+Unchanged native email writes during refocus now preserve feedback; a real edit still clears it.
+Blank/whitespace email returns the backend required message; malformed email keeps its email message.
+Failure injection, failure-to-banner mapping and the shared `auth.banner` identifier are present.
+
+The saved root-cap failure differs only in the prefilled email text’s one-pixel vertical position,
+not its font size. Hosted system categories now enter above the window cap, rather than overriding
+the hosting controller below it. SwiftUI still receives the requested category before its root cap;
+no per-view caps are added. Native field trait/font checks and exact AX5 comparisons remain required.
+Both snapshot suites have bounded 12-turn settling and use immediate mock requests; there is no
+unbounded model wait in either suite. Profile progress is now logged, and cap failures report their
+fixture/context without expanding whole raster byte arrays. Run suites individually above to isolate
+runtime stalls and retain each result before the next run replaces its logs/xcresult.
+
+The measured subtitle exception now covers every auth screen, including Forgot. It locates the
+unique scroll containing the exact issue subtitle, then measures that screenshot’s visible lines;
+unmeasurable, incomplete, non-finite or < 4.5:1 still fails. See
+[auth-subtitle-contrast.md](auth-subtitle-contrast.md). Forgot’s six states join the hosted contrast
+and sky-position guard. Existing untracked Forgot references remain untouched and require a complete
+successful recording/comparison and visual review before acceptance.
+
+Fix-round validation: `make quick` passes strict lint, 333 package tests, 10 TokenGen tests,
+4 AssetGen tests and 86 signing/resource/runner fixtures. Direct iOS 17 compilation passes
+Debug/Release DataAccess/app modules and app SIL, all hosted tests, and Debug UI tests.
+The final hosted/UI edits also pass a focused type-check. These checks do not execute UIKit;
+the individual simulator reruns and visual review above remain open. Logs are
+`build/phase-11a-fix-round1-{quick,typecheck,final-typecheck}.log`.

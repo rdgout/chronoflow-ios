@@ -17,6 +17,7 @@ nonisolated final class AuthSnapshotTests: XCTestCase {
             for style in [UIUserInterfaceStyle.light, .dark] {
                 for language in ["en", "nl"] {
                     for category in try fixture.categories {
+                        print("Sign in snapshots: \(fixture.snapshotName), \(style), \(language), \(category.rawValue)")
                         for banner in [nil] + AuthBannerKind.allCases.map(Optional.some) {
                             let model = authSnapshotModel()
                             if let banner { model.form.receive(snapshotFailure(banner)) }
@@ -75,7 +76,13 @@ nonisolated final class AuthSnapshotTests: XCTestCase {
                                 viewport: CGRect(origin: .zero, size: fixture.size).inset(by: fixture.insets),
                                 frames: Dictionary(uniqueKeysWithValues: frames.map { ($0.key.rawValue, $0.value) }),
                                 required: Set(["brand", "heading", "card", "submit"])))
-                        if let expected { XCTAssertEqual(actual, expected) } else { expected = actual }
+                        if let expected {
+                            XCTAssertTrue(
+                                actual == expected,
+                                "AX5 pixels differ from xxLarge: \(fixture.snapshotName), \(style), \(language)")
+                        } else {
+                            expected = actual
+                        }
                     }
                 }
             }

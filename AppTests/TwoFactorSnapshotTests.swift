@@ -79,7 +79,14 @@ nonisolated final class TwoFactorSnapshotTests: XCTestCase {
                                     frames: Dictionary(
                                         uniqueKeysWithValues: frames.map { ($0.key.rawValue, $0.value) }),
                                     required: Set(["brand", "heading", "card", "submit"])))
-                            if let expected { XCTAssertEqual(actual, expected) } else { expected = actual }
+                            if let expected {
+                                XCTAssertTrue(
+                                    actual == expected,
+                                    "AX5 pixels differ from xxLarge: \(fixture.snapshotName), \(style), \(language), recovery=\(recovery)"
+                                )
+                            } else {
+                                expected = actual
+                            }
                         }
                     }
                 }
