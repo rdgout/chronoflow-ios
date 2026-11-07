@@ -8,6 +8,9 @@ import UIKit
 final class AuthSessionServices {
     let nativeSession: NativeSessionController
     let model: SignInModel
+    #if DEBUG
+        let authUITestEnabled: Bool
+    #endif
 
     init(
         services: AppServices, applicationSupport support: URL, nativeSession native: NativeSessionController,
@@ -16,8 +19,10 @@ final class AuthSessionServices {
         assertionProvider: (any PasskeyAssertionProviding)? = nil,
         verification: @escaping @MainActor (UInt64) async -> Void
     ) {
-        let namespace = services.namespace
-        let credentials = KeychainSessionStore(namespace: namespace)
+        #if DEBUG
+            authUITestEnabled = services.authUITestEnabled
+        #endif
+        let credentials = services.sessionCredentials()
         nativeSession = native
         let source = source ?? services.makeDataSource(applicationSupport: support, credentials: credentials)
         #if DEBUG

@@ -24,6 +24,17 @@ PHASE9_HOSTED = (
     'AppTests/LaunchConnectionTests', 'AppTests/ReleaseReadinessTests',
 )
 
+AUTH_HOSTED = (
+    'AppTests/AuthControlTests', 'AppTests/AuthLayoutTests', 'AppTests/AuthSnapshotGuardTests',
+    'AppTests/AuthSnapshotTests', 'AppTests/TwoFactorControlTests', 'AppTests/TwoFactorLayoutTests',
+    'AppTests/TwoFactorSnapshotTests',
+)
+AUTH_UI = (
+    'AppUITests/SignInTests', 'AppUITests/SignInKeyboardTests', 'AppUITests/TwoFactorTests',
+    'AppUITests/TwoFactorKeyboardTests', 'AppUITests/AuthSessionTests', 'AppUITests/AuthAuditTests',
+)
+AUTH_SNAPSHOTS = ('AppTests/AuthSnapshotTests', 'AppTests/TwoFactorSnapshotTests')
+
 
 def discovered_suites(directory):
     suites = set()
@@ -112,6 +123,22 @@ class ClassificationTests(unittest.TestCase):
         self.assertEqual(runner.recording_selection([snapshot], 'check', 'launch'), [])
         for alias in ['se', 'duo']:
             self.assertEqual(runner.selection('check', alias, only=[keyboard]), [keyboard])
+
+    def test_auth_acceptance_tiers_include_all_suites_once_and_project_discovers_ui_sources(self):
+        for suite in AUTH_HOSTED + AUTH_UI:
+            self.assertEqual(runner.selection('check', '17e').count(suite), 1, suite)
+            if suite not in AUTH_SNAPSHOTS:
+                self.assertEqual(runner.selection('runtime', 'duo').count(suite), 1, suite)
+        self.assertIn('AuthTests/AuthSnapshotCaptureTests', runner.selectors('host'))
+        for suite in AUTH_SNAPSHOTS + ('AppTests/AuthSnapshotGuardTests',):
+            self.assertIn(suite, runner.selection('snapshots', '17e'))
+        project = (ROOT / 'project.yml').read_text()
+        ui = project.split('  AppUITests:\n')[1].split('  PerfUITests:\n')[0]
+        self.assertIn('- path: AppUITests\n', ui)
+        self.assertIn('- path: Packages/ChronoFlowKit/Sources/DataAccess/Mock/MockScenarioValues.swift', ui)
+        self.assertNotIn('excludes:', ui)
+        for suite in ['AppUITests/AuthSessionTests', 'AppUITests/AuthAuditTests']:
+            self.assertIn(suite, runner.SERIAL_TESTS)
 
     def test_store_and_core_logic_run_on_host_by_default(self):
         host = set(runner.selectors('host'))
@@ -326,6 +353,65 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(recorded[0][recorded[0].index('-parallel-testing-worker-count') + 1], '1')
         self.assertNotIn('-only-testing:RenderTests/WelcomeRenderingTests', recorded[0])
         self.assertNotIn('-only-testing:AppTests/WelcomeSnapshotGuardTests', recorded[0])
+
+    def test_auth_check_executes_all_suites_once_and_keeps_failures_visible(self):
+        status, output = self.execute(mode='check')
+        self.assertEqual(status, 0, output)
+        for suite in AUTH_HOSTED + AUTH_UI:
+            commands = [c for c in self.commands_for_tests() if '-only-testing:' + suite in c]
+            self.assertEqual(len(commands), 1, suite)
+            self.assertIn('platform=iOS Simulator,id=device-1', commands[0])
+            self.assertIn(' ' + suite, output)
+        for suite in AUTH_HOSTED + AUTH_UI:
+            with self.subTest(suite=suite):
+                self.result_fail = suite
+                status, output = self.execute(mode='check')
+                self.assertEqual(status, 1, output)
+                self.assertRegex(output, r'FAIL 17e Debug-(?:compare|serial) ' + re.escape(suite))
+                self.assertIn('PASS 17e Release-compare AppTests/ReleaseReadinessTests', output)
+        self.result_fail = None
+
+    def test_auth_skipped_expected_failure_or_missing_execution_cannot_pass(self):
+        for suite in AUTH_HOSTED + AUTH_UI:
+            for result in ['Skipped', 'Expected Failure', 'Failed', None]:
+                with self.subTest(suite=suite, result=result):
+                    self.nodes = [] if result is None else [
+                        {'nodeType': 'Test Case', 'nodeIdentifier': suite + '/testExample()', 'result': result}]
+                    status, output = self.execute(aliases=['17e'], only=[suite])
+                    self.assertEqual(status, 1, output)
+                    self.assertIn('FAIL 17e ', output)
+        self.nodes = None
+
+    def test_auth_recording_is_opt_in_17e_only_and_never_reaches_guards_ui_or_release(self):
+        for record in ['0', '1', 'all', 'launch']:
+            self.commands.clear()
+            self.environments.clear()
+            with patch.dict(os.environ, {'SNAPSHOT_RECORD': record, 'TEST_RUNNER_SNAPSHOT_RECORD': '1'}):
+                status, output = self.execute(mode='check', aliases=['17e', 'duo'],
+                    only=list(AUTH_HOSTED + AUTH_UI) + ['AppTests/ReleaseReadinessTests'])
+            self.assertEqual(status, 0, output)
+            recorded = [c for c, e in zip(self.commands, self.environments) if e.get('TEST_RUNNER_SNAPSHOT_RECORD')]
+            self.assertEqual(len(recorded), int(record in ['1', 'all']))
+            for command in recorded:
+                self.assertIn('platform=iOS Simulator,id=device-1', command)
+                self.assertEqual([v for v in command if v.startswith('-only-testing:')],
+                                 ['-only-testing:' + suite for suite in AUTH_SNAPSHOTS])
+                self.assertEqual(command[command.index('-parallel-testing-enabled') + 1], 'NO')
+            for suite in AUTH_UI + ('AppTests/AuthSnapshotGuardTests', 'AppTests/ReleaseReadinessTests'):
+                for c, env in zip(self.commands, self.environments):
+                    if '-only-testing:' + suite in c:
+                        self.assertNotIn('TEST_RUNNER_SNAPSHOT_RECORD', env)
+
+    def test_auth_record_failure_still_runs_compare_audit_and_release(self):
+        self.command_failure = lambda c: c[-1] == 'test-without-building' and any('record.xcresult' in a for a in c)
+        with patch.dict(os.environ, SNAPSHOT_RECORD='1'):
+            status, output = self.execute(mode='check')
+        self.assertEqual(status, 1, output)
+        self.assertIn('xcodebuild exited 65', output)
+        for suite in AUTH_HOSTED + AUTH_UI:
+            self.assertTrue(any('-only-testing:' + suite in c and not any('record.xcresult' in a for a in c)
+                                for c in self.commands_for_tests()), suite)
+        self.assertIn('PASS 17e Release-compare AppTests/ReleaseReadinessTests', output)
 
     def test_resolves_aliases_by_type_and_runtime_never_name(self):
         self.devices[runner.REGULAR_RUNTIME].insert(0, dict(self.devices[runner.DUO_RUNTIME][0], udid='wrong-runtime'))
@@ -799,7 +885,7 @@ class ProfileTests(unittest.TestCase):
 
     def test_new_baseline_inventory_is_complete_after_recording(self):
         catalog = json.loads((ROOT / 'Packages/ChronoFlowKit/Tests/SnapshotSupport/profiles.json').read_text())
-        for screen in ['Welcome', 'Launch', 'Auth']:
+        for screen in ['Welcome', 'Launch', 'Auth', 'TwoFactor']:
             expected = set()
             if screen == 'Auth':
                 expected.update(f'board-{style}-{language}-{category}-{banner}.png'
@@ -807,6 +893,12 @@ class ProfileTests(unittest.TestCase):
                                 for category in ['large', 'xxLarge']
                                 for banner in ['none', 'credentials', 'locked', 'server'])
                 self.assertEqual(len(expected), 32)
+            if screen == 'TwoFactor':
+                expected.update(f'board-{style}-{language}-{category}-{mode}-{state}.png'
+                                for style in ['light', 'dark'] for language in ['en', 'nl']
+                                for category in ['large', 'xxLarge'] for mode in ['code', 'recovery']
+                                for state in ['none', 'fieldError', 'attempts', 'server'])
+                self.assertEqual(len(expected), 64)
             for device in catalog['devices'].values():
                 profile = catalog['profiles'][device['profile']]
                 name = f"{device['alias']}-{device['width']}x{device['height']}-{device['scale']}x"
@@ -819,15 +911,19 @@ class ProfileTests(unittest.TestCase):
                             expected.update(f'{name}-{style}-{language}-{category}-{banner}.png'
                                             for category in profile['dynamicType']
                                             for banner in ['none', 'credentials', 'locked', 'server'])
+                        elif screen == 'TwoFactor':
+                            expected.update(f'{name}-{style}-{language}-{category}-{mode}-{state}.png'
+                                            for category in profile['dynamicType'] for mode in ['code', 'recovery']
+                                            for state in ['none', 'fieldError', 'attempts', 'server'])
                         else:
                             expected.update(f'sampledSplashFrames.{name}-{style}-{language}-{category}-{frame}.png'
                                             for category in ['large', 'xxLarge'] for frame in profile['launchFrames'])
-            directory = ROOT / 'AppTests/__Snapshots__' / ('Auth' if screen == 'Auth' else f'{screen}SnapshotTests')
+            directory = ROOT / 'AppTests/__Snapshots__' / ({'Auth': 'Auth', 'TwoFactor': 'Auth/TwoFactor'}.get(screen, f'{screen}SnapshotTests'))
             actual = {p.name for p in directory.glob('*.png')}
             # A wholly unrecorded suite is pending orchestrator work; partial recordings must fail.
             if actual:
                 self.assertEqual(actual, expected, screen)
-            self.assertEqual(len(expected), {'Welcome': 320, 'Launch': 472, 'Auth': 896}[screen])
+            self.assertEqual(len(expected), {'Welcome': 320, 'Launch': 472, 'Auth': 896, 'TwoFactor': 1792}[screen])
 
 
 if __name__ == '__main__':

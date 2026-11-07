@@ -17,16 +17,26 @@ nonisolated final class TwoFactorSnapshotTests: XCTestCase {
                     for category in try fixture.categories {
                         for recovery in [false, true] {
                             for state in TwoFactorSnapshotState.allCases {
+                                var frames: [AuthElement: CGRect] = [:]
                                 host.configure(
-                                    TwoFactorView(model: twoFactorSnapshotModel(recovery: recovery, state: state)),
+                                    TwoFactorView(
+                                        model: twoFactorSnapshotModel(recovery: recovery, state: state),
+                                        measure: { frames[$0] = $1 }),
                                     style: style, language: language, category: category)
                                 try await host.settle()
                                 let suffix =
                                     "\(fixture.snapshotName)-\(style == .dark ? "dark" : "light")-\(language)-\(DynamicTypeSize(category).map { String(describing: $0) } ?? category.rawValue)-\(recovery ? "recovery" : "code")-\(state.rawValue)"
                                 let directory = URL(filePath: #filePath).deletingLastPathComponent()
                                     .appending(path: "__Snapshots__/Auth/TwoFactor")
-                                let failure = try SnapshotReference.verify(
+                                let failure = try AuthSnapshotCapture.verify(
                                     png: XCTUnwrap(host.image().pngData()),
+                                    size: fixture.size, scale: fixture.scale,
+                                    viewport: CGRect(origin: .zero, size: fixture.size).inset(by: fixture.insets),
+                                    frames: Dictionary(
+                                        uniqueKeysWithValues: frames.map { ($0.key.rawValue, $0.value) }),
+                                    required: Set(
+                                        (Set([AuthElement.brand, .heading, .card, .code, .submit, .modeToggle])).map(
+                                            \.rawValue)),
                                     reference: directory.appending(path: "\(suffix).png"),
                                     record: ProcessInfo.processInfo.environment["SNAPSHOT_RECORD"] == "1")
                                 if ProcessInfo.processInfo.environment["SNAPSHOT_RECORD"] == "1" {
@@ -52,11 +62,21 @@ nonisolated final class TwoFactorSnapshotTests: XCTestCase {
                     for language in ["en", "nl"] {
                         var expected: SnapshotRaster?
                         for category in [UIContentSizeCategory.extraExtraLarge, .accessibilityExtraExtraExtraLarge] {
+                            var frames: [AuthElement: CGRect] = [:]
                             host.configure(
-                                TwoFactorView(model: twoFactorSnapshotModel(recovery: recovery, state: .fieldError)),
+                                TwoFactorView(
+                                    model: twoFactorSnapshotModel(recovery: recovery, state: .fieldError),
+                                    measure: { frames[$0] = $1 }),
                                 style: style, language: language, category: category)
                             try await host.settle()
                             let actual = try SnapshotRaster(png: XCTUnwrap(host.image().pngData()))
+                            XCTAssertNil(
+                                AuthSnapshotCapture.failure(
+                                    raster: actual, size: fixture.size, scale: fixture.scale,
+                                    viewport: CGRect(origin: .zero, size: fixture.size).inset(by: fixture.insets),
+                                    frames: Dictionary(
+                                        uniqueKeysWithValues: frames.map { ($0.key.rawValue, $0.value) }),
+                                    required: Set(["brand", "heading", "card", "submit"])))
                             if let expected { XCTAssertEqual(actual, expected) } else { expected = actual }
                         }
                     }

@@ -109,6 +109,7 @@ targets:
       - path: Packages/ChronoFlowKit/Tests/ToolingTests/LaunchImageComparison.swift
       - path: Packages/ChronoFlowKit/Tests/ToolingTests/FrameStability.swift
       - path: AppTests/WelcomeAuditPolicy.swift
+      - path: Packages/ChronoFlowKit/Sources/DataAccess/Mock/MockScenarioValues.swift
     settings:
       TARGETED_DEVICE_FAMILY: "1"
       SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO

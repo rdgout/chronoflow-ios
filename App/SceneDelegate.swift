@@ -207,7 +207,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             native = existing
         } else {
             native = NativeSessionController(
-                applicationSupport: root, namespace: services.namespace,
+                applicationSupport: root, namespace: services.namespace, credentials: services.sessionCredentials(),
                 source: { session in services.makeDataSource(applicationSupport: root, session: session) },
                 verification: { [weak app] epoch in await app?.verificationRequired(epoch: epoch) },
                 signedOut: { [navigator] in navigator.navigate(to: .signIn) })

@@ -8,6 +8,33 @@ nonisolated struct AppServices: Sendable {
     let factory: DataSourceFactory
     private let isolatedMockStore: (any MockStateStore)?
     var namespace: StorageNamespace { factory.namespace }
+    #if DEBUG
+        private let authTest: AuthUITestConfiguration?
+        private let authTestSeed: MockServerState?
+        var authUITestEnabled: Bool { authTest != nil }
+    #endif
+
+    func sessionCredentials() -> KeychainSessionStore {
+        #if DEBUG
+            if let authTest { return authTest.credentials }
+        #endif
+        return KeychainSessionStore(namespace: namespace)
+    }
+
+    private func makeMock(applicationSupport: URL, bearer: @escaping @Sendable () async throws -> String?)
+        -> MockDataSource
+    {
+        #if DEBUG
+            if let authTest {
+                return MockDataSource(
+                    store: FileMockStateStore(applicationSupport: applicationSupport),
+                    seed: authTestSeed,
+                    offline: authTest.offline, bearer: bearer)
+            }
+        #endif
+        return MockDataSource(
+            store: isolatedMockStore ?? FileMockStateStore(applicationSupport: applicationSupport), bearer: bearer)
+    }
 
     init(
         info: [String: Any] = Bundle.main.infoDictionary ?? [:],
@@ -35,25 +62,32 @@ nonisolated struct AppServices: Sendable {
             setting: info["CHRONOFLOW_DATA_SOURCE"] as? String ?? "mock",
             baseURL: info["CHRONOFLOW_API_BASE_URL"] as? String ?? "https://api.chronoflow.net/v1",
             release: release, testing: testing)
+        #if DEBUG
+            authTest = factory.source == .mock ? AuthUITestConfiguration() : nil
+            authTestSeed = try authTest.map {
+                try MockAppSeed.make(now: Date(), unverified: $0.unverified, walkthroughSeen: $0.walkthroughSeen)
+            }
+        #endif
     }
     static func launchConfiguration() throws -> (AppServices, URL?) {
         assert(!Thread.isMainThread)
         let services = try AppServices()
-        let root =
+        var root =
             services.signedOutReadiness
             ? nil
             : FileManager.default.urls(
                 for: .applicationSupportDirectory, in: .userDomainMask
             ).first
+        #if DEBUG
+            if let test = services.authTest, let support = root { root = test.applicationSupport(in: support) }
+        #endif
         return (services, root)
     }
 
     func makeDataSource(applicationSupport: URL, session: StoredSession) -> any DataSource {
         assert(!Thread.isMainThread)
         return factory.make {
-            MockDataSource(
-                store: isolatedMockStore ?? FileMockStateStore(applicationSupport: applicationSupport),
-                bearer: { session.token })
+            makeMock(applicationSupport: applicationSupport, bearer: { session.token })
         } api: {
             APIDataSource(client: APIClient(baseURL: factory.baseURL, bearer: { session.token }))
         }
@@ -61,11 +95,8 @@ nonisolated struct AppServices: Sendable {
 
     func makeDataSource(applicationSupport: URL, credentials: any SessionStore) -> any DataSource {
         factory.make {
-            MockDataSource(
-                store: isolatedMockStore ?? FileMockStateStore(applicationSupport: applicationSupport),
-                bearer: {
-                    try await credentials.readStoredSession()?.token
-                })
+            makeMock(
+                applicationSupport: applicationSupport, bearer: { try await credentials.readStoredSession()?.token })
         } api: {
             APIDataSource(
                 client: APIClient(

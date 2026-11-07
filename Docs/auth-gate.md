@@ -1,113 +1,95 @@
-# Phase 10a auth gate — 6 November 2026
+# Auth acceptance gate — Phase 10b, task 2 (7 November 2026)
 
-Implementation was originally stacked early on Phase 9b by user direction; this port integrates
-Phase 9a–9d, the test tiers and recorded Launch/Welcome references.
-The first task stays unticked for browser PNG/visual acceptance and hosted checks;
-password and passkey implementation tasks are ticked with their remaining acceptance limits.
+Implementation and Mac verification are complete. **Acceptance remains open** for the user's
+simulator runs and Two-factor board review. No simulator, xcodebuild, physical device or live API
+was used for this task. Phases 6–8 remain open; this gate does not close their accessibility,
+performance or physical-device requirements. Phase 10b task 2 remains unticked until the pending
+checks below have supplied results.
 
-Auth uses native TextField/SecureField, Buttons and ProgressView, generated board typography,
-semantic Any/Dark colors, OKLab error mix, soft card shadow and template board SVG glyphs.
-The shell scrolls in the keyboard-safe viewport with all four insets. Touch surfaces grow to 44 points,
-footer to 48, and text grows through the existing root xxLarge cap. No patterns or explicit glass API
-are added. Auth geometry and keyboard reveal use measured frames, with a pure overflow result;
-there is no invented pinned action if a field/submit pair does not fit (OQ 32).
+Matrix A means all seven D1c profiles in Mac geometry tests and hosted captures inside **one 17e**,
+plus 17e keyboard/routing/accessibility UI tests. It does not request seven simulator runtimes.
+`make duo` is the opt-in runtime spot check. The full/compact profile split remains unchanged.
 
-OQ 32 correction (7 November 2026, Phase 10b fix round 3): the user verified that headless
-simulators had hardware keyboards attached and `AutomaticMinimizationEnabled = 1`. The software
-keyboard was minimized despite `app.keyboards.firstMatch.exists`. Duo's reported keyboard
-`(0, 722, 466, 245)` below window/scroll `(0, 0, 466, 678)` is not evidence of a real visible
-Duo keyboard layout. The b56c328 whole-window fallback is removed. Shared helpers now require
-stable keyboard frames with at least 100 × 100 points intersecting the app window, then clip
-the scroll/window viewport above the keyboard and check focus, full input/submit containment and
-hittability. The runner disables automatic minimization per device after boot. Earlier SE/Duo
-passes do not establish keyboard acceptance: **OQ 32 is reopened for Sign in**, pending the user's
-SignInKeyboardTests, TwoFactorKeyboardTests and TwoFactorTests reruns on 17e, SE and Duo.
-The user's SE experiment with minimization disabled passed `testDutchCodeServerAtXXLarge` with
-a visible number pad. That single case does not settle the full acceptance gate.
+| Board / state | Native checks | Evidence / remaining acceptance |
+| --- | --- | --- |
+| AuthSignIn none / wrong→credentials / locked / server, light/dark | Generated tokens, native controls, layout, strict text ratios, 896 profile/board references and AX5 equality | User's Phase 10a results and eight-pair visual acceptance pass (8e2d542; `_design/frames/README.md`). Compare again with the new capture guard. |
+| AuthTwoFactor code none / field error / attempts / server, light/dark | Shared controls, max-six oneTimeCode, number-pad submit, field/banner mapping, profile captures | User's task-1 hosted comparisons pass; 1,792 code/recovery references committed at 0e92b6a. New guard/audit/session runs and side-by-side board review remain open. |
+| AuthTwoFactor recovery none / attempts / server, light/dark | Mode toggle, hint, recovery Return, consumed-code mock/model checks, profile captures | Same task-1 evidence; review the recovery board exports and run the extended suites. Recovery field-error snapshots use the designed shared Field error treatment and approved backend copy; there is no separate recovery-error board. |
+| AuthStates / Field / Button | Designed banners, native input/button states, touch targets, color/typography/shadow guards | Previously accepted shared controls; no new visual state, copy or token value in task 2. |
 
-AuthSessionServices reuses the scene’s NativeSessionController. Its one SessionController accepts
-sessions, restores credentials, owns sync and signs out/wipes. Post-accept routing reads the SQLite
-readiness gate: verify through AppDelegate.verificationRequired, then current terms, walkthrough,
-and today. Hosted integration tests cover acceptance, gate precedence, restore and sign-out.
-Forgot, Sign up and Two-factor are memory navigation seams with Debug diagnostics; their UI belongs to later phases. Today and verify retain the existing root seams.
-Release remains non-shipping while these destinations are unbuilt. Navigation does not replay launch.
+The earlier minimized-keyboard results were withdrawn. OQ 32 was subsequently **settled** at
+9505993: the user supplied visible-keyboard passes on 17e, SE and Duo for SignInKeyboardTests,
+TwoFactorKeyboardTests, TwoFactorTests and SignInTests (plan.md records the correction/results).
+The runner still writes `AutomaticMinimizationEnabled=false` on each booted destination before
+any UI pass, including check, Duo, targeted/reused builds and Perf. Helpers require stable keyboard
+frames with at least 100 × 100 points intersecting the window, focused-input/submit containment
+above the keyboard and hittability. The new tree still needs the user's check/Duo runs.
 
-Assumed defaults, not settled questions:
+Auth captures now reject a wrong-size/scale raster, transparent pixels, missing measurements,
+horizontal clipping and vertically clipped brand/heading. Brand and heading must contain rendered
+ink: a sky gradient alone cannot pass the blank guard. Validation happens before comparison or
+recording, including AX5 equality captures. Mac mutation tests cover missing/clipped/blank/gradient/
+transparent captures and recording without writes on failure. Deliberately scrollable content may
+extend below the initial viewport; AuthSnapshotGuardTests scrolls every Sign in and Two-factor
+control fully into view on the board/all seven profiles and an extra four-inset Duo fixture,
+en/nl, light/dark, default/xxLarge. These hosted scroll checks await execution. Captures retain each
+profile's own scale and four insets, including Duo's side rail. No references were changed.
 
-- **OQ 23:** no offline banner or disabled-offline submit. Typed failures remain tested.
-- **OQ 24:** eligible verified success → `.today`; unverified → `.verify`.
-- **OQ 30:** hidden/unknown field and passkey credential/challenge errors use the designed generic server
-  banner; no hidden-field notice. Returned passkey fields/deadlines remain typed in the form model.
+AuthSessionTests enters credentials through the native forms and asserts existing D17 routes:
 
-OQ 28 is resolved by the user 2026-11-06: use RN Dutch for an exact English match, otherwise
-backend `lang/nl.json` for the exact English key, otherwise write natural Dutch matching RN's
-je/jij tone and terminology and the clock-shift copy rule. All 15 pending plan rows now have
-source-tagged values. These six shared rows have exact backend values and now ship in the catalog
-and displayed-field mapping, with en/nl regressions and the existing hidden-field fallback:
+- Verified demo → `.today`; two-factor code and recovery → `.today` only after proof.
+- Unverified demo → `.verify`, both after sign-in and cold restore; no Today/verification screen is invented.
+- Cold relaunch restores the persisted session; background/foreground retains the route without replaying
+  splash/Welcome. A cold process still gets its one splash under D16.
+- Wait for a real SQLite `synced_at` before relaunching with every mock source offline; restore `.today`
+  and the cached marker. No `-cf.session`/stored-readiness override supplies a session or readiness.
+- Tap the existing Debug route diagnostic to call the real controller's voluntary discard/sign-out/wipe;
+  return directly to Sign in without splash/Welcome, then relaunch offline to Welcome with empty auth fields.
+  AccountWipeTests separately verifies exact DB/WAL/SHM, Keychain and wipe-marker deletion; the UI seam
+  cannot inspect files. Both hosted and UI execution are pending for this tree.
 
-- Use both uppercase and lowercase letters.
-- Use at least one letter.
-- Use at least one number.
-- Use at least one symbol.
-- This password has appeared in a data leak. Choose a different password.
-- This email verification link is invalid or has expired.
+Each new session/audit launch uses a UUID-specific file-backed fake server/account root and Keychain service, retained
+across relaunch. It uses the shared Debug mock scenario values from e6623a3, with verification and
+walkthrough flags applied to the same seed for gate coverage. Default demo behavior stays unchanged.
+Debug-only `CF_AUTH_TEST_ID` enables this isolation; `CF_AUTH_TEST_OFFLINE`,
+`CF_AUTH_TEST_UNVERIFIED` and `CF_AUTH_TEST_WALKTHROUGH_SEEN` only apply within that namespace.
+Offline state is installed in the mock constructor, before its first request. The existing route
+text exposes only a `cached` readiness diagnostic and the test-only tap; no token, account data or
+new screen is shown. Release/Perf compile out the configuration, seed and route diagnostic.
+Ordinary Release remains non-shipping while Today/terms/walkthrough/verify destinations are unbuilt
+(D17/D27/OQ 24). Forgot/Sign up stay their existing seams.
 
-Later-phase Two-factor/Forgot/Reset/Verify translations are recorded in plan.md and ship with their
-phases. OQ 21/22/25/27 still block the conflicting password-policy/reset/verification claims.
-Numeric field arguments use catalog interpolation. Passkey-specific backend sentences classify failures, with only the approved generic
-banner rendered; no new translation is needed for an undisplayed server sentence.
+AuthAuditTests audits Sign in and both Two-factor modes, en/nl × light/dark × default/xxLarge,
+scrolling every back/passkey/input/submit/link/footer/mode-toggle control fully into the viewport
+before auditing. Device appearance and session foreground tests run serially. The audit includes
+contrast, text clipping, hit regions and traits; the dynamicType audit is excluded because the
+intentional root xxLarge cap is separately checked by AX5-equality snapshots. Audit errors include
+identifier, label, type, language/size, appearance and stage in logs/attachments, and do not stop the
+remaining controls from being audited. **No new audit pass is claimed until execution.**
 
-Existing Auth snapshots render none/credentials/locked/server, without these added field messages;
-no existing references change or need re-recording in this decision round. Hosted comparison and
-native control/layout/UI checks remain for the user; no simulator execution is claimed here.
+Only `(sign-in.guest, .contrast)` is allow-listed (OQ 33). Nil/prefix/other identifiers, combined
+issue types and every Two-factor control still fail. Generated/native guards retain the accepted
+border/guest-pill values and strict WCAG text contrast. The exemption adds no text-ratio waiver.
+At the board footer centre, text/pill remains 14.9260:1 light / 15.0953:1 dark, with its 90% opacity;
+the guest boundary/pill contrast acceptance is recorded in OQ 33.
 
-Real passkeys use AuthenticationServices required user verification and serialize binary bytes as
-unpadded base64url, including ID and clientDataJSON. Every retry fetches new options; cancellation
-shows no banner. Mock never invokes AuthenticationServices: tests inject named fake-server accounts
-and deterministic providers for verified, unverified, 2FA-bypass, cancellation, rejection and challenge
-consumption. The app's unseeded mock has a deterministic unavailable provider; it cannot authenticate
-a fabricated credential or prefill an account.
+Mac verification: `make quick`, runner selection/failure/skip/record-isolation fixtures, capture
+mutation tests and mock scenario/offline/persistence tests pass. `make generate` includes the new UI
+files through the AppUITests directory glob and compiles the shared scenario-values source into
+that target. Direct Swift 6 iOS 17 Debug/Release app/module/SIL and hosted/UI test compilation is
+checked without xcodebuild; compilation is not UIKit execution. Exact results/commands are in
+Docs/tooling.md, Phase 10b task 2.
 
-Associated domains are configured only for the app target's **DeviceSigned** configuration on iphoneos.
-Normal Debug/Release and DeviceSigned simulator builds use no entitlement. The pre-build signing guard
-rejects simulator, missing-team, ad-hoc and unsigned overrides if entitlements are requested.
-**Open: device-only verification** requires confirmed team/bundle registrations, a team-signed build,
-deployed public AASA and Apple CDN delivery. The backend branch is not deployed. Apple references:
-[Supporting passkeys](https://developer.apple.com/documentation/authenticationservices/supporting-passkeys/),
-[Supporting associated domains](https://developer.apple.com/documentation/xcode/supporting-associated-domains).
+Pending simulator acceptance: `make check`; the explicitly requested opt-in `make duo`; focused
+AuthSnapshotGuardTests/AuthSessionTests/AuthAuditTests if diagnosis is needed; and comparison of the
+existing references against the Two-factor board PNG exports (`make auth-board-pngs`). This sandbox
+has the Sign in board PNGs but no Two-factor browser PNG exports, so their side-by-side review is
+still open. Do not re-record to hide a guard, audit or comparison failure. Record only intentional,
+reviewed changes, serially on 17e, then compare in a fresh process.
 
-Original early-stack host checks: 185 SwiftPM tests pass (21 Auth, 164 existing), strict formatting passes, 8 TokenGen,
-4 AssetGen and 6 font/cache tests pass. Signing guards: 3 Python tests; resource checks: 9 tests;
-runner checks: 22 tests. XcodeGen generation passes. SwiftPM builds every package/test target for
-arm64 iOS 17 simulator; direct app/hosted/UI compilation checks are documented in tooling.md.
-These checks do not execute UIKit or establish accessibility/keyboard/visual acceptance.
-
-Auth hosted snapshots cover the zero-inset 375 × 812 board and all seven D1c profiles in one 17e,
-none/wrong/locked/server × en/nl × light/dark using full/compact profile Dynamic Type categories,
-plus AX5 equality. Native control and layout checks assert that the synthetic safe-area fixture
-actually moves the brand/content. AuthTestHost uses SnapshotContainer with the shared profile device
-table, exact four insets (Air top 68, Duo 0/0/0/19), reused windows and Welcome's CPU layer renderer.
-The Auth host suites run in quick; controls/layout run as hosted logic, sign-in UI and the serial
-device-appearance audit run in check, and snapshots use the profiles policy and SNAPSHOTS.
-No Auth snapshot reference was recorded or added by this port.
-
-Standalone board/component HTML exports are in `_design/frames/auth`; browser PNG export is open:
-Chrome headless exits 134 in this sandbox. The orchestrator must review geometry/contrast, run the
-hosted frame/keyboard/audit checks, record once, then compare. The second fix round allows only
-`(sign-in.guest, .contrast)`, a confirmed board pair, following Welcome's explicit-pair policy.
-Generated color/alpha/typography/ratio guards fail on drift; every other element/type still fails.
-At the board footer centre, text/pill is 14.9260:1 light / 15.0953:1 dark and pill/sky is
-2.3128:1 / 2.9450:1, including the 90% pill opacity. Native colors match the board exactly.
-Input/outline-button borders, decorative dividers and the guest pill over the sky are accepted,
-OQ 33 (user 2026-11-06), exactly as the board/tokens draw them. RN keeps these values; the web's
-P8-D16 correction covers WCAG 1.4.3 text contrast only. Token source notes remain “Kept exact,
-flagged.” The audit allow-list stays limited to the same pair, and text contrast checks stay strict.
-Rendered visual review remains open. Commands are in Docs/tooling.md. No seven-simulator run is required.
-
-Integrated-port verification: make quick passes (286 package host tests including 23 Auth,
-10 TokenGen, 4 AssetGen, 3 signing guards, 10 resource checks and 53 runner fixtures).
-Generator freshness, all 10 static fonts and 6 font/cache checks pass. All package/test targets
-compile for iOS 17 simulator; the app and all hosted AppTests type-check in Debug/Release,
-and all AppUITests type-check in Debug. The 16 native acceptance/gate/cancellation/restore/sign-out
-scenarios are compiled but await hosted execution. See the integrated-port commands in tooling.md;
-no Auth references, simulator results or new acceptance claims are included.
+Pending device-only checks: real AuthenticationServices passkeys require the confirmed Apple
+team/bundle IDs (OQ 4), a team-signed DeviceSigned build, public HTTPS AASA and Apple CDN delivery;
+the backend branch is not deployed. Mock assertions do not prove a real credential. Hardware
+protection/locked-device behavior, VoiceOver and physical launch/status-bar/120 Hz/performance
+proof remain in the original Phase 6–8/OQ 14 gates. Password-policy/reset/verification and real email
+entry remain blocked/deferred under OQ 21/22/25/27 in their named later phases.

@@ -21,11 +21,11 @@ public actor MockDataSource: DataSource {
     private var state: MockServerState?
     private var currentToken: String?
     private var requestToken: String?
-    private var offline = false
+    private var offline: Bool
     private var failures: [MockMethod: DataFailure] = [:]
 
     public init(
-        store: any MockStateStore = MemoryMockStateStore(), seed: MockServerState? = nil,
+        store: any MockStateStore = MemoryMockStateStore(), seed: MockServerState? = nil, offline: Bool = false,
         now: @escaping @Sendable () -> Date = { Date() },
         delay: @escaping @Sendable () -> TimeInterval = { Double.random(in: 0.3...0.8) },
         sleep: @escaping APIClient.Sleep = { try await Task.sleep(for: .seconds($0)) },
@@ -35,6 +35,7 @@ public actor MockDataSource: DataSource {
     ) {
         self.store = store
         self.seed = seed
+        self.offline = offline
         self.now = now
         self.delay = delay
         self.sleep = sleep
