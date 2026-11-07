@@ -7,6 +7,7 @@
     struct RoutePlaceholder: View {
         let route: Route
         @State private var cacheStatus = "pending"
+        @State private var syncStatus = "pending"
         @State private var signingOut = false
 
         private var authTestEnabled: Bool {
@@ -16,7 +17,7 @@
         var body: some View {
             Text(String(format: String(localized: "Debug route: %@"), route.rawValue))
                 .accessibilityIdentifier("route.\(route.rawValue)")
-                .accessibilityValue(authTestEnabled ? cacheStatus : "")
+                .accessibilityValue(authTestEnabled ? "\(cacheStatus):\(syncStatus)" : "")
                 .onTapGesture {
                     guard authTestEnabled, !signingOut,
                         let native = (UIApplication.shared.delegate as? AppDelegate)?.nativeSession
@@ -28,6 +29,23 @@
                         }
                         signingOut = false
                     }
+                }
+                .task {
+                    guard authTestEnabled,
+                        let native = (UIApplication.shared.delegate as? AppDelegate)?.nativeSession
+                    else { return }
+                    do {
+                        // A nil result means restore has not attached the sync lifecycle yet.
+                        for _ in 0..<100 {
+                            if let result = try await native.sync?.refreshNow() {
+                                syncStatus =
+                                    result.state == .offline ? "failed-offline" : String(describing: result.state)
+                                return
+                            }
+                            try await Task.sleep(for: .milliseconds(50))
+                        }
+                        syncStatus = "not-attached"
+                    } catch { syncStatus = "failed" }
                 }
                 .task {
                     guard authTestEnabled,

@@ -53,7 +53,10 @@ nonisolated final class AuthSessionTests: XCTestCase {
         app.launchEnvironment["CF_AUTH_TEST_OFFLINE"] = "1"
         app.launch()
         assertRoute("today", in: app)
-        waitForCache(in: app)
+        let offlineAttempt = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "value == %@", "cached:failed-offline"),
+            object: app.staticTexts["route.today"])
+        XCTAssertEqual(XCTWaiter.wait(for: [offlineAttempt], timeout: 12), .completed)
         signOut(app, route: "today")
         app.terminate()
         app.launch()
@@ -114,7 +117,7 @@ nonisolated final class AuthSessionTests: XCTestCase {
 
     @MainActor private func waitForCache(in app: XCUIApplication) {
         let cached = XCTNSPredicateExpectation(
-            predicate: NSPredicate(format: "value == %@", "cached"),
+            predicate: NSPredicate(format: "value == %@", "cached:idle"),
             object: app.staticTexts["route.today"])
         XCTAssertEqual(XCTWaiter.wait(for: [cached], timeout: 12), .completed)
     }

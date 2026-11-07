@@ -39,7 +39,8 @@ nonisolated struct AppServices: Sendable {
     init(
         info: [String: Any] = Bundle.main.infoDictionary ?? [:],
         testing: Bool = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
-            || NSClassFromString("XCTestCase") != nil
+            || NSClassFromString("XCTestCase") != nil,
+        environment: [String: String] = ProcessInfo.processInfo.environment
     ) throws {
         #if DEBUG
             isolatedMockStore =
@@ -63,7 +64,7 @@ nonisolated struct AppServices: Sendable {
             baseURL: info["CHRONOFLOW_API_BASE_URL"] as? String ?? "https://api.chronoflow.net/v1",
             release: release, testing: testing)
         #if DEBUG
-            authTest = factory.source == .mock ? AuthUITestConfiguration() : nil
+            authTest = factory.source == .mock ? AuthUITestConfiguration(environment: environment) : nil
             authTestSeed = try authTest.map {
                 try MockAppSeed.make(now: Date(), unverified: $0.unverified, walkthroughSeen: $0.walkthroughSeen)
             }
