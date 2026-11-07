@@ -2266,3 +2266,42 @@ ratio report before deciding whether the strict system audit is a false positive
 matching rendered line actually fails 4.5:1, add a design Open question with the measurements and
 no proposed default; do not alter tokens or widen OQ 33. The existing Two-factor side-by-side
 visual review and device-only passkey checks remain open; task 2 stays unticked.
+
+
+## Phase 10b task 2 — fix round 2 (7 November 2026)
+
+The user's round-1 `make check` passes every suite except 80 subtitle contrast audit results;
+`make duo` completes in 404 seconds, with only the keyboard-open mode-toggle reveal assertion
+failing. The user's 2026-11-07 measured subtitle decision is recorded in OQ 33, Matrix A and
+[auth-subtitle-contrast.md](auth-subtitle-contrast.md). AuthAuditTests measures the source screenshot
+inside each eligible issue handler and fails on unavailable/incomplete or below-4.5:1 measurements.
+The guest pair remains the only unconditional allow-list entry.
+
+Duo's saved synthesized gestures start at (233, 439), below the visible keyboard's y=414 top edge.
+AuthUIFlow now computes drag endpoints inside its live four-inset/keyboard-safe viewport, using
+stable keyboard frames and target overflow. App padding is unchanged. Hosted TwoFactorLayoutTests
+adds Duo/SE keyboard-height inset fixtures and requires the last control to scroll fully clear.
+Portable tests cover the saved event bounds, both drag directions, asymmetric viewports, missing
+subtitle lines and low contrast. The new ToolingTests suite is classified as host-only.
+
+Verification: `make quick` (strict lint, all host packages, signing/resource and 64 runner fixtures),
+`make generate`, and direct Swift 6 iOS 17 app/hosted/UI compilation pass. Logs:
+`build/phase-10b-round2-{quick,generate,typecheck,focused-typecheck}.log`. CoreSimulator access is denied here;
+compilation does not execute the new hosted fixtures or audit. No snapshot PNG is changed.
+
+Run on the user's host:
+
+```sh
+make generate
+make check
+make duo
+```
+
+For a focused reachability check on both runtimes, if needed:
+
+```sh
+make targeted DEVICES="se duo" ONLY="AppTests/TwoFactorLayoutTests/testLastControlCanScrollAboveKeyboardInsetsOnDuoAndSE AppUITests/TwoFactorTests/testModeToggleClearsCodeAndRecoveryReturnCompletesTheMockSession"
+```
+
+The seven-runtime matrix is not requested. Task 2 remains unticked for revised runtime acceptance
+and the existing Two-factor side-by-side board review; device-only gates retain their original scope.

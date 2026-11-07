@@ -2,8 +2,8 @@
 
 The user's round-1 `make check` passes every suite except the same 80 subtitle contrast audit
 results; `make duo` completes in 404 seconds with only the keyboard-open toggle reveal assertion
-failing. This round implements the user's measured subtitle exception. Revised simulator execution
-and the existing Two-factor side-by-side board review remain open, so Phase 10b task 2 stays unticked.
+failing. This round implements the user's measured subtitle exception and fixes the keyboard-open
+reveal helper. Revised simulator execution and the existing Two-factor side-by-side board review remain open, so Phase 10b task 2 stays unticked.
 Phases 6–8 retain their accessibility, performance and physical-device gates.
 
 Matrix A means all seven D1c profiles in Mac geometry tests and hosted captures inside **one 17e**,
@@ -12,9 +12,9 @@ plus 17e keyboard/routing/accessibility UI tests. It does not request seven simu
 
 | Board / state | Native checks | Evidence / remaining acceptance |
 | --- | --- | --- |
-| AuthSignIn none / wrong→credentials / locked / server, light/dark | Generated tokens, native controls, layout, strict text ratios, 896 profile/board references and AX5 equality | User's Phase 10a results and eight-pair visual acceptance pass (8e2d542; `_design/frames/README.md`). Compare again with the new capture guard. |
-| AuthTwoFactor code none / field error / attempts / server, light/dark | Shared controls, max-six oneTimeCode, number-pad submit, field/banner mapping, profile captures | User's task-1 hosted comparisons pass; 1,792 code/recovery references committed at 0e92b6a. New guard/audit/session runs and side-by-side board review remain open. |
-| AuthTwoFactor recovery none / attempts / server, light/dark | Mode toggle, hint, recovery Return, consumed-code mock/model checks, profile captures | Same task-1 evidence; review the recovery board exports and run the extended suites. Recovery field-error snapshots use the designed shared Field error treatment and approved backend copy; there is no separate recovery-error board. |
+| AuthSignIn none / wrong→credentials / locked / server, light/dark | Generated tokens, native controls, layout, strict text ratios, 896 profile/board references and AX5 equality | User's Phase 10a results and eight-pair visual acceptance pass (8e2d542; `_design/frames/README.md`). Round-1 capture guards and profile comparisons pass. |
+| AuthTwoFactor code none / field error / attempts / server, light/dark | Shared controls, max-six oneTimeCode, number-pad submit, field/banner mapping, profile captures | User's task-1 hosted comparisons pass; 1,792 code/recovery references committed at 0e92b6a. Round-1 guards, sessions and profile comparisons pass; revised audit/reveal execution and side-by-side board review remain open. |
+| AuthTwoFactor recovery none / attempts / server, light/dark | Mode toggle, hint, recovery Return, consumed-code mock/model checks, profile captures | Round-1 guards, sessions and profile comparisons pass; revised audit/reveal execution and recovery board review remain open. Recovery field-error snapshots use the designed shared Field error treatment and approved backend copy; there is no separate recovery-error board. |
 | AuthStates / Field / Button | Designed banners, native input/button states, touch targets, color/typography/shadow guards | Previously accepted shared controls; no new visual state, copy or token value in task 2. |
 
 The earlier minimized-keyboard results were withdrawn. OQ 32 was subsequently **settled** at
@@ -23,7 +23,8 @@ TwoFactorKeyboardTests, TwoFactorTests and SignInTests (plan.md records the corr
 The runner still writes `AutomaticMinimizationEnabled=false` on each booted destination before
 any UI pass, including check, Duo, targeted/reused builds and Perf. Helpers require stable keyboard
 frames with at least 100 × 100 points intersecting the window, focused-input/submit containment
-above the keyboard and hittability. The new tree still needs the user's check/Duo runs.
+above the keyboard and hittability. The user's round-1 check/Duo results confirm those keyboard
+suites pass; the revised reveal helper still needs execution.
 
 Auth captures now reject a wrong-size/scale raster, transparent pixels, missing measurements,
 horizontal clipping and vertically clipped brand/heading. Brand and heading must contain rendered
@@ -32,8 +33,8 @@ recording, including AX5 equality captures. Mac mutation tests cover missing/cli
 transparent captures and recording without writes on failure. Deliberately scrollable content may
 extend below the initial viewport; AuthSnapshotGuardTests scrolls every Sign in and Two-factor
 control fully into view on the board/all seven profiles and an extra four-inset Duo fixture,
-en/nl, light/dark, default/xxLarge. These hosted scroll checks await execution. Captures retain each
-profile's own scale and four insets, including Duo's side rail. No references were changed.
+en/nl, light/dark, default/xxLarge. The user's round-1 `make check` passes these hosted scroll checks.
+Captures retain each profile's own scale and four insets, including Duo's side rail. No references were changed.
 
 AuthSessionTests enters credentials through the native forms and asserts existing D17 routes:
 
@@ -46,7 +47,7 @@ AuthSessionTests enters credentials through the native forms and asserts existin
 - Tap the existing Debug route diagnostic to call the real controller's voluntary discard/sign-out/wipe;
   return directly to Sign in without splash/Welcome, then relaunch offline to Welcome with empty auth fields.
   AccountWipeTests separately verifies exact DB/WAL/SHM, Keychain and wipe-marker deletion; the UI seam
-  cannot inspect files. Both hosted and UI execution are pending for this tree.
+  cannot inspect files. The user's round-1 `make check` passes the hosted and UI session suites.
 
 Each new session/audit launch uses a UUID-specific file-backed fake server/account root and Keychain service, retained
 across relaunch. It uses the shared Debug mock scenario values from e6623a3, with verification and
@@ -131,4 +132,23 @@ discrepancy and the existing Two-factor visual review.
 User decision 2026-11-07 adds the measured subtitle exception above. AuthAuditTests measures the
 actual screenshot within each eligible issue handler and fails closed. Shared host mutations and
 hosted subtitle diagnostics require ink from every visible line. No committed PNG changed.
-The keyboard-open reveal failure and Two-factor board comparison remain pending at this step.
+The saved Duo mode-toggle recording and synthesized-event attachments establish a helper error:
+all twelve `scroll.swipeUp()` gestures start at **(233, 439)** while the keyboard begins at **y=414**.
+They touch the keyboard instead of the form. The current scroll element exposes full-window bounds;
+its default swipe coordinates are unsuitable while the keyboard is visible. There is no evidence
+of a short app bottom inset, so app padding/layout remain unchanged.
+
+AuthUIFlow now waits for stable keyboard/scroll/target frames, then derives a bounded drag from the
+live keyboard-safe viewport and target overflow. Both endpoints stay inside that viewport, including
+Duo's side rail; final assertions retain full containment and hittability and now report the bounds.
+Portable host tests pin the recorded Duo failure and upward/downward drags in short/asymmetric
+viewports. TwoFactorLayoutTests adds Duo/SE fixtures with keyboard-height safe-area bottom insets
+(Duo: visible intersection 678−414 = 264; SE: 218), en/nl, default/xxLarge and both modes. It asserts
+sufficient maximum scroll offset and full last-control clearance with the generated field gap.
+These inset fixtures prove content reachability without a real keyboard; the actual number-pad
+focus/toggle interaction still needs the user's runtime run.
+
+`make quick`, generation and direct Swift 6 iOS 17 compilation pass. No revised simulator pass is
+claimed: CoreSimulator access is denied here. Pending: `make check` (including the new hosted test
+and measured audit), `make duo`, and the existing Two-factor side-by-side board comparison.
+Task 2 stays unticked because visual review also remains. Committed snapshot PNGs are untouched.

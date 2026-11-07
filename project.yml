@@ -108,6 +108,7 @@ targets:
       - path: AppUITests
       - path: Packages/ChronoFlowKit/Tests/ToolingTests/LaunchImageComparison.swift
       - path: Packages/ChronoFlowKit/Tests/ToolingTests/FrameStability.swift
+      - path: Packages/ChronoFlowKit/Tests/ToolingTests/AuthScrollGesture.swift
       - path: Packages/ChronoFlowKit/Tests/SnapshotSupport/RenderedTextContrast.swift
       - path: Packages/ChronoFlowKit/Tests/SnapshotSupport/SnapshotReference.swift
       - path: Packages/ChronoFlowKit/Tests/SnapshotSupport/WelcomeSnapshotPixels.swift

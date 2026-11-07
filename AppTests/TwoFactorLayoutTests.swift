@@ -5,6 +5,45 @@ import UIKit
 import XCTest
 
 nonisolated final class TwoFactorLayoutTests: XCTestCase {
+    @MainActor func testLastControlCanScrollAboveKeyboardInsetsOnDuoAndSE() async throws {
+        try await FontRegistry.register()
+        // Duo's saved visible keyboard begins at 414 of 678 points; SE's keyboard is 218 points tall.
+        for (alias, keyboardInset) in [("duo", CGFloat(264)), ("se", CGFloat(218))] {
+            let fixture = try XCTUnwrap(AuthDeviceFixture.all().first { $0.name == alias })
+            for language in ["en", "nl"] {
+                for category in [UIContentSizeCategory.large, .extraExtraLarge] {
+                    for recovery in [false, true] {
+                        var frames: [AuthElement: CGRect] = [:]
+                        var insets = fixture.insets
+                        insets.bottom = max(insets.bottom, keyboardInset)
+                        let host = try AuthTestHost(
+                            TwoFactorView(model: twoFactorSnapshotModel(recovery: recovery)) { frames[$0] = $1 },
+                            size: fixture.size, insets: insets, language: language, category: category,
+                            scale: fixture.scale)
+                        defer { host.close() }
+                        try await host.settle()
+                        let scroll = try XCTUnwrap(authScrollViews(host.controller.view).first)
+                        let viewport = scroll.convert(scroll.bounds, to: host.window).intersection(
+                            host.window.bounds.inset(by: insets))
+                        let toggle = try XCTUnwrap(frames[.modeToggle])
+                        let maximum = max(
+                            -scroll.adjustedContentInset.top,
+                            scroll.contentSize.height - scroll.bounds.height + scroll.adjustedContentInset.bottom)
+                        let needed = max(0, toggle.maxY - viewport.maxY + AuthTokens.fieldGap)
+                        let context =
+                            "\(alias), \(language), \(category), recovery=\(recovery), viewport=\(viewport), maximumOffset=\(maximum)"
+                        XCTAssertGreaterThanOrEqual(maximum, scroll.contentOffset.y + needed, context)
+                        scroll.setContentOffset(CGPoint(x: scroll.contentOffset.x, y: maximum), animated: false)
+                        try await host.settle()
+                        let revealed = try XCTUnwrap(frames[.modeToggle])
+                        XCTAssertTrue(viewport.contains(revealed), "Last control \(revealed) outside \(context)")
+                        XCTAssertLessThanOrEqual(revealed.maxY + AuthTokens.fieldGap, viewport.maxY, context)
+                    }
+                }
+            }
+        }
+    }
+
     @MainActor func testModesAndErrorsRespectEveryProfilesSafeInsetsAndTouchTargets() async throws {
         try await FontRegistry.register()
         for fixture in try AuthDeviceFixture.all() {

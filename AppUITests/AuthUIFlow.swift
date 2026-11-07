@@ -61,12 +61,31 @@ import XCTest
                 : element.identifier.hasPrefix("two-factor.")
                     ? app.scrollViews["two-factor.scroll"] : self.scroll(in: app))
         for _ in 0..<12 {
+            do {
+                if app.keyboards.firstMatch.exists
+                    && SoftwareKeyboardVisibility.isVisible(
+                        app.keyboards.firstMatch.frame, in: app.windows.firstMatch.frame)
+                {
+                    _ = try UIWait.keyboardFrames(in: app, including: [scroll, element])
+                }
+            } catch {
+                XCTFail("Reveal frames did not settle for \(element.identifier): \(error)")
+                return
+            }
             let viewport = viewport(in: app, scrollFrame: scroll.frame)
             if element.isHittable && viewport.contains(element.frame) { return }
-            if element.frame.minY < viewport.minY { scroll.swipeDown() } else { scroll.swipeUp() }
+            guard let gesture = AuthScrollGesture.reveal(element.frame, in: viewport) else { break }
+            let origin = app.windows.firstMatch.coordinate(withNormalizedOffset: .zero)
+            let window = app.windows.firstMatch.frame
+            let start = origin.withOffset(
+                CGVector(dx: gesture.start.x - window.minX, dy: gesture.start.y - window.minY))
+            let end = origin.withOffset(CGVector(dx: gesture.end.x - window.minX, dy: gesture.end.y - window.minY))
+            start.press(forDuration: 0.1, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.1)
         }
-        XCTAssertTrue(element.isHittable, element.identifier)
+        let message =
+            "\(element.identifier): frame=\(element.frame), viewport=\(viewport(in: app, scrollFrame: scroll.frame))"
+        XCTAssertTrue(element.isHittable, message)
         XCTAssertTrue(
-            viewport(in: app, scrollFrame: scroll.frame).contains(element.frame), element.identifier)
+            viewport(in: app, scrollFrame: scroll.frame).contains(element.frame), message)
     }
 }
