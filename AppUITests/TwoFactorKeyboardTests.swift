@@ -49,5 +49,7 @@ nonisolated final class TwoFactorKeyboardTests: XCTestCase {
             context: "\(language), xxLarge, \(recovery ? "recovery" : "code"), \(server ? "server" : "field error")",
             attach: add)
         XCTAssertEqual(field.value as? String, "")
+        XCTAssertTrue(field.isEnabled)
+        XCTAssertEqual(app.descendants(matching: .any)["auth.banner"].exists, server)
     }
 }

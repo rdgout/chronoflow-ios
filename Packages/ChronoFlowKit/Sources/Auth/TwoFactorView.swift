@@ -67,8 +67,12 @@
                 text = model.code
             }
             .onChange(of: model.code) { text = model.code }
-            .onChange(of: model.form.fields) {
-                if model.form.fields[model.field] != nil { focus = identifier }
+            .onChange(of: model.form.busy) {
+                if model.form.busy {
+                    focus = nil
+                } else if model.form.failure != nil || model.sessionFailure != nil {
+                    focus = identifier
+                }
             }
             .onChange(of: model.form.announcementRevision) {
                 if let message = model.form.takeAnnouncement(locale: locale) {
@@ -88,13 +92,8 @@
 
         private func submit() {
             guard request == nil, !model.form.busy else { return }
-            let previousFocus = focus
             request = Task {
                 await model.submit()
-                if !Task.isCancelled && (model.form.failure != nil || model.sessionFailure != nil) {
-                    focus = identifier
-                    if model.form.fields.isEmpty { focus = previousFocus ?? identifier }
-                }
                 request = nil
             }
         }

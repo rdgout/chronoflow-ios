@@ -1,3 +1,4 @@
+import AppCore
 import Auth
 import DesignSystem
 import SwiftUI
@@ -5,6 +6,36 @@ import UIKit
 import XCTest
 
 nonisolated final class TwoFactorControlTests: XCTestCase {
+    @MainActor func testFailedAttemptsRefocusTheEnabledFieldWithoutEditingAwayFeedback() async throws {
+        try await FontRegistry.register()
+        for recovery in [false, true] {
+            let model = twoFactorSnapshotModel(recovery: recovery)
+            let host = try AuthTestHost(TwoFactorView(model: model), size: SnapshotDevice.all()[0].size)
+            defer { host.close() }
+            try await host.settle()
+            let field = try XCTUnwrap(textFields(host.window).first)
+            XCTAssertTrue(field.becomeFirstResponder())
+            for failure in [
+                DataFailure.server(status: 503),
+                .validation(fields: [model.field: FieldMessage(key: "Please fill this in.")], status: 422),
+            ] {
+                XCTAssertTrue(model.form.begin(.verify))
+                try await host.settle()
+                XCTAssertFalse(field.isFirstResponder)
+                XCTAssertFalse(field.isEnabled)
+                model.form.receive(failure)
+                model.form.finish()
+                try await host.settle()
+                XCTAssertTrue(field.isEnabled)
+                XCTAssertTrue(field.isFirstResponder)
+                XCTAssertTrue(textFields(host.window).first === field)
+                XCTAssertEqual(model.form.failure, failure)
+                XCTAssertEqual(model.form.banner, failure == .server(status: 503) ? .server : nil)
+                XCTAssertEqual(model.form.fields.isEmpty, failure == .server(status: 503))
+            }
+        }
+    }
+
     @MainActor func testBothModesKeepInteractiveKeyboardDismissalAndVerticalBouncing() async throws {
         try await FontRegistry.register()
         let fixture = try XCTUnwrap(AuthDeviceFixture.all().first { $0.name == "17e" })
