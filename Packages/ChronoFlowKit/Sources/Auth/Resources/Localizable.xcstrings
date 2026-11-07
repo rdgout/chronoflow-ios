@@ -688,6 +688,24 @@
           }
         }
       }
+    },
+    "xxxx-xxxx": {
+      "comment": "Recovery code format example; identical in every language.",
+      "shouldTranslate": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "xxxx-xxxx"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "xxxx-xxxx"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

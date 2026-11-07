@@ -53,6 +53,7 @@ function twoFactor(theme, recovery, state) {
         html = html.replace(condition, (_, attrs, body) => value(attrs.match(/value="\{\{([^}]+)\}\}"/)[1]) ? body : '');
     }
     if (state !== 'field') html = html.replace(/ default-value="482913" error="[^"]*"/,'');
+    html = html.replace(/\s+on-[\w-]+="[^"]*"/g, '');
     return imports(html.replace(/\{\{([^}]+)\}\}/g, (_, key) => escape(value(key))));
 }
 function save(name,html) { fs.writeFileSync(path.join(root,'_design/frames/auth',name+'.html'),`<!doctype html><meta charset="utf-8"><style>${css}</style>${html}`.replace(/[ \t]+$/gm, '')); }

@@ -1,7 +1,8 @@
 # Auth board references
 
 `node Scripts/export-auth-boards.cjs` exports standalone HTML from the committed boards and the
-actual component bundle, for Sign in none/wrong/locked/server, AuthStates and Field/Button/Notice,
+actual component bundle, for Sign in none/wrong/locked/server, Two-factor code none/field/attempts/server
+and recovery none/attempts/server, AuthStates and Field/Button/Notice,
 in light and dark. Open `auth/*.html` in Chrome at 375 × 812 (AuthStates: 375 × 1900;
 controls: 375 × 1200).
 The exports preserve the board's sample field values for design comparison only. Native fields start
@@ -13,8 +14,8 @@ states and info Notice. Focus uses the bundle's native `:focus-visible` rule whe
 The native adaptation grows 36/40-point field/button surfaces to at least 44 points, allows wrapping,
 adds safe-area insets and scrolls. Text sizes remain those of the board, through the root xxLarge cap.
 
-PNG exports now exist in ignored `build/board-png/`: the user generated all 12 on the host with
-headless Chrome (375 points wide at 3×). The exact command used, substituting the name and height:
+PNG exports exist in ignored `build/board-png/`: the user generated the original 12 Sign in/shared
+control exports and the later 14 Two-factor exports on the host with headless Chrome (375 points wide at 3×). The exact command used, substituting the name and height:
 
 ```sh
 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=3 --window-size=375,<812|1900 banners|1200 controls> --screenshot=build/board-png/<name>.png file://$PWD/_design/frames/auth/<name>.html
@@ -54,8 +55,35 @@ User's host runs PASS: `AppTests/AuthControlTests`, `AuthLayoutTests`, `AuthSnap
 (all D1c sizes and AX5 equality), `AppUITests/SignInTests`, serial `AuthAuditTests` and
 `DesignSystemTests/AuthBoardContrastTests`.
 
-Only the shared-shell SE/Duo keyboard acceptance remains open (OQ 32). Run
-`make targeted DEVICES="se duo" ONLY="AppUITests/SignInKeyboardTests"` on the host. The suite
-checks email/password focus at xxLarge with field errors and the server banner in en/nl, using
-real keyboard frames and retaining geometry/screenshots. If the pair cannot fit, record the
-undesigned keyboard state and defer under OQ 32 without changing the layout.
+Shared-shell SE/Duo keyboard acceptance is settled under OQ 32 at 9505993, with the user's
+visible-keyboard passes. The later helper/audit changes and round-4 corrections still need the
+user's updated simulator reruns, as recorded in `Docs/auth-gate.md`.
+
+Final Two-factor board review — fix round 4 (user's side-by-side report, 2026-11-07):
+all seven board states were compared with the native 17e references, in light and dark.
+
+| Board / native state | Visual result |
+| --- | --- |
+| code none / attempts / server | **acceptable-adaptation** |
+| code field / fieldError | **defect corrected**: the plain rejected-code backend key now maps to the board's “That code didn't work. Codes change every 30 seconds, so try the newest one.” and its approved Dutch translation. Updated references/comparison remain the user's run. |
+| recovery none / attempts / server | **placeholder defect corrected**: catalogued `xxxx-xxxx` in both languages, marked `shouldTranslate: false`, drawn with `mutedForeground`. Recovery attempts otherwise passes as an acceptable adaptation. Updated references/comparison remain the user's run. |
+
+Accepted adaptations stay: the shared Field error state's red border (as on the controls board),
+44-point native controls and the resulting upward card shift, empty native fields and plain sky.
+Recovery field-error captures retain the designed shared Field treatment and approved backend copy;
+there is no separate recovery-error board. The placeholder changes every empty recovery capture,
+including fieldError, and is excluded from the accessibility value; the label remains “Recovery code”
+(“Herstelcode” in Dutch).
+
+The board export's ghost toggle row previously showed raw `onclick` / `toggleRecovery` /
+`setState({ recovery: … })` template text. This was an **export bug, not design**. The exporter now
+removes inert `on-*` template attributes before interpolating render values, so a function's quotes
+and arrow cannot corrupt the import tag or leak into its label. All 14 Two-factor HTML exports have
+been regenerated; PNGs from the earlier export should be regenerated with `make auth-board-pngs`.
+The read-only canvas is unchanged.
+
+`make quick` passes. Intentional native reference changes are **code-fieldError and recovery-***,
+in en/nl, light/dark and every existing D1c profile/category. The user will record these on 17e,
+compare them in a fresh process and rerun the updated simulator gates before pushing. No new
+simulator/reference comparison pass is claimed here; the implementation and board-review work is
+complete under the user's task-2 closeout instruction.

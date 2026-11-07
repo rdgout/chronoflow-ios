@@ -6,6 +6,27 @@ import UIKit
 import XCTest
 
 nonisolated final class TwoFactorControlTests: XCTestCase {
+    @MainActor func testRecoveryPlaceholderSurvivesErrorsAndClearsWhenReturningToCode() async throws {
+        try await FontRegistry.register()
+        for language in ["en", "nl"] {
+            for style in [UIUserInterfaceStyle.light, .dark] {
+                let model = twoFactorSnapshotModel(recovery: true, state: .fieldError)
+                let host = try AuthTestHost(
+                    TwoFactorView(model: model), size: SnapshotDevice.all()[0].size, style: style, language: language)
+                defer { host.close() }
+                try await host.settle()
+                let recovery = try XCTUnwrap(textFields(host.window).first)
+                XCTAssertEqual(recovery.placeholder, "xxxx-xxxx")
+                XCTAssertEqual(recovery.text, "")
+                model.toggleMode()
+                try await host.settle()
+                let code = try XCTUnwrap(textFields(host.window).first)
+                XCTAssertTrue(code.placeholder?.isEmpty != false)
+                XCTAssertEqual(code.text, "")
+            }
+        }
+    }
+
     @MainActor func testFailedAttemptsRefocusTheEnabledFieldWithoutEditingAwayFeedback() async throws {
         try await FontRegistry.register()
         for recovery in [false, true] {

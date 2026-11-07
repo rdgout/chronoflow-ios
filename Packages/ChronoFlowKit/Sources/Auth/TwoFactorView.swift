@@ -36,6 +36,7 @@
                         text: $text,
                         error: model.form.fields[model.field].flatMap { AuthCopy.field($0, locale: locale) },
                         hint: model.mode == .recovery ? copy("Each recovery code works once.") : nil,
+                        placeholder: model.mode == .recovery ? copy("xxxx-xxxx") : nil,
                         identifier: identifier, contentType: model.mode == .code ? .oneTimeCode : nil,
                         keyboard: model.mode == .code ? .numberPad : .default, submitLabel: .go, focus: $focus,
                         submit: submit

@@ -31,7 +31,9 @@ import Testing
         #expect(model.form.fields["code"]?.key == "Enter the 6-digit code from your authenticator app.")
         model.editCode("123456")
         await model.submit()
-        #expect(model.form.fields["code"]?.key == "The authentication code was not accepted. Try again.")
+        #expect(
+            model.form.fields["code"]?.key
+                == "That code didn't work. Codes change every 30 seconds, so try the newest one.")
         #expect(model.code.isEmpty && model.form.banner == nil && !model.form.busy)
         model.editCode("654321")
         #expect(await session.accepted.isEmpty)
@@ -101,7 +103,9 @@ import Testing
             }
             model.editCode("123456")
             await model.submit()
-            #expect(model.form.fields["code"]?.key == "The authentication code was not accepted. Try again.")
+            #expect(
+                model.form.fields["code"]?.key
+                    == "That code didn't work. Codes change every 30 seconds, so try the newest one.")
             #expect(model.form.banner == nil && model.code.isEmpty && !model.form.busy)
             #expect(await session.accepted.isEmpty)
         }
@@ -234,30 +238,37 @@ import Testing
 
     @Test func backendMessagesLocalizeOnlyUnderTheDisplayedModeAndAnnouncementsAreConsumedOnce() async throws {
         let model = try #require(await challenged(twoFactorSource()).twoFactor)
-        for (recovery, key, dutch) in [
+        for (recovery, key, displayed, dutch) in [
             (
                 false, "Enter the 6-digit code from your authenticator app.",
+                "Enter the 6-digit code from your authenticator app.",
                 "Vul de 6-cijferige code uit je authenticator-app in."
             ),
             (
                 false, "The authentication code was not accepted. Try again.",
-                "De verificatiecode is niet geaccepteerd. Probeer het opnieuw."
+                "That code didn't work. Codes change every 30 seconds, so try the newest one.",
+                "Die code werkte niet. Codes veranderen elke 30 seconden, dus probeer de nieuwste."
             ),
             (
                 true, "Enter one of the recovery codes you saved when you set up two-factor authentication.",
+                "Enter one of the recovery codes you saved when you set up two-factor authentication.",
                 "Vul een van de herstelcodes in die je hebt bewaard bij het instellen van tweefactorauthenticatie."
             ),
             (
                 true, "This recovery code was not accepted. Try another saved code.",
+                "This recovery code was not accepted. Try another saved code.",
                 "Deze herstelcode is niet geaccepteerd. Probeer een andere bewaarde code."
             ),
         ] {
             if (model.mode == .recovery) != recovery { model.toggleMode() }
             let message = FieldMessage(key: key)
-            model.form.receive(.validation(fields: [model.field: message], status: 422))
-            #expect(model.form.fields[model.field] == message && model.form.banner == nil)
-            #expect(AuthCopy.field(message, locale: Locale(identifier: "en")) == key)
-            #expect(AuthCopy.field(message, locale: Locale(identifier: "nl")) == dutch)
+            let failure = DataFailure.validation(fields: [model.field: message], status: 422)
+            model.form.receive(failure)
+            #expect(model.form.failure == failure && model.form.banner == nil)
+            let mapped = try #require(model.form.fields[model.field])
+            #expect(mapped.key == displayed)
+            #expect(AuthCopy.field(mapped, locale: Locale(identifier: "en")) == displayed)
+            #expect(AuthCopy.field(mapped, locale: Locale(identifier: "nl")) == dutch)
             for (language, expected) in [
                 ("en", "Too many attempts. Wait a few minutes before you try again."),
                 ("nl", "Te veel pogingen. Wacht een paar minuten voordat je het opnieuw probeert."),

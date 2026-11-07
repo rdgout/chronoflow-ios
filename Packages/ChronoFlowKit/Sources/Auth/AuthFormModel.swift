@@ -53,7 +53,14 @@ nonisolated public struct AuthFailureMapping: Sendable, Equatable {
             for (name, message) in messages {
                 if activeProofHasError && proofFields.contains(name) && !displayedFields.contains(name) { continue }
                 if displayedFields.contains(name), AuthCopy.supports(message) {
-                    fields[name] = message
+                    if context == .twoFactor && name == "code"
+                        && message.key == "The authentication code was not accepted. Try again."
+                    {
+                        fields[name] = FieldMessage(
+                            key: "That code didn't work. Codes change every 30 seconds, so try the newest one.")
+                    } else {
+                        fields[name] = message
+                    }
                 } else {
                     banner = .server
                 }

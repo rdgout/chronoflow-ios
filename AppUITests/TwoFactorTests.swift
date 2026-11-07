@@ -31,8 +31,11 @@ nonisolated final class TwoFactorTests: XCTestCase {
         let recovery = app.textFields["two-factor.recovery_code"]
         XCTAssertTrue(recovery.waitForExistence(timeout: 3))
         XCTAssertEqual(recovery.value as? String, "")
+        XCTAssertEqual(recovery.placeholderValue, "xxxx-xxxx")
+        XCTAssertEqual(recovery.label, "Recovery code")
         recovery.tap()
         recovery.typeText("AbCdEf1234-GhIjKl5678")
+        XCTAssertEqual(recovery.value as? String, "AbCdEf1234-GhIjKl5678")
         try assertTwoFactorKeyboardPair(recovery, app: app)
         recovery.typeText("\n")
         XCTAssertTrue(app.staticTexts["route.walkthrough"].waitForExistence(timeout: 10))

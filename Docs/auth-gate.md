@@ -1,9 +1,11 @@
 # Auth acceptance gate — Phase 10b, task 2 (7 November 2026)
 
-The user reports `make check` (17e) and `make duo` completely passing at 4a3e3ea. Fix round 3
-strengthens the local subtitle measurement, sky-column guard, signal cancellation and keyboard
-gesture regression tests. The updated tests need the user's simulator reruns; the Two-factor
-side-by-side board review is running separately. Phase 10b task 2 stays unticked.
+The user reports `make check` (17e) and `make duo` completely passing at 4a3e3ea. The
+Two-factor side-by-side review is complete: code none/attempts/server and recovery attempts are
+acceptable adaptations; fix round 4 corrects rejected-code copy and the missing recovery placeholder.
+Task 2 is ticked under the user's explicit closeout instruction: only their updated simulator
+reruns and intentional reference recording/comparison remain before pushing. No new runtime or
+reference-comparison pass is claimed. Fix round 3's strengthened checks also need those reruns.
 Phases 6–8 retain their accessibility, performance and physical-device gates.
 
 Matrix A means all seven D1c profiles in Mac geometry tests and hosted captures inside **one 17e**,
@@ -13,9 +15,9 @@ plus 17e keyboard/routing/accessibility UI tests. It does not request seven simu
 | Board / state | Native checks | Evidence / remaining acceptance |
 | --- | --- | --- |
 | AuthSignIn none / wrong→credentials / locked / server, light/dark | Generated tokens, native controls, layout, strict text ratios, 896 profile/board references and AX5 equality | User's Phase 10a results and eight-pair visual acceptance pass (8e2d542; `_design/frames/README.md`). Round-1 capture guards and profile comparisons pass. |
-| AuthTwoFactor code none / field error / attempts / server, light/dark | Shared controls, max-six oneTimeCode, number-pad submit, field/banner mapping, profile captures | User's task-1 hosted comparisons pass; 1,792 code/recovery references committed at 0e92b6a. Round-1 guards, sessions and profile comparisons pass; revised audit/reveal execution and side-by-side board review remain open. |
-| AuthTwoFactor recovery none / attempts / server, light/dark | Mode toggle, hint, recovery Return, consumed-code mock/model checks, profile captures | Round-1 guards, sessions and profile comparisons pass; revised audit/reveal execution and recovery board review remain open. Recovery field-error snapshots use the designed shared Field error treatment and approved backend copy; there is no separate recovery-error board. |
-| AuthStates / Field / Button | Designed banners, native input/button states, touch targets, color/typography/shadow guards | Previously accepted shared controls; no new visual state, copy or token value in task 2. |
+| AuthTwoFactor code none / field error / attempts / server, light/dark | Shared controls, max-six oneTimeCode, number-pad submit, field/banner mapping, profile captures | User's task-1 hosted comparisons pass; 1,792 code/recovery references committed at 0e92b6a. Round-1 guards, sessions and profile comparisons pass. Board review accepts none/attempts/server; fieldError copy is corrected in round 4 and needs intentional reference recording/comparison. Revised simulator checks remain the user’s run. |
+| AuthTwoFactor recovery none / attempts / server, light/dark | Mode toggle, hint, recovery Return, consumed-code mock/model checks, profile captures | Board review accepts recovery attempts apart from the shared missing placeholder. Round 4 adds that placeholder to all recovery states; recovery-* needs intentional reference recording/comparison. Field-error snapshots retain the shared Field treatment and approved backend copy; there is no separate recovery-error board. |
+| AuthStates / Field / Button | Designed banners, native input/button states, touch targets, color/typography/shadow guards | Previously accepted shared controls; round 4 uses the existing placeholder token and Field error treatment. |
 
 The earlier minimized-keyboard results were withdrawn. OQ 32 was subsequently **settled** at
 9505993: the user supplied visible-keyboard passes on 17e, SE and Duo for SignInKeyboardTests,
@@ -86,12 +88,13 @@ that target. Direct Swift 6 iOS 17 Debug/Release app/module/SIL and hosted/UI te
 checked without xcodebuild; compilation is not UIKit execution. Exact results/commands are in
 Docs/tooling.md, Phase 10b task 2.
 
-Pending simulator acceptance: `make check`; the explicitly requested opt-in `make duo`; focused
-AuthSnapshotGuardTests/AuthSessionTests/AuthAuditTests if diagnosis is needed; and comparison of the
-existing references against the Two-factor board PNG exports (`make auth-board-pngs`). This sandbox
-has the Sign in board PNGs but no Two-factor browser PNG exports, so their side-by-side review is
-still open. Do not re-record to hide a guard, audit or comparison failure. Record only intentional,
-reviewed changes, serially on 17e, then compare in a fresh process.
+Pending user simulator acceptance: re-record the intentional **code-fieldError and recovery-***
+changes on 17e (all existing profiles/categories, en/nl, light/dark), compare in a fresh process,
+then `make check` and the previously requested opt-in `make duo`. The Two-factor board PNG review
+is complete; regenerate browser PNGs with `make auth-board-pngs` to remove the export-only ghost-row
+corruption. Focused AuthSnapshotGuardTests/AuthSessionTests/AuthAuditTests remain available for
+diagnosis. Do not re-record to hide a guard, audit or comparison failure. Code none/attempts/server
+and Sign in references have no intentional changes. No snapshot PNG is changed in this round.
 
 Pending device-only checks: real AuthenticationServices passkeys require the confirmed Apple
 team/bundle IDs (OQ 4), a team-signed DeviceSigned build, public HTTPS AASA and Apple CDN delivery;
@@ -172,3 +175,33 @@ including processes that ignore the forwarded signal; exit must occur within fou
 
 Validation: `make quick` passes; no committed snapshot PNG changes. Only the user's updated
 simulator reruns and the separate Two-factor side-by-side board review remain for task 2.
+
+## Fix round 4 — Two-factor board review
+
+The user's seven-state side-by-side review is recorded in
+[`_design/frames/README.md`](../_design/frames/README.md). Code none/attempts/server and recovery
+attempts are acceptable adaptations. The red Field error border, 44-point controls/card shift,
+empty native inputs and plain sky remain accepted.
+
+Only the exact plain “The authentication code was not accepted. Try again.” key on the displayed
+Two-factor `code` field maps to the board's 30-second/newest-code copy, in English and Dutch.
+Raw typed failures remain unchanged. Required-input and recovery errors keep their existing mappings;
+no expiry screen or message is invented. The current API and mock return this same generic rejection
+for expired/exhausted code challenges, so those indistinguishable responses receive the same board
+copy. Other backend keys retain their previous policy.
+
+The recovery placeholder comes from the Auth String Catalog (`xxxx-xxxx` in en/nl,
+`shouldTranslate: false`) and uses the generated `mutedForeground` token in both appearances.
+The native input explicitly exposes entered text as its accessibility value, keeping an empty value
+when the placeholder is shown and preserving the localized Recovery code label. Model/mapping tests
+cover copy/localization, recovery errors and expired/exhausted generic responses. Hosted checks cover
+placeholder/error/mode transitions in both languages/appearances; the UI flow checks empty/entered
+accessibility values and the label separately from the placeholder. These UIKit checks await reruns.
+
+The exporter strips inert event attributes before interpolation, fixing the raw function/template
+leak in the ghost toggle. All 14 Two-factor HTML exports are regenerated and parse with clean
+toggle labels/recovery placeholders and no event/template leakage. `make quick` passes. Direct
+Swift 6 iOS 17 simulator compilation passes for the changed DesignSystem/Auth modules and hosted/UI
+tests (`build/phase-10b-round4-typecheck.log`); this does not execute UIKit. The quick log is
+`build/phase-10b-round4-quick.log`. No native reference PNG changed. Task 2's implementation/report is complete under the user's
+instruction; their 17e recording/comparison and updated `make check` / `make duo` remain before push.

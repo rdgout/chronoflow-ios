@@ -4,6 +4,21 @@ import Foundation
 import Testing
 
 struct AuthFailureMappingTests {
+    @Test func rejectedCodeUsesBoardCopyOnlyForTheTwoFactorCodeField() {
+        let message = FieldMessage(key: "The authentication code was not accepted. Try again.")
+        for (context, field) in [
+            (AuthFormContext.twoFactor, "code"), (.twoFactor, "recovery_code"), (.signIn, "code"),
+        ] {
+            let mapped = AuthFailureMapping(
+                .validation(fields: [field: message], status: 422), displayedFields: [field], context: context)
+            #expect(mapped.banner == nil)
+            #expect(
+                mapped.fields[field]?.key
+                    == (context == .twoFactor && field == "code"
+                        ? "That code didn't work. Codes change every 30 seconds, so try the newest one." : message.key))
+        }
+    }
+
     @Test(arguments: ["code", "recovery_code"])
     func inactiveProofIsIgnoredOnlyAlongsideAnActiveProofError(field: String) {
         let inactive = field == "code" ? "recovery_code" : "code"

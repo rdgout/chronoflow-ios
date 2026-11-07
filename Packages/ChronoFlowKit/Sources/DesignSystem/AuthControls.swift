@@ -108,6 +108,7 @@ import SwiftUI
         let secure: Bool
         let error: String?
         let hint: String?
+        let placeholder: String?
         let identifier: String
         let contentType: UITextContentType?
         let keyboard: UIKeyboardType
@@ -118,6 +119,7 @@ import SwiftUI
 
         public init(
             _ title: String, text: Binding<String>, secure: Bool = false, error: String? = nil, hint: String? = nil,
+            placeholder: String? = nil,
             identifier: String, contentType: UITextContentType?, keyboard: UIKeyboardType = .default,
             submitLabel: SubmitLabel = .next, focus: FocusState<String?>.Binding,
             measure: ((AuthControlPart, CGRect) -> Void)? = nil, submit: @escaping () -> Void
@@ -127,6 +129,7 @@ import SwiftUI
             self.secure = secure
             self.error = error
             self.hint = hint
+            self.placeholder = placeholder
             self.identifier = identifier
             self.contentType = contentType
             self.keyboard = keyboard
@@ -142,7 +145,11 @@ import SwiftUI
                     if secure {
                         SecureField(text: $text, prompt: Text(verbatim: "")) { Text(verbatim: title) }
                     } else {
-                        TextField(text: $text, prompt: Text(verbatim: "")) { Text(verbatim: title) }
+                        TextField(
+                            text: $text,
+                            prompt: Text(verbatim: placeholder ?? "").foregroundColor(ColorToken.mutedForeground.color)
+                        ) { Text(verbatim: title) }
+                        .accessibilityValue(Text(verbatim: text))
                     }
                 }
                 .font(Typography.authBody.font)
