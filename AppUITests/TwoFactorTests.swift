@@ -26,7 +26,7 @@ nonisolated final class TwoFactorTests: XCTestCase {
         let code = app.textFields["two-factor.code"]
         code.tap()
         code.typeText("123")
-        revealTwoFactor(app.buttons["two-factor.toggle"], in: app.scrollViews["auth.scroll"])
+        revealTwoFactor(app.buttons["two-factor.toggle"], in: AuthUIFlow.scroll(in: app))
         app.buttons["two-factor.toggle"].tap()
         let recovery = app.textFields["two-factor.recovery_code"]
         XCTAssertTrue(recovery.waitForExistence(timeout: 3))
@@ -46,12 +46,12 @@ nonisolated final class TwoFactorTests: XCTestCase {
         let code = app.textFields["two-factor.code"]
         code.tap()
         code.typeText("123")
-        let scroll = app.scrollViews["auth.scroll"]
-        XCTAssertEqual(app.scrollViews.matching(identifier: "auth.scroll").count, 1)
+        let scroll = AuthUIFlow.scroll(in: app)
+        XCTAssertEqual(app.scrollViews.matching(identifier: "two-factor.scroll").count, 1)
         XCTAssertTrue(scroll.isHittable)
         let window = app.windows.firstMatch
         let frames = try UIWait.keyboardFrames(in: app, including: [scroll])
-        let viewport = frames[0].intersection(frames[2])
+        let viewport = AuthUIFlow.viewport(in: app, scrollFrame: frames[2])
         let contentAboveKeyboard = viewport.intersection(
             CGRect(
                 x: viewport.minX, y: viewport.minY, width: viewport.width,
@@ -69,8 +69,8 @@ nonisolated final class TwoFactorTests: XCTestCase {
             predicate: NSPredicate { _, _ in !app.keyboards.firstMatch.exists }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
         XCTAssertEqual(code.value as? String, "123")
-        revealTwoFactor(app.buttons["auth.back"], in: scroll)
-        app.buttons["auth.back"].tap()
+        revealTwoFactor(AuthUIFlow.control("auth.back", in: app), in: scroll)
+        AuthUIFlow.control("auth.back", in: app).tap()
         XCTAssertTrue(app.textFields["sign-in.email"].waitForExistence(timeout: 3))
         XCTAssertEqual(app.secureTextFields["sign-in.password"].value as? String, "")
         try openMockTwoFactor(app, fromSignIn: true)
@@ -98,26 +98,23 @@ nonisolated final class TwoFactorTests: XCTestCase {
     if !fromSignIn {
         let signIn = app.buttons["welcome.signIn"]
         XCTAssertTrue(signIn.waitForExistence(timeout: 6))
-        revealTwoFactor(signIn, in: app.scrollViews.firstMatch)
+        revealTwoFactor(signIn, in: app.scrollViews.containing(.button, identifier: "welcome.signIn").element)
         signIn.tap()
     }
     let email = app.textFields["sign-in.email"]
     XCTAssertTrue(email.waitForExistence(timeout: 3))
-    revealTwoFactor(email, in: app.scrollViews["auth.scroll"])
+    revealTwoFactor(email, in: AuthUIFlow.scroll(in: app))
     email.tap()
     if !fromSignIn { email.typeText("twofactor@example.com") }
     email.typeText("\n")
     app.secureTextFields["sign-in.password"].typeText("password\n")
     XCTAssertTrue(app.textFields["two-factor.code"].waitForExistence(timeout: 8))
     XCTAssertFalse(app.staticTexts["route.walkthrough"].exists)
-    revealTwoFactor(app.textFields["two-factor.code"], in: app.scrollViews["auth.scroll"])
+    revealTwoFactor(app.textFields["two-factor.code"], in: AuthUIFlow.scroll(in: app))
 }
 
 @MainActor func revealTwoFactor(_ element: XCUIElement, in scroll: XCUIElement) {
-    for _ in 0..<8 where !element.isHittable {
-        if element.frame.midY < scroll.frame.minY { scroll.swipeDown() } else { scroll.swipeUp() }
-    }
-    XCTAssertTrue(element.isHittable)
+    AuthUIFlow.reveal(element, in: XCUIApplication(), scroll: scroll)
 }
 
 @MainActor func assertTwoFactorKeyboardPair(
@@ -134,8 +131,8 @@ nonisolated final class TwoFactorTests: XCTestCase {
         predicate: NSPredicate { _, _ in field.value(forKey: "hasKeyboardFocus") as? Bool == true }, object: nil)
     XCTAssertEqual(XCTWaiter.wait(for: [focused], timeout: 5), .completed, "\(context): focus")
     let submit = app.buttons["two-factor.submit"]
-    let frames = try UIWait.keyboardFrames(in: app, including: [app.scrollViews["auth.scroll"], field, submit])
-    let viewport = frames[0].intersection(frames[2])
+    let frames = try UIWait.keyboardFrames(in: app, including: [AuthUIFlow.scroll(in: app), field, submit])
+    let viewport = AuthUIFlow.viewport(in: app, scrollFrame: frames[2])
     let safeViewport = viewport.intersection(
         CGRect(
             x: viewport.minX, y: viewport.minY, width: viewport.width,

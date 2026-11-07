@@ -38,6 +38,31 @@ struct AuthSnapshotCaptureTests {
         #expect(failure(raster, frames: clipped) != nil)
     }
 
+    @Test func elementInkRejectsTheSkyEvenWhenAnotherElementHasInk() throws {
+        let raster = try SnapshotRaster(png: png())
+        #expect(AuthSnapshotCapture.hasInk(raster, in: frames["heading"]!, scale: 1))
+        #expect(!AuthSnapshotCapture.hasInk(raster, in: CGRect(x: 4, y: 32, width: 32, height: 10), scale: 1))
+        #expect(try !AuthSnapshotCapture.hasInk(SnapshotRaster(png: png(ink: false)), in: frames["heading"]!, scale: 1))
+    }
+
+    @Test func lineContrastUsesRenderedInkAndRejectsBlankLines() throws {
+        let frame = frames["heading"]!
+        let text = [Double](repeating: 240.0 / 255, count: 3)
+        let lines = try RenderedTextContrast.lines(
+            raster: SnapshotRaster(png: png()), frame: frame, scale: 1, lineHeight: frame.height,
+            text: text, viewport: viewport)
+        #expect(lines.count == 1)
+        #expect(lines.first?.ink == text)
+        #expect(lines.first!.minimum > 4.5)
+        #expect(
+            try RenderedTextContrast.lines(
+                raster: SnapshotRaster(png: png(ink: false)), frame: frame, scale: 1, lineHeight: frame.height,
+                text: text, viewport: viewport
+            ).isEmpty)
+        #expect(RenderedTextContrast.ratio([0, 0, 0], [1, 1, 1]) == 21)
+        #expect(RenderedTextContrast.ratio(text, text) == 1)
+    }
+
     @Test func rejectsBlankRecordingBeforeWritingAndKeepsComparisonReadOnly() throws {
         let root = FileManager.default.temporaryDirectory.appending(path: "auth-capture-\(UUID())")
         defer { try? FileManager.default.removeItem(at: root) }

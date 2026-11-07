@@ -26,7 +26,7 @@ nonisolated final class TwoFactorKeyboardTests: XCTestCase {
         let app = launchTwoFactorApp(language: language, xxLarge: true, server: server)
         defer { app.terminate() }
         try openMockTwoFactor(app)
-        let scroll = app.scrollViews["auth.scroll"]
+        let scroll = AuthUIFlow.scroll(in: app)
         if recovery {
             revealTwoFactor(app.buttons["two-factor.toggle"], in: scroll)
             app.buttons["two-factor.toggle"].tap()

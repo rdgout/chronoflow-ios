@@ -20,7 +20,8 @@ nonisolated final class TwoFactorLayoutTests: XCTestCase {
                                 scale: fixture.scale)
                             defer { host.close() }
                             try await host.settle()
-                            XCTAssertEqual(Set(frames.keys), [.brand, .heading, .card, .code, .submit, .modeToggle])
+                            XCTAssertEqual(
+                                Set(frames.keys), [.brand, .heading, .subtitle, .card, .code, .submit, .modeToggle])
                             let brand = try XCTUnwrap(frames[.brand])
                             XCTAssertEqual(brand.minY, fixture.insets.top + AuthTokens.gutter, accuracy: 0.5)
                             for frame in frames.values {

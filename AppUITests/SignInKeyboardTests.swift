@@ -33,11 +33,11 @@ nonisolated final class SignInKeyboardTests: XCTestCase {
         defer { app.terminate() }
         let signIn = app.buttons["welcome.signIn"]
         XCTAssertTrue(signIn.waitForExistence(timeout: 6))
-        reveal(signIn, in: app.scrollViews.firstMatch)
+        reveal(signIn, in: app.scrollViews.containing(.button, identifier: "welcome.signIn").element)
         signIn.tap()
         XCTAssertTrue(app.staticTexts["auth.heading"].waitForExistence(timeout: 3))
 
-        let scroll = app.scrollViews["auth.scroll"]
+        let scroll = AuthUIFlow.scroll(in: app)
         let email = app.textFields["sign-in.email"]
         let password = app.secureTextFields["sign-in.password"]
         let submit = app.buttons["sign-in.submit"]
@@ -85,8 +85,8 @@ nonisolated final class SignInKeyboardTests: XCTestCase {
             predicate: NSPredicate { _, _ in field.value(forKey: "hasKeyboardFocus") as? Bool == true }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [focused], timeout: 5), .completed, "\(context): \(field.identifier) focus")
         let submit = app.buttons["sign-in.submit"]
-        let frames = try UIWait.keyboardFrames(in: app, including: [app.scrollViews["auth.scroll"], field, submit])
-        let viewport = frames[0].intersection(frames[2])
+        let frames = try UIWait.keyboardFrames(in: app, including: [AuthUIFlow.scroll(in: app), field, submit])
+        let viewport = AuthUIFlow.viewport(in: app, scrollFrame: frames[2])
         let keyboardFrame = frames[1]
         let safeViewport = viewport.intersection(
             CGRect(
@@ -110,13 +110,6 @@ nonisolated final class SignInKeyboardTests: XCTestCase {
     }
 
     @MainActor private func reveal(_ element: XCUIElement, in scroll: XCUIElement) {
-        for _ in 0..<8 where !element.isHittable {
-            if element.frame.midY < scroll.frame.minY {
-                scroll.swipeDown()
-            } else {
-                scroll.swipeUp()
-            }
-        }
-        XCTAssertTrue(element.isHittable)
+        AuthUIFlow.reveal(element, in: XCUIApplication(), scroll: scroll)
     }
 }

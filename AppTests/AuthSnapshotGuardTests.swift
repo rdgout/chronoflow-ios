@@ -36,12 +36,12 @@ nonisolated final class AuthSnapshotGuardTests: XCTestCase {
                             let scroll = try XCTUnwrap(scrollViews(host.controller.view).first)
                             let elements: [AuthElement] =
                                 mode == 0
-                                ? [.brand, .email, .password, .submit, .forgot, .signup, .footer]
+                                ? [.brand, .passkey, .email, .password, .submit, .forgot, .signup, .footer]
                                 : [.brand, .code, .submit, .modeToggle]
                             for element in elements {
                                 let frame = try XCTUnwrap(frames[element])
                                 let viewport = scroll.convert(scroll.bounds, to: host.window).intersection(
-                                    host.window.bounds)
+                                    host.window.bounds.inset(by: fixture.insets))
                                 let delta =
                                     frame.minY < viewport.minY
                                     ? frame.minY - viewport.minY : max(0, frame.maxY - viewport.maxY)
@@ -59,7 +59,10 @@ nonisolated final class AuthSnapshotGuardTests: XCTestCase {
                                     "\(fixture.name), \(language), \(style), \(category), mode \(mode), \(element): \(actual) outside \(viewport)"
                                 )
                                 let raster = try SnapshotRaster(png: XCTUnwrap(host.image().pngData()))
-                                XCTAssertTrue(WelcomeSnapshotPixels.hasVisibleVariation(raster.bytes))
+                                XCTAssertTrue(
+                                    AuthSnapshotCapture.hasInk(raster, in: actual, scale: host.scale),
+                                    "Blank \(element) in \(actual), \(fixture.name), \(language), \(style), \(category)"
+                                )
                             }
                         }
                     }

@@ -23,7 +23,7 @@
 
         public var body: some View {
             AuthScreen(
-                title: copy("Enter your code"),
+                scrollIdentifier: "two-factor.scroll", title: copy("Enter your code"),
                 description: copy("Open your authenticator app and type the 6-digit code for ChronoFlow."),
                 back: cancel, measure: report
             ) {

@@ -25,14 +25,15 @@
         private func copy(_ key: String) -> String { AuthCopy.string(key, locale: locale) }
         public var body: some View {
             AuthScreen(
-                title: copy("Welcome back"), description: copy("Sign in to see your trips and plans."), back: back,
+                scrollIdentifier: "sign-in.scroll", title: copy("Welcome back"),
+                description: copy("Sign in to see your trips and plans."), back: back,
                 measure: report
             ) {
                 if let banner = model.form.banner { AuthBanner(title: copy(banner.title), message: copy(banner.body)) }
                 AuthButton(copy("Sign in with a passkey"), busy: model.form.pending == .passkey, glyph: .key) {
                     submit(.passkey)
                 }
-                .accessibilityIdentifier("sign-in.passkey")
+                .accessibilityIdentifier("sign-in.passkey").authMeasure(.passkey, report)
                 HStack(spacing: AuthTokens.inset) {
                     Rectangle().fill(ColorToken.border.color).frame(height: AuthTokens.borderWidth)
                     WelcomeText(copy("or with email"), style: Typography.authMeta, color: .mutedForeground)

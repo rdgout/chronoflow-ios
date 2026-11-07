@@ -43,7 +43,7 @@ public nonisolated enum AuthSnapshotCapture {
         return try SnapshotReference.verify(sample: sample, reference: reference, record: record)
     }
 
-    private static func hasInk(_ raster: SnapshotRaster, in frame: CGRect, scale: CGFloat) -> Bool {
+    public static func hasInk(_ raster: SnapshotRaster, in frame: CGRect, scale: CGFloat) -> Bool {
         let left = max(0, Int((frame.minX * scale).rounded(.up)))
         let right = min(raster.width - 1, Int((frame.maxX * scale).rounded(.down)))
         let top = max(0, Int((frame.minY * scale).rounded(.up)))

@@ -67,7 +67,9 @@ nonisolated final class SignInTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["auth.heading"].waitForExistence(timeout: 3))
     }
     @MainActor private func reveal(_ element: XCUIElement, _ app: XCUIApplication) {
-        for _ in 0..<8 where !element.isHittable { app.scrollViews.firstMatch.swipeUp() }
-        XCTAssertTrue(element.isHittable)
+        let scroll =
+            element.identifier == "welcome.signIn"
+            ? app.scrollViews.containing(.button, identifier: "welcome.signIn").element : AuthUIFlow.scroll(in: app)
+        AuthUIFlow.reveal(element, in: app, scroll: scroll)
     }
 }

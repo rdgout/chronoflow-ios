@@ -35,7 +35,9 @@ nonisolated final class TwoFactorSnapshotTests: XCTestCase {
                                     frames: Dictionary(
                                         uniqueKeysWithValues: frames.map { ($0.key.rawValue, $0.value) }),
                                     required: Set(
-                                        (Set([AuthElement.brand, .heading, .card, .code, .submit, .modeToggle])).map(
+                                        (Set([
+                                            AuthElement.brand, .heading, .subtitle, .card, .code, .submit, .modeToggle,
+                                        ])).map(
                                             \.rawValue)),
                                     reference: directory.appending(path: "\(suffix).png"),
                                     record: ProcessInfo.processInfo.environment["SNAPSHOT_RECORD"] == "1")

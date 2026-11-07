@@ -50,7 +50,7 @@ nonisolated final class AuthAuditTests: XCTestCase {
         _ app: XCUIApplication, identifiers: [String], language: String, appearance: XCUIDevice.Appearance
     ) {
         for identifier in identifiers {
-            let control = app.descendants(matching: .any).matching(identifier: identifier).firstMatch
+            let control = AuthUIFlow.control(identifier, in: app)
             XCTAssertTrue(control.waitForExistence(timeout: 3), identifier)
             AuthUIFlow.reveal(control, in: app)
             audit(app, language: language, appearance: appearance, stage: identifier)
