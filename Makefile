@@ -30,7 +30,7 @@ simulator-check:
 	$(SIM_RUNNER) --no-generate --devices 17e
 
 duo:
-	$(SIM_RUNNER) --no-generate --devices duo --mode runtime
+	TEST_RUN_TIMEOUT=$(or $(TEST_RUN_TIMEOUT),600) $(SIM_RUNNER) --no-generate --devices duo --mode runtime
 
 matrix:
 	$(SIM_RUNNER) --matrix

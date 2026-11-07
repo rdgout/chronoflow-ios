@@ -2180,3 +2180,89 @@ regressions pass in SwiftPM. Direct Swift 6 compilation targets arm64-apple-ios1
 with Debug/Release DataAccess/app modules, app SIL, all hosted tests and Debug UI tests; it invokes
 swiftc only. These checks do not execute UIKit, audits, reference comparisons, or device passkeys.
 Local logs: `build/phase-10b-{quick,generate,typecheck}.log`.
+
+
+## Phase 10b task 2 — fix round 1 (7 November 2026)
+
+The user's check gate reports 1,919.8 seconds in the simulator runner (`build/rerun/check.log`),
+with every suite passing except recovery AuthSessionTests and strict subtitle AuthAuditTests.
+The separate targeted rerun repeats those two failures. The user's Duo run passed 108 cases,
+last RootNavigationTests, then stalled until their 40-minute timeout. No revised runtime pass is
+claimed here; CoreSimulator connections are denied in this sandbox.
+
+Auth helpers now select `sign-in.scroll` or `two-factor.scroll`, including shared back controls;
+no arbitrary first matching auth scroll remains. UIWindow's Debug safe-area diagnostic gives UI
+helpers the live rectangle from all four insets; keyboard intersection further clips it. Hosted
+scroll guards use each fixture's four insets and test ink in the revealed element's frame. Passkey
+has an AuthElement/measurement, so it participates in horizontal capture and scroll/ink guards.
+The offline relaunch requires cached data plus a real completed sync result of offline; an online
+relaunch cannot pass that assertion. A hosted positive/negative launch-flag test covers both mock
+construction paths. No customer copy, token, layout value or committed PNG changes.
+
+All **80 failing subtitle crops** in the saved serial xcresult were exported and measured without
+running the app. Per-line minima remain above 4.5:1: Two-factor default is 10.8872 / 10.6966 light
+and 15.7349 / 15.5897 dark; xxLarge Two-factor and Dutch Sign in are 10.8559 / 10.4839 light and
+15.6097 / 15.4609 dark. All saved stages/modes agree. The sky remains dark behind the text.
+See [auth-subtitle-contrast.md](auth-subtitle-contrast.md) for method, static board/profile evidence
+and limits. This does not establish a failing board value or justify another contrast exemption.
+AuthSubtitleContrastTests is a hosted board/17e diagnostic for all audited language/appearance/
+size/mode contexts and reveal positions; it also checks full-window gradient placement and fails
+on missing ink or any line below 4.5. The strict system audit remains enabled and unresolved.
+
+The saved runner suite durations explain the long gate (sum of case time, **not additive wall
+stages**, because two workers overlap work):
+
+| Work | Saved test seconds |
+| --- | ---: |
+| TwoFactorSnapshotTests | 580.69 |
+| AuthSnapshotTests | 321.69 |
+| AuthAuditTests (serial) | 515.52 |
+| TwoFactorKeyboardTests | 183.30 |
+| SignInKeyboardTests | 111.10 |
+| AuthSnapshotGuardTests | 179.53 |
+| AuthSessionTests (serial) | 103.46 |
+| WelcomeSnapshotTests | 70.18 |
+
+Auth profile capture alone accounts for **902.38 test seconds**; keyboard suites add **294.40**.
+The latest targeted serial pass takes **646.609 wall seconds**, of which about 619 seconds is
+audit/session cases. The latest targeted guard pass takes **218.911 wall seconds**, including
+179.534 seconds in its test. Isolated Release takes **14.898 wall seconds**. The original full
+Debug-compare log was replaced by the targeted guard run; `timings.json` merges suite samples
+across runs, and its stored 180.994-second device wall is an older successful targeted sample,
+not the failed full gate. Build/preparation/worker-startup contributions cannot be separated exactly
+from these retained data. The runner's 1,919.8 seconds exclude make's preceding host/generator
+steps. No tier restructuring or new speed claim is made.
+
+`make duo` now selects exactly DeviceGeometrySmokeTests, LaunchHandOffTests, WelcomeHandOverTests,
+LaunchToWelcomeTests, SignInKeyboardTests, TwoFactorKeyboardTests, SignInTests and TwoFactorTests.
+It resolves the same separate Duo runtime. It performs no profile, full audit/session, service or
+Release gate. Its per-test-run timeout is **600 seconds**; other test passes default to **1,200**.
+`TEST_RUN_TIMEOUT=<seconds>` overrides either limit. On timeout the runner terminates the process
+group, escalates to kill after at most five seconds, retains the log, fails selected suites and
+stops subsequent passes for that destination. Timeout/selection fixtures use temporary directories.
+An initial timeout fixture accidentally removed Duo's ignored Debug-compare log/xcresult; it was
+corrected before final verification. The separate `build/rerun/duo.log`, saved timings and all
+committed PNGs remain intact.
+
+Host verification: `make quick` passes (318 package tests, 10 TokenGen, 4 AssetGen, 3 signing,
+10 resource and 64 runner fixtures), including per-element ink and rendered-contrast sampler
+regressions. Direct iOS 17 Debug/Release app module/SIL and hosted/UI test compilation passes;
+these checks do not execute UIKit. Logs are `build/phase-10b-fix-{quick,typecheck}.log`. Git index
+mutation is blocked by `index.lock` permissions; the requested ordered atomic patches and subjects
+are delivered under `build/commits/`.
+
+Run without recording, after applying the patches:
+
+```sh
+make generate
+make targeted DEVICES="17e" ONLY="AppTests/AuthSubtitleContrastTests AppTests/AuthSnapshotGuardTests AppTests/DataSourceFactoryHostedTests AppUITests/AuthSessionTests AppUITests/AuthAuditTests"
+make check
+make duo
+```
+
+The focused diagnostic writes per-line frames, measured ink, ratios and scroll offsets to
+`build/test-results/17e/Debug-compare.log`. Audit/session results stay in Debug-serial. Read the
+ratio report before deciding whether the strict system audit is a false positive. If a board-
+matching rendered line actually fails 4.5:1, add a design Open question with the measurements and
+no proposed default; do not alter tokens or widen OQ 33. The existing Two-factor side-by-side
+visual review and device-only passkey checks remain open; task 2 stays unticked.

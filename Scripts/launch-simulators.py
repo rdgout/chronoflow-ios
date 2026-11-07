@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import re
 import shlex
+import signal
 import statistics
 import shutil
 import subprocess
@@ -130,6 +131,13 @@ XCODEBUILD_COMMON = ["xcodebuild", "-project", "ChronoFlow.xcodeproj", "-derived
 # Device-wide mutations must be registered here; launch/window-scoped traits are clone-safe.
 SERIAL_TESTS = ("AppUITests/AuthSessionTests", "AppUITests/AuthAuditTests", "AppUITests/LaunchSceneTests", "AppUITests/LaunchSceneDarkTests", "AppUITests/LaunchToWelcomeTests")
 PARALLEL_TARGETS = {"AppTests", "AppUITests", "RenderTests"}
+
+
+RUNTIME_SMOKE = (
+    "AppTests/DeviceGeometrySmokeTests", "AppTests/LaunchHandOffTests", "AppTests/WelcomeHandOverTests",
+    "AppUITests/LaunchToWelcomeTests", "AppUITests/SignInKeyboardTests", "AppUITests/TwoFactorKeyboardTests",
+    "AppUITests/SignInTests", "AppUITests/TwoFactorTests",
+)
 
 
 @dataclass(frozen=True)
@@ -380,7 +388,7 @@ def environment(record=False, intro_order=None):
     return result
 
 
-def run(command, *, log=None, capture=False, record=False, check=True, intro_order=None):
+def run(command, *, log=None, capture=False, record=False, check=True, intro_order=None, timeout=None):
     print("+ " + shlex.join(map(str, command)), flush=True)
     kwargs = dict(cwd=ROOT, text=True, env=environment(record, intro_order), check=check)
     if log is None:
@@ -389,7 +397,33 @@ def run(command, *, log=None, capture=False, record=False, check=True, intro_ord
     with log.open("a") as output:
         output.write("+ " + shlex.join(map(str, command)) + "\n")
         output.flush()
-        return subprocess.run(command, stdout=output, stderr=subprocess.STDOUT, **kwargs)
+        if timeout is None:
+            return subprocess.run(command, stdout=output, stderr=subprocess.STDOUT, **kwargs)
+        options = {key: value for key, value in kwargs.items() if key != "check"}
+        with subprocess.Popen(command, stdout=output, stderr=subprocess.STDOUT, start_new_session=True, **options) as process:
+            try:
+                process.communicate(timeout=timeout)
+            except subprocess.TimeoutExpired:
+                try:
+                    os.killpg(process.pid, signal.SIGTERM)
+                except ProcessLookupError:
+                    pass
+                try:
+                    process.communicate(timeout=5)
+                except subprocess.TimeoutExpired:
+                    pass
+                # Kill descendants even when xcodebuild exits before its test workers.
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                process.communicate()
+                output.write(f"Test run timed out after {timeout:g}s; terminated process group\n")
+                raise
+            completed = subprocess.CompletedProcess(command, process.returncode)
+            if check:
+                completed.check_returncode()
+            return completed
 
 
 def resolve(alias, devices):
@@ -445,7 +479,9 @@ def selection(mode, alias, only=(), include_logic=True, include_matrix=True):
         return selectors("perf")
     if mode == "snapshots":
         return list(SNAPSHOTS) + ["AppTests/SnapshotContainerTests"]
-    if mode in ("check", "test", "runtime"):
+    if mode == "runtime":
+        return list(RUNTIME_SMOKE)
+    if mode in ("check", "test"):
         result = [s for policy in ("logic", "matrix") for s in selectors(policy)
                   if s.startswith(("AppTests/", "AppUITests/"))]
         result += list(IOS_METHODS)
@@ -602,8 +638,14 @@ def test_pass(destination, configuration, selected, label, record=False, intro_o
         shutil.rmtree(bundle)
     log.unlink(missing_ok=True)
     try:
-        completed = run(test_command(destination, configuration, selected, bundle, workers, skipped), log=log, record=record, check=False, intro_order=intro_order)
+        timeout = float(os.environ.get("TEST_RUN_TIMEOUT", "1200"))
+        if not math.isfinite(timeout) or timeout <= 0:
+            raise ValueError("TEST_RUN_TIMEOUT must be a positive finite number of seconds")
+        completed = run(test_command(destination, configuration, selected, bundle, workers, skipped), log=log, record=record, check=False, intro_order=intro_order, timeout=timeout)
         return read_results(destination, label, selected, bundle, completed.returncode, log, timing, require_executed=intro_order is not None)
+    except subprocess.TimeoutExpired as error:
+        return [Result(destination.alias, label + " " + suite, False,
+                       f"Test run timed out after {error.timeout:g}s; see {log.relative_to(ROOT)}") for suite in selected]
     except (subprocess.CalledProcessError, OSError) as error:
         return [Result(destination.alias, label + " " + suite, False, str(error)) for suite in selected]
 
@@ -634,11 +676,17 @@ def test_device(destination, selected, mode, recording, ready, intro_order_check
     record_suites = recording_selection(selected, mode, recording) if recording and destination.alias == "17e" else []
     if record_suites and ready.get("Debug"):
         results += test_pass(destination, "Debug", record_suites, "record", record=True)
+        if any(r.detail.startswith("Test run timed out") for r in results):
+            return results + [Result(destination.alias, s, False, "Not run after timeout")
+                              for s in selected if s not in record_suites]
     for configuration, suites in configurations(selected).items():
         if ready.get(configuration):
             for part in split_passes(configuration, suites, workers):
                 results += test_pass(destination, configuration, part.selected, configuration + "-" + part.suffix,
                                      timing=timing, workers=part.workers, skipped=part.skipped)
+                if any(r.detail.startswith("Test run timed out") for r in results):
+                    return results + [Result(destination.alias, s, False, "Not run after timeout")
+                                      for s in selected if not any(r.suite.endswith(" " + s) for r in results)]
         else:
             results += [Result(destination.alias, s, False, configuration + " build unavailable") for s in suites]
     if timing is not None and all(r.passed for r in results):

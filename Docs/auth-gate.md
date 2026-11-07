@@ -1,8 +1,8 @@
 # Auth acceptance gate — Phase 10b, task 2 (7 November 2026)
 
 Implementation and Mac verification are complete. **Acceptance remains open** for the user's
-simulator runs and Two-factor board review. No simulator, xcodebuild, physical device or live API
-was used for this task. Phases 6–8 remain open; this gate does not close their accessibility,
+simulator runs and Two-factor board review. The original task-2 verification used host checks and direct compilation. Round-1 runtime
+evidence comes from the user's saved results; no revised simulator pass is claimed. Phases 6–8 remain open; this gate does not close their accessibility,
 performance or physical-device requirements. Phase 10b task 2 remains unticked until the pending
 checks below have supplied results.
 
@@ -54,7 +54,7 @@ walkthrough flags applied to the same seed for gate coverage. Default demo behav
 Debug-only `CF_AUTH_TEST_ID` enables this isolation; `CF_AUTH_TEST_OFFLINE`,
 `CF_AUTH_TEST_UNVERIFIED` and `CF_AUTH_TEST_WALKTHROUGH_SEEN` only apply within that namespace.
 Offline state is installed in the mock constructor, before its first request. The existing route
-text exposes only a `cached` readiness diagnostic and the test-only tap; no token, account data or
+text exposes cache/sync readiness diagnostics and the test-only tap; no token, account data or
 new screen is shown. Release/Perf compile out the configuration, seed and route diagnostic.
 Ordinary Release remains non-shipping while Today/terms/walkthrough/verify destinations are unbuilt
 (D17/D27/OQ 24). Forgot/Sign up stay their existing seams.
@@ -93,3 +93,30 @@ the backend branch is not deployed. Mock assertions do not prove a real credenti
 protection/locked-device behavior, VoiceOver and physical launch/status-bar/120 Hz/performance
 proof remain in the original Phase 6–8/OQ 14 gates. Password-policy/reset/verification and real email
 entry remain blocked/deferred under OQ 21/22/25/27 in their named later phases.
+
+## Fix round 1
+
+The user's 17e check and targeted rerun pass all suites except the recovery-session scroll query
+and strict subtitle contrast audit. Pushed screens now have distinct scroll identifiers; shared
+back queries use the current screen, and all auth reveal/keyboard helpers use the live window
+safe-area rectangle, with the visible keyboard removed. Hosted guards use fixture insets, check
+ink inside each revealed element and include the measured passkey button. Snapshot PNGs remain
+unchanged. The hosted subtitle measurement covers the exact audit fixture and the board; the
+per-line measurements and outstanding audit discrepancy are documented in
+[auth-subtitle-contrast.md](auth-subtitle-contrast.md). Measured saved failure crops exceed 4.5:1;
+no new board-design Open question or audit exemption is supported by those pixels.
+
+The route diagnostic now reports cache and completed sync status separately. Online preparation
+requires `cached:idle`; the offline relaunch requires `cached:failed-offline` from a real
+`SessionSync.refreshNow()` result, in a fresh process. A cached `synced_at` alone cannot pass.
+Hosted DataSourceFactoryHostedTests injects the same launch environment into both AppServices
+factories and checks that only the offline flag produces DataFailure.offline from the mock.
+This remains Debug-only diagnostic data, without a new visible UI or a Release flag.
+
+Duo selects geometry, launch/Welcome hand-off, both auth keyboard suites and Sign in/Two-factor
+UI only. No profiles, acceptance audit/session matrix, storage/service tests or Release readiness
+are repeated there. Each test run is bounded at 600 seconds for `make duo` (1,200 otherwise,
+overridable with `TEST_RUN_TIMEOUT`); timeout terminates xcodebuild's process group and fails the
+destination without proceeding to another pass. Other check tiers retain their previous selection,
+with the added hosted contrast diagnostic on 17e. Task 2 stays open for execution, the strict audit
+discrepancy and the existing Two-factor visual review.

@@ -57,6 +57,28 @@ def discovered_suites(directory):
     return suites
 
 
+class TimeoutTests(unittest.TestCase):
+    def test_run_timeout_kills_process_group_and_keeps_log(self):
+        with tempfile.TemporaryDirectory(dir=ROOT / 'build') as directory:
+            log = Path(directory) / 'timeout.log'
+            with self.assertRaises(subprocess.TimeoutExpired):
+                runner.run(['python3', '-c', 'import time; time.sleep(30)'], log=log, timeout=0.1)
+            self.assertIn('Test run timed out after 0.1s', log.read_text())
+
+    def test_timeout_marks_selection_failed_and_skips_later_passes(self):
+        destination = runner.Destination('duo', 'test', 'Booted')
+        selected = ['AppUITests/SignInTests', 'AppUITests/AuthSessionTests', 'AppTests/ReleaseReadinessTests']
+        namespace = runner.test_pass.__globals__
+        with tempfile.TemporaryDirectory(dir=ROOT / 'build') as directory, \
+             patch.dict(namespace, ROOT=Path(directory), prepare=lambda _: None), patch.dict(os.environ, TEST_RUN_TIMEOUT='0.1'), \
+             patch.dict(namespace, run=lambda *args, **kwargs: (_ for _ in ()).throw(subprocess.TimeoutExpired('test', 0.1))):
+            results = runner.test_device(destination, selected, 'runtime', None, {'Debug': True, 'Release': True}, workers=2)
+        self.assertEqual(len(results), 3)
+        self.assertTrue(all(not r.passed for r in results))
+        self.assertTrue(results[0].detail.startswith('Test run timed out'))
+        self.assertTrue(all(r.detail == 'Not run after timeout' for r in results[1:]))
+
+
 class ClassificationTests(unittest.TestCase):
     def test_discovery_rejects_stale_helper_classes_as_well_as_missing_suites(self):
         with tempfile.TemporaryDirectory(dir=ROOT / 'build') as directory:
@@ -127,8 +149,11 @@ class ClassificationTests(unittest.TestCase):
     def test_auth_acceptance_tiers_include_all_suites_once_and_project_discovers_ui_sources(self):
         for suite in AUTH_HOSTED + AUTH_UI:
             self.assertEqual(runner.selection('check', '17e').count(suite), 1, suite)
-            if suite not in AUTH_SNAPSHOTS:
+        self.assertEqual(runner.selection('runtime', 'duo'), list(runner.RUNTIME_SMOKE))
+        for suite in AUTH_UI:
+            if suite not in ('AppUITests/AuthSessionTests', 'AppUITests/AuthAuditTests'):
                 self.assertEqual(runner.selection('runtime', 'duo').count(suite), 1, suite)
+        self.assertFalse(set(AUTH_HOSTED) & set(runner.selection('runtime', 'duo')))
         self.assertIn('AuthTests/AuthSnapshotCaptureTests', runner.selectors('host'))
         for suite in AUTH_SNAPSHOTS + ('AppTests/AuthSnapshotGuardTests',):
             self.assertIn(suite, runner.selection('snapshots', '17e'))
@@ -286,8 +311,12 @@ class RunnerTests(unittest.TestCase):
                     for s in self.selected[bundle]]
                 return subprocess.CompletedProcess(command, status, json.dumps({'testNodes': [{'children': nodes}]}))
             return subprocess.CompletedProcess(command, status, '')
+        def fake_popen(command, **options):
+            completed = fake_run(command, **options)
+            process = SimpleNamespace(returncode=completed.returncode, communicate=lambda **_: (None, None))
+            return contextlib.nullcontext(process)
         output = io.StringIO()
-        with patch.dict(runner.main.__globals__, ROOT=self.scratch, TIMINGS_PATH=self.scratch / 'build/test-results/timings.json', machine_resources=lambda: (14, 36 * 1024**3)), patch.object(runner.subprocess, 'run', side_effect=fake_run), contextlib.redirect_stdout(output):
+        with patch.dict(runner.main.__globals__, ROOT=self.scratch, TIMINGS_PATH=self.scratch / 'build/test-results/timings.json', machine_resources=lambda: (14, 36 * 1024**3)), patch.object(runner.subprocess, 'run', side_effect=fake_run), patch.object(runner.subprocess, 'Popen', side_effect=fake_popen), contextlib.redirect_stdout(output):
             kwargs.setdefault("mode", "matrix")
             result = runner.main(**kwargs)
         return result, output.getvalue()
@@ -567,7 +596,7 @@ class RunnerTests(unittest.TestCase):
         selections, _ = runner.schedule('matrix', list(runner.MATRIX))
         for suite in runner.selectors('profiles') + runner.selectors('reference'):
             self.assertEqual([alias for alias in selections if suite in selections[alias]], ['17e'])
-        self.assertFalse(set(runner.selectors('profiles') + runner.selectors('reference')) & set(runner.selection('runtime', 'duo')))
+        self.assertEqual(set(runner.selectors('profiles') + runner.selectors('reference')) & set(runner.selection('runtime', 'duo')), {'AppUITests/LaunchToWelcomeTests'})
 
     def test_lpt_is_only_used_for_an_explicit_matrix(self):
         selections, order = runner.schedule('check', ['se', '17e', 'duo'])
