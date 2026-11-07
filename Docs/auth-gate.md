@@ -12,18 +12,18 @@ footer to 48, and text grows through the existing root xxLarge cap. No patterns 
 are added. Auth geometry and keyboard reveal use measured frames, with a pure overflow result;
 there is no invented pinned action if a field/submit pair does not fit (OQ 32).
 
-OQ 32 keyboard finding (7 November 2026): the user's targeted run passed on SE; all six Duo
-tests failed only the assertion that the software keyboard must intersect the app window.
-Duo reported window/scroll `(0, 0, 466, 678)` and keyboard `(0, 722, 466, 245)`: a 44 pt gap,
-with the focused input and submit fully visible. On this runtime the keyboard can sit outside
-the app window. `SignInKeyboardTests` now uses the window as the keyboard-safe viewport when
-the keyboard does not intersect it; when it intersects, the existing scroll/window viewport is
-clipped above the keyboard. Both paths retain software-keyboard existence, field focus,
-nonempty viewport, full input/submit containment and hittability checks, with frames/screenshots.
-No device-name condition or app layout change is needed. Status: **passed on SE and Duo (2026-11-07)**
-of `make targeted DEVICES="se duo" ONLY="AppUITests/SignInKeyboardTests"`. A passing corrected
-run settles OQ 32 for Sign in (no overflow); the first 10a task stays unticked until confirmation.
-Verification for this test correction: `make quick` passes; no simulator rerun is claimed here.
+OQ 32 correction (7 November 2026, Phase 10b fix round 3): the user verified that headless
+simulators had hardware keyboards attached and `AutomaticMinimizationEnabled = 1`. The software
+keyboard was minimized despite `app.keyboards.firstMatch.exists`. Duo's reported keyboard
+`(0, 722, 466, 245)` below window/scroll `(0, 0, 466, 678)` is not evidence of a real visible
+Duo keyboard layout. The b56c328 whole-window fallback is removed. Shared helpers now require
+stable keyboard frames with at least 100 × 100 points intersecting the app window, then clip
+the scroll/window viewport above the keyboard and check focus, full input/submit containment and
+hittability. The runner disables automatic minimization per device after boot. Earlier SE/Duo
+passes do not establish keyboard acceptance: **OQ 32 is reopened for Sign in**, pending the user's
+SignInKeyboardTests, TwoFactorKeyboardTests and TwoFactorTests reruns on 17e, SE and Duo.
+The user's SE experiment with minimization disabled passed `testDutchCodeServerAtXXLarge` with
+a visible number pad. That single case does not settle the full acceptance gate.
 
 AuthSessionServices reuses the scene’s NativeSessionController. Its one SessionController accepts
 sessions, restores credentials, owns sync and signs out/wipes. Post-accept routing reads the SQLite

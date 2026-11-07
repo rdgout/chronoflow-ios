@@ -66,6 +66,8 @@ Generate the project after manifest/project changes. Debug/ChronoFlow and isolat
 build once each into `build/DerivedData`, with pinned resolution, then use `test-without-building`.
 Only the Release verification build gets `ENABLE_TESTABILITY=YES`. Perf stays separate.
 
+After `bootstatus` completes, every runner destination receives `xcrun simctl spawn <udid> defaults write com.apple.keyboard.preferences AutomaticMinimizationEnabled -bool false` before testing, including already-booted devices and reused builds. This idempotent device preference prevents headless simulators with an attached hardware keyboard from minimizing the software keyboard; host-global Simulator.app preferences are untouched. Check, targeted, Duo, matrix and the separate Perf scheme all share this preparation. Keyboard helpers require a stable keyboard intersection of at least 100 × 100 points inside the app window, rejecting accessory strips and off-screen frames with “software keyboard not visible — check AutomaticMinimizationEnabled”.
+
 Host package execution uses `Scripts/swiftpm.sh test ChronoFlowKit`, macOS 14 or later,
 `--disable-sandbox`, repo-local scratch/cache/config/security/temp directories and `CFFIXED_USER_HOME`.
 HOME is unchanged. Quick also runs TokenGen and AssetGen SwiftPM tests. Make prerequisite deduplication
@@ -2048,9 +2050,16 @@ TwoFactorModelTests cover missing/wrong/latest codes, input filtering without su
 success/reuse, expiry/exhaustion, throttling/server/offline, hidden-field mapping, localized messages
 and deduplicated announcements, toggles, cancellation/back, double submission and storage boundaries.
 The keyboard suite measures the focused field and Verify against the real keyboard/window/scroll
-frames in both modes and languages at xxLarge, before and after field/server errors. It retains
-SignInKeyboardTests' corrected Duo behavior when the keyboard lies outside the app window. A
-failure to fit remains OQ 32; do not change the layout or shrink the root cap to pass it.
+frames in both modes and languages at xxLarge, before and after field/server errors. Both auth
+helpers and the interactive-dismiss test now require a visible software keyboard inside the window;
+the off-screen fallback introduced at b56c328 was based on a minimized keyboard, not verified Duo
+geometry. The interactive-dismiss drag from 8d92f8b is retained. Earlier keyboard passes do not
+establish OQ 32 acceptance; the user's reruns on 17e, SE and Duo remain pending. A failure to fit
+remains OQ 32; do not change the layout or shrink the root cap to pass it.
+
+Fix round 3 validation: `make quick` passes, including 57 runner fixtures and four UIWaitTests.
+All AppUITests type-check for the iOS 17 simulator target. No simulator UI execution is claimed
+for this fix; the user will run the three keyboard suites on 17e, SE and Duo.
 
 Debug-only `-cf.isolatedMockServer` gives UI launches a shared in-memory mock server for the auth
 and native sync sources, preventing cross-test throttles and recovery consumption. Debug mock-only
