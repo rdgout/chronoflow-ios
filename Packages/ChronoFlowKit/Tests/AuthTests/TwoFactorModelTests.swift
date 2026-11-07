@@ -5,6 +5,21 @@ import Foundation
 import Testing
 
 @MainActor struct TwoFactorModelTests {
+    @Test(arguments: [false, true]) func emptyProofShowsOnlyTheActiveFieldError(recovery: Bool) async throws {
+        let model = try #require(await challenged(twoFactorSource()).twoFactor)
+        if recovery { model.toggleMode() }
+        await model.submit()
+        let messages = [
+            "code": FieldMessage(key: "Enter the 6-digit code from your authenticator app."),
+            "recovery_code": FieldMessage(
+                key: "Enter one of the recovery codes you saved when you set up two-factor authentication."),
+        ]
+        #expect(model.form.failure == .validation(fields: messages, status: 422))
+        #expect(model.form.fields == [model.field: messages[model.field]!])
+        #expect(model.form.banner == nil && model.code.isEmpty && !model.form.busy)
+        #expect(model.form.takeAnnouncement(locale: Locale(identifier: "en")) == nil)
+    }
+
     @Test(arguments: [true, false]) func latestCodeAcceptsThroughPasswordSessionPath(_ verified: Bool) async throws {
         let source = try twoFactorSource(verified: verified, code: "654321")
         let session = AuthTestSession()

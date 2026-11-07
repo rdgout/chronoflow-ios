@@ -199,6 +199,18 @@ public actor MockDataSource: DataSource {
     public func completeTwoFactor(_ input: TwoFactorInput) async throws -> SessionResult {
         try await begin(.completeTwoFactor)
         try limit("two-factor:" + input.challengeId)
+        let value =
+            switch input.proof {
+            case .code(let value), .recoveryCode(let value): value
+            }
+        guard !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw DataFailure.validation(
+                fields: [
+                    "code": FieldMessage(key: "Enter the 6-digit code from your authenticator app."),
+                    "recovery_code": FieldMessage(
+                        key: "Enter one of the recovery codes you saved when you set up two-factor authentication."),
+                ], status: 422)
+        }
         let field: String
         let key: String
         switch input.proof {
@@ -208,12 +220,8 @@ public actor MockDataSource: DataSource {
                 throw validation(field, "Enter the 6-digit code from your authenticator app.")
             }
             key = "The authentication code was not accepted. Try again."
-        case .recoveryCode(let value):
+        case .recoveryCode:
             field = "recovery_code"
-            guard !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                throw validation(
-                    field, "Enter one of the recovery codes you saved when you set up two-factor authentication.")
-            }
             key = "This recovery code was not accepted. Try another saved code."
         }
         guard let challenge = state!.twoFactor[input.challengeId], challenge.expiresAt > now().timeIntervalSince1970,

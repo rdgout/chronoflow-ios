@@ -4,6 +4,26 @@ import Foundation
 import Testing
 
 struct AuthFailureMappingTests {
+    @Test(arguments: ["code", "recovery_code"])
+    func inactiveProofIsIgnoredOnlyAlongsideAnActiveProofError(field: String) {
+        let inactive = field == "code" ? "recovery_code" : "code"
+        let message = FieldMessage(key: "Please fill this in.")
+        let both = [field: message, inactive: message]
+        let mapped = AuthFailureMapping(
+            .validation(fields: both, status: 422), displayedFields: [field], context: .twoFactor)
+        #expect(mapped.fields == [field: message] && mapped.banner == nil)
+        for (fields, context) in [
+            ([inactive: message], AuthFormContext.twoFactor),
+            (both.merging(["challengeId": message]) { first, _ in first }, .twoFactor),
+            (both, .signIn),
+            ([field: FieldMessage(key: "unknown server English"), inactive: message], .twoFactor),
+        ] {
+            #expect(
+                AuthFailureMapping(.validation(fields: fields, status: 422), displayedFields: [field], context: context)
+                    .banner == .server)
+        }
+    }
+
     @Test func onlyApprovedMessagesReachDisplayedFields() {
         let mapped = AuthFailureMapping(
             .validation(

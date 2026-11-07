@@ -46,7 +46,12 @@ nonisolated public struct AuthFailureMapping: Sendable, Equatable {
                 banner = .credentials
                 return
             }
+            let proofFields: Set<String> = ["code", "recovery_code"]
+            let activeProofHasError =
+                context == .twoFactor
+                && !displayedFields.intersection(proofFields).isDisjoint(with: messages.keys)
             for (name, message) in messages {
+                if activeProofHasError && proofFields.contains(name) && !displayedFields.contains(name) { continue }
                 if displayedFields.contains(name), AuthCopy.supports(message) {
                     fields[name] = message
                 } else {
