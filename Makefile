@@ -7,7 +7,7 @@ SWIFT_PATHS := App AppTests AppUITests RenderTests PerfUITests Packages/ChronoFl
 SIM_CONCURRENCY ?=
 SIM_RUNNER := SIM_CONCURRENCY=$(SIM_CONCURRENCY) python3 -I Scripts/launch-simulators.py
 
-.PHONY: generate format lint test snapshots audits duo perf tokens fonts assets auth-board-pngs generators-check launch-resources-check check simulator-check matrix targeted quick host-tests package-tests token-tests asset-tests
+.PHONY: generate format lint test snapshots audits duo perf tokens fonts assets auth-board-pngs generators-check launch-resources-check check simulator-check matrix targeted quick host-tests package-tests token-tests asset-tests contracts contracts-check
 
 generate:
 	$(XCODEGEN) generate
@@ -80,3 +80,9 @@ launch-resources-check:
 	python3 -I Tests/test_launch_simulators.py
 
 check: quick generators-check simulator-check
+
+contracts:
+	python3 -I Tools/contracts-gen/generate.py
+
+contracts-check:
+	Tools/contracts-check
