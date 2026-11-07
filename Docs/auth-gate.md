@@ -1,10 +1,10 @@
 # Auth acceptance gate — Phase 10b, task 2 (7 November 2026)
 
-Implementation and Mac verification are complete. **Acceptance remains open** for the user's
-simulator runs and Two-factor board review. The original task-2 verification used host checks and direct compilation. Round-1 runtime
-evidence comes from the user's saved results; no revised simulator pass is claimed. Phases 6–8 remain open; this gate does not close their accessibility,
-performance or physical-device requirements. Phase 10b task 2 remains unticked until the pending
-checks below have supplied results.
+The user's round-1 `make check` passes every suite except the same 80 subtitle contrast audit
+results; `make duo` completes in 404 seconds with only the keyboard-open toggle reveal assertion
+failing. This round implements the user's measured subtitle exception. Revised simulator execution
+and the existing Two-factor side-by-side board review remain open, so Phase 10b task 2 stays unticked.
+Phases 6–8 retain their accessibility, performance and physical-device gates.
 
 Matrix A means all seven D1c profiles in Mac geometry tests and hosted captures inside **one 17e**,
 plus 17e keyboard/routing/accessibility UI tests. It does not request seven simulator runtimes.
@@ -67,11 +67,16 @@ intentional root xxLarge cap is separately checked by AX5-equality snapshots. Au
 identifier, label, type, language/size, appearance and stage in logs/attachments, and do not stop the
 remaining controls from being audited. **No new audit pass is claimed until execution.**
 
-Only `(sign-in.guest, .contrast)` is allow-listed (OQ 33). Nil/prefix/other identifiers, combined
-issue types and every Two-factor control still fail. Generated/native guards retain the accepted
-border/guest-pill values and strict WCAG text contrast. The exemption adds no text-ratio waiver.
-At the board footer centre, text/pill remains 14.9260:1 light / 15.0953:1 dark, with its 90% opacity;
-the guest boundary/pill contrast acceptance is recorded in OQ 33.
+Only `(sign-in.guest, .contrast)` is unconditionally allow-listed (OQ 33), plus measured subtitle
+contrast exception, user 2026-11-07. An exact `auth.subtitle` contrast issue from Sign in or
+Two-factor may be ignored only when RenderedTextContrast measures every visible line ≥ 4.5:1
+from the app screenshot in that same language, appearance, size and reveal stage. A missing line,
+unavailable measurement or lower minimum fails. Source screenshots, per-line ratios and the measured
+minimum are retained in attachments/failures. Nil/prefix/other identifiers and combined types stay
+strict. The existing subtitle identifier is reused; there is no copy matching. Generated/native guards
+retain accepted border/guest-pill values. At the board footer centre, text/pill remains 14.9260:1
+light / 15.0953:1 dark, with its 90% opacity; the guest boundary/pill acceptance remains in OQ 33.
+See [auth-subtitle-contrast.md](auth-subtitle-contrast.md) for measurement details and prior evidence.
 
 Mac verification: `make quick`, runner selection/failure/skip/record-isolation fixtures, capture
 mutation tests and mock scenario/offline/persistence tests pass. `make generate` includes the new UI
@@ -94,7 +99,7 @@ protection/locked-device behavior, VoiceOver and physical launch/status-bar/120 
 proof remain in the original Phase 6–8/OQ 14 gates. Password-policy/reset/verification and real email
 entry remain blocked/deferred under OQ 21/22/25/27 in their named later phases.
 
-## Fix round 1
+## Fix round 1 (historical; subtitle policy superseded below)
 
 The user's 17e check and targeted rerun pass all suites except the recovery-session scroll query
 and strict subtitle contrast audit. Pushed screens now have distinct scroll identifiers; shared
@@ -120,3 +125,10 @@ overridable with `TEST_RUN_TIMEOUT`); timeout terminates xcodebuild's process gr
 destination without proceeding to another pass. Other check tiers retain their previous selection,
 with the added hosted contrast diagnostic on 17e. Task 2 stays open for execution, the strict audit
 discrepancy and the existing Two-factor visual review.
+
+## Fix round 2
+
+User decision 2026-11-07 adds the measured subtitle exception above. AuthAuditTests measures the
+actual screenshot within each eligible issue handler and fails closed. Shared host mutations and
+hosted subtitle diagnostics require ink from every visible line. No committed PNG changed.
+The keyboard-open reveal failure and Two-factor board comparison remain pending at this step.

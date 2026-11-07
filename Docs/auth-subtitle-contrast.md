@@ -1,8 +1,28 @@
-# Auth subtitle contrast, Phase 10b fix round 1
+# Auth subtitle contrast, Phase 10b fix round 2
 
-The 17e serial rerun still reports strict contrast failures. **There is no new exemption or design
-change.** The rendered failure screenshots do not reproduce a 4.5:1 text-contrast failure. An audit
-false positive is a hypothesis, not an accepted exception. Task 2 remains open.
+User decision, 2026-11-07: **ignore Apple's contrast result only for the Sign in and Two-factor
+subtitle, and only while rendered pixels prove every visible line is at least 4.5:1.** Every other
+text element stays strict. `(sign-in.guest, .contrast)` remains the only unconditional allow-list
+pair (OQ 33); this adds no token, design or snapshot change.
+
+`AuthAuditTests` matches the exact `auth.subtitle` accessibility identifier and `.contrast` type,
+then requires a unique static-text subtitle in the current auth scroll view with the issue's frame.
+Inside that issue handler it captures the app screenshot, reads the live safe-area/scroll/keyboard
+viewport and subtitle frame, derives scale from the raster/app bounds, and uses the audited
+appearance and default/xxLarge category with generated `skyTitle` and `Typography.authBody`.
+`RenderedTextContrast` decodes the screenshot to sRGB, finds actual rendered ink within each visible
+line, and samples the unobstructed sky at the same pixel rows behind it. CfSky is horizontally uniform.
+Every visible line must have measurable ink; missing lines, offscreen-only text, mismatched bounds,
+conversion/capture failures and minima below 4.5 fail. No ratio from a different screen, stage or
+hosted run can exempt an issue. Logs/retained attachments report context, frames, measured/expected
+line count, per-line ratios/ink and the overall measured minimum (or `unmeasurable`), alongside the
+source screenshot. Combined types, nil/prefix identifiers and every other text element stay strict.
+
+The user's round-1 `make check` passed the hosted pixel guard, capture guards, sessions and Release
+readiness. Its system audit repeated the same 80 subtitle results. The revised exception still needs
+the user's simulator execution; no new audit pass is claimed here.
+
+The following saved-crop measurements are **round-1 diagnostic evidence**, not inputs to the exception.
 
 The saved `build/test-results/17e/Debug-serial.xcresult` contains 80 failing subtitle element crops:
 32 English Two-factor, 32 Dutch Two-factor and 16 Dutch Sign in. Exported read-only with:
@@ -45,12 +65,11 @@ board sky, samples rendered text ink and sky behind each line, and prints ratios
 offsets. Missing ink and ratios below 4.5 fail. It never reads or writes snapshot references. The
 portable sampler has host checks for actual ink, blank lines and luminance arithmetic.
 
-The hosted test and revised strict UI audit need the user's simulator run. CoreSimulator access is
-denied in this sandbox; direct iOS compilation is not a hosted measurement pass. If the hosted
-measurement finds a board-matching ratio below 4.5, retain the audit failure and add a new Open
-question with those measured values, default **none — needs the user's design decision**. If pixels
-continue to pass while the system audit fails, investigate the audit discrepancy without widening
-OQ 33. The only allowed pair remains `(sign-in.guest, .contrast)`.
+The hosted guard now uses the same measurement-completeness check as the UI audit, including
+partially visible subtitles. Portable host mutations cover a missing second line (one passing line
+must not suffice), fully blank/invisible text and low contrast. UI policy checks pin exact identity,
+type, finite measurement and the 4.5 threshold. UIKit execution remains the user's check; CoreSimulator
+access is denied in this sandbox. Task 2 also retains its existing Two-factor side-by-side board review.
 
 ```sh
 make generate

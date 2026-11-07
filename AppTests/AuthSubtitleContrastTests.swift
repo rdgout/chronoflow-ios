@@ -74,9 +74,10 @@ nonisolated final class AuthSubtitleContrastTests: XCTestCase {
                                 let lineHeight =
                                     try XCTUnwrap(Typography.authBody.lineHeight) * font.pointSize
                                     / Typography.authBody.size
-                                let lines = RenderedTextContrast.lines(
+                                let measurement = RenderedTextContrast.measure(
                                     raster: raster, frame: subtitle, scale: host.scale, lineHeight: lineHeight,
                                     text: Array(rgb.prefix(3)).map(Double.init), viewport: viewport)
+                                let lines = measurement.lines
                                 let visible = subtitle.intersection(viewport)
                                 if !visible.isNull && !visible.isEmpty {
                                     for y in Int(visible.minY * host.scale)..<Int(visible.maxY * host.scale) {
@@ -91,6 +92,12 @@ nonisolated final class AuthSubtitleContrastTests: XCTestCase {
                                 let context =
                                     "\(fixture.name), \(language), \(style), \(category), mode=\(mode), reveal=\(target), offset=\(scroll.contentOffset.y), subtitle=\(subtitle)"
                                 print("Auth subtitle contrast [\(context)] visibleLines=\(lines.count)")
+                                if !visible.isNull && !visible.isEmpty {
+                                    XCTAssertNotNil(
+                                        measurement.minimum,
+                                        "Unmeasurable subtitle [\(context)], lines=\(lines.count)/\(measurement.expectedLines)"
+                                    )
+                                }
                                 if viewport.contains(subtitle) {
                                     XCTAssertEqual(
                                         lines.count, max(1, Int((subtitle.height / lineHeight).rounded())), context)

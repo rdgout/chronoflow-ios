@@ -63,6 +63,30 @@ struct AuthSnapshotCaptureTests {
         #expect(RenderedTextContrast.ratio(text, text) == 1)
     }
 
+    @Test func contrastMinimumRequiresEveryVisibleLineAndRejectsLowContrast() throws {
+        let frame = CGRect(x: 4, y: 4, width: 32, height: 24)
+        func measure(_ png: Data, ink: Double = 240.0 / 255, visible: CGRect? = nil) throws
+            -> RenderedTextContrast.Measurement
+        {
+            RenderedTextContrast.measure(
+                raster: try SnapshotRaster(png: png), frame: frame, scale: 1, lineHeight: 12,
+                text: [Double](repeating: ink, count: 3), viewport: visible ?? viewport)
+        }
+        let passing = try measure(png())
+        #expect(passing.expectedLines == 2)
+        #expect(passing.minimum! >= 4.5)
+        let missing = try measure(png(headingInk: false))
+        #expect(missing.lines.count == 1)
+        #expect(missing.expectedLines == 2)
+        #expect(missing.minimum == nil)
+        #expect(try measure(png(ink: false)).minimum == nil)
+        let failing = try measure(png(foreground: 120), ink: 120.0 / 255)
+        #expect(failing.lines.count == 2)
+        #expect(failing.minimum! < 4.5)
+        #expect(try measure(png(), visible: CGRect(x: 0, y: 0, width: 40, height: 16)).expectedLines == 1)
+        #expect(try measure(png(), visible: CGRect(x: 0, y: 30, width: 40, height: 20)).minimum == nil)
+    }
+
     @Test func rejectsBlankRecordingBeforeWritingAndKeepsComparisonReadOnly() throws {
         let root = FileManager.default.temporaryDirectory.appending(path: "auth-capture-\(UUID())")
         defer { try? FileManager.default.removeItem(at: root) }
@@ -89,13 +113,16 @@ struct AuthSnapshotCaptureTests {
             required: Set(self.frames.keys))
     }
 
-    private func png(ink: Bool = true, alpha: UInt8 = 255) throws -> Data {
+    private func png(ink: Bool = true, alpha: UInt8 = 255, headingInk: Bool = true, foreground: UInt8 = 240) throws
+        -> Data
+    {
         var bytes = [UInt8](repeating: 0, count: 40 * 60 * 4)
         for y in 0..<60 {
             for x in 0..<40 {
                 let index = (y * 40 + x) * 4
-                let marked = ink && (8..<24).contains(x) && ((6..<12).contains(y) || (20..<26).contains(y))
-                for channel in 0..<3 { bytes[index + channel] = marked ? 240 : UInt8(y) }
+                let marked =
+                    ink && (8..<24).contains(x) && ((6..<12).contains(y) || (headingInk && (20..<26).contains(y)))
+                for channel in 0..<3 { bytes[index + channel] = marked ? foreground : UInt8(y) }
                 bytes[index + 3] = alpha
             }
         }

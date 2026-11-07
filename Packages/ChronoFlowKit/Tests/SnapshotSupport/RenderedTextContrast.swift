@@ -2,6 +2,15 @@ import CoreGraphics
 import Foundation
 
 public nonisolated enum RenderedTextContrast {
+    public struct Measurement {
+        public let lines: [Line]
+        public let expectedLines: Int
+        public var minimum: Double? {
+            guard expectedLines > 0, lines.count == expectedLines else { return nil }
+            return lines.map(\.minimum).min()
+        }
+    }
+
     public struct Line {
         public let frame: CGRect
         public let minimum: Double
@@ -12,6 +21,9 @@ public nonisolated enum RenderedTextContrast {
     public static func lines(
         raster: SnapshotRaster, frame: CGRect, scale: CGFloat, lineHeight: CGFloat, text: [Double], viewport: CGRect
     ) -> [Line] {
+        guard scale.isFinite, scale > 0, lineHeight.isFinite, lineHeight > 0,
+            !frame.isEmpty, !frame.isInfinite, !frame.isNull
+        else { return [] }
         let count = max(1, Int((frame.height / lineHeight).rounded()))
         func pixel(_ x: Int, _ y: Int) -> [Double] {
             let start = (y * raster.width + x) * 4
@@ -48,6 +60,28 @@ public nonisolated enum RenderedTextContrast {
             let ratios = backgrounds.map { ratio(ink, $0) }
             return Line(frame: line, minimum: ratios.min()!, maximum: ratios.max()!, ink: ink)
         }
+    }
+
+    public static func measure(
+        raster: SnapshotRaster, frame: CGRect, scale: CGFloat, lineHeight: CGFloat, text: [Double], viewport: CGRect
+    ) -> Measurement {
+        let lines = lines(
+            raster: raster, frame: frame, scale: scale, lineHeight: lineHeight, text: text, viewport: viewport)
+        guard scale.isFinite, scale > 0, lineHeight.isFinite, lineHeight > 0,
+            !frame.isEmpty, !frame.isInfinite, !frame.isNull
+        else { return Measurement(lines: [], expectedLines: 0) }
+        let count = max(1, Int((frame.height / lineHeight).rounded()))
+        let expected = (0..<count).filter { index in
+            let line = CGRect(
+                x: frame.minX, y: frame.minY + CGFloat(index) * lineHeight,
+                width: frame.width, height: min(lineHeight, frame.height - CGFloat(index) * lineHeight))
+            let visible = line.intersection(viewport)
+            return !visible.isEmpty && !visible.isNull
+        }.count
+        let visible = frame.intersection(viewport)
+        let bounds = CGRect(x: 0, y: 0, width: CGFloat(raster.width) / scale, height: CGFloat(raster.height) / scale)
+        guard bounds.contains(visible) else { return Measurement(lines: [], expectedLines: expected) }
+        return Measurement(lines: lines, expectedLines: expected)
     }
 
     public static func ratio(_ first: [Double], _ second: [Double]) -> Double {
