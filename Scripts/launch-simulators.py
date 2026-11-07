@@ -407,6 +407,8 @@ def prepare(destination):
     if destination.state != "Booted":
         run(["xcrun", "simctl", "boot", destination.udid], log=log)
     run(["xcrun", "simctl", "bootstatus", destination.udid, "-b"], log=log)
+    run(["xcrun", "simctl", "spawn", destination.udid, "defaults", "write",
+         "com.apple.keyboard.preferences", "AutomaticMinimizationEnabled", "-bool", "false"], log=log)
     installed = run(["xcrun", "simctl", "get_app_container", destination.udid, "net.chronoflow.app.native", "app"], capture=True, check=False)
     if installed.returncode == 0:
         run(["xcrun", "simctl", "uninstall", destination.udid, "net.chronoflow.app.native"], log=log)
@@ -439,6 +441,8 @@ IOS_METHODS = (
 def selection(mode, alias, only=(), include_logic=True, include_matrix=True):
     if only:
         return expand(only)
+    if mode == "perf":
+        return selectors("perf")
     if mode == "snapshots":
         return list(SNAPSHOTS) + ["AppTests/SnapshotContainerTests"]
     if mode in ("check", "test", "runtime"):
@@ -462,14 +466,21 @@ def selection(mode, alias, only=(), include_logic=True, include_matrix=True):
 
 def configurations(selected):
     release = set(selectors("release"))
-    groups = {"Debug": [], "Release": []}
+    perf = set(selectors("perf"))
+    groups = {"Debug": [], "Release": [], "Perf": []}
     for suite in selected:
-        groups["Release" if any(suite == s or suite.startswith(s + "/") for s in release) else "Debug"].append(suite)
+        if any(suite == s or suite.startswith(s + "/") for s in perf):
+            configuration = "Perf"
+        elif any(suite == s or suite.startswith(s + "/") for s in release):
+            configuration = "Release"
+        else:
+            configuration = "Debug"
+        groups[configuration].append(suite)
     return {config: suites for config, suites in groups.items() if suites}
 
 
 def build_command(configuration):
-    scheme = "ChronoFlow" if configuration == "Debug" else "ReadinessRelease"
+    scheme = {"Debug": "ChronoFlow", "Release": "ReadinessRelease", "Perf": "Perf"}[configuration]
     return XCODEBUILD_COMMON + ["-scheme", scheme, "-configuration", configuration]
 
 
@@ -495,7 +506,7 @@ def result_nodes(value, target=None):
             target = name if name in SUITES else target
         if kind == "Test Case":
             identifier = str(value.get("nodeIdentifier", ""))
-            qualified = next((s.split("/")[0] for s in selectors("logic") + selectors("matrix") + selectors("release") + selectors("profiles")
+            qualified = next((s.split("/")[0] for s in selectors("logic") + selectors("matrix") + selectors("release") + selectors("profiles") + selectors("perf")
                               if identifier.startswith(s + "/")), target)
             yield dict(value, target=qualified)
         for child in value.values():
@@ -700,7 +711,7 @@ if __name__ == "__main__":
     parser.add_argument("--reuse-build", action="store_true", help="reuse the last build-for-testing products; rebuild after source/project changes")
     parser.add_argument("--intro-order-check", action="store_true", help="compare the 2700 ms frame in fresh and warmed test processes; never overwrite baselines")
     parser.add_argument("--no-generate", action="store_true")
-    parser.add_argument("--mode", choices=("check", "test", "snapshots", "runtime"), default="check")
+    parser.add_argument("--mode", choices=("check", "test", "snapshots", "runtime", "perf"), default="check")
     parser.add_argument("--matrix", action="store_true", help="explicitly request the seven-device matrix")
     for flag in ("timeline", "scene", "snapshots", "readiness", "welcome"):
         parser.add_argument("--" + flag, action="store_true", help="compatibility matrix entry point; uses the suite classification")

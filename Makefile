@@ -3,8 +3,6 @@ SHELL := /bin/sh
 .NOTPARALLEL:
 
 XCODEGEN ?= /opt/homebrew/bin/xcodegen
-DESTINATION := platform=iOS Simulator,name=iPhone 17e,OS=27.2
-XCODEBUILD := xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData -onlyUsePackageVersionsFromResolvedFile
 SWIFT_PATHS := App AppTests AppUITests RenderTests PerfUITests Packages/ChronoFlowKit/Package.swift Packages/ChronoFlowKit/Sources Packages/ChronoFlowKit/Tests $(wildcard Tools/*/Package.swift Tools/*/Sources Tools/*/Tests)
 SIM_CONCURRENCY ?=
 SIM_RUNNER := SIM_CONCURRENCY=$(SIM_CONCURRENCY) python3 -I Scripts/launch-simulators.py
@@ -41,7 +39,7 @@ targeted:
 	$(SIM_RUNNER) --no-generate --devices $(DEVICES) --only $(foreach selector,$(ONLY),'$(selector)') $(if $(filter 1,$(REUSE_BUILD)),--reuse-build,)
 
 perf:
-	$(XCODEBUILD) -destination '$(DESTINATION)' -scheme Perf -configuration Perf test
+	$(SIM_RUNNER) --no-generate --devices 17e --mode perf
 
 tokens:
 	sh Scripts/swiftpm.sh run TokenGen TokenGen

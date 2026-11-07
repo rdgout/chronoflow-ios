@@ -143,7 +143,7 @@ class ClassificationTests(unittest.TestCase):
         self.assertIn('CHRONOFLOW_READINESS = native', (ROOT / 'Config/Base.xcconfig').read_text())
         perf = project.split('\n  Perf:\n    build:')[1]
         self.assertEqual(perf.count('config: Perf'), 3)
-        self.assertIn('-configuration Perf test', (ROOT / 'Makefile').read_text())
+        self.assertIn('--devices 17e --mode perf', (ROOT / 'Makefile').read_text())
         for suite in ('AppCoreTests/SignOutTests', 'AppCoreTests/StoredDataReadinessTests',
                       'SyncTests/SyncTriggerTests', 'SyncTests/SessionSyncReadinessTests', 'SyncTests/SessionWipeTests', 'LocalStoreTests/AccountWiperTests', 'LocalStoreTests/AccountReadinessTests'):
             self.assertIn(suite, runner.selectors('host'))
@@ -344,6 +344,64 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(status, 0, output)
         self.assertEqual(sum(c[:3] == ['xcrun', 'simctl', 'boot'] for c in self.commands), 1)
         self.assertFalse(any('uninstall' in c for c in self.commands))
+
+    def test_software_keyboard_is_enabled_after_boot_before_every_ui_run(self):
+        for mode, aliases, only, reuse in [
+            ('check', ['17e'], (), False),
+            ('runtime', ['duo'], (), False),
+            ('check', ['se', 'duo'], ['AppUITests/TwoFactorKeyboardTests'], True),
+            ('matrix', list(runner.MATRIX), (), False),
+        ]:
+            for state in ('Shutdown', 'Booted'):
+                with self.subTest(mode=mode, aliases=aliases, state=state):
+                    self.commands.clear()
+                    for devices in self.devices.values():
+                        for device in devices:
+                            device['state'] = state
+                    status, output = self.execute(mode=mode, aliases=aliases, only=only, reuse_build=reuse)
+                    self.assertEqual(status, 0, output)
+                    for alias in aliases:
+                        destination = runner.resolve(alias, self.devices)
+                        write = ['xcrun', 'simctl', 'spawn', destination.udid, 'defaults', 'write',
+                                 'com.apple.keyboard.preferences', 'AutomaticMinimizationEnabled', '-bool', 'false']
+                        self.assertEqual(self.commands.count(write), 1)
+                        ready = self.commands.index(['xcrun', 'simctl', 'bootstatus', destination.udid, '-b'])
+                        configured = self.commands.index(write)
+                        self.assertLess(ready, configured)
+                        boot = ['xcrun', 'simctl', 'boot', destination.udid]
+                        if state == 'Shutdown':
+                            self.assertLess(self.commands.index(boot), ready)
+                        else:
+                            self.assertNotIn(boot, self.commands)
+                        tests = [c for c in self.commands_for_tests() if destination.flag in c]
+                        self.assertTrue(tests)
+                        for command in tests:
+                            self.assertLess(configured, self.commands.index(command))
+                    self.assertFalse(any(c[0] == 'defaults' for c in self.commands))
+
+    def test_keyboard_preference_failure_stops_ui_tests_for_that_device(self):
+        self.command_failure = lambda c: 'AutomaticMinimizationEnabled' in c
+        status, output = self.execute(aliases=['se'], only=['AppUITests/TwoFactorKeyboardTests'])
+        self.assertEqual(status, 1, output)
+        self.assertIn('Preparation:', output)
+        self.assertEqual(self.commands_for_tests(), [])
+
+    def test_perf_uses_shared_preparation_and_keeps_its_scheme_and_configuration(self):
+        status, output = self.execute(mode='perf', aliases=['17e'])
+        self.assertEqual(status, 0, output)
+        builds = [c for c in self.commands if c[-1] == 'build-for-testing']
+        self.assertEqual(len(builds), 1)
+        tests = self.commands_for_tests()
+        self.assertEqual(len(tests), 1)
+        for command in builds + tests:
+            self.assertEqual(command[command.index('-scheme') + 1], 'Perf')
+            self.assertEqual(command[command.index('-configuration') + 1], 'Perf')
+            self.assertNotIn('ENABLE_TESTABILITY=YES', command)
+        self.assertIn('-only-testing:PerfUITests/LaunchPerfTests', tests[0])
+        write = next(c for c in self.commands if 'AutomaticMinimizationEnabled' in c)
+        self.assertEqual(write[3], 'device-1')
+        self.assertLess(self.commands.index(write), self.commands.index(tests[0]))
+        self.assertIn('PASS 17e Perf-compare PerfUITests/LaunchPerfTests', output)
 
     def test_per_device_result_paths_and_suite_summaries(self):
         status, output = self.execute()
