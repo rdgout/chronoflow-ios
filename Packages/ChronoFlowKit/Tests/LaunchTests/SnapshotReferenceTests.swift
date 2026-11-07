@@ -6,6 +6,19 @@ import Testing
 import UniformTypeIdentifiers
 
 @Suite struct SnapshotReferenceTests {
+    @Test func missingReferencesNameThePathWithoutAssumingAScreenOrRecording() throws {
+        let directory = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+            .appendingPathComponent("../../../../build/SnapshotReferenceTests/\(UUID().uuidString)").standardizedFileURL
+        let sample = try SnapshotReference.Sample(png: fixture(comment: "missing", compressed: true))
+        for path in ["Welcome/fixture.png", "Auth/SignIn/en.png", "Auth/TwoFactor/code.png"] {
+            let reference = directory.appendingPathComponent(path)
+            #expect(
+                try SnapshotReference.verify(sample: sample, reference: reference, record: false)
+                    == "Missing snapshot reference: \(reference.path). Record explicitly with SNAPSHOT_RECORD=1.")
+        }
+        #expect(!FileManager.default.fileExists(atPath: directory.path))
+    }
+
     @Test func encodedMetadataAndCompressionDoNotChangeComparison() throws {
         let directory = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
             .appendingPathComponent("../../../../build/SnapshotReferenceTests/\(UUID().uuidString)").standardizedFileURL
