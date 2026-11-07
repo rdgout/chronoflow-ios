@@ -388,6 +388,42 @@ def environment(record=False, intro_order=None):
     return result
 
 
+_ACTIVE_RUNS = set()
+_RUN_LOCK = threading.RLock()
+_RUN_SIGNAL = None
+
+
+def signal_group(process, signum):
+    try:
+        os.killpg(process.pid, signum)
+    except ProcessLookupError:
+        pass
+
+
+@contextmanager
+def forward_run_signals():
+    global _RUN_SIGNAL
+    previous = {signum: signal.getsignal(signum) for signum in (signal.SIGINT, signal.SIGTERM)}
+
+    def interrupted(signum, frame):
+        global _RUN_SIGNAL
+        _RUN_SIGNAL = signum
+        with _RUN_LOCK:
+            for process in _ACTIVE_RUNS:
+                signal_group(process, signum)
+        raise SystemExit(128 + signum)
+
+    _RUN_SIGNAL = None
+    for signum in previous:
+        signal.signal(signum, interrupted)
+    try:
+        yield
+    finally:
+        for signum, handler in previous.items():
+            signal.signal(signum, handler)
+        _RUN_SIGNAL = None
+
+
 def run(command, *, log=None, capture=False, record=False, check=True, intro_order=None, timeout=None):
     print("+ " + shlex.join(map(str, command)), flush=True)
     kwargs = dict(cwd=ROOT, text=True, env=environment(record, intro_order), check=check)
@@ -400,26 +436,41 @@ def run(command, *, log=None, capture=False, record=False, check=True, intro_ord
         if timeout is None:
             return subprocess.run(command, stdout=output, stderr=subprocess.STDOUT, **kwargs)
         options = {key: value for key, value in kwargs.items() if key != "check"}
+        if _RUN_SIGNAL is not None:
+            raise SystemExit(128 + _RUN_SIGNAL)
         with subprocess.Popen(command, stdout=output, stderr=subprocess.STDOUT, start_new_session=True, **options) as process:
+            with _RUN_LOCK:
+                _ACTIVE_RUNS.add(process)
+            deadline = time.monotonic() + timeout
             try:
-                process.communicate(timeout=timeout)
-            except subprocess.TimeoutExpired:
+                while True:
+                    if _RUN_SIGNAL is not None:
+                        raise SystemExit(128 + _RUN_SIGNAL)
+                    remaining = deadline - time.monotonic()
+                    if remaining <= 0:
+                        raise subprocess.TimeoutExpired(command, timeout)
+                    try:
+                        process.communicate(timeout=min(0.1, remaining))
+                        break
+                    except subprocess.TimeoutExpired:
+                        continue
+                if _RUN_SIGNAL is not None:
+                    raise SystemExit(128 + _RUN_SIGNAL)
+            except BaseException as error:
+                signal_group(process, _RUN_SIGNAL or signal.SIGTERM)
                 try:
-                    os.killpg(process.pid, signal.SIGTERM)
-                except ProcessLookupError:
-                    pass
-                try:
-                    process.communicate(timeout=5)
+                    process.communicate(timeout=1 if _RUN_SIGNAL else 5)
                 except subprocess.TimeoutExpired:
                     pass
                 # Kill descendants even when xcodebuild exits before its test workers.
-                try:
-                    os.killpg(process.pid, signal.SIGKILL)
-                except ProcessLookupError:
-                    pass
+                signal_group(process, signal.SIGKILL)
                 process.communicate()
-                output.write(f"Test run timed out after {timeout:g}s; terminated process group\n")
+                if isinstance(error, subprocess.TimeoutExpired):
+                    output.write(f"Test run timed out after {timeout:g}s; terminated process group\n")
                 raise
+            finally:
+                with _RUN_LOCK:
+                    _ACTIVE_RUNS.discard(process)
             completed = subprocess.CompletedProcess(command, process.returncode)
             if check:
                 completed.check_returncode()
@@ -770,6 +821,7 @@ if __name__ == "__main__":
     matrix_requested = args.matrix or args.timeline or args.scene or args.readiness or args.welcome
     mode = "launch-snapshots" if args.snapshots and not args.scene else "matrix" if matrix_requested else args.mode
     try:
-        raise SystemExit(main(mode, args.devices, args.only or (), reuse_build=args.reuse_build, generate=not args.no_generate, intro_order_check=args.intro_order_check))
+        with forward_run_signals():
+            raise SystemExit(main(mode, args.devices, args.only or (), reuse_build=args.reuse_build, generate=not args.no_generate, intro_order_check=args.intro_order_check))
     except (subprocess.CalledProcessError, OSError, ValueError, KeyError, RuntimeError) as error:
         parser.exit(1, str(error) + "\n")

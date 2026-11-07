@@ -1,9 +1,9 @@
 # Auth acceptance gate — Phase 10b, task 2 (7 November 2026)
 
-The user's round-1 `make check` passes every suite except the same 80 subtitle contrast audit
-results; `make duo` completes in 404 seconds with only the keyboard-open toggle reveal assertion
-failing. This round implements the user's measured subtitle exception and fixes the keyboard-open
-reveal helper. Revised simulator execution and the existing Two-factor side-by-side board review remain open, so Phase 10b task 2 stays unticked.
+The user reports `make check` (17e) and `make duo` completely passing at 4a3e3ea. Fix round 3
+strengthens the local subtitle measurement, sky-column guard, signal cancellation and keyboard
+gesture regression tests. The updated tests need the user's simulator reruns; the Two-factor
+side-by-side board review is running separately. Phase 10b task 2 stays unticked.
 Phases 6–8 retain their accessibility, performance and physical-device gates.
 
 Matrix A means all seven D1c profiles in Mac geometry tests and hosted captures inside **one 17e**,
@@ -152,3 +152,23 @@ focus/toggle interaction still needs the user's runtime run.
 claimed: CoreSimulator access is denied here. Pending: `make check` (including the new hosted test
 and measured audit), `make duo`, and the existing Two-factor side-by-side board comparison.
 Task 2 stays unticked because visual review also remains. Committed snapshot PNGs are untouched.
+
+## Fix round 3 — test fidelity
+
+Contrast now samples clean pixels inside each line and uses its worst background. A substantial
+near-token ink fraction is required, so one opaque pixel cannot hide mostly dimmed text. The hosted
+sky guard compares the subtitle's columns to the matching x/y pixels in its full-window reference.
+The measured subtitle exception remains conditional on ≥ 4.5:1; unavailable measurements fail.
+Portable fixtures cover local bright patches, missing backgrounds, partial dimming and antialiasing.
+
+The Duo gesture regression now uses the same extracted viewport calculation as AuthUIFlow, with
+window, safe area, scroll and visible keyboard inputs. It rejects the recorded (233, 439) start,
+checks the no-keyboard case and moves the keyboard edge to verify the gesture follows it.
+
+The runner forwards SIGINT/SIGTERM to all active test process groups, polls cancellation in worker
+threads and kills unresponsive descendants after a one-second grace. The per-run timeout remains.
+A real-subprocess fixture checks both signals against two simultaneous groups and their descendants,
+including processes that ignore the forwarded signal; exit must occur within four seconds.
+
+Validation: `make quick` passes; no committed snapshot PNG changes. Only the user's updated
+simulator reruns and the separate Two-factor side-by-side board review remain for task 2.

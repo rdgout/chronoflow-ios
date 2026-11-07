@@ -5,13 +5,15 @@ import os
 from pathlib import Path
 import re
 import runpy
+import signal
+import sys
 import subprocess
 import threading
 import tempfile
 import time
 from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 ROOT = Path(__file__).resolve().parents[1]
 (ROOT / 'build').mkdir(exist_ok=True)
@@ -64,6 +66,70 @@ class TimeoutTests(unittest.TestCase):
             with self.assertRaises(subprocess.TimeoutExpired):
                 runner.run(['python3', '-c', 'import time; time.sleep(30)'], log=log, timeout=0.1)
             self.assertIn('Test run timed out after 0.1s', log.read_text())
+
+    def test_interrupts_forward_to_worker_process_groups_and_exit_promptly(self):
+        for signum in (signal.SIGINT, signal.SIGTERM):
+            with self.subTest(signal=signum), tempfile.TemporaryDirectory(dir=ROOT / 'build') as directory:
+                scratch = Path(directory)
+                child = scratch / 'child.py'
+                child.write_text("""import os
+from pathlib import Path
+import signal
+import subprocess
+import sys
+import time
+root, name = Path(sys.argv[1]), sys.argv[2]
+def interrupted(signum, frame):
+    (root / (name + '.signal')).write_text(str(signum))
+for signum in (signal.SIGINT, signal.SIGTERM):
+    signal.signal(signum, interrupted)
+if not name.endswith('-grandchild'):
+    subprocess.Popen([sys.executable, __file__, str(root), name + '-grandchild'])
+(root / (name + '.pid')).write_text(str(os.getpid()))
+while True:
+    (root / (name + '.heartbeat')).write_text(str(time.monotonic()))
+    time.sleep(0.05)
+""")
+                driver = scratch / 'driver.py'
+                driver.write_text("""from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+import runpy
+import sys
+runner = runpy.run_path(sys.argv[1])
+scratch = Path(sys.argv[2])
+with runner['forward_run_signals']():
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = [pool.submit(runner['run'], [sys.executable, str(scratch / 'child.py'), str(scratch), str(i)],
+                               log=scratch / (str(i) + '.log'), timeout=30) for i in range(2)]
+        for future in futures:
+            future.result()
+""")
+                with subprocess.Popen([sys.executable, str(driver), str(ROOT / 'Scripts/launch-simulators.py'), str(scratch)],
+                                      stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) as process:
+                    try:
+                        deadline = time.monotonic() + 5
+                        while len(list(scratch.glob('*.pid'))) < 4 and time.monotonic() < deadline:
+                            time.sleep(0.01)
+                        self.assertEqual(len(list(scratch.glob('*.pid'))), 4)
+                        started = time.monotonic()
+                        process.send_signal(signum)
+                        output, _ = process.communicate(timeout=4)
+                        self.assertEqual(process.returncode, 128 + signum, output)
+                        self.assertLess(time.monotonic() - started, 4)
+                        self.assertEqual(len(list(scratch.glob('*.signal'))), 4)
+                        self.assertTrue(all(p.read_text() == str(signum) for p in scratch.glob('*.signal')))
+                        heartbeats = {p: p.read_text() for p in scratch.glob('*.heartbeat')}
+                        self.assertEqual(len(heartbeats), 4)
+                        time.sleep(0.15)
+                        self.assertEqual(heartbeats, {p: p.read_text() for p in heartbeats})
+                    finally:
+                        if process.poll() is None:
+                            process.kill()
+                        for pid in scratch.glob('*.pid'):
+                            try:
+                                os.kill(int(pid.read_text()), signal.SIGKILL)
+                            except ProcessLookupError:
+                                pass
 
     def test_timeout_marks_selection_failed_and_skips_later_passes(self):
         destination = runner.Destination('duo', 'test', 'Booted')
@@ -313,7 +379,7 @@ class RunnerTests(unittest.TestCase):
             return subprocess.CompletedProcess(command, status, '')
         def fake_popen(command, **options):
             completed = fake_run(command, **options)
-            process = SimpleNamespace(returncode=completed.returncode, communicate=lambda **_: (None, None))
+            process = Mock(returncode=completed.returncode, communicate=Mock(return_value=(None, None)))
             return contextlib.nullcontext(process)
         output = io.StringIO()
         with patch.dict(runner.main.__globals__, ROOT=self.scratch, TIMINGS_PATH=self.scratch / 'build/test-results/timings.json', machine_resources=lambda: (14, 36 * 1024**3)), patch.object(runner.subprocess, 'run', side_effect=fake_run), patch.object(runner.subprocess, 'Popen', side_effect=fake_popen), contextlib.redirect_stdout(output):
