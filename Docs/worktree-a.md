@@ -94,3 +94,34 @@ Logs: `build/round1-quick.log`, `build/round1-quick-remainder.log`,
 
 Only host verification was run. Runtime layout, VoiceOver behavior and visual
 reference acceptance remain for the user's simulator session.
+
+## Tab snapshot capture repair (2026-11-08)
+
+`AppTabsSnapshotTests` now uses `SystemTabsSnapshotHost` to capture the production
+TabView with `drawHierarchy(afterScreenUpdates: true)` in a key, visible window.
+The window supplies the profile's four native safe-area insets; UIKit inherits
+the profile's display scale, compact/regular size classes, appearance and capped
+Dynamic Type traits. The other screen suites keep their existing layer capture.
+The shared Plan snapshot variants and reference naming remain unchanged: 15 tab
+references across 17e, SE and Duo, with en/nl × light/dark and en/light xxLarge.
+
+An isolated local account with a successful-sync marker and no trips reaches the
+designed TripsEmpty screen. The test selects My trips through UITabBarController
+and its existing delegate, waits for the empty screen's accessibility identifier
+and stable tab-bar geometry, then captures. No production UI or test hook was added.
+Before any reference can be written, throwing guards require a visible, attached
+UITabBar with three symbol images and the selected My trips item, correct profile
+geometry/traits, a successful hierarchy draw and visible ink in the tab-bar region.
+The test also asserts all three localized item titles. Hosted rejection tests
+exercise missing, hidden and incomplete bars, wrong selection and blank images.
+
+Host verification: `make lint` passes. `make host-tests` passes all package tests
+except the existing `APICookieTests.realRedirectCookieHandlingIsDisabled` loopback
+listener EPERM. `make token-tests asset-tests launch-resources-check` passes the
+remaining host tiers (10 TokenGen tests, 7 AssetGen tests, 98 resource/runner tests).
+Direct Swift 6 iOS 17 SDK compilation checks the app and hosted test sources without
+launching a simulator. Logs are `build/tabs-snapshot-{lint,host-tests,host-remainder,typecheck}.log`.
+No simulator commands ran and no references were recorded. Runtime capture,
+comparison and visual reference acceptance remain for the user's recording pass.
+The repair is delivered as `build/commits/1.patch` against `a792f50`, with its
+Conventional Commit subject in `build/commits/messages.txt`.
