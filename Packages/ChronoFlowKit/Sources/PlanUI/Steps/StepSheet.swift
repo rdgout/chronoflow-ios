@@ -186,12 +186,4 @@
         }
     }
 
-    func priorityKey(_ priority: Priority) -> String {
-        switch priority {
-        case .core: "Important"
-        case .recommended: "Recommended"
-        case .optional: "Optional"
-        default: "Information"
-        }
-    }
 #endif

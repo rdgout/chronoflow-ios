@@ -40,7 +40,7 @@ import Sync
         dayID: String? = nil, blockID: String? = nil, keptDay: String? = nil, awaitingSync: Bool = false,
         path: (any SyncPathMonitoring)? = TripPagePathMonitor(),
         timeFormat: TimeFormat = .value24, hiddenCategories: [BlockType] = [],
-        clock: any PlanClock = SystemPlanClock(), now: Date = Date(),
+        clock: any PlanClock = SystemPlanClock(), now: Date = Date(), mutationPermit: SessionMutationPermit? = nil,
         fetchDetail: @escaping @Sendable (String) async throws -> Void = { _ in }
     ) {
         self.tripID = tripID
@@ -52,7 +52,8 @@ import Sync
         self.keptDay = keptDay
         self.awaitingSync = awaitingSync
         self.fetchDetail = fetchDetail
-        plan = TripPlanModel(tripID: tripID, repository: repository, clock: clock, now: now)
+        plan = TripPlanModel(
+            tripID: tripID, repository: repository, clock: clock, now: now, mutationPermit: mutationPermit)
         plan.timeFormat = timeFormat
         plan.hiddenCategories = hiddenCategories
     }

@@ -3,6 +3,7 @@ import Foundation
 import LocalStore
 
 public actor SessionSync {
+    public nonisolated let retention = PlanRetention()
     private let accounts: SessionAccountDatabase
     private let source: @Sendable (StoredSession) async -> any DataSource
     private let isCurrent: @Sendable (StoredSession, UInt64) async -> Bool
@@ -67,7 +68,7 @@ public actor SessionSync {
         let lifecycle = SyncLifecycle(
             database: database, source: source, epoch: SyncEpoch(accountID: id, generation: epoch),
             scheduler: scheduler, retryState: retryContext?.epoch == epoch ? retryContext!.state : SyncRetryState(),
-            path: makePath(), unauthorized: unauthorized, verification: verification)
+            path: makePath(), retention: retention, unauthorized: unauthorized, verification: verification)
         self.lifecycle = lifecycle
         attachedEpoch = epoch
         retryContext = nil
@@ -104,6 +105,25 @@ public actor SessionSync {
     public func refreshNow() async throws -> SyncResult? { try await lifecycle?.refreshNow() }
     public func stop() async { await detach(preservingRetry: false) }
 
+    public func fetchDetail(tripID: String, session: StoredSession, epoch: UInt64) async throws {
+        guard enabled, await isCurrent(session, epoch) else { throw CancellationError() }
+        if attachedEpoch != epoch || lifecycle == nil { await start(session: session, epoch: epoch) }
+        guard enabled, attachedEpoch == epoch, let lifecycle, await isCurrent(session, epoch) else {
+            throw CancellationError()
+        }
+        do {
+            try await lifecycle.engine.fetchDetail(tripID: tripID)
+        } catch let failure as DataFailure {
+            guard await isCurrent(session, epoch) else { throw CancellationError() }
+            switch failure {
+            case .unauthorized: await unauthorized(epoch)
+            case .emailUnverified: await verification(epoch)
+            default: break
+            }
+            throw failure
+        }
+    }
+
     public func events() -> AsyncStream<SyncEvent> {
         let id = UUID()
         let (stream, continuation) = AsyncStream<SyncEvent>.makeStream(bufferingPolicy: .bufferingNewest(1))
@@ -132,7 +152,10 @@ public actor SessionSync {
         eventTask = nil
         previousEvents?.cancel()
         await previousEvents?.value
-        if !preservingRetry { retryContext = nil }
+        if !preservingRetry {
+            retryContext = nil
+            retention.clear()
+        }
         await previous?.stop()
         if preservingRetry, self.generation == generation, let epoch, let previous {
             retryContext = (epoch, await previous.retryState)

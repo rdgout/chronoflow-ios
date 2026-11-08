@@ -20,6 +20,43 @@ private actor ReadinessControllerReference {
 }
 
 @Suite struct SessionSyncReadinessTests {
+    @Test func routedTripUsesTheSessionStoreAndKeepsItsPlanAcrossSyncRestarts() async throws {
+        let store = try await SyncStore()
+        let accounts = SessionAccountDatabase(
+            applicationSupport: store.root.appendingPathComponent("page"), namespace: .mock)
+        try await accounts.open(accountID: AccountID(syncAccount))
+        let database = try #require(await accounts.activeDatabase())
+        let source = ScriptedSource()
+        await source.configure(trips: [card(keep: false)])
+        let clock = ManualSyncScheduler()
+        let session = StoredSession(token: "test", accountId: syncAccount)
+        let sync = SessionSync(
+            accounts: accounts, scheduler: SyncScheduler(now: { syncDate }, sleep: { try await clock.sleep($0) }),
+            source: { _ in source }, isCurrent: { value, epoch in value == session && epoch == 1 },
+            unauthorized: { _ in }, verification: { _ in })
+        await sync.start(session: session, epoch: 1)
+        _ = try await sync.refreshNow()
+        let repository = TripRepository(database: database)
+        #expect(try await repository.plan(tripID: syncTrip, inputHash: "hash") == nil)
+        let lease = sync.retention.hold(tripID: syncTrip)
+        try await sync.fetchDetail(tripID: syncTrip, session: session, epoch: 1)
+        #expect(try await repository.plan(tripID: syncTrip, inputHash: "hash") != nil)
+        await sync.setEnabled(false)
+        await sync.setEnabled(true)
+        await sync.resume(session: session, epoch: 1)
+        _ = try await sync.refreshNow()
+        #expect(try await repository.plan(tripID: syncTrip, inputHash: "hash") != nil)
+        await #expect(throws: CancellationError.self) {
+            try await sync.fetchDetail(tripID: syncTrip, session: session, epoch: 2)
+        }
+        lease.release()
+        _ = try await sync.refreshNow()
+        #expect(try await repository.plan(tripID: syncTrip, inputHash: "hash") == nil)
+        await sync.stop()
+        try await accounts.close()
+        try await store.close()
+    }
+
     @Test func storedSessionResolvesWhileProductionSyncSourceStartupIsSuspended() async throws {
         let store = try await SyncStore()
         let accounts = SessionAccountDatabase(

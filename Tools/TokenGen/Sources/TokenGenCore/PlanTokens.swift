@@ -3,7 +3,7 @@ import Foundation
 public func planTokenOutputs(root: URL) throws -> [String: Data] {
     let source =
         try JSONSerialization.jsonObject(
-            with: Data(contentsOf: root.appending(path: "Tools/TokenGen/plan-tokens.json"))) as! [String: Any]
+            with: Data(contentsOf: root.appending(path: "Tools/TokenGen/Plan.source.json"))) as! [String: Any]
     let design =
         try JSONSerialization.jsonObject(
             with: Data(contentsOf: root.appending(path: "_design/canvas/ds/chronoflow/tokens.json"))) as! [String: Any]
@@ -42,6 +42,7 @@ public func planTokenOutputs(root: URL) throws -> [String: Data] {
     }
     type += "}\n"
     return [
+        "Tools/TokenGen/plan-tokens.json": try jsonData(source),
         "Packages/ChronoFlowKit/Sources/PlanCore/PlanMetrics.generated.swift": try formattedSwift(metrics, root: root),
         "Packages/ChronoFlowKit/Sources/DesignSystem/PlanTypeMetrics.generated.swift": try formattedSwift(
             type, root: root),

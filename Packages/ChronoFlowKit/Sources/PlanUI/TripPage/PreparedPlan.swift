@@ -204,9 +204,6 @@ nonisolated public func preparePlan(
 
 }
 
-nonisolated public func checkIdentity(_ key: CheckKeyView) -> String {
-    "\(key.type.rawValue)|\(key.localDate)|\(key.ordinal)"
-}
 nonisolated public func priorityKey(_ priority: Priority) -> String {
     switch priority {
     case .core: "Important"

@@ -46,7 +46,7 @@ nonisolated struct PlanCategoryStyle {
     }
 }
 
-struct PriorityTag: View {
+struct TripPagePriorityTag: View {
     let label: String
     var body: some View {
         Text(verbatim: label).font(Typography.planPriority.font)
@@ -90,7 +90,7 @@ nonisolated struct PlanPattern: Shape {
     }
 }
 
-struct CategorySwatch: View {
+struct TripPageCategorySwatch: View {
     let type: BlockType
     var body: some View {
         let style = PlanCategoryStyle(type)

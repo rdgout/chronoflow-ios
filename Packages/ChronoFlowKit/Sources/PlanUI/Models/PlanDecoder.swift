@@ -55,8 +55,8 @@ public actor PlanDecoder {
                         card: card, planStartUtc: record.planStartUtc, planEndUtc: record.planEndUtc,
                         status: tripDisplayStatus(
                             card, planStartUtc: record.planStartUtc, planEndUtc: record.planEndUtc, now: now),
-                        planStartZone: record.planStartZone,
-                        planEndDate: record.planEndDate, preparationDays: record.preparationDays))
+                        planStartZone: record.planStartZone, planEndDate: record.planEndDate,
+                        preparationDays: record.preparationDays))
             } catch { firstError = firstError ?? error }
         }
         return (values, firstError)

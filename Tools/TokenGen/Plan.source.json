@@ -1,0 +1,128 @@
+{
+  "source": "plan.md Phase 14b and fix round 1; Plan board compact/tile styles; RN timeline, tileModel and Notice spacing references",
+  "type": {
+    "planTitle": {
+      "size": 17,
+      "lineHeight": 22,
+      "weight": 600
+    },
+    "planSubtitle": {
+      "size": 12,
+      "lineHeight": 15,
+      "weight": 400
+    },
+    "planLane": {
+      "size": 11,
+      "lineHeight": 14,
+      "weight": 500
+    },
+    "planCompactDate": {
+      "size": 10,
+      "lineHeight": 12,
+      "weight": 400
+    },
+    "planListLine": {
+      "size": 13,
+      "lineHeight": 18,
+      "weight": 400
+    },
+    "planCardTitle": {
+      "size": 24,
+      "lineHeight": 32,
+      "weight": 400
+    },
+    "planDayTitle": {
+      "size": 18,
+      "lineHeight": 26,
+      "weight": 400
+    },
+    "planRemoteTitle": {
+      "size": 22,
+      "lineHeight": 28,
+      "weight": 400
+    },
+    "planNow": {
+      "size": 10,
+      "lineHeight": 16,
+      "weight": 600
+    },
+    "planPriority": {
+      "size": 10,
+      "lineHeight": 14,
+      "weight": 500
+    },
+    "planBlockLabel": {
+      "size": 11,
+      "lineHeight": 14,
+      "weight": 600
+    },
+    "planCompactWeekday": {
+      "size": 10,
+      "lineHeight": 12,
+      "weight": 600
+    },
+    "planListTitle": {
+      "size": 13,
+      "lineHeight": 18,
+      "weight": 600
+    }
+  },
+  "spacingMultipliers": {
+    "pointsPerHour": 10,
+    "gutterWidth": 11,
+    "tileInset": 0.5,
+    "minLaneWidth": 11,
+    "minColumnWidth": 7.5,
+    "minTickSpacing": 7.5,
+    "border": 0.25,
+    "emphasisBorder": 0.5,
+    "coreBorder": 1,
+    "gutter": 4,
+    "cardPadding": 4,
+    "sectionGap": 3,
+    "rowGap": 2,
+    "smallGap": 1,
+    "icon": 4,
+    "touch": 11,
+    "cardRadius": 6.5,
+    "rowRadius": 5.5,
+    "tileRadius": 3.5,
+    "tilePadding": 1.5,
+    "patternStep": 2,
+    "patternLine": 0.5,
+    "dotStep": 1.75,
+    "dotRadius": 0.25,
+    "compactFadeDistance": 6,
+    "line": 0.25,
+    "dot": 1.5,
+    "compactHeaderHeight": 9,
+    "skeletonSummary": 30,
+    "skeletonTimeline": 95,
+    "prioritySampleWidth": 10,
+    "prioritySampleHeight": 7,
+    "zonePadding": 5,
+    "textPlateRadius": 2.5,
+    "blockIcon": 3.5,
+    "detailsThreshold": 19,
+    "zonePillPadding": 2,
+    "zonePillVerticalPadding": 0.5
+  },
+  "spacingTokens": {
+    "minTileHeight": "space-6",
+    "tinyTileHeight": "space-14",
+    "gutterMarkerSize": "space-6",
+    "laneGap": "space-1"
+  },
+  "scalars": {
+    "hatchOpacity": 0.12,
+    "dotOpacity": 0.16,
+    "markedOpacity": 0.6,
+    "optionalOpacity": 0.75,
+    "coreBorderOpacity": 0.7,
+    "tagOpacity": 0.4,
+    "optionalBorderOpacity": 0.5,
+    "gridOpacity": 0.6,
+    "markedRowOpacity": 0.7,
+    "warningOpacity": 0.1
+  }
+}

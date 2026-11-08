@@ -52,7 +52,7 @@ public struct DayListView: View {
 
     private func row(_ block: PreparedBlock) -> some View {
         HStack(alignment: .center, spacing: PlanMetrics.sectionGap) {
-            CategorySwatch(type: block.block.type)
+            TripPageCategorySwatch(type: block.block.type)
             VStack(alignment: .leading, spacing: PlanMetrics.smallGap) {
                 Text(verbatim: block.title).font(Typography.authStrong.font)
                 Text(verbatim: interval(block)).font(Typography.planListLine.font).monospacedDigit()
@@ -77,7 +77,9 @@ public struct DayListView: View {
     }
 
     @ViewBuilder private func trailing(_ block: PreparedBlock) -> some View {
-        if block.block.priority == .core || block.block.priority == .optional { PriorityTag(label: block.priority) }
+        if block.block.priority == .core || block.block.priority == .optional {
+            TripPagePriorityTag(label: block.priority)
+        }
         if let status = block.status {
             Image(systemName: status == .done ? "checkmark" : "forward.end")
                 .foregroundStyle(ColorToken.dawnText.color).accessibilityHidden(true)

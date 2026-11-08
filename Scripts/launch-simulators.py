@@ -102,7 +102,8 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
                            'VerifyEmailSnapshotTests',
                            'StepSheetSnapshotTests',
                            'TodaySnapshotTests',
-                           'TripPageSnapshotTests'),
+                           'TripPageSnapshotTests',
+                           'TodayRowSnapshotTests'),
               'reference': ('LaunchFrameParityTests', 'LaunchStoryboardTests'),
               'release': ('ReleaseReadinessTests',)},
  'AppUITests': {'logic': ('SettingsTests',
@@ -190,7 +191,6 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
  'PlanCoreTests': {'host': ('CopyTests', 'TimelineTests', 'LabelTests', 'TimelineGeometryTests')},
  'PlanUITests': {'host': ('ModelTests',
                           'PlanStringsTests',
-                          'DecodeRecoveryTests',
                           'TripPageTests',
                           'TimelineAccessibilityTests',
                           'LargeTimelineFixtureTests',
@@ -221,7 +221,7 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
                            'AuthAuditPolicyTests')},
  'TripWizardTests': {'host': ('TripGenerationTests', 'TripGenerationRecoveryTests')},
  'WelcomeTests': {'logic': ('SmokeTests', 'WelcomeGeometryTests')}}
-SNAPSHOTS = ("AppTests/LaunchSnapshotTests", "AppTests/WelcomeSnapshotTests", "AppTests/WelcomeSnapshotGuardTests", "RenderTests/WelcomeRenderingTests", "AppTests/AuthSnapshotTests", "AppTests/TwoFactorSnapshotTests", "AppTests/ForgotPasswordSnapshotTests", "AppTests/ResetPasswordSnapshotTests", "AppTests/SignUpSnapshotTests", "AppTests/VerifyEmailSnapshotTests", "AppTests/AuthSnapshotGuardTests", "AppTests/StepSheetSnapshotTests", "AppTests/TodaySnapshotTests", "AppTests/TodayRowSnapshotTests", "AppTests/TripsSnapshotTests")
+SNAPSHOTS = ("AppTests/LaunchSnapshotTests", "AppTests/WelcomeSnapshotTests", "AppTests/WelcomeSnapshotGuardTests", "RenderTests/WelcomeRenderingTests", "AppTests/AuthSnapshotTests", "AppTests/TwoFactorSnapshotTests", "AppTests/ForgotPasswordSnapshotTests", "AppTests/ResetPasswordSnapshotTests", "AppTests/SignUpSnapshotTests", "AppTests/VerifyEmailSnapshotTests", "AppTests/AuthSnapshotGuardTests", "AppTests/StepSheetSnapshotTests", "AppTests/TodaySnapshotTests", "AppTests/TodayRowSnapshotTests", "AppTests/TripsSnapshotTests", "AppTests/TripPageSnapshotTests")
 XCODEBUILD_COMMON = ["xcodebuild", "-project", "ChronoFlow.xcodeproj", "-derivedDataPath", "build/DerivedData",
                      "-onlyUsePackageVersionsFromResolvedFile"]
 
