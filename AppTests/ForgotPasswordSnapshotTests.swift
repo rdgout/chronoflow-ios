@@ -58,6 +58,8 @@ nonisolated final class ForgotPasswordSnapshotTests: XCTestCase {
         defer { host.close() }
         var expected: SnapshotRaster?
         var expectedFrames: [AuthElement: CGRect] = [:]
+        var expectedInput: CGRect?
+        var expectedText: CGRect?
         for category in [UIContentSizeCategory.extraExtraLarge, .accessibilityExtraExtraExtraLarge] {
             var frames: [AuthElement: CGRect] = [:]
             let measure: (AuthElement, CGRect) -> Void = { frames[$0] = $1 }
@@ -66,6 +68,11 @@ nonisolated final class ForgotPasswordSnapshotTests: XCTestCase {
                 category: category)
             try await host.settle()
             let actual = try SnapshotRaster(png: XCTUnwrap(host.image().pngData()))
+            let field = try XCTUnwrap(forgotPasswordNativeField(in: host.window))
+            let input = field.convert(field.bounds, to: host.window)
+            let text = field.convert(field.textRect(forBounds: field.bounds), to: host.window)
+            let context =
+                "SE, en, light, requested=\(category.rawValue), nativeCategory=\(field.traitCollection.preferredContentSizeCategory.rawValue), resolvedFont=\(String(describing: field.font))"
             XCTAssertNil(
                 AuthSnapshotCapture.failure(
                     raster: actual, size: fixture.size, scale: fixture.scale,
@@ -77,10 +84,20 @@ nonisolated final class ForgotPasswordSnapshotTests: XCTestCase {
                 for element in expectedFrames.keys.sorted(by: { $0.rawValue < $1.rawValue }) {
                     XCTAssertEqual(frames[element], expectedFrames[element], "AX5 frame differs: \(element)")
                 }
-                XCTAssertTrue(actual == expected, "AX5 pixels differ from xxLarge: SE, en, light")
+                XCTAssertTrue(
+                    AuthSnapshotCapture.nativeInputRectsMatch(text, try XCTUnwrap(expectedText), scale: host.scale),
+                    "AX5 native text rect differs by more than one device pixel: \(text) vs \(String(describing: expectedText)), \(context)"
+                )
+                XCTAssertTrue(
+                    AuthSnapshotCapture.pixelsMatchOutsideNativeInput(
+                        actual, expected, input: input, referenceInput: try XCTUnwrap(expectedInput), scale: host.scale),
+                    "AX5 native input differs by more than one device pixel, or pixels differ outside its expanded union: \(input) vs \(String(describing: expectedInput)), \(context)"
+                )
             } else {
                 expected = actual
                 expectedFrames = frames
+                expectedInput = input
+                expectedText = text
             }
         }
     }

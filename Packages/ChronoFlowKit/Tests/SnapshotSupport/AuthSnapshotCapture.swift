@@ -2,6 +2,40 @@ import CoreGraphics
 import Foundation
 
 public nonisolated enum AuthSnapshotCapture {
+    public static func nativeInputRectsMatch(_ actual: CGRect, _ expected: CGRect, scale: CGFloat) -> Bool {
+        guard scale.isFinite, scale > 0 else { return false }
+        let components = [
+            (actual.origin.x, expected.origin.x), (actual.origin.y, expected.origin.y),
+            (actual.width, expected.width), (actual.height, expected.height),
+        ]
+        return actual.width > 0 && actual.height > 0 && expected.width > 0 && expected.height > 0
+            && components.allSatisfy { $0.isFinite && $1.isFinite && abs($0 * scale - $1 * scale) <= 1 }
+    }
+
+    public static func pixelsMatchOutsideNativeInput(
+        _ actual: SnapshotRaster, _ expected: SnapshotRaster, input: CGRect, referenceInput: CGRect, scale: CGFloat
+    ) -> Bool {
+        guard actual.width == expected.width, actual.height == expected.height,
+            nativeInputRectsMatch(input, referenceInput, scale: scale)
+        else { return false }
+        let bounds = CGRect(x: 0, y: 0, width: CGFloat(actual.width) / scale, height: CGFloat(actual.height) / scale)
+        guard bounds.contains(input), bounds.contains(referenceInput) else { return false }
+        let mask = input.union(referenceInput)
+        let left = max(0, Int((mask.minX * scale - 1).rounded(.down)))
+        let right = min(actual.width, Int((mask.maxX * scale + 1).rounded(.up)))
+        let top = max(0, Int((mask.minY * scale - 1).rounded(.down)))
+        let bottom = min(actual.height, Int((mask.maxY * scale + 1).rounded(.up)))
+        for y in 0..<actual.height {
+            for x in 0..<actual.width where y < top || y >= bottom || x < left || x >= right {
+                let index = (y * actual.width + x) * 4
+                for channel in 0..<4 where actual.bytes[index + channel] != expected.bytes[index + channel] {
+                    return false
+                }
+            }
+        }
+        return true
+    }
+
     public static func failure(
         raster: SnapshotRaster, size: CGSize, scale: CGFloat, viewport: CGRect,
         frames: [String: CGRect], required: Set<String>

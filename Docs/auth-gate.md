@@ -342,3 +342,13 @@ frames, named-control rejection, wrong states/types and incomplete/non-finite/be
 Host compilation/type-checking passes, and `make -k quick` passes all checks except the known
 APICookieTests sandbox listener EPERM. No simulator or reference recording runs here; the Dutch
 server and both-language throttle audit reruns remain open. Exact commands are in Docs/tooling.md.
+
+Round 5 (2026-11-08) supersedes round 4a's height pin: the user's 17e run passes Forgot controls and
+unchanged default-size Auth/Two-factor references, but SE/en/light still yields native input/text rects
+`(48, 474, 279, 24.5)` at AX5 versus `(48, 473.5, 279, 25)` at xxLarge, with the native category capped
+to XXL and identical CFFigtree-400 19 pt metrics. This is UIKit's internal one-pixel rounding at @2x;
+AuthField returns to natural sizing while retaining the clamped environment and diagnostics. Only the
+Forgot AX5/xxLarge native input frame and text rect allow at most `1 / scale` pt per origin/size component;
+their pixel comparison excludes only the union of both native input bounds expanded by one device
+pixel. Every other pixel and all measured labels, buttons, banners, notices and other elements remain
+exact, as do native font metrics. Default-size references remain byte-identical.

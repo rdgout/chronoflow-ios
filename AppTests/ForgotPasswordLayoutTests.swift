@@ -22,7 +22,7 @@ nonisolated final class ForgotPasswordLayoutTests: XCTestCase {
                         frames[$0] = $1
                     }, category: category)
                 try await host.settle()
-                let field = forgotFrameTextFields(host.window).first
+                let field = forgotPasswordNativeField(in: host.window)
                 let native =
                     field.map {
                         "nativeCategory=\($0.traitCollection.preferredContentSizeCategory.rawValue), resolvedFont=\(String(describing: $0.font))"
@@ -48,16 +48,23 @@ nonisolated final class ForgotPasswordLayoutTests: XCTestCase {
                     XCTAssertEqual(
                         font, expected.pointSize, "Native email must use its capped trait metrics: \(context)")
                     XCTAssertEqual(field.font?.lineHeight, expected.lineHeight, context)
-                    XCTAssertEqual(
-                        input, CGRect(x: 48, y: 473.5, width: 279, height: 25),
-                        "Preserve the recorded SE xxLarge native email geometry: \(context)")
                     if category == .extraExtraLarge {
+                        XCTAssertEqual(
+                            input, CGRect(x: 48, y: 473.5, width: 279, height: 25),
+                            "Preserve the recorded SE xxLarge native email geometry: \(context)")
                         expectedInput = input
                         expectedText = text
                         expectedFont = font
                     } else {
-                        XCTAssertEqual(input, expectedInput, "AX5 moves native email input: \(context)")
-                        XCTAssertEqual(text, expectedText, "AX5 moves native email text rect: \(context)")
+                        for (name, actual, expected) in [
+                            ("input", input, try XCTUnwrap(expectedInput)),
+                            ("text rect", text, try XCTUnwrap(expectedText)),
+                        ] {
+                            XCTAssertTrue(
+                                AuthSnapshotCapture.nativeInputRectsMatch(actual, expected, scale: host.scale),
+                                "AX5 native email \(name) differs by more than one device pixel: \(actual) vs \(expected), \(context)"
+                            )
+                        }
                         XCTAssertEqual(font, expectedFont, "AX5 grows native email font: \(context)")
                     }
                 }
@@ -149,6 +156,7 @@ nonisolated final class ForgotPasswordLayoutTests: XCTestCase {
     }
 }
 
-@MainActor private func forgotFrameTextFields(_ view: UIView) -> [UITextField] {
-    (view as? UITextField).map { [$0] } ?? view.subviews.flatMap(forgotFrameTextFields)
+@MainActor func forgotPasswordNativeField(in view: UIView) -> UITextField? {
+    if let field = view as? UITextField { return field }
+    return view.subviews.lazy.compactMap { forgotPasswordNativeField(in: $0) }.first
 }

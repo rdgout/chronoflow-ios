@@ -104,7 +104,6 @@ import SwiftUI
     public struct AuthField: View {
         @Environment(\.isEnabled) private var isEnabled
         @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-        @Environment(\.displayScale) private var displayScale
         let title: String
         @Binding var text: String
         let secure: Bool
@@ -157,7 +156,7 @@ import SwiftUI
                         .accessibilityValue(Text(verbatim: text))
                     }
                 }
-                // Native intrinsic height can still read the uncapped system category with a fixed-size font.
+                // SwiftUI's scalable custom font can re-read the uncapped system preference for native text layout.
                 .font(.custom(Typography.authBody.face.rawValue, fixedSize: font.pointSize))
                 .foregroundStyle(ColorToken.cardForeground.color)
                 .textContentType(contentType)
@@ -168,7 +167,6 @@ import SwiftUI
                 .submitLabel(submitLabel)
                 .onSubmit(submit)
                 .focused(focus, equals: identifier)
-                .frame(height: ceil(font.lineHeight * displayScale) / displayScale)
                 .environment(\.dynamicTypeSize, cappedSize)
                 .padding(.horizontal, AuthTokens.inset)
                 .padding(.vertical, AuthTokens.fieldGap)
