@@ -36,6 +36,24 @@
         }
     }
 
+    extension SettingsDestination {
+        public var canNavigate: Bool {
+            #if DEBUG
+                true
+            #else
+                isBuilt
+            #endif
+        }
+        public var isBuilt: Bool { self == .account || self == .profile }
+        public static var visible: [Self] {
+            #if DEBUG
+                allCases
+            #else
+                allCases.filter(\.isBuilt)
+            #endif
+        }
+    }
+
     @MainActor public struct SettingsHomeView: View {
         @Environment(\.locale) private var locale
         @Bindable private var model: SettingsHomeModel
@@ -77,20 +95,18 @@
                         SettingsSyncRow(copy: copy, pending: model.state.pendingCount > 0, offline: model.offline)
                     }.listRowBackground(Color.clear).listRowSeparator(.hidden)
                 }
-                #if DEBUG
-                    Section {
-                        ForEach(SettingsDestination.allCases.filter { $0 != .profile }) { destination in
-                            self.destination(destination) {
-                                SettingsDestinationRow(
-                                    destination: destination, credits: model.state.credits,
-                                    missingAnswers: model.state.missingAnswers)
-                            }
-                            .accessibilityIdentifier("settings.\(destination.rawValue)")
+                Section {
+                    ForEach(SettingsDestination.visible.filter { $0 != .profile }) { destination in
+                        self.destination(destination) {
+                            SettingsDestinationRow(
+                                destination: destination, credits: model.state.credits,
+                                missingAnswers: model.state.missingAnswers)
                         }
-                    }.listRowBackground(ColorToken.card.color)
-                        .listRowInsets(
-                            EdgeInsets(top: 0, leading: PlanUITokens.space4, bottom: 0, trailing: PlanUITokens.space4))
-                #endif
+                        .accessibilityIdentifier("settings.\(destination.rawValue)")
+                    }
+                }.listRowBackground(ColorToken.card.color)
+                    .listRowInsets(
+                        EdgeInsets(top: 0, leading: PlanUITokens.space4, bottom: 0, trailing: PlanUITokens.space4))
                 Section {
                     SettingsSignOutButton(model: model)
                 }.listRowBackground(Color.clear).listRowSeparator(.hidden)
@@ -98,21 +114,18 @@
             .listStyle(.insetGrouped).scrollContentBackground(.hidden)
             .background(ColorToken.background.color).foregroundStyle(ColorToken.cardForeground.color)
             .tint(ColorToken.primary.color)
-            .accessibilityIdentifier("settings.screen")
+            .accessibilityElement(children: .contain).accessibilityIdentifier("settings.screen")
         }
 
         @ViewBuilder private func destination<Label: View>(
             _ destination: SettingsDestination, @ViewBuilder label: () -> Label
         ) -> some View {
-            #if DEBUG
-                if navigationEnabled {
-                    NavigationLink(value: destination, label: label)
-                } else {
-                    label()
-                }
-            #else
+            if navigationEnabled, destination.canNavigate {
+                NavigationLink(value: destination, label: label)
+            } else {
                 label()
-            #endif
+            }
+
         }
     }
 

@@ -34,8 +34,10 @@ public actor SessionAccountDatabase: SessionAccountStore {
             var record =
                 try AccountRecord.fetchOne(db, key: id.rawValue)
                 ?? AccountRecord(id: id.rawValue, name: account.name, email: account.email)
-            record.name = account.name
-            record.email = account.email
+            if !(try StoreApplication.pending(db)).contains(where: { $0.kind == "profile" }) {
+                record.name = account.name
+                record.email = account.email
+            }
             record.hasVerifiedEmail = account.hasVerifiedEmail
             record.walkthroughSeen =
                 try account.walkthroughSeen

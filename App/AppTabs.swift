@@ -16,6 +16,7 @@ struct AppTabs: View {
     @State private var selection: Tab = .today
     @State private var home: PlanHomeModel?
     @State private var settingsHome = SettingsHomeModel()
+    @State private var settingsPages: SettingsPagesModel?
     @State private var tripsPath: [TripPageRoute] = []
     @State private var path: [TripPageRoute] = []
     @State private var wizard: MemberWizardModel?
@@ -58,6 +59,24 @@ struct AppTabs: View {
         }
     }
 
+    @ViewBuilder private func settingsDestination(_ destination: SettingsDestination) -> some View {
+        ZStack {
+            ColorToken.background.color.ignoresSafeArea()
+            if let settingsPages {
+                switch destination {
+                case .account: SettingsAccountView(store: settingsPages)
+                case .profile: SettingsProfileView(store: settingsPages)
+                default:
+                    #if DEBUG
+                        RoutePlaceholder(route: .settings, destination: destination.rawValue)
+                    #else
+                        EmptyView()
+                    #endif
+                }
+            }
+        }
+    }
+
     private var tabContent: some View {
         TabView(selection: $selection) {
             NavigationStack(path: $path) {
@@ -72,11 +91,7 @@ struct AppTabs: View {
             NavigationStack {
                 SettingsHomeView(model: settingsHome)
                     .navigationDestination(for: SettingsDestination.self) { destination in
-                        #if DEBUG
-                            RoutePlaceholder(route: .settings, destination: destination.rawValue)
-                        #else
-                            EmptyView()
-                        #endif
+                        settingsDestination(destination)
                     }
             }
             .tabItem { Label(t("Settings"), systemImage: "gearshape") }.tag(Tab.settings)
@@ -106,6 +121,12 @@ struct AppTabs: View {
                 database: database, controller: native.controller, session: snapshot, sync: native.sync)
             settingsHome = settings
             settings.start()
+            let pages = SettingsPagesModel(
+                database: database, permit: permit,
+                isCurrent: { await native.controller.activeSession() == snapshot },
+                requestSync: { await native.sync?.requestSync() })
+            settingsPages = pages
+            pages.start()
             var clock: any PlanClock = SystemPlanClock()
             #if DEBUG
                 if ProcessInfo.processInfo.environment["CF_PLAN_TEST_FREEZE_CLOCK"] == "1",
@@ -138,6 +159,7 @@ struct AppTabs: View {
                 else {
                     model.stop()
                     settings.stop()
+                    pages.stop()
                     home = nil
                     step = nil
                     wizard = nil
@@ -150,6 +172,8 @@ struct AppTabs: View {
         .onDisappear {
             home?.stop()
             settingsHome.stop()
+            settingsPages?.stop()
+            settingsPages = nil
             home = nil
         }
         .onChange(of: home?.hero?.card.id, initial: true) { _, _ in home?.selectHero() }
