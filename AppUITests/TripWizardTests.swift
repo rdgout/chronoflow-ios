@@ -24,7 +24,7 @@ nonisolated final class TripWizardTests: XCTestCase {
         pickTime("arrival", hour: "9", minute: "15", in: app)
         app.buttons["wizard.outbound.continue"].tap()
         XCTAssertTrue(app.descendants(matching: .any)["wizard.0.arrival.error"].waitForExistence(timeout: 5))
-        XCTAssertFalse(app.otherElements["wizard.outbound.past"].exists)
+        XCTAssertFalse(app.descendants(matching: .any)["wizard.outbound.past"].exists)
         closeAndDiscard(app)
 
         openWizard(app)
@@ -39,7 +39,11 @@ nonisolated final class TripWizardTests: XCTestCase {
         let check = app.buttons["wizard.debug.check"]
         XCTAssertTrue(check.waitForExistence(timeout: 5))
         check.tap()
-        XCTAssertTrue(app.otherElements["wizard.outbound.past"].waitForExistence(timeout: 5))
+        let past = app.descendants(matching: .any)["wizard.outbound.past"]
+        XCTAssertTrue(past.waitForExistence(timeout: 5))
+        XCTAssertEqual(
+            past.label,
+            "A new plan needs an upcoming arrival. Check your flight dates or add your return flight.")
         XCTAssertTrue(app.buttons["wizard.outbound.continue"].isEnabled)
         closeAndDiscard(app)
     }
