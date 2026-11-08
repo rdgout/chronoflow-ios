@@ -80,6 +80,14 @@ local enqueue, OutboxFlusher and Settings model to verify both online success an
 two offline confirmation attempts through Stay and Discard. Existing wipe coverage
 also checks the deleted account directory and absence of old trips/settings/outbox.
 
+The second account is the seeded `twofactor@example.com`, using password
+`password` and challenge code `123456`; the mock deliberately returns a two-factor
+challenge for it. Sign-out preserves the previous email in the sign-in model.
+AuthUIFlow.signIn now deletes that retained value before entering the next email
+and asserts the replacement, preventing `demo@example.comtwofactor@example.com`.
+The journey reveals the code field and stops with a useful failure if no challenge
+appears before proceeding to Today and the second account's Settings.
+
 The normal commit gate remains `make check` outside this sandbox. Neither `make
 matrix` nor `make duo` is required for this task.
 

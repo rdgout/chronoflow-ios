@@ -1763,6 +1763,8 @@ Orchestrator decision, 2026-11-08: the user asked whether they can log out; sign
 
 - [x] Second snapshot failure follow-up: extract `SettingsHomeContent` and `SignOutPendingContent` from the navigation/presentation wrappers. Profile captures host plain row labels plus the drawn localized title, with no navigation links, navigation styling, sheet binding or presentation modifiers. Keep the throwing required-content/visible-ink guard and every profile variant. Lint and Debug/Release Settings plus hosted-test iOS 17 compiler checks pass; runtime/reference acceptance remains with the user.
 
+- [x] Second-account UI failure follow-up: keep the seeded `twofactor@example.com` / `password` login and its `123456` challenge proof. The sign-in model preserves `demo@example.com` after sign-out, so the shared UI helper must delete the retained email before typing the next account and assert the resulting value. Reveal the code field before entry and stop the journey if the challenge never appears. Lint and all UI-test iOS 17 compiler checks pass; the 17e journey rerun remains with the user.
+
 ### Phase 18 (later, separate decision): guest wizard and claim
 
 Boards: WizardWhereGuest, WizardOutboundGuest, WizardCheckingGuest, WizardFineTuneGuest, WizardReadyGuest and GuestSignup*. Covers `reviewGuestTrip` (5/min per device+IP, 30/min per IP), `draft_token`/`guest_secret` on register and login, and routing by `SessionResult.tripId` (`Kit/Sources/AppCore/SessionController.swift:44,52`; null after a two-factor login, a known backend gap). Depends on 11c and replaces the OQ 12/17 seams. Listed so the work is not lost, not scheduled.

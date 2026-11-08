@@ -38,7 +38,11 @@ import XCTest
         let field = app.textFields["sign-in.email"]
         reveal(field, in: app)
         field.tap()
+        if let previous = field.value as? String, previous != field.placeholderValue, !previous.isEmpty {
+            field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: previous.count))
+        }
         field.typeText(email + "\n")
+        XCTAssertEqual(field.value as? String, email)
         app.secureTextFields["sign-in.password"].typeText(MockScenarioValues.password + "\n")
     }
 

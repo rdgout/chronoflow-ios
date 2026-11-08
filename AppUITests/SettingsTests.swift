@@ -42,7 +42,11 @@ nonisolated final class SettingsTests: XCTestCase {
         XCTAssertFalse(app.images["launch.opening"].exists)
         AuthUIFlow.signIn(app, email: MockScenarioValues.twoFactorEmail)
         let code = app.textFields["two-factor.code"]
-        XCTAssertTrue(code.waitForExistence(timeout: 6))
+        guard code.waitForExistence(timeout: 6) else {
+            XCTFail("The seeded second account did not reach two-factor verification")
+            return
+        }
+        AuthUIFlow.reveal(code, in: app)
         code.tap()
         code.typeText(MockScenarioValues.twoFactorCode)
         let verify = app.buttons["two-factor.submit"]
