@@ -19,7 +19,7 @@ import Testing
         let accounts = AccountRepository(database: database)
         try await accounts.upsert(
             AccountRecord(id: accountA, name: "Test", email: "a@example.test", walkthroughSeen: false))
-        #expect(try await iterator.next()??.gate == .walkthrough)
+        #expect(try await iterator.next()??.gate == nil)
         try await SettingsRepository(database: database).upsert(
             SettingsRecord(
                 section: "policies", value: .encoding(AccountPolicies(termsVersion: "2", privacyVersion: "1"))))
@@ -36,6 +36,10 @@ import Testing
         let ready = try await iterator.next()
         #expect(ready??.gate == .app)
         #expect(ready??.hasStoredData == true)
+        try await SettingsRepository(database: database).remove(section: "policies")
+        let unresolved = try await iterator.next()
+        #expect(unresolved??.gate == nil)
+        #expect(unresolved??.firstLoadGate == .app)
         try await database.close()
         #expect(try await iterator.next() == nil)
     }

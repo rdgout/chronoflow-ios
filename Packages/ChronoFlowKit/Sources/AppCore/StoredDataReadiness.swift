@@ -2,11 +2,13 @@ import Foundation
 
 public struct StoredAccountReadiness: Sendable, Equatable {
     public let accountID: String
-    public let gate: Gate
+    public let gate: Gate?
+    public let firstLoadGate: Gate
     public let hasStoredData: Bool
-    public init(accountID: String, gate: Gate, hasStoredData: Bool) {
+    public init(accountID: String, gate: Gate?, hasStoredData: Bool, firstLoadGate: Gate = .app) {
         self.accountID = accountID
         self.gate = gate
+        self.firstLoadGate = firstLoadGate
         self.hasStoredData = hasStoredData
     }
 }
@@ -19,6 +21,9 @@ public actor StoredDataReadiness: LaunchReadiness {
     private var restoration: Task<SessionPresence, Never>?
     public private(set) var failure: SessionFailure?
     public private(set) var firstLoadEpoch: UInt64?
+    private var unresolvedGates: [UUID: Gate] = [:]
+    private var lastGates: [UUID: Gate] = [:]
+    private var gateContinuations: [UUID: AsyncStream<Gate>.Continuation] = [:]
 
     public init(controller: SessionController, values: @escaping @Sendable (String) async throws -> Values) {
         self.controller = controller
@@ -54,7 +59,10 @@ public actor StoredDataReadiness: LaunchReadiness {
 
     public func retry() async { await retrySignal.signal() }
 
-    public func gate() async -> Gate { await firstValue()?.gate ?? .app }
+    public func gate() async -> Gate {
+        var iterator = await gateUpdates().makeAsyncIterator()
+        return await iterator.next() ?? .app
+    }
     public func hasStoredData() async -> Bool { await firstValue()?.hasStoredData ?? false }
 
     @MainActor public func routeAcceptedSession(
@@ -111,14 +119,27 @@ public actor StoredDataReadiness: LaunchReadiness {
     }
 
     public func gateUpdates() async -> AsyncStream<Gate> {
+        let id = UUID()
+        let epoch = await controller.epoch
         let (stream, continuation) = AsyncStream<Gate>.makeStream(bufferingPolicy: .bufferingNewest(1))
+        gateContinuations[id] = continuation
         let source = updates()
         let task = Task {
             for await value in source {
-                guard !Task.isCancelled else { break }
-                continuation.yield(value?.gate ?? .app)
+                guard !Task.isCancelled, await controller.epoch == epoch else { break }
+                if let gate = value?.gate {
+                    unresolvedGates.removeValue(forKey: id)
+                    emitGate(gate, id: id)
+                } else {
+                    let fallback = value?.firstLoadGate ?? .app
+                    unresolvedGates[id] = fallback
+                    if firstLoadEpoch == epoch { emitGate(fallback, id: id) }
+                }
             }
             continuation.finish()
+            gateContinuations.removeValue(forKey: id)
+            lastGates.removeValue(forKey: id)
+            unresolvedGates.removeValue(forKey: id)
         }
         continuation.onTermination = { _ in task.cancel() }
         return stream
@@ -139,9 +160,16 @@ public actor StoredDataReadiness: LaunchReadiness {
         return stream
     }
 
+    private func emitGate(_ gate: Gate, id: UUID) {
+        guard lastGates[id] != gate else { return }
+        lastGates[id] = gate
+        gateContinuations[id]?.yield(gate)
+    }
+
     public func allowFirstLoad() async {
         guard case .signedIn = await controller.presence else { return }
         firstLoadEpoch = await controller.epoch
+        for (id, fallback) in unresolvedGates { emitGate(fallback, id: id) }
     }
 }
 

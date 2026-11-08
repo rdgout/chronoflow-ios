@@ -12,7 +12,7 @@ import Observation
     private let session: any SessionControlling
     private let deviceIdentity: @Sendable () async throws -> String
     private let deviceName: String
-    private let route: @MainActor (Route) async -> Void
+    private let accepted: @MainActor (SessionResult) async -> Void
     private let passkey: PasskeySignIn
     public var mockMail: (@MainActor (String) async -> AuthLink?)?
     public private(set) var sessionFailure: SessionFailure?
@@ -21,7 +21,7 @@ import Observation
         source: any DataSource, session: any SessionControlling,
         deviceIdentity: @escaping @Sendable () async throws -> String, deviceName: String,
         assertionProvider: any PasskeyAssertionProviding = DeterministicAssertionProvider(),
-        route: @escaping @MainActor (Route) async -> Void
+        accepted: @escaping @MainActor (SessionResult) async -> Void
     ) {
         self.source = source
         self.session = session
@@ -29,10 +29,22 @@ import Observation
         self.deviceName = deviceName
         self.passkey = PasskeySignIn(
             source: source, provider: assertionProvider, identity: deviceIdentity, deviceName: deviceName)
-        self.route = route
+        self.accepted = accepted
         form = AuthFormModel()
         navigation = AuthNavigation()
     }
+    public convenience init(
+        source: any DataSource, session: any SessionControlling,
+        deviceIdentity: @escaping @Sendable () async throws -> String, deviceName: String,
+        assertionProvider: any PasskeyAssertionProviding = DeterministicAssertionProvider(),
+        route: @escaping @MainActor (Route) async -> Void
+    ) {
+        self.init(
+            source: source, session: session, deviceIdentity: deviceIdentity, deviceName: deviceName,
+            assertionProvider: assertionProvider,
+            accepted: { result in await route(AuthNavigation.route(for: result.account)) })
+    }
+
     public func editEmail(_ value: String) {
         guard !form.busy else { return }
         email = value
@@ -111,7 +123,7 @@ import Observation
         try Task.checkCancellation()
         try await session.accept(result)
         password = ""
-        await route(AuthNavigation.route(for: result.account))
+        await accepted(result)
     }
     private func receive(_ error: any Error) {
         guard !(error is CancellationError), error as? PasskeyFailure != .canceled else { return }

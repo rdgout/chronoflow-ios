@@ -370,6 +370,9 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             controller.view.accessibilityElementsHidden = false
             controller.launchIsVisible = false
         }
+        nativeSession?.observeGates(navigator: navigator) { epoch in
+            await (UIApplication.shared.delegate as? AppDelegate)?.verificationRequired(epoch: epoch)
+        }
         signposts.event(.overlayRemoved)
         signposts.end(.exit)
         signposts.end(.launch)

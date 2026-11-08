@@ -11,9 +11,11 @@ public struct AccountReadinessRepository: Sendable {
         return try await database.observe { db in
             guard let account = try AccountRecord.fetchOne(db, key: id.rawValue) else { return nil }
             let policies = try SettingsRecord.fetchOne(db, key: "policies")?.value.decode(AccountPolicies.self)
-            let gate: Gate
+            let gate: Gate?
             if !account.hasVerifiedEmail {
                 gate = .verify
+            } else if policies == nil {
+                gate = nil
             } else if let policies, policies.acceptedTermsVersion != policies.termsVersion {
                 gate = .terms
             } else if !account.walkthroughSeen {
@@ -21,7 +23,9 @@ public struct AccountReadinessRepository: Sendable {
             } else {
                 gate = .app
             }
-            return StoredAccountReadiness(accountID: id.rawValue, gate: gate, hasStoredData: account.syncedAt != nil)
+            return StoredAccountReadiness(
+                accountID: id.rawValue, gate: gate, hasStoredData: account.syncedAt != nil,
+                firstLoadGate: account.walkthroughSeen ? .app : .walkthrough)
         }
     }
 }
