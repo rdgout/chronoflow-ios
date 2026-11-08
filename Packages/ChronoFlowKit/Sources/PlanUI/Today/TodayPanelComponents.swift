@@ -65,11 +65,9 @@
                     Text(PlanStrings.text("{{count}} skipped", language: language, count: skipped))
                 }
             }.font(Typography.screenMeta.font).foregroundStyle(ColorToken.mutedForeground.color)
-                .accessibilityRepresentation {
-                    Color.clear.frame(minHeight: AuthTokens.touch)
-                        .accessibilityElement(children: .ignore)
-                        .accessibilityLabel(summary).accessibilityIdentifier("today.progress")
-                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(summary).accessibilityAddTraits(.isStaticText)
+                .accessibilityIdentifier("today.progress")
         }
     }
 

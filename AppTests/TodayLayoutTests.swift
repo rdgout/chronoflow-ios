@@ -1,3 +1,4 @@
+import DesignSystem
 import PlanUI
 import SwiftUI
 import UIKit
@@ -17,7 +18,7 @@ nonisolated final class TodayLayoutTests: XCTestCase {
                         insets: fixture.insets, language: language, category: .extraExtraLarge, scale: fixture.scale)
                     defer { host.close() }
                     try await host.settle()
-                    try await assertPlanScrollFits(host, content: content)
+                    try await assertPlanScrollFits(host, content: content, horizontalGutter: PlanUITokens.space4)
                 }
             }
         }

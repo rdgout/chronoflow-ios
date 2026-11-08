@@ -7,12 +7,12 @@ nonisolated final class AppTabsTests: XCTestCase {
         defer { app.terminate() }
         _ = try expandedTabs(in: app, selected: "Today")
         capture(app, name: "today-tabs")
-        let progress = app.otherElements["today.progress"]
+        let progress = app.staticTexts["today.progress"]
         XCTAssertTrue(progress.waitForExistence(timeout: 4), app.debugDescription)
         _ = try UIWait.stableFrames([progress], timeout: 4)
         XCTAssertEqual(app.descendants(matching: .any).matching(identifier: "today.progress").count, 1)
         XCTAssertEqual(progress.label, "0 of 3 done")
-        XCTAssertGreaterThanOrEqual(progress.frame.height, AuthTokens.touch)
+        XCTAssertFalse(app.buttons["today.progress"].exists)
         app.tabBars.buttons["My trips"].tap()
         XCTAssertTrue(app.scrollViews["trips.screen"].waitForExistence(timeout: 4))
         _ = try expandedTabs(in: app, selected: "My trips")
@@ -59,9 +59,17 @@ nonisolated final class AppTabsTests: XCTestCase {
             !anchor.exists || anchor.frame.minY < initialY - 1 || !anchor.isHittable,
             "The actual tab content must scroll")
         _ = try XCTUnwrap(minimized, "Tab bar did not minimize after scrolling \(tab) down: \(app.debugDescription)")
-        dragContent(in: app, scroll: scroll, down: false)
-        let restored = try expandedTabs(in: app, selected: tab)
+        let scrolledY = anchor.exists ? anchor.frame.minY : nil
+        var restoration: TabsState?
+        for _ in 0..<6 {
+            dragContent(in: app, scroll: scroll, down: false)
+            restoration = settledTabs(in: app, selected: tab, timeout: 4) { $0.isExpanded }
+            if restoration != nil { break }
+        }
         capture(app, name: "\(name)-tabs-expanded")
+        let restored = try XCTUnwrap(restoration, "Tabs stayed collapsed after scrolling up: \(app.debugDescription)")
+        XCTAssertTrue(anchor.exists)
+        if let scrolledY { XCTAssertGreaterThan(anchor.frame.minY, scrolledY + 1) }
         XCTAssertEqual(restored.bar.width, expanded.bar.width, accuracy: 1)
         XCTAssertEqual(restored.bar.height, expanded.bar.height, accuracy: 1)
         XCTAssertEqual(restored.items.width, expanded.items.width, accuracy: 1)
@@ -94,9 +102,10 @@ nonisolated final class AppTabsTests: XCTestCase {
         let selected: CGRect
         let items: CGRect
         let otherItemsHittable: [Bool]
-        var isExpanded: Bool { otherItemsHittable.allSatisfy { $0 } }
+        let collapsed: Bool
+        var isExpanded: Bool { !collapsed && otherItemsHittable.allSatisfy { $0 } }
         func isMinimized(from expanded: Self) -> Bool {
-            otherItemsHittable.allSatisfy { !$0 }
+            collapsed || otherItemsHittable.allSatisfy { !$0 }
                 || bar.width < expanded.bar.width - 1 || bar.height < expanded.bar.height - 1
                 || items.width < expanded.items.width - 1
         }
@@ -111,22 +120,36 @@ nonisolated final class AppTabsTests: XCTestCase {
     @MainActor private func settledTabs(
         in app: XCUIApplication, selected: String, timeout: TimeInterval, ready: @escaping (TabsState) -> Bool
     ) -> TabsState? {
-        let bar = app.tabBars.firstMatch
-        let button = bar.buttons[selected]
-        let others = ["Today", "My trips", "Settings"].filter { $0 != selected }.map { bar.buttons[$0] }
         var stability = FrameStability()
         var result: TabsState?
         let predicate = NSPredicate { _, _ in
-            guard bar.exists, button.exists, button.isSelected, button.isHittable else { return false }
-            let visible = ([button] + others).filter { $0.exists && $0.isHittable }.map(\.frame)
+            let bar = app.tabBars.firstMatch
+            guard bar.exists else {
+                _ = stability.observe(nil)
+                return false
+            }
+            @MainActor func tab(_ label: String) -> XCUIElement? {
+                let matches = app.buttons.matching(NSPredicate(format: "label == %@", label))
+                    .allElementsBoundByIndex.filter { $0.isHittable && bar.frame.contains($0.frame) }
+                return matches.count == 1 ? matches[0] : nil
+            }
+            guard let button = tab(selected), button.isSelected else {
+                _ = stability.observe(nil)
+                return false
+            }
+            let others = ["Today", "My trips", "Settings"].filter { $0 != selected }.map(tab)
+            let visible = [button] + others.compactMap { $0 }
+            let frames = visible.map(\.frame)
+            let distinct = Set(frames.map { NSValue(cgRect: $0) }).count == frames.count
             let state = TabsState(
-                bar: bar.frame, selected: button.frame, items: visible.reduce(CGRect.null) { $0.union($1) },
-                otherItemsHittable: others.map { $0.exists && $0.isHittable })
+                bar: bar.frame, selected: button.frame, items: frames.reduce(CGRect.null) { $0.union($1) },
+                otherItemsHittable: others.map { $0 != nil && distinct },
+                collapsed: (button.value as? String)?.contains("Collapsed") == true)
             guard ready(state) else {
                 _ = stability.observe(nil)
                 return false
             }
-            guard stability.observe([state.bar, state.selected, state.items]) else { return false }
+            guard stability.observe([state.bar] + frames) else { return false }
             result = state
             return true
         }

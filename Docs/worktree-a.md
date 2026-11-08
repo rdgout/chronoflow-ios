@@ -299,3 +299,80 @@ comparison require the user's simulator rerun; no runtime pass is claimed here.
 
 Delivery: `build/commits/1.patch` against `10f539e`, with one Conventional Commit
 subject in `build/commits/messages.txt`. No commits or PNG changes are included.
+
+## Fourth simulator rerun repair (2026-11-08, base 5be5474)
+
+Evidence: the user's `p15a-uifail4.txt`, plus read-only extraction from the existing
+`build/test-results/17e/Debug-{compare,serial}.xcresult` activities and result
+streams. No simulator was run.
+
+1. **Duo rail.** Today and Trips specify `16px` horizontal main padding, and the
+   design-system README specifies `space-4` page gutters. The safe trailing edge
+   is 466 − 19 = 447; the existing ≤448 assertion allows one point of rounding
+   and is valid. The intended stack edge is 447 − 16 = **431**. The observed 450
+   came from subtracting the gutter from the window edge. Native navigation in
+   the profile host consumes the injected horizontal safe area without leaving
+   a horizontal adjusted scroll inset. Capture the safe proposal above native
+   navigation, carry its global bounds through the environment, and pad Today/
+   Trips scroll containers only where those bounds have not already been
+   consumed. This covers both rail sides and avoids double padding. The host
+   supplies the same bounds from all four profile insets. Existing rail checks
+   are strengthened to require the gutter too; no bound is loosened. Mac tests
+   cover every device profile, already-inset frames, either rail, offsets and
+   window resizing. No snapshot references change.
+
+2. **Progress semantics.** `Today.dc.html` imports TodayPanel; its bundled
+   progress component (`function Le` in `ds/chronoflow/components/bundle.js`) is a
+   div with a progressbar and count spans, with no button, anchor or click
+   handler. It is not interactive. Remove the clear 44-point accessibility
+   representation and expose the actual compact row as one static-text summary,
+   ignoring its visual children. The two UI tests require one static summary,
+   its spoken count and absence of a button. They no longer require a touch
+   height. The audit keeps hit-region checking for all interactive controls.
+
+3. **Tab restoration probe.** The saved failure tree shows Today restored to its
+   opening content position (trip y=169, scroll indicator 0%), but its native
+   48-point tab button still says `Collapsed, Selected`. Only Today is present;
+   there is no evidence that the other tabs were merely missed in that snapshot.
+   The probe incorrectly allowed only one reverse gesture and assumed a fixed
+   button-query hierarchy. It now re-queries unique named buttons within the
+   current system tab-bar bounds, requires distinct stable frames for all three,
+   and explicitly rejects the native Collapsed value. Restoration allows bounded
+   repeated upward content drags, including the top-edge transition, and must
+   still demonstrate content movement and the original expanded geometry. A
+   failed restoration retains its capture and full tree. The app continues to
+   use the system behavior; no forced expansion or tap fallback masks a failure.
+   Apple's [onScrollDown contract](https://developer.apple.com/documentation/uikit/uitabbarcontroller/minimizebehavior/onscrolldown)
+   describes minimizing downward and expanding upward. Whether these retries
+   resolve this runtime's collapsed-at-top state remains for the simulator rerun.
+
+4. **Subtitle contrast reveal.** The original subtitle spans y=800.5…817.5 near
+   native glass. Read the viewport again after settling text, scroll, navigation
+   and tab-bar frames together; require the whole text rectangle inside a
+   reading area with generated `space-4` clearance above/below native chrome.
+   Host gesture tests reproduce the reported subtitle against expanded and
+   collapsed bar frames and reject partial visibility. Keep original identifier,
+   label and frame attribution and require complete rendered measurements ≥4.5:1.
+   The saved audit activities show an earlier title reveal followed by subtitle
+   failure without another drag. The old combined guard also reported changed
+   labels as “Cannot reveal”; the real minute clock could update the relative
+   subtitle during the audit. A Debug-only, authenticated UI-test flag now
+   freezes PlanHomeModel's clock for audits; normal app/test clocks are unchanged.
+   Label changes have a separate failure diagnostic. No token colors, contrast
+   thresholds or audit exemptions change.
+
+Verification: `make -k lint host-tests` runs all host tiers. Of 446 package tests,
+445 pass; the existing `APICookieTests.realRedirectCookieHandlingIsDisabled`
+fails because this sandbox denies its loopback listener (`EPERM`). The new two
+device-geometry tests and one partial-visibility/gesture regression pass.
+All 10 TokenGen and 7 AssetGen tests pass. After registering the new geometry
+suite, `make lint launch-resources-check` passes all 98 resource/runner fixtures.
+Final strict lint passes. Static iOS 17 SDK compilation passes for all package
+modules, the app, AppTests and AppUITests; it executes no UIKit tests. Logs:
+`build/round4-host.log`, `build/round4-fixtures.log`, `build/round4-lint.log`,
+`build/round4-typecheck.log` and `build/round4-typecheck-tests.log` (the latter
+contains the final corrected test compilation). Hosted layouts, UI audits,
+tab restoration and reference comparison remain unrun here.
+
+Delivery: one patch against `5be5474`, `build/commits/1.patch`, and its Conventional
+Commit subject in `build/commits/messages.txt`. No Git commits or PNG changes.

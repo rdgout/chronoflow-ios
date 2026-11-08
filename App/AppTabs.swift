@@ -28,7 +28,7 @@ struct AppTabs: View {
     private func t(_ key: String) -> String { PlanStrings.text(key, language: language) }
     var body: some View {
         #if DEBUG
-            tabs
+            tabs.planPageSafeArea()
                 .onChange(of: home?.formatter != nil) { _, ready in
                     if ready, ProcessInfo.processInfo.environment["CF_PLAN_TEST_SHEET"] == "legend",
                         (UIApplication.shared.delegate as? AppDelegate)?.authServices?.authUITestEnabled == true
@@ -38,7 +38,7 @@ struct AppTabs: View {
                 }
                 .sheet(isPresented: $showingLegend) { LegendSheet() }
         #else
-            tabs
+            tabs.planPageSafeArea()
         #endif
     }
 
@@ -71,7 +71,16 @@ struct AppTabs: View {
                 let permit = await native.controller.mutationPermit(for: snapshot),
                 await native.controller.activeSession() == snapshot, !Task.isCancelled
             else { return }
-            let model = PlanHomeModel(repository: TripRepository(database: database), mutationPermit: permit)
+            var clock: any PlanClock = SystemPlanClock()
+            #if DEBUG
+                if ProcessInfo.processInfo.environment["CF_PLAN_TEST_FREEZE_CLOCK"] == "1",
+                    (UIApplication.shared.delegate as? AppDelegate)?.authServices?.authUITestEnabled == true
+                {
+                    clock = AuditPlanClock()
+                }
+            #endif
+            let model = PlanHomeModel(
+                repository: TripRepository(database: database), clock: clock, mutationPermit: permit)
             home = model
             model.start()
             for await update in await native.controller.updates() {
@@ -137,7 +146,7 @@ struct AppTabs: View {
         } else if native != nil {
             ScrollView {
                 TripsLoadingView().padding(PlanUITokens.space4)
-            }.navigationTitle(t("My trips")).background(ColorToken.background.color)
+            }.planPageRail().navigationTitle(t("My trips")).background(ColorToken.background.color)
         } else {
             seam(.trips)
         }
@@ -151,3 +160,9 @@ struct AppTabs: View {
         #endif
     }
 }
+
+#if DEBUG
+    private struct AuditPlanClock: PlanClock {
+        nonisolated func values() async -> AsyncStream<Date> { AsyncStream { $0.finish() } }
+    }
+#endif

@@ -1,11 +1,12 @@
 import XCTest
 
-@MainActor func launchPlanAccount(presentLegend: Bool = false) -> XCUIApplication {
+@MainActor func launchPlanAccount(presentLegend: Bool = false, freezePlanClock: Bool = false) -> XCUIApplication {
     let app = XCUIApplication()
     app.launchArguments = AuthUIFlow.arguments()
     app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
     app.launchEnvironment["CF_AUTH_TEST_WALKTHROUGH_SEEN"] = "1"
     if presentLegend { app.launchEnvironment["CF_PLAN_TEST_SHEET"] = "legend" }
+    if freezePlanClock { app.launchEnvironment["CF_PLAN_TEST_FREEZE_CLOCK"] = "1" }
     app.launch()
     AuthUIFlow.openSignIn(app)
     AuthUIFlow.signIn(app, email: MockScenarioValues.demoEmail)

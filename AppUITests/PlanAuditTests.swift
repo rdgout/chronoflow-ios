@@ -5,12 +5,14 @@ import XCTest
 nonisolated final class PlanAuditTests: XCTestCase {
     @MainActor func testTodayPrimaryState() async throws {
         try await audit { app in
-            let progress = app.otherElements["today.progress"]
+            let progress = app.staticTexts["today.progress"]
             XCTAssertTrue(progress.waitForExistence(timeout: 8))
             _ = try UIWait.stableFrames(
                 [app.scrollViews["today.screen"], progress, app.tabBars.firstMatch], timeout: 8
             )
-            XCTAssertGreaterThanOrEqual(progress.frame.height, AuthTokens.touch)
+            XCTAssertEqual(app.descendants(matching: .any).matching(identifier: "today.progress").count, 1)
+            XCTAssertEqual(progress.label, "0 of 3 done")
+            XCTAssertFalse(app.buttons["today.progress"].exists)
         }
     }
     @MainActor func testTripsPrimaryState() async throws {
@@ -59,7 +61,7 @@ nonisolated final class PlanAuditTests: XCTestCase {
         let appearance = XCUIDevice.shared.appearance
         defer { XCUIDevice.shared.appearance = appearance }
         try DeviceAppearance.set(.light)
-        let app = launchPlanAccount(presentLegend: legend)
+        let app = launchPlanAccount(presentLegend: legend, freezePlanClock: true)
         defer { app.terminate() }
         try navigate(app)
         _ = try UIWait.stableFrames([app.scrollViews.firstMatch], timeout: 8)
@@ -184,8 +186,11 @@ nonisolated final class PlanAuditTests: XCTestCase {
             return (false, "No unique scroll for \(text.identifier), frame=\(originalFrame)")
         }
         // System glass can cover scroll content; measure the same text in its unobscured reading position.
-        guard reveal(text, in: app, scroll: scroll), text.label == label else {
+        guard reveal(text, in: app, scroll: scroll) else {
             return (false, "Cannot reveal the attributed text: \(text.identifier), original=\(originalFrame)")
+        }
+        guard text.label == label else {
+            return (false, "Revealed text changed: expected=\(label), actual=\(text.label)")
         }
         let current = app.staticTexts.matching(identifier: text.identifier).allElementsBoundByIndex
         guard current.count == 1, current[0].label == label, current[0].frame == text.frame else {
@@ -208,19 +213,20 @@ nonisolated final class PlanAuditTests: XCTestCase {
     }
 
     @MainActor private func viewport(in app: XCUIApplication, scroll: XCUIElement) -> CGRect {
-        var frame = AuthUIFlow.viewport(in: app, scrollFrame: scroll.frame)
-        let scrollBottom = frame.maxY
         let navigation = app.navigationBars.firstMatch
-        if navigation.exists { frame.origin.y = max(frame.minY, navigation.frame.maxY) }
         let tabBar = app.tabBars.firstMatch
-        let bottom = tabBar.exists ? min(scrollBottom, tabBar.frame.minY) : scrollBottom
-        frame.size.height = max(0, bottom - frame.minY)
-        return frame
+        return AuthScrollGesture.readingViewport(
+            AuthUIFlow.viewport(in: app, scrollFrame: scroll.frame),
+            navigationBar: navigation.exists ? navigation.frame : nil,
+            tabBar: tabBar.exists ? tabBar.frame : nil, clearance: PlanUITokens.space4)
     }
 
     @MainActor private func reveal(_ text: XCUIElement, in app: XCUIApplication, scroll: XCUIElement) -> Bool {
         for _ in 0..<12 {
-            do { _ = try UIWait.stableFrames([text, scroll], timeout: 5) } catch { return false }
+            var elements = [text, scroll]
+            if app.tabBars.firstMatch.exists { elements.append(app.tabBars.firstMatch) }
+            if app.navigationBars.firstMatch.exists { elements.append(app.navigationBars.firstMatch) }
+            do { _ = try UIWait.stableFrames(elements, timeout: 5) } catch { return false }
             let viewport = viewport(in: app, scroll: scroll)
             if viewport.contains(text.frame) { return true }
             guard let gesture = AuthScrollGesture.reveal(text.frame, in: viewport) else { return false }

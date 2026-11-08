@@ -78,7 +78,7 @@ SUITES = {'AppTests': {'logic': ('TripsLayoutTests', 'StepSheetLayoutTests', 'To
                            'StoredDataReadinessTests',
                            'DeviceIdentityTests',
                            'SmokeTests')},
- 'DesignSystemTests': {'logic': ('PlanLayoutEvidenceTests', 'AuthBoardContrastTests', 'ExactLineTextLayoutTests', 'PrimitiveTests', 'SmokeTests', 'TypographyTests'),
+ 'DesignSystemTests': {'logic': ('PlanPageGeometryTests', 'PlanLayoutEvidenceTests', 'AuthBoardContrastTests', 'ExactLineTextLayoutTests', 'PrimitiveTests', 'SmokeTests', 'TypographyTests'),
                        'matrix': ('LaunchImagesTests',)},
  'LaunchTests': {'logic': ('FlightPathTests',
                            'LaunchGlowTests',

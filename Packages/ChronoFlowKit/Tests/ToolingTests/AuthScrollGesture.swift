@@ -1,6 +1,14 @@
 import CoreGraphics
 
 nonisolated enum AuthScrollGesture {
+    static func readingViewport(
+        _ viewport: CGRect, navigationBar: CGRect?, tabBar: CGRect?, clearance: CGFloat
+    ) -> CGRect {
+        let top = max(viewport.minY, navigationBar?.maxY ?? viewport.minY) + clearance
+        let bottom = min(viewport.maxY, tabBar?.minY ?? viewport.maxY) - clearance
+        return CGRect(x: viewport.minX, y: top, width: viewport.width, height: max(0, bottom - top))
+    }
+
     static func viewport(
         window: CGRect, safeArea: CGRect, scroll: CGRect, keyboard: CGRect?, includingNavigationBar: Bool = false
     ) -> CGRect {

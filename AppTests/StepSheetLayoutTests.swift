@@ -78,7 +78,9 @@ extension View {
     }
 }
 
-@MainActor func assertPlanScrollFits(_ host: AuthTestHost, content: PlanMeasuredContent) async throws {
+@MainActor func assertPlanScrollFits(
+    _ host: AuthTestHost, content: PlanMeasuredContent, horizontalGutter: CGFloat = 0
+) async throws {
     let scrolls = authScrollViews(host.controller.view)
     XCTAssertFalse(scrolls.isEmpty)
     for scroll in scrolls where !scroll.isHidden && scroll.bounds.width > 0 {
@@ -108,9 +110,11 @@ extension View {
             for frame in content.frames {
                 XCTAssertFalse(
                     frame.isEmpty || frame.isInfinite || frame.isNull, "Invalid content: \(frame) \(context)")
-                XCTAssertGreaterThanOrEqual(frame.minX, safe.left - 1, "content=\(frame) \(context)")
+                XCTAssertGreaterThanOrEqual(
+                    frame.minX, safe.left + horizontalGutter - 1, "content=\(frame) \(context)")
                 XCTAssertLessThanOrEqual(
-                    frame.maxX, host.window.bounds.width - safe.right + 1, "content=\(frame) \(context)")
+                    frame.maxX, host.window.bounds.width - safe.right - horizontalGutter + 1,
+                    "content=\(frame) \(context)")
             }
         }
         XCTAssertTrue(scroll.contentOffset.y.isFinite)
