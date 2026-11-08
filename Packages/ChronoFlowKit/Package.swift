@@ -34,7 +34,7 @@ let package = Package(
             exclude: ["Fixtures/README.md"],
             resources: [
                 .copy("Fixtures/auth"), .copy("Fixtures/account"), .copy("Fixtures/trips"), .copy("Fixtures/errors"),
-                .copy("Fixtures/plans"),
+                .copy("Fixtures/plans"), .copy("Fixtures/wizard"),
             ],
             swiftSettings: [.defaultIsolation(nil), .define("CHRONOFLOW_MOCK_SCENARIOS")]),
         .target(

@@ -34,7 +34,7 @@ host tests can use the scenarios without compiling credentials into the Release 
 `MockAppSeed+Fixtures.swift` embeds RN's `fixture-data.ts` default settings (including
 `createMockAccount`'s optional-items override), `fixtures/trips.ts` and all seven `fixtures/plans`
 payloads, read on 6 November 2026. They are mock data, separate from the sanitized API contract
-fixtures. Trip detail contracts exclude mock-only form/revision; no wizard is implemented here.
+fixtures. Trip detail contracts exclude mock-only form/revision. Phase 13 shares these non-account trip templates with mock generation; default account seeding and its credentials remain Debug-only. The template data is now available to the explicitly selected mock source in either build configuration.
 
 Verify on the host with `sh Scripts/host-tests.sh --filter DataSourceSelectionTests`.
 Hosted composition: `make targeted DEVICES="17e" ONLY="AppTests/DataSourceFactoryHostedTests"`.
@@ -58,15 +58,15 @@ These manual commands are excluded from `make quick` and `make check` because th
 that sibling and pinned commit. Generation also requires Python 3 and the toolchain’s
 `xcrun swift format`, with no added dependencies or network access.
 
-The generator follows the trip list/detail DTO dependency graph through Data/Api,
+The generator follows the trip list/detail and member trip-wizard DTO dependency graphs through Data/Api,
 Data/Trips, Data/Plan, Planner/Input, Planner/Output, Enums and Planning/Copy.
 It also includes all Planner/Output and Enums literals for the manual contracts gate.
 The backend literal `unknown` becomes `.unknownValue`, reserving `.unknown(String)` for future literals.
 It emits Codable/Sendable/Equatable structs, public initializers, optional nullable or
 optional properties and string enums that round-trip `.unknown(String)` values.
-Web DTO numbers here are integral (PHP `int`); mixed copy values retain decimal JSON numbers.
+Web DTO numbers are integral (PHP `int`) except wizard prompt min/max bounds, which use Double for 0.1–9.9 ratings; mixed copy values retain decimal JSON numbers.
 Unsupported syntax and changed hand-written union signatures stop generation.
-Only block parameter dispatch and copy argument unions are hand-written. Block parameters
+Block parameter dispatch and copy argument unions are hand-written; wizard primitive answer records reuse JSONValue and their envelope/profile request shapes are hand-written because they have no generated TS DTO. Snake_case DTO fields have generated CodingKeys. Block parameters
 are decoded by the enclosing block’s `type`; the three caffeine families distinguish
 legacy string amounts from structured drinks, while `caffeine_routine` uses its string shape.
 The indistinguishable null-exception `no_caffeine` shapes decode to the legacy variant.

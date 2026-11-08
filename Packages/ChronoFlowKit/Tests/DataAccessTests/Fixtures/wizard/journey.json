@@ -1,0 +1,9 @@
+{
+  "code": "validation_failed",
+  "message": "The given data was invalid.",
+  "errors": {
+    "outbound.legs.0.stay.bed_available_from_local": "Enter a valid time.",
+    "return.legs.0.arrive_local": "Check the departure and arrival times.",
+    "trip_end_nights": "The planner cannot use this value."
+  }
+}

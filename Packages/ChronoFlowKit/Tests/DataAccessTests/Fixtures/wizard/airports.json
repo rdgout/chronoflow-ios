@@ -1,0 +1,11 @@
+{
+  "airports": [
+    {
+      "iata": "AMS",
+      "name": "Amsterdam Airport Schiphol",
+      "city": "Amsterdam",
+      "country": "NL",
+      "timezone": "Europe/Amsterdam"
+    }
+  ]
+}

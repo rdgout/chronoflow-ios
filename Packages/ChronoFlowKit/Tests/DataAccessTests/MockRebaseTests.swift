@@ -8,7 +8,7 @@ import Testing
     @Suite struct MockRebaseTests {
         @Test(arguments: ["2026-10-25T12:00:00Z", "2026-11-01T12:00:00Z", "2026-11-07T12:00:00Z"])
         func preservesWallTimesAcrossAmsterdamAndNewYorkDST(nowText: String) throws {
-            let originals = try JSONDecoder().decode(MockAppSeed.Fixtures.self, from: MockAppSeed.fixtureData())
+            let originals = try JSONDecoder().decode(MockAppSeed.Fixtures.self, from: MockTripFixtures.fixtureData())
             let now = MockAppSeed.instant(nowText)
             var changedOffsets: Set<String> = []
             func expectWallTime(_ old: String, _ new: String, zone: String) {

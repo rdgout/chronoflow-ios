@@ -179,7 +179,7 @@ import Testing
             let account = try #require(seed.accounts[MockScenarioValues.demoID])
             let statuses = Set(account.trips.map { $0.card.progress.status })
             #expect(statuses == [.active, .upcoming, .completed])
-            let originals = try JSONDecoder().decode(MockAppSeed.Fixtures.self, from: MockAppSeed.fixtureData())
+            let originals = try JSONDecoder().decode(MockAppSeed.Fixtures.self, from: MockTripFixtures.fixtureData())
             for (index, trip) in account.trips.enumerated() {
                 let old = originals.trips[index]
                 let detail = try #require(account.details[trip.card.id])

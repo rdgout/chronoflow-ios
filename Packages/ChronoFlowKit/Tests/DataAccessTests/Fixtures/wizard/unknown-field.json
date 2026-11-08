@@ -1,0 +1,7 @@
+{
+  "code": "validation_failed",
+  "message": "The given data was invalid.",
+  "errors": {
+    "outbound.legs.0.surprise": "This setting cannot be changed here."
+  }
+}

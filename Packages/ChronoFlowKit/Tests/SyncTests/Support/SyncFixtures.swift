@@ -163,5 +163,17 @@ actor ScriptedSource: DataSource {
     func verifyEmail(_ input: SignedVerificationInput) throws -> EmailVerificationStatus {
         throw DataFailure.server(status: nil)
     }
+    func searchAirports(query: String, limit: Int?) throws -> [ApiAirportSuggestion] {
+        throw DataFailure.server(status: nil)
+    }
+    func reviewTrip(_ input: ApiTripReviewInput) throws -> ApiTripReview { throw DataFailure.server(status: nil) }
+    func reviewTripEdit(_ input: ApiTripReviewInput, id: String, sourceRevision: String) throws -> ApiTripReview {
+        throw DataFailure.server(status: nil)
+    }
+    func saveTrip(identity: ApiTripSaveInput) throws -> ApiTripSaveResult { throw DataFailure.server(status: nil) }
+    func updateTrip(id: String, identity: ApiTripSaveInput, sourceRevision: String) throws -> ApiTripSaveResult {
+        throw DataFailure.server(status: nil)
+    }
+    func tripInput(id: String) throws -> ApiTripInputSnapshot { throw DataFailure.server(status: nil) }
     func signOut() throws { throw DataFailure.server(status: nil) }
 }

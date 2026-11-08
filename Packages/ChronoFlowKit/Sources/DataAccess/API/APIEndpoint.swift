@@ -7,17 +7,19 @@ public struct APIEndpoint: Sendable {
     public let path: [String]
     public let access: Access
     public let body: Data?
+    public let query: [String: String]
     public let timeout: TimeInterval
 
     public init(
         method: String = "GET", path: [String], access: Access = .authenticated, body: Data? = nil,
-        timeout: TimeInterval = 15
+        timeout: TimeInterval = 15, query: [String: String] = [:]
     ) {
         self.method = method
         self.path = path
         self.access = access
         self.body = body
         self.timeout = timeout
+        self.query = query
     }
     public func url(relativeTo base: APIBaseURL) throws -> URL {
         var c = URLComponents(url: base.url, resolvingAgainstBaseURL: false)!
@@ -33,6 +35,10 @@ public struct APIEndpoint: Sendable {
             ? "/" + encoded.joined(separator: "/")
             : "/" + c.percentEncodedPath.trimmingCharacters(in: CharacterSet(charactersIn: "/")) + "/"
                 + encoded.joined(separator: "/")
+        if !query.isEmpty {
+            c.queryItems = query.sorted { $0.key < $1.key }.map { URLQueryItem(name: $0.key, value: $0.value) }
+            c.percentEncodedQuery = c.percentEncodedQuery?.replacingOccurrences(of: "+", with: "%2B")
+        }
         guard let url = c.url else { throw DataFailure.server(status: nil) }
         return url
     }

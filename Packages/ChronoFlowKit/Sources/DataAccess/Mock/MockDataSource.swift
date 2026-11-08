@@ -5,7 +5,7 @@ import Foundation
 public enum MockMethod: String, Sendable, CaseIterable {
     case passkeyOptions, passkeyLogin, signIn, completeTwoFactor, signUp, requestPasswordReset, resetPassword
     case verificationStatus, resendVerificationEmail, verifyEmail, signOut, fetchIdentity, fetchAccount, fetchTrips,
-        fetchTripDetail, send
+        fetchTripDetail, send, searchAirports, reviewTrip, reviewTripEdit, saveTrip, updateTrip, tripInput
 }
 
 public actor MockDataSource: DataSource {
@@ -548,4 +548,189 @@ public actor MockDataSource: DataSource {
         case .unsupported(let kind, _): throw DataFailure.unsupported(kind)
         }
     }
+}
+
+extension MockDataSource {
+    public func searchAirports(query: String, limit: Int? = nil) async throws -> [ApiAirportSuggestion] {
+        try await begin(.searchAirports)
+        let rawCount = query.count
+        let query = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        let count = limit ?? 8
+        guard rawCount <= 60, (2...60).contains(query.count), (1...20).contains(count) else {
+            throw validation((2...60).contains(query.count) ? "limit" : "query", "Choose one of the available options.")
+        }
+        return Array(
+            try MockTripGeneration.airports().filter { airport in
+                [airport.iata, airport.name, airport.city ?? "", airport.country].contains {
+                    $0.localizedCaseInsensitiveContains(query)
+                }
+            }.prefix(count))
+    }
+
+    public func tripInput(id: String) async throws -> ApiTripInputSnapshot {
+        try await begin(.tripInput)
+        let owner = try accountID(verified: true)
+        if let input = state!.wizardInputs?[owner + ":" + id] { return input }
+        guard let detail = state!.accounts[owner]!.details[id] else { throw DataFailure.server(status: 404) }
+        return try MockTripGeneration.snapshot(detail)
+    }
+
+    public func reviewTrip(_ input: ApiTripReviewInput) async throws -> ApiTripReview {
+        try await begin(.reviewTrip)
+        return try wizardReview(input, tripID: nil, sourceRevision: nil)
+    }
+
+    public func reviewTripEdit(_ input: ApiTripReviewInput, id: String, sourceRevision: String) async throws
+        -> ApiTripReview
+    {
+        try await begin(.reviewTripEdit)
+        return try wizardReview(input, tripID: id, sourceRevision: sourceRevision)
+    }
+
+    private func wizardReview(_ input: ApiTripReviewInput, tripID: String?, sourceRevision: String?) throws
+        -> ApiTripReview
+    {
+        let owner = try accountID(verified: true)
+        let time = now().timeIntervalSince1970
+        try limit("review:" + owner, count: 30)
+        if let tripID {
+            guard state!.accounts[owner]?.details[tripID] != nil else { throw DataFailure.server(status: 404) }
+            let revision =
+                state!.wizardInputs?[owner + ":" + tripID]?.sourceRevision
+                ?? state!.accounts[owner]!.details[tripID]?.plan.meta.inputHash
+            guard revision == sourceRevision else {
+                throw DataFailure.reviewExpired
+            }
+        }
+        if let identity = input.identity {
+            guard let previous = state!.wizardDrafts?[identity.token], previous.owner == owner,
+                previous.tripID == tripID, previous.expiresAt > time,
+                previous.review.identity.inputRevision == identity.inputRevision,
+                previous.review.identity.reviewRevision == identity.reviewRevision
+            else { throw DataFailure.reviewExpired }
+        }
+        var settings = state!.accounts[owner]!.snapshot.settings
+        if let profile = input.profile, !profile.fields.isEmpty {
+            do { try MockSettings.validate(section: .bodyClock, patch: profile, current: settings) } catch let failure
+                as DataFailure
+            {
+                if case .validation(let fields, let status) = failure {
+                    let prefixed = Dictionary(uniqueKeysWithValues: fields.map { ("profile." + $0.key, $0.value) })
+                    throw TripWizardErrors.map(
+                        .validation(fields: prefixed, status: status), outboundCount: input.input.outbound.legs.count)
+                }
+                throw failure
+            }
+            for (key, value) in profile.fields { settings.bodyClock[MockSettings.camel(key)] = value }
+            if !Set(profile.fields.keys).isDisjoint(with: [
+                "habitual_bed", "habitual_wake", "free_day_status", "free_day_bed", "free_day_wake", "chronotype",
+            ]) {
+                settings.sleepAnswered = true
+            }
+        }
+        let identity = ApiReviewIdentity(
+            token: input.identity?.token ?? id(), inputRevision: (input.identity?.inputRevision ?? 0) + 1,
+            reviewRevision: (input.identity?.reviewRevision ?? 0) + 1, sourceRevision: sourceRevision)
+        let review: ApiTripReview
+        do {
+            review = try MockTripGeneration.review(
+                input.input, identity: identity, settings: settings, edit: tripID != nil,
+                paidDirections: wizardPaidDirections(owner: owner, tripID: tripID))
+        } catch let failure as DataFailure {
+            throw TripWizardErrors.map(failure, outboundCount: input.input.outbound.legs.count)
+        }
+        try update { state in
+            state.accounts[owner]!.snapshot.settings = settings
+            state.accounts[owner]!.snapshot.readiness = MockSettings.readiness(settings.bodyClock)
+            var drafts = state.wizardDrafts ?? [:]
+            drafts = drafts.filter { $0.value.expiresAt > time }
+            drafts[identity.token] = MockWizardDraft(
+                owner: owner, tripID: tripID, input: input.input, review: review, profile: settings.bodyClock,
+                expiresAt: time + 1800)
+            state.wizardDrafts = drafts
+        }
+        return review
+    }
+
+    public func saveTrip(identity: ApiTripSaveInput) async throws -> ApiTripSaveResult {
+        try await begin(.saveTrip)
+        return try wizardSave(identity, tripID: nil, sourceRevision: nil)
+    }
+
+    public func updateTrip(id: String, identity: ApiTripSaveInput, sourceRevision: String) async throws
+        -> ApiTripSaveResult
+    {
+        try await begin(.updateTrip)
+        return try wizardSave(identity, tripID: id, sourceRevision: sourceRevision)
+    }
+
+    private func wizardSave(_ identity: ApiTripSaveInput, tripID: String?, sourceRevision: String?) throws
+        -> ApiTripSaveResult
+    {
+        let owner = try accountID(verified: true)
+        let time = now().timeIntervalSince1970
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .sortedKeys
+        let intent =
+            String(decoding: try encoder.encode(identity), as: UTF8.self) + ":" + (tripID ?? "") + ":"
+            + (sourceRevision ?? "")
+        let key = owner + ":" + identity.draftToken
+        if let receipt = state!.wizardReceipts?[key], receipt.expiresAt > time {
+            guard receipt.intent == intent, state!.accounts[owner]!.details[receipt.tripID] != nil else {
+                throw DataFailure.reviewExpired
+            }
+            return ApiTripSaveResult(tripId: receipt.tripID)
+        }
+        guard let draft = state!.wizardDrafts?[identity.draftToken], draft.owner == owner,
+            draft.tripID == tripID, draft.expiresAt > time,
+            draft.review.identity.inputRevision == identity.inputRevision,
+            draft.review.identity.reviewRevision == identity.reviewRevision,
+            draft.profile == state!.accounts[owner]!.snapshot.settings.bodyClock,
+            draft.review.status == .ok || draft.review.status == .modified
+        else { throw DataFailure.reviewExpired }
+        if let tripID {
+            let revision =
+                state!.wizardInputs?[owner + ":" + tripID]?.sourceRevision
+                ?? state!.accounts[owner]!.details[tripID]?.plan.meta.inputHash
+            guard revision == sourceRevision,
+                draft.review.identity.sourceRevision == sourceRevision
+            else { throw DataFailure.reviewExpired }
+        }
+        let settings = state!.accounts[owner]!.snapshot.settings
+        let currentReview = try MockTripGeneration.review(
+            draft.input, identity: draft.review.identity, settings: settings, edit: tripID != nil,
+            paidDirections: wizardPaidDirections(owner: owner, tripID: tripID))
+        guard currentReview.canSave else { throw DataFailure.notEnoughCredits }
+        try limit("trip-save:" + owner, count: 10)
+        let id = tripID ?? identity.draftToken
+        let (item, detail, input) = try MockTripGeneration.saved(draft, tripID: id)
+        let previousPaid = wizardPaidDirections(owner: owner, tripID: tripID)
+        try update { state in
+            state.accounts[owner]!.trips.removeAll { $0.card.id == id }
+            state.accounts[owner]!.trips.append(item)
+            state.accounts[owner]!.details[id] = detail
+            state.accounts[owner]!.snapshot.settings.planCredits["credits"] = .number(
+                Decimal(currentReview.price.balance - currentReview.price.cost))
+            var receipts = state.wizardReceipts ?? [:]
+            receipts[key] = MockWizardReceipt(intent: intent, tripID: id, expiresAt: time + 86400)
+            state.wizardReceipts = receipts
+            state.wizardDrafts?[identity.draftToken] = nil
+            var inputs = state.wizardInputs ?? [:]
+            inputs[owner + ":" + id] = input
+            state.wizardInputs = inputs
+            var paid = state.wizardPaidDirections ?? [:]
+            let directions: [TripDirection] = draft.input.return == nil ? [.outbound] : [.outbound, .return]
+            paid[owner + ":" + id] = Array(
+                Set(previousPaid + directions.filter { !currentReview.price.freeDirections.contains($0) }))
+            state.wizardPaidDirections = paid
+        }
+        return ApiTripSaveResult(tripId: id)
+    }
+    private func wizardPaidDirections(owner: String, tripID: String?) -> [TripDirection] {
+        guard let tripID else { return [] }
+        if let paid = state!.wizardPaidDirections?[owner + ":" + tripID] { return paid }
+        let hasReturn = state!.accounts[owner]?.details[tripID]?.trip.legs.contains { $0.returnLeg } ?? false
+        return hasReturn ? [.outbound, .return] : [.outbound]
+    }
+
 }

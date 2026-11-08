@@ -1,0 +1,63 @@
+{
+  "identity": {
+    "token": "019a1000-0000-7000-8000-000000000001",
+    "inputRevision": 1,
+    "reviewRevision": 1,
+    "sourceRevision": null,
+    "guestSecret": null
+  },
+  "status": "ok",
+  "reasons": [],
+  "prompts": [],
+  "summary": {
+    "line": {
+      "key": "We shift your clock :shift earlier, starting :count day before you leave.|We shift your clock :shift earlier, starting :count days before you leave.",
+      "args": [
+        {
+          "name": "shift",
+          "kind": "minutes",
+          "value": 420,
+          "tz": null
+        },
+        {
+          "name": "count",
+          "kind": "count",
+          "value": 3,
+          "tz": null
+        }
+      ]
+    },
+    "adaptation": {
+      "goal": "partial",
+      "direction": "earlier",
+      "shiftMin": 420
+    },
+    "preparationDays": 3,
+    "planStartUtc": "2026-11-07T22:00Z",
+    "planStartZone": "Europe/Amsterdam",
+    "planEndDate": "2026-11-21",
+    "endCopy": [],
+    "stayEnd": null
+  },
+  "price": {
+    "state": "create",
+    "cost": 1,
+    "balance": 1,
+    "unlimited": false,
+    "freeDirections": []
+  },
+  "canSave": true,
+  "saveBlockedReason": null,
+  "itinerary": {
+    "legs": [
+      {
+        "journey": "outbound",
+        "legIndex": 0,
+        "departUtc": "2026-11-10T10:00Z",
+        "arriveUtc": "2026-11-10T21:00Z",
+        "flightMin": 660
+      }
+    ],
+    "layovers": []
+  }
+}

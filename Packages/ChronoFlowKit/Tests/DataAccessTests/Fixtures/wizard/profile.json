@@ -1,0 +1,9 @@
+{
+  "code": "validation_failed",
+  "message": "The given data was invalid.",
+  "errors": {
+    "profile": "This setting cannot be changed here.",
+    "profile.age_band": "Choose one of the available options.",
+    "profile.habitual_bed": "Enter a valid time."
+  }
+}
