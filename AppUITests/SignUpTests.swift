@@ -1,6 +1,39 @@
 import XCTest
 
 nonisolated final class SignUpTests: XCTestCase {
+    @MainActor func testOfflineRegistrationShowsConnectionBanner() {
+        let app = launchForgotApp(offline: true)
+        defer { app.terminate() }
+        openSignUp(app)
+        fillSignUp(app, email: "new@example.com")
+        let banner = AuthUIFlow.control("auth.banner", in: app)
+        XCTAssertTrue(banner.waitForExistence(timeout: 6))
+        AuthUIFlow.reveal(banner, in: app)
+        XCTAssertTrue(banner.isHittable)
+        XCTAssertTrue(banner.label.contains("Needs a connection"))
+        XCTAssertEqual(app.textFields["sign-up.name"].value as? String, "Traveller")
+        XCTAssertEqual(app.textFields["sign-up.email"].value as? String, "new@example.com")
+        XCTAssertTrue(app.buttons["sign-up.submit"].isEnabled)
+        XCTAssertFalse(app.scrollViews["verify.scroll"].exists)
+    }
+
+    @MainActor func testTakenEmailOffersTheDesignedSignInPath() {
+        let app = launchForgotApp()
+        defer { app.terminate() }
+        openSignUp(app)
+        fillSignUp(app, email: "demo@example.com")
+        let banner = AuthUIFlow.control("auth.banner", in: app)
+        XCTAssertTrue(banner.waitForExistence(timeout: 6))
+        XCTAssertTrue(banner.label.contains("There's already an account with this email."))
+        let signIn = app.buttons["sign-up.back"]
+        AuthUIFlow.reveal(signIn, in: app)
+        XCTAssertTrue(signIn.label.contains("Already have an account? Sign in"))
+        signIn.tap()
+        XCTAssertTrue(app.textFields["sign-in.email"].waitForExistence(timeout: 4))
+        AuthUIFlow.signIn(app, email: MockScenarioValues.demoEmail)
+        XCTAssertTrue(app.staticTexts["walkthrough.title"].waitForExistence(timeout: 8))
+    }
+
     @MainActor func testRegistrationToggleConsentAndUnverifiedGate() {
         let app = launchForgotApp()
         defer { app.terminate() }

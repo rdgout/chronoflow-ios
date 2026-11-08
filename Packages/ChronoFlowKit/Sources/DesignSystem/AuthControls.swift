@@ -226,7 +226,7 @@ import SwiftUI
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 0) {
                     WelcomeText(title, style: Typography.authStrong, color: .cardForeground)
-                    WelcomeText(message, style: Typography.authHint, color: .cardForeground)
+                    if !message.isEmpty { WelcomeText(message, style: Typography.authHint, color: .cardForeground) }
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(.vertical, AuthTokens.bannerVertical).padding(.horizontal, AuthTokens.bannerHorizontal)

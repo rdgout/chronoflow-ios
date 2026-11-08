@@ -22,7 +22,7 @@ nonisolated final class ForgotPasswordControlTests: XCTestCase {
             let failures: [(DataFailure, AuthBannerKind?)] = [
                 (.server(status: 503), .server),
                 (.validation(fields: ["email": FieldMessage(key: "Please fill this in.")], status: 422), nil),
-                (.throttled(retryAfterSeconds: 60, status: 429), .locked), (.offline, nil),
+                (.throttled(retryAfterSeconds: 60, status: 429), .locked), (.offline, .offline),
             ]
             for (failure, banner) in failures {
                 XCTAssertTrue(model.form.begin(.sendResetLink))

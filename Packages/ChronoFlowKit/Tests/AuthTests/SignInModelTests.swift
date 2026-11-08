@@ -13,7 +13,7 @@ actor AuthTestSession: SessionControlling {
         if let failure { throw failure }
         accepted.append(result)
     }
-    func fail(_ failure: SessionFailure) { self.failure = failure }
+    func fail(_ failure: SessionFailure?) { self.failure = failure }
 }
 
 func authTestSource(verified: Bool = true, twoFactor: Bool = false) throws -> MockDataSource {
@@ -81,7 +81,7 @@ func authTestSource(verified: Bool = true, twoFactor: Bool = false) throws -> Mo
             await model.submitPassword()
             #expect(model.form.failure == failure && model.password.isEmpty && model.email == "retained@example.com")
         }
-        #expect(model.form.banner == nil)
+        #expect(model.form.banner == .offline)
     }
     @Test func concurrentAttemptsAndEditingWhileBusyAreIgnored() async throws {
         let gate = IdentityGate()
@@ -101,20 +101,31 @@ func authTestSource(verified: Bool = true, twoFactor: Bool = false) throws -> Mo
         await attempt.value
         #expect(await session.accepted.count == 1 && model.email == "demo@example.com" && model.password.isEmpty)
     }
-    @Test func cancellationAndStoreFailureNeverRouteOrShowUndesignedBanner() async throws {
+    @Test(arguments: [
+        SessionFailure.credentialsUnavailable, .databaseUnavailable, .credentialWrite, .invalidResult, .superseded,
+    ])
+    func storeFailuresShowAndAnnounceTheServerBannerWithoutRouting(_ failure: SessionFailure) async throws {
         let session = AuthTestSession()
-        await session.fail(.databaseUnavailable)
+        await session.fail(failure)
         var routes: [Route] = []
         let model = SignInModel(
             source: try authTestSource(), session: session, deviceIdentity: { "0199a3c0-0000-7000-8000-000000000001" },
-            deviceName: "test", route: { routes.append($0) })
+            deviceName: "test",
+            assertionProvider: DeterministicAssertionProvider { _ in
+                Base64URL.assertion(
+                    credentialID: Data([1]), clientDataJSON: Data([2]), authenticatorData: Data([3]),
+                    signature: Data([4]), userHandle: nil)
+            }, route: { routes.append($0) })
         model.editEmail("demo@example.com")
         model.editPassword("Password123!")
         await model.submitPassword()
-        #expect(routes.isEmpty && model.form.banner == nil && model.password.isEmpty)
-        #expect(model.sessionFailure == .databaseUnavailable)
+        #expect(routes.isEmpty && model.form.banner == .server && model.password.isEmpty)
+        #expect(model.sessionFailure == failure)
+        #expect(model.form.takeAnnouncement(locale: Locale(identifier: "en")) != nil)
         await model.submitPasskey()
-        #expect(routes.isEmpty && model.form.banner == nil && !model.form.busy)
+        #expect(routes.isEmpty && model.form.banner == .server && !model.form.busy)
+        #expect(model.sessionFailure == failure)
+        #expect(model.form.takeAnnouncement(locale: Locale(identifier: "nl")) != nil)
     }
     @Test func accountGatePrecedenceUsesAvailableAccountRecord() {
         func account(verified: Bool, accepted: String?, seen: Bool) -> SessionAccount {

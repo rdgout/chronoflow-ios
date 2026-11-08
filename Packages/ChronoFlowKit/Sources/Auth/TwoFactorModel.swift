@@ -68,9 +68,8 @@ import Observation
             guard active, !(error is CancellationError) else { return }
             if let failure = error as? SessionFailure {
                 sessionFailure = failure
-            } else {
-                form.receive(error as? DataFailure ?? .server(status: nil))
             }
+            form.receive(error as? DataFailure ?? .server(status: nil))
         }
     }
 

@@ -50,7 +50,7 @@ import Testing
             (DataFailure.validation(fields: ["email": field], status: 422), nil),
             (.server(status: 503), AuthBannerKind.server),
             (.throttled(retryAfterSeconds: 73, status: 429), .locked),
-            (.offline, nil),
+            (.offline, .offline),
             (.validation(fields: ["hidden": field], status: 422), .server),
             (.validation(fields: ["email": FieldMessage(key: "Untranslated server text")], status: 422), .server),
         ] {

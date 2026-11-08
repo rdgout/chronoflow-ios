@@ -44,6 +44,28 @@ import Testing
                         ], status: 422))
         }
     }
+    @Test func registrationValidationEnvelopePreservesVisibleFieldMessages() async throws {
+        let body =
+            #"{"code":"validation_failed","message":"Please fill this in.","errors":{"name":"Please fill this in.","email":"Please fill this in.","password":"Please fill this in."}}"#
+        let server = StubServer { request in
+            #expect(request.url?.path == "/v1/auth/register" && request.httpMethod == "POST")
+            #expect(request.timeoutInterval == 90)
+            return .init(422, body)
+        }
+        let source = APIDataSource(client: try server.client())
+        await #expect(
+            throws: DataFailure.validation(
+                fields: [
+                    "name": FieldMessage(key: "Please fill this in."),
+                    "email": FieldMessage(key: "Please fill this in."),
+                    "password": FieldMessage(key: "Please fill this in."),
+                ], status: 422)
+        ) {
+            try await source.signUp(
+                RegisterInput(
+                    name: "", email: "", password: "", passwordConfirmation: "", deviceID: "test", deviceName: "test"))
+        }
+    }
     @Test(arguments: [
         "{}", "<html>Error</html>", #"{"code":"validation_failed","message":"bad"}"#,
         #"{"code":"validation_failed","message":"bad","errors":{}}"#,
@@ -107,12 +129,18 @@ import Testing
             #expect(crossOrigin ? foreign.requests.count == 1 : server.requests.count == 3)
         }
     }
-    @Test func transportAndExplicitCancellation() async throws {
-        let failed = StubServer { _ in .init(error: URLError(.timedOut)) }
+    @Test(arguments: [
+        URLError.Code.timedOut, .dnsLookupFailed, .cannotFindHost, .secureConnectionFailed,
+        .networkConnectionLost, .notConnectedToInternet,
+    ])
+    func transportFailuresMapToOffline(_ code: URLError.Code) async throws {
+        let failed = StubServer { _ in .init(error: URLError(code)) }
         let client = try failed.client()
         await #expect(throws: DataFailure.offline) {
             let _: AccountIdentity = try await client.request(APIEndpoint(path: ["users", "me"]))
         }
+    }
+    @Test func explicitCancellationIsNotAnOfflineFailure() async throws {
         let blocked = StubServer { _ in .init(hold: true) }
         let held = try blocked.client()
         let task = Task { let _: AccountIdentity = try await held.request(APIEndpoint(path: ["users", "me"])) }

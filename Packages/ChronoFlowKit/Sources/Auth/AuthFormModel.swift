@@ -3,13 +3,14 @@ import Foundation
 import Observation
 
 nonisolated public enum AuthBannerKind: String, CaseIterable, Sendable {
-    case credentials, locked, server, emailTaken
+    case credentials, locked, server, emailTaken, offline
     public var title: String {
         switch self {
         case .emailTaken: "There's already an account with this email."
         case .credentials: "That email and password don't match."
         case .locked: "Too many attempts."
         case .server: "Something went wrong on our side."
+        case .offline: "Needs a connection"
         }
     }
     public var body: String {
@@ -18,6 +19,7 @@ nonisolated public enum AuthBannerKind: String, CaseIterable, Sendable {
         case .credentials: "Check both and try again, or reset your password."
         case .locked: "Wait a few minutes before you try again, or reset your password now."
         case .server: "Try again in a moment."
+        case .offline: ""
         }
     }
     public func body(for context: AuthFormContext) -> String {
@@ -45,7 +47,7 @@ nonisolated public struct AuthFailureMapping: Sendable, Equatable {
 
     public init(_ failure: DataFailure, displayedFields: Set<String>, context: AuthFormContext = .signIn) {
         switch failure {
-        case .offline: break
+        case .offline: banner = .offline
         case .throttled(let seconds, _):
             banner = .locked
             retryAfterSeconds = seconds
@@ -83,6 +85,7 @@ nonisolated public struct AuthFailureMapping: Sendable, Equatable {
             }
         default: banner = .server
         }
+        if banner == nil && fields.isEmpty { banner = .server }
     }
 }
 
@@ -137,12 +140,19 @@ nonisolated public struct AuthFailureMapping: Sendable, Equatable {
         banner = mapped.banner
         fields = mapped.fields
         retryAfterSeconds = mapped.retryAfterSeconds
-        if banner != nil { announcementRevision += 1 }
+        announcementRevision += 1
     }
     public func takeAnnouncement(locale: Locale) -> String? {
-        guard let banner, announcedRevision != announcementRevision else { return nil }
+        guard announcedRevision != announcementRevision else { return nil }
+        var messages: [String] = []
+        if let banner {
+            messages.append(AuthCopy.string(banner.title(for: context), locale: locale))
+            let body = banner.body(for: context)
+            if !body.isEmpty { messages.append(AuthCopy.string(body, locale: locale)) }
+        }
+        messages += fields.keys.sorted().compactMap { fields[$0].flatMap { AuthCopy.field($0, locale: locale) } }
+        guard !messages.isEmpty else { return nil }
         announcedRevision = announcementRevision
-        return AuthCopy.string(banner.title(for: context), locale: locale) + " "
-            + AuthCopy.string(banner.body(for: context), locale: locale)
+        return messages.joined(separator: " ")
     }
 }

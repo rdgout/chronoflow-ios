@@ -33,13 +33,6 @@
                 if let banner = model.form.banner {
                     AuthBanner(title: copy(banner.title(for: .verify)), message: copy(banner.body(for: .verify)))
                 }
-                if let failure = model.signOutFailure {
-                    WelcomeText(
-                        copy(failure == .offline ? "Needs a connection" : "Something went wrong"),
-                        style: Typography.authBody, color: .destructive
-                    )
-                    .accessibilityIdentifier("verify.sign-out-error")
-                }
                 if failed {
                     AuthButton(
                         copy("Try again"), busy: model.form.pending == .checkVerification,
@@ -98,11 +91,6 @@
             .onChange(of: model.state) { UIAccessibility.post(notification: .screenChanged, argument: nil) }
             .onChange(of: model.form.announcementRevision) {
                 if let message = model.form.takeAnnouncement(locale: locale) { authAnnounce(message) }
-            }
-            .onChange(of: model.signOutFailure) {
-                if let failure = model.signOutFailure {
-                    authAnnounce(copy(failure == .offline ? "Needs a connection" : "Something went wrong"))
-                }
             }
             .onDisappear {
                 request?.cancel()

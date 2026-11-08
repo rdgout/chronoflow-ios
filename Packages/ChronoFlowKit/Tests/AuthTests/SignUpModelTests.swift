@@ -83,6 +83,47 @@ import Testing
         model.editConfirmation("NewPassword123!")
         await model.submit(language: .en)
         #expect(model.sessionFailure == .credentialWrite && model.password.isEmpty && model.confirmation.isEmpty)
+        #expect(model.form.banner == .server && model.form.takeAnnouncement(locale: Locale(identifier: "nl")) != nil)
+    }
+
+    @Test(arguments: [
+        SessionFailure.credentialsUnavailable, .databaseUnavailable, .credentialWrite, .invalidResult, .superseded,
+    ])
+    func createdAccountAfterSessionFailureCanRecoverThroughSignIn(_ failure: SessionFailure) async throws {
+        let source = try authTestSource()
+        let session = AuthTestSession()
+        await session.fail(failure)
+        var routes: [Route] = []
+        let signIn = SignInModel(
+            source: source, session: session, deviceIdentity: { "0199a3c0-0000-7000-8000-000000000001" },
+            deviceName: "test", route: { routes.append($0) })
+        signIn.navigation.push(.signUp)
+        let model = signIn.makeSignUpModel()
+        model.editName("Name")
+        model.editEmail("new@example.com")
+        model.editPassword("NewPassword123!")
+        model.editConfirmation("NewPassword123!")
+        await model.submit(language: .en)
+        #expect(model.sessionFailure == failure && model.form.banner == .server)
+        #expect(model.form.takeAnnouncement(locale: Locale(identifier: "en")) != nil)
+        #expect(routes.isEmpty && signIn.navigation.path == [.signUp])
+        #expect(model.password.isEmpty && model.confirmation.isEmpty)
+        model.editPassword("NewPassword123!")
+        model.editConfirmation("NewPassword123!")
+        await model.submit(language: .en)
+        #expect(model.sessionFailure == nil && model.form.banner == .emailTaken)
+        #expect(model.form.takeAnnouncement(locale: Locale(identifier: "nl")) != nil)
+        #expect(model.name == "Name" && model.email == "new@example.com")
+        #expect(model.password.isEmpty && model.confirmation.isEmpty)
+        #expect(try await source.inbox().count == 1)
+        model.backToSignIn()
+        #expect(signIn.navigation.path.isEmpty)
+        await session.fail(nil)
+        signIn.editEmail(model.email)
+        signIn.editPassword("NewPassword123!")
+        await signIn.submitPassword()
+        #expect(await session.accepted.count == 1)
+        #expect(signIn.form.failure == nil && signIn.sessionFailure == nil && routes == [.verify])
     }
     @Test(arguments: [
         "Use at least one symbol.", "The passwords don't match yet.",

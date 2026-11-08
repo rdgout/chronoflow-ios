@@ -56,8 +56,11 @@ struct AuthFailureMappingTests {
                 ], status: 422), displayedFields: ["email"])
         #expect(credentials.banner == .credentials && credentials.fields.isEmpty)
     }
-    @Test func offlineHasNoPresentationAndThrottleRetainsDeadline() {
-        #expect(AuthFailureMapping(.offline, displayedFields: []).banner == nil)
+    @Test func offlineUsesTheRNBannerAndThrottleRetainsDeadline() {
+        #expect(AuthFailureMapping(.offline, displayedFields: []).banner == .offline)
+        #expect(AuthBannerKind.offline.body.isEmpty)
+        #expect(AuthCopy.string(AuthBannerKind.offline.title, locale: Locale(identifier: "en")) == "Needs a connection")
+        #expect(AuthCopy.string(AuthBannerKind.offline.title, locale: Locale(identifier: "nl")) == "Verbinding nodig")
         let throttle = AuthFailureMapping(.throttled(retryAfterSeconds: 73, status: 429), displayedFields: [])
         #expect(throttle.banner == .locked && throttle.retryAfterSeconds == 73)
     }
