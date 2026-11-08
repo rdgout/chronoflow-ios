@@ -45,7 +45,7 @@ import XCTest
             .font(Typography.screenPageTitleLg.font).foregroundStyle(ColorToken.foreground.color)
             .padding(.horizontal, PlanUITokens.space4).padding(.top, PlanUITokens.space1)
             .accessibilityAddTraits(.isHeader).accessibilityIdentifier("settings.title")
-            SettingsHomeView(model: model)
+            SettingsHomeContent(model: model)
         }.background(ColorToken.background.color)
     }
 }
@@ -69,7 +69,7 @@ nonisolated final class SettingsSnapshotTests: XCTestCase {
                         try verifyPlanSnapshot(
                             home, suite: "Settings", state: "home", fixture: fixture, variant: variant)
                         host.configure(
-                            SignOutPendingSheet(model: try settingsFixture(pending: true)),
+                            SignOutPendingContent(model: try settingsFixture(pending: true)),
                             style: style, language: language, category: category)
                         try await host.settle()
                         let pending = try capture(

@@ -42,6 +42,29 @@
         @Environment(\.locale) private var locale
         @Bindable private var model: SettingsHomeModel
         public init(model: SettingsHomeModel) { self.model = model }
+
+        public var body: some View {
+            SettingsHomeContent(model: model, navigationEnabled: true)
+                .navigationTitle(
+                    SettingsStrings.text(
+                        "Settings", language: locale.language.languageCode?.identifier == "nl" ? .nl : .en)
+                )
+                .navigationBarTitleDisplayMode(.large)
+                .background(SettingsNavigationStyle())
+                .sheet(isPresented: $model.showsPending) { SignOutPendingSheet(model: model) }
+        }
+    }
+
+    @MainActor public struct SettingsHomeContent: View {
+        @Environment(\.locale) private var locale
+        private let model: SettingsHomeModel
+        private let navigationEnabled: Bool
+
+        public init(model: SettingsHomeModel, navigationEnabled: Bool = false) {
+            self.model = model
+            self.navigationEnabled = navigationEnabled
+        }
+
         private var language: Language { locale.language.languageCode?.identifier == "nl" ? .nl : .en }
         private func t(_ key: String) -> String { SettingsStrings.text(key, language: language) }
 
@@ -49,12 +72,8 @@
             List {
                 if let account = model.state.account {
                     Section {
-                        #if DEBUG
-                            NavigationLink(value: SettingsDestination.profile) { profile(account) }
-                                .accessibilityIdentifier("settings.profile")
-                        #else
-                            profile(account).accessibilityIdentifier("settings.profile")
-                        #endif
+                        destination(.profile) { profile(account) }
+                            .accessibilityIdentifier("settings.profile")
                     }.listRowBackground(ColorToken.card.color)
                         .listRowInsets(
                             EdgeInsets(top: 0, leading: PlanUITokens.space4, bottom: 0, trailing: PlanUITokens.space4))
@@ -74,7 +93,7 @@
                 #if DEBUG
                     Section {
                         ForEach(SettingsDestination.allCases.filter { $0 != .profile }) { destination in
-                            NavigationLink(value: destination) { row(destination) }
+                            self.destination(destination) { row(destination) }
                                 .accessibilityIdentifier("settings.\(destination.rawValue)")
                         }
                     }.listRowBackground(ColorToken.card.color)
@@ -95,10 +114,21 @@
             .listStyle(.insetGrouped).scrollContentBackground(.hidden)
             .background(ColorToken.background.color).foregroundStyle(ColorToken.cardForeground.color)
             .tint(ColorToken.primary.color)
-            .navigationTitle(t("Settings")).navigationBarTitleDisplayMode(.large)
-            .background(SettingsNavigationStyle())
             .accessibilityIdentifier("settings.screen")
-            .sheet(isPresented: $model.showsPending) { SignOutPendingSheet(model: model) }
+        }
+
+        @ViewBuilder private func destination<Label: View>(
+            _ destination: SettingsDestination, @ViewBuilder label: () -> Label
+        ) -> some View {
+            #if DEBUG
+                if navigationEnabled {
+                    NavigationLink(value: destination, label: label)
+                } else {
+                    label()
+                }
+            #else
+                label()
+            #endif
         }
 
         private func profile(_ account: AccountRecord) -> some View {

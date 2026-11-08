@@ -5,10 +5,28 @@
     import SwiftUI
 
     @MainActor public struct SignOutPendingSheet: View {
-        @Environment(\.locale) private var locale
-        @Bindable private var model: SettingsHomeModel
+        private let model: SettingsHomeModel
         @State private var contentHeight: CGFloat = 0
         public init(model: SettingsHomeModel) { self.model = model }
+
+        public var body: some View {
+            SignOutPendingContent(model: model) { contentHeight = $0 }
+                .presentationDragIndicator(.visible)
+                .presentationDetents(contentHeight > 0 ? [.height(contentHeight), .large] : [.medium, .large])
+                .interactiveDismissDisabled(model.busy)
+        }
+    }
+
+    @MainActor public struct SignOutPendingContent: View {
+        @Environment(\.locale) private var locale
+        private let model: SettingsHomeModel
+        private let onHeightChange: (CGFloat) -> Void
+
+        public init(model: SettingsHomeModel, onHeightChange: @escaping (CGFloat) -> Void = { _ in }) {
+            self.model = model
+            self.onHeightChange = onHeightChange
+        }
+
         private var language: Language { locale.language.languageCode?.identifier == "nl" ? .nl : .en }
         private func t(_ key: String) -> String { SettingsStrings.text(key, language: language) }
         public var body: some View {
@@ -64,13 +82,10 @@
                     .onGeometryChange(for: CGFloat.self) {
                         $0.size.height
                     } action: {
-                        contentHeight = $0
+                        onHeightChange($0)
                     }
             }.foregroundStyle(ColorToken.cardForeground.color).background(ColorToken.card.color)
                 .tint(ColorToken.primary.color).accessibilityIdentifier("settings.pending")
-                .presentationDragIndicator(.visible)
-                .presentationDetents(contentHeight > 0 ? [.height(contentHeight), .large] : [.medium, .large])
-                .interactiveDismissDisabled(model.busy)
         }
     }
 #endif

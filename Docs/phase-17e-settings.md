@@ -50,9 +50,12 @@ make targeted DEVICES="17e" ONLY="AppTests/SettingsSnapshotTests AppUITests/Sett
 
 Settings snapshots include all seven profiles inside that one simulator, both
 languages and appearances and both Large/xxLarge sizes. The profile host renders
-SettingsHomeView directly, with its drawn localized title, and SignOutPendingSheet
-as content. There is no TabView, NavigationStack or live sheet transition in this
-suite: those hosted transitions failed during teardown with
+SettingsHomeContent directly, with its drawn localized title and plain row labels,
+and SignOutPendingContent. The first follow-up still hosted SettingsHomeView's
+sheet modifier and navigation links/style, and SignOutPendingSheet's presentation
+modifiers. Those now live only in the production wrappers; captures instantiate
+no navigation links, navigation containers or presentation modifiers. Those hosted
+transitions failed during teardown with
 `InvalidTransition { phase: idle, targetPhase: failed(deinit) }`. Native tab and
 presentation behavior belongs to the UI journeys. Required accessibility content,
 visible ink and profile dimensions are checked before writing a reference; a blank
