@@ -428,7 +428,7 @@ nonisolated final class AuthAuditTests: XCTestCase {
             }
             audit(
                 app, language: language, appearance: appearance, stage: identifier, xxLarge: xxLarge,
-                forgotBannerState: forgotBannerState, controls: controls, frames: frames, viewport: contentViewport)
+                forgotBannerState: forgotBannerState, controls: controls)
             pending.subtract(visible)
         }
         XCTAssertTrue(pending.isEmpty, "Controls never audited fully inside the viewport: \(pending.sorted())")
@@ -436,103 +436,118 @@ nonisolated final class AuthAuditTests: XCTestCase {
 
     @MainActor private func audit(
         _ app: XCUIApplication, language: String, appearance: XCUIDevice.Appearance, stage: String, xxLarge: Bool,
-        forgotBannerState: String?, controls: [String: XCUIElement], frames: [String: CGRect], viewport: CGRect
+        forgotBannerState: String?, controls: [String: XCUIElement]
     ) {
-        let controlFrames = Array(frames.values)
-        let screenshot = app.screenshot()
-        let attachment = XCTAttachment(screenshot: screenshot)
-        attachment.name = "Auth audit source [\(language), \(appearance), \(stage)]"
-        attachment.lifetime = .keepAlways
-        add(attachment)
-        let raster: SnapshotRaster
-        do {
-            raster = try SnapshotRaster(png: screenshot.pngRepresentation)
-        } catch {
-            XCTFail("Cannot decode auth audit screenshot [\(language), \(stage)]: \(error)")
+        guard let source = captureAudit(app, controls: controls, context: "\(language), \(appearance), \(stage)") else {
             return
         }
-        let brand = controls["auth.brand"]!
-        let brandFrame = frames["auth.brand"]
-        var brandMinimum: Double?
-        var brandMeasurement = "not visible"
-        if let brandFrame, viewport.insetBy(dx: -Self.frameTolerance, dy: -Self.frameTolerance).contains(brandFrame) {
-            (brandMinimum, brandMeasurement) = textContrast(
-                brand, raster: raster, in: app, appearance: appearance, xxLarge: xxLarge, brand: true)
-        }
-        var bannerMinimum: Double?
-        var bannerFrame: CGRect?
-        var bannerMeasurement = "not eligible"
         if ["server", "throttle"].contains(forgotBannerState ?? ""), app.scrollViews["forgot.scroll"].exists {
-            let banner = AuthUIFlow.control("auth.banner", in: app)
-            if banner.exists {
-                bannerFrame = banner.frame
-                (bannerMinimum, bannerMeasurement) = textContrast(
-                    banner, raster: raster, in: app, appearance: appearance, xxLarge: xxLarge, banner: true)
-                print("Forgot banner contrast [\(language), \(appearance), \(stage)]: \(bannerMeasurement)")
-                if let bannerMinimum {
-                    XCTAssertGreaterThanOrEqual(bannerMinimum, 4.5, bannerMeasurement)
-                }
+            let (minimum, measurement) = textContrast(
+                "auth.banner", capture: source, appearance: appearance, xxLarge: xxLarge, banner: true)
+            print("Forgot banner contrast [\(language), \(appearance), \(stage)]: \(measurement)")
+            if let minimum {
+                XCTAssertGreaterThanOrEqual(minimum, 4.5, measurement)
             }
         }
-        var backMinimum: Double?
-        var backFrame: CGRect?
-        var backMeasurement = "not visible"
-        if let back = controls["sign-up.back"], let frame = frames["sign-up.back"],
-            AuthScrollGesture.fullyVisible(frame, in: viewport)
+        if let backFrame = source.frames["sign-up.back"],
+            AuthScrollGesture.fullyVisible(backFrame, in: source.viewport)
         {
-            backFrame = frame
-            (backMinimum, backMeasurement) = textContrast(
-                back, raster: raster, in: app, appearance: appearance, xxLarge: xxLarge, footer: true)
-            print("Sign-up footer contrast [\(language), \(appearance), \(stage)]: \(backMeasurement)")
-            if let backMinimum {
-                XCTAssertGreaterThanOrEqual(backMinimum, 4.5, backMeasurement)
+            let (minimum, measurement) = textContrast(
+                "sign-up.back", capture: source, appearance: appearance, xxLarge: xxLarge, footer: true)
+            print("Sign-up footer contrast [\(language), \(appearance), \(stage)]: \(measurement)")
+            if let minimum {
+                XCTAssertGreaterThanOrEqual(minimum, 4.5, measurement)
             } else {
-                XCTFail("Unmeasurable sign-up.back contrast [\(language), \(appearance), \(stage)]: \(backMeasurement)")
+                XCTFail("Unmeasurable sign-up.back contrast [\(language), \(appearance), \(stage)]: \(measurement)")
             }
         }
         do {
             try app.performAccessibilityAudit(for: .all.subtracting(.dynamicType)) { issue in
-                if Self.isDeferredControlContrast(
-                    auditType: issue.auditType, frame: issue.element?.frame, viewport: viewport,
-                    controlFrames: controlFrames)
-                {
-                    return true
+                let element = issue.element
+                let identifier = element?.identifier
+                let frame = element?.frame
+                let enabled = element?.isEnabled
+                let elementType = element?.elementType
+                let disabledContrast = AuthAuditPolicy.isDisabledContrast(
+                    isContrast: issue.auditType == .contrast, isEnabled: enabled)
+                let boardContrast = Self.isBoardContrast(identifier: identifier, auditType: issue.auditType)
+                var ignored = disabledContrast || boardContrast
+                var diagnostics = ""
+                if issue.auditType == .contrast, !ignored {
+                    guard
+                        let capture = self.captureAudit(
+                            app, controls: controls,
+                            context: "\(language), \(appearance), \(stage), \(identifier ?? "<nil>")")
+                    else { return true }
+                    if Self.isDeferredControlContrast(
+                        auditType: issue.auditType, frame: frame, viewport: capture.viewport,
+                        controlFrames: Array(capture.frames.values))
+                    {
+                        return true
+                    }
+                    var subtitleMinimum: Double?
+                    var subtitleMeasurement = "not eligible"
+                    if identifier == "auth.subtitle", elementType == .staticText,
+                        AuthAuditPolicy.contains(frame, in: capture.frames["auth.subtitle"])
+                    {
+                        (subtitleMinimum, subtitleMeasurement) = self.textContrast(
+                            "auth.subtitle", capture: capture, appearance: appearance, xxLarge: xxLarge)
+                    }
+                    var brandMinimum: Double?
+                    var brandMeasurement = "not eligible"
+                    let brandFrame = capture.frames["auth.brand"]
+                    if identifier == nil || identifier == "", AuthAuditPolicy.contains(frame, in: brandFrame) {
+                        (brandMinimum, brandMeasurement) = self.textContrast(
+                            "auth.brand", capture: capture, appearance: appearance, xxLarge: xxLarge, brand: true)
+                    }
+                    var backMinimum: Double?
+                    var backMeasurement = "not eligible"
+                    let backFrame = capture.frames["sign-up.back"]
+                    if identifier == "sign-up.back", AuthAuditPolicy.contains(frame, in: backFrame) {
+                        (backMinimum, backMeasurement) = self.textContrast(
+                            "sign-up.back", capture: capture, appearance: appearance, xxLarge: xxLarge, footer: true)
+                    }
+                    var bannerMinimum: Double?
+                    var bannerMeasurement = "not eligible"
+                    let bannerFrame = capture.frames["auth.banner"]
+                    if ["server", "throttle"].contains(forgotBannerState ?? ""),
+                        app.scrollViews["forgot.scroll"].exists,
+                        AuthAuditPolicy.contains(frame, in: bannerFrame)
+                    {
+                        (bannerMinimum, bannerMeasurement) = self.textContrast(
+                            "auth.banner", capture: capture, appearance: appearance, xxLarge: xxLarge, banner: true)
+                    }
+                    ignored =
+                        Self.isMeasuredSubtitleContrast(
+                            identifier: identifier, auditType: issue.auditType, minimum: subtitleMinimum)
+                        || Self.isMeasuredSignUpBackContrast(
+                            identifier: identifier, frame: frame, backFrame: backFrame,
+                            auditType: issue.auditType, minimum: backMinimum)
+                        || Self.isMeasuredBrandContrast(
+                            identifier: identifier, frame: frame, brandFrame: brandFrame,
+                            auditType: issue.auditType, minimum: brandMinimum)
+                        || Self.isMeasuredForgotBannerContrast(
+                            identifier: identifier, frame: frame, bannerFrame: bannerFrame,
+                            auditType: issue.auditType, state: forgotBannerState, minimum: bannerMinimum)
+                    diagnostics = """
+                        auditedFrames=\(capture.frames)
+                        subtitleMinimum=\(subtitleMinimum.map { "\($0):1" } ?? "unmeasurable")
+                        \(subtitleMeasurement)
+                        brandMinimum=\(brandMinimum.map { "\($0):1" } ?? "unmeasurable")
+                        \(brandMeasurement)
+                        backMinimum=\(backMinimum.map { "\($0):1" } ?? "unmeasurable")
+                        \(backMeasurement)
+                        bannerMinimum=\(bannerMinimum.map { "\($0):1" } ?? "unmeasurable")
+                        \(bannerMeasurement)
+                        """
                 }
-                let boardContrast = Self.isBoardContrast(
-                    identifier: issue.element?.identifier, auditType: issue.auditType)
-                var minimum: Double?
-                var measurement = "not eligible"
-                if issue.auditType == .contrast, let element = issue.element, element.identifier == "auth.subtitle" {
-                    (minimum, measurement) = self.textContrast(
-                        element, raster: raster, in: app, appearance: appearance, xxLarge: xxLarge)
-                }
-                let ignored =
-                    boardContrast
-                    || Self.isMeasuredSubtitleContrast(
-                        identifier: issue.element?.identifier, auditType: issue.auditType, minimum: minimum)
-                    || Self.isMeasuredSignUpBackContrast(
-                        identifier: issue.element?.identifier, frame: issue.element?.frame, backFrame: backFrame,
-                        auditType: issue.auditType, minimum: backMinimum)
-                    || Self.isMeasuredBrandContrast(
-                        identifier: issue.element?.identifier, frame: issue.element?.frame, brandFrame: brandFrame,
-                        auditType: issue.auditType, minimum: brandMinimum)
-                    || Self.isMeasuredForgotBannerContrast(
-                        identifier: issue.element?.identifier, frame: issue.element?.frame, bannerFrame: bannerFrame,
-                        auditType: issue.auditType,
-                        state: forgotBannerState, minimum: bannerMinimum)
                 let message = """
                     Auth accessibility [\(language), \(appearance), \(stage)] \
-                    auditType=\(issue.auditType) identifier=\(issue.element?.identifier ?? "<nil>") \
-                    label=\(issue.element?.label ?? "<nil>") compactDescription=\(issue.compactDescription) \
-                    frame=\(String(describing: issue.element?.frame)) bannerFrame=\(String(describing: bannerFrame)) \
-                    brandFrame=\(String(describing: brandFrame)) brandMinimum=\(String(describing: brandMinimum)) \
-                    boardContrast=\(boardContrast) ignored=\(ignored) subtitleMinimum=\(minimum.map { "\($0):1" } ?? "unmeasurable")
-                    \(measurement)
-                    bannerMinimum=\(bannerMinimum.map { "\($0):1" } ?? "unmeasurable")
-                    \(bannerMeasurement)
-                    \(brandMeasurement)
-                    backMinimum=\(backMinimum.map { "\($0):1" } ?? "unmeasurable")
-                    \(backMeasurement)
+                    auditType=\(issue.auditType) identifier=\(identifier ?? "<nil>") \
+                    label=\(element?.label ?? "<nil>") compactDescription=\(issue.compactDescription) \
+                    frame=\(String(describing: frame)) enabled=\(String(describing: enabled)) \
+                    disabledContrast=\(disabledContrast) boardContrast=\(boardContrast) ignored=\(ignored)
+                    \(diagnostics)
                     """
                 print(message)
                 let attachment = XCTAttachment(string: message)
@@ -547,25 +562,59 @@ nonisolated final class AuthAuditTests: XCTestCase {
         }
     }
 
+    private struct AuditCapture {
+        let raster: SnapshotRaster
+        let appFrame: CGRect
+        let viewport: CGRect
+        let frames: [String: CGRect]
+        let labels: [String: String]
+    }
+
+    @MainActor private func captureAudit(
+        _ app: XCUIApplication, controls: [String: XCUIElement], context: String
+    ) -> AuditCapture? {
+        let scroll = AuthUIFlow.scroll(in: app)
+        let measuredControls = controls.filter {
+            ["auth.brand", "auth.subtitle", "auth.banner", "sign-up.back"].contains($0.key)
+        }
+        for _ in 0..<3 {
+            let appFrame = app.frame
+            let viewport = AuthUIFlow.viewport(in: app, scrollFrame: scroll.frame)
+            let frames = controls.mapValues(\.frame)
+            let labels = measuredControls.mapValues(\.label)
+            let screenshot = app.screenshot()
+            // The audit may move the scroll view; never pair its new frames with an earlier raster.
+            guard AuthAuditPolicy.sameFrames(frames, controls.mapValues(\.frame)), appFrame == app.frame,
+                viewport == AuthUIFlow.viewport(in: app, scrollFrame: scroll.frame),
+                labels == measuredControls.mapValues(\.label)
+            else { continue }
+            let attachment = XCTAttachment(screenshot: screenshot)
+            attachment.name = "Auth audit source [\(context)]"
+            attachment.lifetime = .keepAlways
+            add(attachment)
+            do {
+                return AuditCapture(
+                    raster: try SnapshotRaster(png: screenshot.pngRepresentation), appFrame: appFrame,
+                    viewport: viewport, frames: frames, labels: labels)
+            } catch {
+                XCTFail("Cannot decode auth audit screenshot [\(context)]: \(error)")
+                return nil
+            }
+        }
+        XCTFail("Auth audit geometry changed during screenshot capture [\(context)]")
+        return nil
+    }
+
     @MainActor private func textContrast(
-        _ element: XCUIElement, raster: SnapshotRaster, in app: XCUIApplication, appearance: XCUIDevice.Appearance,
-        xxLarge: Bool,
+        _ identifier: String, capture: AuditCapture, appearance: XCUIDevice.Appearance, xxLarge: Bool,
         banner: Bool = false, brand: Bool = false, footer: Bool = false
     ) -> (Double?, String) {
-        let identifier = banner ? "auth.banner" : brand ? "auth.brand" : footer ? "sign-up.back" : "auth.subtitle"
-        let scrolls = app.scrollViews.containing(.any, identifier: identifier).allElementsBoundByIndex
-        let matches = scrolls.filter { scroll in
-            let elements = scroll.descendants(matching: .any).matching(identifier: identifier)
-            return elements.count == 1 && elements.element.frame == element.frame
-                && elements.element.label == element.label
-        }
-        guard banner || brand || footer || element.elementType == .staticText, matches.count == 1,
-            let scroll = matches.first
-        else {
-            return (nil, "No unique \(identifier) in the current auth screen")
-        }
-        let appFrame = app.frame
-        var frame = element.frame.offsetBy(dx: -appFrame.minX, dy: -appFrame.minY)
+        guard let elementFrame = capture.frames[identifier], let label = capture.labels[identifier],
+            AuthScrollGesture.fullyVisible(elementFrame, in: capture.viewport)
+        else { return (nil, "\(identifier) not fully visible in the audited screenshot") }
+        let raster = capture.raster
+        let appFrame = capture.appFrame
+        var frame = elementFrame.offsetBy(dx: -appFrame.minX, dy: -appFrame.minY)
         if banner {
             frame = frame.insetBy(dx: AuthTokens.bannerHorizontal, dy: AuthTokens.bannerVertical)
             let glyph = AuthTokens.bannerGlyph + AuthTokens.bannerGap
@@ -577,8 +626,7 @@ nonisolated final class AuthAuditTests: XCTestCase {
             frame.origin.x += glyph
             frame.size.width -= glyph
         }
-        let viewport = AuthUIFlow.viewport(in: app, scrollFrame: scroll.frame)
-            .offsetBy(dx: -appFrame.minX, dy: -appFrame.minY)
+        let viewport = capture.viewport.offsetBy(dx: -appFrame.minX, dy: -appFrame.minY)
         let scale = CGFloat(raster.width) / appFrame.width
         guard scale.isFinite, scale > 0, abs(CGFloat(raster.height) / scale - appFrame.height) < 1 else {
             return (nil, "Screenshot and app bounds disagree: \(raster.width)×\(raster.height), app=\(appFrame)")
@@ -604,7 +652,7 @@ nonisolated final class AuthAuditTests: XCTestCase {
             frame = frame.insetBy(dx: AuthTokens.spacer, dy: 0)
             let ratio = font.pointSize / typography.size
             let text = NSAttributedString(
-                string: element.label, attributes: [.font: font, .kern: typography.tracking * ratio])
+                string: label, attributes: [.font: font, .kern: typography.tracking * ratio])
             let typesetter = CTTypesetterCreateWithAttributedString(text)
             var location = 0
             var lines = 0
@@ -638,7 +686,7 @@ nonisolated final class AuthAuditTests: XCTestCase {
         guard auditType == .contrast, identifier == "sign-up.back", let frame, let backFrame,
             let minimum, minimum.isFinite, minimum >= 4.5
         else { return false }
-        return AuthScrollGesture.fullyVisible(frame, in: backFrame)
+        return AuthAuditPolicy.contains(frame, in: backFrame)
     }
 
     @MainActor func testSignUpFooterExceptionRequiresItsOwnFrameAndPassingPixels() {
@@ -678,7 +726,17 @@ nonisolated final class AuthAuditTests: XCTestCase {
     }
 
     // Audit frames are Double; element frames round-trip through Float, so exact containment misses by ~1e-6.
-    private static let frameTolerance: CGFloat = 0.01
+    private static let frameTolerance = AuthAuditPolicy.frameTolerance
+
+    @MainActor func testDisabledExceptionRequiresOnlyContrastAndAnExplicitDisabledState() {
+        XCTAssertTrue(AuthAuditPolicy.isDisabledContrast(isContrast: true, isEnabled: false))
+        for enabled: Bool? in [nil, true] {
+            XCTAssertFalse(AuthAuditPolicy.isDisabledContrast(isContrast: true, isEnabled: enabled))
+        }
+        for type: XCUIAccessibilityAuditType in [.textClipped, .hitRegion, .trait, .all, [.contrast, .textClipped]] {
+            XCTAssertFalse(AuthAuditPolicy.isDisabledContrast(isContrast: type == .contrast, isEnabled: false))
+        }
+    }
 
     @MainActor private static func isDeferredControlContrast(
         auditType: XCUIAccessibilityAuditType, frame: CGRect?, viewport: CGRect, controlFrames: [CGRect]

@@ -432,3 +432,43 @@ unverified demo account is retained until sign-in and produces the failed screen
 Verify audits use that fixture, including an isolated Debug-only mock 429 for failed-state
 resend. Sign-up/mail/relaunch and cross-account wipe flows continue through the shared
 native AutoFill entry helper. No authentication/link-binding rule is relaxed.
+
+### Phases 11b–11d audit policy fix round 4 (8 November 2026)
+
+The user reports round-3 VerifyEmailTests and AccountRecoveryTests passing on 17e.
+The default AuthAuditTests suite takes 1,287 seconds (21.5 minutes), accepted by the
+user; the remaining reported failures concern contrast attribution and policy.
+
+The user-approved measured text exception applies across all implemented auth screens,
+including the `sign-up.back` footer. That footer requires its exact identifier and
+matching button geometry, plus a complete finite rendered minimum ≥ 4.5:1 using
+`skyCopy`/`skyCopyBackground`. Subtitle and unattributed wordmark exceptions retain
+their identifier/geometry rules and the same minimum. Geometry attribution retains
+the existing 0.01 pt Float/Double tolerance; localized copy never identifies an issue.
+
+Each eligible contrast issue captures fresh control frames, labels, viewport and pixels
+inside the audit handler. Frames are checked immediately before and after the screenshot;
+changed geometry retries at most three times, then fails. Measurement consumes only that
+capture's values, with no later element/frame reads or raster reused from an earlier
+scroll position. Issue geometry must belong to the measured element. Missing, clipped,
+unmeasurable or subthreshold text cannot receive the measured exception. Existing
+scheduled-control reveal/defer checks and proactive footer/banner ratio checks remain.
+
+Under the user's WCAG 1.4.3 decision, inactive UI components are exempt from contrast:
+ignore only an exact `.contrast` issue whose element reports `isEnabled == false` in
+the audit handler. This covers disabled `verify.resend` during countdown/throttle,
+including failed verification. An enabled or missing element gets no disabled exception;
+clipping, hit-region, trait and combined issue types remain strict. Diagnostics retain
+the enabled state and exception decision.
+
+This round uses host verification only. Revised simulator audits remain the user's run;
+no updated runtime pass, recording or visual acceptance is claimed.
+
+Host results: `make quick` passes strict lint and the new policy regressions, stopping
+only at the known `APICookieTests.realRedirectCookieHandlingIsDisabled` loopback EPERM.
+The remaining quick tiers pass separately: 10 TokenGen tests, 4 AssetGen tests and
+90 signing/resource/runner fixtures. Static Swift 6 compilation against the iOS 17
+simulator target passes for the app, hosted tests and all UI tests without executing a
+simulator. Logs: `build/round4-quick.log`, `build/round4-quick-rest.log`,
+`build/round4-final-fixtures.log` and `build/round4-typecheck.log` (the final fixture
+run includes classification of the new host policy suite).
