@@ -42,12 +42,11 @@ editors and billing remain outside this task.
 
 ## Simulator acceptance for the user
 
-Generate the project, record only the new references, review them, then compare:
+Generate the project, then run the Settings journeys:
 
 ```sh
 make generate
-SNAPSHOT_RECORD=1 make targeted DEVICES="17e" ONLY="AppTests/SettingsSnapshotTests"
-make targeted DEVICES="17e" ONLY="AppTests/SettingsSnapshotTests AppUITests/SettingsTests AppUITests/AuthSessionTests AppUITests/AppTabsTests"
+make targeted DEVICES="17e" ONLY="AppUITests/SettingsTests AppUITests/AuthSessionTests AppUITests/AppTabsTests"
 ```
 
 Settings snapshots include all seven profiles inside that one simulator, both
