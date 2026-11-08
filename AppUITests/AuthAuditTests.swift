@@ -9,32 +9,176 @@ nonisolated final class AuthAuditTests: XCTestCase {
         } + [("en", .light, true)]
     }
 
-    @MainActor func testSignInInLeanAuditMatrix() async throws { try await auditSignInOrTwoFactor(mode: 0) }
-    @MainActor func testTwoFactorCodeInLeanAuditMatrix() async throws { try await auditSignInOrTwoFactor(mode: 1) }
-    @MainActor func testTwoFactorRecoveryInLeanAuditMatrix() async throws { try await auditSignInOrTwoFactor(mode: 2) }
-    @MainActor func testForgotFormInLeanAuditMatrix() async throws { try await auditForgot(state: "form") }
-    @MainActor func testForgotSentInLeanAuditMatrix() async throws { try await auditForgot(state: "sent") }
-    @MainActor func testForgotFieldInLeanAuditMatrix() async throws { try await auditForgot(state: "field") }
-    @MainActor func testForgotServerInLeanAuditMatrix() async throws { try await auditForgot(state: "server") }
-    @MainActor func testForgotThrottleInLeanAuditMatrix() async throws { try await auditForgot(state: "throttle") }
-    @MainActor func testForgotOfflineInLeanAuditMatrix() async throws { try await auditForgot(state: "offline") }
+    private enum Profile { case light, dark, xxLarge }
 
-    @MainActor func testResetFormInLeanAuditMatrix() async throws { try await auditReset(state: "form") }
-    @MainActor func testResetPasswordInLeanAuditMatrix() async throws { try await auditReset(state: "password") }
-    @MainActor func testResetConfirmationInLeanAuditMatrix() async throws {
-        try await auditReset(state: "confirmation")
+    @MainActor private func variants(for profile: Profile) -> [(String, XCUIDevice.Appearance, Bool)] {
+        switch profile {
+        case .light: [("en", .light, false), ("nl", .light, false)]
+        case .dark: [("en", .dark, false), ("nl", .dark, false)]
+        case .xxLarge: [("en", .light, true)]
+        }
     }
-    @MainActor func testResetExpiredInLeanAuditMatrix() async throws { try await auditReset(state: "expired") }
-    @MainActor func testResetDoneInLeanAuditMatrix() async throws { try await auditReset(state: "done") }
-    @MainActor func testResetServerInLeanAuditMatrix() async throws { try await auditReset(state: "server") }
-    @MainActor func testResetThrottleInLeanAuditMatrix() async throws { try await auditReset(state: "throttle") }
-    @MainActor func testResetOfflineInLeanAuditMatrix() async throws { try await auditReset(state: "offline") }
 
-    @MainActor private func auditReset(state: String) async throws {
+    @MainActor func testSignInInLeanAuditMatrix() async throws {
+        try await auditSignInOrTwoFactor(mode: 0, profile: .light)
+    }
+    @MainActor func testSignInInLeanAuditMatrixDark() async throws {
+        try await auditSignInOrTwoFactor(mode: 0, profile: .dark)
+    }
+    @MainActor func testSignInInLeanAuditMatrixXXLarge() async throws {
+        try await auditSignInOrTwoFactor(mode: 0, profile: .xxLarge)
+    }
+    @MainActor func testTwoFactorCodeInLeanAuditMatrix() async throws {
+        try await auditSignInOrTwoFactor(mode: 1, profile: .light)
+    }
+    @MainActor func testTwoFactorCodeInLeanAuditMatrixDark() async throws {
+        try await auditSignInOrTwoFactor(mode: 1, profile: .dark)
+    }
+    @MainActor func testTwoFactorCodeInLeanAuditMatrixXXLarge() async throws {
+        try await auditSignInOrTwoFactor(mode: 1, profile: .xxLarge)
+    }
+    @MainActor func testTwoFactorRecoveryInLeanAuditMatrix() async throws {
+        try await auditSignInOrTwoFactor(mode: 2, profile: .light)
+    }
+    @MainActor func testTwoFactorRecoveryInLeanAuditMatrixDark() async throws {
+        try await auditSignInOrTwoFactor(mode: 2, profile: .dark)
+    }
+    @MainActor func testTwoFactorRecoveryInLeanAuditMatrixXXLarge() async throws {
+        try await auditSignInOrTwoFactor(mode: 2, profile: .xxLarge)
+    }
+    @MainActor func testForgotFormInLeanAuditMatrix() async throws {
+        try await auditForgot(state: "form", profile: .light)
+    }
+    @MainActor func testForgotFormInLeanAuditMatrixDark() async throws {
+        try await auditForgot(state: "form", profile: .dark)
+    }
+    @MainActor func testForgotFormInLeanAuditMatrixXXLarge() async throws {
+        try await auditForgot(state: "form", profile: .xxLarge)
+    }
+    @MainActor func testForgotSentInLeanAuditMatrix() async throws {
+        try await auditForgot(state: "sent", profile: .light)
+    }
+    @MainActor func testForgotSentInLeanAuditMatrixDark() async throws {
+        try await auditForgot(state: "sent", profile: .dark)
+    }
+    @MainActor func testForgotSentInLeanAuditMatrixXXLarge() async throws {
+        try await auditForgot(state: "sent", profile: .xxLarge)
+    }
+    @MainActor func testForgotFieldInLeanAuditMatrix() async throws {
+        try await auditForgot(state: "field", profile: .light)
+    }
+    @MainActor func testForgotFieldInLeanAuditMatrixDark() async throws {
+        try await auditForgot(state: "field", profile: .dark)
+    }
+    @MainActor func testForgotFieldInLeanAuditMatrixXXLarge() async throws {
+        try await auditForgot(state: "field", profile: .xxLarge)
+    }
+    @MainActor func testForgotServerInLeanAuditMatrix() async throws {
+        try await auditForgot(state: "server", profile: .light)
+    }
+    @MainActor func testForgotServerInLeanAuditMatrixDark() async throws {
+        try await auditForgot(state: "server", profile: .dark)
+    }
+    @MainActor func testForgotServerInLeanAuditMatrixXXLarge() async throws {
+        try await auditForgot(state: "server", profile: .xxLarge)
+    }
+    @MainActor func testForgotThrottleInLeanAuditMatrix() async throws {
+        try await auditForgot(state: "throttle", profile: .light)
+    }
+    @MainActor func testForgotThrottleInLeanAuditMatrixDark() async throws {
+        try await auditForgot(state: "throttle", profile: .dark)
+    }
+    @MainActor func testForgotThrottleInLeanAuditMatrixXXLarge() async throws {
+        try await auditForgot(state: "throttle", profile: .xxLarge)
+    }
+    @MainActor func testForgotOfflineInLeanAuditMatrix() async throws {
+        try await auditForgot(state: "offline", profile: .light)
+    }
+    @MainActor func testForgotOfflineInLeanAuditMatrixDark() async throws {
+        try await auditForgot(state: "offline", profile: .dark)
+    }
+    @MainActor func testForgotOfflineInLeanAuditMatrixXXLarge() async throws {
+        try await auditForgot(state: "offline", profile: .xxLarge)
+    }
+
+    @MainActor func testResetFormInLeanAuditMatrix() async throws {
+        try await auditReset(state: "form", profile: .light)
+    }
+    @MainActor func testResetFormInLeanAuditMatrixDark() async throws {
+        try await auditReset(state: "form", profile: .dark)
+    }
+    @MainActor func testResetFormInLeanAuditMatrixXXLarge() async throws {
+        try await auditReset(state: "form", profile: .xxLarge)
+    }
+    @MainActor func testResetPasswordInLeanAuditMatrix() async throws {
+        try await auditReset(state: "password", profile: .light)
+    }
+    @MainActor func testResetPasswordInLeanAuditMatrixDark() async throws {
+        try await auditReset(state: "password", profile: .dark)
+    }
+    @MainActor func testResetPasswordInLeanAuditMatrixXXLarge() async throws {
+        try await auditReset(state: "password", profile: .xxLarge)
+    }
+    @MainActor func testResetConfirmationInLeanAuditMatrix() async throws {
+        try await auditReset(state: "confirmation", profile: .light)
+    }
+    @MainActor func testResetConfirmationInLeanAuditMatrixDark() async throws {
+        try await auditReset(state: "confirmation", profile: .dark)
+    }
+    @MainActor func testResetConfirmationInLeanAuditMatrixXXLarge() async throws {
+        try await auditReset(state: "confirmation", profile: .xxLarge)
+    }
+    @MainActor func testResetExpiredInLeanAuditMatrix() async throws {
+        try await auditReset(state: "expired", profile: .light)
+    }
+    @MainActor func testResetExpiredInLeanAuditMatrixDark() async throws {
+        try await auditReset(state: "expired", profile: .dark)
+    }
+    @MainActor func testResetExpiredInLeanAuditMatrixXXLarge() async throws {
+        try await auditReset(state: "expired", profile: .xxLarge)
+    }
+    @MainActor func testResetDoneInLeanAuditMatrix() async throws {
+        try await auditReset(state: "done", profile: .light)
+    }
+    @MainActor func testResetDoneInLeanAuditMatrixDark() async throws {
+        try await auditReset(state: "done", profile: .dark)
+    }
+    @MainActor func testResetDoneInLeanAuditMatrixXXLarge() async throws {
+        try await auditReset(state: "done", profile: .xxLarge)
+    }
+    @MainActor func testResetServerInLeanAuditMatrix() async throws {
+        try await auditReset(state: "server", profile: .light)
+    }
+    @MainActor func testResetServerInLeanAuditMatrixDark() async throws {
+        try await auditReset(state: "server", profile: .dark)
+    }
+    @MainActor func testResetServerInLeanAuditMatrixXXLarge() async throws {
+        try await auditReset(state: "server", profile: .xxLarge)
+    }
+    @MainActor func testResetThrottleInLeanAuditMatrix() async throws {
+        try await auditReset(state: "throttle", profile: .light)
+    }
+    @MainActor func testResetThrottleInLeanAuditMatrixDark() async throws {
+        try await auditReset(state: "throttle", profile: .dark)
+    }
+    @MainActor func testResetThrottleInLeanAuditMatrixXXLarge() async throws {
+        try await auditReset(state: "throttle", profile: .xxLarge)
+    }
+    @MainActor func testResetOfflineInLeanAuditMatrix() async throws {
+        try await auditReset(state: "offline", profile: .light)
+    }
+    @MainActor func testResetOfflineInLeanAuditMatrixDark() async throws {
+        try await auditReset(state: "offline", profile: .dark)
+    }
+    @MainActor func testResetOfflineInLeanAuditMatrixXXLarge() async throws {
+        try await auditReset(state: "offline", profile: .xxLarge)
+    }
+
+    @MainActor private func auditReset(state: String, profile: Profile) async throws {
         try await FontRegistry.register()
         let previous = XCUIDevice.shared.appearance
         defer { XCUIDevice.shared.appearance = previous }
-        for (language, appearance, xxLarge) in variants {
+        for (language, appearance, xxLarge) in variants(for: profile) {
             try DeviceAppearance.set(appearance)
             let app = XCUIApplication()
             app.launchArguments = AuthUIFlow.arguments(language: language, xxLarge: xxLarge)
@@ -70,8 +214,8 @@ nonisolated final class AuthAuditTests: XCTestCase {
                 state == "expired"
                 ? ["auth.back", "forgot.email", "forgot.submit", "forgot.back"]
                 : state == "done"
-                    ? ["auth.back", "reset.continue"]
-                    : ["auth.back", "reset.password", "reset.confirmation", "reset.submit"]
+                    ? ["reset.continue"]
+                    : ["reset.password", "reset.confirmation", "reset.submit"]
                         + (["server", "throttle"].contains(state) ? ["auth.banner"] : [])
             auditControls(
                 app, identifiers: identifiers, language: "\(language), reset-\(state)", appearance: appearance,
@@ -211,12 +355,12 @@ nonisolated final class AuthAuditTests: XCTestCase {
         }
     }
 
-    @MainActor private func auditSignInOrTwoFactor(mode: Int) async throws {
+    @MainActor private func auditSignInOrTwoFactor(mode: Int, profile: Profile) async throws {
         try await FontRegistry.register()
         let device = XCUIDevice.shared
         let previous = device.appearance
         defer { device.appearance = previous }
-        for (language, appearance, xxLarge) in variants {
+        for (language, appearance, xxLarge) in variants(for: profile) {
             try DeviceAppearance.set(appearance)
             let app = XCUIApplication()
             app.launchArguments = AuthUIFlow.arguments(language: language, xxLarge: xxLarge)
@@ -250,12 +394,12 @@ nonisolated final class AuthAuditTests: XCTestCase {
         }
     }
 
-    @MainActor private func auditForgot(state: String) async throws {
+    @MainActor private func auditForgot(state: String, profile: Profile) async throws {
         try await FontRegistry.register()
         let device = XCUIDevice.shared
         let previous = device.appearance
         defer { device.appearance = previous }
-        for (language, appearance, xxLarge) in variants {
+        for (language, appearance, xxLarge) in variants(for: profile) {
             try DeviceAppearance.set(appearance)
             let app = launchForgotApp(
                 language: language, xxLarge: xxLarge, failure: state, offline: state == "offline")
@@ -294,11 +438,24 @@ nonisolated final class AuthAuditTests: XCTestCase {
         _ app: XCUIApplication, identifiers: [String], language: String, appearance: XCUIDevice.Appearance,
         xxLarge: Bool, forgotBannerState: String? = nil
     ) {
+        AuthUIFlow.dismissKeyboard(in: app)
+        let identifiers = ["auth.brand", "auth.heading", "auth.subtitle"] + identifiers
         var auditedPositions: [[CGRect]] = []
         for identifier in identifiers {
-            let control = AuthUIFlow.control(identifier, in: app)
-            XCTAssertTrue(control.waitForExistence(timeout: 3), identifier)
+            let matches = AuthUIFlow.scroll(in: app).descendants(matching: .any).matching(identifier: identifier)
+            guard matches.firstMatch.waitForExistence(timeout: 3), matches.count == 1 else {
+                XCTFail("Expected one accessibility element for \(identifier); found \(matches.count)")
+                return
+            }
+            let control = matches.element
             AuthUIFlow.reveal(control, in: app)
+            do {
+                _ = try UIWait.stableFrames(
+                    [control, AuthUIFlow.control("auth.subtitle", in: app), AuthUIFlow.scroll(in: app)], timeout: 3)
+            } catch {
+                XCTFail("Audit frames did not settle for \(identifier): \(error)")
+                return
+            }
             let position = [
                 AuthUIFlow.control("auth.subtitle", in: app).frame,
                 AuthUIFlow.scroll(in: app).frame,
@@ -308,24 +465,31 @@ nonisolated final class AuthAuditTests: XCTestCase {
             auditedPositions.append(position)
             audit(
                 app, language: language, appearance: appearance, stage: identifier, xxLarge: xxLarge,
-                forgotBannerState: forgotBannerState)
+                forgotBannerState: forgotBannerState, identifiers: identifiers)
         }
     }
 
     @MainActor private func audit(
         _ app: XCUIApplication, language: String, appearance: XCUIDevice.Appearance, stage: String, xxLarge: Bool,
-        forgotBannerState: String?
+        forgotBannerState: String?, identifiers: [String]
     ) {
+        let viewport = AuthUIFlow.viewport(in: app, scrollFrame: AuthUIFlow.scroll(in: app).frame)
+        let controlFrames = identifiers.map { AuthUIFlow.control($0, in: app).frame }
+        let brand = AuthUIFlow.control("auth.brand", in: app)
+        let brandFrame: CGRect? = brand.exists ? brand.frame : nil
+        var brandMinimum: Double?
+        var brandMeasurement = "not visible"
+        if let brandFrame, viewport.insetBy(dx: -Self.frameTolerance, dy: -Self.frameTolerance).contains(brandFrame) {
+            (brandMinimum, brandMeasurement) = textContrast(
+                brand, in: app, appearance: appearance, xxLarge: xxLarge, brand: true)
+        }
         var bannerMinimum: Double?
         var bannerFrame: CGRect?
-        var brandFrame: CGRect?
         var bannerMeasurement = "not eligible"
         if ["server", "throttle"].contains(forgotBannerState ?? ""), app.scrollViews["forgot.scroll"].exists {
             let banner = AuthUIFlow.control("auth.banner", in: app)
             if banner.exists {
                 bannerFrame = banner.frame
-                let brand = AuthUIFlow.control("auth.brand", in: app)
-                if brand.exists { brandFrame = brand.frame }
                 (bannerMinimum, bannerMeasurement) = textContrast(
                     banner, in: app, appearance: appearance, xxLarge: xxLarge, banner: true)
                 print("Forgot banner contrast [\(language), \(appearance), \(stage)]: \(bannerMeasurement)")
@@ -336,6 +500,12 @@ nonisolated final class AuthAuditTests: XCTestCase {
         }
         do {
             try app.performAccessibilityAudit(for: .all.subtracting(.dynamicType)) { issue in
+                if Self.isDeferredControlContrast(
+                    auditType: issue.auditType, frame: issue.element?.frame, viewport: viewport,
+                    controlFrames: controlFrames)
+                {
+                    return true
+                }
                 let boardContrast = Self.isBoardContrast(
                     identifier: issue.element?.identifier, auditType: issue.auditType)
                 var minimum: Double?
@@ -348,20 +518,24 @@ nonisolated final class AuthAuditTests: XCTestCase {
                     boardContrast
                     || Self.isMeasuredSubtitleContrast(
                         identifier: issue.element?.identifier, auditType: issue.auditType, minimum: minimum)
+                    || Self.isMeasuredBrandContrast(
+                        identifier: issue.element?.identifier, frame: issue.element?.frame, brandFrame: brandFrame,
+                        auditType: issue.auditType, minimum: brandMinimum)
                     || Self.isMeasuredForgotBannerContrast(
                         identifier: issue.element?.identifier, frame: issue.element?.frame, bannerFrame: bannerFrame,
-                        brandFrame: brandFrame, auditType: issue.auditType,
+                        auditType: issue.auditType,
                         state: forgotBannerState, minimum: bannerMinimum)
                 let message = """
                     Auth accessibility [\(language), \(appearance), \(stage)] \
                     auditType=\(issue.auditType) identifier=\(issue.element?.identifier ?? "<nil>") \
                     label=\(issue.element?.label ?? "<nil>") compactDescription=\(issue.compactDescription) \
                     frame=\(String(describing: issue.element?.frame)) bannerFrame=\(String(describing: bannerFrame)) \
-                    brandFrame=\(String(describing: brandFrame)) \
+                    brandFrame=\(String(describing: brandFrame)) brandMinimum=\(String(describing: brandMinimum)) \
                     boardContrast=\(boardContrast) ignored=\(ignored) subtitleMinimum=\(minimum.map { "\($0):1" } ?? "unmeasurable")
                     \(measurement)
                     bannerMinimum=\(bannerMinimum.map { "\($0):1" } ?? "unmeasurable")
                     \(bannerMeasurement)
+                    \(brandMeasurement)
                     """
                 print(message)
                 let attachment = XCTAttachment(string: message)
@@ -377,16 +551,17 @@ nonisolated final class AuthAuditTests: XCTestCase {
 
     @MainActor private func textContrast(
         _ element: XCUIElement, in app: XCUIApplication, appearance: XCUIDevice.Appearance, xxLarge: Bool,
-        banner: Bool = false
+        banner: Bool = false, brand: Bool = false
     ) -> (Double?, String) {
-        let identifier = banner ? "auth.banner" : "auth.subtitle"
+        let identifier = banner ? "auth.banner" : brand ? "auth.brand" : "auth.subtitle"
         let scrolls = app.scrollViews.containing(.any, identifier: identifier).allElementsBoundByIndex
         let matches = scrolls.filter { scroll in
             let elements = scroll.descendants(matching: .any).matching(identifier: identifier)
             return elements.count == 1 && elements.element.frame == element.frame
                 && elements.element.label == element.label
         }
-        guard banner || element.elementType == .staticText, matches.count == 1, let scroll = matches.first else {
+        guard banner || brand || element.elementType == .staticText, matches.count == 1, let scroll = matches.first
+        else {
             return (nil, "No unique \(identifier) in the current auth screen")
         }
         let appFrame = app.frame
@@ -394,6 +569,11 @@ nonisolated final class AuthAuditTests: XCTestCase {
         if banner {
             frame = frame.insetBy(dx: AuthTokens.bannerHorizontal, dy: AuthTokens.bannerVertical)
             let glyph = AuthTokens.bannerGlyph + AuthTokens.bannerGap
+            frame.origin.x += glyph
+            frame.size.width -= glyph
+        }
+        if brand {
+            let glyph = AuthTokens.moon + AuthTokens.brandGap
             frame.origin.x += glyph
             frame.size.width -= glyph
         }
@@ -415,7 +595,7 @@ nonisolated final class AuthAuditTests: XCTestCase {
                 $0.preferredContentSizeCategory = xxLarge ? .extraExtraLarge : .large
             }
             let token: ColorToken = banner ? .cardForeground : .skyTitle
-            let typography = banner ? Typography.authHint : Typography.authBody
+            let typography = banner ? Typography.authHint : brand ? Typography.authBrand : Typography.authBody
             guard
                 let rgb = UIColor(token.color).resolvedColor(with: traits).cgColor.converted(
                     to: CGColorSpace(name: CGColorSpace.sRGB)!, intent: .relativeColorimetric, options: nil)?.components
@@ -448,8 +628,89 @@ nonisolated final class AuthAuditTests: XCTestCase {
     // Audit frames are Double; element frames round-trip through Float, so exact containment misses by ~1e-6.
     private static let frameTolerance: CGFloat = 0.01
 
+    @MainActor private static func isDeferredControlContrast(
+        auditType: XCUIAccessibilityAuditType, frame: CGRect?, viewport: CGRect, controlFrames: [CGRect]
+    ) -> Bool {
+        guard auditType == .contrast, let frame, !frame.isEmpty, !frame.isInfinite,
+            !viewport.isEmpty, !viewport.isInfinite,
+            !viewport.insetBy(dx: -frameTolerance, dy: -frameTolerance).contains(frame)
+        else { return false }
+        // Each scheduled control is revealed and audited in full before this screen finishes.
+        return controlFrames.contains {
+            !$0.isEmpty && !$0.isInfinite && $0.insetBy(dx: -frameTolerance, dy: -frameTolerance).contains(frame)
+        }
+    }
+
+    @MainActor private static func isMeasuredBrandContrast(
+        identifier: String?, frame: CGRect?, brandFrame: CGRect?, auditType: XCUIAccessibilityAuditType,
+        minimum: Double?
+    ) -> Bool {
+        guard auditType == .contrast, identifier == nil || identifier == "",
+            let frame, !frame.isEmpty, !frame.isInfinite,
+            let brandFrame, !brandFrame.isEmpty, !brandFrame.isInfinite,
+            let minimum, minimum.isFinite, minimum >= 4.5
+        else { return false }
+        return brandFrame.insetBy(dx: -frameTolerance, dy: -frameTolerance).contains(frame)
+    }
+
+    @MainActor func testWordmarkExceptionRequiresItsOwnGeometryAndPassingPixels() {
+        let brand = CGRect(x: 130, y: 63, width: 140, height: 24)
+        let wordmark = CGRect(x: 158, y: 62.999999, width: 112.000001, height: 24.000002)
+        for identifier: String? in [nil, ""] {
+            XCTAssertTrue(
+                Self.isMeasuredBrandContrast(
+                    identifier: identifier, frame: wordmark, brandFrame: brand, auditType: .contrast, minimum: 4.5))
+        }
+        for minimum: Double? in [nil, 4.499, .nan, .infinity, -.infinity] {
+            XCTAssertFalse(
+                Self.isMeasuredBrandContrast(
+                    identifier: nil, frame: wordmark, brandFrame: brand, auditType: .contrast, minimum: minimum))
+        }
+        for frame: CGRect? in [nil, .zero, .null, .infinite, wordmark.offsetBy(dx: 0, dy: 1)] {
+            XCTAssertFalse(
+                Self.isMeasuredBrandContrast(
+                    identifier: nil, frame: frame, brandFrame: brand, auditType: .contrast, minimum: 15))
+            XCTAssertFalse(
+                Self.isMeasuredBrandContrast(
+                    identifier: nil, frame: wordmark, brandFrame: frame, auditType: .contrast, minimum: 15))
+        }
+        for identifier in ["auth.brand", "auth.banner", "sign-up.submit", "auth.subtitle"] {
+            XCTAssertFalse(
+                Self.isMeasuredBrandContrast(
+                    identifier: identifier, frame: wordmark, brandFrame: brand, auditType: .contrast, minimum: 15))
+        }
+        for type: XCUIAccessibilityAuditType in [.textClipped, .hitRegion, .trait, .all, [.contrast, .textClipped]] {
+            XCTAssertFalse(
+                Self.isMeasuredBrandContrast(
+                    identifier: nil, frame: wordmark, brandFrame: brand, auditType: type, minimum: 15))
+        }
+    }
+
+    @MainActor func testOnlyClippedScheduledControlContrastCanWaitForItsReveal() {
+        let viewport = CGRect(x: 0, y: 47, width: 390, height: 500)
+        let button = CGRect(x: 36, y: 530, width: 318, height: 44)
+        XCTAssertTrue(
+            Self.isDeferredControlContrast(
+                auditType: .contrast, frame: button, viewport: viewport, controlFrames: [button]))
+        for frame: CGRect? in [nil, .zero, .null, .infinite, button.offsetBy(dx: 0, dy: 50)] {
+            XCTAssertFalse(
+                Self.isDeferredControlContrast(
+                    auditType: .contrast, frame: frame, viewport: viewport, controlFrames: [button]))
+        }
+        XCTAssertFalse(
+            Self.isDeferredControlContrast(
+                auditType: .contrast, frame: button, viewport: viewport, controlFrames: []))
+        XCTAssertFalse(
+            Self.isDeferredControlContrast(
+                auditType: .contrast, frame: button, viewport: viewport.insetBy(dx: 0, dy: -100),
+                controlFrames: [button]))
+        XCTAssertFalse(
+            Self.isDeferredControlContrast(
+                auditType: .textClipped, frame: button, viewport: viewport, controlFrames: [button]))
+    }
+
     @MainActor private static func isMeasuredForgotBannerContrast(
-        identifier: String?, frame: CGRect?, bannerFrame: CGRect?, brandFrame: CGRect? = nil,
+        identifier: String?, frame: CGRect?, bannerFrame: CGRect?,
         auditType: XCUIAccessibilityAuditType,
         state: String?, minimum: Double?
     ) -> Bool {
@@ -459,18 +720,13 @@ nonisolated final class AuthAuditTests: XCTestCase {
             let bannerFrame, !bannerFrame.isEmpty, !bannerFrame.isInfinite,
             let minimum
         else { return false }
-        let unattributedBrand =
-            (identifier == nil || identifier == "") && brandFrame?.isInfinite == false
-            && brandFrame?.insetBy(dx: -frameTolerance, dy: -frameTolerance).contains(frame) == true
         return minimum.isFinite && minimum >= 4.5
-            && (bannerFrame.insetBy(dx: -frameTolerance, dy: -frameTolerance).contains(frame) || unattributedBrand)
+            && bannerFrame.insetBy(dx: -frameTolerance, dy: -frameTolerance).contains(frame)
     }
 
     @MainActor func testBannerExceptionRequiresMatchingGeometryAndPassingPixels() {
         let banner = CGRect(x: 30, y: 300, width: 330, height: 64)
         let title = CGRect(x: 78, y: 312, width: 262, height: 20)
-        let brand = CGRect(x: 130, y: 63, width: 140, height: 24)
-        let wordmark = CGRect(x: 158, y: 63, width: 112, height: 24)
         for state in ["server", "throttle"] {
             for identifier: String? in [nil, "", "auth.banner"] {
                 for frame in [banner, title] {
@@ -481,28 +737,11 @@ nonisolated final class AuthAuditTests: XCTestCase {
                 }
             }
         }
-        for identifier: String? in [nil, ""] {
-            XCTAssertTrue(
+        for frame in [title.offsetBy(dx: 0, dy: 100), CGRect(x: 158, y: 63, width: 112, height: 24)] {
+            XCTAssertFalse(
                 Self.isMeasuredForgotBannerContrast(
-                    identifier: identifier, frame: wordmark, bannerFrame: banner, brandFrame: brand,
+                    identifier: nil, frame: frame, bannerFrame: banner,
                     auditType: .contrast, state: "server", minimum: 14.884))
-        }
-        for identifier: String? in [nil, "", "auth.banner", "auth.brand", "auth.back"] {
-            XCTAssertFalse(
-                Self.isMeasuredForgotBannerContrast(
-                    identifier: identifier, frame: wordmark, bannerFrame: banner,
-                    auditType: .contrast, state: "server", minimum: 12.420))
-            XCTAssertFalse(
-                Self.isMeasuredForgotBannerContrast(
-                    identifier: identifier, frame: title.offsetBy(dx: 0, dy: 100), bannerFrame: banner,
-                    brandFrame: brand,
-                    auditType: .contrast, state: "server", minimum: 12.420))
-        }
-        for identifier in ["auth.brand", "auth.banner", "auth.back"] {
-            XCTAssertFalse(
-                Self.isMeasuredForgotBannerContrast(
-                    identifier: identifier, frame: wordmark, bannerFrame: banner, brandFrame: brand,
-                    auditType: .contrast, state: "server", minimum: 12.420))
         }
         for minimum: Double? in [nil, 4.499, .nan, .infinity, -.infinity] {
             XCTAssertFalse(

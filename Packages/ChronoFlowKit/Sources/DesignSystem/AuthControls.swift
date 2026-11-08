@@ -163,11 +163,13 @@ import SwiftUI
                         .accessibilityValue(Text(verbatim: text))
                     }
                 }
+                .accessibilityIdentifier(identifier)
+                .accessibilityLabel(Text(verbatim: title))
+                .accessibilityHint(Text(verbatim: error ?? hint ?? ""))
                 // SwiftUI's scalable custom font can re-read the uncapped system preference for native text layout.
                 .font(.custom(Typography.authBody.face.rawValue, fixedSize: font.pointSize))
                 .foregroundStyle(ColorToken.cardForeground.color)
                 .textContentType(contentType)
-                .background { AuthInputTraits(contentType: contentType) }
                 .keyboardType(keyboard)
                 .textInputAutocapitalization(contentType == .name ? .words : .never)
                 .autocorrectionDisabled()
@@ -195,9 +197,6 @@ import SwiftUI
                 .authControlMeasure(.input, measure)
                 .opacity(isEnabled ? 1 : AuthTokens.disabledOpacity)
                 .contentShape(RoundedRectangle(cornerRadius: AuthTokens.fieldRadius))
-                .accessibilityIdentifier(identifier)
-                .accessibilityLabel(Text(verbatim: title))
-                .accessibilityHint(Text(verbatim: error ?? hint ?? ""))
                 if let error {
                     HStack(alignment: .center, spacing: AuthTokens.brandGap) {
                         AuthGlyph.alert.image.resizable().frame(width: AuthTokens.icon, height: AuthTokens.icon)

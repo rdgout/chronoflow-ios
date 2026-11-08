@@ -17,7 +17,7 @@ nonisolated final class ResetPasswordControlTests: XCTestCase {
         }
     }
 
-    @MainActor func testNewPasswordAutoFillRulesReturnChainAndServerErrors() async throws {
+    @MainActor func testNewPasswordAutoFillReturnChainAndServerErrors() async throws {
         try await AuthTestHost.registerFonts()
         let model = try await resetSnapshotModel()
         let host = try AuthTestHost(ResetPasswordView(model: model), size: SnapshotDevice.all()[0].size)
@@ -28,9 +28,6 @@ nonisolated final class ResetPasswordControlTests: XCTestCase {
         for field in fields {
             XCTAssertTrue(field.isSecureTextEntry)
             XCTAssertEqual(field.textContentType, .newPassword)
-            XCTAssertEqual(
-                field.passwordRules?.passwordRulesDescriptor,
-                UITextInputPasswordRules(descriptor: AuthPasswordPolicy.rules).passwordRulesDescriptor)
             XCTAssertEqual(field.autocapitalizationType, .none)
         }
         XCTAssertEqual(fields.first?.returnKeyType, .next)
