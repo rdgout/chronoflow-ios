@@ -1655,7 +1655,8 @@ Boards imported from RN's canvas copy (15a, 2026-11-08); OQ 38 settled by the 15
   - Tests: routing on gate changes after sign-in; missing → loaded policies; a tab-bar snapshot on all profiles; UI smoke seeds a walkthrough-seen mock account.
 
 **15b: My trips** (boards: Trips, TripsEmpty, TripsLoading)
-- [ ] Sections Active, Upcoming and Completed, with status re-derived locally (`tripDisplayStatus`) and the next step taken from the local plan. Pull-to-refresh calls `SyncEngine.refreshNow()` (D23 seam). "Plan a trip" stays hidden until 16c. Tapping a row opens the trip page.
+- [x] Sections Active, Upcoming and Completed, with status re-derived locally (`tripDisplayStatus`) and the next step taken from the local plan. Pull-to-refresh calls `SyncEngine.refreshNow()` (D23 seam). "Plan a trip" stays hidden until 16c. Tapping a row opens the trip page.
+  - Implementation (2026-11-08, worktree A): sections follow RN's Active/Upcoming/Completed order, descending departure then descending id within each section. TripsModel re-evaluates status on PlanClock updates and excludes both tombstone forms. Active rows observe local detail models for their next unmarked actionable step; no server-provided next-step fallback. Native pull-to-refresh calls the existing session SyncEngine seam. Every row pushes the same `TripPageDestination` used by Today; trip-page implementation remains in worktree B. Creation controls stay hidden until 16c. Added lean list/empty/loading snapshots, rail/xxLarge layout checks, ordering/tombstone tests, a mock navigation/refresh UI flow, and one en/light/default audit. References and runtime acceptance remain for the user; host-only checks are recorded in Docs/worktree-a.md.
   - Files: `Kit/Sources/PlanUI/Trips/*.swift`.
   - Tests: list ordering; tombstoned trips vanish; snapshots per state on an injected clock; VoiceOver labels.
 

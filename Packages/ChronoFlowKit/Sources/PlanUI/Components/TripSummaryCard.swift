@@ -10,16 +10,18 @@
         public let now: Date
         public let formatter: CopyLineFormatter
         public var next: BlockView?
+        public var showPlanStart: Bool
         public var timeFormat: TimeFormat
         public var open: () -> Void
         public init(
             trip: TripListValue, now: Date, formatter: CopyLineFormatter, next: BlockView? = nil,
-            timeFormat: TimeFormat = .value24, open: @escaping () -> Void
+            timeFormat: TimeFormat = .value24, showPlanStart: Bool = true, open: @escaping () -> Void
         ) {
             self.trip = trip
             self.now = now
             self.formatter = formatter
             self.next = next
+            self.showPlanStart = showPlanStart
             self.timeFormat = timeFormat
             self.open = open
         }
@@ -68,7 +70,7 @@
                             Image(systemName: "chevron.right").accessibilityHidden(true)
                         }.padding(PlanUITokens.space3).background(
                             ColorToken.surface2.color, in: RoundedRectangle(cornerRadius: PlanUITokens.radius2Xl))
-                    } else if trip.status == .upcoming {
+                    } else if showPlanStart && trip.status == .upcoming {
                         Text(startLabel).font(Typography.screenLabel.font).foregroundStyle(ColorToken.dawnText.color)
                     }
                 }.planCard(active: trip.status == .active)

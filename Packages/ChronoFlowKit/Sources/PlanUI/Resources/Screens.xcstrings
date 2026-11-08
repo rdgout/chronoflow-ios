@@ -1553,6 +1553,38 @@
         }
       }
     },
+    "Loading your trips": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading your trips"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je reizen laden"
+          }
+        }
+      }
+    },
+    "Your upcoming, active and past trips show up here.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your upcoming, active and past trips show up here."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je aankomende, actieve en afgelopen reizen verschijnen hier."
+          }
+        }
+      }
+    },
     "{{title}}, done": {
       "localizations": {
         "en": {

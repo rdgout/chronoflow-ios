@@ -12,7 +12,7 @@ nonisolated final class AppTabsTests: XCTestCase {
         AuthUIFlow.signIn(app, email: MockScenarioValues.demoEmail)
         XCTAssertTrue(app.tabBars.buttons["My trips"].waitForExistence(timeout: 12))
         app.tabBars.buttons["My trips"].tap()
-        XCTAssertTrue(app.staticTexts["route.trips"].waitForExistence(timeout: 4))
+        XCTAssertTrue(app.scrollViews["trips.screen"].waitForExistence(timeout: 4))
         app.tabBars.buttons["Settings"].tap()
         XCTAssertTrue(app.staticTexts["route.settings"].waitForExistence(timeout: 4))
         app.tabBars.buttons["Today"].tap()

@@ -2,6 +2,12 @@ import XCTest
 
 nonisolated final class PlanAuditTests: XCTestCase {
     @MainActor func testTodayPrimaryState() throws { try audit { _ in } }
+    @MainActor func testTripsPrimaryState() throws {
+        try audit { app in
+            app.tabBars.buttons["My trips"].tap()
+            XCTAssertTrue(app.scrollViews["trips.screen"].waitForExistence(timeout: 6))
+        }
+    }
     @MainActor func testStepSheetPrimaryState() throws {
         try audit { app in
             let row = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "today.step.actionable."))

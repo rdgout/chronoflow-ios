@@ -12,6 +12,7 @@ struct AppTabs: View {
     var native: NativeSessionController?
     @State private var selection: Tab = .today
     @State private var home: PlanHomeModel?
+    @State private var tripsPath: [TripPageRoute] = []
     @State private var path: [TripPageRoute] = []
     @State private var stepTripID: String?
     @State private var stepID: String?
@@ -45,8 +46,10 @@ struct AppTabs: View {
                     .navigationDestination(for: TripPageRoute.self) { TripPageDestination(route: $0, native: native) }
             }
             .tabItem { Label(t("Today"), systemImage: "sun.max") }.tag(Tab.today)
-            NavigationStack { seam(.trips) }
-                .tabItem { Label(t("My trips"), systemImage: "airplane") }.tag(Tab.trips)
+            NavigationStack(path: $tripsPath) {
+                trips.navigationDestination(for: TripPageRoute.self) { TripPageDestination(route: $0, native: native) }
+            }
+            .tabItem { Label(t("My trips"), systemImage: "airplane") }.tag(Tab.trips)
             NavigationStack { seam(.settings) }
                 .tabItem { Label(t("Settings"), systemImage: "gearshape") }.tag(Tab.settings)
         }
@@ -65,6 +68,9 @@ struct AppTabs: View {
             home = nil
         }
         .onChange(of: home?.hero?.card.id, initial: true) { _, _ in home?.selectHero() }
+        .onChange(of: home?.trips.trips.filter { $0.status == .active }.map { $0.card.id }, initial: true) { _, ids in
+            for id in ids ?? [] { _ = home?.detail(for: id) }
+        }
         .sheet(isPresented: $showingStep, onDismiss: clearStep) {
             if let home, let formatter = home.formatter, let stepID, let stepTripID {
                 StepSheet(
@@ -103,6 +109,21 @@ struct AppTabs: View {
             seam(.today)
         }
     }
+    @ViewBuilder private var trips: some View {
+        if let home, let formatter = home.formatter {
+            TripsScreen(
+                trips: home.trips.trips, details: home.details.compactMapValues { $0.detail },
+                now: home.trips.now, loading: !home.synced || !home.trips.hasLoaded, formatter: formatter,
+                timeFormat: home.timeFormat, hidden: home.hidden,
+                open: { tripsPath.append(TripPageRoute(tripID: $0)) },
+                refresh: { try? await native?.refreshNow() })
+        } else if native != nil {
+            PlanLoadingView(label: t("Loading your trips"))
+        } else {
+            seam(.trips)
+        }
+    }
+
     @ViewBuilder private func seam(_ route: Route) -> some View {
         #if DEBUG
             RoutePlaceholder(route: route)
