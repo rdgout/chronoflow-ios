@@ -14,10 +14,13 @@ struct AuthRootView: View {
                 .toolbar(.hidden, for: .navigationBar)
                 .navigationDestination(for: AuthDestination.self) { destination in
                     if case .reset(let link) = destination {
-                        ResetPasswordView(model: model.makeResetPasswordModel(link)).toolbar(
+                        ResetPasswordView(
+                            model: resetModel(link), automaticallyFocusesErrors: automaticallyFocusesErrors
+                        ).toolbar(
                             .hidden, for: .navigationBar)
                     } else if destination == .signUp {
-                        SignUpView(model: model.makeSignUpModel()).toolbar(.hidden, for: .navigationBar)
+                        SignUpView(model: signUpModel(), automaticallyFocusesErrors: automaticallyFocusesErrors)
+                            .toolbar(.hidden, for: .navigationBar)
                     } else if destination == .forgot {
                         ForgotPasswordView(model: model.makeForgotPasswordModel()).toolbar(.hidden, for: .navigationBar)
                     } else if destination == .twoFactor {
@@ -32,6 +35,30 @@ struct AuthRootView: View {
                 }
         }
         .onDisappear { model.clearSecrets() }
+    }
+
+    private var automaticallyFocusesErrors: Bool {
+        #if DEBUG
+            AuthUITestConfiguration()?.auditState == nil
+        #else
+            true
+        #endif
+    }
+
+    private func signUpModel() -> SignUpModel {
+        let result = model.makeSignUpModel()
+        #if DEBUG
+            AuthUITestConfiguration()?.prefill(result)
+        #endif
+        return result
+    }
+
+    private func resetModel(_ link: ResetPasswordLink) -> ResetPasswordModel {
+        let result = model.makeResetPasswordModel(link)
+        #if DEBUG
+            AuthUITestConfiguration()?.prefill(result)
+        #endif
+        return result
     }
 
     @ViewBuilder private func seam(_ destination: AuthDestination) -> some View {

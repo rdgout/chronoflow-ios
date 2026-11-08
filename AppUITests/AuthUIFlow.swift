@@ -161,7 +161,7 @@ import XCTest
             }
             let viewport = viewport(
                 in: app, scrollFrame: scroll.frame, includingNavigationBar: element.identifier == "auth.back")
-            if element.isHittable && viewport.contains(element.frame) { return }
+            if element.isHittable && AuthScrollGesture.fullyVisible(element.frame, in: viewport) { return }
             guard let gesture = AuthScrollGesture.reveal(element.frame, in: viewport) else { break }
             let origin = app.windows.firstMatch.coordinate(withNormalizedOffset: .zero)
             let window = app.windows.firstMatch.frame
@@ -175,6 +175,6 @@ import XCTest
         let message = "\(element.identifier): frame=\(element.frame), viewport=\(viewport)"
         XCTAssertTrue(element.isHittable, message)
         XCTAssertTrue(
-            viewport.contains(element.frame), message)
+            AuthScrollGesture.fullyVisible(element.frame, in: viewport), message)
     }
 }

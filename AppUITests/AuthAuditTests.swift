@@ -1,3 +1,4 @@
+import CoreText
 import DesignSystem
 import UIKit
 import XCTest
@@ -177,6 +178,7 @@ nonisolated final class AuthAuditTests: XCTestCase {
             let app = XCUIApplication()
             app.launchArguments = AuthUIFlow.arguments(language: language, xxLarge: xxLarge)
             app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
+            configureAudit(app, screen: "reset", state: state)
             if state == "expired" {
                 app.launchEnvironment["CF_AUTH_TEST_LINK"] = "https://app.chronoflow.net/reset-password"
             }
@@ -190,10 +192,7 @@ nonisolated final class AuthAuditTests: XCTestCase {
             } else {
                 openResetFromMockMail(app)
                 if state != "form" {
-                    fillReset(
-                        app, password: state == "password" ? "short" : "NewPassword123!",
-                        confirmation: state == "confirmation"
-                            ? "different" : state == "password" ? "short" : "NewPassword123!")
+                    submitPrefilled(app, screen: "reset", state: state)
                     if state == "done" {
                         XCTAssertTrue(app.buttons["reset.continue"].waitForExistence(timeout: 6))
                     } else {
@@ -317,30 +316,18 @@ nonisolated final class AuthAuditTests: XCTestCase {
             let app = XCUIApplication()
             app.launchArguments = AuthUIFlow.arguments(language: language, xxLarge: xxLarge)
             app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
+            configureAudit(app, screen: "sign-up", state: state)
             if ["server", "throttle", "offline"].contains(state) {
                 app.launchEnvironment["CF_AUTH_TEST_SIGNUP_FAILURE"] = state
             }
             app.launch()
             defer { app.terminate() }
             openSignUp(app)
-            if state == "empty" {
-                AuthUIFlow.reveal(app.buttons["sign-up.submit"], in: app)
-                app.buttons["sign-up.submit"].tap()
-            } else if state == "visible" {
+            if state == "visible" {
                 AuthUIFlow.reveal(app.switches["sign-up.visibility"], in: app)
                 app.switches["sign-up.visibility"].tap()
             } else if state != "form" {
-                fillSignUp(
-                    app,
-                    email: state == "taken"
-                        ? MockScenarioValues.demoEmail : state == "email" ? "invalid" : "new@example.com",
-                    password: state == "password" ? "short" : "NewPassword123!",
-                    confirmation: state == "confirmation" ? "different" : nil)
-            }
-            if !["form", "visible"].contains(state) {
-                let finished = XCTNSPredicateExpectation(
-                    predicate: NSPredicate { _, _ in app.textFields["sign-up.name"].isEnabled }, object: nil)
-                XCTAssertEqual(XCTWaiter.wait(for: [finished], timeout: 6), .completed)
+                submitPrefilled(app, screen: "sign-up", state: state)
             }
             auditControls(
                 app,
@@ -454,6 +441,7 @@ nonisolated final class AuthAuditTests: XCTestCase {
             app.launchArguments = AuthUIFlow.arguments(language: language, xxLarge: xxLarge)
             app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
             app.launchEnvironment["CF_AUTH_TEST_VERIFY_STATE"] = state
+            configureAudit(app, screen: "sign-up", state: "verify")
             if state.hasPrefix("failed") {
                 app.launchEnvironment["CF_AUTH_TEST_UNVERIFIED"] = "1"
                 app.launchEnvironment["CF_AUTH_TEST_LINK"] = tamperedVerificationURL()
@@ -465,7 +453,7 @@ nonisolated final class AuthAuditTests: XCTestCase {
                 AuthUIFlow.signIn(app, email: MockScenarioValues.demoEmail)
             } else {
                 openSignUp(app)
-                fillSignUp(app, email: "verify@example.com")
+                submitPrefilled(app, screen: "sign-up", state: "verify")
             }
             let first = app.buttons[state.hasPrefix("failed") ? "verify.retry" : "verify.open-email"]
             XCTAssertTrue(first.waitForExistence(timeout: 8))
@@ -584,54 +572,111 @@ nonisolated final class AuthAuditTests: XCTestCase {
         }
     }
 
+    @MainActor private func configureAudit(_ app: XCUIApplication, screen: String, state: String) {
+        app.launchEnvironment["CF_AUTH_TEST_AUDIT_SCREEN"] = screen
+        app.launchEnvironment["CF_AUTH_TEST_AUDIT_STATE"] = state
+    }
+
+    @MainActor private func submitPrefilled(_ app: XCUIApplication, screen: String, state: String) {
+        let button = app.buttons["\(screen).submit"]
+        AuthUIFlow.reveal(button, in: app)
+        button.tap()
+        if ["taken", "server", "throttle"].contains(state) {
+            XCTAssertTrue(
+                AuthUIFlow.control("auth.banner", in: app).waitForExistence(timeout: 6),
+                "Expected \(screen) \(state) banner after submitting the prefilled form")
+        } else if !["empty", "verify", "done"].contains(state) {
+            let password = app.secureTextFields["\(screen).password"]
+            let finished = XCTNSPredicateExpectation(
+                predicate: NSPredicate { _, _ in
+                    guard password.exists, password.isEnabled, let value = password.value as? String else {
+                        return false
+                    }
+                    return value.isEmpty || value == password.placeholderValue
+                }, object: nil)
+            XCTAssertEqual(
+                XCTWaiter.wait(for: [finished], timeout: 6), .completed,
+                "Expected \(screen) \(state) request to finish and clear its prefilled password")
+        }
+    }
+
     @MainActor private func auditControls(
         _ app: XCUIApplication, identifiers: [String], language: String, appearance: XCUIDevice.Appearance,
         xxLarge: Bool, forgotBannerState: String? = nil
     ) {
         AuthUIFlow.dismissKeyboard(in: app)
         let identifiers = ["auth.brand", "auth.heading", "auth.subtitle"] + identifiers
-        var auditedPositions: [[CGRect]] = []
+        let scroll = AuthUIFlow.scroll(in: app)
+        var controls: [String: XCUIElement] = [:]
         for identifier in identifiers {
-            let matches = AuthUIFlow.scroll(in: app).descendants(matching: .any).matching(identifier: identifier)
+            let matches = scroll.descendants(matching: .any).matching(identifier: identifier)
             guard matches.firstMatch.waitForExistence(timeout: 3), matches.count == 1 else {
                 XCTFail("Expected one accessibility element for \(identifier); found \(matches.count)")
                 return
             }
-            let control = matches.element
-            AuthUIFlow.reveal(control, in: app)
+            controls[identifier] = matches.element
+        }
+        let ordered = identifiers.sorted { controls[$0]!.frame.minY < controls[$1]!.frame.minY }
+        var pending = Set(identifiers)
+        for identifier in ordered where pending.contains(identifier) {
+            let control = controls[identifier]!
+            AuthUIFlow.reveal(control, in: app, scroll: scroll)
             do {
-                _ = try UIWait.stableFrames(
-                    [control, AuthUIFlow.control("auth.subtitle", in: app), AuthUIFlow.scroll(in: app)], timeout: 3)
+                _ = try UIWait.stableFrames([control, scroll], timeout: 3)
             } catch {
                 XCTFail("Audit frames did not settle for \(identifier): \(error)")
                 return
             }
-            let position = [
-                AuthUIFlow.control("auth.subtitle", in: app).frame,
-                AuthUIFlow.scroll(in: app).frame,
-                app.keyboards.firstMatch.exists ? app.keyboards.firstMatch.frame : .zero,
-            ]
-            guard !auditedPositions.contains(position) else { continue }
-            auditedPositions.append(position)
+            let viewport = AuthUIFlow.viewport(
+                in: app, scrollFrame: scroll.frame, includingNavigationBar: identifier == "auth.back")
+            guard AuthScrollGesture.fullyVisible(control.frame, in: viewport) else {
+                XCTFail(
+                    "Expected fully visible \(identifier) before auditing: frame=\(control.frame), viewport=\(viewport)"
+                )
+                return
+            }
+            let visible = pending.filter {
+                let viewport = AuthUIFlow.viewport(
+                    in: app, scrollFrame: scroll.frame, includingNavigationBar: $0 == "auth.back")
+                return AuthScrollGesture.fullyVisible(controls[$0]!.frame, in: viewport)
+            }
+            for identifier in visible {
+                XCTAssertTrue(
+                    controls[identifier]!.isHittable, "Expected reachable \(identifier) in audit viewport \(viewport)")
+            }
             audit(
                 app, language: language, appearance: appearance, stage: identifier, xxLarge: xxLarge,
-                forgotBannerState: forgotBannerState, identifiers: identifiers)
+                forgotBannerState: forgotBannerState, controls: controls)
+            pending.subtract(visible)
         }
+        XCTAssertTrue(pending.isEmpty, "Controls never audited fully inside the viewport: \(pending.sorted())")
     }
 
     @MainActor private func audit(
         _ app: XCUIApplication, language: String, appearance: XCUIDevice.Appearance, stage: String, xxLarge: Bool,
-        forgotBannerState: String?, identifiers: [String]
+        forgotBannerState: String?, controls: [String: XCUIElement]
     ) {
         let viewport = AuthUIFlow.viewport(in: app, scrollFrame: AuthUIFlow.scroll(in: app).frame)
-        let controlFrames = identifiers.map { AuthUIFlow.control($0, in: app).frame }
+        let controlFrames = controls.values.map(\.frame)
+        let screenshot = app.screenshot()
+        let attachment = XCTAttachment(screenshot: screenshot)
+        attachment.name = "Auth audit source [\(language), \(appearance), \(stage)]"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        let raster: SnapshotRaster
+        do {
+            raster = try SnapshotRaster(png: screenshot.pngRepresentation)
+        } catch {
+            XCTFail("Cannot decode auth audit screenshot [\(language), \(stage)]: \(error)")
+            return
+        }
         let brand = AuthUIFlow.control("auth.brand", in: app)
         let brandFrame: CGRect? = brand.exists ? brand.frame : nil
         var brandMinimum: Double?
         var brandMeasurement = "not visible"
         if let brandFrame, viewport.insetBy(dx: -Self.frameTolerance, dy: -Self.frameTolerance).contains(brandFrame) {
             (brandMinimum, brandMeasurement) = textContrast(
-                brand, in: app, appearance: appearance, xxLarge: xxLarge, brand: true)
+                brand, raster: raster, in: app, appearance: appearance, xxLarge: xxLarge, brand: true)
         }
         var bannerMinimum: Double?
         var bannerFrame: CGRect?
@@ -641,11 +686,25 @@ nonisolated final class AuthAuditTests: XCTestCase {
             if banner.exists {
                 bannerFrame = banner.frame
                 (bannerMinimum, bannerMeasurement) = textContrast(
-                    banner, in: app, appearance: appearance, xxLarge: xxLarge, banner: true)
+                    banner, raster: raster, in: app, appearance: appearance, xxLarge: xxLarge, banner: true)
                 print("Forgot banner contrast [\(language), \(appearance), \(stage)]: \(bannerMeasurement)")
                 if let bannerMinimum {
                     XCTAssertGreaterThanOrEqual(bannerMinimum, 4.5, bannerMeasurement)
                 }
+            }
+        }
+        var backMinimum: Double?
+        var backFrame: CGRect?
+        var backMeasurement = "not visible"
+        if let back = controls["sign-up.back"], AuthScrollGesture.fullyVisible(back.frame, in: viewport) {
+            backFrame = back.frame
+            (backMinimum, backMeasurement) = textContrast(
+                back, raster: raster, in: app, appearance: appearance, xxLarge: xxLarge, footer: true)
+            print("Sign-up footer contrast [\(language), \(appearance), \(stage)]: \(backMeasurement)")
+            if let backMinimum {
+                XCTAssertGreaterThanOrEqual(backMinimum, 4.5, backMeasurement)
+            } else {
+                XCTFail("Unmeasurable sign-up.back contrast [\(language), \(appearance), \(stage)]: \(backMeasurement)")
             }
         }
         do {
@@ -662,12 +721,15 @@ nonisolated final class AuthAuditTests: XCTestCase {
                 var measurement = "not eligible"
                 if issue.auditType == .contrast, let element = issue.element, element.identifier == "auth.subtitle" {
                     (minimum, measurement) = self.textContrast(
-                        element, in: app, appearance: appearance, xxLarge: xxLarge)
+                        element, raster: raster, in: app, appearance: appearance, xxLarge: xxLarge)
                 }
                 let ignored =
                     boardContrast
                     || Self.isMeasuredSubtitleContrast(
                         identifier: issue.element?.identifier, auditType: issue.auditType, minimum: minimum)
+                    || Self.isMeasuredSignUpBackContrast(
+                        identifier: issue.element?.identifier, frame: issue.element?.frame, backFrame: backFrame,
+                        auditType: issue.auditType, minimum: backMinimum)
                     || Self.isMeasuredBrandContrast(
                         identifier: issue.element?.identifier, frame: issue.element?.frame, brandFrame: brandFrame,
                         auditType: issue.auditType, minimum: brandMinimum)
@@ -686,13 +748,16 @@ nonisolated final class AuthAuditTests: XCTestCase {
                     bannerMinimum=\(bannerMinimum.map { "\($0):1" } ?? "unmeasurable")
                     \(bannerMeasurement)
                     \(brandMeasurement)
+                    backMinimum=\(backMinimum.map { "\($0):1" } ?? "unmeasurable")
+                    \(backMeasurement)
                     """
                 print(message)
                 let attachment = XCTAttachment(string: message)
                 attachment.lifetime = .keepAlways
                 self.add(attachment)
                 if !ignored { XCTFail(message) }
-                return ignored
+                // Record one attributed failure ourselves; XCTest otherwise adds an unlabelled duplicate.
+                return true
             }
         } catch {
             XCTFail("Auth accessibility audit failed [\(language), \(appearance), \(stage)]: \(error)")
@@ -700,17 +765,19 @@ nonisolated final class AuthAuditTests: XCTestCase {
     }
 
     @MainActor private func textContrast(
-        _ element: XCUIElement, in app: XCUIApplication, appearance: XCUIDevice.Appearance, xxLarge: Bool,
-        banner: Bool = false, brand: Bool = false
+        _ element: XCUIElement, raster: SnapshotRaster, in app: XCUIApplication, appearance: XCUIDevice.Appearance,
+        xxLarge: Bool,
+        banner: Bool = false, brand: Bool = false, footer: Bool = false
     ) -> (Double?, String) {
-        let identifier = banner ? "auth.banner" : brand ? "auth.brand" : "auth.subtitle"
+        let identifier = banner ? "auth.banner" : brand ? "auth.brand" : footer ? "sign-up.back" : "auth.subtitle"
         let scrolls = app.scrollViews.containing(.any, identifier: identifier).allElementsBoundByIndex
         let matches = scrolls.filter { scroll in
             let elements = scroll.descendants(matching: .any).matching(identifier: identifier)
             return elements.count == 1 && elements.element.frame == element.frame
                 && elements.element.label == element.label
         }
-        guard banner || brand || element.elementType == .staticText, matches.count == 1, let scroll = matches.first
+        guard banner || brand || footer || element.elementType == .staticText, matches.count == 1,
+            let scroll = matches.first
         else {
             return (nil, "No unique \(identifier) in the current auth screen")
         }
@@ -729,43 +796,95 @@ nonisolated final class AuthAuditTests: XCTestCase {
         }
         let viewport = AuthUIFlow.viewport(in: app, scrollFrame: scroll.frame)
             .offsetBy(dx: -appFrame.minX, dy: -appFrame.minY)
-        let screenshot = app.screenshot()
-        let attachment = XCTAttachment(screenshot: screenshot)
-        attachment.name = "\(identifier) contrast source"
-        attachment.lifetime = .keepAlways
-        add(attachment)
-        do {
-            let raster = try SnapshotRaster(png: screenshot.pngRepresentation)
-            let scale = CGFloat(raster.width) / appFrame.width
-            guard scale.isFinite, scale > 0, abs(CGFloat(raster.height) / scale - appFrame.height) < 1 else {
-                return (nil, "Screenshot and app bounds disagree: \(raster.width)×\(raster.height), app=\(appFrame)")
-            }
-            let traits = UITraitCollection {
-                $0.userInterfaceStyle = appearance == .dark ? .dark : .light
-                $0.preferredContentSizeCategory = xxLarge ? .extraExtraLarge : .large
-            }
-            let token: ColorToken = banner ? .cardForeground : .skyTitle
-            let typography = banner ? Typography.authHint : brand ? Typography.authBrand : Typography.authBody
-            guard
-                let rgb = UIColor(token.color).resolvedColor(with: traits).cgColor.converted(
-                    to: CGColorSpace(name: CGColorSpace.sRGB)!, intent: .relativeColorimetric, options: nil)?.components
-            else { return (nil, "Cannot convert \(identifier) ink to sRGB") }
-            let font = typography.uiFont(compatibleWith: traits)
-            guard let leading = typography.lineHeight else { return (nil, "Missing \(identifier) leading") }
-            let measurement = RenderedTextContrast.measure(
-                raster: raster, frame: frame, scale: scale,
-                lineHeight: leading * font.pointSize / typography.size,
-                text: Array(rgb.prefix(3)).map(Double.init), viewport: viewport)
-            let lines = measurement.lines.enumerated().map { index, line in
-                "line=\(index + 1), frame=\(line.frame), ratio=\(line.minimum)...\(line.maximum):1, ink=\(line.ink)"
-            }.joined(separator: "\n")
-            return (
-                measurement.minimum,
-                "\(identifier)=\(frame), viewport=\(viewport), scale=\(scale), tokens=\(banner ? "cardForeground/authErrorBackground" : "skyTitle/cf-sky"), minimum=\(measurement.minimum.map { "\($0):1" } ?? "unmeasurable"), measuredLines=\(measurement.lines.count)/\(measurement.expectedLines)\n\(lines)"
-            )
-        } catch {
-            return (nil, "\(identifier) screenshot measurement failed: \(error)")
+        let scale = CGFloat(raster.width) / appFrame.width
+        guard scale.isFinite, scale > 0, abs(CGFloat(raster.height) / scale - appFrame.height) < 1 else {
+            return (nil, "Screenshot and app bounds disagree: \(raster.width)×\(raster.height), app=\(appFrame)")
         }
+        let traits = UITraitCollection {
+            $0.userInterfaceStyle = appearance == .dark ? .dark : .light
+            $0.preferredContentSizeCategory = xxLarge ? .extraExtraLarge : .large
+        }
+        let token: ColorToken = banner ? .cardForeground : footer ? .skyCopy : .skyTitle
+        let typography =
+            banner
+            ? Typography.authHint : brand ? Typography.authBrand : footer ? Typography.authLabel : Typography.authBody
+        guard
+            let rgb = UIColor(token.color).resolvedColor(with: traits).cgColor.converted(
+                to: CGColorSpace(name: CGColorSpace.sRGB)!, intent: .relativeColorimetric, options: nil)?.components
+        else { return (nil, "Cannot convert \(identifier) ink to sRGB") }
+        let font = typography.uiFont(compatibleWith: traits)
+        guard let leading = typography.lineHeight else { return (nil, "Missing \(identifier) leading") }
+        if footer {
+            guard AuthScrollGesture.fullyVisible(frame, in: viewport) else {
+                return (nil, "sign-up.back must be fully visible before measuring")
+            }
+            frame = frame.insetBy(dx: AuthTokens.spacer, dy: 0)
+            let ratio = font.pointSize / typography.size
+            let text = NSAttributedString(
+                string: element.label, attributes: [.font: font, .kern: typography.tracking * ratio])
+            let typesetter = CTTypesetterCreateWithAttributedString(text)
+            var location = 0
+            var lines = 0
+            while location < text.length {
+                location += max(1, CTTypesetterSuggestLineBreak(typesetter, location, frame.width))
+                lines += 1
+            }
+            let height = CGFloat(lines) * leading * ratio
+            guard height <= frame.height - 2 * AuthTokens.fieldGap + Self.frameTolerance else {
+                return (nil, "Cannot fit sign-up.back text lines inside the measured button: \(height), \(frame)")
+            }
+            frame = CGRect(x: frame.minX, y: frame.midY - height / 2, width: frame.width, height: height)
+        }
+        let measurement = RenderedTextContrast.measure(
+            raster: raster, frame: frame, scale: scale,
+            lineHeight: leading * font.pointSize / typography.size,
+            text: Array(rgb.prefix(3)).map(Double.init), viewport: viewport)
+        let lines = measurement.lines.enumerated().map { index, line in
+            "line=\(index + 1), frame=\(line.frame), ratio=\(line.minimum)...\(line.maximum):1, ink=\(line.ink)"
+        }.joined(separator: "\n")
+        return (
+            measurement.minimum,
+            "\(identifier)=\(frame), viewport=\(viewport), scale=\(scale), tokens=\(banner ? "cardForeground/authErrorBackground" : footer ? "skyCopy/skyCopyBackground" : "skyTitle/cf-sky"), minimum=\(measurement.minimum.map { "\($0):1" } ?? "unmeasurable"), measuredLines=\(measurement.lines.count)/\(measurement.expectedLines)\n\(lines)"
+        )
+    }
+
+    @MainActor private static func isMeasuredSignUpBackContrast(
+        identifier: String?, frame: CGRect?, backFrame: CGRect?, auditType: XCUIAccessibilityAuditType,
+        minimum: Double?
+    ) -> Bool {
+        guard auditType == .contrast, identifier == "sign-up.back", let frame, let backFrame,
+            let minimum, minimum.isFinite, minimum >= 4.5
+        else { return false }
+        return AuthScrollGesture.fullyVisible(frame, in: backFrame)
+    }
+
+    @MainActor func testSignUpFooterExceptionRequiresItsOwnFrameAndPassingPixels() {
+        let button = CGRect(x: 16, y: 700, width: 358, height: 48)
+        XCTAssertTrue(
+            Self.isMeasuredSignUpBackContrast(
+                identifier: "sign-up.back", frame: button, backFrame: button, auditType: .contrast, minimum: 4.5))
+        for minimum: Double? in [nil, 4.499, .nan, .infinity, -.infinity] {
+            XCTAssertFalse(
+                Self.isMeasuredSignUpBackContrast(
+                    identifier: "sign-up.back", frame: button, backFrame: button, auditType: .contrast, minimum: minimum
+                ))
+        }
+        for identifier: String? in [nil, "", "sign-up.submit", "auth.subtitle", "sign-up.back.new"] {
+            XCTAssertFalse(
+                Self.isMeasuredSignUpBackContrast(
+                    identifier: identifier, frame: button, backFrame: button, auditType: .contrast, minimum: 10))
+        }
+        for frame: CGRect? in [nil, .zero, .null, .infinite, button.offsetBy(dx: 0, dy: 20)] {
+            XCTAssertFalse(
+                Self.isMeasuredSignUpBackContrast(
+                    identifier: "sign-up.back", frame: frame, backFrame: button, auditType: .contrast, minimum: 10))
+            XCTAssertFalse(
+                Self.isMeasuredSignUpBackContrast(
+                    identifier: "sign-up.back", frame: button, backFrame: frame, auditType: .contrast, minimum: 10))
+        }
+        XCTAssertFalse(
+            Self.isMeasuredSignUpBackContrast(
+                identifier: "sign-up.back", frame: button, backFrame: button, auditType: .textClipped, minimum: 10))
     }
 
     @MainActor private static func isMeasuredSubtitleContrast(
