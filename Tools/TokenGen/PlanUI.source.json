@@ -1,5 +1,5 @@
 {
-  "source": "ChronoFlow ItemDetail, SheetStates, PlanLegend, Today, Trips and Walkthrough boards (28/10 pt gaps, 150 ms pills); Walkthrough Button lg/default exit h-10 and TimelineBlock height 64/max-sm breakpoint; ds components; chronoflow-mobile e24872a PlanAppearance/TodayPanel (read-only blueprints)",
+  "source": "ChronoFlow ItemDetail, SheetStates, PlanLegend, Today, Trips and Walkthrough boards (28/10 pt gaps, 150 ms pills); Walkthrough Button lg/default exit h-10 and TimelineBlock height 64/max-sm breakpoint; ds components; chronoflow-mobile e24872a PlanAppearance/TodayPanel (read-only blueprints); Wizard.dc.html and WizardSheet.dc.html (airport rows, flight rows, progress, typography and primary action)",
   "patternDotOpacity": 0.16,
   "patternHatchOpacity": 0.12,
   "patternDotSpacing": 7,
@@ -29,5 +29,21 @@
   "walkthroughNextHeight": 40,
   "walkthroughDoneHeight": 40,
   "walkthroughBlockHeight": 64,
-  "walkthroughCompactWidth": 640
+  "walkthroughCompactWidth": 640,
+  "wizardAirportHeight": 76,
+  "wizardCardRadius": 16,
+  "wizardControlGap": 6,
+  "wizardContentGap": 14,
+  "wizardFlightRowHeight": 64,
+  "wizardProgressHeight": 4,
+  "wizardButtonHeight": 52,
+  "wizardDisabledOpacity": 0.4,
+  "wizardAirportFontSize": 20,
+  "wizardAirportLineHeight": 26,
+  "wizardRowFontSize": 17,
+  "wizardRowLineHeight": 22,
+  "wizardHintFontSize": 13,
+  "wizardHintLineHeight": 18,
+  "wizardRouteFontSize": 15,
+  "wizardRouteLineHeight": 20
 }

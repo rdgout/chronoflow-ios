@@ -1,0 +1,1830 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "A new plan needs an upcoming arrival. Check your flight dates or add your return flight.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A new plan needs an upcoming arrival. Check your flight dates or add your return flight."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voor een nieuw plan is een aankomst nodig die nog moet plaatsvinden. Controleer je vluchtdata of voeg je terugvlucht toe."
+          }
+        }
+      }
+    },
+    "Add": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toevoegen"
+          }
+        }
+      }
+    },
+    "Add a stop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a stop"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tussenstop toevoegen"
+          }
+        }
+      }
+    },
+    "Add another stop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add another stop"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nog een tussenstop toevoegen"
+          }
+        }
+      }
+    },
+    "Arrival": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrival"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aankomst"
+          }
+        }
+      }
+    },
+    "Arrival date": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrival date"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aankomstdatum"
+          }
+        }
+      }
+    },
+    "Arrival time": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrival time"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aankomsttijd"
+          }
+        }
+      }
+    },
+    "Arrives": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrives"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aankomst"
+          }
+        }
+      }
+    },
+    "Between {{from}} and {{to}}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Between {{from}} and {{to}}"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tussen {{from}} en {{to}}"
+          }
+        }
+      }
+    },
+    "Busy time must end after it starts.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Busy time must end after it starts."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een bezet moment moet eindigen nadat het begint."
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuleren"
+          }
+        }
+      }
+    },
+    "Check the departure and arrival times.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the departure and arrival times."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controleer de vertrek- en aankomsttijden."
+          }
+        }
+      }
+    },
+    "Check your bedtime and wake-up time.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check your bedtime and wake-up time."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controleer je bedtijd en opstatijd."
+          }
+        }
+      }
+    },
+    "Check-out · {{date}}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check-out · {{date}}"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uitchecken · {{date}}"
+          }
+        }
+      }
+    },
+    "Choose an airport": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose an airport"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kies een luchthaven"
+          }
+        }
+      }
+    },
+    "Choose different departure and arrival airports.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose different departure and arrival airports."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kies verschillende luchthavens voor vertrek en aankomst."
+          }
+        }
+      }
+    },
+    "Choose the airport you land at.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the airport you land at."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kies de luchthaven waar je landt."
+          }
+        }
+      }
+    },
+    "Choose the airport you leave from.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the airport you leave from."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kies de luchthaven waar je vertrekt."
+          }
+        }
+      }
+    },
+    "Close": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sluiten"
+          }
+        }
+      }
+    },
+    "Connect to the internet and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect to the internet and try again."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maak verbinding met internet en probeer het opnieuw."
+          }
+        }
+      }
+    },
+    "Connection in {{airport}} · {{duration}}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connection in {{airport}} · {{duration}}"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overstap op {{airport}} · {{duration}}"
+          }
+        }
+      }
+    },
+    "Continue": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doorgaan"
+          }
+        }
+      }
+    },
+    "Continue · Phase 16b (temporary)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue · Phase 16b (temporary)"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doorgaan · Fase 16b (tijdelijk)"
+          }
+        }
+      }
+    },
+    "Date": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datum"
+          }
+        }
+      }
+    },
+    "Departs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Departs"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vertrek"
+          }
+        }
+      }
+    },
+    "Departure date": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Departure date"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vertrekdatum"
+          }
+        }
+      }
+    },
+    "Departure time": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Departure time"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vertrektijd"
+          }
+        }
+      }
+    },
+    "Different times": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Different times"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Andere tijden"
+          }
+        }
+      }
+    },
+    "Discard": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weggooien"
+          }
+        }
+      }
+    },
+    "Discard this trip?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard this trip?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze reis weggooien?"
+          }
+        }
+      }
+    },
+    "End of stay": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End of stay"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einde van je verblijf"
+          }
+        }
+      }
+    },
+    "Enter a valid date and time.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a valid date and time."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vul een geldige datum en tijd in."
+          }
+        }
+      }
+    },
+    "From": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Van"
+          }
+        }
+      }
+    },
+    "From and To are the same airport. Choose where you land.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From and To are the same airport. Choose where you land."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Van en Naar zijn dezelfde luchthaven. Kies waar je landt."
+          }
+        }
+      }
+    },
+    "From your last trip": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From your last trip"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Van je vorige reis"
+          }
+        }
+      }
+    },
+    "From {{time}}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From {{time}}"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vanaf {{time}}"
+          }
+        }
+      }
+    },
+    "Keep editing": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep editing"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verder bewerken"
+          }
+        }
+      }
+    },
+    "Leaving for the airport": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leaving for the airport"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vertrek naar de luchthaven"
+          }
+        }
+      }
+    },
+    "Light box": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light box"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lichtbox"
+          }
+        }
+      }
+    },
+    "Light glasses": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light glasses"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lichtbril"
+          }
+        }
+      }
+    },
+    "New trip": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New trip"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nieuwe reis"
+          }
+        }
+      }
+    },
+    "Nights at your destination": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nights at your destination"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nachten op je bestemming"
+          }
+        }
+      }
+    },
+    "No": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nee"
+          }
+        }
+      }
+    },
+    "No prep days": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No prep days"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geen voorbereidingsdagen"
+          }
+        }
+      }
+    },
+    "None": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geen"
+          }
+        }
+      }
+    },
+    "One way": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One way"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enkele reis"
+          }
+        }
+      }
+    },
+    "Outbound, flight {{number}}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outbound, flight {{number}}"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heenreis, vlucht {{number}}"
+          }
+        }
+      }
+    },
+    "Pick the airports from your booking.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick the airports from your booking."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kies de luchthavens uit je boeking."
+          }
+        }
+      }
+    },
+    "Plan a trip": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan a trip"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan een reis"
+          }
+        }
+      }
+    },
+    "Please fill this in.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please fill this in."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vul dit veld in."
+          }
+        }
+      }
+    },
+    "Preparation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparation"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voorbereiding"
+          }
+        }
+      }
+    },
+    "Progress, {{pct}} percent": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Progress, {{pct}} percent"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voortgang, {{pct}} procent"
+          }
+        }
+      }
+    },
+    "Rated {{rating}}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rated {{rating}}"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waarde {{rating}}"
+          }
+        }
+      }
+    },
+    "Remove stop in {{city}}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove stop in {{city}}"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tussenstop in {{city}} verwijderen"
+          }
+        }
+      }
+    },
+    "Return, flight {{number}}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Return, flight {{number}}"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terugreis, vlucht {{number}}"
+          }
+        }
+      }
+    },
+    "Same as work days": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Same as work days"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zoals op werkdagen"
+          }
+        }
+      }
+    },
+    "Search airports": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search airports"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Luchthavens zoeken"
+          }
+        }
+      }
+    },
+    "Search needs a connection": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search needs a connection"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voor zoeken is een verbinding nodig"
+          }
+        }
+      }
+    },
+    "Start this flight where the previous flight lands.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start this flight where the previous flight lands."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Begin deze vlucht op de luchthaven waar de vorige vlucht landt."
+          }
+        }
+      }
+    },
+    "Stop in {{airport}}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop in {{airport}}"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tussenstop in {{airport}}"
+          }
+        }
+      }
+    },
+    "Stop in {{airport}} · {{count}} complete night": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop in {{airport}} · {{count}} complete night"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop op {{airport}} · {{count}} volledige nacht"
+          }
+        }
+      }
+    },
+    "Stop in {{airport}} · {{count}} complete nights": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop in {{airport}} · {{count}} complete nights"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tussenstop in {{airport}} · {{count}} volledige nachten"
+          }
+        }
+      }
+    },
+    "Swap airports": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swap airports"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Luchthavens omwisselen"
+          }
+        }
+      }
+    },
+    "The next wizard steps are being built in Phase 16b.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The next wizard steps are being built in Phase 16b."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De volgende stappen worden in fase 16b gebouwd."
+          }
+        }
+      }
+    },
+    "The planner cannot use this value.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The planner cannot use this value."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Het plan kan deze waarde niet gebruiken."
+          }
+        }
+      }
+    },
+    "Time": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tijd"
+          }
+        }
+      }
+    },
+    "Time in {{city}}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time in {{city}}"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tijd in {{city}}"
+          }
+        }
+      }
+    },
+    "Times are local at each airport.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Times are local at each airport."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De tijden zijn lokaal op elke luchthaven."
+          }
+        }
+      }
+    },
+    "To": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naar"
+          }
+        }
+      }
+    },
+    "Too many attempts. Please try again later.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too many attempts. Please try again later."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te veel pogingen. Probeer het later opnieuw."
+          }
+        }
+      }
+    },
+    "Try again": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try again"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opnieuw proberen"
+          }
+        }
+      }
+    },
+    "When I land": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When I land"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Als ik land"
+          }
+        }
+      }
+    },
+    "When is your flight?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When is your flight?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wanneer vlieg je?"
+          }
+        }
+      }
+    },
+    "Where are you flying?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where are you flying?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waar vlieg je heen?"
+          }
+        }
+      }
+    },
+    "Where do you fly from?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where do you fly from?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waar vlieg je vandaan?"
+          }
+        }
+      }
+    },
+    "Where do you fly home to?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where do you fly home to?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waar vlieg je naar huis?"
+          }
+        }
+      }
+    },
+    "Where do you fly to?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where do you fly to?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waar vlieg je naartoe?"
+          }
+        }
+      }
+    },
+    "Where's your stop?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where's your stop?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waar is je tussenstop?"
+          }
+        }
+      }
+    },
+    "Where’s your stop?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where’s your stop?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waar is je tussenstop?"
+          }
+        }
+      }
+    },
+    "Window left": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Window left"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raam links"
+          }
+        }
+      }
+    },
+    "Window right": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Window right"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raam rechts"
+          }
+        }
+      }
+    },
+    "Yes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yes"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ja"
+          }
+        }
+      }
+    },
+    "Yes, no rating": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yes, no rating"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ja, zonder waarde"
+          }
+        }
+      }
+    },
+    "Your flights": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your flights"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je vluchten"
+          }
+        }
+      }
+    },
+    "Your sleep for this trip": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your sleep for this trip"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je slaap voor deze reis"
+          }
+        }
+      }
+    },
+    "What you entered is not saved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What you entered is not saved."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wat je hebt ingevuld, wordt niet bewaard."
+          }
+        }
+      }
+    },
+    "Flight time {{d}}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flight time {{d}}"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vliegtijd {{d}}"
+          }
+        }
+      }
+    },
+    "Free": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gratis"
+          }
+        }
+      }
+    },
+    "On another device: the extras changed to {{extras}}.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On another device: the extras changed to {{extras}}."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Op een ander apparaat: de extra’s zijn gewijzigd naar {{extras}}."
+          }
+        }
+      }
+    },
+    "On another device: the outbound flight changed to {{flight}}.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On another device: the outbound flight changed to {{flight}}."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Op een ander apparaat: de heenvlucht is gewijzigd naar {{flight}}."
+          }
+        }
+      }
+    },
+    "On another device: the return flight moved to {{date}}.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On another device: the return flight moved to {{date}}."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Op een ander apparaat: de terugvlucht is verplaatst naar {{date}}."
+          }
+        }
+      }
+    },
+    "On another device: the route changed to {{from}} → {{to}}.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On another device: the route changed to {{from}} → {{to}}."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Op een ander apparaat: de route is gewijzigd naar {{from}} → {{to}}."
+          }
+        }
+      }
+    },
+    "On another device: the sleep times changed to {{times}}.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On another device: the sleep times changed to {{times}}."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Op een ander apparaat: de slaaptijden zijn gewijzigd naar {{times}}."
+          }
+        }
+      }
+    },
+    "On another device: the trip end changed to {{end}}.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On another device: the trip end changed to {{end}}."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Op een ander apparaat: het einde van de reis is gewijzigd naar {{end}}."
+          }
+        }
+      }
+    },
+    "On another device: the trip now uses your usual sleep times.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On another device: the trip now uses your usual sleep times."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Op een ander apparaat: de reis gebruikt nu je gewone slaaptijden."
+          }
+        }
+      }
+    },
+    "The price is now {{price}}.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The price is now {{price}}."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De prijs is nu {{price}}."
+          }
+        }
+      }
+    },
+    "The price is still {{price}}.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The price is still {{price}}."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De prijs is nog steeds {{price}}."
+          }
+        }
+      }
+    },
+    "one way": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "one way"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "enkele reis"
+          }
+        }
+      }
+    },
+    "return": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "return"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "retour"
+          }
+        }
+      }
+    },
+    "{{count}} a day": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{count}} a day"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{count}} per dag"
+          }
+        }
+      }
+    },
+    "{{count}} answered": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{count}} answered"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{count}} beantwoord"
+          }
+        }
+      }
+    },
+    "{{count}} credits": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{count}} credits"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{count}} tegoeden"
+          }
+        }
+      }
+    },
+    "{{count}} days prep": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{count}} days prep"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{count}} dagen voorbereiding"
+          }
+        }
+      }
+    },
+    "{{count}} nights": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{count}} nights"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{count}} nachten"
+          }
+        }
+      }
+    },
+    "{{count}} time ranges": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{count}} time ranges"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{count}} tijdvakken"
+          }
+        }
+      }
+    },
+    "{{hours}} h {{minutes}}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{hours}} h {{minutes}}"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{hours}} u {{minutes}}"
+          }
+        }
+      }
+    },
+    "{{nights}} · until {{date}}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{nights}} · until {{date}}"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{nights}} · tot {{date}}"
+          }
+        }
+      }
+    },
+    "Stop in {{airport}} · {{count}} complete night_one": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop in {{airport}} · {{count}} complete night"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop op {{airport}} · {{count}} volledige nacht"
+          }
+        }
+      }
+    },
+    "{{count}} a day_one": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{count}} a day"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{count}} per dag"
+          }
+        }
+      }
+    },
+    "{{count}} answered_one": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{count}} answered"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{count}} beantwoord"
+          }
+        }
+      }
+    },
+    "{{count}} credits_one": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{count}} credit"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{count}} tegoed"
+          }
+        }
+      }
+    },
+    "{{count}} days prep_one": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{count}} day prep"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{count}} dag voorbereiding"
+          }
+        }
+      }
+    },
+    "{{count}} nights_one": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{count}} night"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{count}} nacht"
+          }
+        }
+      }
+    },
+    "{{count}} time ranges_one": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{count}} time range"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{count}} tijdvak"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

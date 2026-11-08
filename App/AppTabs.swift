@@ -5,6 +5,8 @@ import PlanCore
 import PlanUI
 import Settings
 import SwiftUI
+import TripWizard
+import TripWizardUI
 import UIKit
 
 struct AppTabs: View {
@@ -16,6 +18,10 @@ struct AppTabs: View {
     @State private var settingsHome = SettingsHomeModel()
     @State private var tripsPath: [TripPageRoute] = []
     @State private var path: [TripPageRoute] = []
+    @State private var wizard: MemberWizardModel?
+    @State private var wizardStore: MemberWizardStore?
+    @State private var airportSearch: AirportSearchService?
+    @State private var openingWizard = false
     private struct StepSelection: Identifiable {
         let tripID: String
         let blockID: String
@@ -76,6 +82,10 @@ struct AppTabs: View {
             .tabItem { Label(t("Settings"), systemImage: "gearshape") }.tag(Tab.settings)
         }
         .accessibilityIdentifier("app.tabs").tint(ColorToken.primary.color)
+        .accessibilityElement(children: .contain)
+        .fullScreenCover(isPresented: Binding(get: { wizard != nil }, set: { if !$0 { wizard = nil } })) {
+            if let wizard { MemberWizardView(model: wizard) { self.wizard = nil } }
+        }
         .task {
             guard let native, let snapshot = await native.controller.activeSession(),
                 let database = await native.accounts.activeDatabase(),
@@ -108,6 +118,20 @@ struct AppTabs: View {
                 repository: TripRepository(database: database), clock: clock, mutationPermit: permit)
             home = model
             model.start()
+            let recovery = MemberWizardStore(database: database, permit: permit)
+            if let source = await native.wizardDataSource(session: snapshot.session) {
+                let search = airportSearch ?? AirportSearchService(source: source)
+                guard await native.controller.activeSession() == snapshot, !Task.isCancelled else { return }
+                wizardStore = recovery
+                airportSearch = search
+                do {
+                    if wizard == nil, let recovered = try await recovery.recover(),
+                        await native.controller.activeSession() == snapshot, !Task.isCancelled
+                    {
+                        wizard = MemberWizardModel(draft: recovered, store: recovery, search: search)
+                    }
+                } catch { assertionFailure("Wizard recovery failed: \(error)") }
+            }
             for await update in await native.controller.updates() {
                 guard !Task.isCancelled, update.epoch == snapshot.epoch,
                     update.presence == .signedIn(accountID: snapshot.session.accountId)
@@ -116,6 +140,9 @@ struct AppTabs: View {
                     settings.stop()
                     home = nil
                     step = nil
+                    wizard = nil
+                    wizardStore = nil
+                    airportSearch = nil
                     return
                 }
             }
@@ -185,6 +212,7 @@ struct AppTabs: View {
                 now: home.trips.now, loading: !home.synced || !home.trips.hasLoaded, formatter: formatter,
                 timeFormat: home.timeFormat, hidden: home.hidden,
                 open: { tripsPath.append(TripPageRoute(tripID: $0)) },
+                create: { openWizard() },
                 refresh: { try? await native?.refreshNow() })
         } else if native != nil {
             ScrollView {
@@ -192,6 +220,19 @@ struct AppTabs: View {
             }.navigationTitle(t("My trips")).background(ColorToken.background.color)
         } else {
             seam(.trips)
+        }
+    }
+
+    private func openWizard() {
+        guard !openingWizard, wizard == nil, let wizardStore, let airportSearch else { return }
+        openingWizard = true
+        Task {
+            defer { openingWizard = false }
+            do {
+                let draft = try await wizardStore.start()
+                guard !Task.isCancelled, self.wizardStore === wizardStore else { return }
+                wizard = MemberWizardModel(draft: draft, store: wizardStore, search: airportSearch)
+            } catch is CancellationError { return } catch { assertionFailure("Wizard start failed: \(error)") }
         }
     }
 

@@ -49,6 +49,22 @@ nonisolated public enum PlanUITokens {
     public static var walkthroughDoneHeight: CGFloat { 40 }
     public static var walkthroughDotDuration: Double { 0.15 }
     public static var walkthroughNextHeight: CGFloat { 40 }
+    public static var wizardAirportFontSize: CGFloat { 20 }
+    public static var wizardAirportHeight: CGFloat { 76 }
+    public static var wizardAirportLineHeight: CGFloat { 26 }
+    public static var wizardButtonHeight: CGFloat { 52 }
+    public static var wizardCardRadius: CGFloat { 16 }
+    public static var wizardContentGap: CGFloat { 14 }
+    public static var wizardControlGap: CGFloat { 6 }
+    public static var wizardDisabledOpacity: Double { 0.4 }
+    public static var wizardFlightRowHeight: CGFloat { 64 }
+    public static var wizardHintFontSize: CGFloat { 13 }
+    public static var wizardHintLineHeight: CGFloat { 18 }
+    public static var wizardProgressHeight: CGFloat { 4 }
+    public static var wizardRouteFontSize: CGFloat { 15 }
+    public static var wizardRouteLineHeight: CGFloat { 20 }
+    public static var wizardRowFontSize: CGFloat { 17 }
+    public static var wizardRowLineHeight: CGFloat { 22 }
 }
 extension Typography {
     public static var screenHero: Style {
@@ -94,5 +110,42 @@ extension Typography {
         Style(
             face: .figtree500, size: screenBodyLg.size, lineHeight: screenBodyLg.lineHeight,
             tracking: screenBodyLg.tracking, relativeTo: screenBodyLg.relativeTo)
+    }
+    public static var wizardAirport: Style {
+        Style(
+            face: .figtree600, size: PlanUITokens.wizardAirportFontSize,
+            lineHeight: PlanUITokens.wizardAirportLineHeight,
+            tracking: screenBody.tracking, relativeTo: .headline)
+    }
+    public static var wizardAirportPlaceholder: Style {
+        Style(
+            face: .figtree400, size: PlanUITokens.wizardAirportFontSize,
+            lineHeight: PlanUITokens.wizardAirportLineHeight,
+            tracking: screenBody.tracking, relativeTo: .headline)
+    }
+    public static var wizardRow: Style {
+        Style(
+            face: .figtree400, size: PlanUITokens.wizardRowFontSize, lineHeight: PlanUITokens.wizardRowLineHeight,
+            tracking: screenBody.tracking, relativeTo: .body)
+    }
+    public static var wizardButton: Style {
+        Style(
+            face: .figtree600, size: PlanUITokens.wizardRowFontSize, lineHeight: PlanUITokens.wizardRowLineHeight,
+            tracking: screenBody.tracking, relativeTo: .body)
+    }
+    public static var wizardSubtitle: Style {
+        Style(
+            face: .figtree400, size: screenBodyLg.size, lineHeight: PlanUITokens.wizardRowLineHeight,
+            tracking: screenBody.tracking, relativeTo: .body)
+    }
+    public static var wizardHint: Style {
+        Style(
+            face: .figtree400, size: PlanUITokens.wizardHintFontSize, lineHeight: PlanUITokens.wizardHintLineHeight,
+            tracking: screenBody.tracking, relativeTo: .caption)
+    }
+    public static var wizardRoute: Style {
+        Style(
+            face: .figtree600, size: PlanUITokens.wizardRouteFontSize, lineHeight: PlanUITokens.wizardRouteLineHeight,
+            tracking: screenBody.tracking, relativeTo: .subheadline)
     }
 }

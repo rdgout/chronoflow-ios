@@ -1,0 +1,338 @@
+#if canImport(UIKit)
+    import AppCore
+    import DesignSystem
+    import SwiftUI
+    import TripWizard
+    import UIKit
+
+    public struct MemberWizardView: View {
+        @Environment(\.locale) private var locale
+        @Bindable private var model: MemberWizardModel
+        private let dismiss: () -> Void
+        @State private var path: [Destination]
+        @State private var confirmingDiscard = false
+        @State private var continuing = false
+        @State private var closing = false
+        private enum Destination: Hashable { case outbound, continuation }
+
+        public init(model: MemberWizardModel, dismiss: @escaping () -> Void) {
+            self.model = model
+            self.dismiss = dismiss
+            _path = State(initialValue: model.draft.state.step == .outbound ? [.outbound] : [])
+        }
+
+        private func t(_ key: String, _ arguments: [String: String] = [:]) -> String {
+            WizardStrings.text(key, locale: locale, arguments: arguments)
+        }
+
+        public var body: some View {
+            NavigationStack(path: $path) {
+                whereScreen.navigationDestination(for: Destination.self) { destination in
+                    switch destination {
+                    case .outbound: outboundScreen
+                    case .continuation:
+                        #if DEBUG
+                            continuation
+                        #else
+                            ColorToken.background.color
+                        #endif
+                    }
+                }
+            }
+            .tint(ColorToken.primary.color)
+            .interactiveDismissDisabled()
+            .onChange(of: path) { _, next in
+                model.go(next.isEmpty ? .whereTo : .outbound)
+                continuing = false
+            }
+            .sheet(item: Binding(get: { model.draft.state.sheet }, set: { model.openAirport($0) })) { sheet in
+                WizardAirportSearchView(sheet: sheet, model: model)
+            }
+            .alert(t("Discard this trip?"), isPresented: $confirmingDiscard) {
+                Button(t("Keep editing"), role: .cancel) {}
+                Button(t("Discard"), role: .destructive) { close() }
+            } message: {
+                Text(t("What you entered is not saved."))
+            }
+        }
+
+        private var whereScreen: some View {
+            shell(title: "Where are you flying?", subtitle: "Pick the airports from your booking.", outbound: false) {
+                let first = model.draft.form.legs[0]
+                let last = model.draft.form.legs[model.draft.form.returnBoundary - 1]
+                let same = !first.fromIata.isEmpty && first.fromIata == last.toIata
+                VStack(alignment: .leading, spacing: PlanUITokens.space2) {
+                    VStack(spacing: 0) {
+                        airportRow(
+                            "From", iata: first.fromIata, city: first.fromCity, hint: model.draft.state.fromLastTrip
+                        ) { model.openAirport(WizardAirportSheet(index: 0, side: .from)) }
+                        Divider().overlay(ColorToken.border.color)
+                        airportRow("To", iata: last.toIata, city: last.toCity, invalid: same) {
+                            model.openAirport(WizardAirportSheet(index: model.draft.form.returnBoundary - 1, side: .to))
+                        }
+                    }
+                    .wizardCard()
+                    .overlay(alignment: .trailing) {
+                        Button {
+                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                            model.swapAirports()
+                        } label: {
+                            Image(systemName: "arrow.up.arrow.down").frame(
+                                minWidth: AuthTokens.touch, minHeight: AuthTokens.touch)
+                        }
+                        .buttonStyle(.borderless).tint(ColorToken.foreground.color)
+                        .disabled(first.fromIata.isEmpty || last.toIata.isEmpty)
+                        .accessibilityLabel(t("Swap airports")).accessibilityIdentifier("wizard.swap")
+                        .padding(.trailing, PlanUITokens.space3)
+                    }
+                    if same {
+                        errorLine(
+                            t("From and To are the same airport. Choose where you land."),
+                            identifier: "wizard.where.same")
+                    }
+                }
+            }
+        }
+
+        private func airportRow(
+            _ label: String, iata: String, city: String?, hint: Bool = false, invalid: Bool = false,
+            action: @escaping () -> Void
+        ) -> some View {
+            Button(action: action) {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(t(label)).font(Typography.wizardHint.font).foregroundStyle(ColorToken.mutedForeground.color)
+                    Text(
+                        iata.isEmpty ? t("Choose an airport") : [iata, city].compactMap { $0 }.joined(separator: " · ")
+                    )
+                    .font((iata.isEmpty ? Typography.wizardAirportPlaceholder : Typography.wizardAirport).font)
+                    .foregroundStyle(
+                        (iata.isEmpty ? ColorToken.mutedForeground : .foreground).color)
+                    if hint {
+                        Text(t("From your last trip")).font(Typography.wizardHint.font).foregroundStyle(
+                            ColorToken.dawnText.color)
+                    }
+                }
+                .frame(maxWidth: .infinity, minHeight: PlanUITokens.wizardAirportHeight, alignment: .leading)
+                .padding(.leading, PlanUITokens.space4).padding(.trailing, PlanUITokens.space16)
+                .overlay {
+                    if invalid {
+                        RoundedRectangle(cornerRadius: PlanUITokens.wizardCardRadius).strokeBorder(
+                            ColorToken.destructive.color, lineWidth: AuthTokens.focusWidth)
+                    }
+                }
+            }.buttonStyle(.plain).accessibilityIdentifier(label == "From" ? "wizard.from" : "wizard.to")
+        }
+
+        private var outboundScreen: some View {
+            shell(title: "When is your flight?", subtitle: "Times are local at each airport.", outbound: true) {
+                if let banner = model.draft.fieldErrors["review"] {
+                    HStack(alignment: .top, spacing: PlanUITokens.space2) {
+                        Image(systemName: "info.circle").accessibilityHidden(true)
+                        Text(t(banner.key)).font(Typography.screenBody.font)
+                    }
+                    .padding(PlanUITokens.space3)
+                    .background(
+                        ColorToken.authErrorBackground.color, in: RoundedRectangle(cornerRadius: PlanUITokens.radiusXl)
+                    )
+                    .overlay {
+                        RoundedRectangle(cornerRadius: PlanUITokens.radiusXl).strokeBorder(
+                            ColorToken.authErrorBorder.color, lineWidth: AuthTokens.borderWidth)
+                    }
+                    .accessibilityElement(children: .combine).accessibilityIdentifier("wizard.outbound.past")
+                }
+                ForEach(
+                    Array(model.draft.form.legs.prefix(model.draft.form.returnBoundary).enumerated()), id: \.element.id
+                ) { index, leg in
+                    if index > 0 { connection(index) }
+                    VStack(alignment: .leading, spacing: PlanUITokens.space2) {
+                        Label(leg.fromIata + " → " + leg.toIata, systemImage: "airplane")
+                            .font(Typography.wizardRoute.font).foregroundStyle(ColorToken.dawnText.color)
+                            .accessibilityAddTraits(.isHeader)
+                        VStack(spacing: 0) {
+                            WizardFlightDateTimeRow(model: model, index: index, arrival: false)
+                            Divider().overlay(ColorToken.border.color)
+                            WizardFlightDateTimeRow(model: model, index: index, arrival: true)
+                        }.wizardCard()
+                    }
+                }
+                if let itinerary = model.draft.form.itinerary,
+                    itinerary.legs.contains(where: { $0.journey == .outbound })
+                {
+                    let minutes = itinerary.legs.filter { $0.journey == .outbound }.reduce(0) { $0 + $1.flightMin }
+                    Text(t("Flight time {{d}}", ["d": duration(minutes)]))
+                        .font(Typography.wizardHint.font).foregroundStyle(ColorToken.mutedForeground.color)
+                }
+                if model.draft.form.legs.count < WizardForm.maxFlights {
+                    Button {
+                        model.openAirport(WizardAirportSheet(index: model.draft.form.returnBoundary - 1, side: .stop))
+                    } label: {
+                        Label(
+                            t(model.draft.form.returnBoundary > 1 ? "Add another stop" : "Add a stop"),
+                            systemImage: "plus"
+                        )
+                        .frame(minHeight: AuthTokens.touch)
+                    }.tint(ColorToken.dawnText.color).accessibilityIdentifier("wizard.add-stop")
+                }
+            }
+        }
+
+        private func connection(_ index: Int) -> some View {
+            HStack(spacing: PlanUITokens.space2) {
+                Divider().overlay(ColorToken.border.color)
+                if let message = WizardOutboundRules.connection(
+                    form: model.draft.form, index: index,
+                    duration: duration)
+                {
+                    HStack(spacing: PlanUITokens.space1) {
+                        Text(
+                            t(
+                                message.key,
+                                message.arguments.mapValues { value in
+                                    if case .number(let number) = value {
+                                        return NSDecimalNumber(decimal: number).stringValue
+                                    }
+                                    return value.string ?? ""
+                                })
+                        ).font(Typography.wizardHint.font)
+                        Button {
+                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                            model.removeStop(at: index)
+                        } label: {
+                            Image(systemName: "xmark").frame(minWidth: AuthTokens.touch, minHeight: AuthTokens.touch)
+                        }
+                        .accessibilityLabel(
+                            t(
+                                "Remove stop in {{city}}",
+                                ["city": model.draft.form.legs[index].fromCity ?? model.draft.form.legs[index].fromIata]
+                            )
+                        )
+                        .accessibilityIdentifier("wizard.remove-stop.\(index)")
+                    }.padding(.leading, PlanUITokens.space3)
+                        .background(ColorToken.surface2.color, in: Capsule())
+                }
+                Divider().overlay(ColorToken.border.color)
+            }.fixedSize(horizontal: false, vertical: true).accessibilityElement(children: .contain)
+                .accessibilityIdentifier("wizard.connection.\(index)")
+        }
+
+        private func duration(_ minutes: Int) -> String {
+            t(
+                "{{hours}} h {{minutes}}",
+                ["hours": String(minutes / 60), "minutes": String(format: "%02d", minutes % 60)])
+        }
+
+        private func shell<Content: View>(
+            title: String, subtitle: String, outbound: Bool, @ViewBuilder content: () -> Content
+        ) -> some View {
+            VStack(spacing: 0) {
+                ProgressView(value: outbound ? 0.30 : 0.15)
+                    .tint(ColorToken.dawn.color).padding(.horizontal, PlanUITokens.space5)
+                    .accessibilityLabel(t("Progress, {{pct}} percent", ["pct": outbound ? "30" : "15"]))
+                ScrollView {
+                    VStack(alignment: .leading, spacing: PlanUITokens.wizardContentGap) {
+                        VStack(alignment: .leading, spacing: PlanUITokens.wizardControlGap) {
+                            Text(t(title)).font(Typography.screenPageTitle.font).accessibilityAddTraits(.isHeader)
+                            Text(t(subtitle)).font(Typography.wizardSubtitle.font).foregroundStyle(
+                                ColorToken.mutedForeground.color)
+                        }
+                        content()
+                    }.frame(maxWidth: .infinity, alignment: .leading).padding(PlanUITokens.space5)
+                }
+            }
+            .background(ColorToken.background.color).foregroundStyle(ColorToken.foreground.color)
+            .safeAreaInset(edge: .bottom) {
+                Button {
+                    guard !continuing, outbound ? path == [.outbound] : path.isEmpty else { return }
+                    continuing = true
+                    if outbound {
+                        if model.finishOutbound() {
+                            #if DEBUG
+                                path.append(.continuation)
+                            #endif
+                        } else {
+                            UINotificationFeedbackGenerator().notificationOccurred(.warning)
+                        }
+                    } else {
+                        path.append(.outbound)
+                    }
+                    continuing = false
+                } label: {
+                    Text(t("Continue")).font(Typography.wizardButton.font)
+                        .frame(maxWidth: .infinity, minHeight: PlanUITokens.wizardButtonHeight)
+                }
+                .buttonStyle(.plain).foregroundStyle(ColorToken.primaryForeground.color)
+                .background(ColorToken.primary.color, in: Capsule())
+                .disabled(
+                    closing || continuing || model.persistenceFailed
+                        || (outbound ? !model.outboundComplete : !model.whereComplete)
+                )
+                .opacity(
+                    (outbound ? model.outboundComplete : model.whereComplete) ? 1 : PlanUITokens.wizardDisabledOpacity
+                )
+                .accessibilityIdentifier(outbound ? "wizard.outbound.continue" : "wizard.where.continue")
+                .padding(.horizontal, PlanUITokens.space5).padding(.vertical, PlanUITokens.space3)
+                .background(ColorToken.background.color)
+            }
+            .navigationTitle(t("New trip")).navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        if model.draft.state.entered { confirmingDiscard = true } else { close() }
+                    } label: {
+                        Image(systemName: "xmark")
+                    }
+                    .accessibilityLabel(t("Close")).accessibilityIdentifier("wizard.close")
+                    .disabled(closing)
+                }
+            }
+            .accessibilityElement(children: .contain).accessibilityIdentifier(
+                outbound ? "wizard.outbound" : "wizard.where")
+        }
+
+        #if DEBUG
+            private var continuation: some View {
+                VStack(spacing: PlanUITokens.space4) {
+                    Text(t("The next wizard steps are being built in Phase 16b."))
+                    Button(t("Continue · Phase 16b (temporary)")) {
+                        if !model.previewCheck() {
+                            UINotificationFeedbackGenerator().notificationOccurred(.warning)
+                            path = [.outbound]
+                        }
+                    }.accessibilityIdentifier("wizard.debug.check")
+                }.frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(ColorToken.background.color)
+                    .accessibilityElement(children: .contain).accessibilityIdentifier("wizard.debug.continue")
+            }
+        #endif
+
+        private func close() {
+            guard !closing else { return }
+            closing = true
+            Task {
+                do {
+                    try await model.discard()
+                    dismiss()
+                } catch {
+                    closing = false
+                    assertionFailure("Wizard recovery discard failed: \(error)")
+                }
+            }
+        }
+    }
+
+    func errorLine(_ text: String, identifier: String) -> some View {
+        Label(text, systemImage: "exclamationmark.circle").font(Typography.screenBody.font)
+            .foregroundStyle(ColorToken.destructive.color).accessibilityIdentifier(identifier)
+    }
+
+    extension View {
+        func wizardCard() -> some View {
+            background(ColorToken.card.color, in: RoundedRectangle(cornerRadius: PlanUITokens.wizardCardRadius))
+                .overlay {
+                    RoundedRectangle(cornerRadius: PlanUITokens.wizardCardRadius).strokeBorder(
+                        ColorToken.border.color, lineWidth: AuthTokens.borderWidth)
+                }
+        }
+    }
+
+#endif

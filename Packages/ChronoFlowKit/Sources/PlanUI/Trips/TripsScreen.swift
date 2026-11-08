@@ -14,12 +14,13 @@
         public var timeFormat: TimeFormat
         public var hidden: [BlockType]
         public var open: (String) -> Void
+        public var create: (() -> Void)?
         public var refresh: () async -> Void
 
         public init(
             trips: [TripListValue], details: [String: TripDetail], now: Date, loading: Bool,
             formatter: CopyLineFormatter, timeFormat: TimeFormat = .value24, hidden: [BlockType] = [],
-            open: @escaping (String) -> Void, refresh: @escaping () async -> Void
+            open: @escaping (String) -> Void, create: (() -> Void)? = nil, refresh: @escaping () async -> Void
         ) {
             self.trips = trips
             self.details = details
@@ -29,6 +30,7 @@
             self.timeFormat = timeFormat
             self.hidden = hidden
             self.open = open
+            self.create = create
             self.refresh = refresh
         }
         private var language: Language { locale.language.languageCode?.identifier == "nl" ? .nl : .en }
@@ -47,6 +49,10 @@
                                 .isHeader)
                             Text(t("Your upcoming, active and past trips show up here."))
                                 .planTextStyle(Typography.screenBodyLg, color: .mutedForeground)
+                            if let create {
+                                Button(t("Plan a trip"), action: create).buttonStyle(.borderedProminent)
+                                    .buttonBorderShape(.capsule).accessibilityIdentifier("trips.create-empty")
+                            }
                         }.multilineTextAlignment(.center).frame(maxWidth: .infinity)
                             .padding(.vertical, PlanUITokens.space8).planEmptyCard().accessibilityIdentifier(
                                 "trips.empty")
@@ -79,6 +85,14 @@
                 }.planContentBounds().padding(PlanUITokens.space4).planPageRail()
             }.refreshable { await refresh() }
                 .navigationTitle(t("My trips")).accessibilityIdentifier("trips.screen")
+                .toolbar {
+                    if let create {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button(action: create) { Image(systemName: "plus") }
+                                .accessibilityLabel(t("New trip")).accessibilityIdentifier("trips.create")
+                        }
+                    }
+                }
                 .background(ColorToken.background.color).foregroundStyle(ColorToken.foreground.color)
         }
     }
