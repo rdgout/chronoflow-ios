@@ -1882,6 +1882,8 @@ Save-feedback follow-up: clear Profile's saved state when an observed account va
 
 Recovery-code export follow-up: Download exports a named plain-text document through CoreTransferable and the system share sheet. It supplies data from memory without first writing a private temporary file; the user chooses where to save or share it.
 
+Verification (2026-11-08): strict `make lint` passes. `make quick` reaches only the existing cookie-listener sandbox EPERM. A full package run excluding only that test passes all 540 Swift Testing tests and the three non-timing XCTest checks; the three timeline budget checks fail under concurrent compiler activity and pass on their isolated rerun without changed limits. All 17 generator host tests and 100 runner/resource fixtures pass. Direct iOS 17 compilation passes for changed modules, app, AppTests and AppUITests, plus Release Settings/app. Seven mock UI journeys are authored and registered; no simulator, snapshot suite or matrix was run. The 11 atomic patches and matching subjects are in `build/commits/`; apply them in numeric order. See `Docs/phase-17h-settings-pages.md` for routes, deferrals, logs and the later UI command.
+
 Deferrals: Reminders and notification permissions/delivery remain excluded. Optional timeline items remain excluded by the 5 Nov compact-timeline decision. Purchases, paywall checkout and cancellation remain excluded. Unbuilt destinations stay hidden in Release. Register host/UI suites in the 17h runner entries; no snapshot suites.
 
 ### Phase 18 (later, separate decision): guest wizard and claim
