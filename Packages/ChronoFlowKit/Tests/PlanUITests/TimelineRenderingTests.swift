@@ -23,7 +23,8 @@ struct TimelineRenderingTests {
                 let layout = try #require(layouts[day.id])
                 let drawing = try await renderer.render(
                     day: day, layout: layout, width: width, scale: 3,
-                    fontSize: PlanMetrics.laneLabelSize, appearance: .light, symbols: [:])
+                    fontSize: PlanMetrics.laneLabelSize, appearance: .light, symbols: [:],
+                    compact: width + PlanMetrics.gutter * 2 < PlanMetrics.timelineLabelBreakpoint)
                 #expect(drawing.document.numberOfPages == 1)
                 #expect(abs(drawing.page.getBoxRect(.mediaBox).height - layout.height) < 0.001)
                 #expect(drawing.dividerFrames.count == layout.dividers.count)

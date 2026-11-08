@@ -11,6 +11,7 @@ struct TripDayRow: View, Equatable {
     let copy: PageCopy
     let renderer: TimelineRenderer
     let symbols: TimelineSymbols
+    var compact = false
     let viewportHeight: Double
     let onBlock: (String) -> Void
     let onFrame: () -> Void
@@ -19,6 +20,7 @@ struct TripDayRow: View, Equatable {
         lhs.day == rhs.day && lhs.layout == rhs.layout && lhs.clock === rhs.clock
             && lhs.timeline == rhs.timeline && lhs.copy == rhs.copy && lhs.renderer === rhs.renderer
             && lhs.symbols === rhs.symbols && lhs.viewportHeight == rhs.viewportHeight
+            && lhs.compact == rhs.compact
     }
 
     var body: some View {
@@ -41,7 +43,8 @@ struct TripDayRow: View, Equatable {
     var clockContent: DayClockContent {
         DayClockContent(
             day: day, layout: layout, clock: clock, timeline: timeline, copy: copy,
-            renderer: renderer, symbols: symbols, viewportHeight: viewportHeight, onBlock: onBlock, onFrame: onFrame)
+            renderer: renderer, symbols: symbols, compact: compact, viewportHeight: viewportHeight,
+            onBlock: onBlock, onFrame: onFrame)
     }
 }
 
@@ -63,6 +66,7 @@ struct DayClockContent: View {
     let copy: PageCopy
     let renderer: TimelineRenderer
     let symbols: TimelineSymbols
+    var compact = false
     let viewportHeight: Double
     let onBlock: (String) -> Void
     let onFrame: () -> Void
@@ -72,7 +76,7 @@ struct DayClockContent: View {
             LaneHeadings(copy: copy)
             DayTimelineView(
                 day: day, layout: layout, now: clock.now, nowText: clock.text,
-                copy: copy, renderer: renderer, symbols: symbols, viewportHeight: viewportHeight,
+                copy: copy, renderer: renderer, symbols: symbols, compact: compact, viewportHeight: viewportHeight,
                 onBlock: onBlock, onFrame: onFrame)
         } else {
             DayListView(day: day, now: clock.now, copy: copy, onBlock: onBlock)

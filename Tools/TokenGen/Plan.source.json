@@ -1,5 +1,5 @@
 {
-  "source": "plan.md Phase 14b and fix round 1; Plan board compact/tile styles; RN timeline, tileModel and Notice spacing references",
+  "source": "plan.md Phase 14b and fix round 1; Plan board compact/tile styles; RN DayTimeline compact window threshold space(160), tileModel and Notice spacing references",
   "type": {
     "planTitle": {
       "size": 17,
@@ -68,6 +68,7 @@
     }
   },
   "spacingMultipliers": {
+    "timelineLabelBreakpoint": 160,
     "pointsPerHour": 10,
     "gutterWidth": 11,
     "tileInset": 0.5,

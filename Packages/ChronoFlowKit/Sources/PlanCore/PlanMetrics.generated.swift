@@ -34,6 +34,7 @@ public enum PlanMetrics {
     public static var tileInset: Double { 2.0000000000 }
     public static var tilePadding: Double { 6.0000000000 }
     public static var tileRadius: Double { 14.0000000000 }
+    public static var timelineLabelBreakpoint: Double { 640.0000000000 }
     public static var touch: Double { 44.0000000000 }
     public static var zonePadding: Double { 20.0000000000 }
     public static var zonePillPadding: Double { 8.0000000000 }

@@ -8,6 +8,72 @@ import Testing
 @testable import PlanUI
 
 struct TimelineAlphaTests {
+    @Test func compactAndTinyTilesHideAllCopyAndInvalidateTheCache() async throws {
+        let detail = try MockTimelineFixtures.fixture(named: "S3").detail
+        let layouts = layoutPlan(detail.plan, timeline: detail.timeline)
+        let prepared = preparePlan(
+            detail, layouts: layouts,
+            formatter: CopyLineFormatter(catalog: try await CopyCatalog.load()), language: .en)
+        var day = try #require(prepared.days.first)
+        var layout = try #require(layouts[day.id])
+        var placed = try #require(layout.placed[.sleep]?.first)
+        var block = try #require(day.blocks.first { $0.id == placed.block.id })
+        placed.top = 0
+        placed.height = 120
+        placed.cols = 1
+        placed.col = 0
+        placed.tiny = false
+        placed.continuesBefore = false
+        placed.continuesAfter = false
+        block.status = nil
+        day.blocks = [block]
+        day.ticks = []
+        day.dividerLabels = []
+        layout.height = placed.height
+        layout.markers = []
+        layout.changes = []
+        layout.dividers = []
+        layout.ticks = []
+        layout.placed = [.sleep: [placed], .light: [], .caffeine: [], .travel: []]
+        var changed = day
+        changed.blocks[0].title = "Changed title"
+        changed.blocks[0].interval = "00:00 – 23:59"
+        changed.blocks[0].priority = "Changed priority"
+        changed.blocks[0].reason = "Changed reason"
+        let renderer = TimelineRenderer()
+        for appearance in [TokenAppearance.light, .dark] {
+            for windowWidth in [320.0, 390, 393, 430, 639, 640, 669] {
+                let width = windowWidth - PlanMetrics.gutter * 2
+                let compact = windowWidth < PlanMetrics.timelineLabelBreakpoint
+                func render(_ value: PreparedDay, compact: Bool) async throws -> TimelineDrawing {
+                    try await renderer.render(
+                        day: value, layout: layout, width: width, scale: 3,
+                        fontSize: PlanMetrics.laneLabelSize, appearance: appearance, symbols: [:], compact: compact)
+                }
+                let original = try await render(day, compact: compact)
+                let copyChanged = try await render(changed, compact: compact)
+                let originalPixels = try pixels(original, width: Int(width), height: 120)
+                let changedPixels = try pixels(copyChanged, width: Int(width), height: 120)
+                #expect((originalPixels == changedPixels) == compact)
+                let repeated = try await render(changed, compact: compact)
+                #expect(repeated.document === copyChanged.document)
+                let toggled = try await render(changed, compact: !compact)
+                #expect(toggled.document !== copyChanged.document)
+                #expect(try pixels(toggled, width: Int(width), height: 120) != changedPixels)
+            }
+        }
+        layout.placed[.sleep]?[0].tiny = true
+        let original = try await renderer.render(
+            day: day, layout: layout, width: 637, scale: 3,
+            fontSize: PlanMetrics.laneLabelSize, appearance: .light, symbols: [:], compact: false)
+        let copyChanged = try await renderer.render(
+            day: changed, layout: layout, width: 637, scale: 3,
+            fontSize: PlanMetrics.laneLabelSize, appearance: .light, symbols: [:], compact: false)
+        #expect(try pixels(original, width: 637, height: 120) == pixels(copyChanged, width: 637, height: 120))
+        #expect(day.blocks[0].accessibilityLabel.contains(day.blocks[0].title))
+        #expect(day.blocks[0].accessibilityLabel.contains(day.blocks[0].interval))
+    }
+
     @Test func coreBarDoesNotFadeTheTitleOrInterval() async throws {
         let detail = try MockTimelineFixtures.fixture(named: "S3").detail
         let layouts = layoutPlan(detail.plan, timeline: detail.timeline)

@@ -11,7 +11,7 @@
     "tagOpacity" : 0.40000000000000002,
     "warningOpacity" : 0.10000000000000001
   },
-  "source" : "plan.md Phase 14b and fix round 1; Plan board compact/tile styles; RN timeline, tileModel and Notice spacing references",
+  "source" : "plan.md Phase 14b and fix round 1; Plan board compact/tile styles; RN DayTimeline compact window threshold space(160), tileModel and Notice spacing references",
   "spacingMultipliers" : {
     "blockIcon" : 3.5,
     "border" : 0.25,
@@ -47,6 +47,7 @@
     "tileInset" : 0.5,
     "tilePadding" : 1.5,
     "tileRadius" : 3.5,
+    "timelineLabelBreakpoint" : 160,
     "touch" : 11,
     "zonePadding" : 5,
     "zonePillPadding" : 2,

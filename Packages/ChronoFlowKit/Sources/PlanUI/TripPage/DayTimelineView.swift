@@ -13,6 +13,7 @@ public struct DayTimelineView: View {
     public var onBlock: (String) -> Void = { _ in }
     public var onFrame: () -> Void = {}
     public var viewportHeight: Double
+    public var compact: Bool
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.displayScale) private var displayScale
     @ScaledMetric(relativeTo: .caption2) private var fontSize = Typography.planLane.size
@@ -23,7 +24,8 @@ public struct DayTimelineView: View {
 
     public init(
         day: PreparedDay, layout: DayLayout, now: Date, nowText: String, copy: PageCopy,
-        renderer: TimelineRenderer, symbols: TimelineSymbols = TimelineSymbols(), viewportHeight: Double = 0,
+        renderer: TimelineRenderer, symbols: TimelineSymbols = TimelineSymbols(), compact: Bool = false,
+        viewportHeight: Double = 0,
         onBlock: @escaping (String) -> Void = { _ in }, onFrame: @escaping () -> Void = {}
     ) {
         self.day = day
@@ -34,6 +36,7 @@ public struct DayTimelineView: View {
         self.symbols = symbols
         self.renderer = renderer
         self.viewportHeight = viewportHeight
+        self.compact = compact
         self.onBlock = onBlock
         self.onFrame = onFrame
     }
@@ -51,14 +54,14 @@ public struct DayTimelineView: View {
             .task(
                 id: RenderKey(
                     width: proxy.size.width, scale: displayScale, size: fontSize, dark: colorScheme == .dark,
-                    day: day, layout: layout)
+                    compact: compact, day: day, layout: layout)
             ) {
                 do {
                     let appearance: TokenAppearance = colorScheme == .dark ? .dark : .light
                     let glyphs = symbols.images(appearance: appearance, scale: displayScale)
                     let value = try await renderer.render(
                         day: day, layout: layout, width: proxy.size.width, scale: displayScale,
-                        fontSize: fontSize, appearance: appearance, symbols: glyphs)
+                        fontSize: fontSize, appearance: appearance, symbols: glyphs, compact: compact)
                     guard !Task.isCancelled else { return }
                     drawing = value
                     renderFailed = false
@@ -187,6 +190,7 @@ private struct RenderKey: Equatable {
     var scale: Double
     var size: Double
     var dark: Bool
+    var compact: Bool
     var day: PreparedDay
     var layout: DayLayout
 }

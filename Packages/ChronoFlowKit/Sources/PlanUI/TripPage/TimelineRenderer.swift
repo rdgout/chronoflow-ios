@@ -24,6 +24,7 @@ public actor TimelineRenderer {
         var scale: Double
         var fontSize: Double
         var appearance: TokenAppearance
+        var compact: Bool
         var drawing: TimelineDrawing
     }
     private var cache: [String: Entry] = [:]
@@ -33,24 +34,24 @@ public actor TimelineRenderer {
 
     public func render(
         day: PreparedDay, layout: DayLayout, width: Double, scale: Double, fontSize: Double,
-        appearance: TokenAppearance, symbols: [String: CGImage]
+        appearance: TokenAppearance, symbols: [String: CGImage], compact: Bool = false
     ) throws -> TimelineDrawing {
         try Task.checkCancellation()
         let key = day.id
         if let c = cache[key], c.day == day, c.layout == layout, c.width == width, c.scale == scale,
-            c.fontSize == fontSize, c.appearance == appearance
+            c.fontSize == fontSize, c.appearance == appearance, c.compact == compact
         {
             touch(key)
             return c.drawing
         }
         let drawing = try vectorTimeline(
             day: day, layout: layout, width: width, scale: scale,
-            fontSize: fontSize, appearance: appearance, symbols: symbols)
+            fontSize: fontSize, appearance: appearance, symbols: symbols, compact: compact)
         try Task.checkCancellation()
         if let previous = cache[key] { cachedBytes -= previous.drawing.byteCount }
         cache[key] = Entry(
             day: day, layout: layout, width: width, scale: scale, fontSize: fontSize, appearance: appearance,
-            drawing: drawing)
+            compact: compact, drawing: drawing)
         cachedBytes += drawing.byteCount
         renderCount += 1
         touch(key)
@@ -105,7 +106,7 @@ private enum TimelineRenderFailure: Error { case context, document }
 
 nonisolated private func vectorTimeline(
     day: PreparedDay, layout: DayLayout, width: Double, scale: Double,
-    fontSize: Double, appearance: TokenAppearance, symbols: [String: CGImage]
+    fontSize: Double, appearance: TokenAppearance, symbols: [String: CGImage], compact: Bool
 ) throws -> TimelineDrawing {
     let geometry = TimelineGeometry(layout: layout, availableWidth: width)
     let data = NSMutableData()
@@ -290,7 +291,7 @@ nonisolated private func vectorTimeline(
         }
         context.addPath(path)
         context.clip()
-        let iconOnly = tile.tiny
+        let iconOnly = compact || tile.tiny
         let inset = PlanMetrics.tilePadding
         let iconSize = PlanMetrics.blockIcon * fontSize / PlanMetrics.laneLabelSize
         let contentTop = rect.minY + inset + (tile.continuesBefore ? iconSize + PlanMetrics.smallGap : 0)

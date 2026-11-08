@@ -90,6 +90,8 @@ public struct TripPageView: View {
                                     day: day, layout: model.plan.layouts[day.id],
                                     clock: model.plan.dayClock(for: day.id),
                                     timeline: model.timeline, copy: copy, renderer: renderer, symbols: timelineSymbols,
+                                    compact: geometry.size.width + geometry.safeAreaInsets.leading
+                                        + geometry.safeAreaInsets.trailing < PlanMetrics.timelineLabelBreakpoint,
                                     viewportHeight: geometry.size.height, onBlock: onBlock,
                                     onFrame: onFirstTimelineFrame
                                 ).equatable().id(day.id)
