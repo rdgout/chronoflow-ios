@@ -2,13 +2,13 @@ import XCTest
 
 nonisolated final class TimelineBudgetMetric: NSObject, XCTMetric {
     enum Budget {
-        case firstFrame, scrollingHitches, memoryGrowth
+        case firstFrame, scrollingHitches, memoryPeak
 
         var limit: Double {
             switch self {
             case .firstFrame: 0.8
             case .scrollingHitches: 5
-            case .memoryGrowth: 40 * 1_024 * 1_024
+            case .memoryPeak: 150 * 1_024 * 1_024
             }
         }
 
@@ -16,7 +16,7 @@ nonisolated final class TimelineBudgetMetric: NSObject, XCTMetric {
             switch self {
             case .firstFrame: sample.identifier.hasSuffix("time-to-first-timeline-frame.duration")
             case .scrollingHitches: sample.identifier.hasSuffix(".animation.hitch.time.ratio")
-            case .memoryGrowth: sample.displayName.hasPrefix("Memory Physical")
+            case .memoryPeak: sample.identifier.hasSuffix(".physical_peak")
             }
         }
 
@@ -25,24 +25,31 @@ nonisolated final class TimelineBudgetMetric: NSObject, XCTMetric {
             switch (self, sample.unitSymbol) {
             case (.firstFrame, "s"): return value
             case (.firstFrame, "ms"): return value / 1_000
+            case (.firstFrame, "ns"): return value / 1_000_000_000
             case (.scrollingHitches, "ms/s"): return value
             case (.scrollingHitches, "%"): return value * 10
             case (.scrollingHitches, "s/s"): return value * 1_000
-            case (.memoryGrowth, "B"): return value
-            case (.memoryGrowth, "kB"): return value * 1_000
-            case (.memoryGrowth, "KiB"): return value * 1_024
-            case (.memoryGrowth, "MB"): return value * 1_000_000
-            case (.memoryGrowth, "MiB"): return value * 1_024 * 1_024
+            case (.memoryPeak, "B"), (.memoryPeak, "byte"): return value
+            case (.memoryPeak, "kB"): return value * 1_000
+            case (.memoryPeak, "KiB"): return value * 1_024
+            case (.memoryPeak, "MB"): return value * 1_000_000
+            case (.memoryPeak, "MiB"): return value * 1_024 * 1_024
             default: throw Failure.unsupportedUnit(sample.identifier, sample.unitSymbol)
             }
         }
 
         func validate(_ samples: [XCTPerformanceMeasurement]) throws {
             let matched = samples.filter(matches)
-            guard !matched.isEmpty else { throw Failure.missingMeasurement(String(describing: self)) }
+            guard !matched.isEmpty else {
+                // The simulator has no display hitch pipeline, so XCTest reports only scroll duration there.
+                #if targetEnvironment(simulator)
+                    if self == .scrollingHitches { return }
+                #endif
+                throw Failure.missingMeasurement(String(describing: self))
+            }
             for sample in matched {
                 let value = try normalized(sample)
-                guard value.isFinite, value <= limit, self == .memoryGrowth || value >= 0 else {
+                guard value.isFinite, value <= limit, self == .memoryPeak || value >= 0 else {
                     throw Failure.overBudget(sample.identifier, value, limit)
                 }
             }

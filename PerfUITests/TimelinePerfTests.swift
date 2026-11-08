@@ -34,7 +34,7 @@ nonisolated final class TimelinePerfTests: XCTestCase {
         measure(
             metrics: [
                 TimelineBudgetMetric(XCTOSSignpostMetric.scrollingAndDecelerationMetric, budget: .scrollingHitches),
-                TimelineBudgetMetric(XCTMemoryMetric(application: app), budget: .memoryGrowth),
+                TimelineBudgetMetric(XCTMemoryMetric(application: app), budget: .memoryPeak),
             ], options: options
         ) {
             app.launch()

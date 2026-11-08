@@ -28,12 +28,24 @@ nonisolated struct TimelineMetricBudgetTests {
         #expect(throws: (any Error).self) {
             try TimelineBudgetMetric.Budget.scrollingHitches.validate([sample(hitch + ".adjusted", 0, "ms/s")])
         }
-        let memory = sample("memory", 40 * 1_024, "KiB", name: "Memory Physical (app)")
-        try TimelineBudgetMetric.Budget.memoryGrowth.validate([memory])
+        let peak = "com.apple.dt.XCTMetric_Memory-net.chronoflow.app.native.physical_peak"
+        try TimelineBudgetMetric.Budget.memoryPeak.validate([sample(peak, 150 * 1_024, "KiB")])
+        try TimelineBudgetMetric.Budget.memoryPeak.validate([sample(peak, 57_903_624, "byte")])
         #expect(throws: (any Error).self) {
-            try TimelineBudgetMetric.Budget.memoryGrowth.validate([
-                sample("memory", 41, "MiB", name: "Memory Physical (app)")
+            try TimelineBudgetMetric.Budget.memoryPeak.validate([sample(peak, 151, "MiB")])
+        }
+        #expect(throws: (any Error).self) {
+            try TimelineBudgetMetric.Budget.memoryPeak.validate([
+                sample(peak.replacingOccurrences(of: "_peak", with: ""), 1, "MiB")
             ])
+        }
+    }
+
+    @Test func nanosecondFirstFrameSamplesAreNormalized() throws {
+        let frame = "com.apple.dt.XCTMetric_OSSignpost-time-to-first-timeline-frame.duration"
+        try TimelineBudgetMetric.Budget.firstFrame.validate([sample(frame, 341_935_417, "ns")])
+        #expect(throws: (any Error).self) {
+            try TimelineBudgetMetric.Budget.firstFrame.validate([sample(frame, 810_000_000, "ns")])
         }
     }
 
