@@ -1,9 +1,9 @@
-import AppCore
 import Foundation
 import LocalStore
 import PlanCore
 import Testing
 
+@testable import AppCore
 @testable import PlanUI
 
 extension ModelTests {
@@ -27,7 +27,9 @@ extension ModelTests {
             tripId: trip.id, inputHash: value.plan.meta.inputHash,
             detail: try .encoding(value), receivedAt: date.ISO8601Format())
         try await repository.store(plan: plan, checks: [])
-        let model = TripPlanModel(tripID: trip.id, repository: repository, clock: TestPlanClock(date), now: date)
+        let permit = SessionMutationPermit()
+        let model = TripPlanModel(
+            tripID: trip.id, repository: repository, clock: TestPlanClock(date), now: date, mutationPermit: permit)
         model.start()
         defer { model.stop() }
         try await eventually { model.detail != nil }
@@ -44,6 +46,17 @@ extension ModelTests {
         #expect(model.detail?.checkState.marks.first?.status == .done)
         try await model.setCheck(blockID: block.id, status: nil)
         try await eventually { model.detail?.checkState.marks.isEmpty == true }
+        let pending = try await OutboxRepository(database: db).pending()
+        permit.invalidate()
+        await #expect(throws: CancellationError.self) {
+            try await model.setCheck(blockID: block.id, status: .skipped)
+        }
+        #expect(try await OutboxRepository(database: db).pending().count == pending.count)
+        #expect(model.detail?.checkState.marks.isEmpty == true)
+        model.stop()
+        try await model.setCheck(blockID: block.id, status: .done)
+        #expect(try await OutboxRepository(database: db).pending().count == pending.count)
+        model.start()
         value.plan.blocks.removeAll()
         plan.detail = try .encoding(value)
         try await repository.store(plan: plan, checks: [])

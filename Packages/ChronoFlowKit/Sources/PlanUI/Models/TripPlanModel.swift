@@ -17,19 +17,21 @@ import PlanCore
     @ObservationIgnored private let repository: TripRepository
     @ObservationIgnored private let clock: any PlanClock
     @ObservationIgnored private let decoder: PlanDecoder
+    @ObservationIgnored private let mutationPermit: SessionMutationPermit?
     @ObservationIgnored private var layoutTask: Task<Void, Never>?
     @ObservationIgnored private var layoutRevision = 0
     @ObservationIgnored private var tasks: [Task<Void, Never>] = []
 
     public init(
         tripID: String, repository: TripRepository, clock: any PlanClock = SystemPlanClock(),
-        decoder: PlanDecoder = PlanDecoder(), now: Date = Date()
+        decoder: PlanDecoder = PlanDecoder(), now: Date = Date(), mutationPermit: SessionMutationPermit? = nil
     ) {
         self.tripID = tripID
         self.repository = repository
         self.clock = clock
         self.decoder = decoder
         self.now = now
+        self.mutationPermit = mutationPermit
     }
 
     public func start() {
@@ -75,14 +77,14 @@ import PlanCore
     }
 
     public func setCheck(blockID: String, status: CheckStatus?) async throws {
-        guard let detail, let block = detail.plan.blocks.first(where: { $0.id == blockID }),
+        guard !tasks.isEmpty, let detail, let block = detail.plan.blocks.first(where: { $0.id == blockID }),
             block.actionable, let key = block.checkKey
         else { return }
         try await OutboxRepository(database: repository.database).enqueue(
             .checkOff(
                 CheckOffChange(
                     tripID: tripID, planInputHash: detail.plan.meta.inputHash, type: key.type,
-                    localDate: key.localDate, ordinal: key.ordinal, status: status)))
+                    localDate: key.localDate, ordinal: key.ordinal, status: status)), permit: mutationPermit)
     }
 
     public func stop() {

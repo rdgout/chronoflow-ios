@@ -222,10 +222,59 @@ extension StoredDataReadinessTests {
             #expect(navigator.routes.last == route)
         }
         _ = try await controller.signOut(discardPending: true)
+        let deadline = ContinuousClock.now + .seconds(3)
+        while navigator.routes.last != .signIn && ContinuousClock.now < deadline { await Task.yield() }
+        #expect(navigator.routes.last == .signIn)
         let count = navigator.routes.count
         await values.set(gate: .terms, stored: true)
         for _ in 0..<20 { await Task.yield() }
         #expect(navigator.routes.count == count)
+    }
+
+    @Test @MainActor func signedOutRoutesAndRevokesMutationsBeforeLogoutFinishes() async throws {
+        let logout = SessionTestGate()
+        var teardown = SessionTeardown()
+        teardown.logout = { _ in await logout.wait() }
+        let controller = SessionController(
+            credentials: try readinessCredentials(), accounts: ControllerAccountStore(log: SessionEventLog()),
+            teardown: teardown)
+        let values = ReadinessValues(stored: true)
+        let readiness = StoredDataReadiness(controller: controller, values: { _ in try await values.values() })
+        _ = await readiness.session()
+        let snapshot = try #require(await controller.activeSession())
+        let permit = try #require(await controller.mutationPermit(for: snapshot))
+        #expect(try permit.whileValid { true })
+        let navigator = GateNavigatorProbe()
+        let router = SessionGateRouter(controller: controller, readiness: readiness, navigator: navigator) { _ in }
+        router.start()
+        defer { router.stop() }
+        let deadline = ContinuousClock.now + .seconds(3)
+        while navigator.routes.last != .today && ContinuousClock.now < deadline { await Task.yield() }
+        #expect(navigator.routes.last == .today)
+        let signOut = Task { try await controller.signOut(discardPending: true) }
+        await logout.waitUntilEntered()
+        while navigator.routes.last != .signIn && ContinuousClock.now < deadline { await Task.yield() }
+        #expect(navigator.routes.last == .signIn)
+        #expect(throws: CancellationError.self) { try permit.whileValid { Issue.record("Revoked mutation ran") } }
+        #expect(await controller.mutationPermit(for: snapshot) == nil)
+        await values.set(gate: .terms, stored: true)
+        for _ in 0..<20 { await Task.yield() }
+        #expect(navigator.routes.last == .signIn)
+        await logout.release()
+        #expect(try await signOut.value == .signedOut)
+    }
+
+    @Test @MainActor func initiallySignedOutKeepsWelcomeRoute() async {
+        let controller = readinessController(ControllerMemoryStore(log: SessionEventLog()))
+        _ = try? await controller.restore()
+        let readiness = StoredDataReadiness(
+            controller: controller, values: { _ in AsyncThrowingStream { $0.finish() } })
+        let navigator = GateNavigatorProbe()
+        let router = SessionGateRouter(controller: controller, readiness: readiness, navigator: navigator) { _ in }
+        router.start()
+        defer { router.stop() }
+        for _ in 0..<20 { await Task.yield() }
+        #expect(navigator.routes.isEmpty)
     }
 
     @Test func missingPoliciesWaitUntilLoadedOrExplicitFirstLoadAllowance() async throws {

@@ -53,7 +53,7 @@ extension OutboxRecord {
 extension OutboxRepository {
     @discardableResult
     public func enqueue(
-        _ change: OutboxChange, now: Date = Date(),
+        _ change: OutboxChange, permit: SessionMutationPermit? = nil, now: Date = Date(),
         randomBytes: [UInt8] = (0..<10).map { _ in UInt8.random(in: .min ... .max) }
     ) async throws -> OutboxRecord {
         let milliseconds = floor(now.timeIntervalSince1970 * 1000)
@@ -65,7 +65,7 @@ extension OutboxRepository {
         let createdAt = now.ISO8601Format(.iso8601(timeZone: .gmt, includingFractionalSeconds: true))
         let row = try Self.record(change, id: id, createdAt: createdAt)
         guard let accountID = await database.accountID else { throw StoreFailure.closed }
-        return try await database.write { db in
+        return try await database.write(permit: permit) { db in
             var row = row
             guard var account = try AccountRecord.fetchOne(db, key: accountID.rawValue) else {
                 throw LocalMutationFailure.missingAccount

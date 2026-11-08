@@ -21,17 +21,28 @@ import Foundation
     public func start() {
         guard sessionTask == nil else { return }
         sessionTask = Task { [weak self, controller] in
+            var sawSignedIn = false
             for await update in await controller.updates() {
                 guard !Task.isCancelled, let self else { return }
                 gateTask?.cancel()
                 gateTask = nil
+                if update.presence == .signedOut {
+                    if sawSignedIn, await controller.epoch == update.epoch, !Task.isCancelled {
+                        navigator?.navigate(to: .signIn)
+                    }
+                    continue
+                }
+                sawSignedIn = true
                 guard case .signedIn = update.presence,
-                    let snapshot = await controller.activeSession(), snapshot.epoch == update.epoch
+                    let snapshot = await controller.activeSession(), snapshot.epoch == update.epoch,
+                    !Task.isCancelled
                 else { continue }
                 gateTask = Task { [weak self, readiness, controller, verification] in
                     var previous: Gate?
                     for await gate in await readiness.gateUpdates() {
-                        guard !Task.isCancelled, await controller.activeSession() == snapshot, let self else { return }
+                        guard !Task.isCancelled, await controller.activeSession() == snapshot,
+                            !Task.isCancelled, let self
+                        else { return }
                         guard gate != previous else { continue }
                         previous = gate
                         if gate == .verify {

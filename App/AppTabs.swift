@@ -39,13 +39,21 @@ struct AppTabs: View {
         #endif
     }
 
-    private var tabs: some View {
+    @ViewBuilder private var tabs: some View {
+        if #available(iOS 26, *) {
+            tabContent.tabBarMinimizeBehavior(.onScrollDown)
+        } else {
+            tabContent
+        }
+    }
+
+    private var tabContent: some View {
         TabView(selection: $selection) {
             NavigationStack(path: $path) {
                 today
                     .navigationDestination(for: TripPageRoute.self) { TripPageDestination(route: $0, native: native) }
             }
-            .tabItem { Label(t("Today"), systemImage: "sun.max") }.tag(Tab.today)
+            .tabItem { Label(t("Today"), systemImage: "square.grid.2x2") }.tag(Tab.today)
             NavigationStack(path: $tripsPath) {
                 trips.navigationDestination(for: TripPageRoute.self) { TripPageDestination(route: $0, native: native) }
             }
@@ -57,11 +65,23 @@ struct AppTabs: View {
         .task {
             guard let native, let snapshot = await native.controller.activeSession(),
                 let database = await native.accounts.activeDatabase(),
+                let permit = await native.controller.mutationPermit(for: snapshot),
                 await native.controller.activeSession() == snapshot, !Task.isCancelled
             else { return }
-            let model = PlanHomeModel(repository: TripRepository(database: database))
+            let model = PlanHomeModel(repository: TripRepository(database: database), mutationPermit: permit)
             home = model
             model.start()
+            for await update in await native.controller.updates() {
+                guard !Task.isCancelled, update.epoch == snapshot.epoch,
+                    update.presence == .signedIn(accountID: snapshot.session.accountId)
+                else {
+                    model.stop()
+                    home = nil
+                    showingStep = false
+                    clearStep()
+                    return
+                }
+            }
         }
         .onDisappear {
             home?.stop()

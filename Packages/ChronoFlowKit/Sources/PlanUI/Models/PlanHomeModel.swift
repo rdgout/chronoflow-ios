@@ -16,12 +16,17 @@ import PlanCore
     public private(set) var changingCheck = false
     @ObservationIgnored private let repository: TripRepository
     @ObservationIgnored private let clock: any PlanClock
+    @ObservationIgnored private let mutationPermit: SessionMutationPermit?
     @ObservationIgnored private var selectedID: String?
     @ObservationIgnored private var tasks: [Task<Void, Never>] = []
 
-    public init(repository: TripRepository, clock: any PlanClock = SystemPlanClock(), now: Date = Date()) {
+    public init(
+        repository: TripRepository, clock: any PlanClock = SystemPlanClock(), now: Date = Date(),
+        mutationPermit: SessionMutationPermit? = nil
+    ) {
         self.repository = repository
         self.clock = clock
+        self.mutationPermit = mutationPermit
         trips = TripsModel(repository: repository, clock: clock, now: now)
     }
     public var hero: TripListValue? { selectTodayTrip(trips.trips, now: trips.now) }
@@ -62,13 +67,14 @@ import PlanCore
     }
     public func detail(for id: String) -> TripPlanModel {
         if let existing = details[id] { return existing }
-        let model = TripPlanModel(tripID: id, repository: repository, clock: clock, now: trips.now)
+        let model = TripPlanModel(
+            tripID: id, repository: repository, clock: clock, now: trips.now, mutationPermit: mutationPermit)
         details[id] = model
         model.start()
         return model
     }
     public func setCheck(tripID: String, blockID: String, status: CheckStatus?) async {
-        guard !changingCheck else { return }
+        guard !tasks.isEmpty, !changingCheck else { return }
         changingCheck = true
         defer { changingCheck = false }
         do {
