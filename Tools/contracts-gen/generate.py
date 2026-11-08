@@ -119,7 +119,9 @@ def generate(repo):
             raise ValueError(f'unsupported type: {name} = {body}')
         output.append('\n'.join(lines) + '\n')
     raw = '\n'.join(output)
-    return subprocess.check_output(['xcrun', 'swift', 'format', 'format', '-'], input=raw, text=True)
+    return subprocess.check_output(
+        ['xcrun', 'swift', 'format', 'format', '--configuration', str(ROOT / '.swift-format'), '-'],
+        input=raw, text=True)
 
 
 def main():

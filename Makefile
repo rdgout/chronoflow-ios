@@ -76,6 +76,7 @@ generators-check: token-tests asset-tests
 
 launch-resources-check:
 	python3 -I Tests/test_auth_signing.py
+	python3 -I Tests/test_contracts_generator.py
 	python3 -I Tests/test_launch_resources.py
 	python3 -I Tests/test_launch_simulators.py
 

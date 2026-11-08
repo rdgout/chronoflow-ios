@@ -1557,6 +1557,8 @@ Every UI round verifies Matrix A-style coverage on 17e:
 **Phase 12 fix round 1 (2026-11-08)**
 - [x] Rebase each instant by calendar days in its display zone, preserving wall times across Amsterdam and New York DST boundaries; cover cards, plan days/zones, blocks, parameters and timeline ticks with host tests.
 - [x] Stamp persisted app mocks with the local seed date; refresh seeded trips and derived list fields after restoration, preserving user trips, account changes and check-off marks. Host tests restore a ten-day-old file and a state predating the anchor field.
+- [x] Pass the repository's formatter configuration explicitly to contracts generation. Add a host regression with a conflicting outside-directory configuration and verify real `contracts-check` runs from both the repository and `/private/tmp`.
+  - Host verification: `make quick` passes strict lint and all SwiftPM host suites except the known `APICookieTests.realRedirectCookieHandlingIsDisabled` loopback `EPERM`. Token/asset host tests and all 86 signing/contracts/resource/runner fixtures pass separately. No simulator commands were run.
 
 ### Phase 13: Plan generation through the API, no UI (`feat/phase-13-trip-generation`), no blockers
 
