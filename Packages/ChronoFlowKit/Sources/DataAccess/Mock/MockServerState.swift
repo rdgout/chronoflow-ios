@@ -34,6 +34,7 @@ public struct MockServerAccount: Codable, Sendable, Equatable {
 public struct MockServerState: Codable, Sendable, Equatable {
     static var currentSchemaVersion: Int { 2 }
     var schemaVersion = Self.currentSchemaVersion
+    var seedAnchor: String?
     public var accounts: [String: MockServerAccount]
     var sessions: [String: MockSession] = [:]
     var twoFactor: [String: MockTwoFactor] = [:]

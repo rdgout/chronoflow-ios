@@ -67,7 +67,9 @@ public actor MockDataSource: DataSource {
                 if let restored, !restored.accounts.isEmpty,
                     restored.schemaVersion == MockServerState.currentSchemaVersion
                 {
-                    state = restored
+                    let refreshed = try MockAppSeed.refresh(restored, now: now())
+                    if refreshed != restored { try store.save(refreshed) }
+                    state = refreshed
                 } else {
                     let initial = try MockAppSeed.make(now: now())
                     try store.save(initial)

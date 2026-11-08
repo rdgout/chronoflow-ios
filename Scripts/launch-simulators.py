@@ -97,7 +97,7 @@ SUITES = {'AppTests': {'logic': ('AuthControlTests', 'AuthLayoutTests', 'AuthSna
  'WelcomeTests': {'logic': ('SmokeTests', 'WelcomeGeometryTests')},
  'ToolingTests': {'host': ('LaunchImageComparisonTests', 'UIWaitTests', 'AuthScrollGestureTests', 'AuthAuditPolicyTests')},
  'PerfUITests': {'perf': ('LaunchPerfTests',)},
- 'DataAccessTests': {'host': ('ContractsTests', 'PlanDecodingTests', 'MockRebaseTests',
+ 'DataAccessTests': {'host': ('ContractsTests', 'PlanDecodingTests', 'MockRebaseTests', 'MockSeedRefreshTests',
                               'DataSourceSelectionTests',
                               'APIClientTests',
                               'APICookieTests',

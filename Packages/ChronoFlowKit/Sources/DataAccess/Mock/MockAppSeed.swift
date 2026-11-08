@@ -53,7 +53,54 @@
                 twoFactorCode: MockScenarioValues.twoFactorCode, recoveryCodes: [MockScenarioValues.recoveryCode],
                 walkthroughSeen: walkthroughSeen,
                 trips: trips, details: details)
-            return MockServerState(accounts: [demo, twoFactor])
+            var state = MockServerState(accounts: [demo, twoFactor])
+            state.seedAnchor = anchor(now: now)
+            return state
+        }
+
+        static func anchor(now: Date) -> String {
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "en_US_POSIX")
+            formatter.calendar = Calendar(identifier: .gregorian)
+            formatter.timeZone = .current
+            formatter.dateFormat = "yyyy-MM-dd"
+            return formatter.string(from: now)
+        }
+
+        static func refresh(_ stored: MockServerState, now: Date) throws -> MockServerState {
+            var state = stored
+            let anchor = anchor(now: now)
+            let fixtures = try JSONDecoder().decode(Fixtures.self, from: fixtureData())
+            for accountID in [MockScenarioValues.demoID, MockScenarioValues.twoFactorID] {
+                guard var account = state.accounts[accountID] else { continue }
+                for (index, fixture) in fixtures.trips.enumerated() {
+                    let id = fixture.card.id
+                    guard let tripIndex = account.trips.firstIndex(where: { $0.card.id == id }),
+                        let detail = account.details[id]
+                    else { continue }
+                    var trip = TripFixture(card: account.trips[tripIndex].card, detail: detail)
+                    if stored.seedAnchor != anchor {
+                        trip = try rebase(fixture, index: index, now: now)
+                        var refreshed = trip.detail
+                        refreshed.checkState.marks = detail.checkState.marks.map { mark in
+                            var mark = mark
+                            if let block = detail.plan.blocks.first(where: { $0.checkKey == mark.key }),
+                                let key = refreshed.plan.blocks.first(where: { $0.id == block.id })?.checkKey
+                            {
+                                mark.key = key
+                            }
+                            return mark
+                        }
+                        refreshed.checkState.days = detail.checkState.days
+                        trip = TripFixture(card: trip.card, detail: refreshed)
+                    }
+                    account.trips[tripIndex] = listItem(trip, now: now)
+                    account.details[id] = trip.detail
+                }
+                state.accounts[accountID] = account
+            }
+            state.seedAnchor = anchor
+            return state
         }
 
         private static func listItem(_ fixture: TripFixture, now: Date) -> TripListItem {

@@ -1556,6 +1556,7 @@ Every UI round verifies Matrix A-style coverage on 17e:
 
 **Phase 12 fix round 1 (2026-11-08)**
 - [x] Rebase each instant by calendar days in its display zone, preserving wall times across Amsterdam and New York DST boundaries; cover cards, plan days/zones, blocks, parameters and timeline ticks with host tests.
+- [x] Stamp persisted app mocks with the local seed date; refresh seeded trips and derived list fields after restoration, preserving user trips, account changes and check-off marks. Host tests restore a ten-day-old file and a state predating the anchor field.
 
 ### Phase 13: Plan generation through the API, no UI (`feat/phase-13-trip-generation`), no blockers
 
