@@ -1,0 +1,422 @@
+[
+  {
+    "id": "amsterdam-spring-before-en-24",
+    "label": "Amsterdam spring before en 24h",
+    "zone": "Europe/Amsterdam",
+    "value": "2026-03-29T00:59:00Z",
+    "expected": "01:59",
+    "kind": "instant",
+    "locale": "en",
+    "timeFormat": "24"
+  },
+  {
+    "id": "amsterdam-spring-before-nl-24",
+    "label": "Amsterdam spring before nl 24h",
+    "zone": "Europe/Amsterdam",
+    "value": "2026-03-29T00:59:00Z",
+    "expected": "01:59",
+    "kind": "instant",
+    "locale": "nl",
+    "timeFormat": "24"
+  },
+  {
+    "id": "amsterdam-spring-after-en-24",
+    "label": "Amsterdam spring after en 24h",
+    "zone": "Europe/Amsterdam",
+    "value": "2026-03-29T01:00:00Z",
+    "expected": "03:00",
+    "kind": "instant",
+    "locale": "en",
+    "timeFormat": "24"
+  },
+  {
+    "id": "amsterdam-spring-after-nl-24",
+    "label": "Amsterdam spring after nl 24h",
+    "zone": "Europe/Amsterdam",
+    "value": "2026-03-29T01:00:00Z",
+    "expected": "03:00",
+    "kind": "instant",
+    "locale": "nl",
+    "timeFormat": "24"
+  },
+  {
+    "id": "amsterdam-autumn-before-en-24",
+    "label": "Amsterdam autumn before en 24h",
+    "zone": "Europe/Amsterdam",
+    "value": "2026-10-25T00:59:00Z",
+    "expected": "02:59",
+    "kind": "instant",
+    "locale": "en",
+    "timeFormat": "24"
+  },
+  {
+    "id": "amsterdam-autumn-before-nl-24",
+    "label": "Amsterdam autumn before nl 24h",
+    "zone": "Europe/Amsterdam",
+    "value": "2026-10-25T00:59:00Z",
+    "expected": "02:59",
+    "kind": "instant",
+    "locale": "nl",
+    "timeFormat": "24"
+  },
+  {
+    "id": "amsterdam-autumn-after-en-24",
+    "label": "Amsterdam autumn after en 24h",
+    "zone": "Europe/Amsterdam",
+    "value": "2026-10-25T01:00:00Z",
+    "expected": "02:00",
+    "kind": "instant",
+    "locale": "en",
+    "timeFormat": "24"
+  },
+  {
+    "id": "amsterdam-autumn-after-nl-24",
+    "label": "Amsterdam autumn after nl 24h",
+    "zone": "Europe/Amsterdam",
+    "value": "2026-10-25T01:00:00Z",
+    "expected": "02:00",
+    "kind": "instant",
+    "locale": "nl",
+    "timeFormat": "24"
+  },
+  {
+    "id": "new-york-spring-before-en-24",
+    "label": "New York spring before en 24h",
+    "zone": "America/New_York",
+    "value": "2026-03-08T06:59:00Z",
+    "expected": "01:59",
+    "kind": "instant",
+    "locale": "en",
+    "timeFormat": "24"
+  },
+  {
+    "id": "new-york-spring-before-nl-24",
+    "label": "New York spring before nl 24h",
+    "zone": "America/New_York",
+    "value": "2026-03-08T06:59:00Z",
+    "expected": "01:59",
+    "kind": "instant",
+    "locale": "nl",
+    "timeFormat": "24"
+  },
+  {
+    "id": "new-york-spring-after-en-24",
+    "label": "New York spring after en 24h",
+    "zone": "America/New_York",
+    "value": "2026-03-08T07:00:00Z",
+    "expected": "03:00",
+    "kind": "instant",
+    "locale": "en",
+    "timeFormat": "24"
+  },
+  {
+    "id": "new-york-spring-after-nl-24",
+    "label": "New York spring after nl 24h",
+    "zone": "America/New_York",
+    "value": "2026-03-08T07:00:00Z",
+    "expected": "03:00",
+    "kind": "instant",
+    "locale": "nl",
+    "timeFormat": "24"
+  },
+  {
+    "id": "new-york-autumn-before-en-24",
+    "label": "New York autumn before en 24h",
+    "zone": "America/New_York",
+    "value": "2026-11-01T05:59:00Z",
+    "expected": "01:59",
+    "kind": "instant",
+    "locale": "en",
+    "timeFormat": "24"
+  },
+  {
+    "id": "new-york-autumn-before-nl-24",
+    "label": "New York autumn before nl 24h",
+    "zone": "America/New_York",
+    "value": "2026-11-01T05:59:00Z",
+    "expected": "01:59",
+    "kind": "instant",
+    "locale": "nl",
+    "timeFormat": "24"
+  },
+  {
+    "id": "new-york-autumn-after-en-24",
+    "label": "New York autumn after en 24h",
+    "zone": "America/New_York",
+    "value": "2026-11-01T06:00:00Z",
+    "expected": "01:00",
+    "kind": "instant",
+    "locale": "en",
+    "timeFormat": "24"
+  },
+  {
+    "id": "new-york-autumn-after-nl-24",
+    "label": "New York autumn after nl 24h",
+    "zone": "America/New_York",
+    "value": "2026-11-01T06:00:00Z",
+    "expected": "01:00",
+    "kind": "instant",
+    "locale": "nl",
+    "timeFormat": "24"
+  },
+  {
+    "id": "tokyo-spring-before-en-24",
+    "label": "Tokyo spring before en 24h",
+    "zone": "Asia/Tokyo",
+    "value": "2026-03-29T00:59:00Z",
+    "expected": "09:59",
+    "kind": "instant",
+    "locale": "en",
+    "timeFormat": "24"
+  },
+  {
+    "id": "tokyo-spring-before-nl-24",
+    "label": "Tokyo spring before nl 24h",
+    "zone": "Asia/Tokyo",
+    "value": "2026-03-29T00:59:00Z",
+    "expected": "09:59",
+    "kind": "instant",
+    "locale": "nl",
+    "timeFormat": "24"
+  },
+  {
+    "id": "tokyo-spring-after-en-24",
+    "label": "Tokyo spring after en 24h",
+    "zone": "Asia/Tokyo",
+    "value": "2026-03-29T01:00:00Z",
+    "expected": "10:00",
+    "kind": "instant",
+    "locale": "en",
+    "timeFormat": "24"
+  },
+  {
+    "id": "tokyo-spring-after-nl-24",
+    "label": "Tokyo spring after nl 24h",
+    "zone": "Asia/Tokyo",
+    "value": "2026-03-29T01:00:00Z",
+    "expected": "10:00",
+    "kind": "instant",
+    "locale": "nl",
+    "timeFormat": "24"
+  },
+  {
+    "id": "tokyo-autumn-before-en-24",
+    "label": "Tokyo autumn before en 24h",
+    "zone": "Asia/Tokyo",
+    "value": "2026-10-25T00:59:00Z",
+    "expected": "09:59",
+    "kind": "instant",
+    "locale": "en",
+    "timeFormat": "24"
+  },
+  {
+    "id": "tokyo-autumn-before-nl-24",
+    "label": "Tokyo autumn before nl 24h",
+    "zone": "Asia/Tokyo",
+    "value": "2026-10-25T00:59:00Z",
+    "expected": "09:59",
+    "kind": "instant",
+    "locale": "nl",
+    "timeFormat": "24"
+  },
+  {
+    "id": "tokyo-autumn-after-en-24",
+    "label": "Tokyo autumn after en 24h",
+    "zone": "Asia/Tokyo",
+    "value": "2026-10-25T01:00:00Z",
+    "expected": "10:00",
+    "kind": "instant",
+    "locale": "en",
+    "timeFormat": "24"
+  },
+  {
+    "id": "tokyo-autumn-after-nl-24",
+    "label": "Tokyo autumn after nl 24h",
+    "zone": "Asia/Tokyo",
+    "value": "2026-10-25T01:00:00Z",
+    "expected": "10:00",
+    "kind": "instant",
+    "locale": "nl",
+    "timeFormat": "24"
+  },
+  {
+    "id": "amsterdam-am-en-12",
+    "label": "Amsterdam AM en 12h",
+    "zone": "Europe/Amsterdam",
+    "value": "2026-03-29T01:00:00Z",
+    "expected": "03:00 AM",
+    "kind": "instant",
+    "locale": "en",
+    "timeFormat": "12"
+  },
+  {
+    "id": "amsterdam-am-nl-12",
+    "label": "Amsterdam AM nl 12h",
+    "zone": "Europe/Amsterdam",
+    "value": "2026-03-29T01:00:00Z",
+    "expected": "03:00 a.m.",
+    "kind": "instant",
+    "locale": "nl",
+    "timeFormat": "12"
+  },
+  {
+    "id": "tokyo-pm-en-12",
+    "label": "Tokyo PM en 12h",
+    "zone": "Asia/Tokyo",
+    "value": "2026-11-01T06:00:00Z",
+    "expected": "03:00 PM",
+    "kind": "instant",
+    "locale": "en",
+    "timeFormat": "12"
+  },
+  {
+    "id": "tokyo-pm-nl-12",
+    "label": "Tokyo PM nl 12h",
+    "zone": "Asia/Tokyo",
+    "value": "2026-11-01T06:00:00Z",
+    "expected": "03:00 p.m.",
+    "kind": "instant",
+    "locale": "nl",
+    "timeFormat": "12"
+  },
+  {
+    "id": "amsterdam-date-en",
+    "label": "Amsterdam date en",
+    "zone": "Europe/Amsterdam",
+    "value": "2026-03-28T23:30:00Z",
+    "expected": "29 Mar 2026",
+    "kind": "date",
+    "locale": "en"
+  },
+  {
+    "id": "amsterdam-date-nl",
+    "label": "Amsterdam date nl",
+    "zone": "Europe/Amsterdam",
+    "value": "2026-03-28T23:30:00Z",
+    "expected": "29 mrt 2026",
+    "kind": "date",
+    "locale": "nl"
+  },
+  {
+    "id": "new-york-date-en",
+    "label": "New York date en",
+    "zone": "America/New_York",
+    "value": "2026-11-01T03:30:00Z",
+    "expected": "31 Oct 2026",
+    "kind": "date",
+    "locale": "en"
+  },
+  {
+    "id": "new-york-date-nl",
+    "label": "New York date nl",
+    "zone": "America/New_York",
+    "value": "2026-11-01T03:30:00Z",
+    "expected": "31 okt 2026",
+    "kind": "date",
+    "locale": "nl"
+  },
+  {
+    "id": "tokyo-date-en",
+    "label": "Tokyo date en",
+    "zone": "Asia/Tokyo",
+    "value": "2026-10-24T15:30:00Z",
+    "expected": "25 Oct 2026",
+    "kind": "date",
+    "locale": "en"
+  },
+  {
+    "id": "tokyo-date-nl",
+    "label": "Tokyo date nl",
+    "zone": "Asia/Tokyo",
+    "value": "2026-10-24T15:30:00Z",
+    "expected": "25 okt 2026",
+    "kind": "date",
+    "locale": "nl"
+  },
+  {
+    "kind": "minutes",
+    "id": "minutes-en",
+    "label": "Minutes en",
+    "locale": "en",
+    "value": 90,
+    "style": "minutes",
+    "expected": "90 min"
+  },
+  {
+    "kind": "minutes",
+    "id": "minutes-grouped-en",
+    "label": "Grouped minutes en",
+    "locale": "en",
+    "value": 1500,
+    "style": "minutes",
+    "expected": "1,500 min"
+  },
+  {
+    "kind": "minutes",
+    "id": "duration-en",
+    "label": "Duration en",
+    "locale": "en",
+    "value": 90,
+    "style": "duration",
+    "expected": "1 hr 30 min"
+  },
+  {
+    "kind": "offset",
+    "id": "offset-positive-en",
+    "label": "Positive offset en",
+    "locale": "en",
+    "value": 330,
+    "expected": "+5 h 30 min"
+  },
+  {
+    "kind": "offset",
+    "id": "offset-negative-en",
+    "label": "Negative offset en",
+    "locale": "en",
+    "value": -330,
+    "expected": "−5 h 30 min"
+  },
+  {
+    "kind": "minutes",
+    "id": "minutes-nl",
+    "label": "Minutes nl",
+    "locale": "nl",
+    "value": 90,
+    "style": "minutes",
+    "expected": "90 min"
+  },
+  {
+    "kind": "minutes",
+    "id": "minutes-grouped-nl",
+    "label": "Grouped minutes nl",
+    "locale": "nl",
+    "value": 1500,
+    "style": "minutes",
+    "expected": "1.500 min"
+  },
+  {
+    "kind": "minutes",
+    "id": "duration-nl",
+    "label": "Duration nl",
+    "locale": "nl",
+    "value": 90,
+    "style": "duration",
+    "expected": "1 uur 30 min"
+  },
+  {
+    "kind": "offset",
+    "id": "offset-positive-nl",
+    "label": "Positive offset nl",
+    "locale": "nl",
+    "value": 330,
+    "expected": "+5 u 30 min"
+  },
+  {
+    "kind": "offset",
+    "id": "offset-negative-nl",
+    "label": "Negative offset nl",
+    "locale": "nl",
+    "value": -330,
+    "expected": "−5 u 30 min"
+  }
+]

@@ -2720,3 +2720,8 @@ from `build/test-results/17e/Debug-serial.xcresult` and require each to finish w
 not change the 600-second per-method watchdog. No timing or runtime pass is inferred from host compilation. No recording,
 `make check`, Duo runtime or seven-simulator matrix ran in this fix round. Existing board
 review, server AASA/team ID and physical-mail/passkey acceptance remain open.
+## Phase 14 plan copy
+
+`make plan-copy` regenerates PlanCore's `PlanCopy.xcstrings` and its runtime positional-format table. `Tools/PlanCopyGen` reads the sibling web repository with `git show afd80dc0:…`; it never executes or writes to the web app. It covers the backend copy map, presenter, review summary, trip/wizard validation, fixture CopyLines and explicit plan labels/formatter keys. Six RN duration-unit templates absent from web are pinned in `format-units.json`. Normal plurals use catalog variations with numeric count specifiers; Laravel numbered choices become bilingual coded cases. Runtime formatting retains localized grouping and English fallback.
+
+`make generators-check` verifies these outputs and runs missing-English/Dutch, fixture-coverage and plural-grammar checks. `CopyCatalog.load()` reads the generated runtime table on a detached worker; constructing models does no I/O.
