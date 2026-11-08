@@ -14,6 +14,7 @@ public struct TripPageView: View {
     @State private var headerScrolled = false
     @State private var copy: PageCopy
     @State private var viewport = CGSize.zero
+    @ScaledMetric(relativeTo: .caption2) private var compactHeight = PlanMetrics.compactHeaderHeight
     @State private var showLegend = false
     @State private var renderer = TimelineRenderer()
     @State private var timelineSymbols = TimelineSymbols()
@@ -32,12 +33,14 @@ public struct TripPageView: View {
     public init(
         tripID: String, repository: TripRepository, retention: PlanRetention,
         dayID: String? = nil, blockID: String? = nil, keptDay: String? = nil, awaitingSync: Bool = false,
+        timeFormat: TimeFormat = .value24, hiddenCategories: [BlockType] = [],
         fetchDetail: @escaping @Sendable (String) async throws -> Void = { _ in }
     ) {
         self.init(
             model: TripPageModel(
                 tripID: tripID, repository: repository, retention: retention,
-                dayID: dayID, blockID: blockID, keptDay: keptDay, awaitingSync: awaitingSync, fetchDetail: fetchDetail))
+                dayID: dayID, blockID: blockID, keptDay: keptDay, awaitingSync: awaitingSync,
+                timeFormat: timeFormat, hiddenCategories: hiddenCategories, fetchDetail: fetchDetail))
     }
 
     public var body: some View {
@@ -72,6 +75,10 @@ public struct TripPageView: View {
             GeometryReader { geometry in
                 ScrollView {
                     LazyVStack(spacing: PlanMetrics.sectionGap) {
+                        if model.state != .ready && !model.plan.metadata.isEmpty {
+                            Text(verbatim: model.plan.metadata).font(Typography.planSubtitle.font)
+                                .foregroundStyle(ColorToken.mutedForeground.color).frame(maxWidth: .infinity)
+                        }
                         if let prepared = model.plan.prepared, model.state == .ready {
                             summary(prepared)
                             DayNavigation(days: prepared.days, selected: model.anchor.dayID, copy: copy) {
@@ -109,7 +116,7 @@ public struct TripPageView: View {
                     .onPreferenceChange(DayFrames.self) { value in
                         scroll.frames = value
                         if let current = model.plan.prepared?.days.last(where: {
-                            (value[$0.id]?.minY ?? .infinity) <= PlanMetrics.compactHeaderHeight
+                            (value[$0.id]?.minY ?? .infinity) <= compactHeight
                         }), let frame = value[current.id] {
                             model.select(dayID: current.id, offset: max(0, -frame.minY))
                         }
@@ -137,37 +144,45 @@ public struct TripPageView: View {
             }
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Menu {
-                        ForEach(model.plan.prepared?.days ?? []) { day in
-                            Button {
-                                jump(day.id, proxy: proxy)
-                            } label: {
-                                if day.id == model.anchor.dayID {
-                                    Label(day.title + " · " + day.date, systemImage: "checkmark")
-                                } else {
-                                    Text(verbatim: day.title + " · " + day.date)
+                    if model.state == .ready, let prepared = model.plan.prepared {
+                        Menu {
+                            Section(copy("Go to a day")) {
+                                ForEach(prepared.days) { day in
+                                    Button {
+                                        jump(day.id, proxy: proxy)
+                                    } label: {
+                                        if day.id == model.anchor.dayID {
+                                            Label(day.title + " · " + day.date, systemImage: "checkmark")
+                                        } else {
+                                            Text(verbatim: day.title + " · " + day.date)
+                                        }
+                                    }
                                 }
                             }
-                        }
-                    } label: {
-                        VStack(spacing: 0) {
-                            Text(verbatim: model.plan.prepared?.title ?? cardTitle).font(Typography.planTitle.font)
-                                .lineLimit(1)
-                            HStack(spacing: PlanMetrics.smallGap) {
-                                Text(verbatim: subtitle).lineLimit(1)
-                                Image(systemName: "chevron.down")
-                            }.font(Typography.planSubtitle.font).foregroundStyle(ColorToken.mutedForeground.color)
-                        }
-                    }.accessibilityLabel(copy("Go to day")).accessibilityIdentifier("trip.dayMenu")
+                        } label: {
+                            VStack(spacing: 0) {
+                                Text(verbatim: prepared.title).font(Typography.planTitle.font).lineLimit(1)
+                                HStack(spacing: PlanMetrics.smallGap) {
+                                    Text(verbatim: subtitle).lineLimit(1)
+                                    Image(systemName: "chevron.down")
+                                }.font(Typography.planSubtitle.font).foregroundStyle(ColorToken.mutedForeground.color)
+                            }
+                        }.accessibilityLabel(dayMenuLabel).accessibilityIdentifier("trip.dayMenu")
+                    } else {
+                        Text(verbatim: model.plan.prepared?.title ?? cardTitle).font(Typography.planTitle.font)
+                            .lineLimit(1)
+                    }
                 }
-                ToolbarItem(placement: .primaryAction) {
-                    Button(
-                        copy(model.timeline ? "Show as list" : "Show as timeline"),
-                        systemImage: model.timeline ? "list.bullet" : "rectangle.split.3x1"
-                    ) {
-                        model.timeline.toggle()
-                        if let id = model.anchor.dayID { proxy.scrollTo(id, anchor: .top) }
-                    }.accessibilityIdentifier("trip.viewToggle")
+                if model.state == .ready && model.plan.prepared != nil {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button(
+                            copy(model.timeline ? "Show as list" : "Show as timeline"),
+                            systemImage: model.timeline ? "list.bullet" : "rectangle.split.3x1"
+                        ) {
+                            model.timeline.toggle()
+                            if let id = model.anchor.dayID { proxy.scrollTo(id, anchor: .top) }
+                        }.accessibilityIdentifier("trip.viewToggle")
+                    }
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button(copy("Trip actions"), systemImage: "ellipsis") { onActions?() }.disabled(onActions == nil)
@@ -183,6 +198,16 @@ public struct TripPageView: View {
         guard let card = model.plan.card else { return "" }
         return "\(card.from.city ?? card.from.iata) → \(card.to.city ?? card.to.iata)"
     }
+    private var dayMenuLabel: String {
+        guard let trip = model.plan.detail?.trip, let prepared = model.plan.prepared else { return cardTitle }
+        let from = trip.from.city ?? trip.from.iata
+        let to = trip.to.city ?? trip.to.iata
+        if headerScrolled, let day = prepared.days.first(where: { $0.id == model.anchor.dayID }) {
+            return copy("%@ to %@, %@, %@. Go to a day", from, to, day.title, day.date)
+        }
+        return copy("%@ to %@, %@. Go to a day", from, to, prepared.spokenDates)
+    }
+
     private var subtitle: String {
         if headerScrolled, let day = model.plan.prepared?.days.first(where: { $0.id == model.anchor.dayID }) {
             return day.title + " · " + day.date
@@ -197,16 +222,18 @@ public struct TripPageView: View {
                     LaneHeadings(copy: copy, day: day)
                 } else {
                     HStack {
-                        Text(verbatim: day.title + " · " + day.date).font(Typography.planListLine.font)
+                        (Text(verbatim: day.title).font(Typography.planListTitle.font)
+                            + Text(verbatim: " · " + day.date).font(Typography.planListLine.font)
+                            .foregroundColor(ColorToken.mutedForeground.color))
                         Spacer(minLength: PlanMetrics.smallGap)
                         Text(verbatim: day.zone).font(Typography.planSubtitle.font)
                     }
                 }
-            }.padding(.horizontal, PlanMetrics.gutter).frame(minHeight: PlanMetrics.compactHeaderHeight)
+            }.padding(.horizontal, PlanMetrics.gutter).frame(minHeight: compactHeight)
                 .background(ColorToken.card.color)
             #if os(iOS)
                 CompactHeaderHost(content: header, tracker: scroll)
-                    .frame(height: PlanMetrics.compactHeaderHeight)
+                    .frame(height: compactHeight)
             #else
                 header.opacity(headerScrolled ? 1 : 0).accessibilityHidden(!headerScrolled)
             #endif
@@ -264,10 +291,10 @@ public struct TripPageView: View {
                     DualClocks(
                         from: card.from, to: card.to, now: model.plan.now, formatter: formatter,
                         options: CopyFormat(language: model.plan.language, timeFormat: model.plan.timeFormat),
-                        activeZone: nil)
+                        activeZone: nil, remote: true)
                 }
             }
-        }
+        }.accessibilityElement(children: .contain).accessibilityLabel(copy("Plan summary"))
     }
     private var skeleton: some View {
         VStack(spacing: PlanMetrics.sectionGap) {

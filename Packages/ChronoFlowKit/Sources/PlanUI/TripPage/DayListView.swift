@@ -29,54 +29,61 @@ public struct DayListView: View {
                     } label: {
                         row(block)
                     }
-                    .buttonStyle(.plain).accessibilityLabel(Text(verbatim: block.accessibilityLabel))
+                    .buttonStyle(.plain).accessibilityLabel(Text(verbatim: rowLabel(block)))
                     .accessibilityIdentifier("trip.block.\(block.id)")
                 }
             }
         }
     }
 
+    private func interval(_ block: PreparedBlock) -> String {
+        planDate(block.block.startUtc) <= now && now < planDate(block.block.endUtc)
+            ? copy("%@ · now", block.interval) : block.interval
+    }
+
+    private func rowLabel(_ block: PreparedBlock) -> String {
+        [
+            block.title, interval(block),
+            block.block.priority == .core || block.block.priority == .optional ? block.priority : nil,
+            block.status.map { copy($0 == .done ? "Marked done" : "Skipped") },
+        ]
+        .compactMap { $0 }.joined(separator: ", ")
+    }
+
     private func row(_ block: PreparedBlock) -> some View {
-        let style = PlanCategoryStyle(block.block.type)
-        return HStack(alignment: .top, spacing: PlanMetrics.rowGap) {
-            Image(systemName: style.icon).frame(width: PlanMetrics.touch).padding(.top, PlanMetrics.smallGap)
+        HStack(alignment: .center, spacing: PlanMetrics.sectionGap) {
+            CategorySwatch(type: block.block.type)
             VStack(alignment: .leading, spacing: PlanMetrics.smallGap) {
                 Text(verbatim: block.title).font(Typography.authStrong.font)
-                Text(verbatim: block.interval).font(Typography.planListLine.font).monospacedDigit()
-                PriorityTag(label: block.priority)
+                Text(verbatim: interval(block)).font(Typography.planListLine.font).monospacedDigit()
+                    .foregroundStyle(ColorToken.mutedForeground.color)
             }.frame(maxWidth: .infinity, alignment: .leading)
-            if let status = block.status {
-                Image(systemName: status == .done ? "checkmark.circle.fill" : "minus.circle")
-            }
-            Image(systemName: "chevron.right").font(Typography.authMeta.font)
-        }
-        .padding(PlanMetrics.sectionGap)
-        .foregroundStyle(style.foreground.color)
-        .background(style.fill.color)
-        .overlay {
-            if let pattern = style.pattern {
-                if pattern == .dots {
-                    PlanPattern(dots: true).fill(style.foreground.color.opacity(PlanMetrics.dotOpacity))
-                } else {
-                    PlanPattern(dots: false).stroke(
-                        style.foreground.color.opacity(PlanMetrics.hatchOpacity), lineWidth: PlanMetrics.patternLine)
-                }
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: PlanMetrics.rowGap) { trailing(block) }
+                VStack(alignment: .trailing, spacing: PlanMetrics.rowGap) { trailing(block) }
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: PlanMetrics.rowRadius))
+        .padding(.horizontal, PlanMetrics.blockIcon).padding(.vertical, PlanMetrics.sectionGap)
+        .foregroundStyle(ColorToken.cardForeground.color)
+        .background(ColorToken.card.color, in: RoundedRectangle(cornerRadius: PlanMetrics.rowRadius))
         .overlay(
             RoundedRectangle(cornerRadius: PlanMetrics.rowRadius).strokeBorder(
-                block.block.type == .noCaffeine
-                    ? ColorToken.catCaffeine.color : style.foreground.color.opacity(PlanMetrics.tagOpacity),
-                style: StrokeStyle(lineWidth: PlanMetrics.border, dash: style.dashed ? [PlanMetrics.smallGap] : []))
+                ColorToken.border.color,
+                style: StrokeStyle(
+                    lineWidth: PlanMetrics.border,
+                    dash: block.block.priority == .optional ? [PlanMetrics.smallGap, PlanMetrics.smallGap] : []))
         )
-        .overlay(alignment: .leading) {
-            if block.block.priority == .core {
-                Capsule().fill(style.foreground.color).frame(width: PlanMetrics.coreBorder).padding(
-                    .vertical, PlanMetrics.sectionGap)
-            }
+        .opacity(block.status == nil ? 1 : PlanMetrics.markedRowOpacity)
+    }
+
+    @ViewBuilder private func trailing(_ block: PreparedBlock) -> some View {
+        if block.block.priority == .core || block.block.priority == .optional { PriorityTag(label: block.priority) }
+        if let status = block.status {
+            Image(systemName: status == .done ? "checkmark" : "forward.end")
+                .foregroundStyle(ColorToken.dawnText.color).accessibilityHidden(true)
         }
     }
+
 }
 
 struct ZoneChangeCard: View {

@@ -1,4 +1,5 @@
 import AppCore
+import DataAccess
 import Foundation
 import LocalStore
 import PlanCore
@@ -31,6 +32,11 @@ struct TripPageFetchTests {
         try await ModelTests().eventually { model.fetch == .offline }
         #expect(model.online)
         #expect(model.state == .loading)
+        var card = try MockTimelineFixtures.fixture(named: "S3").card
+        card.id = "remote"
+        try await repo.upsert(TripRecord(id: "remote", card: try .encoding(card), departureUtc: card.departureUtc))
+        try await ModelTests().eventually { model.plan.tripRecord != nil && !model.awaitingSync }
+        #expect(model.state == .remoteOffline)
         model.online = false
         model.online = true
         try await ModelTests().eventually { model.fetch == .loaded }

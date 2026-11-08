@@ -25,9 +25,8 @@ struct DayHeader: View {
             if day.warningCount > 0 {
                 Button {
                     expanded.toggle()
-                    notesExpanded = expanded
                 } label: {
-                    Label(copy("%@ warnings", String(day.warningCount)), systemImage: "exclamationmark.triangle")
+                    Label(copy.count("%lld warnings", day.warningCount), systemImage: "exclamationmark.triangle")
                 }.tint(ColorToken.dawnText.color)
             }
             if expanded {
@@ -40,16 +39,14 @@ struct DayHeader: View {
                     Text(verbatim: headline).font(Typography.planSubtitle.font).foregroundStyle(
                         ColorToken.dawnText.color)
                 }
-                if !day.notices.isEmpty {
-                    Button(copy("%@ notes", String(day.notices.count))) { notesExpanded.toggle() }.font(
+                if day.warningCount == 0 && !day.notices.isEmpty {
+                    Button(copy.count("%lld notes", day.notices.count)) { notesExpanded.toggle() }.font(
                         Typography.authMeta.font)
                 }
-                if notesExpanded {
-                    ForEach(Array(day.notices.enumerated()), id: \.offset) { _, text in
-                        Text(verbatim: text).font(Typography.planListLine.font).padding(PlanMetrics.rowGap)
-                            .frame(maxWidth: .infinity, alignment: .leading).background(
-                                ColorToken.surface2.color, in: RoundedRectangle(cornerRadius: PlanMetrics.rowRadius))
-                    }
+                ForEach(
+                    Array(day.shownNotices(expanded: expanded, notesOpen: notesExpanded).enumerated()), id: \.offset
+                ) { _, notice in
+                    DayNotice(notice: notice)
                 }
             }
             Button(copy(expanded ? "Show less" : "Show more"), systemImage: expanded ? "chevron.up" : "chevron.down") {
@@ -70,5 +67,28 @@ struct DayHeader: View {
     private var zone: some View {
         Text(verbatim: day.zone).font(Typography.planSubtitle.font).padding(PlanMetrics.smallGap)
             .background(ColorToken.muted.color, in: Capsule())
+    }
+}
+
+private struct DayNotice: View {
+    let notice: PreparedNotice
+    var body: some View {
+        HStack(alignment: .top, spacing: PlanMetrics.sectionGap) {
+            Image(systemName: notice.warning ? "exclamationmark.triangle" : "info.circle")
+                .foregroundStyle(notice.warning ? ColorToken.dawnText.color : ColorToken.mutedForeground.color)
+                .frame(width: PlanMetrics.icon, height: PlanMetrics.icon).accessibilityHidden(true)
+            Text(verbatim: notice.text).font(Typography.planListLine.font).frame(
+                maxWidth: .infinity, alignment: .leading)
+        }.padding(PlanMetrics.sectionGap)
+            .background(
+                notice.warning ? ColorToken.dawn.color.opacity(PlanMetrics.warningOpacity) : ColorToken.card.color,
+                in: RoundedRectangle(cornerRadius: PlanMetrics.rowRadius)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: PlanMetrics.rowRadius).strokeBorder(
+                    notice.warning ? ColorToken.dawn.color.opacity(PlanMetrics.tagOpacity) : ColorToken.border.color,
+                    lineWidth: PlanMetrics.border)
+            )
+            .accessibilityElement(children: .combine)
     }
 }

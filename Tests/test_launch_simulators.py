@@ -441,7 +441,8 @@ class ClassificationTests(unittest.TestCase):
     def test_target_and_method_selection_is_explicit_and_validated(self):
         self.assertEqual(runner.expand(['AppTests/WelcomeSnapshotTests/frozenIntro']), ['AppTests/WelcomeSnapshotTests/frozenIntro'])
         self.assertIn('AppTests/WelcomeSnapshotTests', runner.expand(['AppTests']))
-        for selector in ['Unknown', 'PerfUITests', 'AppTests/NewTests']:
+        self.assertEqual(runner.expand(['PerfUITests']), sorted(runner.selectors('perf')))
+        for selector in ['Unknown', 'PerfUITests/NewTests', 'AppTests/NewTests']:
             with self.assertRaises(ValueError): runner.expand([selector])
         self.assertEqual(runner.selection('welcome', 'duo', ['AppUITests/ReadinessTests']), ['AppUITests/ReadinessTests'])
 

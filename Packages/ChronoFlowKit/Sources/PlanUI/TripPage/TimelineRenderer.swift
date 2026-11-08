@@ -359,7 +359,7 @@ nonisolated private func vectorTimeline(
                         context.setStrokeColor(textColor)
                         context.setLineWidth(PlanMetrics.border)
                         context.setLineDash(
-                            phase: 0, lengths: optional ? [PlanMetrics.border * 3, PlanMetrics.border * 3] : [])
+                            phase: 0, lengths: [])
                         context.addPath(pill)
                         context.strokePath()
                         context.restoreGState()

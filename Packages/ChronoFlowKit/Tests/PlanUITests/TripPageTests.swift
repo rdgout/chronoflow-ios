@@ -112,7 +112,7 @@ struct TripPageTests {
         #expect(await decoder.layoutCount == 1)
         #expect(first.days.count == changed.days.count)
         #expect(changed.days.flatMap(\.blocks).first { $0.id == block.id }?.status == .done)
-        #expect(PageCopy(language: .nl)("Go to day") == "Ga naar dag")
+        #expect(PageCopy(language: .nl)("Go to a day") == "Ga naar een dag")
         await decoder.evict(tripID: detail.trip.id)
         _ = try await decoder.prepare(detail, hidden: [], language: .en, timeFormat: .value24, marks: [])
         #expect(await decoder.layoutCount == 2)

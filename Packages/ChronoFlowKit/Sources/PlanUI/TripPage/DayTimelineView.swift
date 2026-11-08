@@ -91,7 +91,7 @@ public struct DayTimelineView: View {
                         ColorToken.now.color.frame(height: PlanMetrics.emphasisBorder)
                     }
                     .offset(y: offset - nowHeight / 2)
-                    .accessibilityElement(children: .ignore).accessibilityLabel(copy("Now, %@", nowText))
+                    .accessibilityHidden(true)
             }
         }
         .frame(width: geometry.width, height: geometry.height, alignment: .topLeading)
@@ -112,6 +112,10 @@ public struct DayTimelineView: View {
         .accessibilityIdentifier(drawing == nil ? "trip.timeline.preparing" : "trip.timeline.ready")
         .accessibilityChildren {
             ZStack(alignment: .topLeading) {
+                if let offset = nowLineOffset(layout.day, now: now) {
+                    Text(verbatim: copy("Now, %@", nowText)).frame(width: geometry.width, height: nowHeight)
+                        .position(x: geometry.width / 2, y: offset)
+                }
                 ForEach(day.blocks) { block in
                     if let frame = timelineBlockFrame(block.id, geometry: geometry, layout: layout) {
                         Button {
@@ -126,7 +130,9 @@ public struct DayTimelineView: View {
                 }
                 ForEach(Array(layout.dividers.enumerated()), id: \.offset) { index, divider in
                     let frame =
-                        drawing?.dividerFrames[index]
+                        drawing.flatMap {
+                            $0.dividerFrames.indices.contains(index) ? $0.dividerFrames[index] : nil
+                        }
                         ?? CGRect(
                             x: PlanMetrics.gutterWidth + PlanMetrics.laneGap, y: divider.top - PlanMetrics.touch / 2,
                             width: geometry.width - PlanMetrics.gutterWidth - PlanMetrics.laneGap,
@@ -192,14 +198,15 @@ struct LaneHeadings: View {
         HStack(spacing: PlanMetrics.laneGap) {
             Group {
                 if let day {
-                    VStack(spacing: 0) {
-                        Text(verbatim: day.weekday).font(Typography.planPriority.font)
+                    VStack(alignment: .trailing, spacing: 0) {
+                        Text(verbatim: day.weekday).font(Typography.planCompactWeekday.font)
+                            .foregroundStyle(ColorToken.foreground.color)
                         Text(verbatim: day.dayMonth).font(Typography.planCompactDate.font).monospacedDigit()
-                    }
+                    }.padding(.trailing, PlanMetrics.smallGap)
                 } else {
                     Color.clear
                 }
-            }.frame(width: PlanMetrics.gutterWidth).accessibilityHidden(true)
+            }.frame(width: PlanMetrics.gutterWidth, alignment: .trailing).accessibilityHidden(true)
             ForEach(
                 Array(
                     zip(

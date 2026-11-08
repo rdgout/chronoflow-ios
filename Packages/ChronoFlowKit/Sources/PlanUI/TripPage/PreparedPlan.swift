@@ -18,6 +18,11 @@ nonisolated public struct PreparedBlock: Sendable, Equatable, Identifiable {
     public var zoneComparison: String?
 }
 
+nonisolated public struct PreparedNotice: Sendable, Equatable {
+    public var text: String
+    public var warning: Bool
+}
+
 nonisolated public struct PreparedDay: Sendable, Equatable, Identifiable {
     public var id: String { day.id }
     public var day: DayView
@@ -29,12 +34,16 @@ nonisolated public struct PreparedDay: Sendable, Equatable, Identifiable {
     public var status: String?
     public var summary: String
     public var headline: String?
-    public var notices: [String]
+    public var notices: [PreparedNotice]
     public var warningCount: Int
     public var progress: String
     public var blocks: [PreparedBlock]
     public var dividerLabels: [String]
     public var ticks: [String]
+
+    public func shownNotices(expanded: Bool, notesOpen: Bool) -> [PreparedNotice] {
+        expanded && (warningCount > 0 || notesOpen) ? notices : []
+    }
 }
 
 nonisolated public struct PreparedPlan: Sendable, Equatable {
@@ -42,6 +51,7 @@ nonisolated public struct PreparedPlan: Sendable, Equatable {
     public var days: [PreparedDay]
     public var title: String
     public var subtitle: String
+    public var spokenDates: String
     public var shift: String?
     public var summary: String
     public var endText: String
@@ -131,7 +141,9 @@ nonisolated public func preparePlan(
             status: day.status.flatMap(dayStatusLabelKey).map { formatter.catalog.text($0, language: language) },
             summary: summary, headline: day.headline.map { formatter.format($0, options: options) },
             notices: notices.map {
-                $0.note.lines.map { formatter.format($0, options: options) }.joined(separator: " ")
+                PreparedNotice(
+                    text: $0.note.lines.map { formatter.format($0, options: options) }.joined(separator: " "),
+                    warning: $0.warning)
             },
             warningCount: notices.filter(\.warning).count,
             progress: copy(
@@ -179,11 +191,12 @@ nonisolated public func preparePlan(
     return PreparedPlan(
         revision: detail.plan.meta.inputHash + "|" + detail.detailVersion, days: days,
         title: "\(detail.trip.from.city ?? detail.trip.from.iata) → \(detail.trip.to.city ?? detail.trip.to.iata)",
-        subtitle: [
-            formatter.formatDate(detail.trip.departLocal, language: language),
-            plan.days.last.map { formatter.formatDate($0.labelDate, language: language) },
-            detail.trip.legs.first?.flightNumber,
-        ].compactMap { $0 }.joined(separator: " · "),
+        subtitle: tripMetaText(
+            start: detail.trip.departLocal, end: plan.days.last?.labelDate,
+            flights: detail.trip.legs.filter { !$0.returnLeg }.compactMap(\.flightNumber), language: language),
+        spokenDates: tripDatesText(
+            start: detail.trip.departLocal, end: plan.days.last?.labelDate,
+            language: language, long: true),
         shift: plan.summary.map { clockShiftText($0.adaptation, formatter: formatter, options: options) },
         summary: summary,
         endText: endText.isEmpty ? copy("There are no more steps in this plan.") : endText, assumedEnd: assumedEnd,

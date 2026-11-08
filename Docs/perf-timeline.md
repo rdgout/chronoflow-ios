@@ -34,7 +34,7 @@ of vector payload and four entries**, rather than four 13–16 MB rasters. Share
 images are the only app-owned rasters. Views release their vector drawing on disappearance.
 Host regression tests traverse all 60 days at phone and Duo widths, enforce a 512 KiB
 per-drawing ceiling and the cache limit, and verify cache reuse/invalidation. The latest
-symbol-free host fixture drawing peaks at 38,657 bytes; this is a display-list size, not a
+symbol-free host fixture drawing peaks at 39,081 bytes; this is a display-list size, not a
 process-memory measurement. System Canvas backing and PDF/font caches still count toward
 the unchanged 40 MiB **process-growth** budget below and require the optimized UI run.
 
@@ -79,14 +79,14 @@ mean, standard deviation and ten samples.
 
 | Fixture | Host Debug budget per sample | Observed host mean, 2026-11-08 |
 | --- | ---: | ---: |
-| S3 | 200 ms | 14 ms |
-| 30 days | 500 ms | 41 ms |
-| 60 days | 1,000 ms | 83 ms |
+| S3 | 200 ms | 20 ms |
+| 30 days | 500 ms | 57 ms |
+| 60 days | 1,000 ms | 99 ms |
 
 These are warm host-process measurements from this worktree's Mac checks, not iPhone or
 simulator results. The pre-optimization 60-day host mean was 297 ms. The equivalence suite
 compares bucketed layouts against a full scan for S1–S6, reversed inputs and hidden lanes.
-The latest host log is `build/phase15-quick-complete.log`; fresh runs supersede these observations.
+The latest host log is `build/fix1-quick.log`; fresh runs supersede these observations.
 
 ## Optimized hosted UI run — user runs this
 
@@ -106,7 +106,7 @@ label preparation and the first day vector drawing. It ends after the splash ove
 two display-link callbacks have passed with a ready timeline. Thus it represents a visible
 committed frame, not simply a SwiftUI `onAppear`. Launch time is reported separately and
 includes the diagnostic fixture setup. Tests wait for `trip.timeline.presented` so a missing
-signpost/failed raster cannot silently pass.
+signpost/failed drawing cannot silently pass.
 
 `test60DayScrollEndToEnd` waits for that frame, then manually starts measurement and swipes
 from the **first** day through all 60 days to the end card, with a 240-swipe guard. It measures
@@ -148,3 +148,15 @@ loading/offline, ready timeline, no-plan, not-found/server, list/end and end-car
 No references were recorded, and the suite intentionally compares without recording even
 if `SNAPSHOT_RECORD` is set. Missing references require a separate reviewed recording step.
 The live Valet read gate, simulator runtime validation and wide-layout phase remain deferred.
+
+## Fix round 1 host verification, 2026-11-08
+
+`make quick` passed strict lint and all package checks except the known sandbox EPERM in
+`APICookieTests.realRedirectCookieHandlingIsDisabled`. Host preparation benchmarks remain
+unchanged, with every sample inside its original budget (means above). The additional
+pixel regression verifies that core-priority tiles differ from recommended tiles only in
+the left bar, so the bar's alpha cannot leak into title/interval content. Token/asset tests
+and the runner/resource checks skipped by make's package failure were run separately.
+New regression suites are classified as host-only. The selector fixture now recognizes the
+already registered Perf target and still rejects unknown suites. `PerfUITests/TimelinePerfTests`
+is unchanged. No simulator, runtime performance claim or reference recording is included.

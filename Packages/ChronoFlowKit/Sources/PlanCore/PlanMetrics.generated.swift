@@ -5,7 +5,7 @@ public enum PlanMetrics {
     public static var cardPadding: Double { 16.0000000000 }
     public static var cardRadius: Double { 26.0000000000 }
     public static var compactFadeDistance: Double { 24.0000000000 }
-    public static var compactHeaderHeight: Double { 32.0000000000 }
+    public static var compactHeaderHeight: Double { 36.0000000000 }
     public static var coreBorder: Double { 4.0000000000 }
     public static var detailsThreshold: Double { 76.0000000000 }
     public static var dot: Double { 6.0000000000 }
@@ -60,12 +60,16 @@ public enum PlanMetrics {
     public static var planCardTitleLineHeight: Double { 32 }
     public static var planCompactDateSize: Double { 10 }
     public static var planCompactDateLineHeight: Double { 12 }
+    public static var planCompactWeekdaySize: Double { 10 }
+    public static var planCompactWeekdayLineHeight: Double { 12 }
     public static var planDayTitleSize: Double { 18 }
     public static var planDayTitleLineHeight: Double { 26 }
     public static var planLaneSize: Double { 11 }
     public static var planLaneLineHeight: Double { 14 }
     public static var planListLineSize: Double { 13 }
     public static var planListLineLineHeight: Double { 18 }
+    public static var planListTitleSize: Double { 13 }
+    public static var planListTitleLineHeight: Double { 18 }
     public static var planNowSize: Double { 10 }
     public static var planNowLineHeight: Double { 16 }
     public static var planPrioritySize: Double { 10 }

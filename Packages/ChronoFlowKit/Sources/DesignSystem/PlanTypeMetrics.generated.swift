@@ -6,12 +6,16 @@ nonisolated enum PlanTypeMetrics {
     static var planCardTitleFace: FontFace { .figtree400 }
     static var planCompactDate: TypeMetrics { TypeMetrics(size: 10, lineHeight: 12, tracking: 0) }
     static var planCompactDateFace: FontFace { .figtree400 }
+    static var planCompactWeekday: TypeMetrics { TypeMetrics(size: 10, lineHeight: 12, tracking: 0) }
+    static var planCompactWeekdayFace: FontFace { .figtree600 }
     static var planDayTitle: TypeMetrics { TypeMetrics(size: 18, lineHeight: 26, tracking: 0) }
     static var planDayTitleFace: FontFace { .figtree400 }
     static var planLane: TypeMetrics { TypeMetrics(size: 11, lineHeight: 14, tracking: 0) }
     static var planLaneFace: FontFace { .figtree500 }
     static var planListLine: TypeMetrics { TypeMetrics(size: 13, lineHeight: 18, tracking: 0) }
     static var planListLineFace: FontFace { .figtree400 }
+    static var planListTitle: TypeMetrics { TypeMetrics(size: 13, lineHeight: 18, tracking: 0) }
+    static var planListTitleFace: FontFace { .figtree600 }
     static var planNow: TypeMetrics { TypeMetrics(size: 10, lineHeight: 16, tracking: 0) }
     static var planNowFace: FontFace { .figtree600 }
     static var planPriority: TypeMetrics { TypeMetrics(size: 10, lineHeight: 14, tracking: 0) }

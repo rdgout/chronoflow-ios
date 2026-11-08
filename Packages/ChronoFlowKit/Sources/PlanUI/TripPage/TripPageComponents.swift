@@ -10,6 +10,7 @@ struct DualClocks: View {
     let formatter: CopyLineFormatter
     let options: CopyFormat
     let activeZone: String?
+    var remote = false
     var body: some View {
         let copy = PageCopy(language: options.language)
         HStack(spacing: PlanMetrics.rowGap) {
@@ -18,7 +19,9 @@ struct DualClocks: View {
                 VStack(alignment: .leading, spacing: PlanMetrics.smallGap) {
                     Text(
                         verbatim: copy(
-                            active ? "You’re here · %@" : index == 0 ? "Home time · %@" : "Destination time · %@",
+                            remote
+                                ? (index == 0 ? "Home · %@" : "There · %@")
+                                : active ? "You’re here · %@" : index == 0 ? "Home time · %@" : "Destination time · %@",
                             place.city ?? place.iata)
                     )
                     .font(Typography.planSubtitle.font).foregroundStyle(

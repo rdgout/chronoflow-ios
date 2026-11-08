@@ -71,6 +71,17 @@ public enum Typography {
         Style(
             face: PlanTypeMetrics.planCompactDateFace, metrics: PlanTypeMetrics.planCompactDate, relativeTo: .caption2)
     }
+    public static var planCompactWeekday: Style {
+        Style(
+            face: PlanTypeMetrics.planCompactWeekdayFace, metrics: PlanTypeMetrics.planCompactWeekday,
+            relativeTo: .caption2)
+    }
+    public static var planListTitle: Style {
+        Style(face: PlanTypeMetrics.planListTitleFace, metrics: PlanTypeMetrics.planListTitle, relativeTo: .subheadline)
+    }
+    public static var planBlockLabel: Style {
+        Style(face: PlanTypeMetrics.planBlockLabelFace, metrics: PlanTypeMetrics.planBlockLabel, relativeTo: .caption2)
+    }
     public static var planNow: Style {
         Style(face: PlanTypeMetrics.planNowFace, metrics: PlanTypeMetrics.planNow, relativeTo: .caption2)
     }

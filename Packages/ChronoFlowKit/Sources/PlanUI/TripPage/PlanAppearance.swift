@@ -49,7 +49,7 @@ nonisolated struct PlanCategoryStyle {
 struct PriorityTag: View {
     let label: String
     var body: some View {
-        Text(verbatim: label).font(Typography.planCompactDate.font)
+        Text(verbatim: label).font(Typography.planPriority.font)
             .padding(.horizontal, PlanMetrics.tilePadding).padding(.vertical, PlanMetrics.border)
             .background(ColorToken.background.color.opacity(PlanMetrics.tagOpacity), in: Capsule())
             .overlay(Capsule().strokeBorder(.foreground.opacity(PlanMetrics.tagOpacity), lineWidth: PlanMetrics.border))
@@ -87,5 +87,47 @@ nonisolated struct PlanPattern: Shape {
             }
         }
         return path
+    }
+}
+
+struct CategorySwatch: View {
+    let type: BlockType
+    var body: some View {
+        let style = PlanCategoryStyle(type)
+        let border: ColorToken? =
+            type == .noCaffeine ? .catCaffeine : type == .lightOK ? .catModerateFg : type == .note ? .border : nil
+        let width = type == .noCaffeine ? PlanMetrics.emphasisBorder : PlanMetrics.border
+        ZStack {
+            style.fill.color
+            if let pattern = style.pattern {
+                if pattern == .dots {
+                    PlanPattern(dots: true).fill(style.foreground.color.opacity(PlanMetrics.dotOpacity))
+                } else {
+                    PlanPattern(dots: false).stroke(
+                        style.foreground.color.opacity(PlanMetrics.hatchOpacity), lineWidth: PlanMetrics.patternLine)
+                }
+            }
+            Image(systemName: style.icon).font(.system(size: PlanMetrics.blockIcon))
+                .foregroundStyle(style.foreground.color)
+            if type == .noCaffeine {
+                Path { path in
+                    path.move(
+                        to: CGPoint(
+                            x: PlanMetrics.tilePadding, y: PlanMetrics.prioritySampleHeight - PlanMetrics.tilePadding))
+                    path.addLine(
+                        to: CGPoint(
+                            x: PlanMetrics.prioritySampleHeight - PlanMetrics.tilePadding, y: PlanMetrics.tilePadding))
+                }.stroke(style.foreground.color, lineWidth: PlanMetrics.emphasisBorder)
+            }
+        }.frame(width: PlanMetrics.prioritySampleHeight, height: PlanMetrics.prioritySampleHeight)
+            .clipShape(RoundedRectangle(cornerRadius: PlanMetrics.tileRadius))
+            .overlay {
+                if let border {
+                    RoundedRectangle(cornerRadius: PlanMetrics.tileRadius).strokeBorder(
+                        border.color.opacity(type == .lightOK ? PlanMetrics.tagOpacity : 1),
+                        style: StrokeStyle(
+                            lineWidth: width, dash: style.dashed ? [PlanMetrics.smallGap, PlanMetrics.smallGap] : []))
+                }
+            }.accessibilityHidden(true)
     }
 }

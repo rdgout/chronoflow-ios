@@ -1,5 +1,5 @@
 {
-  "source": "plan.md Phase 14b, canvas.json planCompactNote; RN timeline.ts spacing references",
+  "source": "plan.md Phase 14b and fix round 1; Plan board compact/tile styles; RN timeline, tileModel and Notice spacing references",
   "type": {
     "planTitle": {
       "size": 17,
@@ -55,6 +55,16 @@
       "size": 11,
       "lineHeight": 14,
       "weight": 600
+    },
+    "planCompactWeekday": {
+      "size": 10,
+      "lineHeight": 12,
+      "weight": 600
+    },
+    "planListTitle": {
+      "size": 13,
+      "lineHeight": 18,
+      "weight": 600
     }
   },
   "spacingMultipliers": {
@@ -85,7 +95,7 @@
     "compactFadeDistance": 6,
     "line": 0.25,
     "dot": 1.5,
-    "compactHeaderHeight": 8,
+    "compactHeaderHeight": 9,
     "skeletonSummary": 30,
     "skeletonTimeline": 95,
     "prioritySampleWidth": 10,
