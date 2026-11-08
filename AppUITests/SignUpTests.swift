@@ -25,7 +25,9 @@ nonisolated final class SignUpTests: XCTestCase {
     AuthUIFlow.openSignIn(app)
     AuthUIFlow.reveal(app.buttons["sign-in.signup"], in: app)
     app.buttons["sign-in.signup"].tap()
-    XCTAssertTrue(app.textFields["sign-up.name"].waitForExistence(timeout: 4))
+    XCTAssertTrue(
+        app.textFields["sign-up.name"].waitForExistence(timeout: 4),
+        "Expected sign-up.name after opening Create account")
 }
 
 @MainActor func fillSignUp(

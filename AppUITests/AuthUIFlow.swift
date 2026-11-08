@@ -13,7 +13,7 @@ import XCTest
     static func waitUntilEnabled(_ element: XCUIElement) {
         let enabled = XCTNSPredicateExpectation(
             predicate: NSPredicate { _, _ in element.exists && element.isEnabled }, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [enabled], timeout: 6), .completed)
+        XCTAssertEqual(XCTWaiter.wait(for: [enabled], timeout: 6), .completed, "Expected enabled \(element.identifier)")
     }
 
     static func openSignIn(_ app: XCUIApplication) {
@@ -26,7 +26,9 @@ import XCTest
         if app.textFields["sign-in.email"].exists { return }
         reveal(button, in: app, scroll: app.scrollViews.containing(.button, identifier: "welcome.signIn").element)
         button.tap()
-        XCTAssertTrue(app.textFields["sign-in.email"].waitForExistence(timeout: 4))
+        XCTAssertTrue(
+            app.textFields["sign-in.email"].waitForExistence(timeout: 4), "Expected sign-in.email after Welcome Sign in"
+        )
         XCTAssertFalse(app.images["launch.opening"].exists)
     }
 
