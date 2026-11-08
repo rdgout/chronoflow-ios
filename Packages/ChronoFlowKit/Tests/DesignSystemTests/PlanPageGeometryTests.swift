@@ -4,6 +4,24 @@ import SnapshotSupport
 import Testing
 
 struct PlanPageGeometryTests {
+    @Test func verticalReflowDoesNotInvalidateHorizontalRailGeometry() throws {
+        for device in try SnapshotDevice.all() {
+            let frame = CGRect(origin: .zero, size: device.size)
+            let bounds = PlanPageGeometry.horizontalBounds(
+                frame, leading: device.insets.left, trailing: device.insets.right)
+            for height in [CGFloat(1), frame.height / 2, frame.height * 3] {
+                let reflowed = CGRect(x: frame.minX, y: height, width: frame.width, height: height)
+                #expect(
+                    PlanPageGeometry.horizontalBounds(
+                        reflowed, leading: device.insets.left, trailing: device.insets.right) == bounds)
+                let rail = PlanPageGeometry.horizontalInsets(
+                    frame: PlanPageGeometry.horizontalBounds(reflowed), safeBounds: bounds)
+                #expect(rail.left == device.insets.left)
+                #expect(rail.right == device.insets.right)
+            }
+        }
+    }
+
     @Test func everyProfileKeepsThePageGutterInsideItsSafeAreaWithoutDoubleInsets() throws {
         for device in try SnapshotDevice.all() {
             let window = CGRect(origin: .zero, size: device.size)

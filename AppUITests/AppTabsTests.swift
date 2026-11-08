@@ -50,7 +50,7 @@ nonisolated final class AppTabsTests: XCTestCase {
         let initialY = anchor.frame.minY
         var minimized: TabsState?
         for _ in 0..<3 {
-            dragContent(in: app, scroll: scroll, down: true)
+            scroll.swipeUp(velocity: .fast)
             minimized = settledTabs(in: app, selected: tab, timeout: 4) { $0.isMinimized(from: expanded) }
             if minimized != nil { break }
         }
@@ -61,40 +61,25 @@ nonisolated final class AppTabsTests: XCTestCase {
         _ = try XCTUnwrap(minimized, "Tab bar did not minimize after scrolling \(tab) down: \(app.debugDescription)")
         let scrolledY = anchor.exists ? anchor.frame.minY : nil
         var restoration: TabsState?
+        var reachedTop = false
         for _ in 0..<6 {
-            dragContent(in: app, scroll: scroll, down: false)
+            scroll.swipeDown(velocity: .fast)
+            _ = try UIWait.stableFrames([scroll, anchor, app.navigationBars.firstMatch], timeout: 5)
+            reachedTop = anchor.frame.minY >= initialY - 1
             restoration = settledTabs(in: app, selected: tab, timeout: 4) { $0.isExpanded }
-            if restoration != nil { break }
+            if restoration != nil && reachedTop { break }
         }
         capture(app, name: "\(name)-tabs-expanded")
-        let restored = try XCTUnwrap(restoration, "Tabs stayed collapsed after scrolling up: \(app.debugDescription)")
+        let restored = try XCTUnwrap(
+            restoration,
+            "Tabs stayed collapsed after 6 native swipeDown gestures; reachedTop=\(reachedTop) "
+                + "initialY=\(initialY) finalY=\(anchor.frame.minY): \(app.debugDescription)")
+        XCTAssertTrue(reachedTop, "Upward scrolling did not reach the content top: \(anchor.frame)")
         XCTAssertTrue(anchor.exists)
         if let scrolledY { XCTAssertGreaterThan(anchor.frame.minY, scrolledY + 1) }
         XCTAssertEqual(restored.bar.width, expanded.bar.width, accuracy: 1)
         XCTAssertEqual(restored.bar.height, expanded.bar.height, accuracy: 1)
         XCTAssertEqual(restored.items.width, expanded.items.width, accuracy: 1)
-    }
-
-    @MainActor private func dragContent(in app: XCUIApplication, scroll: XCUIElement, down: Bool) {
-        var viewport = AuthUIFlow.viewport(in: app, scrollFrame: scroll.frame)
-        let navigation = app.navigationBars.firstMatch
-        if navigation.exists {
-            let bottom = viewport.maxY
-            viewport.origin.y = max(viewport.minY, navigation.frame.maxY)
-            viewport.size.height = max(0, bottom - viewport.minY)
-        }
-        let bar = app.tabBars.firstMatch
-        if bar.exists { viewport.size.height = max(0, min(viewport.maxY, bar.frame.minY) - viewport.minY) }
-        XCTAssertGreaterThan(viewport.height, 0)
-        let origin = app.coordinate(withNormalizedOffset: .zero)
-        func point(_ fraction: CGFloat) -> XCUICoordinate {
-            origin.withOffset(
-                CGVector(
-                    dx: viewport.midX - app.frame.minX, dy: viewport.minY + viewport.height * fraction - app.frame.minY)
-            )
-        }
-        point(down ? 0.85 : 0.2).press(
-            forDuration: 0.05, thenDragTo: point(down ? 0.2 : 0.85), withVelocity: .fast, thenHoldForDuration: 0.1)
     }
 
     private struct TabsState {

@@ -76,8 +76,8 @@
                             }
                         }
                     }
-                }.planContentBounds().padding(PlanUITokens.space4)
-            }.planPageRail().refreshable { await refresh() }
+                }.planContentBounds().padding(PlanUITokens.space4).planPageRail()
+            }.refreshable { await refresh() }
                 .navigationTitle(t("My trips")).accessibilityIdentifier("trips.screen")
                 .background(ColorToken.background.color).foregroundStyle(ColorToken.foreground.color)
         }

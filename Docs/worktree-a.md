@@ -376,3 +376,78 @@ tab restoration and reference comparison remain unrun here.
 
 Delivery: one patch against `5be5474`, `build/commits/1.patch`, and its Conventional
 Commit subject in `build/commits/messages.txt`. No Git commits or PNG changes.
+
+## Fifth simulator rerun repair (2026-11-08, base b15b5c6)
+
+Read-only evidence: the supplied `p15a-uifail5.txt` and the existing 17e
+`Debug-serial.xcresult` / `Debug-compare.xcresult`. No simulator was launched.
+The supplied Today/Trips layout passes remain recorded; this patch's runtime
+and device-fit acceptance still need the user's rerun.
+
+The Today activity stream stops after collecting original text metadata, before
+any reveal gesture or contrast measurement. Its timeout spindump places the runner
+in `performAccessibilityAudit` → `XCTFuture`'s synchronous wait. The audit daemon
+waits for ChronoFlow, whose main thread is continuously laying out SwiftUI from
+`_axAuditCheckDynamicTextSupport:andClippingIssues:spinRunloop:`. Thus the
+ten-minute failure is inside the native clipping audit, not twelve reveal retries.
+The new rail modifier fed every global CGRect change back into layout state,
+including y/height changes that cannot affect horizontal rails. Remove that
+feedback: both root and content observations project only horizontal bounds.
+Observe the root without wrapping TabView in GeometryReader. The saved stack
+establishes the native layout stall; resolving it with this change still requires
+runtime confirmation. All-profile host tests vary height and vertical position
+while retaining the exact horizontal rail result.
+
+The native audit has no public timeout/cancellation parameter. A 45 s timer on
+the runner's real main run loop terminates the target app to unblock the native
+request and reports `Native Plan accessibility audit exceeded 45.0s`. It is
+invalidated on every exit. The named XCTest activity retains the stage/deadline,
+and a 120 s test execution allowance is the outer bound if a framework call
+stops servicing the run loop. Frame settling remains bounded. Contrast work has
+a shared 45 s deadline, and a reveal gets at most 15 s and six gestures. Errors
+identify the text, attempt, actual viewport and preferred viewport.
+
+Reveal tracks whether the text and actual viewport moved. It prefers the
+generated clearance, then accepts complete visibility at an immovable scroll
+boundary or in non-scrolling content. Text crossing actual chrome remains a
+failure. Measurements use the viewport that was satisfied; the 4.5:1 threshold,
+complete line measurement and original identifier/frame/label attribution stay
+strict. Collect sources from the foreground audit scene. A presented sheet
+uses its own navigation chrome and excludes the background tab bar; a step sheet
+has no navigation bar. Host tests cover pinned last text, genuinely clipped text,
+non-scrolling sheets and continued progress toward the preferred clearance.
+
+The old audit clock returned an empty finished stream, which contains no loop
+and cannot freeze Foundation/UIKit time. Replace it with a FixedPlanClock that
+emits the same captured date to each subscriber, then finishes. Its host test
+checks stream completion, initial home/formatter load, subsequent store changes
+and detail layout after the clock has finished. No app animation, run-loop timer
+or UI settling deadline uses this domain clock.
+
+The saved tab failure has Today at its opening position and its native button
+still `Collapsed, Selected`. The old gestures press, drag at 750 px/s and hold
+before releasing; six repeats did not fix it. Today and Trips also had rail
+padding around the ScrollView. Move that padding to the inner content, keeping
+the native primary ScrollView directly under navigation, including loading.
+Use the scroll element's native `swipeDown(velocity: .fast)` to scroll upward,
+settle frames and explicitly verify the first content anchor has returned to
+its original top. Six attempts remain the bound. The system must expand with
+all three tabs and the original geometry; there is no forced expansion or tap
+fallback. This preserves Apple's
+[native onScrollDown behavior](https://developer.apple.com/documentation/uikit/uitabbarcontroller/minimizebehavior/onscrolldown).
+
+Verification: strict lint passes. `make -k lint host-tests` finishes all host
+tiers: 451 of 452 package tests pass, including all six new regressions; only
+the existing `APICookieTests.realRedirectCookieHandlingIsDisabled` loopback
+listener fails with sandbox `EPERM`. All 10 TokenGen tests, 7 AssetGen tests and
+98 resource/signing/runner fixtures pass. Direct Swift 6 iOS 17 SDK compilation
+passes for all package modules, the app, AppTests and AppUITests, without
+launching CoreSimulator. Logs: `build/round5-host-final.log`,
+`build/round5-typecheck.log` (package/app compilation), and
+`build/round5-typecheck-tests.log` (final app/test compilation).
+
+Delivery: one atomic `build/commits/1.patch` against `b15b5c6`, with its
+Conventional Commit subject in `build/commits/messages.txt`. No Git commits or
+snapshot changes. Re-run the PlanAuditTests and AppTabsTests on 17e, plus
+TodayLayoutTests/TripsLayoutTests to confirm both rail sides after moving the
+padding. No seven-simulator matrix is requested.

@@ -7,6 +7,41 @@ import Testing
 @testable import PlanUI
 
 extension ModelTests {
+    @Test @MainActor func fixedClockFinishesWithoutBlockingInitialLoadOrLaterRepositoryUpdates() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let db = AccountDatabase(applicationSupport: root)
+        try await db.open(accountID: "00000000-0000-4000-8000-000000000016")
+        let repository = TripRepository(database: db)
+        let detail = try detail()
+        let now = planDate(detail.plan.days[0].startUtc)
+        let clock = FixedPlanClock(now: now)
+        for _ in 0..<2 {
+            var iterator = await clock.values().makeAsyncIterator()
+            #expect(await iterator.next() == now)
+            #expect(await iterator.next() == nil)
+        }
+        let home = PlanHomeModel(repository: repository, clock: clock, now: now.addingTimeInterval(-60))
+        home.start()
+        defer { home.stop() }
+        try await eventually { home.trips.hasLoaded && home.trips.now == now && home.formatter != nil }
+        let record = TripRecord(
+            id: detail.trip.id, card: try .encoding(recoveryCard(detail)), currentInputHash: detail.plan.meta.inputHash,
+            departureUtc: detail.trip.departureUtc)
+        try await repository.upsert(record)
+        try await eventually { home.trips.trips.count == 1 }
+        let plan = PlanVersionRecord(
+            tripId: detail.trip.id, inputHash: detail.plan.meta.inputHash, detail: try .encoding(detail),
+            receivedAt: now.ISO8601Format(), detailVersion: detail.detailVersion)
+        try await repository.store(plan: plan, checks: [])
+        let selected = home.detail(for: detail.trip.id)
+        try await eventually { selected.detail != nil && !selected.layouts.isEmpty }
+        #expect(selected.now == now)
+        #expect(home.trips.now == now)
+        home.stop()
+        try await db.close()
+    }
+
     @Test @MainActor func tripsSectionsKeepRNNewestFirstAndStableTies() throws {
         let detail = try detail()
         let card = recoveryCard(detail)

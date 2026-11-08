@@ -3,6 +3,12 @@ import UIKit
 import XCTest
 
 nonisolated final class PlanAuditTests: XCTestCase {
+    override func setUp() {
+        super.setUp()
+        executionTimeAllowance = 120
+        continueAfterFailure = false
+    }
+
     @MainActor func testTodayPrimaryState() async throws {
         try await audit { app in
             let progress = app.staticTexts["today.progress"]
@@ -64,24 +70,31 @@ nonisolated final class PlanAuditTests: XCTestCase {
         let app = launchPlanAccount(presentLegend: legend, freezePlanClock: true)
         defer { app.terminate() }
         try navigate(app)
-        _ = try UIWait.stableFrames([app.scrollViews.firstMatch], timeout: 8)
+        let scene = AuditScene(app: app)
+        _ = try UIWait.stableFrames([scene.content], timeout: 8)
         attach(app, name: "plan-audit-settled")
         // The user settled the root xxLarge cap on 2026-11-06 (plan Phase 5 fix round 3).
         let types: XCUIAccessibilityAuditType = .all.subtracting(.dynamicType)
         XCTAssertEqual(types, .all.subtracting(.dynamicType), "Honor the root xxLarge cap; keep every other audit")
-        let sources = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@", "plan.text."))
+        let sources = scene.content.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@", "plan.text."))
             .allElementsBoundByIndex.map { TextSource(identifier: $0.identifier, label: $0.label, frame: $0.frame) }
         var findings: [Finding] = []
         // Capture every finding before contrast measurements scroll the original audit scene.
-        try app.performAccessibilityAudit(for: types) { issue in
+        try UIWait.accessibilityAudit(in: app, types: types, timeout: 45) { issue in
             findings.append(Finding(issue: issue, disabled: Self.disabledControl(issue: issue, in: app)))
             return true
         }
+        let measurementDeadline = ContinuousClock.now + .seconds(45)
         for finding in findings {
+            guard ContinuousClock.now < measurementDeadline else {
+                throw AuditFailure(
+                    message: "Plan contrast measurements exceeded 45s; next=\(finding.identifier ?? "<nil>")")
+            }
             var measurement = "not eligible"
             var measured = false
             if finding.type == .contrast {
-                (measured, measurement) = measuredText(finding: finding, sources: sources, in: app)
+                (measured, measurement) = try measuredText(
+                    finding: finding, sources: sources, in: app, scene: scene, deadline: measurementDeadline)
             }
             let ignored = measured || finding.disabled
             let message = """
@@ -96,6 +109,35 @@ nonisolated final class PlanAuditTests: XCTestCase {
             attachment.lifetime = .keepAlways
             add(attachment)
             if !ignored { XCTFail(message) }
+        }
+    }
+
+    private struct AuditFailure: Error, CustomStringConvertible {
+        let message: String
+        var description: String { message }
+    }
+
+    @MainActor private struct AuditScene {
+        let content: XCUIElement
+        let navigation: XCUIElement?
+        let tabBar: XCUIElement?
+
+        init(app: XCUIApplication) {
+            let legend = app.descendants(matching: .any).matching(identifier: "legend.sheet").firstMatch
+            let step = app.descendants(matching: .any).matching(identifier: "step.sheet").firstMatch
+            if legend.exists {
+                content = legend
+                navigation = app.navigationBars["What the steps mean"]
+                tabBar = nil
+            } else if step.exists {
+                content = step
+                navigation = nil
+                tabBar = nil
+            } else {
+                content = app.scrollViews.firstMatch
+                navigation = app.navigationBars.firstMatch
+                tabBar = app.tabBars.firstMatch
+            }
         }
     }
 
@@ -131,8 +173,9 @@ nonisolated final class PlanAuditTests: XCTestCase {
     }
 
     @MainActor private func measuredText(
-        finding: Finding, sources: [TextSource], in app: XCUIApplication
-    ) -> (Bool, String) {
+        finding: Finding, sources: [TextSource], in app: XCUIApplication, scene: AuditScene,
+        deadline: ContinuousClock.Instant
+    ) throws -> (Bool, String) {
         guard let identifier = finding.identifier, let reportedFrame = finding.frame else {
             return (false, "No attributed element")
         }
@@ -159,7 +202,7 @@ nonisolated final class PlanAuditTests: XCTestCase {
         guard candidates.count == 1, let source = candidates.first else {
             return (false, "No unique original text identifier and frame; candidates=\(candidates.count)")
         }
-        let live = app.staticTexts.matching(identifier: source.identifier).allElementsBoundByIndex
+        let live = scene.content.staticTexts.matching(identifier: source.identifier).allElementsBoundByIndex
         guard live.count == 1, let text = live.first, text.label == source.label else {
             return (false, "Original text no longer has a unique live identity: \(source.identifier)")
         }
@@ -178,21 +221,18 @@ nonisolated final class PlanAuditTests: XCTestCase {
         guard pairs.count == 1, let (style, color) = pairs.first else {
             return (false, "Unknown text style: \(text.identifier)")
         }
-        let scrolls = app.scrollViews.allElementsBoundByIndex.filter {
-            $0.descendants(matching: .staticText).matching(identifier: text.identifier).allElementsBoundByIndex
-                .contains { $0.frame == text.frame && $0.label == label }
-        }
-        guard scrolls.count == 1, let scroll = scrolls.first else {
-            return (false, "No unique scroll for \(text.identifier), frame=\(originalFrame)")
+        let scrolls = [scene.content].filter {
+            $0.elementType == .scrollView
+                && $0.descendants(matching: .staticText).matching(identifier: text.identifier).allElementsBoundByIndex
+                    .contains { $0.frame == text.frame && $0.label == label }
         }
         // System glass can cover scroll content; measure the same text in its unobscured reading position.
-        guard reveal(text, in: app, scroll: scroll) else {
-            return (false, "Cannot reveal the attributed text: \(text.identifier), original=\(originalFrame)")
-        }
+        let readingViewport = try reveal(
+            text, in: app, scene: scene, scroll: scrolls.first, deadline: deadline)
         guard text.label == label else {
             return (false, "Revealed text changed: expected=\(label), actual=\(text.label)")
         }
-        let current = app.staticTexts.matching(identifier: text.identifier).allElementsBoundByIndex
+        let current = scene.content.staticTexts.matching(identifier: text.identifier).allElementsBoundByIndex
         guard current.count == 1, current[0].label == label, current[0].frame == text.frame else {
             return (false, "Revealed text is not unique: \(text.identifier), original=\(originalFrame)")
         }
@@ -202,7 +242,7 @@ nonisolated final class PlanAuditTests: XCTestCase {
         }
         let (minimum, description) = measure(
             app: app, identifier: text.identifier, label: label, frame: text.frame,
-            viewport: viewport(in: app, scroll: scroll), ink: UIColor(color.color).resolvedColor(with: traits),
+            viewport: readingViewport, ink: UIColor(color.color).resolvedColor(with: traits),
             lineHeight: style.uiFont(compatibleWith: traits).lineHeight)
         return (
             PlanLayoutEvidence.passingText(
@@ -212,24 +252,46 @@ nonisolated final class PlanAuditTests: XCTestCase {
         )
     }
 
-    @MainActor private func viewport(in app: XCUIApplication, scroll: XCUIElement) -> CGRect {
-        let navigation = app.navigationBars.firstMatch
-        let tabBar = app.tabBars.firstMatch
+    @MainActor private func viewport(in app: XCUIApplication, scene: AuditScene, clearance: CGFloat) -> CGRect {
         return AuthScrollGesture.readingViewport(
-            AuthUIFlow.viewport(in: app, scrollFrame: scroll.frame),
-            navigationBar: navigation.exists ? navigation.frame : nil,
-            tabBar: tabBar.exists ? tabBar.frame : nil, clearance: PlanUITokens.space4)
+            AuthUIFlow.viewport(in: app, scrollFrame: scene.content.frame),
+            navigationBar: scene.navigation.flatMap { $0.exists ? $0.frame : nil },
+            tabBar: scene.tabBar.flatMap { $0.exists ? $0.frame : nil }, clearance: clearance)
     }
 
-    @MainActor private func reveal(_ text: XCUIElement, in app: XCUIApplication, scroll: XCUIElement) -> Bool {
-        for _ in 0..<12 {
-            var elements = [text, scroll]
-            if app.tabBars.firstMatch.exists { elements.append(app.tabBars.firstMatch) }
-            if app.navigationBars.firstMatch.exists { elements.append(app.navigationBars.firstMatch) }
-            do { _ = try UIWait.stableFrames(elements, timeout: 5) } catch { return false }
-            let viewport = viewport(in: app, scroll: scroll)
-            if viewport.contains(text.frame) { return true }
-            guard let gesture = AuthScrollGesture.reveal(text.frame, in: viewport) else { return false }
+    @MainActor private func reveal(
+        _ text: XCUIElement, in app: XCUIApplication, scene: AuditScene, scroll: XCUIElement?,
+        deadline: ContinuousClock.Instant
+    ) throws -> CGRect {
+        let deadline = min(deadline, ContinuousClock.now + .seconds(15))
+        var progress = AuthScrollGesture.TextRevealProgress()
+        var diagnostics = ""
+        for attempt in 0..<6 {
+            let remaining = ContinuousClock.now.duration(to: deadline)
+            guard remaining > .zero else { break }
+            var elements = [text, scene.content]
+            if let tabBar = scene.tabBar, tabBar.exists { elements.append(tabBar) }
+            if let navigation = scene.navigation, navigation.exists { elements.append(navigation) }
+            do {
+                let seconds = Double(remaining.components.seconds) + Double(remaining.components.attoseconds) / 1e18
+                _ = try UIWait.stableFrames(elements, timeout: min(4, seconds))
+            } catch {
+                throw AuditFailure(message: "Plan reveal frames did not settle for \(text.identifier): \(error)")
+            }
+            let visible = viewport(in: app, scene: scene, clearance: 0)
+            let preferred = viewport(in: app, scene: scene, clearance: PlanUITokens.space4)
+            let frame = text.frame
+            diagnostics = "attempt=\(attempt) frame=\(frame) visible=\(visible) preferred=\(preferred)"
+            switch progress.observe(frame: frame, visible: visible, preferred: preferred, canScroll: scroll != nil) {
+            case .measure(let viewport): return viewport
+            case .blocked:
+                throw AuditFailure(
+                    message: "Plan text remains clipped at its scroll limit: \(text.identifier); \(diagnostics)")
+            case .scroll: break
+            }
+            guard ContinuousClock.now < deadline,
+                let gesture = AuthScrollGesture.reveal(frame, in: preferred)
+            else { break }
             let origin = app.coordinate(withNormalizedOffset: .zero)
             let start = origin.withOffset(
                 CGVector(dx: gesture.start.x - app.frame.minX, dy: gesture.start.y - app.frame.minY))
@@ -237,7 +299,7 @@ nonisolated final class PlanAuditTests: XCTestCase {
                 CGVector(dx: gesture.end.x - app.frame.minX, dy: gesture.end.y - app.frame.minY))
             start.press(forDuration: 0.1, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.1)
         }
-        return false
+        throw AuditFailure(message: "Plan text reveal exceeded 15s or 6 gestures: \(text.identifier); \(diagnostics)")
     }
 
     @MainActor private func measure(

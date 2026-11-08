@@ -76,7 +76,7 @@ struct AppTabs: View {
                 if ProcessInfo.processInfo.environment["CF_PLAN_TEST_FREEZE_CLOCK"] == "1",
                     (UIApplication.shared.delegate as? AppDelegate)?.authServices?.authUITestEnabled == true
                 {
-                    clock = AuditPlanClock()
+                    clock = FixedPlanClock(now: Date())
                 }
             #endif
             let model = PlanHomeModel(
@@ -145,8 +145,8 @@ struct AppTabs: View {
                 refresh: { try? await native?.refreshNow() })
         } else if native != nil {
             ScrollView {
-                TripsLoadingView().padding(PlanUITokens.space4)
-            }.planPageRail().navigationTitle(t("My trips")).background(ColorToken.background.color)
+                TripsLoadingView().padding(PlanUITokens.space4).planPageRail()
+            }.navigationTitle(t("My trips")).background(ColorToken.background.color)
         } else {
             seam(.trips)
         }
@@ -160,9 +160,3 @@ struct AppTabs: View {
         #endif
     }
 }
-
-#if DEBUG
-    private struct AuditPlanClock: PlanClock {
-        nonisolated func values() async -> AsyncStream<Date> { AsyncStream { $0.finish() } }
-    }
-#endif
