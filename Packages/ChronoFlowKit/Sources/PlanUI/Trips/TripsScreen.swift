@@ -37,7 +37,7 @@
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: PlanUITokens.space6) {
                     if loading {
-                        PlanLoadingView(label: t("Loading your trips"))
+                        TripsLoadingView()
                     } else if trips.isEmpty {
                         VStack(spacing: PlanUITokens.space3) {
                             Image(systemName: "airplane").font(.system(size: PlanUITokens.space6))

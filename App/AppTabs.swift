@@ -138,7 +138,9 @@ struct AppTabs: View {
                 open: { tripsPath.append(TripPageRoute(tripID: $0)) },
                 refresh: { try? await native?.refreshNow() })
         } else if native != nil {
-            PlanLoadingView(label: t("Loading your trips"))
+            ScrollView {
+                TripsLoadingView().padding(PlanUITokens.space4)
+            }.navigationTitle(t("My trips")).background(ColorToken.background.color)
         } else {
             seam(.trips)
         }

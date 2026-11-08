@@ -178,7 +178,7 @@
                             style: StrokeStyle(lineWidth: AuthTokens.focusWidth, dash: [PlanUITokens.space1]))
                 }
         }
-        func planCard(active: Bool = false) -> some View {
+        func planCard(active: Bool = false, completed: Bool = false) -> some View {
             padding(PlanUITokens.space5)
                 .background(ColorToken.card.color, in: RoundedRectangle(cornerRadius: PlanUITokens.radius3Xl))
                 .overlay {
@@ -187,6 +187,7 @@
                             (active ? ColorToken.dawn : .border).color,
                             lineWidth: active ? AuthTokens.focusWidth : AuthTokens.borderWidth)
                 }
+                .opacity(completed ? PlanUITokens.completedCardOpacity : 1)
         }
     }
 #endif

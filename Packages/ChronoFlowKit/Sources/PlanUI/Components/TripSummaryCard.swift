@@ -50,8 +50,14 @@
                         Spacer(minLength: 0)
                         airport(card.to, trailing: true)
                     }
-                    Text(times).font(Typography.screenBody.font).foregroundStyle(ColorToken.mutedForeground.color)
-                        .monospacedDigit()
+                    HStack(spacing: PlanUITokens.space2) {
+                        Text(times).font(Typography.screenBody.font).monospacedDigit()
+                        if next == nil {
+                            Spacer(minLength: 0)
+                            Image(systemName: "chevron.right").font(.system(size: PlanUITokens.space5))
+                                .accessibilityHidden(true)
+                        }
+                    }.foregroundStyle(ColorToken.mutedForeground.color)
                     if let next {
                         HStack(spacing: PlanUITokens.space3) {
                             CategorySwatch(next.type)
@@ -73,7 +79,7 @@
                     } else if showPlanStart && trip.status == .upcoming {
                         Text(startLabel).font(Typography.screenLabel.font).foregroundStyle(ColorToken.dawnText.color)
                     }
-                }.planCard(active: trip.status == .active)
+                }.planCard(active: trip.status == .active, completed: trip.status == .completed)
             }
             .buttonStyle(.plain).foregroundStyle(ColorToken.cardForeground.color)
             .accessibilityIdentifier("trip.\(card.id)").accessibilityElement(children: .combine)

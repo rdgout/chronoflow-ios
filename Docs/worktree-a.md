@@ -1,9 +1,11 @@
 # Worktree A: native shell and day-to-day screens
 
-Implemented in patch order **15a → 17a → 17b → 15b**, based on `5def5a1`.
-The worktree's shared Git index is read-only in the sandbox; the four atomic patches
-and tab-separated subjects are in `build/commits/`. No references were recorded and
-no simulator was launched.
+Original stack: **15a → 17a → 17b → 15b**, now at `f438bd2`. Review round 1 fixes
+all 14 verified findings on top of that HEAD. Git denied `index.lock`, so the four
+ordered follow-up patches are `build/commits/1.patch` through `4.patch`, with one
+Conventional Commit subject per line in `build/commits/messages.txt`. The patches
+are checked sequentially against HEAD and reproduce the changed files. No references
+were recorded and no simulator was launched.
 
 The shell uses a system TabView. Its session-scoped gate observer keeps
 verify → terms → walkthrough → Today precedence after acceptance and restoration.
@@ -61,3 +63,34 @@ controls stay hidden until 16c. Terms/walkthrough UI, the undesigned TripNotOnPh
 state, calendar and notifications remain deferred. The future note omits the RN
 reminder promise while notifications are out of scope. Release remains non-shipping
 while those required destinations and the existing shipping gates are unfinished.
+
+
+## Review round 1 verification (2026-11-08)
+
+The tab shell uses the dashboard grid and iOS 26 scroll minimization. Signed-out
+publication routes away immediately and stops the home model. A session mutation
+permit guards the complete SQLite check-off transaction and is revoked before
+publication, including queued actions while logout is delayed.
+
+Sheet badges, priority tag/key, full-width actions, step-gone state and VoiceOver
+confirmation/focus follow the supplied boards and RN behavior. Today has a separate
+future card, paired headings and spoken progress, catalog plural variations, inline
+progress and the designed status/empty/hidden treatments. My trips has no-next-step
+chevrons, dimmed completed cards and its own accessible loading layout.
+
+`make quick`: strict lint passes; 437/438 package tests pass. The only failure is
+the known `APICookieTests.realRedirectCookieHandlingIsDisabled` listener EPERM.
+The remaining quick tiers pass: 10 TokenGen tests, 7 AssetGen tests and 98
+signing/resource/runner fixtures. The newly added catalog suite is registered as
+host-only; its initial classification failure was fixed and all 76 runner fixtures
+pass on rerun. The delayed-logout, permit-revocation and en/nl catalog regressions
+pass. Direct Swift 6 iOS 17 SDK checks pass for package/app modules, AppTests and
+AppUITests; the final router/layout edits also pass focused module compilation.
+
+Logs: `build/round1-quick.log`, `build/round1-quick-remainder.log`,
+`build/round1-runner.log`, `build/round1-final-targeted.log`,
+`build/round1-final-lint.log`, `build/round1-typecheck.log` and
+`build/round1-final-{AppCore,PlanUI}-typecheck.log`.
+
+Only host verification was run. Runtime layout, VoiceOver behavior and visual
+reference acceptance remain for the user's simulator session.

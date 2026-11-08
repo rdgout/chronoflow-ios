@@ -1662,6 +1662,8 @@ Boards imported from RN's canvas copy (15a, 2026-11-08); OQ 38 settled by the 15
   - Files: `Kit/Sources/PlanUI/Trips/*.swift`.
   - Tests: list ordering; tombstoned trips vanish; snapshots per state on an injected clock; VoiceOver labels.
 
+- [x] Review round 1: add a trailing chevron when no next step is shown, dim completed cards, and replace the shared Today skeleton with the TripsLoading section/card layout and loading accessibility semantics, including the tab bootstrap state. No references recorded.
+
 **15c: Trip page frame and list view** (boards: Plan, PlanDark, PlanList, PlanListScrolled, PlanScrolled(Dark), PlanTimelineTop, PlanDayMenu, PlanEnd, PlanEndNoText, PlanLoading, PlanNoPlan, PlanRemote, PlanRemoteLoadingNL, PlanRemoteOffline(NL), ErrorNotFound, ErrorServer)
 - [ ] Take a `PlanRetention` lease on appear. Show the header summary and day pills that follow the scroll, in one continuous scroll (note `reqContinuousPlan`). The day title is the system `Menu` titled "Go to day", with the supplied nl strings. The compact header line fades in over the last 24 pt of scroll, with an instant swap only under Reduce Motion. Day headers show `noticeItems`.
 - [ ] Open on the deep-linked day (a `blockId` maps to its day), then the kept day, then today, then the last day, then the first.
