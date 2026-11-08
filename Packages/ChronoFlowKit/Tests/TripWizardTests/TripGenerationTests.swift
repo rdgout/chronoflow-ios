@@ -66,12 +66,15 @@ import TripWizard
         let probe = EffectProbe()
         await probe.failPull()
         let service = TripGenerationService(source: source, effects: await probe.effects())
-        let initial = TripGenerationState(instance: "one", review: try generationReview())
+        let initial = TripGenerationState(
+            instance: "one", input: ApiTripReviewInput(input: try generationInput()), review: try generationReview())
         let first = try await service.save(initial)
         #expect(first.outcome == .saved(tripId: "created") && first.state.savedTripId == "created")
         #expect(try await service.save(initial).outcome == first.outcome)
         #expect(await source.count("save") == 1)
-        let recovered = TripGenerationState(instance: "recovered", savedTripId: "already-saved")
+        let recovered = TripGenerationState(
+            instance: "recovered", input: ApiTripReviewInput(input: try generationInput()), savedTripId: "already-saved"
+        )
         let skipped = try await service.save(recovered)
         #expect(skipped.outcome == .saved(tripId: "already-saved"))
         #expect(await source.count("save") == 1)
@@ -88,10 +91,12 @@ import TripWizard
         await source.configure(saveFailure: failure)
         let probe = EffectProbe()
         let service = TripGenerationService(source: source, effects: await probe.effects())
-        let initial = TripGenerationState(instance: "one", review: try generationReview())
+        let initial = TripGenerationState(
+            instance: "one", input: ApiTripReviewInput(input: try generationInput()), review: try generationReview())
         let result = try await service.save(initial)
         if failure == .reviewExpired || failure == .notEnoughCredits {
             #expect(result.state.identity == nil)
+            #expect(result.state.input.identity == nil)
             #expect(result.outcome == .reReviewNeeded(failure == .reviewExpired ? .reviewExpired : .notEnoughCredits))
         } else {
             #expect(result.state.identity == initial.identity && result.outcome == .failed(failure))
@@ -109,7 +114,8 @@ import TripWizard
         await source.configure(beforeSave: { await gate.wait() })
         let probe = EffectProbe()
         let service = TripGenerationService(source: source, effects: await probe.effects())
-        let state = TripGenerationState(instance: "one", review: try generationReview())
+        let state = TripGenerationState(
+            instance: "one", input: ApiTripReviewInput(input: try generationInput()), review: try generationReview())
         async let first = service.save(state)
         await source.waitForSaves(1)
         async let second = service.save(state)
@@ -120,7 +126,10 @@ import TripWizard
         let edit = TripEditContext(tripID: "trip", sourceRevision: "revision")
         _ = try await service.review(instance: "edit", input: ApiTripReviewInput(input: generationInput()), edit: edit)
         #expect(await source.lastEdit == edit)
-        _ = try await service.save(TripGenerationState(instance: "edit", review: generationReview()), edit: edit)
+        _ = try await service.save(
+            TripGenerationState(
+                instance: "edit", input: ApiTripReviewInput(input: generationInput()), review: generationReview(),
+                edit: edit))
         #expect(await source.count("update") == 1)
     }
 
@@ -247,7 +256,7 @@ import TripWizard
         let service = TripGenerationService(source: source, effects: effects)
         var input = ApiTripReviewInput(
             input: try generationInput(), profile: JSONObject(["age_band": .null, "shift_work": .null]))
-        let first = try await service.review(instance: "one", input: input)
+        let first = try await service.review(instance: "one", input: input).review
         #expect(first.status == .needsAnswers)
         let age = try #require(first.prompts.first { $0.kind == .ageBand })
         let screening = try #require(first.prompts.first { $0.fields == ["shift_work"] })
@@ -261,9 +270,10 @@ import TripWizard
         #expect(await sync.syncs == 2)
         input = answered.input
         input.profile = JSONObject(["habitual_bed": .string("22:00")])
-        let review = try await service.review(instance: "one", input: input)
-        #expect(review.canSave)
-        let result = try await service.save(TripGenerationState(instance: "one", review: review))
+        let reviewed = try await service.review(instance: "one", input: input)
+        #expect(reviewed.review.canSave)
+        let result = try await service.save(
+            TripGenerationState(instance: "one", input: reviewed.input, review: reviewed.review, edit: reviewed.edit))
         let tripID = try #require(result.state.savedTripId)
         let repository = TripRepository(database: database)
         let trip = try #require(try await repository.trips().first { $0.id == tripID })

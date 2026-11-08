@@ -9,6 +9,10 @@ actor GenerationSource: DataSource {
     var counts: [String: Int] = [:]
     var reviewFailure: DataFailure?
     var reviewInputs: [ApiTripReviewInput] = []
+    var reviewResults: [Result<ApiTripReview, DataFailure>] = []
+    var snapshots: [ApiTripInputSnapshot] = []
+    var editRequests: [TripEditContext] = []
+    var operations: [String] = []
     var saveFailure: DataFailure?
     var lastEdit: TripEditContext?
     var beforeReview: @Sendable () async throws -> Void = {}
@@ -29,7 +33,10 @@ actor GenerationSource: DataSource {
         self.beforeSave = beforeSave
     }
     func count(_ method: String) -> Int { counts[method, default: 0] }
+    func queueReviews(_ results: [Result<ApiTripReview, DataFailure>]) { reviewResults = results }
+    func queueSnapshots(_ values: [ApiTripInputSnapshot]) { snapshots = values }
     func record(_ method: String) {
+        operations.append(method)
         counts[method, default: 0] += 1
         let ready = waiters.filter { $0.0 == method && $0.1 <= counts[method, default: 0] }
         waiters.removeAll { $0.0 == method && $0.1 <= counts[method, default: 0] }
@@ -45,13 +52,18 @@ actor GenerationSource: DataSource {
         reviewInputs.append(input)
         record("review")
         try await beforeReview()
+        if !reviewResults.isEmpty { return try reviewResults.removeFirst().get() }
         if let reviewFailure { throw reviewFailure }
         if let mock { return try await mock.reviewTrip(input) }
         return reviewValue
     }
     func reviewTripEdit(_ input: ApiTripReviewInput, id: String, sourceRevision: String) async throws -> ApiTripReview {
-        lastEdit = TripEditContext(tripID: id, sourceRevision: sourceRevision)
-        return try await reviewTrip(input)
+        let edit = TripEditContext(tripID: id, sourceRevision: sourceRevision)
+        lastEdit = edit
+        editRequests.append(edit)
+        var review = try await reviewTrip(input)
+        if review.identity.sourceRevision == nil { review.identity.sourceRevision = sourceRevision }
+        return review
     }
     func saveTrip(identity: ApiTripSaveInput) async throws -> ApiTripSaveResult {
         record("save")
@@ -76,7 +88,11 @@ actor GenerationSource: DataSource {
     func searchAirports(query: String, limit: Int?) throws -> [ApiAirportSuggestion] {
         throw DataFailure.server(status: nil)
     }
-    func tripInput(id: String) throws -> ApiTripInputSnapshot { throw DataFailure.server(status: nil) }
+    func tripInput(id: String) throws -> ApiTripInputSnapshot {
+        record("input")
+        if !snapshots.isEmpty { return snapshots.removeFirst() }
+        return ApiTripInputSnapshot(input: try generationInput(), sourceRevision: "revision", airports: [:])
+    }
     func passkeyOptions() throws -> ApiPasskeyChallenge { throw DataFailure.server(status: nil) }
     func passkeyLogin(_ input: ApiPasskeyLoginInput) throws -> SessionResult { throw DataFailure.server(status: nil) }
     func signIn(_ input: PasswordSignInInput) throws -> SignInResult { throw DataFailure.server(status: nil) }

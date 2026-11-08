@@ -29,12 +29,20 @@ public struct TripEditContext: Sendable, Equatable, Hashable {
 
 public struct TripGenerationState: Sendable, Equatable {
     public let instance: String
+    public var input: ApiTripReviewInput
+    public var edit: TripEditContext?
     public var review: ApiTripReview?
     public var savedTripId: String?
     public var identity: ApiReviewIdentity? { review?.identity }
 
-    public init(instance: String, review: ApiTripReview? = nil, savedTripId: String? = nil) {
+    public init(
+        instance: String, input: ApiTripReviewInput, review: ApiTripReview? = nil,
+        edit: TripEditContext? = nil, savedTripId: String? = nil
+    ) {
         self.instance = instance
+        self.input = input
+        if let review { self.input.identity = review.identity }
+        self.edit = edit
         self.review = review
         self.savedTripId = savedTripId
     }
@@ -67,7 +75,7 @@ public actor TripGenerationService {
     private let source: any DataSource
     private let effects: TripGenerationEffects
     private let sleep: APIClient.Sleep
-    private var reviews: [ReviewKey: Task<ApiTripReview, any Error>] = [:]
+    private var reviews: [ReviewKey: Task<TripGenerationReviewResult, any Error>] = [:]
     private var saves: [SaveKey: Task<String, any Error>] = [:]
     private var cancelled = false
     private var savedTrips: [SaveKey: String] = [:]
@@ -82,7 +90,7 @@ public actor TripGenerationService {
     }
 
     public func review(instance: String, input: ApiTripReviewInput, edit: TripEditContext? = nil) async throws
-        -> ApiTripReview
+        -> TripGenerationReviewResult
     {
         try Task.checkCancellation()
         guard !cancelled else { throw CancellationError() }
@@ -102,13 +110,9 @@ public actor TripGenerationService {
         let effects = effects
         let sleep = sleep
         let task = Task {
-            let review = try await withThrowingTaskGroup(of: ApiTripReview.self) { group in
+            let result = try await withThrowingTaskGroup(of: TripGenerationReviewResult.self) { group in
                 group.addTask {
-                    if let edit {
-                        return try await source.reviewTripEdit(
-                            input, id: edit.tripID, sourceRevision: edit.sourceRevision)
-                    }
-                    return try await source.reviewTrip(input)
+                    try await Self.performReview(source: source, input: input, edit: edit)
                 }
                 group.addTask {
                     try await sleep(30)
@@ -119,14 +123,14 @@ public actor TripGenerationService {
                 return try await group.next()!
             }
             try Task.checkCancellation()
-            if let profile = input.profile, !profile.fields.isEmpty {
+            if let profile = result.input.profile, !profile.fields.isEmpty {
                 do { try await effects.mergeProfile(profile) } catch {
                     await effects.requestSync()
                     throw error
                 }
                 await effects.requestSync()
             }
-            return review
+            return result
         }
         reviews[key] = task
         defer { reviews[key] = nil }
@@ -135,12 +139,13 @@ public actor TripGenerationService {
         return result
     }
 
-    public func save(_ initial: TripGenerationState, edit: TripEditContext? = nil) async throws
+    public func save(_ initial: TripGenerationState) async throws
         -> TripGenerationSaveResult
     {
         try Task.checkCancellation()
         guard !cancelled else { throw CancellationError() }
         var state = initial
+        let edit = state.edit
         do {
             let tripID: String
             if let saved = state.savedTripId {
@@ -187,6 +192,7 @@ public actor TripGenerationService {
             switch failure {
             case .reviewExpired, .notEnoughCredits:
                 state.review = nil
+                state.input.identity = nil
                 return TripGenerationSaveResult(
                     state: state,
                     outcome: .reReviewNeeded(failure == .reviewExpired ? .reviewExpired : .notEnoughCredits))

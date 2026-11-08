@@ -1,11 +1,6 @@
 import AppCore
 import Foundation
 
-public struct TripGenerationReviewResult: Sendable, Equatable {
-    public let input: ApiTripReviewInput
-    public let review: ApiTripReview
-}
-
 extension TripGenerationService {
     public func answerPrompts(
         instance: String, input: ApiTripReviewInput, review: ApiTripReview, answers: [String: [String: JSONValue]],
@@ -41,9 +36,7 @@ extension TripGenerationService {
         }
         input.input = try JSONDecoder().decode(ApiTripInput.self, from: JSONEncoder().encode(object))
         input.identity = review.identity
-        let reviewed = try await self.review(instance: instance, input: input, edit: edit)
-        input.identity = reviewed.identity
-        return TripGenerationReviewResult(input: input, review: reviewed)
+        return try await self.review(instance: instance, input: input, edit: edit)
     }
 
     private static func set(_ value: JSONValue, path: ArraySlice<String>, in root: inout JSONValue) throws {
