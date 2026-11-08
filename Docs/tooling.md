@@ -2479,3 +2479,23 @@ not record. Each command replaces `build/test-results/17e/Debug-compare.{log,xcr
 preserve earlier results before continuing when investigating a failure. The shared font change
 may expose reference differences: inspect them before any intentional re-recording. The user's
 previous passes are evidence for round 2, not a new runtime pass for this round.
+
+### Phase 11a fix round 4a — native input height
+
+AuthField now pins the input height before padding to the capped UIKit font line height, rounded up
+to the current display pixel. The field subtree receives the same clamped Dynamic Type environment.
+The SE layout test explicitly retains the xxLarge input rectangle `(48, 473.5, 279, 25)` and reports
+the requested category, native category and resolved font on geometry/font failures.
+Existing Forgot, Sign in and Two-factor PNGs are unchanged.
+
+Host verification: `make quick` reaches only the known sandbox-denied loopback listener in
+`APICookieTests.realRedirectCookieHandlingIsDisabled` (`Operation not permitted`).
+`make -k quick` completes the remaining host checks; logs are
+`build/phase-11a-round4-quick{,-all}.log`. Direct iOS 17 host compilation/type-checking of DesignSystem,
+Auth, all hosted AppTests and AppUITests passes (`build/phase-11a-round4-typecheck.log`), without
+simulator execution. Runtime geometry, pixel equality and unchanged default-size references remain
+the user's checks. Build the changed sources and compare without recording:
+
+```sh
+make targeted DEVICES="17e" ONLY="AppTests/ForgotPasswordLayoutTests AppTests/ForgotPasswordSnapshotTests AppTests/ForgotPasswordControlTests AppTests/AuthSnapshotTests AppTests/TwoFactorSnapshotTests"
+```

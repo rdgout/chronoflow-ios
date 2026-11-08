@@ -309,3 +309,16 @@ Host verification: `make quick` is blocked only by the existing cookie redirect 
 loopback listener (`Operation not permitted`). `make -k quick` confirms all other checks pass (333/334 package tests, 10 TokenGen, 4 AssetGen and
 88 signing/resource/runner fixtures); details and
 rerun commands are in Docs/tooling.md. No simulator tests are run here.
+
+## Phase 11a fix round 4a — native input height
+
+The user's round-3 AuthSubtitleContrastTests and ForgotPasswordControlTests pass. The SE native
+email frame/text rect still differs by one pixel at AX5 (24.5 pt tall at y 474) versus xxLarge
+(25 pt tall at y 473.5), despite identical capped font metrics. The fixed-size SwiftUI font alone
+does not stabilize UIKit's intrinsic input height.
+
+AuthField now gives the native field an explicit height of `ceil(font.lineHeight * displayScale) /
+displayScale` before padding, using the capped UIKit font and the same clamped SwiftUI environment
+inside the field. The SE regression pins the existing xxLarge rectangle and includes native category
+and resolved-font diagnostics. References are untouched; default-size Sign in/Two-factor comparison
+and Forgot AX5 equality still require the user's 17e rerun. Host verification is in Docs/tooling.md.

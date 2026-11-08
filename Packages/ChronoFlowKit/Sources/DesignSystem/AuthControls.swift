@@ -104,6 +104,7 @@ import SwiftUI
     public struct AuthField: View {
         @Environment(\.isEnabled) private var isEnabled
         @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+        @Environment(\.displayScale) private var displayScale
         let title: String
         @Binding var text: String
         let secure: Bool
@@ -140,8 +141,9 @@ import SwiftUI
             self.measure = measure
         }
         public var body: some View {
+            let cappedSize = ContentSizeCap.clamp(dynamicTypeSize)
             let font = Typography.authBody.uiFont(
-                compatibleWith: UITraitCollection(preferredContentSizeCategory: UIContentSizeCategory(dynamicTypeSize)))
+                compatibleWith: UITraitCollection(preferredContentSizeCategory: UIContentSizeCategory(cappedSize)))
             VStack(alignment: .leading, spacing: AuthTokens.fieldGap) {
                 WelcomeText(title, style: Typography.authLabel, color: .cardForeground).accessibilityHidden(true)
                 Group {
@@ -155,7 +157,7 @@ import SwiftUI
                         .accessibilityValue(Text(verbatim: text))
                     }
                 }
-                // SwiftUI's scalable custom font can re-read the uncapped system preference for native text layout.
+                // Native intrinsic height can still read the uncapped system category with a fixed-size font.
                 .font(.custom(Typography.authBody.face.rawValue, fixedSize: font.pointSize))
                 .foregroundStyle(ColorToken.cardForeground.color)
                 .textContentType(contentType)
@@ -166,6 +168,8 @@ import SwiftUI
                 .submitLabel(submitLabel)
                 .onSubmit(submit)
                 .focused(focus, equals: identifier)
+                .frame(height: ceil(font.lineHeight * displayScale) / displayScale)
+                .environment(\.dynamicTypeSize, cappedSize)
                 .padding(.horizontal, AuthTokens.inset)
                 .padding(.vertical, AuthTokens.fieldGap)
                 .frame(minHeight: AuthTokens.touch)

@@ -22,33 +22,43 @@ nonisolated final class ForgotPasswordLayoutTests: XCTestCase {
                         frames[$0] = $1
                     }, category: category)
                 try await host.settle()
+                let field = forgotFrameTextFields(host.window).first
+                let native =
+                    field.map {
+                        "nativeCategory=\($0.traitCollection.preferredContentSizeCategory.rawValue), resolvedFont=\(String(describing: $0.font))"
+                    } ?? "no native field"
+                let context = "requested=\(category.rawValue), sent=\(sent), \(native)"
                 if category == .extraExtraLarge {
                     expectedFrames = frames
                 } else {
-                    XCTAssertEqual(Set(frames.keys), Set(expectedFrames.keys), "sent=\(sent)")
+                    XCTAssertEqual(Set(frames.keys), Set(expectedFrames.keys), context)
                     for element in expectedFrames.keys.sorted(by: { $0.rawValue < $1.rawValue }) {
                         XCTAssertEqual(
-                            frames[element], expectedFrames[element], "AX5 grows/moves \(element), sent=\(sent)")
+                            frames[element], expectedFrames[element], "AX5 grows/moves \(element): \(context)")
                     }
                 }
                 if !sent {
-                    let field = try XCTUnwrap(forgotFrameTextFields(host.window).first)
+                    let field = try XCTUnwrap(field, context)
                     let input = field.convert(field.bounds, to: host.window)
                     let text = field.convert(field.textRect(forBounds: field.bounds), to: host.window)
-                    let font = try XCTUnwrap(field.font).pointSize
-                    XCTAssertEqual(field.traitCollection.preferredContentSizeCategory, .extraExtraLarge)
+                    let font = try XCTUnwrap(field.font, context).pointSize
+                    XCTAssertEqual(field.traitCollection.preferredContentSizeCategory, .extraExtraLarge, context)
                     let expected = Typography.authBody.uiFont(compatibleWith: field.traitCollection)
-                    XCTAssertEqual(field.font?.fontName, expected.fontName)
-                    XCTAssertEqual(font, expected.pointSize, "Native email must use its capped trait metrics")
-                    XCTAssertEqual(field.font?.lineHeight, expected.lineHeight)
+                    XCTAssertEqual(field.font?.fontName, expected.fontName, context)
+                    XCTAssertEqual(
+                        font, expected.pointSize, "Native email must use its capped trait metrics: \(context)")
+                    XCTAssertEqual(field.font?.lineHeight, expected.lineHeight, context)
+                    XCTAssertEqual(
+                        input, CGRect(x: 48, y: 473.5, width: 279, height: 25),
+                        "Preserve the recorded SE xxLarge native email geometry: \(context)")
                     if category == .extraExtraLarge {
                         expectedInput = input
                         expectedText = text
                         expectedFont = font
                     } else {
-                        XCTAssertEqual(input, expectedInput, "AX5 moves native email input")
-                        XCTAssertEqual(text, expectedText, "AX5 moves native email text rect")
-                        XCTAssertEqual(font, expectedFont, "AX5 grows native email font")
+                        XCTAssertEqual(input, expectedInput, "AX5 moves native email input: \(context)")
+                        XCTAssertEqual(text, expectedText, "AX5 moves native email text rect: \(context)")
+                        XCTAssertEqual(font, expectedFont, "AX5 grows native email font: \(context)")
                     }
                 }
             }
