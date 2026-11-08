@@ -227,7 +227,9 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
                            'UIWaitTests',
                            'AuthScrollGestureTests',
                            'AuthAuditPolicyTests')},
- 'TripWizardTests': {'host': ('TripGenerationTests', 'TripGenerationRecoveryTests')},
+ 'TripWizardTests': {'host': ('TripGenerationTests', 'TripGenerationRecoveryTests',
+                            'WizardDateTimeTests', 'WizardValidationTests', 'WizardFormTests',
+                            'WizardRecoveryTests', 'WizardSearchTests', 'WizardPresentationTests')},
  'WelcomeTests': {'logic': ('SmokeTests', 'WelcomeGeometryTests')}}
 SNAPSHOTS = ("AppTests/LaunchSnapshotTests", "AppTests/WelcomeSnapshotTests", "AppTests/WelcomeSnapshotGuardTests", "RenderTests/WelcomeRenderingTests", "AppTests/AuthSnapshotTests", "AppTests/TwoFactorSnapshotTests", "AppTests/ForgotPasswordSnapshotTests", "AppTests/ResetPasswordSnapshotTests", "AppTests/SignUpSnapshotTests", "AppTests/VerifyEmailSnapshotTests", "AppTests/AuthSnapshotGuardTests", "AppTests/StepSheetSnapshotTests", "AppTests/TodaySnapshotTests", "AppTests/TodayRowSnapshotTests", "AppTests/TripsSnapshotTests", "AppTests/TripPageSnapshotTests")
 XCODEBUILD_COMMON = ["xcodebuild", "-project", "ChronoFlow.xcodeproj", "-derivedDataPath", "build/DerivedData",

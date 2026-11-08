@@ -66,7 +66,9 @@ let package = Package(
         .testTarget(
             name: "LocalStoreTests", dependencies: ["LocalStore"], resources: [.copy("Fixtures")],
             swiftSettings: [.defaultIsolation(nil)]),
-        .target(name: "TripWizard", dependencies: ["AppCore", "DataAccess"], swiftSettings: [.defaultIsolation(nil)]),
+        .target(
+            name: "TripWizard", dependencies: ["AppCore", "DataAccess", "LocalStore"],
+            swiftSettings: [.defaultIsolation(nil)]),
         .testTarget(
             name: "TripWizardTests", dependencies: ["TripWizard", "Sync", "DataAccess", "LocalStore"],
             resources: [.copy("Fixtures")],
