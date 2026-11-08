@@ -8,6 +8,7 @@ public struct OutboxFlushResult: Sendable, Equatable {
     public var serverRetryAfter: TimeInterval?
     public var parked: Int = 0
     public var offline = false
+    public var deferredWalkthroughAuthorization = false
     public init() {}
 }
 
@@ -81,7 +82,7 @@ public struct OutboxFlusher: Sendable {
             } catch is CancellationError { throw CancellationError() } catch {
                 try epoch.check()
                 let failure = error as? DataFailure ?? .server(status: nil)
-                if case .unauthorized = failure { throw failure }
+                if case .unauthorized = failure, row.kind != "walkthrough" { throw failure }
                 if case .emailUnverified = failure { throw failure }
                 if case .unsupported = failure {
                     result.parked += 1
@@ -89,7 +90,9 @@ public struct OutboxFlusher: Sendable {
                     continue
                 }
                 let sent = row
-                if OutboxFailurePolicy.isFinal(failure) && !(row.kind == "check-off" && Self.isStale(failure)) {
+                if OutboxFailurePolicy.isFinal(failure) && row.kind != "walkthrough"
+                    && !(row.kind == "check-off" && Self.isStale(failure))
+                {
                     let refusal = SyncRefusal(
                         id: row.id, kind: row.kind, status: failure.status,
                         failedAt: now().ISO8601Format(), lastError: OutboxFailurePolicy.sanitized(failure))
@@ -116,6 +119,11 @@ public struct OutboxFlusher: Sendable {
                         result.retryAfter ?? 0,
                         OutboxFailurePolicy.retryDelay(attempts: max(0, attempts - 1), retryAfter: retryAfter))
                     blocked.insert(row.dependency)
+                    if case .unauthorized = failure {
+                        // This optional POST must not revoke the session or lose its durable completion.
+                        result.deferredWalkthroughAuthorization = true
+                        return result
+                    }
                     if case .offline = failure {
                         result.offline = true
                         return result

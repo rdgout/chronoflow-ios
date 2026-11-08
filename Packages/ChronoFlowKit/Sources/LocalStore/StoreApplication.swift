@@ -17,7 +17,7 @@ public enum StoreApplication {
             record.email = value.email
         }
         record.hasVerifiedEmail = value.hasVerifiedEmail
-        if !rows.contains(where: { $0.kind == "walkthrough" }) { record.walkthroughSeen = value.walkthroughSeen }
+        record.walkthroughSeen = value.walkthroughSeen || rows.contains(where: { $0.kind == "walkthrough" })
         try record.save(db)
         try setting("policies", value: .encoding(value.policies), db: db)
     }

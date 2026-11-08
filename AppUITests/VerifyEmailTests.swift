@@ -12,12 +12,12 @@ nonisolated final class VerifyEmailTests: XCTestCase {
         AuthUIFlow.reveal(mail, in: app)
         mail.tap()
         XCTAssertTrue(
-            app.staticTexts["route.walkthrough"].waitForExistence(timeout: 8),
+            app.staticTexts["walkthrough.title"].waitForExistence(timeout: 8),
             "Expected Walkthrough after mock-mail verification; registration already accepted the current terms")
         app.terminate()
         app.launch()
         XCTAssertTrue(
-            app.staticTexts["route.walkthrough"].waitForExistence(timeout: 12),
+            app.staticTexts["walkthrough.title"].waitForExistence(timeout: 12),
             "Expected persisted verified session to restore Walkthrough after relaunch")
     }
 }

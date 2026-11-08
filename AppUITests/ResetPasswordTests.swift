@@ -14,7 +14,7 @@ nonisolated final class ResetPasswordTests: XCTestCase {
         app.textFields["sign-in.email"].tap()
         app.textFields["sign-in.email"].typeText(MockScenarioValues.demoEmail + "\n")
         app.secureTextFields["sign-in.password"].typeText("NewPassword123!\n")
-        XCTAssertTrue(app.staticTexts["route.walkthrough"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.staticTexts["walkthrough.title"].waitForExistence(timeout: 8))
     }
 }
 

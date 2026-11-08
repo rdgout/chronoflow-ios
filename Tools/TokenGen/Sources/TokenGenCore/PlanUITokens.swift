@@ -22,7 +22,7 @@ func planUITokens(root: URL) throws -> Data {
             with: Data(contentsOf: root.appending(path: "Tools/TokenGen/PlanUI.source.json"))) as! [String: Any]
     for key in patterns.keys.sorted() where key != "source" {
         code +=
-            "public static var \(key): \(["Opacity", "Ratio", "Saturation"].contains(where: key.hasSuffix) ? "Double" : "CGFloat") { \(patterns[key]!) }\n"
+            "public static var \(key): \(["Opacity", "Ratio", "Saturation", "Duration"].contains(where: key.hasSuffix) ? "Double" : "CGFloat") { \(patterns[key]!) }\n"
     }
     code += "}\nextension Typography {\n"
     for group in (json["type"] as! [String: Any])["groups"] as! [[String: Any]] {
@@ -40,6 +40,13 @@ func planUITokens(root: URL) throws -> Data {
                 "public static var \(camelCase("screen-" + (style["name"] as! String))): Style { Style(face: .\(face), size: \(size), lineHeight: \(line), tracking: \(tracking), relativeTo: .body) }\n"
         }
     }
-    code += "}\n"
+    code += """
+        public static var walkthroughBody: Style {
+            Style(face: .figtree500, size: screenBodyLg.size, lineHeight: screenBodyLg.lineHeight,
+                  tracking: screenBodyLg.tracking, relativeTo: screenBodyLg.relativeTo)
+        }
+        }
+
+        """
     return try formattedSwift(code, root: root)
 }

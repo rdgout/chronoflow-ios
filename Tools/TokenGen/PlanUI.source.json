@@ -1,5 +1,5 @@
 {
-  "source": "ChronoFlow ItemDetail, SheetStates, PlanLegend, Today and Trips boards; ds components; chronoflow-mobile e24872a PlanAppearance/TodayPanel (read-only blueprints)",
+  "source": "ChronoFlow ItemDetail, SheetStates, PlanLegend, Today, Trips and Walkthrough boards (28/10 pt gaps, 150 ms pills); Walkthrough Button lg/default exit h-10 and TimelineBlock height 64/max-sm breakpoint; ds components; chronoflow-mobile e24872a PlanAppearance/TodayPanel (read-only blueprints)",
   "patternDotOpacity": 0.16,
   "patternHatchOpacity": 0.12,
   "patternDotSpacing": 7,
@@ -22,5 +22,12 @@
   "loadingHeadingHeight": 18,
   "tripsLoadingFirstHeight": 260,
   "tripsLoadingSecondHeight": 180,
-  "futureCardSpacing": 14
+  "futureCardSpacing": 14,
+  "walkthroughContentGap": 28,
+  "walkthroughCopyGap": 10,
+  "walkthroughDotDuration": 0.15,
+  "walkthroughNextHeight": 40,
+  "walkthroughDoneHeight": 40,
+  "walkthroughBlockHeight": 64,
+  "walkthroughCompactWidth": 640
 }

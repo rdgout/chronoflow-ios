@@ -42,6 +42,13 @@ nonisolated public enum PlanUITokens {
     public static var stepGoneIconSize: CGFloat { 22 }
     public static var tripsLoadingFirstHeight: CGFloat { 260 }
     public static var tripsLoadingSecondHeight: CGFloat { 180 }
+    public static var walkthroughBlockHeight: CGFloat { 64 }
+    public static var walkthroughCompactWidth: CGFloat { 640 }
+    public static var walkthroughContentGap: CGFloat { 28 }
+    public static var walkthroughCopyGap: CGFloat { 10 }
+    public static var walkthroughDoneHeight: CGFloat { 40 }
+    public static var walkthroughDotDuration: Double { 0.15 }
+    public static var walkthroughNextHeight: CGFloat { 40 }
 }
 extension Typography {
     public static var screenHero: Style {
@@ -82,5 +89,10 @@ extension Typography {
     }
     public static var screenPriorityTag: Style {
         Style(face: .figtree500, size: 10.0, lineHeight: 14.0, tracking: 0.0, relativeTo: .body)
+    }
+    public static var walkthroughBody: Style {
+        Style(
+            face: .figtree500, size: screenBodyLg.size, lineHeight: screenBodyLg.lineHeight,
+            tracking: screenBodyLg.tracking, relativeTo: screenBodyLg.relativeTo)
     }
 }

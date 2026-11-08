@@ -10,6 +10,9 @@ public struct AccountReadinessRepository: Sendable {
         guard await database.accountID == id else { throw StoreFailure.invalidAccountID }
         return try await database.observe { db in
             guard let account = try AccountRecord.fetchOne(db, key: id.rawValue) else { return nil }
+            let walkthroughSeen =
+                try account.walkthroughSeen
+                || StoreApplication.pending(db).contains { $0.kind == "walkthrough" }
             let policies = try SettingsRecord.fetchOne(db, key: "policies")?.value.decode(AccountPolicies.self)
             let gate: Gate?
             if !account.hasVerifiedEmail {
@@ -18,14 +21,14 @@ public struct AccountReadinessRepository: Sendable {
                 gate = nil
             } else if let policies, policies.acceptedTermsVersion != policies.termsVersion {
                 gate = .terms
-            } else if !account.walkthroughSeen {
+            } else if !walkthroughSeen {
                 gate = .walkthrough
             } else {
                 gate = .app
             }
             return StoredAccountReadiness(
                 accountID: id.rawValue, gate: gate, hasStoredData: account.syncedAt != nil,
-                firstLoadGate: account.walkthroughSeen ? .app : .walkthrough)
+                firstLoadGate: walkthroughSeen ? .app : .walkthrough)
         }
     }
 }
