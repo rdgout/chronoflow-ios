@@ -1237,6 +1237,8 @@ OQ 28's Forgot translations are resolved and recorded; ship them with this phase
 
 #### Phase 11b: Reset, expired and done (`feat/phase-11b-reset`)
 
+- [x] Fix round 1: defer reset links until signed out, retain recovery through the form-to-expired transition, and keep the board's empty Back spacer on reset form/done. Add host routing/recovery coverage; UIKit lifecycle and visual acceptance remain host-only limitations.
+
 OQ 21: “Server policy”; OQ 22/27: “RN's honest copy” (user 2026-11-07). Ship the approved en/nl hint, iOS AutoFill password rules and reset/done copy above. OQ 25 approves native reset universal-link entry; implement the exact W reset URL and simulated `NSUserActivity` tests in this round. Device associated-domain entitlement is required; physical email opening awaits server AASA and confirmed team ID (OQ 4), not a custom scheme.
 
 - [x] Add typed Reset input routing plus native universal-link/`NSUserActivity` entry, device associated-domain entitlement (simulator as allowed), and Reset/resetExpired/resetDone state machine. Missing/invalid/expired/reused token selects designed expired view; confirmation and password use server field messages; clear both after every attempt. Successful 204 goes to the approved done copy/action and never fabricates a session. Send a new link wires 11a; Continue returns to Sign in under settled OQ 27; other devices are signed out because the backend revokes all tokens.

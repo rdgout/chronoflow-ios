@@ -6,6 +6,7 @@ import UIKit
 
 @MainActor
 final class AuthSessionServices {
+    let resetLinks: GuestResetLinkRouter
     let nativeSession: NativeSessionController
     let model: SignInModel
     #if DEBUG
@@ -66,6 +67,10 @@ final class AuthSessionServices {
             deviceName: DeviceIdentityStore.deviceName(UIDevice.current.name, model: UIDevice.current.model),
             assertionProvider: assertion,
             route: { _ in await native.routeAcceptedSession(navigator: navigator, verification: verification) })
+        resetLinks = GuestResetLinkRouter(session: native.controller) { [model, navigator] input in
+            navigator.navigate(to: .signIn)
+            model.openReset(input)
+        }
         if let mock = source as? MockDataSource {
             model.mockMail = {
                 guard let event = try? await mock.inbox().last else { return nil }

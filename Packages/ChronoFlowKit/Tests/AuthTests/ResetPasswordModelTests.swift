@@ -63,8 +63,9 @@ import Testing
         model.editConfirmation("NewPassword123!")
         await model.submit()
         #expect(model.state == .expired && model.recovery.email == "demo@example.com")
+        model.recovery.editEmail("replacement@example.com")
         await model.recovery.submit()
-        #expect(model.recovery.sentEmail == "demo@example.com")
+        #expect(model.recovery.sentEmail == "replacement@example.com")
     }
     @Test func cancelAndDuplicateSubmissionIgnoreLateCompletion() async {
         let gate = ForgotRequestGate()

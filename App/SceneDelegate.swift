@@ -396,8 +396,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         pendingAuthLink = nil
         switch link {
         case .reset(let input):
-            navigator.navigate(to: .signIn)
-            auth.model.openReset(input)
+            Task { await auth.resetLinks.receive(input) }
         }
     }
 

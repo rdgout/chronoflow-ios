@@ -19,10 +19,12 @@
         let card: Card
         let footer: Footer
         let measure: (AuthElement, CGRect) -> Void
+        let showsBack: Bool
         public init(
             scrollIdentifier: String, title: String, description: String, headingGlyph: AuthGlyph? = nil,
             back: @escaping () -> Void,
             measure: @escaping (AuthElement, CGRect) -> Void = { _, _ in },
+            showsBack: Bool = true,
             @ViewBuilder card: () -> Card, @ViewBuilder footer: () -> Footer
         ) {
             self.scrollIdentifier = scrollIdentifier
@@ -33,12 +35,13 @@
             self.measure = measure
             self.card = card()
             self.footer = footer()
+            self.showsBack = showsBack
         }
         public var body: some View {
             GeometryReader { viewport in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
-                        AuthBrand(back: back).authMeasure(.brand, measure)
+                        AuthBrand(back: showsBack ? back : nil).authMeasure(.brand, measure)
                         VStack(alignment: .leading, spacing: AuthTokens.fieldGap) {
                             if let headingGlyph {
                                 headingGlyph.image.resizable().frame(

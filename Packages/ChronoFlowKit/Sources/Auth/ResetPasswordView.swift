@@ -16,7 +16,7 @@
         }
         private func copy(_ key: String) -> String { AuthCopy.string(key, locale: locale) }
         public var body: some View {
-            Group {
+            ZStack {
                 if model.state == .expired {
                     ResetLinkExpiredView(model: model.recovery, measure: measure)
                 } else {
@@ -27,7 +27,7 @@
                             model.state == .done
                                 ? "Password updated. Sign in with your new password."
                                 : "Sign in with your new password once it's saved."),
-                        headingGlyph: model.state == .done ? .check : nil, back: back, measure: report
+                        headingGlyph: model.state == .done ? .check : nil, back: back, measure: report, showsBack: false
                     ) {
                         if model.state == .done {
                             WelcomeText(

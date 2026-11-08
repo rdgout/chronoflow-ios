@@ -4,17 +4,24 @@
 
     public struct AuthBrand: View {
         @Environment(\.locale) private var locale
-        let back: () -> Void
-        public init(back: @escaping () -> Void) { self.back = back }
+        let back: (() -> Void)?
+        public init(back: (() -> Void)? = nil) { self.back = back }
         public var body: some View {
             HStack(spacing: 0) {
-                Button(action: back) {
-                    AuthGlyph.back.image.resizable().frame(width: AuthTokens.backGlyph, height: AuthTokens.backGlyph)
+                if let back {
+                    Button(action: back) {
+                        AuthGlyph.back.image.resizable().frame(
+                            width: AuthTokens.backGlyph, height: AuthTokens.backGlyph
+                        )
                         .frame(width: AuthTokens.touch, height: AuthTokens.touch).contentShape(Circle())
+                    }
+                    .foregroundStyle(ColorToken.skyTitle.color).buttonStyle(.plain)
+                    .accessibilityLabel(Text(verbatim: AuthCopy.string("Back", locale: locale)))
+                    .accessibilityIdentifier(
+                        "auth.back")
+                } else {
+                    Color.clear.frame(width: AuthTokens.touch, height: AuthTokens.touch).accessibilityHidden(true)
                 }
-                .foregroundStyle(ColorToken.skyTitle.color).buttonStyle(.plain)
-                .accessibilityLabel(Text(verbatim: AuthCopy.string("Back", locale: locale))).accessibilityIdentifier(
-                    "auth.back")
                 Spacer(minLength: 0)
                 HStack(spacing: AuthTokens.brandGap) {
                     MoonShape().stroke(
