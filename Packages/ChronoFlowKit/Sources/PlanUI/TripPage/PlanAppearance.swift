@@ -3,7 +3,7 @@ import DesignSystem
 import PlanCore
 import SwiftUI
 
-struct PlanCategoryStyle {
+nonisolated struct PlanCategoryStyle {
     var fill: ColorToken
     var foreground: ColorToken
     var icon: String

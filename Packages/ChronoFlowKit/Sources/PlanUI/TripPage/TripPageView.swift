@@ -13,6 +13,7 @@ public struct TripPageView: View {
     @State private var frames: [String: CGRect] = [:]
     @State private var viewport = CGSize.zero
     @State private var showLegend = false
+    @State private var renderer = TimelineRenderer()
     public var onBlock: (String) -> Void = { _ in }
     public var onActions: (() -> Void)?
     public var onSettings: (() -> Void)?
@@ -72,7 +73,20 @@ public struct TripPageView: View {
                             ForEach(prepared.days) { day in
                                 VStack(spacing: 0) {
                                     DayHeader(day: day, copy: copy)
-                                    DayListView(day: day, onBlock: onBlock)
+                                    if model.timeline, let layout = model.plan.layouts[day.id] {
+                                        LaneHeadings(copy: copy)
+                                        DayTimelineView(
+                                            day: day, layout: layout, now: model.plan.now,
+                                            nowText: formatter?.nowLabel(
+                                                layout, now: model.plan.now,
+                                                options: CopyFormat(
+                                                    language: model.plan.language, timeFormat: model.plan.timeFormat))
+                                                ?? "",
+                                            copy: copy, renderer: renderer, onBlock: onBlock,
+                                            onFrame: onFirstTimelineFrame)
+                                    } else {
+                                        DayListView(day: day, onBlock: onBlock)
+                                    }
                                 }.id(day.id)
                                     .background(
                                         GeometryReader { geo in
@@ -94,7 +108,13 @@ public struct TripPageView: View {
                         }
                     }.padding(.horizontal, PlanMetrics.gutter).padding(.bottom, PlanMetrics.gutter)
                 }.coordinateSpace(name: "trip.scroll").accessibilityIdentifier("trip.scroll")
-                    .onAppear { viewport = geometry.size }
+                    .onAppear {
+                        viewport = geometry.size
+                        if model.plan.prepared != nil {
+                            model.acceptPreparedPlan()
+                            if let id = model.anchor.dayID { proxy.scrollTo(id, anchor: .top) }
+                        }
+                    }
                     .onChange(of: geometry.size) { _, size in viewport = size }
                     .onPreferenceChange(DayFrames.self) { value in
                         frames = value
@@ -147,6 +167,15 @@ public struct TripPageView: View {
                     }.accessibilityLabel(copy("Go to day")).accessibilityIdentifier("trip.dayMenu")
                 }
                 ToolbarItem(placement: .primaryAction) {
+                    Button(
+                        copy(model.timeline ? "Show as list" : "Show as timeline"),
+                        systemImage: model.timeline ? "list.bullet" : "rectangle.split.3x1"
+                    ) {
+                        model.timeline.toggle()
+                        if let id = model.anchor.dayID { proxy.scrollTo(id, anchor: .top) }
+                    }.accessibilityIdentifier("trip.viewToggle")
+                }
+                ToolbarItem(placement: .primaryAction) {
                     Button(copy("Trip actions"), systemImage: "ellipsis") { onActions?() }.disabled(onActions == nil)
                 }
             }
@@ -178,10 +207,16 @@ public struct TripPageView: View {
                 reduceMotion
                 ? (distance >= PlanMetrics.compactHeaderHeight ? 1.0 : 0)
                 : min(1, max(0, distance / PlanMetrics.compactFadeDistance))
-            HStack {
-                Text(verbatim: day.title + " · " + day.date).font(Typography.planListLine.font)
-                Spacer(minLength: PlanMetrics.smallGap)
-                Text(verbatim: day.zone).font(Typography.planSubtitle.font)
+            VStack(spacing: 0) {
+                if model.timeline {
+                    LaneHeadings(copy: copy)
+                } else {
+                    HStack {
+                        Text(verbatim: day.title + " · " + day.date).font(Typography.planListLine.font)
+                        Spacer(minLength: PlanMetrics.smallGap)
+                        Text(verbatim: day.zone).font(Typography.planSubtitle.font)
+                    }
+                }
             }.padding(.horizontal, PlanMetrics.gutter).frame(minHeight: PlanMetrics.compactHeaderHeight)
                 .background(ColorToken.card.color).opacity(opacity).accessibilityHidden(opacity < 1)
         }

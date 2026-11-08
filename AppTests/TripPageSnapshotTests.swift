@@ -46,12 +46,10 @@ import XCTest
                 try await context.wait()
                 let prepared = try XCTUnwrap(context.model.plan.prepared)
                 let last = try XCTUnwrap(prepared.days.last)
-                let view = ScrollView {
-                    VStack {
-                        DayListView(day: last)
-                        TripPageView(model: context.model)
-                    }
-                }
+                context.model.timeline = false
+                context.model.acceptPreparedPlan()
+                context.model.select(dayID: last.id)
+                let view = NavigationStack { TripPageView(model: context.model) }
                 let host = try AuthTestHost(
                     view, size: fixture.size, insets: fixture.insets, style: style, language: language,
                     category: category, scale: fixture.scale)
