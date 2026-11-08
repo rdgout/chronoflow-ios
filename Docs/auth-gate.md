@@ -322,3 +322,23 @@ displayScale` before padding, using the capped UIKit font and the same clamped S
 inside the field. The SE regression pins the existing xxLarge rectangle and includes native category
 and resolved-font diagnostics. References are untouched; default-size Sign in/Two-factor comparison
 and Forgot AX5 equality still require the user's 17e rerun. Host verification is in Docs/tooling.md.
+
+## Phase 11a fix round 4b — banner attribution in both languages
+
+The user's round-3 Dutch server audits measure **14.8840:1 light / 12.4197:1 dark** but reject the
+unattributed banner title because the old exception checks labels. The saved logs also contain the
+previously accepted unattributed ChronoFlow wordmark issue. Neither path now checks copy.
+
+The audit captures `auth.banner` and `auth.brand` frames in the current Forgot server/throttle
+context. Only `.contrast` issues with finite, nonempty frames inside the banner and either its exact
+identifier or a nil/empty identifier can qualify. The existing wordmark exception requires a nil/empty
+identifier inside the identified brand frame. Both require the same current screenshot's complete,
+finite banner-text minimum ≥ 4.5:1. Missing geometry/measurements, unrelated frames, other named
+controls/states and other audit types fail. Diagnostics include issue/banner/brand frames and measured
+line minima. This supersedes round 3's copy-based attribution rule; saved ratios never grant an exception.
+
+Policy tests cover banner/title containment, wordmark matching, missing/invalid/overlapping/outside
+frames, named-control rejection, wrong states/types and incomplete/non-finite/below-threshold minima.
+Host compilation/type-checking passes, and `make -k quick` passes all checks except the known
+APICookieTests sandbox listener EPERM. No simulator or reference recording runs here; the Dutch
+server and both-language throttle audit reruns remain open. Exact commands are in Docs/tooling.md.

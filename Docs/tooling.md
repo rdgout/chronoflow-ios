@@ -2499,3 +2499,27 @@ the user's checks. Build the changed sources and compare without recording:
 ```sh
 make targeted DEVICES="17e" ONLY="AppTests/ForgotPasswordLayoutTests AppTests/ForgotPasswordSnapshotTests AppTests/ForgotPasswordControlTests AppTests/AuthSnapshotTests AppTests/TwoFactorSnapshotTests"
 ```
+
+### Phase 11a fix round 4b — language-independent banner attribution
+
+The exception now matches the current `auth.banner` identifier/frame and unattributed descendants,
+with no copy checks. Previously accepted unattributed wordmark reports match the current `auth.brand`
+frame. Both require a complete finite banner-text minimum ≥ 4.5:1 measured in the same audit context.
+The user's round-3 Dutch server results already report **14.8840:1 light / 12.4197:1 dark**; the new
+code still measures fresh screenshots. All other named controls, unrelated frames/states and other
+audit types remain strict. Issue/banner/brand frames are included in diagnostics, and the policy test
+covers containment, missing/invalid geometry and all measurement/state/type gates.
+
+The round-4 host verification above includes the updated audit code. Strict lint and direct iOS 17
+compilation/type-checking pass; `make -k quick` reports only the known APICookieTests listener EPERM,
+with all other 333 package tests, 10 TokenGen tests, 4 AssetGen tests and 88 signing/resource/runner
+fixtures passing. No simulator, matrix, Duo runtime or recording command is run here.
+After the round-4a command builds the current sources, reuse that unchanged build:
+
+```sh
+make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppUITests/AuthAuditTests/testBannerExceptionRequiresMatchingGeometryAndPassingPixels AppUITests/AuthAuditTests/testForgotServerInLeanAuditMatrix AppUITests/AuthAuditTests/testForgotThrottleInLeanAuditMatrix"
+```
+
+Each targeted command replaces `build/test-results/17e/Debug-compare.{log,xcresult,jsonl}`; preserve
+prior results when investigating failures. Runtime equality, default-size reference preservation and
+strict audit acceptance remain unclaimed until these reruns pass.

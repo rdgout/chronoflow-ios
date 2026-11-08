@@ -125,10 +125,15 @@ nonisolated final class AuthAuditTests: XCTestCase {
         forgotBannerState: String?
     ) {
         var bannerMinimum: Double?
+        var bannerFrame: CGRect?
+        var brandFrame: CGRect?
         var bannerMeasurement = "not eligible"
         if ["server", "throttle"].contains(forgotBannerState ?? ""), app.scrollViews["forgot.scroll"].exists {
             let banner = AuthUIFlow.control("auth.banner", in: app)
             if banner.exists {
+                bannerFrame = banner.frame
+                let brand = AuthUIFlow.control("auth.brand", in: app)
+                if brand.exists { brandFrame = brand.frame }
                 (bannerMinimum, bannerMeasurement) = textContrast(
                     banner, in: app, appearance: appearance, xxLarge: xxLarge, banner: true)
                 print("Forgot banner contrast [\(language), \(appearance), \(stage)]: \(bannerMeasurement)")
@@ -152,12 +157,15 @@ nonisolated final class AuthAuditTests: XCTestCase {
                     || Self.isMeasuredSubtitleContrast(
                         identifier: issue.element?.identifier, auditType: issue.auditType, minimum: minimum)
                     || Self.isMeasuredForgotBannerContrast(
-                        identifier: issue.element?.identifier, label: issue.element?.label, auditType: issue.auditType,
+                        identifier: issue.element?.identifier, frame: issue.element?.frame, bannerFrame: bannerFrame,
+                        brandFrame: brandFrame, auditType: issue.auditType,
                         state: forgotBannerState, minimum: bannerMinimum)
                 let message = """
                     Auth accessibility [\(language), \(appearance), \(stage)] \
                     auditType=\(issue.auditType) identifier=\(issue.element?.identifier ?? "<nil>") \
                     label=\(issue.element?.label ?? "<nil>") compactDescription=\(issue.compactDescription) \
+                    frame=\(String(describing: issue.element?.frame)) bannerFrame=\(String(describing: bannerFrame)) \
+                    brandFrame=\(String(describing: brandFrame)) \
                     boardContrast=\(boardContrast) ignored=\(ignored) subtitleMinimum=\(minimum.map { "\($0):1" } ?? "unmeasurable")
                     \(measurement)
                     bannerMinimum=\(bannerMinimum.map { "\($0):1" } ?? "unmeasurable")
@@ -246,50 +254,101 @@ nonisolated final class AuthAuditTests: XCTestCase {
     }
 
     @MainActor private static func isMeasuredForgotBannerContrast(
-        identifier: String?, label: String?, auditType: XCUIAccessibilityAuditType, state: String?, minimum: Double?
+        identifier: String?, frame: CGRect?, bannerFrame: CGRect?, brandFrame: CGRect? = nil,
+        auditType: XCUIAccessibilityAuditType,
+        state: String?, minimum: Double?
     ) -> Bool {
         guard auditType == .contrast, ["server", "throttle"].contains(state ?? ""),
-            identifier == nil || identifier == "", label == nil || label == "" || label == "ChronoFlow",
+            identifier == nil || identifier == "" || identifier == "auth.banner",
+            let frame, !frame.isEmpty, !frame.isInfinite,
+            let bannerFrame, !bannerFrame.isEmpty, !bannerFrame.isInfinite,
             let minimum
         else { return false }
-        return minimum.isFinite && minimum >= 4.5
+        let unattributedBrand =
+            (identifier == nil || identifier == "") && brandFrame?.isInfinite == false
+            && brandFrame?.contains(frame) == true
+        return minimum.isFinite && minimum >= 4.5 && (bannerFrame.contains(frame) || unattributedBrand)
     }
 
-    @MainActor func testUnattributedBannerExceptionRequiresAForgotBannerAndPassingPixels() {
+    @MainActor func testBannerExceptionRequiresMatchingGeometryAndPassingPixels() {
+        let banner = CGRect(x: 30, y: 300, width: 330, height: 64)
+        let title = CGRect(x: 78, y: 312, width: 262, height: 20)
+        let brand = CGRect(x: 130, y: 63, width: 140, height: 24)
+        let wordmark = CGRect(x: 158, y: 63, width: 112, height: 24)
         for state in ["server", "throttle"] {
-            for identifier: String? in [nil, ""] {
-                for label: String? in [nil, "", "ChronoFlow"] {
+            for identifier: String? in [nil, "", "auth.banner"] {
+                for frame in [banner, title] {
                     XCTAssertTrue(
                         Self.isMeasuredForgotBannerContrast(
-                            identifier: identifier, label: label, auditType: .contrast, state: state, minimum: 4.5))
+                            identifier: identifier, frame: frame, bannerFrame: banner,
+                            auditType: .contrast, state: state, minimum: 4.5))
                 }
             }
+        }
+        for identifier: String? in [nil, ""] {
+            XCTAssertTrue(
+                Self.isMeasuredForgotBannerContrast(
+                    identifier: identifier, frame: wordmark, bannerFrame: banner, brandFrame: brand,
+                    auditType: .contrast, state: "server", minimum: 14.884))
+        }
+        for identifier: String? in [nil, "", "auth.banner", "auth.brand", "auth.back"] {
+            XCTAssertFalse(
+                Self.isMeasuredForgotBannerContrast(
+                    identifier: identifier, frame: wordmark, bannerFrame: banner,
+                    auditType: .contrast, state: "server", minimum: 12.420))
+            XCTAssertFalse(
+                Self.isMeasuredForgotBannerContrast(
+                    identifier: identifier, frame: title.offsetBy(dx: 0, dy: 100), bannerFrame: banner,
+                    brandFrame: brand,
+                    auditType: .contrast, state: "server", minimum: 12.420))
+        }
+        for identifier in ["auth.brand", "auth.banner", "auth.back"] {
+            XCTAssertFalse(
+                Self.isMeasuredForgotBannerContrast(
+                    identifier: identifier, frame: wordmark, bannerFrame: banner, brandFrame: brand,
+                    auditType: .contrast, state: "server", minimum: 12.420))
         }
         for minimum: Double? in [nil, 4.499, .nan, .infinity, -.infinity] {
             XCTAssertFalse(
                 Self.isMeasuredForgotBannerContrast(
-                    identifier: nil, label: "ChronoFlow", auditType: .contrast, state: "server", minimum: minimum))
+                    identifier: nil, frame: title, bannerFrame: banner,
+                    auditType: .contrast, state: "server", minimum: minimum))
         }
         for state: String? in [nil, "form", "sent", "field", "offline", "sign-in"] {
             XCTAssertFalse(
                 Self.isMeasuredForgotBannerContrast(
-                    identifier: nil, label: "ChronoFlow", auditType: .contrast, state: state, minimum: 10))
+                    identifier: nil, frame: title, bannerFrame: banner,
+                    auditType: .contrast, state: state, minimum: 10))
         }
-        for identifier in ["auth.banner", "auth.back", "forgot.email", "forgot.submit", "auth.subtitle"] {
+        for identifier in ["auth.banner.new", "auth.back", "forgot.email", "forgot.submit", "auth.subtitle"] {
             XCTAssertFalse(
                 Self.isMeasuredForgotBannerContrast(
-                    identifier: identifier, label: "ChronoFlow", auditType: .contrast, state: "server", minimum: 10))
+                    identifier: identifier, frame: title, bannerFrame: banner,
+                    auditType: .contrast, state: "server", minimum: 10))
         }
-        XCTAssertFalse(
-            Self.isMeasuredForgotBannerContrast(
-                identifier: nil, label: "Other text", auditType: .contrast, state: "server", minimum: 10))
+        for invalid: CGRect? in [
+            nil, .zero, .null, .infinite, CGRect(x: 30, y: 270, width: 330, height: 40),
+            CGRect(x: 40, y: 100, width: 44, height: 44),
+        ] {
+            for identifier: String? in [nil, "", "auth.banner"] {
+                XCTAssertFalse(
+                    Self.isMeasuredForgotBannerContrast(
+                        identifier: identifier, frame: invalid, bannerFrame: banner,
+                        auditType: .contrast, state: "server", minimum: 10))
+                XCTAssertFalse(
+                    Self.isMeasuredForgotBannerContrast(
+                        identifier: identifier, frame: title, bannerFrame: invalid,
+                        auditType: .contrast, state: "server", minimum: 10))
+            }
+        }
         for type: XCUIAccessibilityAuditType in [
             .textClipped, .dynamicType, .hitRegion, .trait, .all,
             [.contrast, .textClipped],
         ] {
             XCTAssertFalse(
                 Self.isMeasuredForgotBannerContrast(
-                    identifier: nil, label: "ChronoFlow", auditType: type, state: "server", minimum: 10))
+                    identifier: nil, frame: title, bannerFrame: banner,
+                    auditType: type, state: "server", minimum: 10))
         }
     }
 
