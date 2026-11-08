@@ -28,14 +28,16 @@ editors and billing remain outside this task.
 ## Verification in this workspace
 
 - `make lint`: passes.
+- `make host-tests`: the known `APICookieTests.realRedirectCookieHandlingIsDisabled`
+  loopback listener fails with sandbox `Operation not permitted`; the package suite
+  passes when rerun excluding only that test. Generator and resource/runner fixtures pass.
 - `sh Scripts/swiftpm.sh test ChronoFlowKit --skip realRedirectCookieHandlingIsDisabled`:
   all 453 Swift Testing tests and 6 XCTest cases pass, including 11 Settings tests.
   Only the known sandbox loopback-socket test is excluded (previously EPERM).
 - `make token-tests asset-tests launch-resources-check`: all 17 generator tests and
   98 resource/runner fixtures pass, including all 76 runner fixtures.
-- Direct Swift iOS 17 module compilation/type-checking passes for DataAccess, Settings, Sync,
-  the app, AppTests and AppUITests, using the installed SDK and existing dependency
-  modules. This verifies compilation, not linking or runtime behavior.
+- Direct Swift iOS 17 module compilation/type-checking passes for Settings in Debug/Release,
+  the app, AppTests and AppUITests, using the installed SDK and existing dependency modules. This verifies compilation, not linking or runtime behavior.
 - No xcodebuild or simulator command was run. No snapshot references were recorded.
 
 ## Simulator acceptance for the user
@@ -45,7 +47,7 @@ Generate the project, record only the new references, review them, then compare:
 ```sh
 make generate
 SNAPSHOT_RECORD=1 make targeted DEVICES="17e" ONLY="AppTests/SettingsSnapshotTests"
-make targeted DEVICES="17e" ONLY="AppTests/SettingsSnapshotTests AppUITests/SettingsTests AppUITests/AppTabsTests"
+make targeted DEVICES="17e" ONLY="AppTests/SettingsSnapshotTests AppUITests/SettingsTests AppUITests/AuthSessionTests AppUITests/AppTabsTests"
 ```
 
 Settings snapshots include all seven profiles inside that one simulator, both
@@ -88,12 +90,20 @@ and asserts the replacement, preventing `demo@example.comtwofactor@example.com`.
 The journey reveals the code field and stops with a useful failure if no challenge
 appears before proceeding to Today and the second account's Settings.
 
+Auth session diagnostics still enter through Settings' Account row. The shared
+reveal helper now searches for the target's containing scroll, collection or table
+view and accepts all three container types as fallbacks. This covers the native
+Settings List, which XCUI exposes as a collection view, while retaining the
+keyboard-safe viewport and gesture checks used by auth screens.
+
 The normal commit gate remains `make check` outside this sandbox. Neither `make
 matrix` nor `make duo` is required for this task.
 
 ## Patch delivery
 
-Failure follow-up based on `25f52be`: `build/commits/1.patch` stabilizes the Settings
-profile captures; `2.patch` fixes the pending seed and offline mutation scenario.
-Each patch ticks its follow-up task in `plan.md`. `messages.txt` contains the
-matching Conventional Commit subjects in order. Apply the patches in that order.
+Failure follow-up based on `9c7ed7e`: `build/commits/1.patch` removes the remaining
+navigation/presentation wrappers from profile captures; `2.patch` replaces the
+retained email for the seeded second-account login; `3.patch` reveals diagnostics
+through scroll, collection and table containers. Each patch ticks its follow-up
+task in `plan.md`. `messages.txt` contains matching Conventional Commit subjects
+without trailers. Apply the patches in that order.
