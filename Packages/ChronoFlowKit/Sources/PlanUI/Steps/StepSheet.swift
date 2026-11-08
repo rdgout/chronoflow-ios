@@ -7,6 +7,8 @@
     public struct StepSheet: View {
         @Environment(\.locale) private var locale
         @Environment(\.dismiss) private var dismiss
+        @ScaledMetric(relativeTo: .body) private var titleLineHeight =
+            Typography.screenCardTitle.lineHeight ?? Typography.screenCardTitle.size
         private enum ActionFocus: Hashable { case done, undo }
         @AccessibilityFocusState private var actionFocus: ActionFocus?
         public let detail: TripDetail?
@@ -104,10 +106,11 @@
                         HStack { badges(block, mark: mark, running: running) }
                         VStack(alignment: .leading) { badges(block, mark: mark, running: running) }
                     }
-                    Text(t(stepLabelKey(block.type) ?? "Note")).planTextStyle(
-                        Typography.screenCardTitle, context: "step.title"
-                    )
-                    .accessibilityAddTraits(.isHeader)
+                    Text(t(stepLabelKey(block.type) ?? "Note"))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, minHeight: titleLineHeight, alignment: .leading)
+                        .planTextStyle(Typography.screenCardTitle, context: "step.title")
+                        .accessibilityAddTraits(.isHeader)
                     Text(
                         running
                             ? time + " · "

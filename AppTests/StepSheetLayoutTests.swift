@@ -6,6 +6,47 @@ import UIKit
 import XCTest
 
 nonisolated final class StepSheetLayoutTests: XCTestCase {
+    @MainActor func testStepTitleKeepsItsFullColumnAndScaledBoardLineHeight() async throws {
+        try await AuthTestHost.registerFonts()
+        let formatter = try await PlanScreenFixture.formatter()
+        let detail = try PlanScreenFixture.detail()
+        let block = try XCTUnwrap(detail.plan.blocks.first { $0.type == .avoidLight })
+        let style = Typography.screenCardTitle
+        for fixture in try AuthDeviceFixture.all() {
+            for language in ["en", "nl"] {
+                for category in [UIContentSizeCategory.large, .extraExtraLarge] {
+                    let content = PlanMeasuredContent()
+                    let host = try AuthTestHost(
+                        StepSheet(
+                            detail: detail, blockID: block.id, now: PlanScreenFixture.now, formatter: formatter,
+                            change: { _ in }
+                        ).capturePlanContent(in: content),
+                        size: fixture.size, insets: fixture.insets, language: language, category: category,
+                        scale: fixture.scale)
+                    defer { host.close() }
+                    try await host.settle()
+                    let font = style.uiFont(compatibleWith: .init(preferredContentSizeCategory: category))
+                    let left = fixture.insets.left + PlanUITokens.space5 + PlanUITokens.space8 + PlanUITokens.space3
+                    let right = fixture.size.width - fixture.insets.right - PlanUITokens.space5
+                    let title = try XCTUnwrap(
+                        content.frames.filter {
+                            abs($0.minX - left) <= 1 && $0.height >= font.lineHeight - 1
+                        }.min { $0.minY < $1.minY },
+                        "Missing title: \(fixture.name) \(language) \(category.rawValue)")
+                    XCTAssertEqual(title.maxX, right, accuracy: 1)
+                    let lineHeight = try XCTUnwrap(style.lineHeight) * font.pointSize / style.size
+                    XCTAssertGreaterThanOrEqual(title.height, lineHeight - 1)
+                    let text = PlanStrings.text("Avoid bright light", language: language == "nl" ? .nl : .en)
+                    let bounds = (text as NSString).boundingRect(
+                        with: CGSize(width: right - left, height: .greatestFiniteMagnitude),
+                        options: [.usesLineFragmentOrigin, .usesFontLeading], attributes: [.font: font], context: nil)
+                    XCTAssertGreaterThanOrEqual(title.height, bounds.height - 1)
+                    try await assertPlanScrollFits(host, content: content)
+                }
+            }
+        }
+    }
+
     @MainActor func testContentCollectorMeasuresOverflowAndReconfiguration() async throws {
         let fixture = try XCTUnwrap(AuthDeviceFixture.all().first { $0.name == "duo" })
         let content = PlanMeasuredContent()
