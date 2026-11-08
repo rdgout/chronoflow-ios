@@ -38,15 +38,53 @@ import XCTest
     @Environment(\.locale) private var locale
     let model: SettingsHomeModel
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text(
-                SettingsStrings.text("Settings", language: locale.language.languageCode?.identifier == "nl" ? .nl : .en)
-            )
-            .font(Typography.screenPageTitleLg.font).foregroundStyle(ColorToken.foreground.color)
-            .padding(.horizontal, PlanUITokens.space4).padding(.top, PlanUITokens.space1)
-            .accessibilityAddTraits(.isHeader).accessibilityIdentifier("settings.title")
-            SettingsHomeContent(model: model)
-        }.background(ColorToken.background.color)
+        // Keep List's gesture lifecycle out of profile-window teardown.
+        ScrollView {
+            VStack(alignment: .leading, spacing: PlanUITokens.space6) {
+                Text(
+                    SettingsStrings.text(
+                        "Settings", language: locale.language.languageCode?.identifier == "nl" ? .nl : .en)
+                )
+                .font(Typography.screenPageTitleLg.font).foregroundStyle(ColorToken.foreground.color)
+                .padding(.bottom, -PlanUITokens.space2)
+                .accessibilityAddTraits(.isHeader).accessibilityIdentifier("settings.title")
+                if let account = model.state.account {
+                    SettingsProfileRow(account: account, initials: model.state.initials)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, PlanUITokens.space4)
+                        .settingsSnapshotCard().accessibilityIdentifier("settings.profile")
+                }
+                if let copy = model.state.syncCopy(now: model.now, syncing: model.syncing, offline: model.offline) {
+                    SettingsSyncRow(copy: copy, pending: model.state.pendingCount > 0, offline: model.offline)
+                        .padding(.horizontal, PlanUITokens.space1)
+                }
+                #if DEBUG
+                    VStack(spacing: 0) {
+                        ForEach(SettingsDestination.allCases.filter { $0 != .profile }) { destination in
+                            if destination != .account { Divider().overlay(ColorToken.border.color) }
+                            SettingsDestinationRow(
+                                destination: destination, credits: model.state.credits,
+                                missingAnswers: model.state.missingAnswers
+                            )
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, PlanUITokens.space4)
+                            .accessibilityIdentifier("settings.\(destination.rawValue)")
+                        }
+                    }.settingsSnapshotCard()
+                #endif
+                SettingsSignOutButton(model: model)
+            }.padding(.horizontal, PlanUITokens.space4).padding(.top, PlanUITokens.space1)
+                .padding(.bottom, PlanUITokens.space8)
+        }.background(ColorToken.background.color).foregroundStyle(ColorToken.cardForeground.color)
+            .tint(ColorToken.primary.color)
+    }
+}
+
+extension View {
+    fileprivate func settingsSnapshotCard() -> some View {
+        let shape = RoundedRectangle(cornerRadius: PlanUITokens.radius2Xl)
+        return background(ColorToken.card.color, in: shape)
+            .overlay(shape.strokeBorder(ColorToken.border.color, lineWidth: AuthTokens.borderWidth))
     }
 }
 
@@ -80,6 +118,23 @@ nonisolated final class SettingsSnapshotTests: XCTestCase {
                 }
             }
         }
+    }
+
+    @MainActor func testHomeCaptureUsesSharedRowsWithoutACollectionView() async throws {
+        try await AuthTestHost.registerFonts()
+        let fixture = try XCTUnwrap(AuthDeviceFixture.authSnapshotProfiles().first)
+        let model = try settingsFixture()
+        let host = try AuthTestHost(
+            SettingsSnapshotHome(model: model), size: fixture.size, insets: fixture.insets, scale: fixture.scale)
+        defer { host.close() }
+        try await host.settle()
+        _ = try capture(host, fixture: fixture, required: ["settings.title", "settings.profile", "settings.sync"])
+        func check(_ view: UIView) {
+            XCTAssertFalse(view is UICollectionView, "Profile captures must not instantiate List's collection view")
+            XCTAssertFalse(view is UITableView, "Profile captures must not instantiate List's table view")
+            view.subviews.forEach(check)
+        }
+        check(host.controller.view)
     }
 
     @MainActor func testCaptureRejectsBlankContent() throws {

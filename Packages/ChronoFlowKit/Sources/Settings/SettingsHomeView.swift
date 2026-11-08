@@ -1,7 +1,5 @@
 #if canImport(UIKit)
-    import AppCore
     import DesignSystem
-    import LocalStore
     import SwiftUI
     import UIKit
 
@@ -56,7 +54,6 @@
     }
 
     @MainActor public struct SettingsHomeContent: View {
-        @Environment(\.locale) private var locale
         private let model: SettingsHomeModel
         private let navigationEnabled: Bool
 
@@ -65,14 +62,11 @@
             self.navigationEnabled = navigationEnabled
         }
 
-        private var language: Language { locale.language.languageCode?.identifier == "nl" ? .nl : .en }
-        private func t(_ key: String) -> String { SettingsStrings.text(key, language: language) }
-
         public var body: some View {
             List {
                 if let account = model.state.account {
                     Section {
-                        destination(.profile) { profile(account) }
+                        destination(.profile) { SettingsProfileRow(account: account, initials: model.state.initials) }
                             .accessibilityIdentifier("settings.profile")
                     }.listRowBackground(ColorToken.card.color)
                         .listRowInsets(
@@ -80,35 +74,25 @@
                 }
                 if let copy = model.state.syncCopy(now: model.now, syncing: model.syncing, offline: model.offline) {
                     Section {
-                        Label(
-                            syncText(copy),
-                            systemImage: model.state.pendingCount > 0
-                                ? "icloud.and.arrow.up" : model.offline ? "icloud.slash" : "checkmark.icloud"
-                        )
-                        .font(Typography.screenMeta.font).foregroundStyle(ColorToken.mutedForeground.color)
-                        .monospacedDigit().accessibilityElement(children: .combine)
-                        .accessibilityIdentifier("settings.sync")
+                        SettingsSyncRow(copy: copy, pending: model.state.pendingCount > 0, offline: model.offline)
                     }.listRowBackground(Color.clear).listRowSeparator(.hidden)
                 }
                 #if DEBUG
                     Section {
                         ForEach(SettingsDestination.allCases.filter { $0 != .profile }) { destination in
-                            self.destination(destination) { row(destination) }
-                                .accessibilityIdentifier("settings.\(destination.rawValue)")
+                            self.destination(destination) {
+                                SettingsDestinationRow(
+                                    destination: destination, credits: model.state.credits,
+                                    missingAnswers: model.state.missingAnswers)
+                            }
+                            .accessibilityIdentifier("settings.\(destination.rawValue)")
                         }
                     }.listRowBackground(ColorToken.card.color)
                         .listRowInsets(
                             EdgeInsets(top: 0, leading: PlanUITokens.space4, bottom: 0, trailing: PlanUITokens.space4))
                 #endif
                 Section {
-                    Button {
-                        Task { await model.signOut() }
-                    } label: {
-                        Text(t("Sign out")).font(Typography.screenLabel.font).frame(maxWidth: .infinity)
-                            .frame(minHeight: PlanUITokens.actionMinHeight)
-                    }
-                    .buttonStyle(.bordered).buttonBorderShape(.capsule)
-                    .disabled(model.busy || model.state.account == nil).accessibilityIdentifier("settings.signOut")
+                    SettingsSignOutButton(model: model)
                 }.listRowBackground(Color.clear).listRowSeparator(.hidden)
             }
             .listStyle(.insetGrouped).scrollContentBackground(.hidden)
@@ -129,65 +113,6 @@
             #else
                 label()
             #endif
-        }
-
-        private func profile(_ account: AccountRecord) -> some View {
-            HStack(spacing: PlanUITokens.space3) {
-                Text(model.state.initials).font(Typography.screenBodyLg.font).fontWeight(.semibold)
-                    .frame(width: AuthTokens.touch, height: AuthTokens.touch)
-                    .foregroundStyle(ColorToken.primaryForeground.color)
-                    .background(ColorToken.primary.color, in: Circle()).accessibilityHidden(true)
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(account.name).font(Typography.screenBodyLg.font).fontWeight(.semibold)
-                    Text(account.email).font(Typography.screenBody.font).foregroundStyle(
-                        ColorToken.mutedForeground.color
-                    )
-                    .lineLimit(1)
-                }
-            }.padding(.vertical, PlanUITokens.space3).frame(minHeight: PlanUITokens.space16 + PlanUITokens.space2)
-                .accessibilityElement(children: .combine)
-        }
-
-        private func row(_ destination: SettingsDestination) -> some View {
-            HStack(spacing: PlanUITokens.space3) {
-                Image(systemName: destination.symbol).font(Typography.screenBodyLg.font)
-                    .frame(
-                        width: PlanUITokens.space8 + PlanUITokens.space1,
-                        height: PlanUITokens.space8 + PlanUITokens.space1
-                    )
-                    .background(ColorToken.muted.color, in: Circle()).accessibilityHidden(true)
-                VStack(alignment: .leading, spacing: PlanUITokens.space1) {
-                    Text(t(destination.title)).font(Typography.screenBodyLg.font).fontWeight(.medium)
-                    if let subtitle = destination.subtitle {
-                        Text(t(subtitle)).font(Typography.screenBody.font).foregroundStyle(
-                            ColorToken.mutedForeground.color)
-                    } else if destination == .plan, let credits = model.state.credits {
-                        Text(SettingsStrings.text("%lld credits left", language: language, count: credits))
-                            .font(Typography.screenBody.font).foregroundStyle(ColorToken.mutedForeground.color)
-                            .monospacedDigit()
-                    }
-                    if destination == .bodyClock, model.state.missingAnswers > 0 {
-                        Text(
-                            SettingsStrings.text(
-                                "%lld to answer", language: language, count: model.state.missingAnswers)
-                        )
-                        .font(Typography.screenMeta.font).foregroundStyle(ColorToken.dawnForeground.color)
-                        .padding(.horizontal, PlanUITokens.space2).padding(.vertical, PlanUITokens.space1)
-                        .background(ColorToken.dawn.color, in: Capsule())
-                        .accessibilityIdentifier("settings.readiness")
-                    }
-                }
-            }.frame(minHeight: PlanUITokens.space16).accessibilityElement(children: .combine)
-        }
-
-        private func syncText(_ copy: SettingsCopy) -> String {
-            guard copy.key == "Synced on {{date}}", let raw = copy.values["date"],
-                let date = (try? Date.ISO8601FormatStyle(includingFractionalSeconds: true).parse(raw))
-                    ?? (try? Date.ISO8601FormatStyle().parse(raw))
-            else { return copy.text(language: language) }
-            return SettingsStrings.text(
-                copy.key, language: language,
-                ["date": date.formatted(.dateTime.day().month(.abbreviated).locale(locale))])
         }
     }
 
