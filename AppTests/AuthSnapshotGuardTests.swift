@@ -6,7 +6,7 @@ import XCTest
 
 nonisolated final class AuthSnapshotGuardTests: XCTestCase {
     @MainActor func testEveryControlCanBeCapturedWithoutClippingAfterScrolling() async throws {
-        try await FontRegistry.register()
+        try await AuthTestHost.registerFonts()
         let duo = try XCTUnwrap(AuthDeviceFixture.all().first { $0.name == "duo" })
         let asymmetric = AuthDeviceFixture(
             name: "duo-asymmetric", size: duo.size,

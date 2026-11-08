@@ -6,7 +6,7 @@ import XCTest
 
 nonisolated final class TwoFactorLayoutTests: XCTestCase {
     @MainActor func testLastControlCanScrollAboveKeyboardInsetsOnDuoAndSE() async throws {
-        try await FontRegistry.register()
+        try await AuthTestHost.registerFonts()
         // Duo's saved visible keyboard begins at 414 of 678 points; SE's keyboard is 218 points tall.
         for (alias, keyboardInset) in [("duo", CGFloat(264)), ("se", CGFloat(218))] {
             let fixture = try XCTUnwrap(AuthDeviceFixture.all().first { $0.name == alias })
@@ -45,7 +45,7 @@ nonisolated final class TwoFactorLayoutTests: XCTestCase {
     }
 
     @MainActor func testModesAndErrorsRespectEveryProfilesSafeInsetsAndTouchTargets() async throws {
-        try await FontRegistry.register()
+        try await AuthTestHost.registerFonts()
         for fixture in try AuthDeviceFixture.all() {
             for language in ["en", "nl"] {
                 for category in [UIContentSizeCategory.large, .extraExtraLarge] {

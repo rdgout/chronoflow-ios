@@ -7,7 +7,7 @@ import XCTest
 
 nonisolated final class ForgotPasswordControlTests: XCTestCase {
     @MainActor func testEmailAutoFillAndFormLockPreserveFieldAndRestoreErrorFocus() async throws {
-        try await FontRegistry.register()
+        try await AuthTestHost.registerFonts()
         for language in ["en", "nl"] {
             let model = await forgotPasswordSnapshotModel()
             let host = try AuthTestHost(
@@ -43,7 +43,7 @@ nonisolated final class ForgotPasswordControlTests: XCTestCase {
     }
 
     @MainActor func testPrefilledNativeEmailInheritsTheWindowRootCap() async throws {
-        try await FontRegistry.register()
+        try await AuthTestHost.registerFonts()
         let host = try AuthTestHost(EmptyView(), size: SnapshotDevice.all()[0].size)
         defer { host.close() }
         for category in [UIContentSizeCategory.small, .extraExtraLarge, .accessibilityExtraExtraExtraLarge] {
@@ -61,7 +61,7 @@ nonisolated final class ForgotPasswordControlTests: XCTestCase {
     }
 
     @MainActor func testSentStateReplacesTheInputAndKeepsTheSharedScrollBehavior() async throws {
-        try await FontRegistry.register()
+        try await AuthTestHost.registerFonts()
         for sent in [false, true] {
             let fixture = try XCTUnwrap(AuthDeviceFixture.all().first { $0.name == "17e" })
             let host = try AuthTestHost(

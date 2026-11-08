@@ -5,8 +5,58 @@ import UIKit
 import XCTest
 
 nonisolated final class ForgotPasswordLayoutTests: XCTestCase {
+    @MainActor func testFormAndSentElementFramesMatchAtAX5AndXXLarge() async throws {
+        try await AuthTestHost.registerFonts()
+        let fixture = try XCTUnwrap(AuthDeviceFixture.all().first { $0.name == "se" })
+        let host = try AuthTestHost(EmptyView(), size: fixture.size, insets: fixture.insets, scale: fixture.scale)
+        defer { host.close() }
+        for sent in [false, true] {
+            var expectedFrames: [AuthElement: CGRect] = [:]
+            var expectedInput: CGRect?
+            var expectedText: CGRect?
+            var expectedFont: CGFloat?
+            for category in [UIContentSizeCategory.extraExtraLarge, .accessibilityExtraExtraExtraLarge] {
+                var frames: [AuthElement: CGRect] = [:]
+                host.configure(
+                    ForgotPasswordView(model: await forgotPasswordSnapshotModel(sent: sent, state: .fieldError)) {
+                        frames[$0] = $1
+                    }, category: category)
+                try await host.settle()
+                if category == .extraExtraLarge {
+                    expectedFrames = frames
+                } else {
+                    XCTAssertEqual(Set(frames.keys), Set(expectedFrames.keys), "sent=\(sent)")
+                    for element in expectedFrames.keys.sorted(by: { $0.rawValue < $1.rawValue }) {
+                        XCTAssertEqual(
+                            frames[element], expectedFrames[element], "AX5 grows/moves \(element), sent=\(sent)")
+                    }
+                }
+                if !sent {
+                    let field = try XCTUnwrap(forgotFrameTextFields(host.window).first)
+                    let input = field.convert(field.bounds, to: host.window)
+                    let text = field.convert(field.textRect(forBounds: field.bounds), to: host.window)
+                    let font = try XCTUnwrap(field.font).pointSize
+                    XCTAssertEqual(field.traitCollection.preferredContentSizeCategory, .extraExtraLarge)
+                    let expected = Typography.authBody.uiFont(compatibleWith: field.traitCollection)
+                    XCTAssertEqual(field.font?.fontName, expected.fontName)
+                    XCTAssertEqual(font, expected.pointSize, "Native email must use its capped trait metrics")
+                    XCTAssertEqual(field.font?.lineHeight, expected.lineHeight)
+                    if category == .extraExtraLarge {
+                        expectedInput = input
+                        expectedText = text
+                        expectedFont = font
+                    } else {
+                        XCTAssertEqual(input, expectedInput, "AX5 moves native email input")
+                        XCTAssertEqual(text, expectedText, "AX5 moves native email text rect")
+                        XCTAssertEqual(font, expectedFont, "AX5 grows native email font")
+                    }
+                }
+            }
+        }
+    }
+
     @MainActor func testLastControlCanScrollAboveKeyboardInsetsOnDuoAndSE() async throws {
-        try await FontRegistry.register()
+        try await AuthTestHost.registerFonts()
         // Duo's saved visible keyboard begins at 414 of 678 points; SE's keyboard is 218 points tall.
         for (alias, keyboardInset) in [("duo", CGFloat(264)), ("se", CGFloat(218))] {
             let fixture = try XCTUnwrap(AuthDeviceFixture.all().first { $0.name == alias })
@@ -47,7 +97,7 @@ nonisolated final class ForgotPasswordLayoutTests: XCTestCase {
     }
 
     @MainActor func testFormAndSentStatesRespectEveryProfilesSafeInsetsAndTouchTargets() async throws {
-        try await FontRegistry.register()
+        try await AuthTestHost.registerFonts()
         for fixture in try AuthDeviceFixture.all() {
             for language in ["en", "nl"] {
                 for category in [UIContentSizeCategory.large, .extraExtraLarge] {
@@ -87,4 +137,8 @@ nonisolated final class ForgotPasswordLayoutTests: XCTestCase {
             }
         }
     }
+}
+
+@MainActor private func forgotFrameTextFields(_ view: UIView) -> [UITextField] {
+    (view as? UITextField).map { [$0] } ?? view.subviews.flatMap(forgotFrameTextFields)
 }

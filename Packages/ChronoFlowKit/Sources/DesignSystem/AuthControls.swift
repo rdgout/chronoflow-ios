@@ -103,6 +103,7 @@ import SwiftUI
 
     public struct AuthField: View {
         @Environment(\.isEnabled) private var isEnabled
+        @Environment(\.dynamicTypeSize) private var dynamicTypeSize
         let title: String
         @Binding var text: String
         let secure: Bool
@@ -139,6 +140,8 @@ import SwiftUI
             self.measure = measure
         }
         public var body: some View {
+            let font = Typography.authBody.uiFont(
+                compatibleWith: UITraitCollection(preferredContentSizeCategory: UIContentSizeCategory(dynamicTypeSize)))
             VStack(alignment: .leading, spacing: AuthTokens.fieldGap) {
                 WelcomeText(title, style: Typography.authLabel, color: .cardForeground).accessibilityHidden(true)
                 Group {
@@ -152,7 +155,8 @@ import SwiftUI
                         .accessibilityValue(Text(verbatim: text))
                     }
                 }
-                .font(Typography.authBody.font)
+                // SwiftUI's scalable custom font can re-read the uncapped system preference for native text layout.
+                .font(.custom(Typography.authBody.face.rawValue, fixedSize: font.pointSize))
                 .foregroundStyle(ColorToken.cardForeground.color)
                 .textContentType(contentType)
                 .keyboardType(keyboard)

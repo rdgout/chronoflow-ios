@@ -8,14 +8,17 @@ reruns and intentional reference recording/comparison remain before pushing. No 
 reference-comparison pass is claimed. Fix round 3's strengthened checks also need those reruns.
 Phases 6–8 retain their accessibility, performance and physical-device gates.
 
-Matrix A means all seven D1c profiles in Mac geometry tests and hosted captures inside **one 17e**,
-plus 17e keyboard/routing/accessibility UI tests. It does not request seven simulator runtimes.
-`make duo` is the opt-in runtime spot check. The full/compact profile split remains unchanged.
+Matrix A uses the **lean snapshot set, user 2026-11-07**, for every auth screen: every
+implemented state on 17e/SE/Duo, en/nl × light/dark at default size, plus one xxLarge reference per
+state (17e, en, light). Capture all profiles inside **one 17e**. All seven D1c sizes remain in Mac
+geometry and hosted layout/guard tests; keyboard/routing/accessibility UI checks remain on 17e.
+AX5 equals xxLarge in one pixel comparison per screen. `make duo` stays opt-in; seven simulator
+runtimes run only when asked. Splash/Welcome retain their existing full/compact profile sets.
 
 | Board / state | Native checks | Evidence / remaining acceptance |
 | --- | --- | --- |
-| AuthSignIn none / wrong→credentials / locked / server, light/dark | Generated tokens, native controls, layout, strict text ratios, 896 profile/board references and AX5 equality | User's Phase 10a results and eight-pair visual acceptance pass (8e2d542; `_design/frames/README.md`). Round-1 capture guards and profile comparisons pass. |
-| AuthTwoFactor code none / field error / attempts / server, light/dark | Shared controls, max-six oneTimeCode, number-pad submit, field/banner mapping, profile captures | User's task-1 hosted comparisons pass; 1,792 code/recovery references committed at 0e92b6a. Round-1 guards, sessions and profile comparisons pass. Board review accepts none/attempts/server; fieldError copy is corrected in round 4 and needs intentional reference recording/comparison. Revised simulator checks remain the user’s run. |
+| AuthSignIn none / wrong→credentials / locked / server, light/dark | Generated tokens, native controls, layout, strict text ratios, 52 lean references and one AX5 equality comparison | User's Phase 10a results and eight-pair visual acceptance pass (8e2d542; `_design/frames/README.md`). Round-1 capture guards and profile comparisons pass. |
+| AuthTwoFactor code none / field error / attempts / server, light/dark | Shared controls, max-six oneTimeCode, number-pad submit, field/banner mapping, profile captures | User's task-1 hosted comparisons pass; 104 code/recovery references survive the lean-set pruning (original full set committed at 0e92b6a). Round-1 guards, sessions and profile comparisons pass. Board review accepts none/attempts/server; fieldError copy is corrected in round 4 and needs intentional reference recording/comparison. Revised simulator checks remain the user’s run. |
 | AuthTwoFactor recovery none / attempts / server, light/dark | Mode toggle, hint, recovery Return, consumed-code mock/model checks, profile captures | Board review accepts recovery attempts apart from the shared missing placeholder. Round 4 adds that placeholder to all recovery states; recovery-* needs intentional reference recording/comparison. Field-error snapshots retain the shared Field treatment and approved backend copy; there is no separate recovery-error board. |
 | AuthStates / Field / Button | Designed banners, native input/button states, touch targets, color/typography/shadow guards | Previously accepted shared controls; round 4 uses the existing placeholder token and Field error treatment. |
 
@@ -227,7 +230,7 @@ shared Field design; offline is visually the unchanged form. `make auth-board-pn
 HTML but Chrome exited 134 in this sandbox; the PNG export remains for the user's host.
 
 Coverage added: eight portable model tests (including two cancellation cases); hosted native
-control/focus/lock, D1c layout and six-state snapshots (1,344 references expected), root-cap equality,
+control/focus/lock, D1c layout and six-state lean snapshots (78 references expected), root-cap equality,
 and all-state/asymmetric-safe-area scroll/ink guards; ForgotPasswordTests and en/nl xxLarge
 ForgotPasswordKeyboardTests; strict audits of all six states in both languages/appearances/sizes.
 The existing subtitle exception remains limited to Sign in/Two-factor and requires a measured
@@ -243,3 +246,66 @@ The commands are in `Docs/tooling.md`. Real mail receipt is not simulator accept
 OQ 21/22/25/27 and the four trips decisions are recorded in plan.md. Password-rule/copy amendments
 ship with 11b/11c, and native reset/verify universal-link entry with 11b/11d. Real link opening also
 requires server AASA with the confirmed team/bundle ID; team ID remains pending. Trips follow 11d.
+
+## Phase 11a fix round 2 — lean coverage and bounded captures
+
+The reference contract is 13 captures per state: three profiles × two languages × two appearances
+at default size, plus 17e/en/light xxLarge. Exact inventories are **52 Sign in**, **104 Two-factor**
+and **78 Forgot**. Obsolete PNGs are removed; surviving PNGs are unchanged. Forgot survivors were
+already untracked and remain unaccepted. No references were recorded in this round.
+
+Forgot uniquely snapshots a prefilled native email, whereas Sign in/Two-factor fixtures have empty
+inputs. The existing SwiftUI range cap and font-size checks do not constrain every native layout
+trait. `ContentSizeCap.apply` now clamps the UIKit root category and observes window preference
+changes, shared by production and the hosted harness. The SwiftUI root also normalizes its environment to the concrete capped value; its range cap stays in place.
+The SE regression compares form/sent element frames and native email bounds, text rect and font,
+so failures identify the element. One SE/en/light AX5/xxLarge pixel comparison remains per screen;
+Forgot’s comparison uses its prefilled field-error form.
+
+Each AuthTestHost owns its window/controller; snapshot models use immediate mock requests, and
+there is no shared auth host or static raster cache. CoreText registration is process-wide and runs
+off the main actor; hosted auth registration now fails after 10 s. Settling replaces the unchecked
+main-queue continuation with cancellable 10 ms yields and a 12-capture / 5 s limit. Failures include
+the revision and capture context. XCTest’s 600 s per-test watchdog bounds synchronous UIKit/CoreText
+stalls; the runner’s existing inactivity and process-group limits remain. Recorded guards/subtitle tests
+took 452/506 s individually. The runner observes actual XCTest result-stream growth (and prints
+progress on new events), covering buffered parallel stdout without treating timestamps as activity. Combined runtime success
+cannot be claimed from this sandbox: CoreSimulator access is denied. Rerun commands are in
+`Docs/tooling.md`; visual acceptance stays open.
+
+
+## Phase 11a fix round 3 — capped input metrics and lean audits
+
+The user's round-2 17e run passes Forgot controls, Auth/Two-factor snapshots, capture guards,
+Auth layout and Forgot UI/keyboard tests without hangs. Forgot AX5/native-frame equality and the
+oversized contrast/audit methods still fail; their revised simulator acceptance stays open.
+
+Native auth inputs now derive their point size with `Typography.authBody.uiFont(compatibleWith:)`
+from the root-capped environment and use a fixed-size SwiftUI custom font. This avoids a second
+native scaling pass against the uncapped system preference. The SE regression also checks the
+native font name, point size and line height against the field's capped UIKit traits.
+
+Audits and subtitle checks now use five variants per state: en/nl × light/dark at default size,
+plus en/light xxLarge. Each screen/Forgot state has a separate method. Every control is revealed;
+identical scroll/keyboard positions share one audit or pixel measurement. The 600 s watchdog is
+unchanged. Only back-button containment includes the navigation-bar region above the content safe
+area, preserving horizontal insets and the visible-keyboard edge. Portable tests cover both keyboard
+states with an offset window and asymmetric viewport.
+
+The banner text region excludes generated padding and the glyph column. Its title and body use the
+same generated 20-point/subheadline line-height grid, scaled through capped UIKit metrics. Both
+hosted and UI tests measure that region with RenderedTextContrast. A missing/incomplete measurement,
+non-finite minimum or ratio below 4.5:1 cannot exempt an issue. Only unattributed `.contrast` issues
+(nil/empty identifier and nil/empty/ChronoFlow label) in Forgot server/throttle states qualify.
+Named controls, named banner issues, other states and other issue types stay strict.
+
+Read-only measurements of all eight default-size 17e server/throttle references give **14.8840:1
+light / 12.4197:1 dark**, en/nl, with every text line measurable. Tokens are `cardForeground` and
+`authErrorBackground`. These saved-image measurements are diagnostic evidence; the UI exception
+requires its own current screenshot. All 78 re-recorded Forgot PNGs are retained unchanged and included
+in the fresh patch series. Reference comparison/visual acceptance and new audit timings remain open.
+
+Host verification: `make quick` is blocked only by the existing cookie redirect test's sandbox-denied
+loopback listener (`Operation not permitted`). `make -k quick` confirms all other checks pass (333/334 package tests, 10 TokenGen, 4 AssetGen and
+88 signing/resource/runner fixtures); details and
+rerun commands are in Docs/tooling.md. No simulator tests are run here.

@@ -7,7 +7,7 @@ import XCTest
 
 nonisolated final class AuthControlTests: XCTestCase {
     @MainActor func testCardShadowMatchesBoardInkInAllEightSignInStates() async throws {
-        try await FontRegistry.register()
+        try await AuthTestHost.registerFonts()
         let host = try AuthTestHost(EmptyView(), size: AuthShadowBoard.size, scale: AuthShadowBoard.scale)
         defer { host.close() }
         for style in [UIUserInterfaceStyle.light, .dark] {
@@ -85,7 +85,7 @@ nonisolated final class AuthControlTests: XCTestCase {
                 }
             }
         }
-        try await FontRegistry.register()
+        try await AuthTestHost.registerFonts()
         let host = try AuthTestHost(Fields(), size: CGSize(width: 390, height: 844))
         defer { host.close() }
         try await host.settle()
@@ -106,7 +106,7 @@ nonisolated final class AuthControlTests: XCTestCase {
     }
 
     @MainActor func testPasskeyGlyphUsesThePrimaryForegroundInBothAppearances() async throws {
-        try await FontRegistry.register()
+        try await AuthTestHost.registerFonts()
         for style in [UIUserInterfaceStyle.light, .dark] {
             var frames: [AuthControlPart: CGRect] = [:]
             let host = try AuthTestHost(
@@ -134,7 +134,7 @@ nonisolated final class AuthControlTests: XCTestCase {
     }
 
     @MainActor func testButtonEndCapsAreSemicirclesWithoutExteriorInk() async throws {
-        try await FontRegistry.register()
+        try await AuthTestHost.registerFonts()
         for style in [UIUserInterfaceStyle.light, .dark] {
             for scale: CGFloat in [2, 3] {
                 for category in [UIContentSizeCategory.large, .extraExtraLarge] {
@@ -229,7 +229,7 @@ nonisolated final class AuthControlTests: XCTestCase {
     }
 
     @MainActor func testCreateAccountLinkUsesDawnTextOnTheCardInBothAppearances() async throws {
-        try await FontRegistry.register()
+        try await AuthTestHost.registerFonts()
         for style in [UIUserInterfaceStyle.light, .dark] {
             for language in ["en", "nl"] {
                 var frames: [AuthElement: CGRect] = [:]
@@ -258,7 +258,7 @@ nonisolated final class AuthControlTests: XCTestCase {
     }
 
     @MainActor func testBusySpinnerPrecedesGlyphAndLabelInTheCenteredContent() async throws {
-        try await FontRegistry.register()
+        try await AuthTestHost.registerFonts()
         var frames: [AuthControlPart: CGRect] = [:]
         var buttonFrame = CGRect.zero
         let host = try AuthTestHost(
@@ -314,7 +314,7 @@ nonisolated final class AuthControlTests: XCTestCase {
                 .task { focus = "email" }
             }
         }
-        try await FontRegistry.register()
+        try await AuthTestHost.registerFonts()
         for style in [UIUserInterfaceStyle.light, .dark] {
             var frames: [AuthControlPart: CGRect] = [:]
             let host = try AuthTestHost(
@@ -340,7 +340,7 @@ nonisolated final class AuthControlTests: XCTestCase {
     }
 
     @MainActor func testGuestFooterRendersTheBoardTextAndTranslucentPillColors() async throws {
-        try await FontRegistry.register()
+        try await AuthTestHost.registerFonts()
         for style in [UIUserInterfaceStyle.light, .dark] {
             for language in ["en", "nl"] {
                 var frames: [AuthControlPart: CGRect] = [:]
@@ -407,7 +407,7 @@ nonisolated final class AuthControlTests: XCTestCase {
         return try XCTUnwrap(converted.components).prefix(3).map(Double.init)
     }
     @MainActor func testBusyButtonKeepsItsLabelAndDimensions() async throws {
-        try await FontRegistry.register()
+        try await AuthTestHost.registerFonts()
         var sizes: [String: CGSize] = [:]
         let view = VStack {
             AuthButton("Sign in", kind: .outline) {}

@@ -38,7 +38,9 @@ import XCTest
         scroll(in: app).descendants(matching: .any).matching(identifier: identifier).element
     }
 
-    static func viewport(in app: XCUIApplication, scrollFrame: CGRect) -> CGRect {
+    static func viewport(
+        in app: XCUIApplication, scrollFrame: CGRect, includingNavigationBar: Bool = false
+    ) -> CGRect {
         let window = app.windows.firstMatch
         guard let value = window.value as? String, let data = value.data(using: .utf8),
             let values = try? JSONDecoder().decode([CGFloat].self, from: data), values.count == 4
@@ -51,7 +53,7 @@ import XCTest
         let keyboard = app.keyboards.firstMatch
         return AuthScrollGesture.viewport(
             window: window.frame, safeArea: safeArea, scroll: scrollFrame,
-            keyboard: keyboard.exists ? keyboard.frame : nil)
+            keyboard: keyboard.exists ? keyboard.frame : nil, includingNavigationBar: includingNavigationBar)
     }
 
     static func reveal(_ element: XCUIElement, in app: XCUIApplication, scroll: XCUIElement? = nil) {
@@ -74,7 +76,8 @@ import XCTest
                 XCTFail("Reveal frames did not settle for \(element.identifier): \(error)")
                 return
             }
-            let viewport = viewport(in: app, scrollFrame: scroll.frame)
+            let viewport = viewport(
+                in: app, scrollFrame: scroll.frame, includingNavigationBar: element.identifier == "auth.back")
             if element.isHittable && viewport.contains(element.frame) { return }
             guard let gesture = AuthScrollGesture.reveal(element.frame, in: viewport) else { break }
             let origin = app.windows.firstMatch.coordinate(withNormalizedOffset: .zero)
@@ -84,10 +87,11 @@ import XCTest
             let end = origin.withOffset(CGVector(dx: gesture.end.x - window.minX, dy: gesture.end.y - window.minY))
             start.press(forDuration: 0.1, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.1)
         }
-        let message =
-            "\(element.identifier): frame=\(element.frame), viewport=\(viewport(in: app, scrollFrame: scroll.frame))"
+        let viewport = viewport(
+            in: app, scrollFrame: scroll.frame, includingNavigationBar: element.identifier == "auth.back")
+        let message = "\(element.identifier): frame=\(element.frame), viewport=\(viewport)"
         XCTAssertTrue(element.isHittable, message)
         XCTAssertTrue(
-            viewport(in: app, scrollFrame: scroll.frame).contains(element.frame), message)
+            viewport.contains(element.frame), message)
     }
 }
