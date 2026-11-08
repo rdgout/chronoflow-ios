@@ -13,6 +13,7 @@ nonisolated final class StepSheetLayoutTests: XCTestCase {
             ScrollView {
                 Text(verbatim: "Geometry probe")
                     .frame(width: 64, height: 64).padding(.leading, offset).planContentBounds()
+                    .padding(PlanUITokens.space4).frame(maxWidth: .infinity)
             }.capturePlanContent(in: content)
         }
         let host = try AuthTestHost(

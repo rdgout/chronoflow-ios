@@ -61,7 +61,7 @@
                                 }
                             }
                         }
-                    }.padding(PlanUITokens.space5).planContentBounds()
+                    }.planContentBounds().padding(PlanUITokens.space5)
                 }
                 .navigationTitle(t("What the steps mean")).navigationBarTitleDisplayMode(.inline)
                 .toolbar {

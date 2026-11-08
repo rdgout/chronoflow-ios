@@ -7,8 +7,11 @@ nonisolated final class AppTabsTests: XCTestCase {
         defer { app.terminate() }
         _ = try expandedTabs(in: app, selected: "Today")
         capture(app, name: "today-tabs")
-        let progress = app.staticTexts["today.progress"]
-        XCTAssertTrue(progress.exists, app.debugDescription)
+        let progress = app.otherElements["today.progress"]
+        XCTAssertTrue(progress.waitForExistence(timeout: 4), app.debugDescription)
+        _ = try UIWait.stableFrames([progress], timeout: 4)
+        XCTAssertEqual(app.descendants(matching: .any).matching(identifier: "today.progress").count, 1)
+        XCTAssertEqual(progress.label, "0 of 3 done")
         XCTAssertGreaterThanOrEqual(progress.frame.height, AuthTokens.touch)
         app.tabBars.buttons["My trips"].tap()
         XCTAssertTrue(app.scrollViews["trips.screen"].waitForExistence(timeout: 4))

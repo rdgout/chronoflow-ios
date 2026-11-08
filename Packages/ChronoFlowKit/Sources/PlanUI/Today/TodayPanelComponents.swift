@@ -66,7 +66,9 @@
                 }
             }.font(Typography.screenMeta.font).foregroundStyle(ColorToken.mutedForeground.color)
                 .accessibilityRepresentation {
-                    Text(summary).frame(minHeight: AuthTokens.touch).accessibilityIdentifier("today.progress")
+                    Color.clear.frame(minHeight: AuthTokens.touch)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(summary).accessibilityIdentifier("today.progress")
                 }
         }
     }

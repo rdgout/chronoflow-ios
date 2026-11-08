@@ -5,10 +5,12 @@ import XCTest
 nonisolated final class PlanAuditTests: XCTestCase {
     @MainActor func testTodayPrimaryState() async throws {
         try await audit { app in
-            XCTAssertTrue(app.staticTexts["today.progress"].waitForExistence(timeout: 8))
+            let progress = app.otherElements["today.progress"]
+            XCTAssertTrue(progress.waitForExistence(timeout: 8))
             _ = try UIWait.stableFrames(
-                [app.scrollViews["today.screen"], app.staticTexts["today.progress"], app.tabBars.firstMatch], timeout: 8
+                [app.scrollViews["today.screen"], progress, app.tabBars.firstMatch], timeout: 8
             )
+            XCTAssertGreaterThanOrEqual(progress.frame.height, AuthTokens.touch)
         }
     }
     @MainActor func testTripsPrimaryState() async throws {
@@ -31,8 +33,20 @@ nonisolated final class PlanAuditTests: XCTestCase {
             let time = app.staticTexts.matching(NSPredicate(format: "identifier ENDSWITH %@", "|step.time")).firstMatch
             let footer = app.staticTexts.matching(NSPredicate(format: "identifier ENDSWITH %@", "|step.footer"))
                 .firstMatch
+            // The inset medium sheet scales its content; audit the native, unscaled large reading position.
+            _ = try UIWait.stableFrames([sheet, title], timeout: 8)
+            let origin = app.coordinate(withNormalizedOffset: .zero)
+            let start = origin.withOffset(
+                CGVector(
+                    dx: sheet.frame.midX - app.frame.minX, dy: sheet.frame.minY - app.frame.minY + PlanUITokens.space2))
+            let end = origin.withOffset(CGVector(dx: app.frame.width / 2, dy: app.frame.height * 0.15))
+            start.press(forDuration: 0.1, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.1)
             _ = try UIWait.stableFrames(
                 [sheet, title, time, footer, app.buttons["step.done"], app.buttons["step.skip"]], timeout: 8)
+            XCTAssertEqual(sheet.frame.width, app.frame.width, accuracy: 1)
+            let traits = UITraitCollection(preferredContentSizeCategory: .large)
+            XCTAssertGreaterThanOrEqual(
+                title.frame.height, Typography.screenCardTitle.uiFont(compatibleWith: traits).lineHeight - 1)
         }
     }
     @MainActor func testLegendPrimaryState() async throws {

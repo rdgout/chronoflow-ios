@@ -65,7 +65,7 @@
                     } else if let ended = lastEndedTrip(trips, now: now) {
                         completed(ended)
                     }
-                }.padding(PlanUITokens.space4).planContentBounds()
+                }.planContentBounds().padding(PlanUITokens.space4)
             }
             .background(ColorToken.background.color).foregroundStyle(ColorToken.foreground.color)
             .navigationTitle(t("Today")).accessibilityIdentifier("today.screen")

@@ -239,3 +239,63 @@ make targeted DEVICES="17e" ONLY="AppTests/StepSheetLayoutTests AppTests/TodayLa
 make targeted DEVICES="17e" ONLY="AppUITests/PlanAuditTests AppUITests/AppTabsTests AppUITests/StepSheetTests"
 make targeted DEVICES="17e" ONLY="AppTests/StepSheetSnapshotTests AppTests/TodaySnapshotTests AppTests/TripsSnapshotTests"
 ```
+
+## Third simulator rerun repair (2026-11-08, base 10f539e)
+
+1. The only rail failures in the supplied dump measure the padded outer stacks at
+   x=0, width=466. Individual text measurements and the existing Today row-control
+   checks do not report rail overflow. The Duo sheet reference also places its
+   controls inside the rail. Move the Today, Trips, StepSheet and Legend container
+   probes before decorative padding, measuring the inner layout that contains
+   text and controls. Keep every individual text probe and both scroll extremes;
+   do not intersect measurements with the safe frame or relax the 447 pt limit
+   (448 pt with the existing tolerance). Backgrounds and scroll containers may
+   fill the window. This changes measurement only, with no content-layout change.
+2. Retain the user's leading-padding overflow correction from 10f539e. Extend that
+   regression with an unmeasured padded full-width wrapper: deliberate leading
+   padding must still exceed the rail, and reconfiguration must still produce
+   exactly one fresh 64 x 64 measurement. This exercises the same distinction as
+   the screen probes. Execution of this hosted test remains for the user's rerun.
+3. Leave Today references and the user's 75 modified StepSheet PNGs untouched.
+   Keep the visible progress row at its natural board height; no visible 44 pt
+   frame is restored.
+4. The failed AppTabs assertion read a Text element's 14.7 pt glyph frame. Replace
+   the virtual Text with a labelled nontext accessibility container, creating its
+   element after the representation's generated 44 pt frame. AppTabsTests queries
+   that unique Other element, waits for stable frames, and checks its spoken
+   summary and height. The supplied dump has no minimization-test failure, so
+   those assertions stay unchanged.
+5. Today audit: the virtual Text says "0 of 3 done", while the rendered row says
+   "0/3 done" beside a track/checkmark. It is not rendered text whose clipping or
+   contrast can be measured. The labelled container preserves the full spoken
+   summary without claiming to be a drawn Text. Its height is asserted before
+   the audit; no progress-specific audit exemption is introduced.
+
+   Step-sheet audit: the saved `plan-audit-settled` screenshot shows a settled,
+   legible inset medium sheet, not an animation. The reported title, time, body,
+   footer and button heights all equal their layout heights times 374/390
+   (for example, 48 becomes 46.030769 pt). This is consistent with the native
+   partial-height sheet's inset scaling and explains the clipping reports for
+   otherwise fully visible text. Apple describes the native inset partial-height
+   presentation in [Explore the biggest updates from WWDC25](https://developer.apple.com/videos/play/meet-with-apple/201/?time=6289).
+   The audit now drags the native grabber to the existing large detent, waits for
+   all relevant frames, and requires full-window width and unscaled title height
+   before running. Production presentation is unchanged. No clipping issue is
+   ignored, and contrast attribution still requires the same original identity,
+   frame, label and complete passing rendered-text measurement. The medium
+   detent's Inspector clipping behavior is not claimed fixed; that presentation
+   remains covered by the user's screenshots and interactive StepSheetTests.
+
+Verification: `make lint` passes. `make host-tests` passes 442 of 443 package tests;
+the only failure is the existing `APICookieTests.realRedirectCookieHandlingIsDisabled`
+loopback-listener sandbox `EPERM`. All remaining host tiers pass separately:
+10 TokenGen tests, 7 AssetGen tests and 98 resource/runner fixtures. Direct iOS 17 SDK
+compilation passes for the package modules, app, AppTests and AppUITests without
+running a simulator. Logs are
+`build/round3-lint.log`, `build/round3-host-tests.log`,
+`build/round3-host-remainder.log` and `build/round3-typecheck.log`.
+Hosted layout tests, UI audits, progress representation geometry and snapshot
+comparison require the user's simulator rerun; no runtime pass is claimed here.
+
+Delivery: `build/commits/1.patch` against `10f539e`, with one Conventional Commit
+subject in `build/commits/messages.txt`. No commits or PNG changes are included.
