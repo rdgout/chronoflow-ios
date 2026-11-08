@@ -151,9 +151,14 @@ import XCTest
         let safeArea = CGRect(x: values[0], y: values[1], width: values[2], height: values[3])
             .offsetBy(dx: window.frame.minX, dy: window.frame.minY)
         let keyboard = app.keyboards.firstMatch
-        return AuthScrollGesture.viewport(
+        let viewport = AuthScrollGesture.viewport(
             window: window.frame, safeArea: safeArea, scroll: scrollFrame,
             keyboard: keyboard.exists ? keyboard.frame : nil, includingNavigationBar: includingNavigationBar)
+        let navigation = app.navigationBars.firstMatch
+        let tabs = app.tabBars.firstMatch
+        return AuthScrollGesture.readingViewport(
+            viewport, navigationBar: !includingNavigationBar && navigation.exists ? navigation.frame : nil,
+            tabBar: tabs.exists ? tabs.frame : nil, clearance: 0)
     }
 
     static func reveal(_ element: XCUIElement, in app: XCUIApplication, scroll: XCUIElement? = nil) {

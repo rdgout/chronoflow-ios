@@ -2,6 +2,26 @@ import CoreGraphics
 import Testing
 
 struct AuthScrollGestureTests {
+    @Test func settingsCodeInsideTheSafeAreaStillNeedsToScrollAboveTheTabBar() throws {
+        let window = CGRect(x: 0, y: 0, width: 390, height: 844)
+        let safe = CGRect(x: 0, y: 47, width: 390, height: 763)
+        let navigation = CGRect(x: 0, y: 47, width: 390, height: 44)
+        let tabs = CGRect(x: 0, y: 749, width: 390, height: 95)
+        let code = CGRect(x: 36, y: 760.7, width: 318, height: 22)
+        for keyboard in [nil, CGRect(x: 0, y: 550, width: 390, height: 294)] {
+            let viewport = AuthScrollGesture.readingViewport(
+                AuthScrollGesture.viewport(window: window, safeArea: safe, scroll: window, keyboard: keyboard),
+                navigationBar: navigation, tabBar: tabs, clearance: 0)
+            #expect(viewport.minY == navigation.maxY)
+            #expect(viewport.maxY == min(tabs.minY, keyboard?.minY ?? safe.maxY))
+            #expect(!AuthScrollGesture.fullyVisible(code, in: viewport))
+            let gesture = try #require(AuthScrollGesture.reveal(code, in: viewport))
+            #expect(viewport.contains(gesture.start) && viewport.contains(gesture.end))
+            let revealed = code.offsetBy(dx: 0, dy: gesture.end.y - gesture.start.y)
+            #expect(AuthScrollGesture.fullyVisible(revealed, in: viewport))
+        }
+    }
+
     @Test func auditCoverageRequiresTheWholeControlInsideTheSafeKeyboardViewport() {
         let window = CGRect(x: 0, y: 0, width: 390, height: 844)
         let safeArea = CGRect(x: 0, y: 47, width: 390, height: 763)

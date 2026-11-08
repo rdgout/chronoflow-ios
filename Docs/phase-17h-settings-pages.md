@@ -1,8 +1,9 @@
 # Phase 17h: Settings destination pages
 
 Branch `feat/phase-17h-settings-pages`, based on `fix/auth-error-banners` at `d92ff91c`.
-The patch series is under `build/commits/`. Apply `1.patch` through `11.patch` in numeric
-order; `messages.txt` has the corresponding Conventional Commit subjects.
+The original 11 patches are applied at `e06dab5b`. The follow-up series is under
+`build/commits/`: apply `1.patch` through `3.patch` in numeric order; `messages.txt`
+has the corresponding Conventional Commit subjects.
 
 ## Built
 
@@ -105,3 +106,37 @@ acceptance remain pending under the user's simulator prohibition. To execute lat
 make generate
 make targeted DEVICES="17e" ONLY="AppUITests/SettingsPagesTests"
 ```
+
+## 17e runtime follow-up
+
+- Body clock already committed answers locally and queued settings patches. Its
+  Saved feedback was after every question in a lazy Form, outside the accessibility
+  tree while editing About you. The checkmark and paired Saved/Opgeslagen copy now
+  sit beside each saved group's title, as drawn in SetBodyClock. The UI test queries
+  the saved element by its group-specific identifier across accessibility types.
+  A host regression selects Night owl through SettingsPagesModel, reopens SQLite
+  and checks both the local answer and the pending settings patch.
+- Replay uses the same Next/Done implementation as first run. Its test could reuse
+  the still-existing Next control before the preceding page update settled. It now
+  waits for each page counter and stable control frames, including page three and
+  Done, before tapping. The existing replay Skip/Done model regression verifies no
+  second walkthrough completion write.
+- Two-factor setup already uses a native Form with keyboard avoidance. The reveal
+  helper accepted the code field's frame inside the window safe area even when the
+  tab bar covered it, leaving no scroll gesture to perform. Reveal now clips to
+  native navigation/tab bars as well as the keyboard. The test waits for password
+  sheet dismissal, targets the two-factor Form, and checks/reveals the focused field
+  again after keyboard frames settle. A host regression reproduces the reported
+  y=760.7, height=22 field with and without a keyboard.
+
+Runtime verification of these follow-ups remains pending; no simulator or snapshot
+execution was performed during this follow-up.
+
+Follow-up validation: `make lint` passes. `make quick` reports the existing cookie
+test's sandbox EPERM and one 60-day timeline timing failure (0.207 s / 0.2 s during
+compiler activity). A package rerun excluding only that loopback test passes all
+542 Swift Testing tests and all six XCTest checks, including the unchanged timeline
+budgets. The remaining quick targets pass all 17 generator tests and 100 fixtures.
+Direct iOS 17 compiler checks pass for Settings, the app, AppTests and AppUITests;
+final Settings and UI-test edits were rechecked. Logs are
+`build/settings-regressions-{lint,quick,host,remaining-quick,ios,ui-ios,final-ios}.log`.

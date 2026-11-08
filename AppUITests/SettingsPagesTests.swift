@@ -108,10 +108,15 @@ nonisolated final class SettingsPagesTests: XCTestCase {
         open("settings.twoFactor.enable", app: app)
         fillSecret("settings.security.prompt.password", "New password1!", app: app)
         open("settings.security.prompt.submit", app: app)
+        XCTAssertTrue(app.buttons["settings.security.prompt.submit"].waitForNonExistence(timeout: 8))
         let code = app.textFields["settings.twoFactor.code"]
         XCTAssertTrue(code.waitForExistence(timeout: 8))
-        AuthUIFlow.reveal(code, in: app)
+        let form = app.descendants(matching: .any)["settings.twoFactor.screen"].firstMatch
+        XCTAssertTrue(form.waitForExistence(timeout: 8))
+        AuthUIFlow.reveal(code, in: app, scroll: form)
         code.tap()
+        do { _ = try UIWait.keyboardFrames(in: app, including: [form, code]) } catch { XCTFail("\(error)") }
+        AuthUIFlow.reveal(code, in: app, scroll: form)
         code.typeText("123456")
         open("settings.twoFactor.confirm", app: app)
         XCTAssertTrue(app.staticTexts["settings.twoFactor.recoveryCode"].firstMatch.waitForExistence(timeout: 8))
