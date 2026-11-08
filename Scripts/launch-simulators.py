@@ -624,7 +624,7 @@ def selectors(policy):
 
 
 def expand(only):
-    known = set(selectors("logic") + selectors("matrix") + selectors("release") + selectors("profiles") + selectors("reference"))
+    known = set(selectors("logic") + selectors("matrix") + selectors("release") + selectors("profiles") + selectors("reference") + selectors("perf"))
     result = []
     for item in only:
         matches = sorted(s for s in known if s == item or s.startswith(item + "/") or item.startswith(s + "/"))
