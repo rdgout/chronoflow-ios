@@ -60,6 +60,25 @@ import Testing
             #expect(model.form.fields["password"] != nil && model.password.isEmpty && model.confirmation.isEmpty)
         }
     }
+    @Test(arguments: [false, true])
+    func uiTestSeedReturnsTheExpectedRegistrationBanner(offline: Bool) async throws {
+        let source = MockDataSource(
+            seed: try MockAppSeed.make(now: Date()), offline: offline, delay: { 0 }, sleep: { _ in })
+        let model = SignUpModel(
+            source: source, navigation: AuthNavigation(), deviceIdentity: { "0199a3c0-0000-7000-8000-000000000001" },
+            deviceName: "test", accept: { _ in Issue.record("Failed registration accepted") })
+        let email = offline ? "new@example.com" : "demo@example.com"
+        model.editName("Traveller")
+        model.editEmail(email)
+        model.editPassword("NewPassword123!")
+        model.editConfirmation("NewPassword123!")
+        await model.submit(language: .en)
+        #expect(model.form.banner == (offline ? .offline : .emailTaken))
+        #expect(model.form.fields.isEmpty)
+        #expect(model.name == "Traveller" && model.email == email)
+        #expect(model.password.isEmpty && model.confirmation.isEmpty && !model.form.busy)
+    }
+
     @Test func failuresPreserveNameEmailAndClearPasswordsIncludingKeychainFailure() async throws {
         let source = try authTestSource()
         let model = SignUpModel(

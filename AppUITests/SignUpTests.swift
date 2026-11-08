@@ -2,10 +2,8 @@ import XCTest
 
 nonisolated final class SignUpTests: XCTestCase {
     @MainActor func testOfflineRegistrationShowsConnectionBanner() {
-        let app = launchForgotApp(offline: true)
+        let app = submitPrefilledSignUp(state: "offline", offline: true)
         defer { app.terminate() }
-        openSignUp(app)
-        fillSignUp(app, email: "new@example.com")
         let banner = AuthUIFlow.control("auth.banner", in: app)
         XCTAssertTrue(banner.waitForExistence(timeout: 6))
         AuthUIFlow.reveal(banner, in: app)
@@ -18,10 +16,8 @@ nonisolated final class SignUpTests: XCTestCase {
     }
 
     @MainActor func testTakenEmailOffersTheDesignedSignInPath() {
-        let app = launchForgotApp()
+        let app = submitPrefilledSignUp(state: "taken")
         defer { app.terminate() }
-        openSignUp(app)
-        fillSignUp(app, email: "demo@example.com")
         let banner = AuthUIFlow.control("auth.banner", in: app)
         XCTAssertTrue(banner.waitForExistence(timeout: 6))
         XCTAssertTrue(banner.label.contains("There's already an account with this email."))
@@ -51,6 +47,21 @@ nonisolated final class SignUpTests: XCTestCase {
         AuthUIFlow.reveal(submit, in: app)
         submit.tap()
         XCTAssertTrue(app.scrollViews["verify.scroll"].waitForExistence(timeout: 8))
+    }
+
+    @MainActor private func submitPrefilledSignUp(state: String, offline: Bool = false) -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments = AuthUIFlow.arguments()
+        app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
+        app.launchEnvironment["CF_AUTH_TEST_AUDIT_SCREEN"] = "sign-up"
+        app.launchEnvironment["CF_AUTH_TEST_AUDIT_STATE"] = state
+        if offline { app.launchEnvironment["CF_AUTH_TEST_OFFLINE"] = "1" }
+        app.launch()
+        openSignUp(app)
+        let submit = app.buttons["sign-up.submit"]
+        AuthUIFlow.reveal(submit, in: app)
+        submit.tap()
+        return app
     }
 }
 

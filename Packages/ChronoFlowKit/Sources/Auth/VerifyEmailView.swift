@@ -21,6 +21,9 @@
         }
         private var failed: Bool { model.state == .failed }
         private func copy(_ key: String) -> String { AuthCopy.string(key, locale: locale) }
+        private var signOutError: String? {
+            model.signOutFailure.map { copy($0 == .offline ? "Needs a connection" : "Something went wrong") }
+        }
         public var body: some View {
             AuthScreen(
                 scrollIdentifier: "verify.scroll",
@@ -30,7 +33,10 @@
                     : AuthCopy.verificationSent(email: model.context.email, locale: locale),
                 headingGlyph: failed ? .problem : nil, back: signOut, measure: measure
             ) {
-                if let banner = model.form.banner {
+                if let signOutError {
+                    WelcomeText(signOutError, style: Typography.authBody, color: .destructive)
+                        .accessibilityIdentifier("verify.sign-out-error")
+                } else if let banner = model.form.banner {
                     AuthBanner(title: copy(banner.title(for: .verify)), message: copy(banner.body(for: .verify)))
                 }
                 if failed {
@@ -90,7 +96,7 @@
             .onChange(of: scenePhase) { if scenePhase == .active { run { await model.activate() } } }
             .onChange(of: model.state) { UIAccessibility.post(notification: .screenChanged, argument: nil) }
             .onChange(of: model.form.announcementRevision) {
-                if let message = model.form.takeAnnouncement(locale: locale) { authAnnounce(message) }
+                if let message = model.form.takeAnnouncement(locale: locale) { authAnnounce(signOutError ?? message) }
             }
             .onDisappear {
                 request?.cancel()

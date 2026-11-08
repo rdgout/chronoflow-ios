@@ -84,6 +84,7 @@
                 }
                 .scrollBounceBehavior(.always, axes: .vertical)
                 .scrollDismissesKeyboard(.interactively)
+                .accessibilityElement(children: .contain)
                 .accessibilityIdentifier(scrollIdentifier)
             }.background { CfSky().ignoresSafeArea() }
         }

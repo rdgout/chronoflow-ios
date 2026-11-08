@@ -78,6 +78,7 @@ nonisolated public struct VerificationContext: Sendable, Equatable {
     }
     public func check(silent: Bool = false) async {
         guard active, !completed, form.begin(.checkVerification) else { return }
+        signOutFailure = nil
         sessionFailure = nil
         let revision = revision
         let submitted = input
@@ -118,6 +119,7 @@ nonisolated public struct VerificationContext: Sendable, Equatable {
     public func resend() async {
         tick()
         guard active, !completed, canResend, form.begin(.resendVerification) else { return }
+        signOutFailure = nil
         sessionFailure = nil
         let revision = revision
         defer { form.finish() }

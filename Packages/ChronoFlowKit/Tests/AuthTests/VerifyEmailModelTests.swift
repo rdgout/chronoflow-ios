@@ -199,6 +199,27 @@ private final class VerificationClock: @unchecked Sendable {
         await #expect(throws: DataFailure.unauthorized(status: 401)) { try await source.fetchIdentity() }
     }
 
+    @Test(arguments: [false, true])
+    func signOutFailureIsAnnouncedOncePerAttemptAndReplacedByTheNextFailure(resend: Bool) async throws {
+        let (source, result, _) = try await registered()
+        let context = VerificationContext(accountID: result.account.id, email: result.account.email, epoch: 6)
+        let model = VerifyEmailModel(
+            context: context, source: source, current: { context }, persist: { _ in true }, route: {},
+            discard: { throw DataFailure.offline })
+        await model.activate()
+        for _ in 0..<2 {
+            await model.signOut()
+            #expect(model.signOutFailure == .offline && model.isActive)
+            #expect(model.form.takeAnnouncement(locale: Locale(identifier: "en")) == "Needs a connection")
+            #expect(model.form.takeAnnouncement(locale: Locale(identifier: "en")) == nil)
+        }
+        await source.failNext(
+            method: resend ? .resendVerificationEmail : .verificationStatus, error: .server(status: 503))
+        if resend { await model.resend() } else { await model.check() }
+        #expect(model.signOutFailure == nil && model.form.banner == .server)
+        #expect(model.form.takeAnnouncement(locale: Locale(identifier: "en")) != nil)
+    }
+
     @Test(arguments: [
         SessionFailure.credentialsUnavailable, .databaseUnavailable, .credentialWrite, .invalidResult, .superseded,
     ])
