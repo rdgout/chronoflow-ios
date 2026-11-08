@@ -12,7 +12,7 @@ ChronoFlow plans sleep, light and caffeine for each trip. Two apps exist, both r
 - Five full-screen SVG layers in the overlay; Welcome draws `SkyBackground` twice; per-frame bezier allocation in worklets.
 - The moon landing depends on JS layout (`measureInWindow`), with a fixed fallback offset.
 
-**This plan covers:** the system launch screen; animated splash and readiness; Welcome and its intro/moon landing; sign-in and two-factor; password recovery, account creation and email verification; a GRDB account store, mock and real API data sources, sessions and offline sync; English/Dutch, both appearances and accessibility. **Phases 6–8 stay in place and run later for the splash/Welcome slice**: the existing audit, RN comparison and launch verification are not auth acceptance. Phases 9–11 have their own tests and matrix gates. The reviewed trips extension (2026-11-07) schedules Phases 12–18 after 11d; each phase lifts the UI exclusions below only for its own scope. Phase 12 adds typed trip contracts, raw plan storage and rebased mock trips without UI.
+**This plan covers:** the system launch screen; animated splash and readiness; Welcome and its intro/moon landing; sign-in and two-factor; password recovery, account creation and email verification; a GRDB account store, mock and real API data sources, sessions and offline sync; English/Dutch, both appearances and accessibility. **Phases 6–8 stay in place and run later for the splash/Welcome slice**: the existing audit, RN comparison and launch verification are not auth acceptance. Phases 9–11 have their own tests and matrix gates. The reviewed trips extension (2026-11-07) schedules Phases 12–18 after 11d; each phase lifts the UI exclusions below only for its own scope. Phase 12 adds typed trip contracts, raw plan storage and rebased mock trips without UI. Phase 13 adds member trip review/save/edit contracts, API/mock generation and a non-UI generation service.
 
 **It deliberately does not cover:** the guest wizard, Today UI (boards exist; only the `.today` route seam is used), terms/walkthrough UI, notifications, guest-draft recovery (OQ 17), email-change Settings flow, an in-app appearance setting, RN user migration (OQ 9), or Android. **Still not shippable to TestFlight:** server AASA/team-ID setup, physical link acceptance and unbuilt destinations must be settled first. Phase 9d replaces Phase 4's historical Release signed-out-only restriction; the `Perf` scheme retains an isolated signed-out launch path.
 
@@ -1565,7 +1565,9 @@ Every UI round verifies Matrix A-style coverage on 17e:
 Built against the trip-wizard contract with URLProtocol fixtures and the mock. Live acceptance comes with 16c.
 
 **13a: Contracts and the API client**
-- [ ] Add DTOs:
+
+  Implementation decision (2026-11-08): extend the pinned Phase 12 generator to follow the wizard DTO graph, generate snake_case CodingKeys and typed dictionaries, and retain `ApiReviewPrice`/`ApiReviewItinerary` as the backend names with the requested aliases. Prompt numeric bounds use Double (the backend emits 0.1–9.9). The primitive answer union uses existing JSONValue; review/save request envelopes and sparse snake_case profile patches are hand-written, as RN does, because no TS DTO defines them. Guest secrets are never encoded in member requests.
+- [x] Add DTOs:
   - `ApiTripInput` (snake_case request), with legs and stays;
   - `ApiTripReview`, `ApiReviewIdentity`, `ApiReviewPrompt` and its kinds (including `Screening` and `AgeBand`), `ApiReviewSummary`, `ApiTripPrice`, `ApiTripItinerary`;
   - `ApiTripSaveResult`, `ApiTripInputSnapshot`, `ApiAirportSuggestion`.

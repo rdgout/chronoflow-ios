@@ -141,6 +141,38 @@ public struct AirportRef: Codable, Sendable, Equatable {
     }
 }
 
+public struct ApiAirportSearchResults: Codable, Sendable, Equatable {
+    public var airports: [ApiAirportSuggestion]
+
+    public init(
+        airports: [ApiAirportSuggestion]
+    ) {
+        self.airports = airports
+    }
+}
+
+public struct ApiAirportSuggestion: Codable, Sendable, Equatable {
+    public var iata: String
+    public var name: String
+    public var city: String?
+    public var country: String
+    public var timezone: String
+
+    public init(
+        iata: String,
+        name: String,
+        city: String? = nil,
+        country: String,
+        timezone: String
+    ) {
+        self.iata = iata
+        self.name = name
+        self.city = city
+        self.country = country
+        self.timezone = timezone
+    }
+}
+
 public enum ApiErrorCode: Codable, Sendable, Equatable, Hashable, RawRepresentable {
     case validationFailed
     case unauthenticated
@@ -202,6 +234,229 @@ public enum ApiErrorCode: Codable, Sendable, Equatable, Hashable, RawRepresentab
     }
 }
 
+public struct ApiReviewIdentity: Codable, Sendable, Equatable {
+    public var token: String
+    public var inputRevision: Int
+    public var reviewRevision: Int?
+    public var sourceRevision: String?
+    public var guestSecret: String?
+
+    public init(
+        token: String,
+        inputRevision: Int,
+        reviewRevision: Int? = nil,
+        sourceRevision: String? = nil,
+        guestSecret: String? = nil
+    ) {
+        self.token = token
+        self.inputRevision = inputRevision
+        self.reviewRevision = reviewRevision
+        self.sourceRevision = sourceRevision
+        self.guestSecret = guestSecret
+    }
+}
+
+public struct ApiReviewItinerary: Codable, Sendable, Equatable {
+    public var legs: [ApiReviewLeg]
+    public var layovers: [ApiReviewLayover]
+
+    public init(
+        legs: [ApiReviewLeg],
+        layovers: [ApiReviewLayover]
+    ) {
+        self.legs = legs
+        self.layovers = layovers
+    }
+}
+
+public struct ApiReviewLayover: Codable, Sendable, Equatable {
+    public var journey: TripDirection
+    public var afterLegIndex: Int
+    public var kind: SegmentKindCode
+    public var durationMin: Int
+    public var nights: Int
+
+    public init(
+        journey: TripDirection,
+        afterLegIndex: Int,
+        kind: SegmentKindCode,
+        durationMin: Int,
+        nights: Int
+    ) {
+        self.journey = journey
+        self.afterLegIndex = afterLegIndex
+        self.kind = kind
+        self.durationMin = durationMin
+        self.nights = nights
+    }
+}
+
+public struct ApiReviewLeg: Codable, Sendable, Equatable {
+    public var journey: TripDirection
+    public var legIndex: Int
+    public var departUtc: String
+    public var arriveUtc: String
+    public var flightMin: Int
+
+    public init(
+        journey: TripDirection,
+        legIndex: Int,
+        departUtc: String,
+        arriveUtc: String,
+        flightMin: Int
+    ) {
+        self.journey = journey
+        self.legIndex = legIndex
+        self.departUtc = departUtc
+        self.arriveUtc = arriveUtc
+        self.flightMin = flightMin
+    }
+}
+
+public struct ApiReviewPrice: Codable, Sendable, Equatable {
+    public var state: ReviewCreditState
+    public var cost: Int
+    public var balance: Int
+    public var unlimited: Bool
+    public var freeDirections: [TripDirection]
+
+    public init(
+        state: ReviewCreditState,
+        cost: Int,
+        balance: Int,
+        unlimited: Bool,
+        freeDirections: [TripDirection]
+    ) {
+        self.state = state
+        self.cost = cost
+        self.balance = balance
+        self.unlimited = unlimited
+        self.freeDirections = freeDirections
+    }
+}
+
+public struct ApiReviewPrompt: Codable, Sendable, Equatable {
+    public var id: String
+    public var kind: PromptKind
+    public var blocking: Bool
+    public var required: Bool
+    public var text: CopyLine
+    public var scope: ApiReviewPromptScope
+    public var target: ReviewPromptTarget
+    public var fields: [String]
+    public var answer: [String: JSONValue]
+    public var shape: ApiReviewPromptShape
+    public var side: WindowSide?
+    public var deviceMin: Int?
+
+    public init(
+        id: String,
+        kind: PromptKind,
+        blocking: Bool,
+        required: Bool,
+        text: CopyLine,
+        scope: ApiReviewPromptScope,
+        target: ReviewPromptTarget,
+        fields: [String],
+        answer: [String: JSONValue],
+        shape: ApiReviewPromptShape,
+        side: WindowSide? = nil,
+        deviceMin: Int? = nil
+    ) {
+        self.id = id
+        self.kind = kind
+        self.blocking = blocking
+        self.required = required
+        self.text = text
+        self.scope = scope
+        self.target = target
+        self.fields = fields
+        self.answer = answer
+        self.shape = shape
+        self.side = side
+        self.deviceMin = deviceMin
+    }
+}
+
+public struct ApiReviewPromptScope: Codable, Sendable, Equatable {
+    public var journey: TripDirection?
+    public var legIndex: Int?
+    public var stayIndex: Int?
+
+    public init(
+        journey: TripDirection? = nil,
+        legIndex: Int? = nil,
+        stayIndex: Int? = nil
+    ) {
+        self.journey = journey
+        self.legIndex = legIndex
+        self.stayIndex = stayIndex
+    }
+}
+
+public struct ApiReviewPromptShape: Codable, Sendable, Equatable {
+    public var kind: ReviewAnswerShape
+    public var options: [String]
+    public var min: Double?
+    public var max: Double?
+
+    public init(
+        kind: ReviewAnswerShape,
+        options: [String],
+        min: Double? = nil,
+        max: Double? = nil
+    ) {
+        self.kind = kind
+        self.options = options
+        self.min = min
+        self.max = max
+    }
+}
+
+public struct ApiReviewSummary: Codable, Sendable, Equatable {
+    public var line: CopyLine
+    public var adaptation: AdaptationView
+    public var preparationDays: Int
+    public var planStartUtc: String
+    public var planStartZone: String
+    public var planEndDate: String
+    public var endCopy: [CopyLine]
+    public var stayEnd: ApiStayEnd?
+
+    public init(
+        line: CopyLine,
+        adaptation: AdaptationView,
+        preparationDays: Int,
+        planStartUtc: String,
+        planStartZone: String,
+        planEndDate: String,
+        endCopy: [CopyLine],
+        stayEnd: ApiStayEnd? = nil
+    ) {
+        self.line = line
+        self.adaptation = adaptation
+        self.preparationDays = preparationDays
+        self.planStartUtc = planStartUtc
+        self.planStartZone = planStartZone
+        self.planEndDate = planEndDate
+        self.endCopy = endCopy
+        self.stayEnd = stayEnd
+    }
+}
+
+public struct ApiStayEnd: Codable, Sendable, Equatable {
+    public var checkOutLocalDate: String
+    public var leaveUtc: String
+
+    public init(
+        checkOutLocalDate: String,
+        leaveUtc: String
+    ) {
+        self.checkOutLocalDate = checkOutLocalDate
+        self.leaveUtc = leaveUtc
+    }
+}
+
 public struct TripDetail: Codable, Sendable, Equatable {
     public var trip: TripDetailView
     public var plan: PlanView
@@ -224,6 +479,229 @@ public struct TripDetail: Codable, Sendable, Equatable {
         self.timeline = timeline
         self.checkState = checkState
         self.detailVersion = detailVersion
+    }
+}
+
+public struct ApiTripInput: Codable, Sendable, Equatable {
+    public var outbound: ApiTripInputJourney
+    public var `return`: ApiTripInputJourney?
+    public var tripEndKind: String
+    public var tripEndNights: Int?
+    public var tripEndCheckOutDate: String?
+    public var preparationDays: Int
+    public var fastDelayOptIn: Bool
+    public var override: ApiTripInputOverride
+    public var latestWake: String?
+    public var feasibleNightBed: String?
+    public var feasibleNightWake: String?
+    public var preDepartureBusyAnswered: Bool
+    public var preDepartureBusyIntervals: [ApiTripInputBusy]
+
+    public init(
+        outbound: ApiTripInputJourney,
+        `return`: ApiTripInputJourney? = nil,
+        tripEndKind: String,
+        tripEndNights: Int? = nil,
+        tripEndCheckOutDate: String? = nil,
+        preparationDays: Int,
+        fastDelayOptIn: Bool,
+        override: ApiTripInputOverride,
+        latestWake: String? = nil,
+        feasibleNightBed: String? = nil,
+        feasibleNightWake: String? = nil,
+        preDepartureBusyAnswered: Bool,
+        preDepartureBusyIntervals: [ApiTripInputBusy]
+    ) {
+        self.outbound = outbound
+        self.`return` = `return`
+        self.tripEndKind = tripEndKind
+        self.tripEndNights = tripEndNights
+        self.tripEndCheckOutDate = tripEndCheckOutDate
+        self.preparationDays = preparationDays
+        self.fastDelayOptIn = fastDelayOptIn
+        self.override = override
+        self.latestWake = latestWake
+        self.feasibleNightBed = feasibleNightBed
+        self.feasibleNightWake = feasibleNightWake
+        self.preDepartureBusyAnswered = preDepartureBusyAnswered
+        self.preDepartureBusyIntervals = preDepartureBusyIntervals
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case outbound
+        case `return`
+        case tripEndKind = "trip_end_kind"
+        case tripEndNights = "trip_end_nights"
+        case tripEndCheckOutDate = "trip_end_check_out_date"
+        case preparationDays = "preparation_days"
+        case fastDelayOptIn = "fast_delay_opt_in"
+        case override
+        case latestWake = "latest_wake"
+        case feasibleNightBed = "feasible_night_bed"
+        case feasibleNightWake = "feasible_night_wake"
+        case preDepartureBusyAnswered = "pre_departure_busy_answered"
+        case preDepartureBusyIntervals = "pre_departure_busy_intervals"
+    }
+}
+
+public struct ApiTripInputBusy: Codable, Sendable, Equatable {
+    public var startLocal: String
+    public var endLocal: String
+
+    public init(
+        startLocal: String,
+        endLocal: String
+    ) {
+        self.startLocal = startLocal
+        self.endLocal = endLocal
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case startLocal = "start_local"
+        case endLocal = "end_local"
+    }
+}
+
+public struct ApiTripInputJourney: Codable, Sendable, Equatable {
+    public var legs: [ApiTripInputLeg]
+
+    public init(
+        legs: [ApiTripInputLeg]
+    ) {
+        self.legs = legs
+    }
+}
+
+public struct ApiTripInputLeg: Codable, Sendable, Equatable {
+    public var fromIata: String
+    public var toIata: String
+    public var departLocal: String
+    public var arriveLocal: String
+    public var flightNumber: String?
+    public var seatLieFlat: Bool
+    public var seatWindow: String?
+    public var leaveForAirportLocal: String?
+    public var airportTransferMin: Int?
+    public var stay: ApiTripInputStay
+
+    public init(
+        fromIata: String,
+        toIata: String,
+        departLocal: String,
+        arriveLocal: String,
+        flightNumber: String? = nil,
+        seatLieFlat: Bool,
+        seatWindow: String? = nil,
+        leaveForAirportLocal: String? = nil,
+        airportTransferMin: Int? = nil,
+        stay: ApiTripInputStay
+    ) {
+        self.fromIata = fromIata
+        self.toIata = toIata
+        self.departLocal = departLocal
+        self.arriveLocal = arriveLocal
+        self.flightNumber = flightNumber
+        self.seatLieFlat = seatLieFlat
+        self.seatWindow = seatWindow
+        self.leaveForAirportLocal = leaveForAirportLocal
+        self.airportTransferMin = airportTransferMin
+        self.stay = stay
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case fromIata = "from_iata"
+        case toIata = "to_iata"
+        case departLocal = "depart_local"
+        case arriveLocal = "arrive_local"
+        case flightNumber = "flight_number"
+        case seatLieFlat = "seat_lie_flat"
+        case seatWindow = "seat_window"
+        case leaveForAirportLocal = "leave_for_airport_local"
+        case airportTransferMin = "airport_transfer_min"
+        case stay
+    }
+}
+
+public struct ApiTripInputOverride: Codable, Sendable, Equatable {
+    public var use: Bool
+    public var habitualBed: String?
+    public var habitualWake: String?
+    public var chronotype: String?
+
+    public init(
+        use: Bool,
+        habitualBed: String? = nil,
+        habitualWake: String? = nil,
+        chronotype: String? = nil
+    ) {
+        self.use = use
+        self.habitualBed = habitualBed
+        self.habitualWake = habitualWake
+        self.chronotype = chronotype
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case use
+        case habitualBed = "habitual_bed"
+        case habitualWake = "habitual_wake"
+        case chronotype
+    }
+}
+
+public struct ApiTripInputSnapshot: Codable, Sendable, Equatable {
+    public var input: ApiTripInput
+    public var sourceRevision: String
+    public var airports: [String: ApiAirportSuggestion]
+    public var stayEnd: ApiStayEnd?
+
+    public init(
+        input: ApiTripInput,
+        sourceRevision: String,
+        airports: [String: ApiAirportSuggestion],
+        stayEnd: ApiStayEnd? = nil
+    ) {
+        self.input = input
+        self.sourceRevision = sourceRevision
+        self.airports = airports
+        self.stayEnd = stayEnd
+    }
+}
+
+public struct ApiTripInputStay: Codable, Sendable, Equatable {
+    public var bedAvailableMode: String?
+    public var bedAvailableFromLocal: String?
+    public var checkOutLocal: String?
+    public var lateCheckOutOrDayRoom: Bool
+    public var arrivalTransferMin: Int?
+    public var transferMode: String?
+    public var busyIntervals: [ApiTripInputBusy]
+
+    public init(
+        bedAvailableMode: String? = nil,
+        bedAvailableFromLocal: String? = nil,
+        checkOutLocal: String? = nil,
+        lateCheckOutOrDayRoom: Bool,
+        arrivalTransferMin: Int? = nil,
+        transferMode: String? = nil,
+        busyIntervals: [ApiTripInputBusy]
+    ) {
+        self.bedAvailableMode = bedAvailableMode
+        self.bedAvailableFromLocal = bedAvailableFromLocal
+        self.checkOutLocal = checkOutLocal
+        self.lateCheckOutOrDayRoom = lateCheckOutOrDayRoom
+        self.arrivalTransferMin = arrivalTransferMin
+        self.transferMode = transferMode
+        self.busyIntervals = busyIntervals
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case bedAvailableMode = "bed_available_mode"
+        case bedAvailableFromLocal = "bed_available_from_local"
+        case checkOutLocal = "check_out_local"
+        case lateCheckOutOrDayRoom = "late_check_out_or_day_room"
+        case arrivalTransferMin = "arrival_transfer_min"
+        case transferMode = "transfer_mode"
+        case busyIntervals = "busy_intervals"
     }
 }
 
@@ -264,6 +742,50 @@ public struct TripListItem: Codable, Sendable, Equatable {
         self.keepOffline = keepOffline
         self.detailVersion = detailVersion
         self.checkState = checkState
+    }
+}
+
+public struct ApiTripReview: Codable, Sendable, Equatable {
+    public var identity: ApiReviewIdentity
+    public var status: PlanStatus
+    public var reasons: [CopyLine]
+    public var prompts: [ApiReviewPrompt]
+    public var summary: ApiReviewSummary?
+    public var price: ApiReviewPrice
+    public var canSave: Bool
+    public var saveBlockedReason: String?
+    public var itinerary: ApiReviewItinerary
+
+    public init(
+        identity: ApiReviewIdentity,
+        status: PlanStatus,
+        reasons: [CopyLine],
+        prompts: [ApiReviewPrompt],
+        summary: ApiReviewSummary? = nil,
+        price: ApiReviewPrice,
+        canSave: Bool,
+        saveBlockedReason: String? = nil,
+        itinerary: ApiReviewItinerary
+    ) {
+        self.identity = identity
+        self.status = status
+        self.reasons = reasons
+        self.prompts = prompts
+        self.summary = summary
+        self.price = price
+        self.canSave = canSave
+        self.saveBlockedReason = saveBlockedReason
+        self.itinerary = itinerary
+    }
+}
+
+public struct ApiTripSaveResult: Codable, Sendable, Equatable {
+    public var tripId: String
+
+    public init(
+        tripId: String
+    ) {
+        self.tripId = tripId
     }
 }
 
@@ -3088,6 +3610,37 @@ public enum TripStatus: Codable, Sendable, Equatable, Hashable, RawRepresentable
         case .upcoming: "upcoming"
         case .active: "active"
         case .completed: "completed"
+        case .unknown(let raw): raw
+        }
+    }
+
+    public init(from decoder: any Decoder) throws {
+        self.init(rawValue: try decoder.singleValueContainer().decode(String.self))
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
+    }
+}
+
+public enum WindowSide: Codable, Sendable, Equatable, Hashable, RawRepresentable {
+    case left
+    case right
+    case unknown(String)
+
+    public init(rawValue: String) {
+        switch rawValue {
+        case "left": self = .left
+        case "right": self = .right
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    public var rawValue: String {
+        switch self {
+        case .left: "left"
+        case .right: "right"
         case .unknown(let raw): raw
         }
     }

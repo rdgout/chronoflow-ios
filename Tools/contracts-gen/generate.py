@@ -18,6 +18,8 @@ OVERRIDES = {
     ('CopyArg', 'value'): ('string | number', 'CopyArgValue'),
     ('CopyLine', 'args'): ('(CopyArg| CaffeineCopyArg)[]', '[CopyArgument]'),
 }
+ROOT_TYPES = ['ApiTripListItem', 'ApiTripDetail', 'ApiTripInput', 'ApiTripReview',
+              'ApiTripSaveResult', 'ApiTripInputSnapshot', 'ApiAirportSearchResults']
 KEYWORDS = {'public', 'private', 'internal', 'return', 'case', 'default', 'extension', 'repeat', 'in', 'is', 'switch', 'where', 'throw', 'throws', 'try', 'false', 'true', 'none', 'operator'}
 
 def identifier(value):
@@ -46,8 +48,9 @@ def generate(repo):
         selected.add(name)
         body = definitions[name]
         for ref in re.findall(r'\b[A-Z]\w*\b', re.sub(r"'[^']*'", '', body)):
-            include(ref)
-    for name in ['ApiTripListItem', 'ApiTripDetail']:
+            if ref != 'Record':
+                include(ref)
+    for name in ROOT_TYPES:
         include(name)
     # Check every planner/output and domain enum, including currently unused literals.
     for path in ['Planner/Output', 'Enums']:
@@ -57,6 +60,11 @@ def generate(repo):
 
     def swift_type(ts):
         ts = ts.strip()
+        record = re.fullmatch(r'Record<string, (.+)>', ts)
+        if record:
+            return '[String: ' + swift_type(record[1]) + ']'
+        if ts == 'boolean | number | string | null':
+            return 'JSONValue'
         if ts.endswith(' | null'):
             return swift_type(ts[:-7]) + '?'
         if ts.endswith('[]'):
@@ -97,6 +105,10 @@ def generate(repo):
                         raise ValueError(f'hand-written union changed: {name}.{key}')
                 else:
                     kind = swift_type(ts)
+                if name == 'ApiReviewPromptShape' and key in {'min', 'max'}:
+                    if ts != 'number | null':
+                        raise ValueError(f'prompt numeric bound changed: {key}')
+                    kind = 'Double?'
                 if optional and not kind.endswith('?'):
                     kind += '?'
                 fields.append((key, kind))
@@ -113,6 +125,11 @@ def generate(repo):
                     else:
                         method = 'decodeIfPresent' if t.endswith('?') else 'decode'
                         lines += [f'        {identifier(k)} = try container.{method}({t.rstrip("?")}.self, forKey: .{identifier(k)})']
+                lines += ['    }']
+            coding_keys = [(k, identifier(k)) for k, _ in fields if k != identifier(k).strip('`')]
+            if coding_keys:
+                lines += ['', '    enum CodingKeys: String, CodingKey {']
+                lines += [f'        case {identifier(k)}' + (f' = "{k}"' if (k, identifier(k)) in coding_keys else '') for k, _ in fields]
                 lines += ['    }']
             lines += ['}']
         else:

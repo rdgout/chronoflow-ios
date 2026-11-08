@@ -17,8 +17,8 @@ class ContractsGeneratorTests(unittest.TestCase):
         def source_or_formatter(command, **kwargs):
             if command[0] == 'git':
                 if command[-1].endswith('/Data/Api/index.ts'):
-                    return ('export type ApiTripListItem = {\nreadonly value: string,\n};\n'
-                            'export type ApiTripDetail = {\nreadonly value: string,\n};\n')
+                    return ''.join(f'export type {name} = {{\nreadonly value: string,\n}};\n'
+                                   for name in GENERATOR['ROOT_TYPES'])
                 return ''
             return check_output(command, **kwargs)
 

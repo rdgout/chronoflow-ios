@@ -31,6 +31,10 @@ public struct FieldMessage: Sendable, Equatable {
 }
 
 public enum DataFailure: Error, Sendable, Equatable {
+    case reviewExpired
+    case notEnoughCredits
+    case saveCapacity
+    case profileInvalid(fields: [String: FieldMessage])
     case offline
     case unauthorized(status: Int)
     case emailUnverified(status: Int)
@@ -45,6 +49,7 @@ public enum DataFailure: Error, Sendable, Equatable {
         case .unauthorized(let s), .emailUnverified(let s), .conflict(let s): s
         case .validation(_, let s), .throttled(_, let s): s
         case .server(let s): s
+        case .reviewExpired, .notEnoughCredits, .saveCapacity, .profileInvalid: 422
         case .offline, .unsupported: nil
         }
     }
