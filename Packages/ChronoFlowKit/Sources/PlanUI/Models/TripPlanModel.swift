@@ -55,11 +55,13 @@ import PlanCore
                             self?.layouts = [:]
                             continue
                         }
-                        let value = try await decoder.detail(plan)
-                        guard !Task.isCancelled else { break }
-                        self?.detail = value
-                        self?.rebuildLayouts()
-                        self?.error = nil
+                        do {
+                            let value = try await decoder.detail(plan)
+                            guard !Task.isCancelled else { break }
+                            self?.detail = value
+                            self?.rebuildLayouts()
+                            self?.error = nil
+                        } catch { if !Task.isCancelled { self?.error = error } }
                     }
                 } catch { if !Task.isCancelled { self?.error = error } }
             },

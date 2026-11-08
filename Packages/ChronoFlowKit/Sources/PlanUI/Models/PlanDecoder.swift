@@ -21,15 +21,21 @@ public actor PlanDecoder {
     public private(set) var decodedOnMainThread = false
     public init() {}
 
-    public func trips(_ records: [TripRecord], now: Date) throws -> [TripListValue] {
+    public func trips(_ records: [TripRecord], now: Date) -> (values: [TripListValue], error: (any Error)?) {
         assertWorker()
-        return try records.filter { $0.deletedAt == nil && !$0.deletedLocally }.map { record in
-            let card = try record.card.decode(TripCardView.self)
-            return TripListValue(
-                card: card, planStartUtc: record.planStartUtc, planEndUtc: record.planEndUtc,
-                status: tripDisplayStatus(
-                    card, planStartUtc: record.planStartUtc, planEndUtc: record.planEndUtc, now: now))
+        var values: [TripListValue] = []
+        var firstError: (any Error)?
+        for record in records where record.deletedAt == nil && !record.deletedLocally {
+            do {
+                let card = try record.card.decode(TripCardView.self)
+                values.append(
+                    TripListValue(
+                        card: card, planStartUtc: record.planStartUtc, planEndUtc: record.planEndUtc,
+                        status: tripDisplayStatus(
+                            card, planStartUtc: record.planStartUtc, planEndUtc: record.planEndUtc, now: now)))
+            } catch { firstError = firstError ?? error }
         }
+        return (values, firstError)
     }
 
     public func detail(_ record: PlanVersionRecord) throws -> TripDetail {

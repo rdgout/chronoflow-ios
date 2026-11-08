@@ -32,11 +32,11 @@ import PlanCore
                 do {
                     for try await records in try await repository.values() {
                         guard !Task.isCancelled else { break }
-                        let values = try await decoder.trips(records, now: self?.now ?? Date())
+                        let result = await decoder.trips(records, now: self?.now ?? Date())
                         guard !Task.isCancelled else { break }
-                        self?.trips = values
+                        self?.trips = result.values
                         if let self { self.updateNow(self.now) }
-                        self?.error = nil
+                        self?.error = result.error
                     }
                 } catch { if !Task.isCancelled { self?.error = error } }
             },
