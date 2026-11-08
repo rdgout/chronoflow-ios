@@ -89,8 +89,9 @@
                         "settings.preferences.saved")
                 }
             }.onChange(of: value) { _, value in model.receive(value) }
-                .fullScreenCover(isPresented: $replaying) {
+                .navigationDestination(isPresented: $replaying) {
                     SettingsWalkthroughReplay { replaying = false }
+                        .toolbar(.hidden, for: .navigationBar, .tabBar)
                 }
         }
     }

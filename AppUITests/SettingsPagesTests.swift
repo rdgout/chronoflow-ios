@@ -64,6 +64,9 @@ nonisolated final class SettingsPagesTests: XCTestCase {
             next.tap()
         }
         XCTAssertTrue(app.buttons["settings.preferences.replay"].waitForExistence(timeout: 8))
+        format.tap()
+        app.buttons["24-hour (14:30)"].tap()
+        XCTAssertTrue(app.staticTexts["settings.preferences.saved"].waitForExistence(timeout: 8))
     }
 
     @MainActor func testLanguageChoiceUpdatesAppAndReturnsToAccount() {

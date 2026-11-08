@@ -24,7 +24,7 @@ final class RootNavigator: Navigator {
 struct RootView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.locale) private var phoneLocale
-    @State private var devicePreferences = SettingsDevicePreferences()
+    @State private var devicePreferences = SettingsDevicePreferences(defaults: SettingsPreferenceStore.make())
     var navigator = RootNavigator()
     var authModel: SignInModel?
     var authServices: AuthSessionServices?

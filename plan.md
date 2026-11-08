@@ -1876,6 +1876,8 @@ User decision, 2026-11-08: build the Settings destination pages in order, using 
 
   - Implemented account deletion with the board's exact two-step confirmation: Delete my account → current-password sheet; Keep/Cancel perform no request. The real DELETE account route sends `password`; wrong-password, offline, throttle, billing and server failures keep the account. Success uses the captured session's existing sign-out/wipe path and discards its now-deleted data. Added API/mock support, host tests and a mock UI journey. **Deferred:** Your data & policies/download: only session-authenticated web `settings/data.json` exists, with no mobile bearer-authenticated export route. The `data-export` outbox kind remains unsupported and is never acknowledged as success. The policy reader is owned by sibling 17g; no placeholder data/policy row is exposed here.
 
+Replay follow-up: use the existing NavigationStack with the bars hidden rather than a full-screen cover, so presenting replay cannot tear down the tab's session models. The UI journey changes a preference again after both replay exits. UI-test theme/language defaults are UUID-scoped under the existing authenticated test gate.
+
 Deferrals: Reminders and notification permissions/delivery remain excluded. Optional timeline items remain excluded by the 5 Nov compact-timeline decision. Purchases, paywall checkout and cancellation remain excluded. Unbuilt destinations stay hidden in Release. Register host/UI suites in the 17h runner entries; no snapshot suites.
 
 ### Phase 18 (later, separate decision): guest wizard and claim
