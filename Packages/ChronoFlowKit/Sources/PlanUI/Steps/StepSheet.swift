@@ -59,6 +59,7 @@
                             .background(ColorToken.muted.color, in: Circle()).accessibilityHidden(true)
                         Text(t("This step is no longer in your plan")).planTextStyle(Typography.screenCardTitle)
                             .accessibilityAddTraits(.isHeader)
+                            .accessibilityIdentifier("step.gone")
                         Text(
                             t(
                                 "Your plan changed after you opened it, for example because you edited the trip. Your other check-offs are kept."

@@ -6,6 +6,12 @@ import PlanCore
 import Sync
 
 @Observable public final class TripPageModel {
+    public struct StepSelection: Identifiable {
+        public let blockID: String
+        public let formatter: CopyLineFormatter
+        public var id: String { blockID }
+    }
+
     public let tripID: String
     public let plan: TripPlanModel
     public var online = true {
@@ -20,6 +26,7 @@ import Sync
     public private(set) var fetch: TripPageFetch = .idle
     public private(set) var anchor = TripPageAnchor()
     public var timeline = true
+    public var selectedStep: StepSelection?
     @ObservationIgnored private let retention: PlanRetention
     @ObservationIgnored private var lease: PlanLease?
     @ObservationIgnored private let fetchDetail: @Sendable (String) async throws -> Void
@@ -156,7 +163,12 @@ import Sync
         anchor = TripPageAnchor(dayID: day.id, labelDate: day.labelDate, offset: offset)
     }
 
+    public func selectBlock(_ id: String, formatter: CopyLineFormatter) {
+        selectedStep = StepSelection(blockID: id, formatter: formatter)
+    }
+
     public func stop() {
+        selectedStep = nil
         pathTask?.cancel()
         pathTask = nil
         reconnectPending = false

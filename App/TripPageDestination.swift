@@ -19,8 +19,6 @@ struct TripPageDestination: View {
     var onToday: (() -> Void)?
     var onSettings: (() -> Void)?
     @State private var model: TripPageModel?
-    @State private var showingStep = false
-    @State private var blockID: String?
 
     var body: some View {
         Group {
@@ -56,7 +54,6 @@ struct TripPageDestination: View {
                 events.cancel()
                 page.stop()
                 model = nil
-                showingStep = false
             }
             for await update in await native.controller.updates() {
                 guard !Task.isCancelled, update.epoch == snapshot.epoch,
@@ -64,47 +61,13 @@ struct TripPageDestination: View {
                 else { return }
             }
         }
-        .sheet(isPresented: $showingStep) {
-            if let model, let blockID {
-                TripPageStepSheet(model: model, blockID: blockID)
-            }
-        }
     }
 
     private func tripPage(_ model: TripPageModel) -> TripPageView {
         var page = TripPageView(model: model)
-        page.onBlock = openStep
         page.onTrips = onTrips
         page.onToday = onToday
         page.onSettings = onSettings
         return page
-    }
-
-    private func openStep(_ id: String) {
-        blockID = id
-        showingStep = true
-    }
-}
-
-private struct TripPageStepSheet: View {
-    let model: TripPageModel
-    let blockID: String
-    @State private var formatter: CopyLineFormatter?
-    @State private var busy = false
-
-    var body: some View {
-        Group {
-            if let formatter {
-                StepSheet(
-                    detail: model.plan.detail, blockID: blockID, now: model.plan.now, formatter: formatter,
-                    timeFormat: model.plan.timeFormat, busy: busy
-                ) { status in
-                    guard !busy else { return }
-                    busy = true
-                    defer { busy = false }
-                    try? await model.plan.setCheck(blockID: blockID, status: status)
-                }
-            }
-        }.task { formatter = try? await CopyLineFormatter(catalog: CopyCatalog.load()) }
     }
 }

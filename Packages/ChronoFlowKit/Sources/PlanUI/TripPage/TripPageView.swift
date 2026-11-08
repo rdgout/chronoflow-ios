@@ -18,7 +18,6 @@ public struct TripPageView: View {
     @State private var showLegend = false
     @State private var renderer = TimelineRenderer()
     @State private var timelineSymbols = TimelineSymbols()
-    public var onBlock: (String) -> Void = { _ in }
     public var onActions: (() -> Void)?
     public var onSettings: (() -> Void)?
     public var onMakePlan: (() -> Void)?
@@ -45,6 +44,7 @@ public struct TripPageView: View {
     }
 
     public var body: some View {
+        @Bindable var model = model
         Group {
             if model.state == .notFound || model.state == .server { errorPage } else { page }
         }
@@ -60,6 +60,11 @@ public struct TripPageView: View {
             copy = PageCopy(language: model.plan.language)
         }
         .onDisappear { model.stop() }
+        #if canImport(UIKit)
+            .sheet(item: $model.selectedStep) { selection in
+                TripPageStepSheet(model: model, selection: selection)
+            }
+        #endif
         .sheet(isPresented: $showLegend) {
             NavigationStack {
                 ScrollView { PriorityKey(copy: copy).padding(PlanMetrics.gutter) }
@@ -80,7 +85,7 @@ public struct TripPageView: View {
                             Text(verbatim: model.plan.metadata).font(Typography.planSubtitle.font)
                                 .foregroundStyle(ColorToken.mutedForeground.color).frame(maxWidth: .infinity)
                         }
-                        if let prepared = model.plan.prepared, model.state == .ready {
+                        if let prepared = model.plan.prepared, model.state == .ready, formatter != nil {
                             summary(prepared)
                             DayNavigation(days: prepared.days, selected: model.anchor.dayID, copy: copy) {
                                 jump($0, proxy: proxy)
@@ -92,7 +97,7 @@ public struct TripPageView: View {
                                     timeline: model.timeline, copy: copy, renderer: renderer, symbols: timelineSymbols,
                                     compact: geometry.size.width + geometry.safeAreaInsets.leading
                                         + geometry.safeAreaInsets.trailing < PlanMetrics.timelineLabelBreakpoint,
-                                    viewportHeight: geometry.size.height, onBlock: onBlock,
+                                    viewportHeight: geometry.size.height, onBlock: openBlock,
                                     onFrame: onFirstTimelineFrame
                                 ).equatable().id(day.id)
                             }
@@ -253,6 +258,11 @@ public struct TripPageView: View {
     private func jump(_ id: String, proxy: ScrollViewProxy) {
         model.select(dayID: id)
         if reduceMotion { proxy.scrollTo(id, anchor: .top) } else { withAnimation { proxy.scrollTo(id, anchor: .top) } }
+    }
+
+    private func openBlock(_ id: String) {
+        guard let formatter else { return }
+        model.selectBlock(id, formatter: formatter)
     }
 
     private func summary(_ prepared: PreparedPlan) -> some View {
