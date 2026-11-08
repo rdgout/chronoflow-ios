@@ -49,7 +49,15 @@ public enum StoreApplication {
     }
 
     public static func setting(_ section: String, value: JSONDocument, db: Database) throws {
-        guard !(try pending(db)).contains(where: { $0.dependency == "settings:\(section)" }) else { return }
+        let rows = try pending(db).filter { $0.dependency == "settings:\(section)" }
+        if section == "policies", let latest = rows.last, case .policies(let version) = try latest.change {
+            var policies = try value.decode(JSONObject.self)
+            policies["acceptedTermsVersion"] = .string(version)
+            policies["acceptedTermsAt"] = .string(latest.createdAt)
+            try SettingsRecord(section: section, value: .encoding(policies)).save(db)
+            return
+        }
+        guard rows.isEmpty else { return }
         try SettingsRecord(section: section, value: value).save(db)
     }
 

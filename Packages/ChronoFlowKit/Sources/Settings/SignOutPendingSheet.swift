@@ -85,7 +85,8 @@
                         onHeightChange($0)
                     }
             }.foregroundStyle(ColorToken.cardForeground.color).background(ColorToken.card.color)
-                .tint(ColorToken.primary.color).accessibilityIdentifier("settings.pending")
+                .tint(ColorToken.primary.color).accessibilityElement(children: .contain)
+                .accessibilityIdentifier("settings.pending")
         }
     }
 #endif

@@ -110,6 +110,7 @@ public func tokenOutputs(root: URL) throws -> [String: Data] {
     outputs["Packages/ChronoFlowKit/Sources/DesignSystem/WelcomeTokens.generated.swift"] = try welcomeTokens(root: root)
     outputs["Packages/ChronoFlowKit/Sources/DesignSystem/PlanUITokens.generated.swift"] = try planUITokens(root: root)
     outputs["Packages/ChronoFlowKit/Sources/DesignSystem/AuthTokens.generated.swift"] = try authTokens(root: root)
+    outputs["Packages/ChronoFlowKit/Sources/DesignSystem/TermsTokens.generated.swift"] = try termsTokens(root: root)
     outputs.merge(try planTokenOutputs(root: root)) { _, new in new }
     return outputs
 }
