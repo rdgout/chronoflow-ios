@@ -7,6 +7,8 @@
     public struct StepSheet: View {
         @Environment(\.locale) private var locale
         @Environment(\.dismiss) private var dismiss
+        private enum ActionFocus: Hashable { case done, undo }
+        @AccessibilityFocusState private var actionFocus: ActionFocus?
         public let detail: TripDetail?
         public let blockID: String
         public let now: Date
@@ -33,19 +35,40 @@
         private func t(_ key: String, _ values: [String: String] = [:]) -> String {
             PlanStrings.text(key, language: language, values)
         }
+        private var markStatus: CheckStatus? {
+            guard let detail, let block = detail.plan.blocks.first(where: { $0.id == blockID }),
+                let key = block.checkKey
+            else { return nil }
+            return detail.checkState.marks.first { checkIdentity($0.key) == checkIdentity(key) }?.status
+        }
         public var body: some View {
             ScrollView {
                 VStack(alignment: .leading, spacing: PlanUITokens.space4) {
                     if let detail, let block = detail.plan.blocks.first(where: { $0.id == blockID }) {
                         content(detail, block)
                     } else {
+                        Image(systemName: "magnifyingglass")
+                            .overlay {
+                                Image(systemName: "xmark").font(.system(size: PlanUITokens.stepGoneIconSize / 2))
+                                    .offset(
+                                        x: -PlanUITokens.stepGoneIconSize / 12, y: -PlanUITokens.stepGoneIconSize / 12)
+                            }
+                            .font(.system(size: PlanUITokens.stepGoneIconSize))
+                            .frame(width: PlanUITokens.stepGoneCircleSize, height: PlanUITokens.stepGoneCircleSize)
+                            .foregroundStyle(ColorToken.dawnText.color)
+                            .background(ColorToken.muted.color, in: Circle()).accessibilityHidden(true)
                         Text(t("This step is no longer in your plan")).font(Typography.screenCardTitle.font)
                             .accessibilityAddTraits(.isHeader)
                         Text(
                             t(
                                 "Your plan changed after you opened it, for example because you edited the trip. Your other check-offs are kept."
-                            ))
-                        Button(t("See today's steps")) { dismiss() }.buttonStyle(.borderedProminent)
+                            )
+                        ).foregroundStyle(ColorToken.mutedForeground.color)
+                        Button {
+                            dismiss()
+                        } label: {
+                            Text(t("See today's steps")).frame(maxWidth: .infinity)
+                        }.buttonStyle(.borderedProminent).frame(minHeight: PlanUITokens.actionMinHeight)
                     }
                 }.padding(PlanUITokens.space5).padding(.top, PlanUITokens.space4)
             }
@@ -53,6 +76,13 @@
             .font(Typography.screenBodyLg.font).foregroundStyle(ColorToken.cardForeground.color)
             .background(ColorToken.card.color).accessibilityIdentifier("step.sheet")
             .presentationDragIndicator(.visible).presentationDetents([.medium, .large])
+            .onChange(of: markStatus) { _, status in
+                guard detail?.plan.blocks.contains(where: { $0.id == blockID }) == true else { return }
+                AccessibilityNotification.Announcement(
+                    t(status == .done ? "Done" : status == .skipped ? "Skipped" : "Check-off undone")
+                ).post()
+                actionFocus = status == nil ? .done : .undo
+            }
         }
 
         @ViewBuilder private func content(_ detail: TripDetail, _ block: BlockView) -> some View {
@@ -105,12 +135,16 @@
             section("How", lines: instructions, options: options, bullets: true)
             if key != nil {
                 if mark != nil {
-                    Button(t("Undo")) { Task { await change(nil) } }.buttonStyle(.bordered)
+                    Button {
+                        Task { await change(nil) }
+                    } label: {
+                        Text(t("Undo")).frame(maxWidth: .infinity)
+                    }.buttonStyle(.bordered).accessibilityFocused($actionFocus, equals: .undo)
                         .accessibilityIdentifier("step.undo").disabled(busy)
                 } else {
                     ViewThatFits(in: .horizontal) {
-                        HStack { actions }
-                        VStack { actions }
+                        HStack(spacing: PlanUITokens.space2) { actions }
+                        VStack(spacing: PlanUITokens.space2) { actions }
                     }.disabled(busy)
                 }
             }
@@ -119,15 +153,25 @@
                 .frame(maxWidth: .infinity).multilineTextAlignment(.center)
         }
         @ViewBuilder private var actions: some View {
-            Button(t("Skip")) { Task { await change(.skipped) } }.buttonStyle(.bordered).accessibilityIdentifier(
+            Button {
+                Task { await change(.skipped) }
+            } label: {
+                Text(t("Skip")).frame(maxWidth: .infinity)
+            }.buttonStyle(.bordered).accessibilityIdentifier(
                 "step.skip")
-            Button(t("Mark as done")) { Task { await change(.done) } }.buttonStyle(.borderedProminent)
+            Button {
+                Task { await change(.done) }
+            } label: {
+                Label(t("Mark as done"), systemImage: "checkmark").frame(maxWidth: .infinity)
+            }.buttonStyle(.borderedProminent).accessibilityFocused($actionFocus, equals: .done)
                 .accessibilityIdentifier("step.done")
         }
         @ViewBuilder private func badges(_ block: BlockView, mark: CheckMark?, running: Bool) -> some View {
-            PlanBadge(text: t(priorityKey(block.priority)))
+            PriorityTag(text: t(priorityKey(block.priority)))
             if let mark {
-                PlanBadge(text: t(mark.status == .done ? "Done" : "Skipped"), active: mark.status == .done)
+                PlanBadge(
+                    text: t(mark.status == .done ? "Done" : "Skipped"),
+                    variant: mark.status == .done ? .secondary : .outline)
             } else if running {
                 PlanBadge(text: t("Now"), active: true)
             }
