@@ -71,15 +71,23 @@ nonisolated final class TimelinePerfTests: XCTestCase {
         waitForTimeline(app)
         let menu = app.buttons["trip.dayMenu"]
         menu.tap()
-        let last = app.buttons["trip.dayMenu.day.59"]
+        let days = app.collectionViews.firstMatch
+        XCTAssertTrue(days.waitForExistence(timeout: 5), "The native day menu must open its scrollable collection")
+        // LargeTimelineFixtureTests pins this label to large60's final prepared day.
+        let lastLabel = "Day 2.0 · Tue 8 Dec"
+        let last = days.buttons.matching(NSPredicate(format: "label == %@", lastLabel)).firstMatch
         for _ in 0..<12 {
             if last.exists && last.isHittable { break }
-            app.swipeUp(velocity: .fast)
+            days.swipeUp(velocity: .fast)
         }
-        XCTAssertTrue(last.isHittable, "The native day menu must expose day 60")
-        let lastLabel = last.label
+        guard last.exists && last.isHittable else {
+            XCTFail("The native day menu must expose day 60 (\(lastLabel))")
+            return
+        }
         last.tap()
-        XCTAssertEqual(menu.value as? String, lastLabel, "The day picker must select day 60")
+        let selection = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "value == %@", lastLabel), object: menu)
+        XCTAssertEqual(XCTWaiter.wait(for: [selection], timeout: 10), .completed, "The day picker must select day 60")
         let scroll = app.scrollViews["trip.scroll"].firstMatch
         let end = app.descendants(matching: .any)["trip.plan.end"].firstMatch
         for _ in 0..<6 {

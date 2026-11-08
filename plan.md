@@ -1725,6 +1725,14 @@ Fix round 1 verification: strict lint and package suites pass except the known A
 
 Performance enforcement verification: `make lint`, focused host guards (including a real expected-failure XCTest metric measurement), 76 runner fixtures and 10 launch-resource checks pass. The full Debug package run has only the existing APICookieTests sandbox EPERM. An optional Release host test attempt is blocked by the unrelated `TripWizardTests/TripGenerationTests.swift:235` reference to Debug-only `MockAppSeed`; no Release host timings are claimed. Changed Perf sources type-check against the iOS simulator SDK; runtime results remain pending.
 
+**15 performance runner repair (worktree B, 2026-11-08)**
+
+- [x] Preserve the user's missing-start forwarding fix through XCTest's actual timestamped lifecycle. Forward protocol-conformance/selector checks and unhandled messages so native metric preparation, estimated start, start and stop reach each copied delegate. The supplied no-argument `didStartMeasuring()` line cannot compile against either installed XCTest SDK; real automatic/manual host measurement regressions cover the corrected forwarding.
+- [x] Find the last native-menu item by the English label verified from `large60`'s prepared fixture copy, scroll the menu's collection instead of the app, and wait for selected-day confirmation before traversing to the end. Keep the twelve-menu/six-timeline gesture bounds and use the existing user interface.
+- [ ] User reruns `make perf-timeline` on 17e for the corrected native metrics and menu traversal; simulator execution remains excluded from this repair.
+
+Runner repair verification: strict lint, eight focused metric/fixture host tests, token/asset and resource/runner checks pass; the full package run has only the known APICookieTests sandbox EPERM. Perf sources type-check against the iOS 17 simulator target. `Docs/perf-timeline.md` records the SDK-compatible replacement for the supplied no-argument start hook and the pending runtime acceptance.
+
 **15e: Wide trip page** (blocked on OQ 35: PlanWide, PlanWideScrolled and PlanWideDayMenu HTML)
 - [ ] From a 600 pt window width, portrait only: timeline and list side by side, a 280 pt list column growing to 320 pt from 900 pt, no view button (`reqWideTrip`). Duo folded and every iPhone keep the phone layout. Until the user re-exports the wide boards and this lands, Duo unfolded uses the phone layout at full width (settled OQ 35).
   - Tests: wide snapshots at 669 pt; a size-change test (phone → 669 pt → phone) that keeps the day, scroll position and open sheet; `make duo`.

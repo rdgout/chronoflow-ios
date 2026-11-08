@@ -199,7 +199,12 @@ requiring every iteration to travel its entire height.
 
 `test60DayLastDayReachesEnd` separately launches, opens the real native day picker, selects
 its last (index 59) entry, asserts that selection, and reaches `trip.plan.end` in at most
-six vertical swipes. Native-menu scrolling is bounded to twelve gestures. These checks
+six vertical swipes. It finds the entry by its visible English label,
+`Day 2.0 · Tue 8 Dec`, pinned against the generated fixture's prepared copy by
+`LargeTimelineFixtureTests`. The synthetic fixture repeats six-day titles, so its 60th
+entry is not titled "Day 60"; the date distinguishes it. It scrolls the native menu's
+collection view, bounded to twelve gestures, and waits for the selected-day value after
+tapping. SwiftUI menu-item accessibility identifiers are not required. These checks
 are outside the scrolling measurement. They prove navigation across the full day range
 and end-card reachability, not that all intermediate days were physically scrolled through.
 The host renderer/cache test still traverses and prepares all 60 days at phone/Duo widths.
@@ -225,6 +230,20 @@ Budget violations call `XCTFail` while preserving the returned measurements. A h
 XCTest as an assertion failure. All raw values are logged as `Timeline metric:` and returned to XCTest for `.xcresult`
 reporting. **No Xcode-recorded baseline plist is required.** Host tests exercise boundaries,
 unit conversion, missing/bad data, copied delegate lifecycle and over-budget rejection.
+
+XCTest's built-in signpost and memory metrics also use a private, timestamped lifecycle.
+The adapter forwards Objective-C protocol-conformance and selector checks, and forwards
+unhandled messages to the copied metric. This preserves preparation options, estimated
+start, actual start and stop timestamps, including optional UI-automation callbacks,
+without declaring private XCTest APIs in the adapter. Forwarding just the public
+`willBeginMeasuring()` / `didStopMeasuring()` hooks leaves the native signpost probe's
+start date unset. The supplied `didStartMeasuring() { metric.didStartMeasuring?() }` fix
+captures the missing-start intent, but does not compile against the installed macOS or
+iOS XCTest SDK: that member is absent from `XCTMetric`. The actual callback is
+`didStartMeasuringAtTimestamp:` and XCTest first checks private-protocol conformance.
+Host regressions exercise real automatic and manual XCTest measurement loops, proving
+that copied delegates receive preparation and all three timestamped callbacks; direct
+forwarding and the existing budget-rejection checks remain covered.
 
 The user supplied the following **pre-change** 17e/iOS 27.2 Perf results from
 `build/test-results/17e/Perf-compare.log`. The changed UI tests have only been SDK
@@ -291,3 +310,14 @@ fails to compile in Release. No Release host timing is claimed. This does not ch
 Debug `make quick` gate or the separate iOS Perf target. No xcodebuild, simulator,
 all-size snapshot recording or physical-device profiling was run. The simulator SDK
 successfully type-checks the changed Perf tests and shared metric adapter.
+
+## Performance runner repair verification, 2026-11-08
+
+`make lint`, all eight focused metric/large-fixture host tests, token/asset tests and
+resource/runner checks pass. The complete Debug package run reports only the existing
+`APICookieTests.realRedirectCookieHandlingIsDisabled` sandbox EPERM. The corrected Perf
+tests and adapter type-check against the iOS 17 simulator target. Logs are
+`build/timeline-perf-fix-{lint,focused,package,tools,typecheck}.log`. No simulator was run;
+native menu traversal and Release signpost/hitch/memory results require a fresh
+`make perf-timeline` run on 17e. The supplied failing run does not fill the pending
+acceptance slots above.

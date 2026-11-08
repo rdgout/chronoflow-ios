@@ -48,6 +48,18 @@ nonisolated struct TimelineMetricBudgetTests {
         copy.didStopMeasuring()
         #expect(delegate.started && delegate.stopped)
         let timestamp = XCTPerformanceMeasurementTimestamp()
+        for selector in [
+            #selector(FixtureMetric.willBeginMeasuringAtEstimatedTimestamp(_:)),
+            #selector(FixtureMetric.didStartMeasuringAtTimestamp(_:)),
+            #selector(FixtureMetric.didStopMeasuringAtTimestamp(_:)),
+        ] {
+            try #require(copy.responds(to: selector))
+            copy.perform(selector, with: timestamp)
+        }
+        #expect(delegate.estimatedStart === timestamp)
+        #expect(delegate.measurementStart === timestamp)
+        #expect(delegate.measurementStop === timestamp)
+        #expect(fake.estimatedStart == nil && fake.measurementStart == nil && fake.measurementStop == nil)
         delegate.samples = [sample("time-to-first-timeline-frame.duration", 0.53, "s")]
         #expect(try copy.reportMeasurements(from: timestamp, to: timestamp).count == 1)
         delegate.samples.append(sample("time-to-first-timeline-frame.duration", 0.81, "s"))
@@ -59,21 +71,70 @@ nonisolated private final class FixtureMetric: NSObject, XCTMetric {
     var copies: [FixtureMetric] = []
     var started = false
     var stopped = false
+    var estimatedStart: XCTPerformanceMeasurementTimestamp?
+    var measurementStart: XCTPerformanceMeasurementTimestamp?
+    var measurementStop: XCTPerformanceMeasurementTimestamp?
+    var prepared = false
     var samples: [XCTPerformanceMeasurement] = []
+
+    // Match built-in metrics so XCTest exercises its timestamped lifecycle.
+    override func conforms(to aProtocol: Protocol) -> Bool {
+        NSStringFromProtocol(aProtocol) == "XCTMetric_Private" || super.conforms(to: aProtocol)
+    }
+
     func copy(with zone: NSZone? = nil) -> Any {
         let copy = FixtureMetric()
         copy.samples = samples
+        copy.prepared = prepared
         copies.append(copy)
         return copy
     }
     func willBeginMeasuring() { started = true }
     func didStopMeasuring() { stopped = true }
+    @objc func prepareToMeasureWithOptions(_ options: AnyObject) { prepared = true }
+    @objc func willBeginMeasuringAtEstimatedTimestamp(_ timestamp: XCTPerformanceMeasurementTimestamp) {
+        estimatedStart = timestamp
+    }
+    @objc func didStartMeasuringAtTimestamp(_ timestamp: XCTPerformanceMeasurementTimestamp) {
+        measurementStart = timestamp
+    }
+    @objc func didStopMeasuringAtTimestamp(_ timestamp: XCTPerformanceMeasurementTimestamp) {
+        measurementStop = timestamp
+    }
     func reportMeasurements(
         from startTime: XCTPerformanceMeasurementTimestamp, to endTime: XCTPerformanceMeasurementTimestamp
     ) throws -> [XCTPerformanceMeasurement] { samples }
 }
 
 nonisolated final class TimelineMetricReportingTests: XCTestCase {
+    func testAutomaticMeasurementForwardsTimestampedLifecycle() { checkLifecycle(manual: false) }
+    func testManualMeasurementForwardsTimestampedLifecycle() { checkLifecycle(manual: true) }
+
+    private func checkLifecycle(manual: Bool) {
+        let metric = FixtureMetric()
+        metric.samples = [
+            XCTPerformanceMeasurement(
+                identifier: "time-to-first-timeline-frame.duration", displayName: "First frame",
+                doubleValue: 0.53, unitSymbol: "s")
+        ]
+        let options = XCTMeasureOptions()
+        options.iterationCount = 1
+        if manual { options.invocationOptions = [.manuallyStart, .manuallyStop] }
+        measure(metrics: [TimelineBudgetMetric(metric, budget: .firstFrame)], options: options) {
+            if manual {
+                startMeasuring()
+                stopMeasuring()
+            }
+        }
+        XCTAssertFalse(metric.copies.isEmpty)
+        for copy in metric.copies {
+            XCTAssertTrue(copy.prepared)
+            XCTAssertNotNil(copy.estimatedStart)
+            XCTAssertNotNil(copy.measurementStart)
+            XCTAssertNotNil(copy.measurementStop)
+        }
+    }
+
     func testOverBudgetReportFailsTheXCTestMeasurement() {
         let options = XCTExpectedFailure.Options()
         options.issueMatcher = { $0.compactDescription.contains("Timeline budget exceeded") }

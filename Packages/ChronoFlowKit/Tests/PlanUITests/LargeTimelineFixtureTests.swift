@@ -52,6 +52,9 @@ struct LargeTimelineFixtureTests {
         let prepared = preparePlan(
             fixture.detail, layouts: layouts, formatter: CopyLineFormatter(catalog: try await CopyCatalog.load()),
             language: .en)
+        let last = try #require(prepared.days.last)
+        let lastLabel = last.title + " · " + last.date
+        #expect(lastLabel == "Day 2.0 · Tue 8 Dec")
         print(
             "60-day layout: grids=\(heights.reduce(0, +))pt; gaps=\(Double(62) * PlanMetrics.sectionGap)pt; warning headers=\(prepared.days.filter { $0.warningCount > 0 }.count); list rows=\(prepared.days.reduce(0) { $0 + $1.blocks.count }); zone rows=\(prepared.days.flatMap(\.blocks).filter { $0.block.type == .zoneChange }.count); widths=\(Set(layouts.values.map(\.minWidth)).sorted())"
         )

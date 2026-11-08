@@ -78,6 +78,19 @@ nonisolated final class TimelineBudgetMetric: NSObject, XCTMetric {
     func willBeginMeasuring() { metric.willBeginMeasuring?() }
     func didStopMeasuring() { metric.didStopMeasuring?() }
 
+    // XCTest gates its timestamped lifecycle on a private protocol implemented by the wrapped metric.
+    override func conforms(to aProtocol: Protocol) -> Bool {
+        super.conforms(to: aProtocol) || metric.conforms(to: aProtocol)
+    }
+
+    override func responds(to selector: Selector!) -> Bool {
+        super.responds(to: selector) || metric.responds(to: selector)
+    }
+
+    override func forwardingTarget(for selector: Selector!) -> Any? {
+        metric.responds(to: selector) ? metric : super.forwardingTarget(for: selector)
+    }
+
     func reportMeasurements(
         from startTime: XCTPerformanceMeasurementTimestamp, to endTime: XCTPerformanceMeasurementTimestamp
     ) throws -> [XCTPerformanceMeasurement] {
