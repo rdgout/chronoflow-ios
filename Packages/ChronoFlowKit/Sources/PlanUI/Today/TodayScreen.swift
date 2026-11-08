@@ -48,10 +48,19 @@
                         empty
                     } else if let hero = selectTodayTrip(trips, now: now) {
                         let view = detail.map { todayView($0, marks: $0.checkState.marks, now: now, hidden: hidden) }
-                        TripSummaryCard(
-                            trip: hero, now: now, formatter: formatter, next: view?.nextStep, timeFormat: timeFormat
-                        ) { openTrip(hero.card.id) }
-                        .accessibilityIdentifier("today.trip")
+                        Group {
+                            if hero.status == .upcoming {
+                                TodayFutureTripCard(
+                                    trip: hero, now: now, formatter: formatter, next: view?.nextStep,
+                                    timeFormat: timeFormat
+                                ) { openTrip(hero.card.id) }
+                            } else {
+                                TripSummaryCard(
+                                    trip: hero, now: now, formatter: formatter, next: view?.nextStep,
+                                    timeFormat: timeFormat
+                                ) { openTrip(hero.card.id) }
+                            }
+                        }.accessibilityIdentifier("today.trip")
                         if hero.status == .upcoming { future(hero) } else if let view { panel(view) }
                     } else if let ended = lastEndedTrip(trips, now: now) {
                         completed(ended)
@@ -106,14 +115,13 @@
                 Text(t("Keep your usual sleep times."))
                 if let days = trip.preparationDays, days > 0 {
                     Text(
-                        t(
-                            "Your {{count}} preparation days start on {{date}}.",
+                        PlanStrings.text(
+                            "Your {{count}} preparation days start on {{date}}.", language: language,
                             [
-                                "count": String(days),
                                 "date": formatter.formatWeekdayDate(
                                     trip.planStartUtc ?? trip.card.departureUtc, language: language,
-                                    zone: trip.planStartZone ?? trip.card.from.zone),
-                            ]))
+                                    zone: trip.planStartZone ?? trip.card.from.zone)
+                            ], count: days))
                 }
             }.font(Typography.screenBody.font).planCard().accessibilityIdentifier("today.future")
         }
@@ -128,28 +136,28 @@
                     )
                     .font(Typography.screenSectionTitle.font).accessibilityAddTraits(.isHeader)
                     if let status = day.status {
-                        PlanBadge(
-                            text: t(dayStatusLabelKey(status) ?? ""),
-                            active: status == .adapted || status == .adaptedSlowerClock)
+                        DayStatusPill(status: status, text: t(dayStatusLabelKey(status) ?? ""))
                     }
                 }
                 if let progress = view.dayProgress, progress.total > 0 {
-                    ProgressView(value: Double(progress.done), total: Double(progress.total)) {
-                        Text(
-                            t(
-                                "{{done}}/{{total}} done",
-                                ["done": String(progress.done), "total": String(progress.total)]))
-                    }.tint(ColorToken.dawn.color).font(Typography.screenMeta.font)
-                    if progress.skipped > 0 {
-                        Text(t("{{count}} skipped", ["count": String(progress.skipped)])).font(
-                            Typography.screenMeta.font)
-                    }
+                    DayProgressRow(
+                        done: progress.done, total: progress.total, skipped: progress.skipped, language: language)
                 }
             }
             VStack(alignment: .leading, spacing: PlanUITokens.space2) {
                 heading("Right now")
                 if view.currentSteps.isEmpty {
-                    Text(t("Nothing scheduled right now.")).font(Typography.screenBodyLg.font).planCard()
+                    VStack(spacing: PlanUITokens.space2) {
+                        Image(systemName: "calendar.badge.checkmark").font(.system(size: PlanUITokens.space6))
+                            .accessibilityHidden(true)
+                        Text(t("Nothing scheduled right now.")).font(Typography.screenBodyLg.font)
+                    }.foregroundStyle(ColorToken.mutedForeground.color).multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity).padding(PlanUITokens.space6)
+                        .overlay {
+                            RoundedRectangle(cornerRadius: PlanUITokens.radius3Xl).strokeBorder(
+                                ColorToken.border.color,
+                                style: StrokeStyle(lineWidth: AuthTokens.borderWidth, dash: [PlanUITokens.space1]))
+                        }
                 }
                 ForEach(view.currentSteps, id: \.id) { row($0, view: view, running: true) }
             }
@@ -160,7 +168,8 @@
             }
             if view.importantHidden || view.allCategoriesHidden {
                 Button(action: settings) {
-                    Label {
+                    HStack(spacing: PlanUITokens.space3) {
+                        Image(systemName: "eye.slash").accessibilityHidden(true)
                         VStack(alignment: .leading) {
                             Text(
                                 t(
@@ -169,10 +178,14 @@
                             Text(t("Show them in Settings › Preferences")).foregroundStyle(
                                 ColorToken.mutedForeground.color)
                         }
-                    } icon: {
-                        Image(systemName: "eye.slash")
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.right").foregroundStyle(ColorToken.mutedForeground.color)
+                            .accessibilityHidden(true)
                     }
-                }.buttonStyle(.plain).font(Typography.screenBody.font).planCard().accessibilityIdentifier(
+                    .padding(.vertical, PlanUITokens.space2).padding(.horizontal, PlanUITokens.space3)
+                    .frame(minHeight: PlanUITokens.space14)
+                    .background(ColorToken.surface2.color, in: RoundedRectangle(cornerRadius: PlanUITokens.radiusXl))
+                }.buttonStyle(.plain).font(Typography.screenBody.font).accessibilityIdentifier(
                     "today.hidden")
             }
         }

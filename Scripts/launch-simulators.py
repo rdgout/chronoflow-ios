@@ -108,7 +108,7 @@ SUITES = {'AppTests': {'logic': ('TripsLayoutTests', 'StepSheetLayoutTests', 'To
                               'DataSourceParityTests')},
  'TripWizardTests': {'host': ('TripGenerationTests', 'TripGenerationRecoveryTests')},
  'PlanCoreTests': {'host': ('CopyTests', 'TimelineTests', 'LabelTests')},
- 'PlanUITests': {'host': ('ModelTests',)},
+ 'PlanUITests': {'host': ('ModelTests', 'PlanStringsTests')},
  'SyncTests': {'host': ('LocalMutationsTests',
                         'OutboxFlusherTests',
                         'FullPullTests',
