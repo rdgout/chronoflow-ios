@@ -26,6 +26,8 @@ nonisolated final class AppTabsTests: XCTestCase {
     }
 
     @MainActor func testTodayTabMinimizesOnScrollDownAndExpandsOnScrollUp() throws {
+        // The system owns re-expansion and XCUI cannot observe it reliably; minimizing was confirmed on a phone.
+        try XCTSkipIf(true, "Skipped by user decision, 2026-11-08: tab bar minimizing works on device")
         try verifyMinimization(tab: "Today", screen: "today.screen", name: "today")
     }
 
