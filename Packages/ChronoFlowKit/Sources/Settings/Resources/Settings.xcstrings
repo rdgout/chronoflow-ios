@@ -3773,6 +3773,150 @@
           }
         }
       }
+    },
+    "Delete account": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete account"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account verwijderen"
+          }
+        }
+      }
+    },
+    "Delete your account?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete your account?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je account verwijderen?"
+          }
+        }
+      }
+    },
+    "Your trips, plans, body-clock answers and any credits left are deleted for good, here and on the web. This can't be undone.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your trips, plans, body-clock answers and any credits left are deleted for good, here and on the web. This can't be undone."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je reizen, plannen, antwoorden over je lichaamsklok en resterende credits worden definitief verwijderd, hier en op het web. Dit kun je niet ongedaan maken."
+          }
+        }
+      }
+    },
+    "Delete my account": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete my account"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mijn account verwijderen"
+          }
+        }
+      }
+    },
+    "You'll be asked for your password next.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You'll be asked for your password next."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daarna vragen we om je wachtwoord."
+          }
+        }
+      }
+    },
+    "Keep my account": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep my account"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mijn account houden"
+          }
+        }
+      }
+    },
+    "Enter your password to delete your account. This can't be undone.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter your password to delete your account. This can't be undone."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voer je wachtwoord in om je account te verwijderen. Dit kun je niet ongedaan maken."
+          }
+        }
+      }
+    },
+    "Your subscription could not be cancelled. Please try deleting your account again.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your subscription could not be cancelled. Please try deleting your account again."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je abonnement kon niet worden opgezegd. Probeer je account opnieuw te verwijderen."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

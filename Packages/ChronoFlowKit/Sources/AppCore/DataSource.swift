@@ -10,6 +10,7 @@ public protocol DataSource: Sendable {
     func resendVerificationEmail() async throws -> EmailVerificationStatus
     func verifyEmail(_ input: SignedVerificationInput) async throws -> EmailVerificationStatus
     func signOut() async throws
+    func deleteAccount(password: String) async throws
     func accountSecurity(_ change: AccountSecurityChange) async throws -> AccountSecurityResult
     func fetchIdentity() async throws -> AccountIdentity
     func fetchAccount() async throws -> AccountSnapshot
@@ -25,6 +26,8 @@ public protocol DataSource: Sendable {
 }
 
 extension DataSource {
+    public func deleteAccount(password: String) async throws { throw DataFailure.unsupported(.security) }
+
     public func accountSecurity(_ change: AccountSecurityChange) async throws -> AccountSecurityResult {
         throw DataFailure.unsupported(.security)
     }

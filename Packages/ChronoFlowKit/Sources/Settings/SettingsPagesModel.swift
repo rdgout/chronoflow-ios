@@ -12,6 +12,7 @@ import Observation
     @ObservationIgnored private let database: AccountDatabase
     @ObservationIgnored private let permit: SessionMutationPermit
     @ObservationIgnored private let isCurrent: @Sendable () async -> Bool
+    @ObservationIgnored private let delete: @MainActor (String) async throws -> Void
     @ObservationIgnored private let security: @MainActor (AccountSecurityChange) async throws -> AccountSecurityResult
     @ObservationIgnored private let requestSync: @Sendable () async -> Void
     @ObservationIgnored private var tasks: [Task<Void, Never>] = []
@@ -21,6 +22,7 @@ import Observation
         database: AccountDatabase, permit: SessionMutationPermit,
         isCurrent: @escaping @Sendable () async -> Bool,
         requestSync: @escaping @Sendable () async -> Void = {},
+        delete: @escaping @MainActor (String) async throws -> Void = { _ in throw DataFailure.unsupported(.security) },
         security: @escaping @MainActor (AccountSecurityChange) async throws -> AccountSecurityResult = { _ in
             throw DataFailure.unsupported(.security)
         }
@@ -30,6 +32,7 @@ import Observation
         self.isCurrent = isCurrent
         self.requestSync = requestSync
         self.security = security
+        self.delete = delete
     }
 
     public func start() {
@@ -69,6 +72,11 @@ import Observation
         guard active, await isCurrent(), !Task.isCancelled else { throw CancellationError() }
         try await OutboxRepository(database: database).enqueue(change, permit: permit)
         await requestSync()
+    }
+
+    public func deleteAccount(password: String) async throws {
+        guard active, await isCurrent(), !Task.isCancelled else { throw CancellationError() }
+        try await delete(password)
     }
 
     public func performSecurity(_ change: AccountSecurityChange) async throws -> AccountSecurityResult {

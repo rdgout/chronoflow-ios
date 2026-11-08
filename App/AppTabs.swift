@@ -132,6 +132,7 @@ struct AppTabs: View {
                 database: database, permit: permit,
                 isCurrent: { await native.controller.activeSession() == snapshot },
                 requestSync: { await native.sync?.requestSync() },
+                delete: { try await native.deleteAccount(password: $0, session: snapshot) },
                 security: { try await native.accountSecurity($0, session: snapshot) })
             settingsPages = pages
             pages.start()

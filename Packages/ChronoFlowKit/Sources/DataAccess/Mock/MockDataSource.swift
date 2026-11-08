@@ -3,7 +3,7 @@ import CryptoKit
 import Foundation
 
 public enum MockMethod: String, Sendable, CaseIterable {
-    case accountSecurity
+    case accountSecurity, deleteAccount
     case passkeyOptions, passkeyLogin, signIn, completeTwoFactor, signUp, requestPasswordReset, resetPassword
     case verificationStatus, resendVerificationEmail, verifyEmail, signOut, fetchIdentity, fetchAccount, fetchTrips,
         fetchTripDetail, send, searchAirports, reviewTrip, reviewTripEdit, saveTrip, updateTrip, tripInput
@@ -741,6 +741,21 @@ extension MockDataSource {
 }
 
 extension MockDataSource {
+    public func deleteAccount(password: String) async throws {
+        try await begin(.deleteAccount)
+        let id = try accountID(verified: true)
+        try limit("credential:\(id)", count: 6)
+        guard state!.accounts[id]?.password == password else {
+            throw validation("password", "The provided password was incorrect.")
+        }
+        try update {
+            $0.accounts[id] = nil
+            $0.sessions = $0.sessions.filter { $0.value.accountID != id }
+        }
+        currentToken = nil
+        requestToken = nil
+    }
+
     public func accountSecurity(_ change: AccountSecurityChange) async throws -> AccountSecurityResult {
         try await begin(.accountSecurity)
         let accountID = try accountID(verified: true)

@@ -2,6 +2,11 @@ import AppCore
 import Foundation
 
 extension APIDataSource {
+    public func deleteAccount(password: String) async throws {
+        try await client.requestNoContent(
+            APIEndpoint(method: "DELETE", path: ["account"], body: JSONEncoder().encode(["password": password])))
+    }
+
     public func accountSecurity(_ change: AccountSecurityChange) async throws -> AccountSecurityResult {
         func endpoint(_ method: String, _ path: [String], _ fields: [String: JSONValue]) throws -> APIEndpoint {
             APIEndpoint(method: method, path: ["account"] + path, body: try JSONEncoder().encode(JSONObject(fields)))

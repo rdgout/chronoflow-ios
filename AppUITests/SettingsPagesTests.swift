@@ -127,6 +127,24 @@ nonisolated final class SettingsPagesTests: XCTestCase {
         XCTAssertFalse(app.buttons["Buy credits or a plan"].exists)
     }
 
+    @MainActor func testDeleteAccountKeepsAccountUntilBothConfirmationStepsComplete() {
+        let app = launchSettingsPages()
+        defer { app.terminate() }
+        open("settings.account", app: app)
+        open("settings.account.delete", app: app)
+        open("settings.delete.keep", app: app)
+        XCTAssertTrue(app.buttons["settings.account.delete"].waitForExistence(timeout: 6))
+        open("settings.account.delete", app: app)
+        open("settings.delete.confirm", app: app)
+        fillSecret("settings.delete.password", "wrong", app: app)
+        open("settings.delete.submit", app: app)
+        XCTAssertTrue(app.staticTexts["settings.delete.error"].waitForExistence(timeout: 8))
+        XCTAssertEqual(app.staticTexts["settings.delete.error"].label, "The provided password was incorrect.")
+        fillSecret("settings.delete.password", "password", app: app)
+        open("settings.delete.submit", app: app)
+        XCTAssertTrue(app.textFields["sign-in.email"].waitForExistence(timeout: 12))
+    }
+
     @MainActor private func launchSettingsPages() -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments =

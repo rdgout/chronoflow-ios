@@ -28,6 +28,7 @@
     @MainActor public struct SettingsAccountView: View {
         @Environment(\.locale) private var locale
         private let store: SettingsPagesModel
+        @State private var showingDelete = false
         public init(store: SettingsPagesModel) { self.store = store }
         private func t(_ key: String) -> String {
             SettingsStrings.text(key, language: locale.language.languageCode?.identifier == "nl" ? .nl : .en)
@@ -49,10 +50,14 @@
                             Label(t("Language"), systemImage: "globe")
                         }.accessibilityIdentifier("settings.account.language")
                     }
+                    Section {
+                        Button(t("Delete account"), role: .destructive) { showingDelete = true }
+                            .accessibilityIdentifier("settings.account.delete")
+                    }
                 } else {
                     SettingsStoredState(loaded: store.loaded, failed: store.failure)
                 }
-            }
+            }.sheet(isPresented: $showingDelete) { SettingsDeleteAccountView(delete: store.deleteAccount) }
         }
     }
 
