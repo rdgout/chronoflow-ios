@@ -79,6 +79,63 @@ nonisolated final class AuthAuditTests: XCTestCase {
         }
     }
 
+    @MainActor func testSignUpFormInLeanAuditMatrix() async throws { try await auditSignUp(state: "form") }
+    @MainActor func testSignUpEmptyInLeanAuditMatrix() async throws { try await auditSignUp(state: "empty") }
+    @MainActor func testSignUpEmailInLeanAuditMatrix() async throws { try await auditSignUp(state: "email") }
+    @MainActor func testSignUpTakenInLeanAuditMatrix() async throws { try await auditSignUp(state: "taken") }
+    @MainActor func testSignUpPasswordInLeanAuditMatrix() async throws { try await auditSignUp(state: "password") }
+    @MainActor func testSignUpConfirmationInLeanAuditMatrix() async throws {
+        try await auditSignUp(state: "confirmation")
+    }
+    @MainActor func testSignUpVisibleInLeanAuditMatrix() async throws { try await auditSignUp(state: "visible") }
+    @MainActor func testSignUpServerInLeanAuditMatrix() async throws { try await auditSignUp(state: "server") }
+    @MainActor func testSignUpThrottleInLeanAuditMatrix() async throws { try await auditSignUp(state: "throttle") }
+    @MainActor func testSignUpOfflineInLeanAuditMatrix() async throws { try await auditSignUp(state: "offline") }
+
+    @MainActor private func auditSignUp(state: String) async throws {
+        try await FontRegistry.register()
+        let previous = XCUIDevice.shared.appearance
+        defer { XCUIDevice.shared.appearance = previous }
+        for (language, appearance, xxLarge) in variants {
+            try DeviceAppearance.set(appearance)
+            let app = XCUIApplication()
+            app.launchArguments = AuthUIFlow.arguments(language: language, xxLarge: xxLarge)
+            app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
+            if ["server", "throttle", "offline"].contains(state) {
+                app.launchEnvironment["CF_AUTH_TEST_SIGNUP_FAILURE"] = state
+            }
+            app.launch()
+            defer { app.terminate() }
+            openSignUp(app)
+            if state == "empty" {
+                AuthUIFlow.reveal(app.buttons["sign-up.submit"], in: app)
+                app.buttons["sign-up.submit"].tap()
+            } else if state == "visible" {
+                AuthUIFlow.reveal(app.switches["sign-up.visibility"], in: app)
+                app.switches["sign-up.visibility"].tap()
+            } else if state != "form" {
+                fillSignUp(
+                    app,
+                    email: state == "taken"
+                        ? MockScenarioValues.demoEmail : state == "email" ? "invalid" : "new@example.com",
+                    password: state == "password" ? "short" : "NewPassword123!",
+                    confirmation: state == "confirmation" ? "different" : nil)
+            }
+            if !["form", "visible"].contains(state) {
+                let finished = XCTNSPredicateExpectation(
+                    predicate: NSPredicate { _, _ in app.textFields["sign-up.name"].isEnabled }, object: nil)
+                XCTAssertEqual(XCTWaiter.wait(for: [finished], timeout: 6), .completed)
+            }
+            auditControls(
+                app,
+                identifiers: [
+                    "auth.back", "sign-up.name", "sign-up.email", "sign-up.password", "sign-up.confirmation",
+                    "sign-up.visibility", "sign-up.submit", "sign-up.consent", "sign-up.back",
+                ] + (["taken", "server", "throttle"].contains(state) ? ["auth.banner"] : []),
+                language: "\(language), sign-up-\(state)", appearance: appearance, xxLarge: xxLarge)
+        }
+    }
+
     @MainActor private func auditSignInOrTwoFactor(mode: Int) async throws {
         try await FontRegistry.register()
         let device = XCUIDevice.shared

@@ -45,6 +45,18 @@ final class AuthSessionServices {
                                     ? .throttled(retryAfterSeconds: 60, status: 429) : .server(status: 503))
                     }
                 }
+                if services.authUITestEnabled,
+                    let failure = ProcessInfo.processInfo.environment["CF_AUTH_TEST_SIGNUP_FAILURE"]
+                {
+                    Task {
+                        await mock.failNext(
+                            method: .signUp,
+                            error: failure == "offline"
+                                ? .offline
+                                : failure == "throttle"
+                                    ? .throttled(retryAfterSeconds: 60, status: 429) : .server(status: 503))
+                    }
+                }
                 if ProcessInfo.processInfo.arguments.contains("-cf.forgotServerFailure") {
                     Task { await mock.failNext(method: .requestPasswordReset, error: .server(status: 503)) }
                 } else if ProcessInfo.processInfo.arguments.contains("-cf.forgotThrottleFailure") {

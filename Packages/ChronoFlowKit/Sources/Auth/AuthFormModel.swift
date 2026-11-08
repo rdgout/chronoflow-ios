@@ -3,9 +3,10 @@ import Foundation
 import Observation
 
 nonisolated public enum AuthBannerKind: String, CaseIterable, Sendable {
-    case credentials, locked, server
+    case credentials, locked, server, emailTaken
     public var title: String {
         switch self {
+        case .emailTaken: "There's already an account with this email."
         case .credentials: "That email and password don't match."
         case .locked: "Too many attempts."
         case .server: "Something went wrong on our side."
@@ -13,15 +14,17 @@ nonisolated public enum AuthBannerKind: String, CaseIterable, Sendable {
     }
     public var body: String {
         switch self {
+        case .emailTaken: "Sign in instead, or reset your password."
         case .credentials: "Check both and try again, or reset your password."
         case .locked: "Wait a few minutes before you try again, or reset your password now."
         case .server: "Try again in a moment."
         }
     }
     public func body(for context: AuthFormContext) -> String {
+        if self == .server && context == .signUp { return "Your details are kept. Try again in a moment." }
         if self == .server && context == .reset { return "Your new password wasn't saved. Try again in a moment." }
         if self == .locked && context == .forgot { return "Wait a few minutes before you ask for another link." }
-        if self == .locked && (context == .twoFactor || context == .reset) {
+        if self == .locked && (context == .twoFactor || context == .reset || context == .signUp) {
             return "Wait a few minutes before you try again."
         }
         return body
@@ -32,7 +35,7 @@ nonisolated public enum AuthBannerKind: String, CaseIterable, Sendable {
     }
 }
 
-nonisolated public enum AuthFormContext: Sendable { case signIn, twoFactor, forgot, reset }
+nonisolated public enum AuthFormContext: Sendable { case signIn, twoFactor, forgot, reset, signUp }
 
 nonisolated public struct AuthFailureMapping: Sendable, Equatable {
     public var banner: AuthBannerKind?
@@ -46,6 +49,10 @@ nonisolated public struct AuthFailureMapping: Sendable, Equatable {
             banner = .locked
             retryAfterSeconds = seconds
         case .validation(let messages, _):
+            if context == .signUp, messages["email"]?.key == "This email address is already in use." {
+                banner = .emailTaken
+                return
+            }
             if context == .signIn
                 && messages.values.contains(where: {
                     $0.key == "These sign-in details don't match our records."
@@ -79,7 +86,7 @@ nonisolated public struct AuthFailureMapping: Sendable, Equatable {
 }
 
 @MainActor @Observable public final class AuthFormModel {
-    public enum Action: Sendable { case password, passkey, verify, sendResetLink, reset }
+    public enum Action: Sendable { case password, passkey, verify, sendResetLink, reset, register }
     public private(set) var pending: Action?
     public private(set) var banner: AuthBannerKind?
     public private(set) var fields: [String: FieldMessage] = [:]

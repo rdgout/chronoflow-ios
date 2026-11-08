@@ -49,6 +49,13 @@ import Observation
             return true
         }
     }
+    public func makeSignUpModel() -> SignUpModel {
+        SignUpModel(source: source, navigation: navigation, deviceIdentity: deviceIdentity, deviceName: deviceName) {
+            [weak self] result in
+            guard let self else { throw CancellationError() }
+            try await self.accept(result)
+        }
+    }
     public func openReset(_ link: ResetPasswordLink) {
         password = ""
         twoFactor?.cancel()
