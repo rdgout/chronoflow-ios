@@ -1,6 +1,12 @@
 import XCTest
 
 nonisolated final class SettingsTests: XCTestCase {
+    override func setUp() {
+        super.setUp()
+        continueAfterFailure = false
+        executionTimeAllowance = 120
+    }
+
     @MainActor func testSignOutWithNoPendingOpensSignInWithoutReplayingLaunch() {
         let app = launch(pending: false)
         defer { app.terminate() }
@@ -53,6 +59,10 @@ nonisolated final class SettingsTests: XCTestCase {
         AuthUIFlow.reveal(verify, in: app)
         AuthUIFlow.waitUntilEnabled(verify)
         verify.tap()
+        XCTAssertTrue(
+            app.scrollViews["today.screen"].waitForExistence(timeout: 12),
+            "Both seeded accounts must bypass Walkthrough with CF_AUTH_TEST_WALKTHROUGH_SEEN")
+        XCTAssertFalse(app.buttons["walkthrough.skip"].exists)
         openSettings(app, email: MockScenarioValues.twoFactorEmail)
         signOut(app)
         XCTAssertTrue(app.textFields["sign-in.email"].waitForExistence(timeout: 10))

@@ -67,7 +67,7 @@ nonisolated final class PlanAuditTests: XCTestCase {
         let appearance = XCUIDevice.shared.appearance
         defer { XCUIDevice.shared.appearance = appearance }
         try DeviceAppearance.set(.light)
-        let app = launchPlanAccount(presentLegend: legend, freezePlanClock: true)
+        let app = try launchPlanAccount(presentLegend: legend, freezePlanClock: true)
         defer { app.terminate() }
         try navigate(app)
         let scene = AuditScene(app: app)

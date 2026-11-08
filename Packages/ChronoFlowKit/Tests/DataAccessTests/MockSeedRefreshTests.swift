@@ -7,6 +7,15 @@ import Testing
 #if DEBUG
     @Suite struct MockSeedRefreshTests {
         @Test(arguments: [false, true])
+        func walkthroughOverrideCoversBothSeededAccounts(seen: Bool) throws {
+            let seed = try MockAppSeed.make(now: MockAppSeed.instant("2026-11-07T12:00:00Z"), walkthroughSeen: seen)
+            for id in [MockScenarioValues.demoID, MockScenarioValues.twoFactorID] {
+                let account = try #require(seed.accounts[id])
+                #expect(account.walkthroughSeen == seen)
+            }
+        }
+
+        @Test(arguments: [false, true])
         func restoresTenDayOldSeedWithoutLosingUserState(legacyAnchor: Bool) async throws {
             let now = MockAppSeed.instant("2026-11-07T12:00:00Z")
             let earlier = now - 10 * 86400

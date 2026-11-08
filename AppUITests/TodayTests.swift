@@ -1,6 +1,7 @@
 import XCTest
 
-@MainActor func launchPlanAccount(presentLegend: Bool = false, freezePlanClock: Bool = false) -> XCUIApplication {
+@MainActor func launchPlanAccount(presentLegend: Bool = false, freezePlanClock: Bool = false) throws -> XCUIApplication
+{
     let app = XCUIApplication()
     app.launchArguments = AuthUIFlow.arguments()
     app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
@@ -10,18 +11,25 @@ import XCTest
     app.launch()
     AuthUIFlow.openSignIn(app)
     AuthUIFlow.signIn(app, email: MockScenarioValues.demoEmail)
-    if presentLegend {
-        XCTAssertTrue(app.scrollViews["legend.sheet"].waitForExistence(timeout: 15))
-    } else {
-        XCTAssertTrue(app.scrollViews["today.screen"].waitForExistence(timeout: 15))
-        XCTAssertTrue(app.buttons["today.trip"].waitForExistence(timeout: 15))
+    do {
+        let screen = app.scrollViews[presentLegend ? "legend.sheet" : "today.screen"]
+        _ = try XCTUnwrap(
+            screen.waitForExistence(timeout: 15) ? screen : nil,
+            "Expected seeded plan account to bypass Walkthrough and open \(screen.identifier)")
+        if !presentLegend {
+            let trip = app.buttons["today.trip"]
+            _ = try XCTUnwrap(trip.waitForExistence(timeout: 15) ? trip : nil, "Expected seeded Today trip")
+        }
+    } catch {
+        app.terminate()
+        throw error
     }
     return app
 }
 
 nonisolated final class TodayTests: XCTestCase {
-    @MainActor func testTodayOpensTheTripRouteAndReturnsToItsRows() {
-        let app = launchPlanAccount()
+    @MainActor func testTodayOpensTheTripRouteAndReturnsToItsRows() throws {
+        let app = try launchPlanAccount()
         defer { app.terminate() }
         let card = app.buttons["today.trip"]
         XCTAssertTrue(card.waitForExistence(timeout: 12))
@@ -34,8 +42,8 @@ nonisolated final class TodayTests: XCTestCase {
 }
 
 nonisolated final class StepSheetTests: XCTestCase {
-    @MainActor func testTodayStepCanBeDoneUndoneSkippedAndReopened() {
-        let app = launchPlanAccount()
+    @MainActor func testTodayStepCanBeDoneUndoneSkippedAndReopened() throws {
+        let app = try launchPlanAccount()
         defer { app.terminate() }
         let row = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "today.step.actionable."))
             .firstMatch
@@ -70,8 +78,8 @@ nonisolated final class StepSheetTests: XCTestCase {
 }
 
 nonisolated final class LegendTests: XCTestCase {
-    @MainActor func testLegendCanScrollAndCloseToToday() {
-        let app = launchPlanAccount(presentLegend: true)
+    @MainActor func testLegendCanScrollAndCloseToToday() throws {
+        let app = try launchPlanAccount(presentLegend: true)
         defer { app.terminate() }
         app.scrollViews["legend.sheet"].swipeUp()
         app.buttons["Close"].tap()

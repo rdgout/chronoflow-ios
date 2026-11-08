@@ -62,5 +62,56 @@ concurrent compiler load exceeded the existing S3 timeline performance budget;
 the final isolated full host run passes. Direct iOS 17 SDK compilation covers the
 app, PlanUI and hosted/UI test sources without simulator execution.
 
-Delivery: `build/commits/1.patch` and `build/commits/messages.txt`, one atomic
-Conventional Commit, based on `f173d1e` (`feat/phase-15-timeline`).
+## Blank-destination follow-up
+
+The initial 17e run passed AppTabsTests/AuthSessionTests but found both walkthrough
+journeys blank and the Settings second-account journey timed out. An empty SwiftUI
+Group never mounted the task that created its content. WalkthroughDestination now
+hosts initialization on a ZStack with the generated background colour. Missing
+session, database or mutation permit retries every 100 ms until ready or cancelled;
+database identity and the session epoch are checked before creating the model.
+
+Three hosted WalkthroughDestinationTests mount the actual destination and require
+its counter, Skip and Next without user input, including a session and a database
+that become available after mounting. They are registered in the simulator runner.
+The hosted tests inspect accessibility elements; they do not record screenshots.
+
+The seen override already applies to both seeded accounts. A Mac regression now
+checks both values of that override for both accounts. Settings keeps the seen seed
+and explicitly requires Today after the second account verifies, before opening
+Settings and checking that no old queue remains. Skipping here would enqueue a new
+pending completion and defeat the empty-queue assertion while mutations are offline.
+SettingsTests and WalkthroughTests stop on their first failed assertion and have a
+120 s execution allowance. The shared plan-account launcher throws after a missing
+screen's 15 s wait and terminates the app, so its callers cannot continue tapping.
+
+| UI suites checked | Walkthrough handling |
+| --- | --- |
+| AppTabsTests, TodayTests, TripsTests, StepSheetTests, TripPageStepTests, LegendTests, PlanAuditTests | Shared launcher seeds seen; startup waits now throw on failure. |
+| SettingsTests | Seeds seen for both accounts; explicitly checks Today after second-account verification. |
+| AuthSessionTests | Seeds seen for both accounts; already stops at the first failed bounded wait. |
+| WalkthroughTests | Requires the real pages and completes via Skip or Done. |
+| TwoFactorTests, ResetPasswordTests, VerifyEmailTests, AccountRecoveryTests | Successful verified sessions explicitly require the real walkthrough title with bounded waits. Other recovery journeys remain at Verify or sign-in. |
+| AuthAuditTests, SignUpTests, SignInTests, SignInKeyboardTests, TwoFactorKeyboardTests, ForgotPasswordTests, ForgotPasswordKeyboardTests | Stop before the verified-session walkthrough gate. |
+| ReadinessTests, LaunchSceneTests, LaunchSceneDarkTests, LaunchToWelcomeTests, WelcomeTests, WelcomeEnglishAccessibilityTests, WelcomeDutchAccessibilityTests, WelcomeLogicTests | Stub readiness or signed-out launch/Welcome coverage; no fresh native sign-in. |
+
+PerfUITests were also checked: TimelinePerfTests uses the explicit seen timeline
+fixture; LaunchPerfTests measures signed-out launch.
+
+Follow-up validation: `make lint` passes. `make quick` runs all package tests and
+reports only the existing APICookieTests loopback-listener EPERM. The new seed
+regression passes. The remaining quick targets pass separately: 17 token/asset
+tests and 100 resource/runner fixtures. The app and all hosted/UI sources compile
+for iOS 17 using swiftc. No simulator was run; the three hosted destination tests
+and the UI journeys still need execution. Logs are in
+`build/walkthrough-fix-{lint,quick,remaining-quick,ios,tests-ios}.log`.
+
+To execute the affected suites later on 17e:
+
+```sh
+make generate
+make targeted DEVICES="17e" ONLY="AppTests/WalkthroughDestinationTests AppUITests/WalkthroughTests AppUITests/SettingsTests AppUITests/AppTabsTests AppUITests/TodayTests AppUITests/TripsTests AppUITests/StepSheetTests AppUITests/TripPageStepTests AppUITests/LegendTests AppUITests/PlanAuditTests"
+```
+
+Follow-up delivery: `build/commits/1.patch` and `build/commits/messages.txt`, one
+atomic Conventional Commit based on `d06fd88`.

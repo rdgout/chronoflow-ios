@@ -1,6 +1,12 @@
 import XCTest
 
 nonisolated final class WalkthroughTests: XCTestCase {
+    override func setUp() {
+        super.setUp()
+        continueAfterFailure = false
+        executionTimeAllowance = 120
+    }
+
     @MainActor func testFreshMockSkipOpensTodayAndOfflineRelaunchKeepsPendingCompletion() {
         let app = launch()
         defer { app.terminate() }
