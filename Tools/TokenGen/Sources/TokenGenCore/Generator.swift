@@ -109,6 +109,7 @@ public func tokenOutputs(root: URL) throws -> [String: Data] {
     outputs["Tools/TokenGen/TokenGenReport.md"] = Data(report.utf8)
     outputs["Packages/ChronoFlowKit/Sources/DesignSystem/WelcomeTokens.generated.swift"] = try welcomeTokens(root: root)
     outputs["Packages/ChronoFlowKit/Sources/DesignSystem/AuthTokens.generated.swift"] = try authTokens(root: root)
+    outputs.merge(try planTokenOutputs(root: root)) { _, new in new }
     return outputs
 }
 

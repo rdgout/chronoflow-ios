@@ -1620,12 +1620,14 @@ Built against the trip-wizard contract with URLProtocol fixtures and the mock. L
   - Verify: `make plan-copy`, `make generators-check`, `make quick`.
 
 **14b: Timeline logic and observation models**
-- [ ] Port to pure Swift in `PlanCore`, with point sizes from tokens only:
+- [x] Port to pure Swift in `PlanCore`, with point sizes from tokens only:
   - `isOptionalStep` and `withoutOptionalSteps` (always applied), and hidden-category filtering;
   - `tripDisplayStatus` (for My trips);
   - `noticeItems`, `day-header` (dayDateLabel, dayZoneLabel, summaryIntervals), `step-labels`, `timeline-labels` (nowLabel, localDate, utcOffset, blockInterval);
   - `layoutDay`, `layoutPlan`, `indexTimeline`: lanes, `packLane`, info gutter markers, zone_change positions, zone dividers, tick thinning, now-line offset, continues-before/after.
-- [ ] Add the `planCompactNote` type values (title 600 17/22, subtitle 400 12/15, lane 500 11/14, compact date 10/12, list line 13/18) to the tokens through TokenGen/Typography.
+  Implementation decision (2026-11-08): optional filtering is enforced by `layoutDay` and `summaryIntervals` as well as the plan helper, so callers cannot accidentally reveal optional steps. Unknown types/lanes are skipped only in layout; the stored DTOs stay unchanged. UTC layout and boundary semantics, stable overlap packing, notice deduplication and labels follow RN. Native ISO8601 value parsing avoids repeated formatter allocation.
+- [x] Add the `planCompactNote` type values (title 600 17/22, subtitle 400 12/15, lane 500 11/14, compact date 10/12, list line 13/18) to the tokens through TokenGen/Typography.
+  Implementation decision (2026-11-08): the canvas source remains read-only. `Tools/TokenGen/plan-tokens.json` owns the approved `planCompactNote` additions and RN spacing multipliers; TokenGen emits PlanCore spacing metrics and DesignSystem type metrics/font faces. Compact-date and list-line weight is 400, following RN. Typography keeps root-only Dynamic Type capping.
 - [ ] Create the `PlanUI` target (MainActor default, depending on PlanCore and LocalStore). Add `TripsModel` and `TripPlanModel` (`@Observable`), fed by `TripRepository` streams. They decode off-main and cache per `(trip, inputHash, detailVersion)`, and take a `PlanClock` that ticks on the minute boundary, on foreground, on significant time change and on time-zone change.
   - Files: `Kit/Sources/PlanCore/*.swift`, `Kit/Sources/PlanUI/Models/*.swift`, `Tools/TokenGen` outputs, `Package.swift` (+ `PlanCoreTests`, `PlanUITests`).
   - Tests: port the relevant RN `src/plan/__tests__` files (timeline, day-header, step-labels, timeline-labels, caffeine-format, zone-label, notices, optional-items); 23-, 25- and 30+-hour days; multi-zone travel days; an injected clock; no main-thread decode (executor assertion); an eviction updates the model; the minute tick advances the now offset.
