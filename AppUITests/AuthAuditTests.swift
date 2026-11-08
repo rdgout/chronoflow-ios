@@ -253,6 +253,9 @@ nonisolated final class AuthAuditTests: XCTestCase {
         return minimum.isFinite && minimum >= 4.5
     }
 
+    // Audit frames are Double; element frames round-trip through Float, so exact containment misses by ~1e-6.
+    private static let frameTolerance: CGFloat = 0.01
+
     @MainActor private static func isMeasuredForgotBannerContrast(
         identifier: String?, frame: CGRect?, bannerFrame: CGRect?, brandFrame: CGRect? = nil,
         auditType: XCUIAccessibilityAuditType,
@@ -266,8 +269,9 @@ nonisolated final class AuthAuditTests: XCTestCase {
         else { return false }
         let unattributedBrand =
             (identifier == nil || identifier == "") && brandFrame?.isInfinite == false
-            && brandFrame?.contains(frame) == true
-        return minimum.isFinite && minimum >= 4.5 && (bannerFrame.contains(frame) || unattributedBrand)
+            && brandFrame?.insetBy(dx: -frameTolerance, dy: -frameTolerance).contains(frame) == true
+        return minimum.isFinite && minimum >= 4.5
+            && (bannerFrame.insetBy(dx: -frameTolerance, dy: -frameTolerance).contains(frame) || unattributedBrand)
     }
 
     @MainActor func testBannerExceptionRequiresMatchingGeometryAndPassingPixels() {
