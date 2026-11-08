@@ -3503,6 +3503,276 @@
           }
         }
       }
+    },
+    "Your plan": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your plan"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je plan"
+          }
+        }
+      }
+    },
+    "Payment processing.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Payment processing."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Betaling wordt verwerkt."
+          }
+        }
+      }
+    },
+    "Your credit shows up here in a minute or two. You can leave this screen.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your credit shows up here in a minute or two. You can leave this screen."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je tegoed verschijnt hier over een minuut of twee. Je kunt dit scherm verlaten."
+          }
+        }
+      }
+    },
+    "Your last payment failed.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your last payment failed."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je laatste betaling is mislukt."
+          }
+        }
+      }
+    },
+    "Update your payment method to keep unlimited trips.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update your payment method to keep unlimited trips."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Werk je betaalmethode bij om onbeperkt reizen te behouden."
+          }
+        }
+      }
+    },
+    "Update your payment method to get unlimited trips back.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update your payment method to get unlimited trips back."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Werk je betaalmethode bij om weer onbeperkt te kunnen reizen."
+          }
+        }
+      }
+    },
+    "Unlimited trips": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlimited trips"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onbeperkt reizen"
+          }
+        }
+      }
+    },
+    "Cancelled": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelled"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opgezegd"
+          }
+        }
+      }
+    },
+    "Ends on {{date}}. After that, you can buy credits per trip.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ends on {{date}}. After that, you can buy credits per trip."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eindigt op {{date}}. Daarna kun je tegoed per reis kopen."
+          }
+        }
+      }
+    },
+    "Renews on {{date}} · {{interval}}": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renews on {{date}} · {{interval}}"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wordt verlengd op {{date}} · {{interval}}"
+          }
+        }
+      }
+    },
+    "yearly": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "yearly"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "jaarlijks"
+          }
+        }
+      }
+    },
+    "monthly": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "monthly"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "maandelijks"
+          }
+        }
+      }
+    },
+    "One credit plans one direction of a trip, so a return trip uses 2. Small time shifts are free.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One credit plans one direction of a trip, so a return trip uses 2. Small time shifts are free."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eén tegoed plant één richting van een reis, dus een retourreis kost er 2. Kleine tijdsverschillen zijn gratis."
+          }
+        }
+      }
+    },
+    "Credits and plans aren't sold in the app. Your balance updates here automatically.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Credits and plans aren't sold in the app. Your balance updates here automatically."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tegoed en abonnementen worden niet in de app verkocht. Je saldo wordt hier automatisch bijgewerkt."
+          }
+        }
+      }
+    },
+    "Try again": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try again"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opnieuw proberen"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -118,6 +118,15 @@ nonisolated final class SettingsPagesTests: XCTestCase {
         field.typeText(value)
     }
 
+    @MainActor func testPlanShowsStoredCreditsAndNoLinkState() {
+        let app = launchSettingsPages()
+        defer { app.terminate() }
+        open("settings.plan", app: app)
+        XCTAssertTrue(app.staticTexts["settings.plan.balance"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.staticTexts["settings.plan.noLink"].exists)
+        XCTAssertFalse(app.buttons["Buy credits or a plan"].exists)
+    }
+
     @MainActor private func launchSettingsPages() -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments =

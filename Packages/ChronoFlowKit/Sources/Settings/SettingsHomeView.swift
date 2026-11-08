@@ -44,9 +44,7 @@
                 isBuilt
             #endif
         }
-        public var isBuilt: Bool {
-            self == .account || self == .profile || self == .bodyClock || self == .preferences || self == .security
-        }
+        public var isBuilt: Bool { true }
         public static var visible: [Self] {
             #if DEBUG
                 allCases

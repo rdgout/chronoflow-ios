@@ -69,6 +69,10 @@ struct AppTabs: View {
                 case .bodyClock: SettingsBodyClockView(store: settingsPages)
                 case .preferences: SettingsPreferencesView(store: settingsPages)
                 case .security: SettingsSecurityView(store: settingsPages)
+                case .plan:
+                    SettingsPlanView(store: settingsPages, offline: settingsHome.offline) {
+                        try? await native?.refreshNow()
+                    }
                 default:
                     #if DEBUG
                         RoutePlaceholder(route: .settings, destination: destination.rawValue)
