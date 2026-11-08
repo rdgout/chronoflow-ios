@@ -4,7 +4,10 @@ public struct DesignSource {
     public static let names = [
         "sky-top", "sky-mid", "sky-horizon", "sky-title", "sky-copy", "sky-copy-background", "dawn", "dawn-foreground",
         "background", "foreground", "card", "card-foreground", "input", "border", "ring",
-        "muted-foreground", "primary", "primary-foreground", "accent", "accent-foreground", "destructive", "dawn-text",
+        "surface-2", "secondary", "secondary-foreground", "muted", "cat-sleep", "cat-sleep-fg", "cat-light",
+        "cat-light-fg", "cat-moderate", "cat-moderate-fg", "cat-dark", "cat-dark-fg", "cat-caffeine", "cat-caffeine-fg",
+        "cat-travel", "cat-travel-fg", "muted-foreground", "primary", "primary-foreground", "accent",
+        "accent-foreground", "destructive", "dawn-text",
     ]
     public let root: URL
     public let tokens: [String: Any]
@@ -24,7 +27,7 @@ public struct DesignSource {
             guard let block = try captures(blockPattern, in: theme).first else {
                 throw GenerationError.invalid("Missing theme.css block: \(appearance)")
             }
-            let regex = try NSRegularExpression(pattern: #"--([a-z-]+):\s*([^;]+);"#)
+            let regex = try NSRegularExpression(pattern: #"--([a-z0-9-]+):\s*([^;]+);"#)
             let values = Dictionary(
                 uniqueKeysWithValues: regex.matches(in: block, range: NSRange(block.startIndex..., in: block)).map {
                     (

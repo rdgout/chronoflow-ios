@@ -148,3 +148,20 @@ import Testing
         try await store.close()
     }
 }
+
+extension CheckOffReconcilerTests {
+    @Test(arguments: [DataFailure.offline, .throttled(retryAfterSeconds: 60, status: 429), .server(status: 408)])
+    func transientCheckOffFailuresKeepTheOptimisticMarkQueued(_ failure: DataFailure) async throws {
+        let store = try await SyncStore()
+        let source = ScriptedSource()
+        _ = try await store.enqueue(.checkOff(check()))
+        await source.configure(failures: [failure])
+        let result = try await OutboxFlusher(database: store.database, source: source).run(epoch: store.epoch)
+        #expect(result.refusals.isEmpty)
+        #expect(try await OutboxRepository(database: store.database).pending().count == 1)
+        #expect(
+            try await TripRepository(database: store.database).checks(tripID: syncTrip, inputHash: "hash").first?.status
+                == "done")
+        try await store.close()
+    }
+}

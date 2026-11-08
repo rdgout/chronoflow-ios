@@ -1,8 +1,11 @@
+import AppCore
 import GRDB
 
 public struct TripPlanSnapshot: Sendable, Equatable {
     public var trip: TripRecord?
     public var plan: PlanVersionRecord?
+    public var checks: [CheckMarkRecord]
+    public var pendingChecks: [CheckOffChange]
 }
 
 extension TripRepository {
@@ -15,7 +18,16 @@ extension TripRepository {
                     sql: "SELECT * FROM plan_versions WHERE trip_id=? AND input_hash=?",
                     arguments: [tripID, hash])
             }
-            return TripPlanSnapshot(trip: trip, plan: plan)
+            let checks = try CheckMarkRecord.fetchAll(
+                db, sql: "SELECT * FROM check_marks WHERE trip_id=?", arguments: [tripID])
+            let pending = try OutboxRecord.fetchAll(
+                db, sql: "SELECT * FROM outbox WHERE kind='check-off' ORDER BY created_at,id"
+            )
+            .compactMap { row -> CheckOffChange? in
+                guard case .checkOff(let change) = try row.change, change.tripID == tripID else { return nil }
+                return change
+            }
+            return TripPlanSnapshot(trip: trip, plan: plan, checks: checks, pendingChecks: pending)
         }
     }
 }

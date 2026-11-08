@@ -1,0 +1,9 @@
+{
+  "source": "chronoflow-mobile e24872a src/components/plan/CategorySwatch.tsx (read-only blueprint)",
+  "patternDotOpacity": 0.16,
+  "patternHatchOpacity": 0.12,
+  "patternDotSpacing": 7,
+  "patternHatchSpacing": 8,
+  "patternDotDiameter": 2,
+  "patternHatchWidth": 2
+}

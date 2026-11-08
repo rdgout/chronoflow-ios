@@ -49,6 +49,28 @@ public actor PlanDecoder {
         return detail
     }
 
+    public func detail(_ snapshot: TripPlanSnapshot) throws -> TripDetail? {
+        guard let record = snapshot.plan else { return nil }
+        var value = try detail(record)
+        var marks: [String: CheckMark] = [:]
+        for row in snapshot.checks where row.inputHash == record.inputHash {
+            let key = CheckKeyView(type: BlockType(rawValue: row.type), localDate: row.localDate, ordinal: row.ordinal)
+            marks[checkIdentity(key)] = CheckMark(
+                key: key, status: CheckStatus(rawValue: row.status), markedAt: row.markedAt)
+        }
+        for change in snapshot.pendingChecks {
+            let key = CheckKeyView(type: change.type, localDate: change.localDate, ordinal: change.ordinal)
+            if let status = change.status {
+                marks[checkIdentity(key)] = CheckMark(key: key, status: status, markedAt: "")
+            } else {
+                marks.removeValue(forKey: checkIdentity(key))
+            }
+        }
+        value.checkState = buildCheckState(
+            value.plan, marks: marks.values.sorted { checkIdentity($0.key) < checkIdentity($1.key) })
+        return value
+    }
+
     public func layouts(_ detail: TripDetail, hidden: [BlockType]) -> [String: DayLayout] {
         layoutPlan(withoutOptionalSteps(detail.plan), timeline: detail.timeline, hidden: hidden)
     }

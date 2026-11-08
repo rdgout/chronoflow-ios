@@ -44,7 +44,7 @@ import PlanCore
                     for try await snapshot in try await repository.detailValues(tripID: tripID) {
                         guard !Task.isCancelled else { break }
                         guard let trip = snapshot.trip, trip.deletedAt == nil, !trip.deletedLocally,
-                            let plan = snapshot.plan
+                            snapshot.plan != nil
                         else {
                             await decoder.evict(tripID: tripID)
                             guard !Task.isCancelled else { break }
@@ -56,7 +56,7 @@ import PlanCore
                             continue
                         }
                         do {
-                            let value = try await decoder.detail(plan)
+                            let value = try await decoder.detail(snapshot)
                             guard !Task.isCancelled else { break }
                             self?.detail = value
                             self?.rebuildLayouts()
@@ -72,6 +72,17 @@ import PlanCore
                 }
             },
         ]
+    }
+
+    public func setCheck(blockID: String, status: CheckStatus?) async throws {
+        guard let detail, let block = detail.plan.blocks.first(where: { $0.id == blockID }),
+            block.actionable, let key = block.checkKey
+        else { return }
+        try await OutboxRepository(database: repository.database).enqueue(
+            .checkOff(
+                CheckOffChange(
+                    tripID: tripID, planInputHash: detail.plan.meta.inputHash, type: key.type,
+                    localDate: key.localDate, ordinal: key.ordinal, status: status)))
     }
 
     public func stop() {
