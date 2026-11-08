@@ -41,6 +41,15 @@ nonisolated public enum AuthCopy {
         field(message, locale: Locale(identifier: "en")) != nil
     }
 
+    public static func verificationSent(email: String, locale: Locale) -> String {
+        String(
+            format: string("We sent a link to %@. Open it on this phone to finish.", locale: locale), locale: locale,
+            email)
+    }
+    public static func resendCountdown(seconds: Int, locale: Locale) -> String {
+        let time = String(format: "%d:%02d", max(0, seconds) / 60, max(0, seconds) % 60)
+        return String(format: string("You can resend in %@.", locale: locale), locale: locale, time)
+    }
     public static func resetSent(email: String, locale: Locale) -> String {
         String(
             format: string("If %@ has an account, a link to choose a new password is on its way.", locale: locale),

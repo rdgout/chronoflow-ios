@@ -3,6 +3,26 @@ import Foundation
 import Testing
 
 struct AuthLinkTests {
+    @Test func exactSignedVerificationShapeAndMalformedInputs() throws {
+        let id = "0199a3c0-0000-7000-8000-000000000001"
+        let hash = String(repeating: "a", count: 40)
+        let signature = String(repeating: "b", count: 64)
+        let url = try #require(
+            URL(
+                string:
+                    "https://app.chronoflow.net/email/verify/\(id)/\(hash)?signature=\(signature)&expires=1800000000"))
+        #expect(
+            AuthLink(url: url)
+                == .verify(SignedVerificationInput(id: id, hash: hash, expires: 1_800_000_000, signature: signature)))
+        for path in [
+            "/email/verify", "/email/verify/bad/hash?expires=1&signature=x",
+            "/email/verify/\(id)/\(hash)?expires=1&expires=2&signature=\(signature)",
+            "/email/verify/\(id)/\(hash)?expires=-1&signature=\(signature)",
+        ] {
+            let malformed = try #require(URL(string: "https://app.chronoflow.net" + path))
+            #expect(AuthLink(url: malformed) == .verify(nil))
+        }
+    }
     @Test func exactResetURLDecodesOnceAndKeepsPlusPercentAndUnicode() throws {
         let encoded = try #require(
             URL(string: "https://app.chronoflow.net/reset-password/a%2Fb%252F?email=rick%2B100%25%40example.com"))

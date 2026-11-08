@@ -32,3 +32,9 @@ Second fix round (2026-11-06): Welcome capture now uses CPU layer rendering inst
 The user's 792 recorded PNGs are retained unchanged. Re-record the 320 Welcome references with
 `SNAPSHOT_RECORD=1 make targeted DEVICES=17e ONLY=AppTests/WelcomeSnapshotTests`; its comparison follows
 automatically. The 472 splash references retain their existing capture path. Comparison remains exact.
+
+
+Phase 11b–11d references are intentionally absent until user recording/review: Auth/Reset (104),
+Auth/SignUp (130), Auth/Verify (130). They use the lean three-profile/five-variant-per-state policy
+(one xxLarge reference on 17e, four default variants on each profile). Existing Forgot PNGs are
+unchanged. See Docs/tooling.md for targeted recording/comparison commands.

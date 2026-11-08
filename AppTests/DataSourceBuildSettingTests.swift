@@ -6,6 +6,15 @@ import Testing
 @testable import DataAccess
 
 @MainActor @Suite struct DataSourceBuildSettingTests {
+    #if DEBUG
+        @Test func recoveryUIFixtureForcesMockEvenWhenTheBuildRequestsAPI() throws {
+            let services = try AppServices(
+                info: ["CHRONOFLOW_DATA_SOURCE": "api"], testing: false,
+                environment: ["CF_AUTH_TEST_ID": UUID().uuidString])
+            #expect(services.factory.source == .mock && services.authUITestEnabled)
+        }
+    #endif
+
     @Test func builtSettingsAndTestSelection() throws {
         let info = try #require(Bundle.main.infoDictionary)
         #expect(["mock", "api"].contains(try #require(info["CHRONOFLOW_DATA_SOURCE"] as? String)))

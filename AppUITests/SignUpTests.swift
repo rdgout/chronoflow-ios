@@ -17,7 +17,7 @@ nonisolated final class SignUpTests: XCTestCase {
         let submit = app.buttons["sign-up.submit"]
         AuthUIFlow.reveal(submit, in: app)
         submit.tap()
-        XCTAssertTrue(app.staticTexts["route.verify"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.scrollViews["verify.scroll"].waitForExistence(timeout: 8))
     }
 }
 

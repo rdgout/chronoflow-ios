@@ -11,6 +11,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     private(set) var overlayController: LaunchOverlayController?
     private(set) var pendingIntent = PendingLaunchIntent()
     private(set) var pendingAuthLink: AuthLink?
+    var authLinkHandler: ((AuthLink) -> Void)?
     private(set) var coordinator: LaunchCoordinator?
     var navigator = RootNavigator()
     private(set) var moonAnchorStore = MoonAnchorStore()
@@ -301,10 +302,12 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                         captureAuthActivities([activity])
                     }
                 #endif
+                if navigator.route == .verify { await app?.authServices?.prepareVerification() }
                 consumePendingAuthLink()
                 let controller = LaunchHostingController(
                     rootView: RootView(
-                        navigator: navigator, authModel: app?.authServices?.model, moonAnchorStore: moonAnchorStore,
+                        navigator: navigator, authModel: app?.authServices?.model, authServices: app?.authServices,
+                        moonAnchorStore: moonAnchorStore,
                         launchIntro: launchIntro,
                         forcesReduceMotion: overlayController?.launchScene.timeline.reduceMotion ?? false),
                     signposts: signposts)
@@ -390,11 +393,18 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func consumePendingAuthLink() {
+        if let link = pendingAuthLink, let authLinkHandler {
+            pendingAuthLink = nil
+            authLinkHandler(link)
+            return
+        }
         guard let link = pendingAuthLink,
             let auth = (UIApplication.shared.delegate as? AppDelegate)?.authServices
         else { return }
         pendingAuthLink = nil
         switch link {
+        case .verify(let input):
+            Task { await auth.receiveVerificationLink(input) }
         case .reset(let input):
             Task { await auth.resetLinks.receive(input) }
         }

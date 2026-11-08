@@ -59,12 +59,18 @@ nonisolated struct AppServices: Sendable {
         #else
             let release = true
         #endif
+        #if DEBUG
+            let requestedAuthTest = AuthUITestConfiguration(environment: environment)
+            let authTestRequested = requestedAuthTest != nil
+        #else
+            let authTestRequested = false
+        #endif
         factory = try DataSourceFactory(
             setting: info["CHRONOFLOW_DATA_SOURCE"] as? String ?? "mock",
             baseURL: info["CHRONOFLOW_API_BASE_URL"] as? String ?? "https://api.chronoflow.net/v1",
-            release: release, testing: testing)
+            release: release, testing: testing || authTestRequested)
         #if DEBUG
-            authTest = factory.source == .mock ? AuthUITestConfiguration(environment: environment) : nil
+            authTest = requestedAuthTest
             authTestSeed = try authTest.map {
                 try MockAppSeed.make(now: Date(), unverified: $0.unverified, walkthroughSeen: $0.walkthroughSeen)
             }

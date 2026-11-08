@@ -44,6 +44,36 @@ private actor AccountDetachGate {
 }
 
 struct SessionAccountDatabaseTests {
+    @Test func verificationPreservesStoredFieldsAndRejectsWrongEmailOrSupersededSession() async throws {
+        let root = try temporaryStoreRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let accounts = SessionAccountDatabase(applicationSupport: root, namespace: .mock)
+        let credentials = IntegrationCredentials()
+        let controller = SessionController(credentials: credentials, accounts: accounts)
+        let account = SessionAccount(
+            id: accountA, name: "Name", email: "a@example.com", hasVerifiedEmail: false,
+            policies: AccountPolicies(termsVersion: "1", privacyVersion: "1"), walkthroughSeen: false)
+        try await controller.accept(SessionResult(token: "fixture", account: account))
+        let snapshot = try #require(await controller.activeSession())
+        #expect(try await !controller.confirmEmailVerification(expected: snapshot, email: "changed@example.com"))
+        #expect(try await controller.confirmEmailVerification(expected: snapshot, email: account.email))
+        let database = try #require(await accounts.activeDatabase())
+        let record = try #require(await AccountRepository(database: database).account())
+        #expect(record.hasVerifiedEmail && record.name == account.name && !record.walkthroughSeen)
+        let stored = try await credentials.readStoredSession()
+        #expect(stored?.token == "fixture")
+        _ = try await controller.signOut(discardPending: true)
+        #expect(try await !controller.confirmEmailVerification(expected: snapshot, email: account.email))
+        let replacement = SessionAccount(
+            id: accountB, name: "B", email: "b@example.com", hasVerifiedEmail: false, policies: account.policies,
+            walkthroughSeen: false)
+        try await controller.accept(SessionResult(token: "replacement", account: replacement))
+        _ = try await controller.signOut(expected: snapshot, discardPending: true)
+        #expect(await controller.activeSession()?.session.token == "replacement")
+        _ = try await controller.signOut(discardPending: true)
+        try await accounts.close()
+    }
+
     @Test @MainActor func closeRejectsAnAttachmentResolvedBeforeDetachAndHidesTheClosingDatabase() async throws {
         let root = try temporaryStoreRoot()
         defer { try? FileManager.default.removeItem(at: root) }

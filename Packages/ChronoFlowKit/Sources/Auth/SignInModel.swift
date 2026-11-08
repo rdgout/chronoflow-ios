@@ -14,7 +14,7 @@ import Observation
     private let deviceName: String
     private let route: @MainActor (Route) async -> Void
     private let passkey: PasskeySignIn
-    public var mockMail: (@MainActor () async -> AuthLink?)?
+    public var mockMail: (@MainActor (String) async -> AuthLink?)?
     public private(set) var sessionFailure: SessionFailure?
 
     public init(
@@ -41,10 +41,10 @@ import Observation
     public func makeForgotPasswordModel() -> ForgotPasswordModel {
         ForgotPasswordModel(source: source, navigation: navigation, email: navigation.forgotEmail, mail: mailAction)
     }
-    private var mailAction: (@MainActor () async -> Bool)? {
+    private var mailAction: (@MainActor (String) async -> Bool)? {
         guard mockMail != nil else { return nil }
-        return { [weak self] in
-            guard let self, let link = await mockMail?() else { return false }
+        return { [weak self] email in
+            guard let self, let link = await mockMail?(email) else { return false }
             if case .reset(let input) = link { openReset(input) }
             return true
         }

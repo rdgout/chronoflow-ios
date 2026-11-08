@@ -10,9 +10,20 @@ import XCTest
         return result
     }
 
+    static func waitUntilEnabled(_ element: XCUIElement) {
+        let enabled = XCTNSPredicateExpectation(
+            predicate: NSPredicate { _, _ in element.exists && element.isEnabled }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [enabled], timeout: 6), .completed)
+    }
+
     static func openSignIn(_ app: XCUIApplication) {
         let button = app.buttons["welcome.signIn"]
-        XCTAssertTrue(button.waitForExistence(timeout: 12))
+        let ready = XCTNSPredicateExpectation(
+            predicate: NSPredicate { _, _ in
+                button.exists || app.textFields["sign-in.email"].exists
+            }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 12), .completed)
+        if app.textFields["sign-in.email"].exists { return }
         reveal(button, in: app, scroll: app.scrollViews.containing(.button, identifier: "welcome.signIn").element)
         button.tap()
         XCTAssertTrue(app.textFields["sign-in.email"].waitForExistence(timeout: 4))
@@ -28,7 +39,7 @@ import XCTest
     }
 
     static func scroll(in app: XCUIApplication) -> XCUIElement {
-        for screen in ["reset.scroll", "sign-up.scroll"] {
+        for screen in ["reset.scroll", "sign-up.scroll", "verify.scroll"] {
             if app.scrollViews[screen].exists { return app.scrollViews[screen] }
         }
         let forgot = app.scrollViews["forgot.scroll"]

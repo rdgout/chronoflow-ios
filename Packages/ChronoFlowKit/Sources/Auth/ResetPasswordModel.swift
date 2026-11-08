@@ -16,7 +16,7 @@ import Observation
 
     public init(
         link: ResetPasswordLink, source: any DataSource, navigation: AuthNavigation,
-        mail: (@MainActor () async -> Bool)? = nil
+        mail: (@MainActor (String) async -> Bool)? = nil
     ) {
         self.link = link
         self.source = source

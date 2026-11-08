@@ -352,3 +352,46 @@ Forgot AX5/xxLarge native input frame and text rect allow at most `1 / scale` pt
 their pixel comparison excludes only the union of both native input bounds expanded by one device
 pixel. Every other pixel and all measured labels, buttons, banners, notices and other elements remain
 exact, as do native font metrics. Default-size references remain byte-identical.
+## Phases 11b–11d — native recovery acceptance (2026-11-08)
+
+Implemented: Reset form/field/server/throttle/offline, expired editable-email recovery and done;
+Sign up with a single native visibility Toggle and inline terms/privacy links; Verify waiting/failed,
+resend deadlines/errors and explicit discard. Reset's approved copy promises no session and says other
+devices are signed out. The production password policy is server-only; both new-password fields carry
+matching iOS passwordRules. AuthField font and height logic is unchanged.
+
+Backend contract was inspected read-only with `git show HEAD:…` at
+`841be4bd84fe2136f9c00eb794506812385959db`. Reset is public POST auth/reset-password → 204;
+registration is public POST auth/register → an unverified session; resend and signed verify are
+bearer-authenticated POST email/verification-notification and email/verify; status uses GET users/me.
+URLProtocol fixtures cover the encoded reset token/email and exact signed id/hash/expires/signature
+body. Existing API suites cover public bearer exclusion, registration language/device fields and
+204 results. Mock server journeys consume recipient/account-scoped mail data with no inbox UI or
+external mail/network. Debug auth UI fixture IDs force the mock factory even with an API build setting.
+
+Universal-link input is HTTPS app.chronoflow.net/reset-password/{token}?email=… or
+/email/verify/{id}/{hash}?expires=…&signature=… . Native browsing-activity tests cover cold capture and
+warm dispatch; malformed recognized links select expired/failed. Signed values are never re-signed.
+Unauthenticated verification waits for sign-in. The DeviceSigned entitlement includes applinks and
+webcredentials, using the configurable Local.xcconfig team; simulator/mock entry needs neither a team
+nor an entitlement. These tests do not prove AASA deployment or physical email-app dispatch.
+
+Verification writes are scoped to account/email/session epoch and share the session controller's
+transition queue. The DB transaction checks the stored email and changes only the verified flag.
+Older sync drains before the write; the normal sync request and gate route follow it. Delayed
+unverified callbacks inspect the stored flag. Explicit discard also carries its captured session.
+The maximum server deadline survives users/me's zero delay and foregrounding; no client cooldown is
+invented. Failed resend respects the same deadline. Storage failure UI, inbox, toast, email-changed,
+guest-claim recovery, terms reader and walkthrough remain outside these boards/phases.
+
+Snapshot coverage is intentionally lean and unrecorded: Reset 8 states/104 references, Sign up 10/130,
+Verify 10/130. Each state has en/nl × light/dark at default size on 17e, SE and Duo profiles, plus one
+17e en/light xxLarge reference. Control/layout tests include native AutoFill and visibility semantics,
+server error focus, all four safe insets and last-action reachability with keyboard insets. Each audit
+method handles one state and five appearance/language/type variants, using the existing strict policy
+and same-frame subtitle pixel measurement. No new unconditional contrast exceptions are added.
+Runtime timing, real keyboard behavior, VoiceOver, board frames and visual acceptance await the user's
+simulator run. Existing 78 Forgot references remain byte-identical; the AX5 font/height fix is separate.
+
+Run the suites in Docs/tooling.md. Real AASA/team registration, physical links/passkeys, unbuilt gate
+destinations and Phase 6–8 launch acceptance remain open; this work does not claim TestFlight readiness.

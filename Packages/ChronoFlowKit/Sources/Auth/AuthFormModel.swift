@@ -21,10 +21,11 @@ nonisolated public enum AuthBannerKind: String, CaseIterable, Sendable {
         }
     }
     public func body(for context: AuthFormContext) -> String {
+        if self == .server && context == .verify { return "We couldn't send the link. Try again in a moment." }
         if self == .server && context == .signUp { return "Your details are kept. Try again in a moment." }
         if self == .server && context == .reset { return "Your new password wasn't saved. Try again in a moment." }
         if self == .locked && context == .forgot { return "Wait a few minutes before you ask for another link." }
-        if self == .locked && (context == .twoFactor || context == .reset || context == .signUp) {
+        if self == .locked && (context == .twoFactor || context == .reset || context == .signUp || context == .verify) {
             return "Wait a few minutes before you try again."
         }
         return body
@@ -35,7 +36,7 @@ nonisolated public enum AuthBannerKind: String, CaseIterable, Sendable {
     }
 }
 
-nonisolated public enum AuthFormContext: Sendable { case signIn, twoFactor, forgot, reset, signUp }
+nonisolated public enum AuthFormContext: Sendable { case signIn, twoFactor, forgot, reset, signUp, verify }
 
 nonisolated public struct AuthFailureMapping: Sendable, Equatable {
     public var banner: AuthBannerKind?
@@ -86,7 +87,9 @@ nonisolated public struct AuthFailureMapping: Sendable, Equatable {
 }
 
 @MainActor @Observable public final class AuthFormModel {
-    public enum Action: Sendable { case password, passkey, verify, sendResetLink, reset, register }
+    public enum Action: Sendable {
+        case password, passkey, verify, sendResetLink, reset, register, checkVerification, resendVerification, signOut
+    }
     public private(set) var pending: Action?
     public private(set) var banner: AuthBannerKind?
     public private(set) var fields: [String: FieldMessage] = [:]

@@ -136,6 +136,81 @@ nonisolated final class AuthAuditTests: XCTestCase {
         }
     }
 
+    @MainActor func testVerifyWaitingInLeanAuditMatrix() async throws { try await auditVerify(state: "waiting") }
+    @MainActor func testVerifyCountdownInLeanAuditMatrix() async throws { try await auditVerify(state: "countdown") }
+    @MainActor func testVerifyFailedInLeanAuditMatrix() async throws { try await auditVerify(state: "failed") }
+    @MainActor func testVerifyServerInLeanAuditMatrix() async throws { try await auditVerify(state: "server") }
+    @MainActor func testVerifyThrottleInLeanAuditMatrix() async throws { try await auditVerify(state: "throttle") }
+    @MainActor func testVerifyOfflineInLeanAuditMatrix() async throws { try await auditVerify(state: "offline") }
+    @MainActor func testVerifySignOutErrorInLeanAuditMatrix() async throws {
+        try await auditVerify(state: "signOutError")
+    }
+
+    @MainActor func testVerifyFailedServerInLeanAuditMatrix() async throws {
+        try await auditVerify(state: "failedServer")
+    }
+    @MainActor func testVerifyFailedThrottleInLeanAuditMatrix() async throws {
+        try await auditVerify(state: "failedThrottle")
+    }
+    @MainActor func testVerifyFailedOfflineInLeanAuditMatrix() async throws {
+        try await auditVerify(state: "failedOffline")
+    }
+
+    @MainActor private func auditVerify(state: String) async throws {
+        try await FontRegistry.register()
+        let previous = XCUIDevice.shared.appearance
+        defer { XCUIDevice.shared.appearance = previous }
+        for (language, appearance, xxLarge) in variants {
+            try DeviceAppearance.set(appearance)
+            let app = XCUIApplication()
+            app.launchArguments = AuthUIFlow.arguments(language: language, xxLarge: xxLarge)
+            app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
+            app.launchEnvironment["CF_AUTH_TEST_VERIFY_STATE"] = state
+            if state.hasPrefix("failed") {
+                app.launchEnvironment["CF_AUTH_TEST_LINK"] = "https://app.chronoflow.net/email/verify/invalid"
+            }
+            app.launch()
+            defer { app.terminate() }
+            openSignUp(app)
+            fillSignUp(app, email: "verify@example.com")
+            let first = app.buttons[state.hasPrefix("failed") ? "verify.retry" : "verify.open-email"]
+            XCTAssertTrue(first.waitForExistence(timeout: 8))
+            AuthUIFlow.waitUntilEnabled(first)
+            if ["countdown", "throttle", "server", "offline", "failedServer", "failedThrottle", "failedOffline"]
+                .contains(state)
+            {
+                let resend = app.buttons["verify.resend"]
+                let enabled = XCTNSPredicateExpectation(
+                    predicate: NSPredicate { _, _ in resend.isEnabled }, object: nil)
+                XCTAssertEqual(XCTWaiter.wait(for: [enabled], timeout: 6), .completed)
+                AuthUIFlow.reveal(resend, in: app)
+                resend.tap()
+                if state != "offline" && state != "failedOffline" {
+                    XCTAssertTrue(AuthUIFlow.control("auth.banner", in: app).waitForExistence(timeout: 6))
+                }
+                if state == "countdown" {
+                    XCUIDevice.shared.press(.home)
+                    app.activate()
+                }
+            } else if state == "signOutError" {
+                let back = app.buttons["verify.different-email"]
+                AuthUIFlow.reveal(back, in: app)
+                back.tap()
+                XCTAssertTrue(AuthUIFlow.control("verify.sign-out-error", in: app).waitForExistence(timeout: 6))
+            }
+            let identifiers =
+                state.hasPrefix("failed")
+                ? ["auth.back", "verify.retry", "verify.resend"]
+                : ["auth.back", "verify.open-email", "verify.resend", "verify.different-email"]
+                    + (["countdown", "throttle"].contains(state) ? ["verify.countdown"] : [])
+                    + (["server", "throttle", "failedServer", "failedThrottle"].contains(state) ? ["auth.banner"] : [])
+                    + (state == "signOutError" ? ["verify.sign-out-error"] : [])
+            auditControls(
+                app, identifiers: identifiers, language: "\(language), verify-\(state)", appearance: appearance,
+                xxLarge: xxLarge)
+        }
+    }
+
     @MainActor private func auditSignInOrTwoFactor(mode: Int) async throws {
         try await FontRegistry.register()
         let device = XCUIDevice.shared

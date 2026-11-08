@@ -2523,3 +2523,32 @@ make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppUITests/AuthAuditTests/testBa
 Each targeted command replaces `build/test-results/17e/Debug-compare.{log,xcresult,jsonl}`; preserve
 prior results when investigating failures. Runtime equality, default-size reference preservation and
 strict audit acceptance remain unclaimed until these reruns pass.
+
+## Phases 11b–11d: host checks and user simulator handoff
+
+Only host verification runs in this round. `make quick` reaches the known APICookieTests sandbox
+EPERM; `make -k quick` continues through the generators and runner/resource fixtures. Final totals: 352/353 package tests pass (only the known cookie listener failure); the remaining quick tiers pass separately (10 TokenGen, 4 AssetGen and 89 signing/resource/runner fixtures). The changed iOS package/app modules and all hosted/UI test sources also pass a static compiler check on the host against the iOS 17 minimum, without starting a simulator. Logs: build/recovery-quick.log, build/recovery-host-fixtures.log and build/recovery-typecheck/. No simulator, recording, matrix, make check or make duo was run.
+
+Generate the project, then run the new hosted controls/layout and activity/factory tests on 17e:
+
+```sh
+make generate
+make targeted DEVICES="17e" ONLY="AppTests/ResetPasswordControlTests AppTests/ResetPasswordLayoutTests AppTests/SignUpControlTests AppTests/SignUpLayoutTests AppTests/VerifyEmailControlTests AppTests/VerifyEmailLayoutTests AppTests/AuthUniversalLinkTests AppTests/DataSourceBuildSettingTests"
+```
+
+The three new snapshot suites have 364 references to record and review. They render 17e/SE/Duo
+profiles inside the 17e simulator and never name references after the executing simulator:
+
+```sh
+SNAPSHOT_RECORD=1 make targeted DEVICES="17e" ONLY="AppTests/ResetPasswordSnapshotTests AppTests/SignUpSnapshotTests AppTests/VerifyEmailSnapshotTests"
+make targeted DEVICES="17e" ONLY="AppTests/ResetPasswordSnapshotTests AppTests/SignUpSnapshotTests AppTests/VerifyEmailSnapshotTests"
+make targeted DEVICES="17e" ONLY="AppUITests/ResetPasswordTests AppUITests/SignUpTests AppUITests/VerifyEmailTests AppUITests/AccountRecoveryTests AppUITests/AuthAuditTests"
+```
+
+Recording is performed by the user. The agent did not create or alter reference PNGs. AuthAuditTests
+keeps one screen/state per method with five variants, all control reveals, same-context subtitle
+measurements and the existing 600-second watchdog. Full-suite duration and each new method's actual
+time require the user run; no higher watchdog or new board exception was introduced. Use the existing
+board PNG export workflow for visual approval. DeviceSigned still reads DEVELOPMENT_TEAM from ignored
+Config/Local.xcconfig and adds applinks:app.chronoflow.net alongside webcredentials. System email-link
+opening still needs server AASA deployment with the confirmed team/bundle ID and physical acceptance.

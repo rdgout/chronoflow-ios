@@ -332,6 +332,24 @@ class ClassificationTests(unittest.TestCase):
         self.assertEqual(runner.recording_selection(['AppTests/AuthSnapshotTests'], 'welcome', '1'),
                          ['AppTests/AuthSnapshotTests'])
 
+    def test_reset_signup_verify_recovery_suites_are_registered_without_default_matrix_or_network(self):
+        for screen in ['ResetPassword', 'SignUp', 'VerifyEmail']:
+            self.assertIn(f'AuthTests/{screen}ModelTests', runner.selectors('host'))
+            for suffix in ['ControlTests', 'LayoutTests']:
+                suite = f'AppTests/{screen}{suffix}'
+                self.assertIn(suite, runner.selectors('logic'))
+                self.assertEqual(runner.selection('check', '17e').count(suite), 1)
+            snapshot = f'AppTests/{screen}SnapshotTests'
+            self.assertIn(snapshot, runner.SNAPSHOTS)
+            self.assertEqual(runner.recording_selection([snapshot], 'check', '1'), [snapshot])
+            self.assertIn(f'AppUITests/{screen}Tests', runner.selectors('logic'))
+        self.assertIn('AppUITests/AccountRecoveryTests', runner.selectors('logic'))
+        self.assertIn('AppTests/AuthUniversalLinkTests', runner.selectors('logic'))
+        self.assertIn('AppUITests/AuthAuditTests', runner.SERIAL_TESTS)
+        source = (ROOT / 'App/Session/AppServices.swift').read_text()
+        self.assertIn('testing: testing || authTestRequested', source)
+        self.assertIn('AuthUITestConfiguration(environment: environment)', source)
+
     def test_two_factor_suites_run_at_their_registered_tiers_and_record_only_on_17e(self):
         self.assertIn('AuthTests/TwoFactorModelTests', runner.selectors('host'))
         for suite in ['AppTests/TwoFactorControlTests', 'AppTests/TwoFactorLayoutTests', 'AppUITests/TwoFactorTests']:
