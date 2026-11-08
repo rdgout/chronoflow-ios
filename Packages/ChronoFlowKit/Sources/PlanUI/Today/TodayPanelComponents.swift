@@ -65,7 +65,6 @@
                     Text(PlanStrings.text("{{count}} skipped", language: language, count: skipped))
                 }
             }.font(Typography.screenMeta.font).foregroundStyle(ColorToken.mutedForeground.color)
-                .frame(minHeight: AuthTokens.touch)
                 .accessibilityRepresentation {
                     Text(summary).frame(minHeight: AuthTokens.touch).accessibilityIdentifier("today.progress")
                 }

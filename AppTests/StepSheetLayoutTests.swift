@@ -12,7 +12,7 @@ nonisolated final class StepSheetLayoutTests: XCTestCase {
         func probe(offset: CGFloat) -> some View {
             ScrollView {
                 Text(verbatim: "Geometry probe")
-                    .frame(width: 64, height: 64).offset(x: offset).planContentBounds()
+                    .frame(width: 64, height: 64).padding(.leading, offset).planContentBounds()
             }.capturePlanContent(in: content)
         }
         let host = try AuthTestHost(
