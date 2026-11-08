@@ -56,7 +56,7 @@ SUITES = {'AppTests': {'logic': ('TripsLayoutTests', 'StepSheetLayoutTests', 'To
                          'WelcomeHandOverTests',
                          'LaunchImageMutationTests',
                          'SnapshotContainerTests'),
-              'profiles': ('TodayRowSnapshotTests', 'TripsSnapshotTests', 'LaunchSnapshotTests', 'WelcomeSnapshotTests', 'AuthSnapshotTests', 'TwoFactorSnapshotTests', 'ForgotPasswordSnapshotTests', 'ResetPasswordSnapshotTests', 'SignUpSnapshotTests', 'VerifyEmailSnapshotTests', 'AppTabsSnapshotTests', 'StepSheetSnapshotTests', 'TodaySnapshotTests'),
+              'profiles': ('TodayRowSnapshotTests', 'TripsSnapshotTests', 'LaunchSnapshotTests', 'WelcomeSnapshotTests', 'AuthSnapshotTests', 'TwoFactorSnapshotTests', 'ForgotPasswordSnapshotTests', 'ResetPasswordSnapshotTests', 'SignUpSnapshotTests', 'VerifyEmailSnapshotTests', 'StepSheetSnapshotTests', 'TodaySnapshotTests'),
               'reference': ('LaunchFrameParityTests', 'LaunchStoryboardTests'),
               'release': ('ReleaseReadinessTests',)},
  'RenderTests': {'profiles': ('WelcomeRenderingTests',)},
@@ -129,8 +129,6 @@ SUITES = {'AppTests': {'logic': ('TripsLayoutTests', 'StepSheetLayoutTests', 'To
                               'AccountWiperTests',
                               'AccountReadinessTests')}}
 SNAPSHOTS = ("AppTests/LaunchSnapshotTests", "AppTests/WelcomeSnapshotTests", "AppTests/WelcomeSnapshotGuardTests", "RenderTests/WelcomeRenderingTests", "AppTests/AuthSnapshotTests", "AppTests/TwoFactorSnapshotTests", "AppTests/ForgotPasswordSnapshotTests", "AppTests/ResetPasswordSnapshotTests", "AppTests/SignUpSnapshotTests", "AppTests/VerifyEmailSnapshotTests", "AppTests/AuthSnapshotGuardTests", "AppTests/StepSheetSnapshotTests", "AppTests/TodaySnapshotTests", "AppTests/TodayRowSnapshotTests", "AppTests/TripsSnapshotTests")
-SNAPSHOTS = ("AppTests/LaunchSnapshotTests", "AppTests/WelcomeSnapshotTests", "AppTests/WelcomeSnapshotGuardTests", "RenderTests/WelcomeRenderingTests", "AppTests/AuthSnapshotTests", "AppTests/TwoFactorSnapshotTests", "AppTests/ForgotPasswordSnapshotTests", "AppTests/ResetPasswordSnapshotTests", "AppTests/SignUpSnapshotTests", "AppTests/VerifyEmailSnapshotTests", "AppTests/AuthSnapshotGuardTests", "AppTests/AppTabsSnapshotTests", "AppTests/StepSheetSnapshotTests", "AppTests/TodaySnapshotTests", "AppTests/TodayRowSnapshotTests", "AppTests/TripsSnapshotTests")
-SNAPSHOTS = ("AppTests/LaunchSnapshotTests", "AppTests/WelcomeSnapshotTests", "AppTests/WelcomeSnapshotGuardTests", "RenderTests/WelcomeRenderingTests", "AppTests/AuthSnapshotTests", "AppTests/TwoFactorSnapshotTests", "AppTests/ForgotPasswordSnapshotTests", "AppTests/ResetPasswordSnapshotTests", "AppTests/SignUpSnapshotTests", "AppTests/VerifyEmailSnapshotTests", "AppTests/AuthSnapshotGuardTests", "AppTests/AppTabsSnapshotTests", "AppTests/StepSheetSnapshotTests", "AppTests/TodaySnapshotTests", "AppTests/TodayRowSnapshotTests", "AppTests/TripsSnapshotTests")
 XCODEBUILD_COMMON = ["xcodebuild", "-project", "ChronoFlow.xcodeproj", "-derivedDataPath", "build/DerivedData",
                      "-onlyUsePackageVersionsFromResolvedFile"]
 
