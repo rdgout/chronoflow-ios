@@ -67,6 +67,7 @@ struct AppTabs: View {
                 case .account: SettingsAccountView(store: settingsPages)
                 case .profile: SettingsProfileView(store: settingsPages)
                 case .bodyClock: SettingsBodyClockView(store: settingsPages)
+                case .preferences: SettingsPreferencesView(store: settingsPages)
                 default:
                     #if DEBUG
                         RoutePlaceholder(route: .settings, destination: destination.rawValue)

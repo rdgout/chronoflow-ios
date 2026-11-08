@@ -2,6 +2,7 @@ import AppCore
 import Auth
 import DesignSystem
 import Observation
+import Settings
 import SwiftUI
 import Welcome
 
@@ -22,6 +23,8 @@ final class RootNavigator: Navigator {
 
 struct RootView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.locale) private var phoneLocale
+    @State private var devicePreferences = SettingsDevicePreferences()
     var navigator = RootNavigator()
     var authModel: SignInModel?
     var authServices: AuthSessionServices?
@@ -30,7 +33,12 @@ struct RootView: View {
     var forcesReduceMotion = false
 
     var body: some View {
-        content.dynamicTypeSize(...ContentSizeCap.maximum)
+        content.environment(devicePreferences)
+            .environment(\.locale, devicePreferences.resolvedLocale(phone: phoneLocale))
+            .preferredColorScheme(
+                devicePreferences.theme == .system ? nil : devicePreferences.theme == .dark ? .dark : .light
+            )
+            .dynamicTypeSize(...ContentSizeCap.maximum)
             .environment(\.dynamicTypeSize, ContentSizeCap.clamp(dynamicTypeSize))
     }
 

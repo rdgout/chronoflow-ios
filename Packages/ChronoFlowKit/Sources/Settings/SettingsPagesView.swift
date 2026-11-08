@@ -43,6 +43,11 @@
                                     .font(Typography.screenBody.font).foregroundStyle(ColorToken.mutedForeground.color)
                             }
                         }.accessibilityIdentifier("settings.account.profile")
+                        NavigationLink {
+                            SettingsLanguageView()
+                        } label: {
+                            Label(t("Language"), systemImage: "globe")
+                        }.accessibilityIdentifier("settings.account.language")
                     }
                 } else {
                     SettingsStoredState(loaded: store.loaded, failed: store.failure)

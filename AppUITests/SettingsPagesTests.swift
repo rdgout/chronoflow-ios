@@ -41,9 +41,50 @@ nonisolated final class SettingsPagesTests: XCTestCase {
         XCTAssertTrue(app.buttons["settings.bodyClock.chronotype"].label.contains("Night owl"))
     }
 
+    @MainActor func testPreferencesSavesAndReplaySkipAndDoneReturnHere() {
+        let app = launchSettingsPages()
+        defer { app.terminate() }
+        open("settings.preferences", app: app)
+        let format = app.buttons["settings.preferences.timeFormat"]
+        XCTAssertTrue(format.waitForExistence(timeout: 8))
+        format.tap()
+        app.buttons["12-hour (2:30 PM)"].tap()
+        XCTAssertTrue(app.staticTexts["settings.preferences.saved"].waitForExistence(timeout: 8))
+        let sleep = app.switches["settings.preferences.Sleep"]
+        AuthUIFlow.reveal(sleep, in: app)
+        sleep.tap()
+        open("settings.preferences.replay", app: app)
+        XCTAssertTrue(app.buttons["walkthrough.skip"].waitForExistence(timeout: 8))
+        app.buttons["walkthrough.skip"].tap()
+        XCTAssertTrue(app.buttons["settings.preferences.replay"].waitForExistence(timeout: 8))
+        open("settings.preferences.replay", app: app)
+        for index in 0..<3 {
+            let next = app.buttons[index == 2 ? "walkthrough.done" : "walkthrough.next"]
+            XCTAssertTrue(next.waitForExistence(timeout: 6))
+            next.tap()
+        }
+        XCTAssertTrue(app.buttons["settings.preferences.replay"].waitForExistence(timeout: 8))
+    }
+
+    @MainActor func testLanguageChoiceUpdatesAppAndReturnsToAccount() {
+        let app = launchSettingsPages()
+        defer { app.terminate() }
+        open("settings.account", app: app)
+        open("settings.account.language", app: app)
+        let dutch = app.buttons["Dutch"]
+        XCTAssertTrue(dutch.waitForExistence(timeout: 8))
+        dutch.tap()
+        XCTAssertTrue(app.staticTexts["settings.language.saved"].waitForExistence(timeout: 6))
+        XCTAssertTrue(app.staticTexts["settings.language.saved"].label.contains("Nederlands"))
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        XCTAssertTrue(app.buttons["settings.account.language"].waitForExistence(timeout: 6))
+        XCTAssertTrue(app.buttons["settings.account.language"].label.contains("Taal"))
+    }
+
     @MainActor private func launchSettingsPages() -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = AuthUIFlow.arguments()
+        app.launchArguments =
+            AuthUIFlow.arguments() + ["-cf.settings.language", "system", "-cf.settings.theme", "system"]
         app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
         app.launchEnvironment["CF_AUTH_TEST_WALKTHROUGH_SEEN"] = "1"
         app.launch()
