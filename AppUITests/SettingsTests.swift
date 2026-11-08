@@ -15,10 +15,16 @@ nonisolated final class SettingsTests: XCTestCase {
         let app = launch(pending: true)
         defer { app.terminate() }
         openSettings(app)
-        XCTAssertTrue(app.staticTexts["settings.sync"].waitForExistence(timeout: 8))
+        let pending = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "label == %@", "1 change waiting to sync"),
+            object: app.staticTexts["settings.sync"])
+        XCTAssertEqual(XCTWaiter.wait(for: [pending], timeout: 12), .completed)
         signOut(app)
         let sheet = app.scrollViews["settings.pending"]
-        XCTAssertTrue(sheet.waitForExistence(timeout: 8))
+        guard sheet.waitForExistence(timeout: 8) else {
+            XCTFail("Pending changes confirmation did not appear")
+            return
+        }
         XCTAssertTrue(app.staticTexts["settings.pending.title"].label.contains("1 change"))
         let stay = app.buttons["settings.pending.stay"]
         AuthUIFlow.reveal(stay, in: app, scroll: sheet)

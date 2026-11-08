@@ -22,10 +22,12 @@ public actor MockDataSource: DataSource {
     private var currentToken: String?
     private var requestToken: String?
     private var offline: Bool
+    private let mutationsOffline: Bool
     private var failures: [MockMethod: DataFailure] = [:]
 
     public init(
         store: any MockStateStore = MemoryMockStateStore(), seed: MockServerState? = nil, offline: Bool = false,
+        mutationsOffline: Bool = false,
         now: @escaping @Sendable () -> Date = { Date() },
         delay: @escaping @Sendable () -> TimeInterval = { Double.random(in: 0.3...0.8) },
         sleep: @escaping APIClient.Sleep = { try await Task.sleep(for: .seconds($0)) },
@@ -36,6 +38,7 @@ public actor MockDataSource: DataSource {
         self.store = store
         self.seed = seed
         self.offline = offline
+        self.mutationsOffline = mutationsOffline
         self.now = now
         self.delay = delay
         self.sleep = sleep
@@ -88,7 +91,7 @@ public actor MockDataSource: DataSource {
         try Task.checkCancellation()
         let token = try await bearer?()
         try Task.checkCancellation()
-        if offline { throw DataFailure.offline }
+        if offline || (mutationsOffline && method == .send) { throw DataFailure.offline }
         if let failure = failures.removeValue(forKey: method) { throw failure }
         try load()
         requestToken = bearer == nil ? currentToken : token

@@ -29,7 +29,7 @@ nonisolated struct AppServices: Sendable {
                 return MockDataSource(
                     store: FileMockStateStore(applicationSupport: applicationSupport),
                     seed: authTestSeed,
-                    offline: authTest.offline, bearer: bearer)
+                    offline: authTest.offline, mutationsOffline: authTest.settingsPending, bearer: bearer)
             }
         #endif
         return MockDataSource(

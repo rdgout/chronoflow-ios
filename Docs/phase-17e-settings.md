@@ -28,12 +28,12 @@ editors and billing remain outside this task.
 ## Verification in this workspace
 
 - `make lint`: passes.
-- `make package-tests`: the known loopback-socket test
-  `APICookieTests.realRedirectCookieHandlingIsDisabled` fails with sandbox EPERM.
 - `sh Scripts/swiftpm.sh test ChronoFlowKit --skip realRedirectCookieHandlingIsDisabled`:
-  all 452 other host tests pass, including 10 new Settings tests.
-- `python3 -I Tests/test_launch_simulators.py`: all 76 runner fixtures pass.
-- Direct Swift iOS 17 module compilation/type-checking passes for Settings, Sync,
+  all 453 Swift Testing tests and 6 XCTest cases pass, including 11 Settings tests.
+  Only the known sandbox loopback-socket test is excluded (previously EPERM).
+- `make token-tests asset-tests launch-resources-check`: all 17 generator tests and
+  98 resource/runner fixtures pass, including all 76 runner fixtures.
+- Direct Swift iOS 17 module compilation/type-checking passes for DataAccess, Settings, Sync,
   the app, AppTests and AppUITests, using the installed SDK and existing dependency
   modules. This verifies compilation, not linking or runtime behavior.
 - No xcodebuild or simulator command was run. No snapshot references were recorded.
@@ -62,19 +62,27 @@ usual-sleep-times edit; the home fixture shows the board's two-minute sync age a
 badges.
 
 The pending UI journey uses `CF_SETTINGS_TEST_PENDING=1`, behind the existing
-UUID-scoped Auth UI test gate. It waits for the initial pull, stops sync and queues
-one real plan check-off so both confirmation attempts retain it. The second
-account is pulled and sync is stopped again before checking sign-out, so sync
-cannot conceal leaked outbox rows. The host integration test independently checks
-that the previous account directory is removed and the next account has no trips,
-old settings or outbox rows.
+UUID-scoped Auth UI test gate. The original seed selected the oldest trip, which
+has a plan hash but no cached detail because it is completed. The optional read
+then silently returned without enqueueing. The seed now waits for a successful
+initial pull, scans for a cached actionable step, enqueues with the session permit,
+and checks that its row remains. Seeding errors are surfaced as Debug assertions.
+The UI test waits for the actual one-pending-change sync label before signing out.
+
+Mock mutation sends persistently return offline in this scenario, including for
+the next account, while reads and authentication remain usable. Sync keeps running;
+real sign-out flush attempts retain the queue, and flushing cannot hide leaked
+rows in the next account. A host regression uses the actual mock seed, FullPull,
+local enqueue, OutboxFlusher and Settings model to verify both online success and
+two offline confirmation attempts through Stay and Discard. Existing wipe coverage
+also checks the deleted account directory and absence of old trips/settings/outbox.
 
 The normal commit gate remains `make check` outside this sandbox. Neither `make
 matrix` nor `make duo` is required for this task.
 
 ## Patch delivery
 
-The worktree's Git directory is outside writable roots; creating its `index.lock`
-returns Operation not permitted. `build/commits/1.patch` imports the boards and
-ticks that task; `2.patch` implements Settings and sign-out and ticks their tasks.
-`messages.txt` contains the matching Conventional Commit subjects in order.
+Failure follow-up based on `25f52be`: `build/commits/1.patch` stabilizes the Settings
+profile captures; `2.patch` fixes the pending seed and offline mutation scenario.
+Each patch ticks its follow-up task in `plan.md`. `messages.txt` contains the
+matching Conventional Commit subjects in order. Apply the patches in that order.

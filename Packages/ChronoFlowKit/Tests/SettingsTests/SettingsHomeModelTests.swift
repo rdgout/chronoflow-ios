@@ -1,11 +1,12 @@
 import AppCore
-import DataAccess
 import Foundation
 import LocalStore
 import PlanCore
 import Settings
 import Sync
 import Testing
+
+@testable import DataAccess
 
 private let firstID = "019a562b-8000-7000-8000-000000000071"
 private let secondID = "019a562b-8000-7000-8000-000000000072"
@@ -50,7 +51,8 @@ private struct QuietClock: PlanClock {
     let session: SessionSnapshot
     let model: SettingsHomeModel
     static func make(
-        flush: @escaping @Sendable () async throws -> Void = { throw DataFailure.offline },
+        sessionResult: SessionResult? = nil,
+        flush: @escaping @Sendable (AccountDatabase) async throws -> Void = { _ in throw DataFailure.offline },
         logout: @escaping @Sendable (StoredSession) async throws -> Void = { _ in },
         sleep: @escaping @Sendable (TimeInterval) async throws -> Void = { try await Task.sleep(for: .seconds($0)) }
     ) async throws -> Fixture {
@@ -63,14 +65,17 @@ private struct QuietClock: PlanClock {
             guard let database = await accounts.activeDatabase() else { return 0 }
             return try await OutboxRepository(database: database).pending().count
         }
-        hooks.flush = flush
+        hooks.flush = {
+            guard let database = await accounts.activeDatabase() else { throw StoreFailure.closed }
+            try await flush(database)
+        }
         hooks.logout = logout
         hooks.sleep = sleep
         hooks.beginWipe = { try await wiper.begin($0) }
         hooks.erase = { try await wiper.erase($0) }
         hooks.finishWipe = { try await wiper.finish() }
         let controller = SessionController(credentials: credentials, accounts: accounts, teardown: hooks)
-        try await controller.accept(result(firstID))
+        try await controller.accept(sessionResult ?? result(firstID))
         let database = try #require(await accounts.activeDatabase())
         let session = try #require(await controller.activeSession())
         let model = SettingsHomeModel(database: database, controller: controller, session: session, clock: QuietClock())
@@ -142,6 +147,72 @@ private struct QuietClock: PlanClock {
         try await f.close()
     }
 
+    #if DEBUG
+        @Test(arguments: [false, true])
+        func realSeededCheckOffRequiresConfirmationOnlyWhileMutationsStayOffline(mutationsOffline: Bool) async throws {
+            let now = Date(timeIntervalSince1970: 1_794_132_000)
+            let source = MockDataSource(
+                seed: try MockAppSeed.make(now: now, walkthroughSeen: true), mutationsOffline: mutationsOffline,
+                now: { now }, sleep: { _ in })
+            let signIn = try await source.signIn(
+                PasswordSignInInput(
+                    email: MockScenarioValues.demoEmail, password: MockScenarioValues.password,
+                    deviceID: UUID().uuidString, deviceName: "iPhone"))
+            guard case .session(let result) = signIn else {
+                Issue.record("Expected demo session")
+                return
+            }
+            let f = try await Fixture.make(
+                sessionResult: result,
+                flush: { database in
+                    let epoch = SyncEpoch(accountID: try AccountID(result.account.id), generation: 0)
+                    let flush = try await OutboxFlusher(database: database, source: source).run(epoch: epoch)
+                    #expect(flush.offline == mutationsOffline)
+                })
+            let epoch = SyncEpoch(accountID: try AccountID(result.account.id), generation: f.session.epoch)
+            _ = try await FullPull(database: f.database, source: source, now: { now }).run(epoch: epoch)
+            let trips = TripRepository(database: f.database)
+            let rows = try await trips.trips()
+            let oldest = try #require(rows.first)
+            let oldestHash = try #require(oldest.currentInputHash)
+            #expect(try await trips.plan(tripID: oldest.id, inputHash: oldestHash) == nil)
+            let cached = try #require(rows.first { $0.keepOffline })
+            let hash = try #require(cached.currentInputHash)
+            let plan = try #require(try await trips.plan(tripID: cached.id, inputHash: hash))
+            let detail = try plan.detail.decode(TripDetail.self)
+            let key = try #require(detail.plan.blocks.first { $0.actionable && $0.checkKey != nil }?.checkKey)
+            let permit = try #require(await f.controller.mutationPermit(for: f.session))
+            let outbox = OutboxRepository(database: f.database)
+            let row = try await outbox.enqueue(
+                .checkOff(
+                    CheckOffChange(
+                        tripID: cached.id, planInputHash: hash, type: key.type, localDate: key.localDate,
+                        ordinal: key.ordinal, status: .done)), permit: permit, now: now)
+            #expect(try await outbox.pending().map(\.id) == [row.id])
+            await f.model.signOut()
+            #expect(f.model.failure == nil)
+            #expect(f.model.showsPending == mutationsOffline)
+            if mutationsOffline {
+                #expect(f.model.confirmationCount == 1)
+                #expect(try await outbox.pending().first?.lastError == "offline")
+                #expect(try await source.fetchTripDetail(id: cached.id).checkState.marks.isEmpty)
+                f.model.stay()
+                #expect(await f.controller.activeSession() == f.session)
+                await f.model.signOut()
+                #expect(f.model.showsPending)
+                #expect(try await outbox.pending().first?.attempts == 2)
+                await f.model.signOut(discardPending: true)
+            } else {
+                #expect(try await source.fetchTripDetail(id: cached.id).checkState.marks.first?.status == .done)
+            }
+            #expect(await f.controller.presence == .signedOut)
+            try await f.controller.accept(Fixture.result(secondID))
+            let next = try #require(await f.accounts.activeDatabase())
+            #expect(try await OutboxRepository(database: next).pending().isEmpty)
+            try await f.close()
+        }
+    #endif
+
     @Test func observationUpdatesBadgesAndEmptiedQueueDismissesSheet() async throws {
         let f = try await Fixture.make()
         try await f.pending()
@@ -172,7 +243,7 @@ private struct QuietClock: PlanClock {
 
     @Test func forced401DuringFlushNeverPresentsStaleConfirmation() async throws {
         let flush = Gate()
-        let f = try await Fixture.make(flush: { await flush.block() })
+        let f = try await Fixture.make(flush: { _ in await flush.block() })
         try await f.pending()
         let signOut = Task { await f.model.signOut() }
         await flush.wait()

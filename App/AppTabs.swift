@@ -83,7 +83,13 @@ struct AppTabs: View {
                 await native.controller.activeSession() == snapshot, !Task.isCancelled
             else { return }
             #if DEBUG
-                await seedSettingsPending(native: native, database: database, snapshot: snapshot, permit: permit)
+                do {
+                    try await seedSettingsPending(
+                        native: native, database: database, snapshot: snapshot, permit: permit)
+                } catch {
+                    assertionFailure("Settings UI test seed failed: \(error)")
+                    return
+                }
             #endif
             guard await native.controller.activeSession() == snapshot, !Task.isCancelled else { return }
             let settings = SettingsHomeModel(
