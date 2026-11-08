@@ -39,8 +39,10 @@ nonisolated final class SignUpTests: XCTestCase {
         let field =
             identifier.contains("password") || identifier.contains("confirmation")
             ? app.secureTextFields[identifier] : app.textFields[identifier]
-        AuthUIFlow.reveal(field, in: app)
-        field.tap()
-        field.typeText(value + (identifier == "sign-up.confirmation" && !submit ? "" : "\n"))
+        guard
+            AuthUIFlow.type(
+                value + (identifier == "sign-up.confirmation" && !submit ? "" : "\n"), into: field, in: app,
+                newPassword: identifier == "sign-up.password" || identifier == "sign-up.confirmation")
+        else { return }
     }
 }

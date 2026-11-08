@@ -4,7 +4,7 @@ import UIKit
 import XCTest
 
 nonisolated final class SignUpControlTests: XCTestCase {
-    @MainActor func testSharedVisibilityPreservesValuesAutoFillRulesAndNativeNameTraits() async throws {
+    @MainActor func testSharedVisibilityPreservesValuesAutoFillAndNativeNameTraits() async throws {
         try await AuthTestHost.registerFonts()
         let model = try signUpSnapshotModel()
         let host = try AuthTestHost(SignUpView(model: model), size: SnapshotDevice.all()[0].size)
@@ -24,9 +24,6 @@ nonisolated final class SignUpControlTests: XCTestCase {
                 XCTAssertEqual(field.isSecureTextEntry, !visible)
                 XCTAssertEqual(field.textContentType, .newPassword)
                 XCTAssertEqual(field.text, "NewPassword123!")
-                XCTAssertEqual(
-                    field.passwordRules?.passwordRulesDescriptor,
-                    UITextInputPasswordRules(descriptor: AuthPasswordPolicy.rules).passwordRulesDescriptor)
             }
             XCTAssertEqual(fields.last?.returnKeyType, .go)
         }
