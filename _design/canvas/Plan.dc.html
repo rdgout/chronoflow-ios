@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Trip plan</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="ds/chronoflow/components/bundle.css">
+<script src="ds/chronoflow/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Figtree';src:url("/_blob/74876cc764ebb15bf4ae98bcdbf3140c") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/741b1ce40b46479a73d934d0d5be9774") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/079d83fda74d66d1f31e35072f71201d") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/991830890debdac04981f1a27656ed5c") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Fraunces';src:url("/_blob/fc815083784d00806d267d81858d2414") format("woff2");font-weight:400 500;font-style:normal;font-display:swap}
+body{margin:0}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="{{rootStyle}}">
+  <div style="position: absolute; inset: 0; overflow-y: auto;">
+    <!-- Navigation bar. Subtitle: trip dates at the top; the day at the top of the screen once scrolled. Tapping the title opens the day menu. -->
+    <header class="ios ios-navbar">
+      <span><a href="Trips.dc.html" aria-label="My trips" class="ios-glass ios-navbtn"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg></a></span>
+      <button type="button" aria-haspopup="menu" aria-expanded="{{menuStr}}" aria-label="{{nav.a11y}}" onClick="{{toggleMenu}}" class="ios" style="display: flex; flex-direction: column; align-items: center; min-width: 0; padding: 0; border: 0; background: transparent; color: var(--foreground); font: inherit;">
+        <span class="ios-navtitle" style="max-width: 100%;">Amsterdam → Tokyo</span>
+        <span style="display: inline-flex; align-items: center; gap: 3px; max-width: 100%; font-size: 12px; line-height: 15px; color: var(--muted-foreground); white-space: nowrap; font-variant-numeric: tabular-nums;"><span style="overflow: hidden; text-overflow: ellipsis;">{{nav.sub}}</span><svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="m6 9 6 6 6-6"></path></svg></span>
+      </button>
+      <span class="ios-glass" style="justify-self: end; display: inline-flex; border-radius: 9999px;">
+        <button type="button" aria-label="{{viewBtn.label}}" onClick="{{viewBtn.pick}}" class="ios-navbtn" style="padding: 0; border: 0; background: transparent;"><sc-if value="{{isTimeline}}" hint-placeholder-val="{{ true }}"><svg aria-hidden="true" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h.01"></path><path d="M3 18h.01"></path><path d="M3 6h.01"></path><path d="M8 12h13"></path><path d="M8 18h13"></path><path d="M8 6h13"></path></svg></sc-if><sc-if value="{{isList}}" hint-placeholder-val="{{ false }}"><svg aria-hidden="true" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M9 3v18"></path><path d="M15 3v18"></path></svg></sc-if></button>
+        <a href="TripActions.dc.html" aria-label="Trip actions" class="ios-navbtn"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg></a>
+      </span>
+    </header>
+
+    <main style="{{mainStyle}}">
+      <sc-if value="{{noPlan}}" hint-placeholder-val="{{ false }}">
+        <section aria-labelledby="np-title" style="display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 24px; padding: 32px 20px; border-radius: 26px; border: 2px dashed var(--border); text-align: center;">
+          <span aria-hidden="true" style="display: grid; place-items: center; width: 56px; height: 56px; border-radius: 9999px; background: var(--muted); color: var(--dawn-text);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path><path d="M8 14h.01"></path><path d="M12 14h.01"></path><path d="M16 14h.01"></path></svg></span>
+          <h2 id="np-title" style="margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 24px; line-height: 32px; letter-spacing: -0.01em;">No plan yet</h2>
+          <p style="margin: 0; font-size: 16px; line-height: 24px; color: var(--muted-foreground);">Your flights are saved. Check your answers to make the plan. Once it's made, it's stored on this phone and works offline.</p>
+          <a href="TripReview.dc.html" class="inline-flex shrink-0 items-center justify-center gap-2 text-sm font-medium whitespace-nowrap transition-colors rounded-full bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6" style="height: 48px; text-decoration: none;">Check answers and make plan</a>
+          <p style="margin: 0; font-size: 13px; line-height: 18px; color: var(--muted-foreground);">Making the plan needs a connection.</p>
+        </section>
+      </sc-if>
+      <sc-if value="{{hasPlan}}" hint-placeholder-val="{{ true }}">
+      <sc-if value="{{fromTop}}" hint-placeholder-val="{{ false }}">
+      <!-- Trip summary -->
+      <section aria-label="Plan summary" style="display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 26px; border: 1px solid var(--border); background: var(--card); box-shadow: var(--shadow-soft);">
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;">
+          <div style="min-width: 0;">
+            <p style="margin: 0; font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dawn-text);">Your plan</p>
+            <p style="margin: 2px 0 0; font-family: var(--font-display); font-size: 20px; line-height: 28px; letter-spacing: -0.01em;">We advance your clock 7 hours</p>
+          </div>
+          <a href="PlanLegend.dc.html" aria-label="Legend: what the colours and patterns mean" class="cf-press" style="display: grid; place-items: center; width: 44px; height: 44px; flex-shrink: 0; border-radius: 9999px; background: var(--surface-2); color: var(--foreground);">
+            <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+          </a>
+        </div>
+        <p style="margin: 0; font-size: 14px; line-height: 20px; color: var(--muted-foreground); font-variant-numeric: tabular-nums;">3 days of preparation, then your body clock shifts towards Tokyo. Expected adapted by Sun 18 Oct.</p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <div style="display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 18px; background: var(--surface-2);">
+            <span style="font-size: 12px; line-height: 16px; color: var(--muted-foreground);">Home · Amsterdam</span>
+            <span style="font-size: 20px; line-height: 28px; font-weight: 600; font-variant-numeric: tabular-nums;">02:45 <span style="font-size: 12px; font-weight: 500; color: var(--muted-foreground);">Tue</span></span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 18px; border: 2px solid var(--dawn); background: var(--card);">
+            <span style="font-size: 12px; line-height: 16px; color: var(--dawn-text); font-weight: 600;">You're here · Tokyo</span>
+            <span style="font-size: 20px; line-height: 28px; font-weight: 600; font-variant-numeric: tabular-nums;">09:45 <span style="font-size: 12px; font-weight: 500; color: var(--muted-foreground);">Tue</span></span>
+          </div>
+        </div>
+      </section>
+
+      </sc-if>
+
+      <!-- Day pills: part of the scrolling content, so they scroll away. Once gone, the nav subtitle shows the day and its menu jumps between days. -->
+      <sc-if value="{{showChips}}" hint-placeholder-val="{{ true }}">
+        <x-import component-from-global-scope="ChronoFlow.DayStrip" days="{{days}}" current="{{topDay}}"></x-import>
+      </sc-if>
+
+      <sc-if value="{{loading}}" hint-placeholder-val="{{ false }}">
+        <div aria-busy="true" aria-label="Loading your plan" style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="height: 120px; border-radius: 22px; overflow: hidden;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div>
+          <div style="height: 44px; border-radius: 9999px; overflow: hidden;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div>
+          <div style="height: 380px; border-radius: 22px; overflow: hidden;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ready}}" hint-placeholder-val="{{ true }}">
+        <!-- Continuous plan: no card around a day; the time gutter and lanes run on from day to day -->
+        <div>
+        <sc-for list="{{dayList}}" as="dd" hint-placeholder-count="2">
+          <section aria-label="{{dd.label}}, {{dd.date}}">
+            <!-- Day header. Full at the start of a day; once it reaches the navigation bar it shrinks to the compact line below. The next day's header pushes it out. -->
+            <sc-if value="{{dd.compact}}" hint-placeholder-val="{{ false }}">
+              <sc-if value="{{isTimeline}}" hint-placeholder-val="{{ true }}">
+                <div class="ios-glass" aria-label="{{dd.label}}, {{dd.date}}" style="{{dd.compactStyle}}">
+                  <span style="display: flex; flex-direction: column; align-items: flex-end; padding-right: 4px; font-size: 10px; line-height: 12px; color: var(--muted-foreground); font-variant-numeric: tabular-nums;"><span style="font-weight: 600; color: var(--foreground);">{{dd.dow}}</span>{{dd.dm}}</span>
+                  <sc-for list="{{laneHeads}}" as="lh" hint-placeholder-count="4"><span aria-hidden="true" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 0; font-size: 11px; line-height: 14px; font-weight: 500; color: var(--muted-foreground);"><span style="{{lh.dot}}"></span><span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{lh.label}}</span></span></sc-for>
+                </div>
+              </sc-if>
+              <sc-if value="{{isList}}" hint-placeholder-val="{{ false }}">
+                <div class="ios-glass" style="{{dd.compactListStyle}}"><span style="flex: 1; min-width: 0; font-size: 13px; line-height: 18px; font-weight: 600;">{{dd.label}} <span style="font-weight: 400; color: var(--muted-foreground); font-variant-numeric: tabular-nums;">· {{dd.date}}</span></span><span style="font-size: 12px; color: var(--muted-foreground);">{{dd.zoneText}}</span></div>
+              </sc-if>
+            </sc-if>
+            <sc-if value="{{dd.full}}" hint-placeholder-val="{{ true }}">
+            <div class="ios-glass" style="{{dd.headerStyle}}">
+              <div style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;">
+                <h3 style="margin: 0; flex: 1; min-width: 0; font-family: var(--font-display); font-weight: 400; font-size: 18px; line-height: 26px;">{{dd.label}} <span style="font-family: var(--font-sans); font-size: 14px; color: var(--muted-foreground); font-variant-numeric: tabular-nums;">· {{dd.date}}</span></h3>
+                <span style="display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 10px; border-radius: 9999px; font: inherit; font-size: 12px; line-height: 16px; font-weight: 500; background: var(--muted); color: var(--muted-foreground);">{{dd.zoneText}}</span>
+                <sc-if value="{{dd.hasWarn}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{dd.toggle}}" style="display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 10px; border-radius: 9999px; font: inherit; font-size: 12px; line-height: 16px; font-weight: 500; border: 1px solid color-mix(in oklab, var(--dawn) 40%, transparent); background: color-mix(in oklab, var(--dawn) 10%, transparent); color: var(--foreground);"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--dawn-text);"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>{{dd.warnText}}</button></sc-if>
+              </div>
+              <sc-if value="{{dd.open}}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 6px;">
+                  <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <x-import component-from-global-scope="ChronoFlow.StatusPill" status="{{dd.status}}"></x-import>
+                    <sc-if value="{{dd.hasInfoOnly}}" hint-placeholder-val="{{ false }}"><button type="button" aria-expanded="{{dd.notesOpenStr}}" onClick="{{dd.toggleNotes}}" style="display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 10px; border-radius: 9999px; font: inherit; font-size: 12px; line-height: 16px; font-weight: 500; border: 1px solid var(--border); background: var(--card); color: var(--foreground);"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>{{dd.infoText}}</button></sc-if>
+                  </div>
+                  <p style="margin: 0; font-size: 12px; line-height: 16px; color: var(--muted-foreground); font-variant-numeric: tabular-nums;">{{dd.sleep}} · {{dd.light}}</p>
+                  <x-import component-from-global-scope="ChronoFlow.DayProgress" done="{{dd.progress.done}}" total="{{dd.progress.total}}"></x-import>
+                  <p style="margin: 0; font-size: 12px; line-height: 16px; font-weight: 500; color: var(--dawn-text);">{{dd.headline}}</p>
+                  <sc-for list="{{dd.shownNotes}}" as="nt" hint-placeholder-count="1">
+                    <x-import component-from-global-scope="ChronoFlow.Notice" tone="{{nt.tone}}">{{nt.text}}</x-import>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <button type="button" aria-expanded="{{dd.openStr}}" onClick="{{dd.toggle}}" style="display: flex; align-items: center; gap: 4px; height: 28px; margin: 2px auto 0; padding: 0 12px; border: 0; border-radius: 9999px; background: transparent; color: var(--muted-foreground); font: inherit; font-size: 12px;">{{dd.moreLabel}}</button>
+              <sc-if value="{{showLanes}}" hint-placeholder-val="{{ true }}">
+                <div aria-hidden="true" style="display: grid; grid-template-columns: 44px repeat(4, minmax(0, 1fr)); gap: 4px; padding-top: 4px;"><span></span><sc-for list="{{laneHeads}}" as="lh" hint-placeholder-count="4"><span style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 0; font-size: 11px; line-height: 14px; font-weight: 500; color: var(--muted-foreground);"><span style="{{lh.dot}}"></span>{{lh.label}}</span></sc-for></div>
+              </sc-if>
+            </div>
+            </sc-if>
+
+            <sc-if value="{{isTimeline}}" hint-placeholder-val="{{ true }}">
+              <div role="img" aria-label="Timeline for {{dd.label}}" style="{{dd.tlStyle}}">
+                <div style="position: relative;">
+                  <sc-for list="{{dd.hours}}" as="h" hint-placeholder-count="12"><span style="{{h.style}}">{{h.label}}</span></sc-for>
+                </div>
+                <sc-for list="{{dd.lanes}}" as="ln" hint-placeholder-count="4">
+                  <div style="{{ln.style}}">
+                    <sc-for list="{{dd.lines}}" as="hl" hint-placeholder-count="12"><span aria-hidden="true" style="{{hl.style}}"></span></sc-for>
+                    <sc-for list="{{ln.blocks}}" as="b" hint-placeholder-count="2">
+                      <x-import component-from-global-scope="ChronoFlow.TimelineBlock" category="{{b.category}}" priority="{{b.priority}}" title="{{b.title}}" time="{{b.time}}" top="{{b.top}}" height="{{b.height}}" continues-before="{{b.cb}}" continues-after="{{b.ca}}" status="{{b.status}}"></x-import>
+                    </sc-for>
+                  </div>
+                </sc-for>
+                <sc-if value="{{dd.hasZone}}" hint-placeholder-val="{{ false }}"><div style="{{dd.zoneStyle}}"><span style="position: absolute; left: 48px; top: 0; transform: translateY(-50%); padding: 2px 8px; border-radius: 9999px; background: var(--cat-travel); color: var(--cat-travel-fg); font-size: 10px; line-height: 14px; font-weight: 500;">Now on Tokyo time</span></div></sc-if>
+                <sc-if value="{{dd.hasNow}}" hint-placeholder-val="{{ false }}"><div style="{{dd.nowStyle}}"><span style="position: absolute; left: 0; top: 1px; transform: translateY(-50%); padding: 0 6px; border-radius: 9999px; background: var(--now); color: var(--primary-foreground); font-size: 10px; line-height: 16px; font-weight: 600; font-variant-numeric: tabular-nums;">{{dd.nowLabel}}</span></div></sc-if>
+              </div>
+            </sc-if>
+            <sc-if value="{{isList}}" hint-placeholder-val="{{ false }}">
+              <div style="padding-top: 8px;">
+              <ol aria-label="Steps for {{dd.label}}" style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px;">
+                <sc-for list="{{dd.items}}" as="it" hint-placeholder-count="6">
+              <li>
+                <sc-if value="{{it.isZone}}" hint-placeholder-val="{{ false }}">
+                  <x-import component-from-global-scope="ChronoFlow.ZoneChangeCard" zone="Tokyo" time="09:15" from="Amsterdam 02:15" to="Tokyo 09:15 Tue" offset="+7 h"></x-import>
+                </sc-if>
+                <sc-if value="{{it.isStep}}" hint-placeholder-val="{{ true }}">
+                  <a href="ItemDetail.dc.html" class="cf-press" style="{{it.rowStyle}}">
+                    <x-import component-from-global-scope="ChronoFlow.CategorySwatch" category="{{it.category}}" size="sm"></x-import>
+                    <span style="flex: 1; min-width: 0;">
+                      <span style="display: block; font-size: 16px; line-height: 22px; font-weight: 500;">{{it.title}}</span>
+                      <span style="display: block; font-size: 14px; line-height: 20px; color: var(--muted-foreground); font-variant-numeric: tabular-nums;">{{it.time}}</span>
+                    </span>
+                    <sc-if value="{{it.hasTag}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="ChronoFlow.PriorityTag" priority="{{it.priority}}"></x-import></sc-if>
+                    <sc-if value="{{it.done}}" hint-placeholder-val="{{ false }}"><svg aria-label="Done" role="img" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: var(--dawn-text);"><path d="M20 6 9 17l-5-5"></path></svg></sc-if>
+                  </a>
+                </sc-if>
+              </li>
+                </sc-for>
+              </ol>
+              </div>
+            </sc-if>
+          </section>
+        </sc-for>
+        </div>
+        <sc-if value="{{hasEnd}}" hint-placeholder-val="{{ false }}">
+                  <section aria-labelledby="end-title" style="display: flex; flex-direction: column; gap: 12px; padding: 20px; border-radius: 26px; border: 1px solid var(--border); background: var(--card); box-shadow: var(--shadow-soft); text-align: center; align-items: center;">
+            <span aria-hidden="true" style="display: grid; place-items: center; width: 48px; height: 48px; border-radius: 9999px; background: var(--dawn); color: var(--dawn-foreground);"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg></span>
+            <h2 id="end-title" style="margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 24px; line-height: 32px; letter-spacing: -0.01em;">That's the end of this plan</h2>
+            <sc-if value="{{hasEndText}}" hint-placeholder-val="{{ true }}"><p style="margin: 0; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">You should be on Tokyo time by now. Keep your usual sleep times; there's nothing more to do until your return plan starts on Wed 21 Oct.</p></sc-if>
+            <sc-if value="{{noEndText}}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">There are no more steps in this plan.</p></sc-if>
+            <div style="display: grid; width: 100%; gap: 8px;">
+              <a href="Plan.dc.html" class="inline-flex shrink-0 items-center justify-center gap-2 text-sm font-medium whitespace-nowrap transition-colors rounded-full bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6" style="text-decoration: none;">See your return plan</a>
+            </div>
+          </section>
+        </sc-if>
+      </sc-if>
+      </sc-if>
+    </main>
+  </div>
+
+  <!-- Tab bar: minimises to the selected tab while scrolling down, back to full when scrolling up -->
+  <sc-if value="{{tabFull}}" hint-placeholder-val="{{ true }}">
+  <nav aria-label="Main" class="ios ios-glass ios-tabbar">
+    <a href="Today.dc.html" class="ios-tab"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"></rect><rect width="7" height="5" x="14" y="3" rx="1"></rect><rect width="7" height="9" x="14" y="12" rx="1"></rect><rect width="7" height="5" x="3" y="16" rx="1"></rect></svg><span>Today</span></a>
+    <a href="Trips.dc.html" aria-current="page" class="ios-tab"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"></path></svg><span>My trips</span></a>
+    <a href="SetHome.dc.html" class="ios-tab"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg><span>Settings</span></a>
+  </nav>
+  </sc-if>
+  <sc-if value="{{tabMini}}" hint-placeholder-val="{{ false }}">
+    <nav aria-label="Main" class="ios ios-glass" style="position: absolute; left: 20px; bottom: 22px; z-index: 20; display: grid; place-items: center; width: 56px; height: 56px; border-radius: 9999px;"><a href="Trips.dc.html" aria-current="page" aria-label="My trips" style="display: grid; place-items: center; width: 48px; height: 48px; border-radius: 9999px; color: var(--dawn-text); background: rgba(120, 120, 128, 0.2);"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"></path></svg></a></nav>
+  </sc-if>
+
+  <!-- Day menu, from the title -->
+  <sc-if value="{{menuOpen}}" hint-placeholder-val="{{ false }}">
+    <button type="button" aria-label="Close menu" onClick="{{toggleMenu}}" style="position: absolute; inset: 0; z-index: 30; padding: 0; border: 0; background: rgba(0, 0, 0, 0.08);"></button>
+    <div role="menu" aria-label="Go to day" class="ios ios-glass" style="position: absolute; z-index: 31; top: 52px; left: 50%; transform: translateX(-50%); width: 276px; padding: 6px 0; border-radius: 24px; background: color-mix(in oklab, var(--card) 86%, transparent); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);">
+      <sc-for list="{{menuDays}}" as="md" hint-placeholder-count="7"><button type="button" role="menuitemradio" aria-checked="{{md.checked}}" onClick="{{md.pick}}" style="{{md.style}}"><span style="width: 18px; flex-shrink: 0;"><sc-if value="{{md.on}}" hint-placeholder-val="{{ false }}"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: var(--dawn-text);"><path d="M20 6 9 17l-5-5"></path></svg></sc-if></span><span style="flex: 1; min-width: 0; text-align: left;">{{md.label}}</span><span style="font-size: 15px; color: var(--muted-foreground); font-variant-numeric: tabular-nums;">{{md.date}}</span></button></sc-for>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"day":{"editor":"int","default":1,"min":0,"max":6},"scrollHour":{"editor":"number","default":8},"openDay":{"editor":"int","default":-1,"min":-1,"max":6},"view":{"editor":"enum","options":["timeline","list"],"default":"timeline"},"loading":{"editor":"boolean","default":false},"fromTop":{"editor":"boolean","default":false},"noPlan":{"editor":"boolean","default":false},"endText":{"editor":"boolean","default":true},"height":{"editor":"int","default":844,"min":844,"max":3000},"scrolled":{"editor":"boolean","default":false},"dayMenu":{"editor":"boolean","default":false},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { open: props.openDay != null ? { [props.openDay]: true } : {}, notesOpen: {}, day: props.day ?? 1, view: props.view ?? 'timeline', optional: false, menu: !!props.dayMenu };
+  }
+  renderVals() {
+    const s = this.state;
+    const pill = (on) => 'height: 36px; padding: 0 14px; border: 0; border-radius: 9999px; font-family: var(--font-sans); font-size: 14px; ' +
+      (on ? 'background: var(--card); color: var(--foreground); font-weight: 600; box-shadow: var(--shadow-soft);' : 'background: transparent; color: var(--muted-foreground); font-weight: 500;');
+
+    const dayDefs = [
+      { id: 'd0', label: 'Departure day', short: '12 Oct', date: 'Mon 12 Oct', kind: 'departure' },
+      { id: 'd1', label: 'Arrival day', short: '13 Oct', date: 'Tue 13 Oct', kind: 'arrival' },
+      { id: 'd2', label: 'Day 3', short: '14 Oct', date: 'Wed 14 Oct', kind: 'regular' },
+      { id: 'd3', label: 'Day 4', short: '15 Oct', date: 'Thu 15 Oct', kind: 'regular' },
+      { id: 'd4', label: 'Day 5', short: '16 Oct', date: 'Fri 16 Oct', kind: 'regular' },
+      { id: 'd5', label: 'Day 6', short: '17 Oct', date: 'Sat 17 Oct', kind: 'regular' },
+      { id: 'd6', label: 'Day 7', short: '18 Oct', date: 'Sun 18 Oct', kind: 'regular' }
+    ];
+    // [category, title, time, priority, lane, start, end, continuesBefore, continuesAfter, done]
+    const kinds = {
+      departure: {
+        zones: ['Amsterdam'], status: 'adapting', progress: { done: 4, total: 6 },
+        headline: 'Early dinner, then try to sleep on the plane.', sleep: 'Sleep on board from 18:00', light: 'Dim light after 15:00',
+        notes: [{ tone: 'info', text: 'Times are in Amsterdam time until you land.' }],
+        now: null, zoneAt: null, hasNotice: false,
+        list: [
+          ['sleep', 'Sleep', 'until 07:00', 'core', 0, 0, 7, true, false, true],
+          ['seek_light', 'Seek bright light', '07:30–09:30', 'core', 1, 7.5, 9.5, false, false, true],
+          ['caffeine_serving', 'Last cup of coffee', '10:00', 'recommended', 2, 10, 10.5, false, false, true],
+          ['flight', 'KL 861 departs', '14:40', 'core', 3, 14.67, 24, false, true, false],
+          ['avoid_light', 'Avoid bright light', '15:00–18:00', 'core', 1, 15, 18, false, false, false],
+          ['nap', '20-minute nap', '16:00–16:20', 'optional', 0, 16, 16.33, false, false, false],
+          ['sleep', 'Sleep on board', 'from 18:00', 'core', 0, 18, 24, false, true, false]
+        ]
+      },
+      arrival: {
+        zones: ['Amsterdam', 'Tokyo'], status: 'adapting', progress: { done: 3, total: 7 },
+        headline: 'Stay out of bright light until 10:30, then get outside.', sleep: 'Sleep 23:00–07:00', light: 'Bright light 11:00–13:00',
+        notes: [
+          { tone: 'warning', text: 'Short night: you land after about 5 hours of sleep. A 20-minute nap is in your plan.' },
+          { tone: 'info', text: 'Times switch to Tokyo time when you land at 09:15.' }
+        ],
+        now: 9.75, zoneAt: 9.25, hasNotice: true,
+        list: [
+          ['sleep', 'Sleep in flight', 'until 07:30', 'core', 0, 0, 7.5, true, false, true],
+          ['flight', 'Land at Tokyo Narita', '09:15', 'core', 3, 0, 9.25, true, false, true],
+          ['avoid_light', 'Avoid bright light', '07:30–10:30 · now', 'core', 1, 7.5, 10.5, false, false, false],
+          ['zone'],
+          ['transfer', 'Train to the hotel', '10:15–11:30', 'recommended', 3, 10.25, 11.5, false, false, false],
+          ['caffeine_serving', '1 cup of filter coffee', '10:45', 'recommended', 2, 10.75, 11.25, false, false, false],
+          ['seek_light', 'Seek bright light outdoors', '11:00–13:00', 'core', 1, 11, 13, false, false, false],
+          ['light_ok', 'Light is fine', '13:00–16:00', 'optional', 1, 13, 16, false, false, false],
+          ['nap', '20-minute nap', '13:30–14:00', 'optional', 0, 13.5, 14, false, false, false],
+          ['no_caffeine', 'No caffeine', 'from 14:00', 'recommended', 2, 14, 24, false, true, false],
+          ['avoid_light', 'Dim, warm light', '20:00–23:00', 'recommended', 1, 20, 23, false, false, false],
+          ['sleep', 'Sleep', 'from 23:00', 'core', 0, 23, 24, false, true, false]
+        ]
+      },
+      regular: {
+        zones: ['Tokyo'], status: 'partly', progress: { done: 0, total: 5 },
+        headline: 'Morning light again, a little later each day.', sleep: 'Sleep 23:00–07:00', light: 'Bright light 08:00–10:00',
+        notes: [], now: null, zoneAt: null, hasNotice: false,
+        list: [
+          ['sleep', 'Sleep', 'until 07:00', 'core', 0, 0, 7, true, false, false],
+          ['seek_light', 'Seek bright light', '08:00–10:00', 'core', 1, 8, 10, false, false, false],
+          ['caffeine_serving', '1 cup of filter coffee', '08:30', 'recommended', 2, 8.5, 9, false, false, false],
+          ['light_ok', 'Light is fine', '10:00–17:00', 'optional', 1, 10, 17, false, false, false],
+          ['no_caffeine', 'No caffeine', '14:00–23:00', 'recommended', 2, 14, 23, false, false, false],
+          ['avoid_light', 'Dim, warm light', '20:00–23:00', 'recommended', 1, 20, 23, false, false, false],
+          ['sleep', 'Sleep', 'from 23:00', 'core', 0, 23, 24, false, true, false]
+        ]
+      }
+    };
+    const pad = (n) => String(n).padStart(2, '0');
+    const fmt = (h) => pad(Math.floor(h) % 24) + ':' + pad(Math.round((h % 1) * 60));
+    const scrolled = !!this.props.scrolled && !this.props.fromTop;
+    const start = this.props.fromTop ? 0 : Math.max(0, Math.min(6, s.day));
+    const scrollHour = this.props.fromTop ? null : (this.props.scrollHour ?? 8);
+    const dayData = (i) => {
+      const def = dayDefs[i];
+      const k = kinds[def.kind];
+      const status = def.kind === 'regular' && i >= 5 ? 'adapted' : k.status;
+      const first = i === start && scrollHour !== null && (s.view ?? 'timeline') === 'timeline';
+      const sh = first ? scrollHour : 0, eh = 24;
+      const y = (h) => (h - sh) * 40;
+      // Optional items are not shown for now (the toggle is gone)
+      const visible = k.list.filter((r) => r[0] === 'zone' || r[3] !== 'optional');
+      const steps = visible.filter((r) => r[0] !== 'zone');
+      const hours = [];
+      for (let h = Math.ceil(sh); h < eh; h++) hours.push({ label: fmt(h), style: 'position: absolute; right: 4px; top: ' + y(h) + 'px; transform: translateY(-50%); font-size: 11px; line-height: 14px; color: var(--muted-foreground); font-variant-numeric: tabular-nums;' + (h === Math.ceil(sh) && h === sh && i !== start ? ' display: none;' : '') });
+      const lines = [];
+      for (let h = Math.ceil(sh); h < eh; h++) lines.push({ style: 'position: absolute; left: 0; right: 0; top: ' + y(h) + 'px; border-top: 1px solid color-mix(in oklab, var(--border) 60%, transparent);' });
+      const lanes = [0, 1, 2, 3].map((ln) => ({
+        style: 'position: relative; background: var(--surface-2);',
+        blocks: steps.filter((r) => r[4] === ln && r[6] > sh).map((r) => {
+          const st = Math.max(r[5], sh);
+          return { category: r[0], priority: r[3], title: r[1], time: r[2], top: y(st), height: Math.max(24, (r[6] - st) * 40), cb: r[7] || r[5] < sh, ca: r[8], status: r[9] ? 'done' : undefined };
+        })
+      }));
+      const warns = k.notes.filter((n) => n.tone === 'warning');
+      const infos = k.notes.filter((n) => n.tone === 'info');
+      const open = !!(s.open[i]);
+      const notesOpen = !!(s.notesOpen[i]);
+      const items = visible.map((r) => r[0] === 'zone'
+        ? { isZone: true, isStep: false }
+        : {
+            isZone: false, isStep: true, category: r[0], title: r[1], time: r[2], priority: r[3],
+            hasTag: r[3] === 'core' || r[3] === 'optional', done: !!r[9],
+            rowStyle: 'display: flex; align-items: center; gap: 12px; min-height: ' + 64 + 'px; padding: 8px 12px; box-sizing: border-box; border-radius: 22px; border: 1px solid var(--border); background: var(--card); color: var(--card-foreground); text-decoration: none;' + (r[9] ? ' opacity: 0.7;' : '') + (r[3] === 'optional' ? ' border-style: dashed;' : '')
+          });
+      return {
+        id: def.id, label: def.label, date: def.date, status, progress: k.progress, headline: k.headline, sleep: k.sleep, light: k.light,
+        zoneText: k.zones.join(' → '),
+        hasWarn: warns.length > 0, warnText: warns.length + (warns.length === 1 ? ' warning' : ' warnings'),
+        hasInfoOnly: warns.length === 0 && infos.length > 0, infoText: infos.length + (infos.length === 1 ? ' note' : ' notes'),
+        open, openStr: open ? 'true' : 'false', moreLabel: open ? 'Show less' : 'Show more',
+        notesOpenStr: notesOpen ? 'true' : 'false',
+        shownNotes: warns.concat(warns.length > 0 || notesOpen ? infos : []),
+        toggle: () => this.setState({ open: { ...this.state.open, [i]: !this.state.open[i] } }),
+        toggleNotes: () => this.setState({ notesOpen: { ...this.state.notesOpen, [i]: !this.state.notesOpen[i] } }),
+        full: !(scrolled && i === start), compact: scrolled && i === start,
+        dow: def.date.split(' ')[0], dm: def.date.split(' ').slice(1).join(' '),
+        compactStyle: 'position: sticky; top: 54px; z-index: 8; display: grid; grid-template-columns: 44px repeat(4, minmax(0, 1fr)); gap: 4px; align-items: center; height: 36px; margin: 0 -16px; padding: 0 16px; border-width: 0 0 0.5px; border-radius: 0;',
+        compactListStyle: 'position: sticky; top: 54px; z-index: 8; display: flex; align-items: center; gap: 8px; height: 36px; margin: 0 -16px 8px; padding: 0 16px; border-width: 0 0 0.5px; border-radius: 0;',
+        headerStyle: 'position: sticky; top: ' + 54 + 'px; z-index: 8; margin: 0 -' + 16 + 'px' + (first ? ' -' + (40) + 'px' : '') + '; padding: 8px ' + 16 + 'px 6px; border-width: 0 0 0.5px; border-radius: 0;',
+        tlStyle: 'position: relative; display: grid; grid-template-columns: 44px repeat(4, minmax(0, 1fr)); gap: 4px; height: ' + ((eh - sh) * 40) + 'px;' + (first ? ' padding-top: 0;' : ''),
+        hours, lines, lanes, items,
+        hasNow: k.now !== null && k.now >= sh, nowLabel: k.now !== null ? fmt(k.now) : '',
+        nowStyle: 'position: absolute; left: 0; right: 0; z-index: 4; height: 2px; background: var(--now); top: ' + (k.now !== null ? y(k.now) : 0) + 'px;',
+        hasZone: k.zoneAt !== null && k.zoneAt >= sh,
+        zoneStyle: 'position: absolute; left: 0; right: 0; z-index: 3; border-top: 2px dotted var(--cat-travel); top: ' + (k.zoneAt !== null ? y(k.zoneAt) : 0) + 'px;'
+      };
+    };
+    const dayList = [];
+    for (let n = start; n < 7; n++) dayList.push(dayData(n));
+
+    const cur = dayDefs[start];
+    const laneDot = (c) => 'width: 8px; height: 8px; flex-shrink: 0; border-radius: 9999px; background: var(--cat-' + c + ');';
+    return {
+      theme: this.props.theme ?? 'light',
+      rootStyle: 'position: relative; width: 390px; height: ' + (this.props.height ?? 844) + 'px; overflow: hidden; background: var(--background); color: var(--foreground); font-family: var(--font-sans);',
+      yes: true, no: false,
+      loading: !!this.props.loading, ready: !this.props.loading,
+      noPlan: !!this.props.noPlan, hasPlan: !this.props.noPlan,
+      hasEndText: this.props.endText !== false, noEndText: this.props.endText === false,
+      days: dayDefs.map((d) => ({ id: d.id, label: d.label, date: d.short })),
+      dayList, topDay: dayDefs[start].id, hasEnd: true, showLanes: s.view === 'timeline', listTop: 204, fromTop: !!this.props.fromTop,
+      showChips: !scrolled, tabFull: !scrolled, tabMini: scrolled,
+      mainStyle: 'padding: ' + (scrolled ? 0 : 8) + 'px 16px 120px; display: flex; flex-direction: column; gap: ' + (scrolled ? 0 : 12) + 'px;',
+      nav: { sub: scrolled ? cur.label + ' · ' + cur.date : '12–18 Oct · KL 861', a11y: 'Amsterdam to Tokyo, ' + (scrolled ? cur.label + ', ' + cur.date : '12 to 18 October') + '. Go to a day' },
+      laneHeads: [['sleep', 'Sleep'], ['light', 'Light'], ['caffeine', 'Caffeine'], ['travel', 'Travel']].map(([c, label]) => ({ label, dot: laneDot(c) })),
+      viewBtn: { label: s.view === 'timeline' ? 'Show as list' : 'Show as timeline', pick: () => this.setState({ view: s.view === 'timeline' ? 'list' : 'timeline' }) },
+      menuOpen: !!s.menu, menuStr: s.menu ? 'true' : 'false', toggleMenu: () => this.setState({ menu: !this.state.menu }),
+      menuDays: dayDefs.map((d, i) => ({ label: d.label, date: d.date, on: i === start, checked: i === start ? 'true' : 'false', pick: () => this.setState({ day: i, menu: false }),
+        style: 'display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 0 16px 0 12px; border: 0; background: transparent; color: var(--foreground); font: inherit; font-size: 17px; line-height: 22px;' + (i ? ' border-top: 0.5px solid color-mix(in oklab, var(--border) 70%, transparent);' : '') })),
+      isTimeline: s.view === 'timeline', isList: s.view === 'list',
+      hourHeight: 40
+    };
+  }
+}
+</script>
+</body>
+</html>

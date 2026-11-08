@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>New trip wizard</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="ds/chronoflow/components/bundle.css">
+<script src="ds/chronoflow/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Figtree';src:url("/_blob/74876cc764ebb15bf4ae98bcdbf3140c") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/741b1ce40b46479a73d934d0d5be9774") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/079d83fda74d66d1f31e35072f71201d") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/991830890debdac04981f1a27656ed5c") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Fraunces';src:url("/_blob/fc815083784d00806d267d81858d2414") format("woff2");font-weight:400 500;font-style:normal;font-display:swap}
+body{margin:0}
+</style>
+</helmet>
+<div data-theme="{{theme}}" lang="{{lang}}" style="position: relative; width: 390px; height: 844px; overflow: hidden; background: var(--background); color: var(--foreground); font-family: var(--font-sans);">
+  <!-- Full-screen modal over the tabs. Native header: back on the left from step 2, Close (×) always on the right. -->
+  <header class="ios ios-navbar" style="position: absolute; left: 0; right: 0; top: 0;">
+    <span><sc-if value="{{nav.back}}" hint-placeholder-val="{{ true }}"><a href="{{nav.backHref}}" aria-label="{{t.back}}" class="ios-glass ios-navbtn"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg></a></sc-if></span>
+    <p class="ios-navtitle" style="font-size: 15px; color: var(--muted-foreground); font-weight: 500;">{{nav.title}}</p>
+    <span style="justify-self: end;"><sc-if value="{{nav.close}}" hint-placeholder-val="{{ true }}"><a href="{{nav.closeHref}}" aria-label="{{t.close}}" class="ios-glass ios-navbtn"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></a></sc-if></span>
+  </header>
+  <div role="progressbar" aria-label="{{nav.progressLabel}}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{nav.pct}}" style="position: absolute; left: 20px; right: 20px; top: 60px; height: 4px; border-radius: 9999px; background: var(--muted); overflow: hidden;"><div style="{{nav.barStyle}}"></div></div>
+
+  <main style="{{mainStyle}} ">
+    <sc-if value="{{hasEyebrow}}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dawn-text);">{{eyebrow}}</p></sc-if>
+    <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 4px;">
+      <h1 style="{{titleStyle}}">{{title}}</h1>
+      <sc-if value="{{hasSub}}" hint-placeholder-val="{{ true }}"><p style="margin: 0; font-size: 16px; line-height: 22px; color: var(--muted-foreground);">{{sub}}</p></sc-if>
+    </div>
+    <!-- Trip-wide message slot: past arrival, planner rejections, save failures, changes on another device -->
+    <sc-if value="{{banner.show}}" hint-placeholder-val="{{ false }}">
+      <div role="alert" style="{{banner.style}}"><span style="display: inline-flex; margin-top: 1px;"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg></span><span style="flex: 1;"><sc-if value="{{banner.hasTitle}}" hint-placeholder-val="{{ true }}"><span style="display: block; font-weight: 600;">{{banner.title}}</span></sc-if>{{banner.body}}</span></div>
+    </sc-if>
+
+    <sc-if value="{{is.where}}" hint-placeholder-val="{{ false }}">
+      <div style="position: relative; border-radius: 16px; background: var(--card); border: 1px solid var(--border); overflow: hidden;">
+        <a href="TripAirportSearch.dc.html" class="cf-press" style="display: flex; flex-direction: column; gap: 2px; min-height: 76px; padding: 12px 64px 12px 16px; box-sizing: border-box; color: var(--foreground); text-decoration: none;">
+          <span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground);">{{t.from}}</span>
+          <span style="{{w.fromStyle}}">{{w.from}}</span>
+          <sc-if value="{{w.lastTrip}}" hint-placeholder-val="{{ false }}"><span style="font-size: 13px; line-height: 18px; color: var(--dawn-text);">{{t.fromHint}}</span></sc-if>
+        </a>
+        <a href="TripAirportSearch.dc.html" class="cf-press" style="{{w.toStyle}}">
+          <span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground);">{{t.to}}</span>
+          <span style="{{w.toValueStyle}}">{{w.to}}</span>
+        </a>
+        <span class="ios-glass" role="button" aria-label="{{t.swap}}" aria-disabled="{{w.swapOff}}" style="{{w.swapStyle}}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 16-4 4-4-4"></path><path d="M17 20V4"></path><path d="m3 8 4-4 4 4"></path><path d="M7 4v16"></path></svg></span>
+      </div>
+      <sc-if value="{{w.sameErr}}" hint-placeholder-val="{{ false }}"><p role="alert" style="margin: 0; display: flex; gap: 6px; font-size: 14px; line-height: 20px; color: var(--destructive);"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="8" y2="12"></line><line x1="12" x2="12.01" y1="16" y2="16"></line></svg>{{t.sameErr}}</p></sc-if>
+    </sc-if>
+
+    <sc-if value="{{is.flight}}" hint-placeholder-val="{{ false }}">
+      <sc-if value="{{o.isHome}}" hint-placeholder-val="{{ false }}">
+        <div style="border-radius: 16px; background: var(--card); border: 1px solid var(--border); overflow: hidden;">
+          <div aria-label="{{o.fromA11y}}" style="display: flex; align-items: center; gap: 8px; min-height: 56px; padding: 6px 16px; box-sizing: border-box;"><span style="width: 52px; font-size: 15px; color: var(--muted-foreground);">{{t.from}}</span><span style="flex: 1;"><span style="display: block; font-size: 17px; line-height: 22px; font-weight: 600;">{{o.homeFrom}}</span><span style="display: block; font-size: 13px; line-height: 18px; color: var(--muted-foreground);">{{t.whereLanded}}</span></span><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: var(--muted-foreground);"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></div>
+          <a href="TripAirportSearch.dc.html" class="cf-press" style="display: flex; align-items: center; gap: 8px; min-height: 56px; padding: 6px 12px 6px 16px; box-sizing: border-box; border-top: 1px solid var(--border); color: var(--foreground); text-decoration: none;"><span style="width: 52px; font-size: 15px; color: var(--muted-foreground);">{{t.to}}</span><span style="flex: 1; font-size: 17px; line-height: 22px; font-weight: 600;">{{o.homeTo}}</span><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: rgba(120, 120, 128, 0.7);"><path d="m9 18 6-6-6-6"></path></svg></a>
+        </div>
+      </sc-if>
+      <sc-for list="{{o.legs}}" as="lg" hint-placeholder-count="1">
+        <sc-if value="{{lg.hasStopBefore}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; align-items: center; gap: 8px; color: var(--muted-foreground);"><span aria-hidden="true" style="flex: 1; border-top: 2px dotted var(--border);"></span><span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 4px 2px 12px; border-radius: 9999px; background: var(--surface-2); color: var(--foreground); font-size: 13px; line-height: 18px; font-variant-numeric: tabular-nums;">{{lg.stopText}}<span role="button" aria-label="{{lg.removeLabel}}" style="display: grid; place-items: center; width: 28px; height: 28px; border-radius: 9999px; color: var(--muted-foreground);"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></span></span><span aria-hidden="true" style="flex: 1; border-top: 2px dotted var(--border);"></span></div>
+        </sc-if>
+        <section aria-label="{{lg.routeA11y}}" style="display: flex; flex-direction: column; gap: 8px;">
+          <p style="margin: 0 4px; display: flex; align-items: center; gap: 8px; font-size: 15px; line-height: 20px; font-weight: 600;"><span style="color: var(--dawn-text); display: inline-flex;"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"></path></svg></span>{{lg.route}}</p>
+          <div style="border-radius: 16px; background: var(--card); border: 1px solid var(--border); overflow: hidden;">
+            <div style="{{lg.rowStyle}}">
+              <span style="flex: 1; min-width: 0;"><span style="display: block; font-size: 17px; line-height: 22px;">{{t.departs}}</span><span style="display: block; font-size: 13px; line-height: 18px; color: var(--muted-foreground);">{{lg.depZone}}</span></span>
+              <span class="ios" aria-label="{{lg.depDateA11y}}" style="{{lg.depDateStyle}}">{{lg.depDate}}</span><span class="ios" style="{{lg.depTimeStyle}}">{{lg.depTime}}</span>
+            </div>
+            <div style="{{lg.rowStyle2}}">
+              <span style="flex: 1; min-width: 0;"><span style="display: block; font-size: 17px; line-height: 22px;">{{t.arrives}}</span><span style="display: block; font-size: 13px; line-height: 18px; color: var(--muted-foreground);">{{lg.arrZone}}</span></span>
+              <span class="ios" aria-label="{{lg.arrDateA11y}}" style="{{lg.arrDateStyle}}">{{lg.arrDate}}</span><span class="ios" style="{{lg.arrTimeStyle}}">{{lg.arrTime}}</span>
+            </div>
+          </div>
+          <sc-if value="{{lg.orderErr}}" hint-placeholder-val="{{ false }}"><p role="alert" style="margin: 0; display: flex; gap: 6px; font-size: 14px; line-height: 20px; color: var(--destructive);"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="8" y2="12"></line><line x1="12" x2="12.01" y1="16" y2="16"></line></svg>{{t.orderErr}}</p></sc-if>
+        </section>
+      </sc-for>
+      <sc-if value="{{o.hasDuration}}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 13px; line-height: 18px; color: var(--muted-foreground); margin: -4px 4px 0; font-variant-numeric: tabular-nums;">{{o.duration}}</p></sc-if>
+      <sc-if value="{{o.canAddStop}}" hint-placeholder-val="{{ true }}"><a href="WizardStopSearch.dc.html" class="ios" style="align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 4px; color: var(--dawn-text); text-decoration: none; font-size: 15px;"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>{{o.addStopLabel}}</a></sc-if>
+    </sc-if>
+
+    <sc-if value="{{is.ret}}" hint-placeholder-val="{{ false }}">
+      <div role="radiogroup" aria-label="{{t.retTitle}}" style="display: flex; flex-direction: column; gap: 10px;">
+        <sc-if value="{{r.web}}" hint-placeholder-val="{{ false }}"><a href="WizardEditWeb.dc.html" role="radio" aria-checked="true" class="cf-press" style="{{r.webStyle}}"><span style="flex: 1;"><span style="display: block; font-size: 18px; line-height: 24px; font-weight: 600;">{{t.webTitle}}</span><span style="display: block; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">{{t.webSub}}</span></span><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: var(--dawn-text);"><path d="M20 6 9 17l-5-5"></path></svg></a></sc-if>
+        <a href="{{r.oneHref}}" role="radio" aria-checked="{{r.oneChecked}}" class="cf-press" style="{{r.oneStyle}}"><span style="flex: 1;"><span style="display: block; font-size: 18px; line-height: 24px; font-weight: 600;">{{r.oneTitle}}</span><span style="display: block; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">{{r.oneSub}}</span></span><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: rgba(120, 120, 128, 0.7);"><path d="m9 18 6-6-6-6"></path></svg></a>
+        <a href="{{r.retHref}}" role="radio" aria-checked="false" class="cf-press" style="{{r.retStyle}}"><span style="flex: 1;"><span style="display: block; font-size: 18px; line-height: 24px; font-weight: 600;">{{t.addReturn}}</span><span style="display: block; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">{{r.retSub}}</span></span><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: rgba(120, 120, 128, 0.7);"><path d="m9 18 6-6-6-6"></path></svg></a>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{is.sleep}}" hint-placeholder-val="{{ false }}">
+      <div style="border-radius: 16px; background: var(--card); border: 1px solid var(--border); overflow: hidden;">
+        <div style="display: flex; align-items: center; gap: 8px; min-height: 56px; padding: 6px 12px 6px 16px; box-sizing: border-box;"><span style="flex: 1; font-size: 17px; line-height: 22px;">{{t.bed}}</span><span class="ios" style="padding: 6px 12px; border-radius: 8px; background: rgba(118, 118, 128, 0.12); font-size: 17px; line-height: 22px; font-variant-numeric: tabular-nums; white-space: nowrap;">23:30</span></div>
+        <div style="display: flex; align-items: center; gap: 8px; min-height: 56px; padding: 6px 12px 6px 16px; box-sizing: border-box; border-top: 1px solid var(--border);"><span style="flex: 1; font-size: 17px; line-height: 22px;">{{t.wake}}</span><span class="ios" style="padding: 6px 12px; border-radius: 8px; background: rgba(118, 118, 128, 0.12); font-size: 17px; line-height: 22px; font-variant-numeric: tabular-nums; white-space: nowrap;">07:15</span></div>
+      </div>
+      <p style="margin: 8px 4px 0; font-size: 17px; line-height: 22px; font-weight: 600;">{{t.awake}}</p>
+      <div role="radiogroup" aria-label="{{t.awake}}" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <sc-for list="{{chrono}}" as="c" hint-placeholder-count="4"><button type="button" role="radio" aria-checked="{{c.checked}}" class="cf-press" style="{{c.style}}"><span style="display: block; font-size: 16px; line-height: 22px; font-weight: 600;">{{c.title}}</span><span style="display: block; font-size: 13px; line-height: 18px; color: var(--muted-foreground);">{{c.hint}}</span></button></sc-for>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{is.checking}}" hint-placeholder-val="{{ false }}">
+      <section aria-live="polite" style="display: flex; flex-direction: column; gap: 18px; padding: 22px 20px; border-radius: 26px; background: var(--card); border: 1px solid var(--border); box-shadow: var(--shadow-soft);">
+        <div aria-hidden="true" style="display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px;">
+          <span style="font-family: var(--font-display); font-size: 26px; line-height: 32px;">AMS</span>
+          <svg viewBox="0 0 200 40" style="width: 100%; height: 40px; color: var(--dawn);"><path d="M4 34 C 60 2, 140 2, 196 34" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="4 6" stroke-linecap="round"></path><circle cx="128" cy="11" r="5" fill="currentColor"></circle></svg>
+          <span style="font-family: var(--font-display); font-size: 26px; line-height: 32px;">NRT</span>
+        </div>
+        <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px;">
+          <sc-for list="{{checks}}" as="k" hint-placeholder-count="3">
+            <li style="display: flex; align-items: center; gap: 12px; font-size: 16px; line-height: 22px;"><span aria-hidden="true" style="{{k.dotStyle}}"><sc-if value="{{k.done}}" hint-placeholder-val="{{ true }}"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></sc-if><sc-if value="{{k.busy}}" hint-placeholder-val="{{ false }}"><svg aria-hidden="true" class="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg></sc-if></span><span style="{{k.textStyle}}">{{k.label}}</span></li>
+          </sc-for>
+        </ul>
+        <sc-if value="{{slow}}" hint-placeholder-val="{{ false }}"><p role="status" style="margin: 0; font-size: 13px; line-height: 18px; color: var(--muted-foreground);">{{t.slow}}</p></sc-if>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{is.fail}}" hint-placeholder-val="{{ false }}">
+      <section role="status" style="display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 28px 20px; border-radius: 26px; border: 1px dashed var(--border); text-align: center;">
+        <span aria-hidden="true" style="display: grid; place-items: center; width: 52px; height: 52px; border-radius: 9999px; background: var(--muted); color: var(--muted-foreground);"><sc-if value="{{f.cloud}}" hint-placeholder-val="{{ true }}"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 2 20 20"></path><path d="M5.782 5.782A7 7 0 0 0 9 19h8.5a4.5 4.5 0 0 0 1.307-.193"></path><path d="M21.532 16.5A4.5 4.5 0 0 0 17.5 10h-1.79A7.008 7.008 0 0 0 10 5.07"></path></svg></sc-if><sc-if value="{{f.alert}}" hint-placeholder-val="{{ false }}"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="8" y2="12"></line><line x1="12" x2="12.01" y1="16" y2="16"></line></svg></sc-if><sc-if value="{{f.plane}}" hint-placeholder-val="{{ false }}"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"></path></svg></sc-if><sc-if value="{{f.clock}}" hint-placeholder-val="{{ false }}"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg></sc-if></span>
+        <h2 style="margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 22px; line-height: 28px;">{{f.title}}</h2>
+        <p style="margin: 0; font-size: 15px; line-height: 22px; color: var(--muted-foreground);">{{f.body}}</p>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{is.question}}" hint-placeholder-val="{{ false }}">
+      <div role="radiogroup" aria-label="{{title}}" style="display: flex; flex-direction: column; gap: 10px;">
+        <sc-for list="{{q.options}}" as="op" hint-placeholder-count="2"><a href="{{q.next}}" role="radio" aria-checked="false" class="cf-press" style="{{q.optStyle}}">{{op}}</a></sc-for>
+      </div>
+      <p style="{{q.whyStyle}}">{{q.why}}</p>
+      <sc-if value="{{q.disclaimer}}" hint-placeholder-val="{{ false }}"><p style="margin: 2px 4px 0; padding-top: 10px; border-top: 1px solid var(--border); font-size: 13px; line-height: 18px; color: var(--muted-foreground);">{{t.disclaimer}}</p></sc-if>
+    </sc-if>
+
+    <sc-if value="{{is.excluded}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; gap: 10px; padding: 20px; border-radius: 26px; border: 1px solid color-mix(in oklab, var(--dawn) 40%, transparent); background: color-mix(in oklab, var(--dawn) 10%, var(--card));">
+        <sc-for list="{{ex.lines}}" as="ln" hint-placeholder-count="2"><p style="margin: 0; font-size: 16px; line-height: 24px;">{{ln}}</p></sc-for>
+      </div>
+      <p style="margin: 0; font-size: 13px; line-height: 18px; color: var(--muted-foreground); margin: 0 4px;">{{ex.note}}</p>
+    </sc-if>
+
+    <sc-if value="{{is.finetune}}" hint-placeholder-val="{{ false }}">
+      <sc-if value="{{ft.hasRows}}" hint-placeholder-val="{{ true }}"><div style="border-radius: 16px; background: var(--card); border: 1px solid var(--border); overflow: hidden;">
+        <sc-for list="{{ft.rows}}" as="fr" hint-placeholder-count="6"><a href="{{fr.href}}" class="cf-press" style="{{fr.style}}"><span style="flex: 1; min-width: 0;"><span style="display: block; font-size: 16px; line-height: 21px;">{{fr.label}}</span><sc-if value="{{fr.needed}}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; align-items: center; gap: 4px; margin-top: 2px; font-size: 12px; line-height: 16px; font-weight: 600; color: var(--dawn-text);"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" fill="currentColor"></path></svg>{{t.helps}}</span></sc-if></span><span style="{{fr.valueStyle}}">{{fr.value}}</span><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: rgba(120, 120, 128, 0.7);"><path d="m9 18 6-6-6-6"></path></svg></a></sc-for>
+      </div></sc-if>
+      <div style="border-radius: 16px; background: var(--card); border: 1px solid var(--border); overflow: hidden;">
+        <div style="display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 6px 12px 6px 16px; box-sizing: border-box;">
+          <span style="flex: 1;"><span style="display: block; font-size: 16px; line-height: 21px;">{{t.prep}}</span><span style="display: block; font-size: 13px; line-height: 18px; color: var(--muted-foreground);">{{t.prepSub}}</span></span>
+          <span class="ios" style="font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; min-width: 14px; text-align: center;">{{ft.prepDays}}</span>
+          <span class="ios" role="group" aria-label="{{t.prep}}" style="display: inline-grid; grid-template-columns: 1fr 1fr; width: 94px; height: 32px; border-radius: 9px; background: rgba(118, 118, 128, 0.12); font-size: 20px; line-height: 32px; text-align: center;"><span style="border-right: 1px solid rgba(120, 120, 128, 0.3);">−</span><span>+</span></span>
+        </div>
+        <sc-if value="{{ft.showSwitch}}" hint-placeholder-val="{{ true }}"><a href="{{ft.switchHref}}" role="switch" aria-checked="{{ft.sleepOn}}" class="cf-press" style="display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 6px 12px 6px 16px; box-sizing: border-box; border-top: 1px solid var(--border); color: var(--foreground); text-decoration: none;">
+          <span style="flex: 1; font-size: 16px; line-height: 21px;">{{t.diffSleep}}</span>
+          <span aria-hidden="true" class="ios-switch" data-on="{{ft.sleepOn}}"></span>
+        </a></sc-if>
+        <sc-if value="{{ft.sleepOpen}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 6px 12px 6px 16px; box-sizing: border-box; border-top: 1px solid var(--border);"><span style="flex: 1; font-size: 16px;">{{t.tripBed}}</span><span class="ios" style="padding: 6px 12px; border-radius: 8px; background: rgba(118, 118, 128, 0.12); font-size: 17px; line-height: 22px; font-variant-numeric: tabular-nums; white-space: nowrap;">00:30</span></div>
+          <div style="display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 6px 12px 6px 16px; box-sizing: border-box; border-top: 1px solid var(--border);"><span style="flex: 1; font-size: 16px;">{{t.tripWake}}</span><span class="ios" style="padding: 6px 12px; border-radius: 8px; background: rgba(118, 118, 128, 0.12); font-size: 17px; line-height: 22px; font-variant-numeric: tabular-nums; white-space: nowrap;">08:30</span></div>
+          <p style="margin: 0; font-size: 13px; line-height: 18px; color: var(--muted-foreground); padding: 0 16px 12px;">{{t.sleepNote}}</p>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{is.ready}}" hint-placeholder-val="{{ false }}">
+      <section style="display: flex; flex-direction: column; gap: 6px; padding: 16px 18px; border-radius: 26px; background: var(--card); border: 2px solid var(--dawn); box-shadow: var(--shadow-soft);">
+        <p style="margin: 0; font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dawn-text);">{{t.yourPlan}}</p>
+        <p style="margin: 0; font-family: var(--font-display); font-size: 20px; line-height: 27px;">{{rd.summary}}</p>
+        <p style="margin: 0; font-size: 13px; line-height: 18px; color: var(--muted-foreground); font-variant-numeric: tabular-nums;">{{rd.dates}}</p>
+      </section>
+      <div style="border-radius: 16px; background: var(--card); border: 1px solid var(--border); overflow: hidden;">
+        <sc-for list="{{rd.rows}}" as="rr" hint-placeholder-count="5"><a href="{{rr.href}}" aria-label="{{rr.a11y}}" class="cf-press" style="{{rr.style}}"><span style="width: 92px; flex-shrink: 0; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">{{rr.label}}</span><span style="flex: 1; min-width: 0; font-size: 14px; line-height: 19px; font-variant-numeric: tabular-nums;">{{rr.value}}</span><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: rgba(120, 120, 128, 0.7);"><path d="m9 18 6-6-6-6"></path></svg></a></sc-for>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 2px; padding: 0 4px;">
+        <span style="font-size: 16px; line-height: 22px;">{{rd.priceLabel}} <span style="font-weight: 600;">{{rd.price}}</span></span>
+        <sc-for list="{{rd.lines}}" as="bl" hint-placeholder-count="1"><span style="{{bl.style}}">{{bl.text}}</span></sc-for>
+      </div>
+      <sc-if value="{{rd.editNote}}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 13px; line-height: 18px; color: var(--muted-foreground); margin: 0 4px;">{{rd.editNoteText}}</p></sc-if>
+    </sc-if>
+
+    <sc-if value="{{is.calc}}" hint-placeholder-val="{{ false }}">
+      <section aria-busy="true" style="display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 32px 20px; border-radius: 26px; background: var(--card); border: 1px solid var(--border); box-shadow: var(--shadow-soft); text-align: center;">
+        <span aria-hidden="true" style="display: grid; place-items: center; width: 64px; height: 64px; border-radius: 9999px; background: color-mix(in oklab, var(--dawn) 16%, transparent); color: var(--dawn-text);"><svg class="animate-spin" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg></span>
+        <p style="margin: 0; font-size: 15px; line-height: 22px; color: var(--muted-foreground);">{{calcLine}}</p>
+      </section>
+    </sc-if>
+
+  </main>
+
+  <!-- Main action: bottom, above the home indicator; rises with the keyboard -->
+  <sc-if value="{{hasCta}}" hint-placeholder-val="{{ true }}">
+    <div style="position: absolute; left: 20px; right: 20px; bottom: 34px; display: flex; flex-direction: column; gap: 6px;">
+      <sc-if value="{{hasSecondary}}" hint-placeholder-val="{{ false }}"><a href="{{secondaryHref}}" class="ios" style="display: flex; align-items: center; justify-content: center; min-height: 44px; color: var(--foreground); text-decoration: none; font-size: 16px; font-weight: 500;">{{secondary}}</a></sc-if>
+      <a href="{{ctaHref}}" aria-disabled="{{ctaDisabled}}" style="{{ctaStyle}}"><sc-if value="{{ctaBusy}}" hint-placeholder-val="{{ false }}"><svg aria-hidden="true" class="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg></sc-if>{{cta}}</a>
+    </div>
+  </sc-if>
+  <sc-if value="{{noCta}}" hint-placeholder-val="{{ false }}">
+    <p style="position: absolute; left: 20px; right: 20px; bottom: 44px; margin: 0; text-align: center; font-size: 13px; line-height: 18px; color: var(--muted-foreground);">{{noCtaHint}}</p>
+  </sc-if>
+
+  <!-- System alert for closing -->
+  <sc-if value="{{al.show}}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; inset: 0; display: grid; place-items: center; padding: 0 24px; background: rgba(0, 0, 0, 0.25);">
+      <section role="alertdialog" aria-modal="true" aria-labelledby="wz-al" class="ios ios-glass ios-alert" style="background: color-mix(in oklab, var(--card) 82%, transparent);">
+        <h2 id="wz-al">{{al.title}}</h2>
+        <p>{{al.body}}</p>
+        <div style="{{al.gridStyle}}"><a href="{{al.keepHref}}" class="ios-alert-btn">{{al.keep}}</a><a href="{{al.goHref}}" class="ios-alert-btn" data-role="destructive">{{al.go}}</a></div>
+      </section>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "lang": {"editor": "enum", "options": ["en", "nl"], "default": "en"}, "screen": {"editor": "enum", "options": ["where", "outbound", "ret", "sleep", "checking", "fail", "question", "excluded", "finetune", "ready", "calc"], "default": "where"}, "v": {"editor": "text", "default": ""}, "guest": {"editor": "boolean", "default": false}, "pct": {"editor": "int", "default": 15, "min": 0, "max": 100}, "large": {"editor": "boolean", "default": false}, "slow": {"editor": "boolean", "default": false}, "alert": {"editor": "enum", "options": ["none", "discard", "guest", "edit"], "default": "none"}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const T = {"en": {"close": "Close", "back": "Back", "progressA11y": "Progress, {pct} percent", "newTrip": "New trip", "editTrip": "Edit trip", "cont": "Continue", "swap": "Swap airports", "whereTitle": "Where are you flying?", "whereSub": "Pick the airports from your booking.", "to": "To", "fromHint": "From your last trip", "choose": "Choose an airport", "sameErr": "From and To are the same airport. Choose where you land.", "ams": "AMS · Amsterdam", "nrt": "NRT · Tokyo", "city": {"ams": "Amsterdam", "tyo": "Tokyo", "dxb": "Dubai"}, "outTitle": "When is your flight?", "outSub": "Times are local at each airport.", "dupSub": "Copied from Amsterdam → Tokyo. Choose the new dates.", "departs": "Departs", "arrives": "Arrives", "timeIn": "Time in {city}", "localTime": "Local time", "date": "Date", "time": "Time", "notSet": "not set", "depDateA11y": "Departure date", "arrDateA11y": "Arrival date", "routeA11y": "{from} to {to}", "d12": "12 Oct 2026", "d12A": "Monday 12 October 2026", "d13": "13 Oct 2026", "d13A": "Tuesday 13 October 2026", "d14": "14 Oct 2026", "d14A": "Wednesday 14 October 2026", "d11": "11 Oct 2026", "d11A": "Sunday 11 October 2026", "d1": "2 Sep 2026", "d1A": "Wednesday 2 September 2026", "d2": "3 Sep 2026", "d2A": "Thursday 3 September 2026", "d3": "22 Oct 2026", "d3A": "Thursday 22 October 2026", "flightTime": "Flight time {d}", "dur1135": "11 h 35 min", "dur240": "2 h 40 min", "dur1205": "12 h 5 min", "addStop": "Add a stop", "addAnotherStop": "Add another stop", "stopNew": "Stop in {airport}", "connection": "Connection in {airport} · {duration}", "overnight1": "Stop in {airport} · {count} complete night", "overnightN": "Stop in {airport} · {count} complete nights", "removeStop": "Remove stop in {city}", "orderErr": "Check the departure and arrival times.", "pastMember": "A new plan needs an upcoming arrival. Check your flight dates or add your return flight.", "pastGuest": "A new plan needs an upcoming arrival. Check your flight dates.", "retFlightTitle": "Your flight home", "retFlightSub": "It leaves from where you landed. Add your date and times.", "whereLanded": "Where you landed", "homeA11y": "Leaves from Tokyo, where you landed. You can't change this.", "retTitle": "Coming back?", "oneWay": "One way", "oneWaySub": "Just this flight", "addReturn": "Add my return flight", "addReturnSub": "We plan the shift back home too", "addReturnSubEdit": "We plan the shift back home too · 1 credit", "webTitle": "Ends after 9 nights", "webSub": "Set on the website. Keep it, or add your flight home.", "tapHint": "Tap an answer to continue.", "sleepTitle": "How do you usually sleep?", "sleepSub": "On a work day. We save it for next time.", "sleepSubGuest": "On a normal work day.", "bed": "Usual bedtime", "wake": "Usual wake-up", "awake": "When do you naturally feel most awake?", "early": "Early bird", "earlyHint": "Up early, tired in the evening", "between": "In between", "betweenHint": "A normal working day", "owl": "Night owl", "owlHint": "Late nights, slow mornings", "unsure": "Not sure", "unsureHint": "We use your sleep times", "checkTitle": "Checking your trip", "againTitle": "Checking your answers", "editCheckTitle": "Checking your changes", "checkSub": "This takes a few seconds.", "c1": "Flights and time zones", "c2": "Your saved answers", "c2guest": "Your answers", "c3": "What we can tailor", "slow": "This is taking longer than usual. You can keep this screen open.", "offTitle": "Checking needs a connection", "offBody": "Connect to the internet and try again.", "offBodyEdit": "Connect to the internet and try again. If you close now, your trip stays as it was.", "srvTitle": "We couldn't check your trip", "srvBody": "Something went wrong on our side. Try again in a moment.", "srvBodyEdit": "Something went wrong on our side. Try again in a moment. If you close now, your trip stays as it was.", "pracTitle": "Practice mode is on", "pracBody": "Checking a trip needs the internet, and practice mode keeps the app offline. Turn it off to continue.", "pracCta": "Turn off practice mode", "thrTitle": "Wait a moment", "thrBody": "Too many attempts. Try again in 42 seconds.", "thrLater": "Too many attempts. Please try again later.", "retry": "Try again", "retryIn": "Try again in 42 s", "closeBtn": "Close", "qEyebrow": "A few quick questions", "qAge": "How old are you?", "u18": "Under 18", "a1864": "18–64", "a65": "65 or older", "qAgeWhy": "Light and sleep advice differs by age.", "qShift": "In the past 14 days, have you worked night or rotating shifts, or had a very irregular sleep schedule?", "qShiftWhy": "Shift work changes how we can plan your clock.", "qCaf": "Have you been told to avoid caffeine?", "qCafWhy": "If so, we leave coffee and tea out of your plan.", "qEye": "Do you have an eye disease, or take medicine that makes your eyes sensitive to light?", "qEyeWhy": "Some light advice isn't safe for sensitive eyes.", "qClot": "Do you have a risk factor for blood clots, such as a past clot or a clotting disorder?", "qClotWhy": "Then we add more movement on long flights.", "qBip": "Do you have bipolar disorder?", "qBipWhy": "Shifting sleep and light can affect mood, so we check first.", "qPreg": "Are you pregnant or breastfeeding?", "qPregWhy": "Some advice, like caffeine timing, changes when you're pregnant or breastfeeding.", "yes": "Yes", "no": "No", "disclaimer": "ChronoFlow gives timing guidance, not medical advice. If you're unsure about a question, check with your doctor.", "exTitle": "No plan available", "under18": "Plans are only available for people aged 18 and over.", "shiftWork": "After recent night or rotating shifts, your body clock is too unsettled to plan a shift from.", "doctor": "Your doctor can tell you what's safe when you travel.", "exNote": "If you answered by mistake, you can change your answers.", "exNoteSaved": "You gave this answer on an earlier trip. Change it to plan this trip.", "exNoteEdit": "Your trip stays as it was.", "changeAnswers": "Change my answers", "ftTitle": "Fine-tune your plan", "ftSub": "All optional. The ones marked help your plan most.", "ftSubNone": "No extra questions for this trip. You can still change these.", "helps": "Helps a lot", "add": "Add", "done": "Done", "prep": "Preparation days", "prepSub": "Before you leave", "diffSleep": "Use different sleep times for this trip", "tripBed": "Bedtime on this trip", "tripWake": "Wake-up on this trip", "sleepNote": "Only for this trip. Your usual sleep stays saved.", "rows": {"seat": "Side of the plane", "room": "Dark room at your stay", "roomAt": "Dark room · ", "checkout": "Late check-out", "checkoutAt": "Late check-out · ", "wake": "Latest you can wake up", "busy": "Busy hours before you leave", "free": "Sleep on free days", "drinks": "Coffee, tea and soft drinks", "light": "Light box or light glasses", "blue": "Blue-blocking glasses"}, "val": {"windowLeft": "Window left", "twoADay": "2 a day", "fromTime": "From 15:00", "same": "Same as work days"}, "readyTitle": "Ready to plan", "editTitle": "Edit your trip", "yourPlan": "Your plan", "summary": "We shift your clock 7 hours earlier, starting 3 days before you leave.", "summaryReturn": "We shift your clock 7 hours earlier, and back again after your flight home.", "dates": "Fri 9 Oct – Wed 14 Oct · one way", "datesReturn": "Fri 9 Oct – Mon 26 Oct · return", "datesWeb": "Fri 9 Oct – Thu 22 Oct · 9 nights", "lbl": {"route": "Route", "flight": "Flight", "ret": "Return", "sleep": "Sleep", "extras": "Extras", "questions": "Questions", "wake": "Latest wake-up"}, "rv": {"flight": "Mon 12 Oct 14:40 → Tue 09:15", "flightVia": "Mon 12 Oct 14:40 → Tue 16:35 · via DXB", "ret": "Thu 22 Oct 10:25 → 15:30", "retMoved": "Thu 22 Oct 10:25 → 15:30", "oneWay": "One way", "removed": "One way", "web": "9 nights · until Wed 21 Oct", "sleep": "23:30–07:15", "sleepGuest": "23:30–07:15 · In between", "extras": "2 answered · 3 days prep", "extrasWake": "1 answered · 3 days prep", "extras0": "3 days prep", "q3": "3 answered", "wakeAssumed": "08:00 · assumed"}, "rowHint": "Opens this step", "price": "Price", "credit1": "1 credit", "free": "Free", "balance": "You have 3 credits", "balanceNone": "You have 0 credits", "unlimited": "Included in your subscription.", "freeLine": "This trip is free: only a small body-clock shift is needed.", "oneFreeLine": "Your flight home is free: only a small shift is needed that way.", "guestBalance": "Paid with 1 of the 3 credits you get when you sign up.", "guestFree": "Your sign-up credits stay unused.", "noRefund": "Removing a flight doesn't give a credit back.", "editNote": "Changes recalculate the plan. Check-offs on steps that stay in your plan are kept.", "editReturnNote": "Adding a return flight costs 1 credit, because credits are per direction. Other changes are free.", "adjTitle": "We adjusted your plan", "adjBody": "We assumed you can wake up at 08:00 at the latest. If that's wrong, change it below.", "changedTitle": "Updated", "changedBody": "On another device: the return flight moved to Thu 22 Oct. The price is still 1 credit.", "saveOffTitle": "Saving needs a connection", "saveOffBody": "Connect to the internet and tap Make my plan again. Keep this screen open: closing discards the trip.", "saveSrvTitle": "We couldn't save your plan", "saveSrvBody": "Something went wrong on our side. Tap Make my plan to try again.", "checkingBtn": "Checking…", "buyCredits": "Buy credits on the website", "update": "Update my plan", "make": "Make my plan", "calcTitle": "Calculating your plan…", "calcSub": "This can take up to a minute. You can keep this screen open.", "calcDays": "6 days of steps", "discardTitle": "Discard this trip?", "discardBody": "What you entered is not saved.", "discardGuestBody": "What you entered is not saved. You go back to the welcome screen.", "discardEditTitle": "Discard your changes?", "discardEditBody": "Your trip stays as it was.", "keepEditing": "Keep editing", "discard": "Discard", "discardChanges": "Discard changes", "from": "From"}, "nl": {"close": "Sluiten", "back": "Terug", "progressA11y": "Voortgang, {pct} procent", "newTrip": "Nieuwe reis", "editTrip": "Reis bewerken", "cont": "Doorgaan", "swap": "Luchthavens omwisselen", "whereTitle": "Waar vlieg je heen?", "whereSub": "Kies de luchthavens uit je boeking.", "to": "Naar", "fromHint": "Van je vorige reis", "choose": "Kies een luchthaven", "sameErr": "Van en Naar zijn dezelfde luchthaven. Kies waar je landt.", "ams": "AMS · Amsterdam", "nrt": "NRT · Tokio", "city": {"ams": "Amsterdam", "tyo": "Tokio", "dxb": "Dubai"}, "outTitle": "Wanneer vlieg je?", "outSub": "Tijden zijn lokaal op elke luchthaven.", "dupSub": "Gekopieerd van Amsterdam → Tokio. Kies de nieuwe data.", "departs": "Vertrek", "arrives": "Aankomst", "timeIn": "Tijd in {city}", "localTime": "Lokale tijd", "date": "Datum", "time": "Tijd", "notSet": "niet ingesteld", "depDateA11y": "Vertrekdatum", "arrDateA11y": "Aankomstdatum", "routeA11y": "{from} naar {to}", "d12": "12 okt 2026", "d12A": "maandag 12 oktober 2026", "d13": "13 okt 2026", "d13A": "dinsdag 13 oktober 2026", "d14": "14 okt 2026", "d14A": "woensdag 14 oktober 2026", "d11": "11 okt 2026", "d11A": "zondag 11 oktober 2026", "d1": "2 sep 2026", "d1A": "woensdag 2 september 2026", "d2": "3 sep 2026", "d2A": "donderdag 3 september 2026", "d3": "22 okt 2026", "d3A": "donderdag 22 oktober 2026", "flightTime": "Vliegtijd {d}", "dur1135": "11 u 35 min", "dur240": "2 u 40 min", "dur1205": "12 u 5 min", "addStop": "Tussenstop toevoegen", "addAnotherStop": "Nog een tussenstop toevoegen", "stopNew": "Tussenstop in {airport}", "connection": "Overstap in {airport} · {duration}", "overnight1": "Tussenstop in {airport} · {count} volledige nacht", "overnightN": "Tussenstop in {airport} · {count} volledige nachten", "removeStop": "Tussenstop in {city} verwijderen", "orderErr": "Controleer de vertrek- en aankomsttijden.", "pastMember": "Voor een nieuw plan is een aankomst nodig die nog moet plaatsvinden. Controleer je vluchtdata of voeg je terugvlucht toe.", "pastGuest": "Voor een nieuw plan is een aankomst nodig die nog moet plaatsvinden. Controleer je vluchtdata.", "retFlightTitle": "Je vlucht naar huis", "retFlightSub": "Hij vertrekt van de luchthaven waar je landde. Vul je datum en tijden in.", "whereLanded": "Waar je landde", "homeA11y": "Vertrekt vanuit Tokio, waar je landde. Dit kun je niet wijzigen.", "retTitle": "Kom je terug?", "oneWay": "Enkele reis", "oneWaySub": "Alleen deze vlucht", "addReturn": "Terugvlucht toevoegen", "addReturnSub": "We plannen ook de verschuiving terug naar huis", "addReturnSubEdit": "We plannen ook de verschuiving terug naar huis · 1 credit", "webTitle": "Eindigt na 9 nachten", "webSub": "Ingesteld op de website. Laat het zo, of voeg je vlucht naar huis toe.", "tapHint": "Tik op een antwoord om door te gaan.", "sleepTitle": "Hoe slaap je meestal?", "sleepSub": "Op een werkdag. We bewaren het voor de volgende keer.", "sleepSubGuest": "Op een normale werkdag.", "bed": "Meestal naar bed", "wake": "Meestal wakker", "awake": "Wanneer voel je je van nature het fitst?", "early": "Ochtendmens", "earlyHint": "Vroeg op, moe in de avond", "between": "Ertussenin", "betweenHint": "Een gewone werkdag", "owl": "Avondmens", "owlHint": "Laat naar bed, trage ochtenden", "unsure": "Weet ik niet", "unsureHint": "We gebruiken je slaaptijden", "checkTitle": "We bekijken je reis", "againTitle": "We bekijken je antwoorden", "editCheckTitle": "We bekijken je wijzigingen", "checkSub": "Dit duurt een paar seconden.", "c1": "Vluchten en tijdzones", "c2": "Je opgeslagen antwoorden", "c2guest": "Je antwoorden", "c3": "Wat we kunnen afstemmen", "slow": "Dit duurt langer dan normaal. Je kunt dit scherm open laten.", "offTitle": "Voor controleren is een verbinding nodig", "offBody": "Maak verbinding met internet en probeer het opnieuw.", "offBodyEdit": "Maak verbinding met internet en probeer het opnieuw. Sluit je nu, dan blijft je reis zoals hij was.", "srvTitle": "We konden je reis niet bekijken", "srvBody": "Er ging iets mis bij ons. Probeer het zo opnieuw.", "srvBodyEdit": "Er ging iets mis bij ons. Probeer het zo opnieuw. Sluit je nu, dan blijft je reis zoals hij was.", "pracTitle": "Oefenmodus staat aan", "pracBody": "Voor het controleren van een reis is internet nodig, en oefenmodus houdt de app offline. Zet hem uit om door te gaan.", "pracCta": "Oefenmodus uitzetten", "thrTitle": "Even geduld", "thrBody": "Te veel pogingen. Probeer het over 42 seconden opnieuw.", "thrLater": "Te veel pogingen. Probeer het later opnieuw.", "retry": "Opnieuw proberen", "retryIn": "Opnieuw proberen over 42 s", "closeBtn": "Sluiten", "qEyebrow": "Een paar korte vragen", "qAge": "Hoe oud ben je?", "u18": "Jonger dan 18", "a1864": "18–64", "a65": "65 of ouder", "qAgeWhy": "Advies over licht en slaap verschilt per leeftijd.", "qShift": "Heb je in de afgelopen 14 dagen in nacht- of wisseldiensten gewerkt, of had je een heel onregelmatig slaapritme?", "qShiftWhy": "Ploegendiensten veranderen hoe we je klok kunnen plannen.", "qCaf": "Is je aangeraden om cafeïne te vermijden?", "qCafWhy": "Dan laten we koffie en thee uit je plan.", "qEye": "Heb je een oogziekte, of gebruik je medicijnen die je ogen gevoelig maken voor licht?", "qEyeWhy": "Sommig lichtadvies is niet veilig voor gevoelige ogen.", "qClot": "Heb je een risicofactor voor bloedstolsels, zoals een eerdere trombose of een stollingsstoornis?", "qClotWhy": "Dan voegen we meer beweging toe op lange vluchten.", "qBip": "Heb je een bipolaire stoornis?", "qBipWhy": "Slaap en licht verschuiven kan je stemming beïnvloeden, dus we checken dit eerst.", "qPreg": "Ben je zwanger of geef je borstvoeding?", "qPregWhy": "Sommig advies, zoals wanneer je cafeïne neemt, verandert als je zwanger bent of borstvoeding geeft.", "yes": "Ja", "no": "Nee", "disclaimer": "ChronoFlow geeft advies over timing, geen medisch advies. Twijfel je over een vraag, overleg dan met je arts.", "exTitle": "Geen plan beschikbaar", "under18": "Plannen zijn alleen beschikbaar voor mensen van 18 jaar en ouder.", "shiftWork": "Na recente nacht- of wisseldiensten is je biologische klok te onrustig om een verschuiving vanaf te plannen.", "doctor": "Je arts kan je vertellen wat veilig is als je reist.", "exNote": "Heb je je vergist? Dan kun je je antwoorden wijzigen.", "exNoteSaved": "Je gaf dit antwoord bij een eerdere reis. Wijzig het om deze reis te plannen.", "exNoteEdit": "Je reis blijft zoals hij was.", "changeAnswers": "Mijn antwoorden wijzigen", "ftTitle": "Stem je plan af", "ftSub": "Allemaal optioneel. De gemarkeerde helpen je plan het meest.", "ftSubNone": "Geen extra vragen voor deze reis. Je kunt deze nog wel aanpassen.", "helps": "Helpt veel", "add": "Toevoegen", "done": "Klaar", "prep": "Voorbereidingsdagen", "prepSub": "Voor vertrek", "diffSleep": "Andere slaaptijden voor deze reis", "tripBed": "Naar bed op deze reis", "tripWake": "Wakker op deze reis", "sleepNote": "Alleen voor deze reis. Je gewone slaaptijden blijven bewaard.", "rows": {"seat": "Kant van het vliegtuig", "room": "Donkere kamer op je verblijf", "roomAt": "Donkere kamer · ", "checkout": "Laat uitchecken", "checkoutAt": "Laat uitchecken · ", "wake": "Uiterlijk wakker om", "busy": "Drukke uren voor vertrek", "free": "Slaap op vrije dagen", "drinks": "Koffie, thee en frisdrank", "light": "Lichtbox of lichtbril", "blue": "Blauwfilterbril"}, "val": {"windowLeft": "Raam links", "twoADay": "2 per dag", "fromTime": "Vanaf 15:00", "same": "Zoals op werkdagen"}, "readyTitle": "Klaar om te plannen", "editTitle": "Je reis bewerken", "yourPlan": "Je plan", "summary": "We zetten je klok 7 uur vroeger, vanaf 3 dagen voor vertrek.", "summaryReturn": "We zetten je klok 7 uur vroeger, en na je vlucht naar huis weer terug.", "dates": "vr 9 okt – wo 14 okt · enkele reis", "datesReturn": "vr 9 okt – ma 26 okt · retour", "datesWeb": "vr 9 okt – do 22 okt · 9 nachten", "lbl": {"route": "Route", "flight": "Vlucht", "ret": "Terug", "sleep": "Slaap", "extras": "Extra's", "questions": "Vragen", "wake": "Uiterlijk wakker"}, "rv": {"flight": "ma 12 okt 14:40 → di 09:15", "flightVia": "ma 12 okt 14:40 → di 16:35 · via DXB", "ret": "do 22 okt 10:25 → 15:30", "retMoved": "do 22 okt 10:25 → 15:30", "oneWay": "Enkele reis", "removed": "Enkele reis", "web": "9 nachten · tot wo 21 okt", "sleep": "23:30–07:15", "sleepGuest": "23:30–07:15 · Ertussenin", "extras": "2 beantwoord · 3 dagen voorbereiding", "extrasWake": "1 beantwoord · 3 dagen voorbereiding", "extras0": "3 dagen voorbereiding", "q3": "3 beantwoord", "wakeAssumed": "08:00 · aangenomen"}, "rowHint": "Opent deze stap", "price": "Prijs", "credit1": "1 credit", "free": "Gratis", "balance": "Je hebt 3 credits", "balanceNone": "Je hebt 0 credits", "unlimited": "Inbegrepen in je abonnement.", "freeLine": "Deze reis is gratis: je klok hoeft maar een klein beetje te verschuiven.", "oneFreeLine": "Je vlucht naar huis is gratis: die kant op is maar een kleine verschuiving nodig.", "guestBalance": "Betaald met 1 van de 3 credits die je krijgt als je een account maakt.", "guestFree": "Je credits van je nieuwe account blijven ongebruikt.", "noRefund": "Een vlucht verwijderen levert geen credit op.", "editNote": "Wijzigingen berekenen het plan opnieuw. Afgevinkte stappen die in je plan blijven, blijven bewaard.", "editReturnNote": "Een terugvlucht toevoegen kost 1 credit, want credits gelden per richting. Andere wijzigingen zijn gratis.", "adjTitle": "We hebben je plan aangepast", "adjBody": "We gingen ervan uit dat je uiterlijk om 08:00 wakker kunt worden. Klopt dat niet, pas het dan hieronder aan.", "changedTitle": "Bijgewerkt", "changedBody": "Op een ander apparaat: de terugvlucht is verplaatst naar do 22 okt. De prijs is nog steeds 1 credit.", "saveOffTitle": "Voor opslaan is een verbinding nodig", "saveOffBody": "Maak verbinding met internet en tik opnieuw op Maak mijn plan. Laat dit scherm open: sluiten gooit de reis weg.", "saveSrvTitle": "We konden je plan niet opslaan", "saveSrvBody": "Er ging iets mis bij ons. Tik op Maak mijn plan om het opnieuw te proberen.", "checkingBtn": "Controleren…", "buyCredits": "Credits kopen op de website", "update": "Mijn plan bijwerken", "make": "Maak mijn plan", "calcTitle": "Je plan wordt berekend…", "calcSub": "Dit kan tot een minuut duren. Je kunt dit scherm open laten.", "calcDays": "6 dagen met stappen", "discardTitle": "Deze reis weggooien?", "discardBody": "Wat je hebt ingevuld, wordt niet bewaard.", "discardGuestBody": "Wat je hebt ingevuld, wordt niet bewaard. Je gaat terug naar het welkomstscherm.", "discardEditTitle": "Je wijzigingen weggooien?", "discardEditBody": "Je reis blijft zoals hij was.", "keepEditing": "Verder bewerken", "discard": "Weggooien", "discardChanges": "Wijzigingen weggooien", "from": "Van"}};
+    const lang = this.props.lang === 'nl' ? 'nl' : 'en';
+    const t = T[lang];
+    const fill = (s, m) => Object.keys(m).reduce((a, k) => a.split('{' + k + '}').join(m[k]), s);
+    const screen = this.props.screen ?? 'where';
+    const v = this.props.v ?? '';
+    const guest = !!this.props.guest;
+    const pct = this.props.pct ?? 15;
+    const large = !!this.props.large;
+    const alertKind = this.props.alert ?? 'none';
+    const slow = !!this.props.slow;
+    const isEdit = v.indexOf('edit') === 0;
+    const PILL = 'padding: 6px 12px; border-radius: 8px; background: rgba(118, 118, 128, 0.12); font-size: 17px; line-height: 22px; font-variant-numeric: tabular-nums; white-space: nowrap;';
+    const OUT = ' box-shadow: inset 0 0 0 2px var(--destructive); color: var(--destructive);';
+    const EMPTY = ' color: var(--muted-foreground);';
+    const exitHref = guest ? 'Main.dc.html' : isEdit ? 'Plan.dc.html' : 'Trips.dc.html';
+    const nothingEntered = (screen === 'where' && v === 'empty');
+    const alertBoard = guest ? 'WizardDiscardGuest.dc.html' : isEdit ? 'WizardDiscardEdit.dc.html' : 'WizardDiscard.dc.html';
+    const closeHref = nothingEntered || (isEdit && v === 'edit') ? exitHref : alertBoard;
+
+    // ---------- back targets ----------
+    const lastInput = guest ? 'WizardSleep.dc.html' : 'WizardReturn.dc.html';
+    const backMap = {
+      outbound: v === 'retflight' || v === 'retpast' ? 'WizardReturn.dc.html' : 'WizardWhere.dc.html',
+      ret: 'WizardOutbound.dc.html', sleep: guest ? 'WizardOutboundGuest.dc.html' : 'WizardReturn.dc.html',
+      fail: lastInput, question: lastInput, excluded: lastInput,
+      finetune: guest ? 'WizardQCaffeine.dc.html' : 'WizardReturn.dc.html',
+      ready: guest ? 'WizardFineTuneGuest.dc.html' : 'WizardFineTune.dc.html'
+    };
+    const firstScreen = (screen === 'where') || (screen === 'outbound' && v === 'dup') || (screen === 'ready' && isEdit);
+    const nav = {
+      back: !firstScreen && screen !== 'checking' && screen !== 'calc' && !(screen === 'fail' && isEdit),
+      close: screen !== 'calc',
+      backHref: isEdit && screen !== 'ready' ? (v === 'editweb' ? 'WizardEditWeb.dc.html' : 'WizardEdit.dc.html') : (backMap[screen] || 'WizardWhere.dc.html'), closeHref,
+      title: isEdit ? t.editTrip : t.newTrip, pct: String(pct),
+      progressLabel: fill(t.progressA11y, { pct: String(pct) }),
+      barStyle: 'width: ' + pct + '%; height: 100%; border-radius: 9999px; background: var(--dawn);'
+    };
+    const is = {};
+    ['where', 'flight', 'ret', 'sleep', 'checking', 'fail', 'question', 'excluded', 'finetune', 'ready', 'calc'].forEach((k) => { is[k] = k === (screen === 'outbound' ? 'flight' : screen); });
+
+    let s = { eyebrow: '', title: '', sub: '', cta: t.cont, ctaHref: '#', ctaOn: true, ctaBusy: false, secondary: '', secondaryHref: '#', noCtaHint: '', banner: null };
+    const bannerOf = (tone, title, body) => ({ tone, title, body });
+
+    // ---------- where ----------
+    const VAL = 'font-size: 20px; line-height: 26px; font-weight: 600;';
+    const PH = 'font-size: 20px; line-height: 26px; font-weight: 400; color: var(--muted-foreground);';
+    const emptyW = v === 'empty';
+    const sameErr = v === 'same';
+    const rowBase = 'display: flex; flex-direction: column; gap: 2px; min-height: 76px; padding: 12px 64px 12px 16px; box-sizing: border-box; border-top: 1px solid var(--border); color: var(--foreground); text-decoration: none;';
+    const w = {
+      from: emptyW ? t.choose : t.ams, fromStyle: emptyW ? PH : VAL,
+      to: emptyW ? t.choose : sameErr ? t.ams : t.nrt, toValueStyle: emptyW ? PH : VAL,
+      toStyle: rowBase + (sameErr ? ' box-shadow: inset 0 0 0 2px var(--destructive);' : ''),
+      lastTrip: !guest && !emptyW && !sameErr, sameErr,
+      swapOff: emptyW ? 'true' : 'false',
+      swapStyle: 'position: absolute; right: 14px; top: 50%; transform: translateY(-50%); display: grid; place-items: center; width: 40px; height: 40px; border-radius: 9999px; color: var(--foreground);' + (emptyW ? ' opacity: 0.35;' : '')
+    };
+
+    // ---------- flights ----------
+    const tz = (c) => fill(t.timeIn, { city: c });
+    const C = t.city;
+    const pill = (val, err) => val ? PILL + (err ? OUT : '') : PILL + EMPTY;
+    const mkLeg = (L, i) => {
+      const r1 = 'display: flex; align-items: center; gap: 8px; min-height: 64px; padding: 8px 12px 8px 16px; box-sizing: border-box;';
+      return {
+        hasStopBefore: !!L.stop, stopText: L.stop || '', removeLabel: L.stopCity ? fill(t.removeStop, { city: L.stopCity }) : '',
+        route: L.route, routeA11y: L.routeA11y, depZone: tz(L.dc), arrZone: tz(L.ac),
+        depDate: L.dd || t.date, depTime: L.dt || t.time, arrDate: L.ad || t.date, arrTime: L.at || t.time,
+        depDateA11y: t.depDateA11y + ', ' + (L.ddA || t.notSet), arrDateA11y: t.arrDateA11y + ', ' + (L.adA || t.notSet),
+        depDateStyle: pill(L.dd, L.depErr), depTimeStyle: pill(L.dt), arrDateStyle: pill(L.ad, L.arrErr), arrTimeStyle: pill(L.at),
+        rowStyle: r1, rowStyle2: r1 + ' border-top: 1px solid var(--border);', orderErr: !!L.arrErr
+      };
+    };
+    const ra = (a, b) => fill(t.routeA11y, { from: a, to: b });
+    const leg = (route, a, b, dc, ac, dd, dt, ad, at, ddA, adA, extra) => Object.assign({ route, routeA11y: ra(a, b), dc, ac, dd, dt, ad, at, ddA, adA }, extra || {});
+    let legs = [leg('AMS → NRT', C.ams, C.tyo, C.ams, C.tyo, t.d12, '14:40', t.d13, '09:15', t.d12A, t.d13A)];
+    let o = { isHome: false, homeFrom: t.nrt, homeTo: t.ams, fromA11y: t.homeA11y, hasDuration: true, duration: fill(t.flightTime, { d: t.dur1135 }), canAddStop: true, addStopLabel: t.addStop };
+    let outOn = true;
+    if (v === 'empty' || v === 'dup') {
+      legs = [leg('AMS → NRT', C.ams, C.tyo, C.ams, C.tyo)];
+      o.hasDuration = false; outOn = false;
+    }
+    if (v === 'errors') { legs[0].ad = t.d11; legs[0].adA = t.d11A; legs[0].arrErr = true; o.hasDuration = false; }
+    if (v === 'stopnew' || v === 'stop' || v === 'overnight') {
+      const night = v === 'overnight';
+      const known = v !== 'stopnew';
+      legs = [
+        leg('AMS → DXB', C.ams, C.dxb, C.ams, C.dxb, t.d12, '14:40', known ? t.d12 : '', known ? '23:25' : '', t.d12A, known ? t.d12A : ''),
+        leg('DXB → NRT', C.dxb, C.tyo, C.dxb, C.tyo, known ? (night ? t.d14 : t.d13) : '', known ? '02:05' : '', night ? t.d14 : t.d13, '16:35', known ? (night ? t.d14A : t.d13A) : '', night ? t.d14A : t.d13A,
+          { stop: v === 'stopnew' ? fill(t.stopNew, { airport: C.dxb }) : night ? fill(t.overnight1, { airport: C.dxb, count: '1' }) : fill(t.connection, { airport: C.dxb, duration: t.dur240 }), stopCity: C.dxb })
+      ];
+      o.hasDuration = false; o.addStopLabel = t.addAnotherStop; outOn = known;
+    }
+    if (v === 'past') {
+      legs = [leg('AMS → NRT', C.ams, C.tyo, C.ams, C.tyo, t.d1, '14:40', t.d2, '09:15', t.d1A, t.d2A)];
+      s.banner = bannerOf('error', '', guest ? t.pastGuest : t.pastMember);
+    }
+    if (v === 'retflight' || v === 'retpast') {
+      o.isHome = true;
+      legs = v === 'retflight' ? [leg('NRT → AMS', C.tyo, C.ams, C.tyo, C.ams)] : [leg('NRT → AMS', C.tyo, C.ams, C.tyo, C.ams, t.d3, '10:25', t.d3, '15:30', t.d3A, t.d3A)];
+      o.hasDuration = v === 'retpast'; o.duration = fill(t.flightTime, { d: t.dur1205 }); outOn = v === 'retpast';
+      if (v === 'retpast') s.banner = bannerOf('error', '', t.pastGuest);
+    }
+    o.legs = legs.map(mkLeg);
+
+    // ---------- coming back ----------
+    const card = (on) => 'display: flex; align-items: center; gap: 12px; min-height: 76px; padding: 12px 16px 12px 20px; box-sizing: border-box; border-radius: 22px; background: var(--card); color: var(--foreground); text-decoration: none; ' + (on ? 'border: 2px solid var(--dawn);' : 'border: 2px solid var(--border);');
+    const r = {
+      web: v === 'web' || v === 'editweb', webStyle: card(true), oneStyle: card(false), retStyle: card(false),
+      oneHref: isEdit ? 'WizardEditNoReturn.dc.html' : 'WizardChecking.dc.html', oneChecked: 'false', oneTitle: t.oneWay, oneSub: t.oneWaySub,
+      retHref: 'WizardReturnFlight.dc.html', retSub: isEdit ? t.addReturnSubEdit : t.addReturnSub
+    };
+
+    // ---------- sleep ----------
+    const chrono = [['early', t.early, t.earlyHint], ['between', t.between, t.betweenHint], ['owl', t.owl, t.owlHint], ['unsure', t.unsure, t.unsureHint]].map(([id, title, hint]) => ({
+      title, hint, checked: id === 'between' ? 'true' : 'false',
+      style: 'display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-height: 76px; padding: 10px 14px; box-sizing: border-box; border-radius: 18px; background: var(--card); color: var(--foreground); font: inherit; text-align: left; ' + (id === 'between' ? 'border: 2px solid var(--dawn);' : 'border: 2px solid var(--border);')
+    }));
+
+    // ---------- checking ----------
+    const again = v === 'again';
+    const lines = again ? [[t.c2guest, 'done'], [t.c1, 'done'], [t.c3, 'busy']] : [[t.c1, 'done'], [guest ? t.c2guest : t.c2, 'done'], [t.c3, 'busy']];
+    const checks = lines.map(([label, st]) => ({
+      label, done: st === 'done', busy: st === 'busy',
+      dotStyle: 'display: grid; place-items: center; width: 24px; height: 24px; flex-shrink: 0; border-radius: 9999px; ' + (st === 'done' ? 'background: var(--dawn); color: var(--dawn-foreground);' : 'background: var(--muted); color: var(--muted-foreground);'),
+      textStyle: st === 'done' ? '' : 'color: var(--muted-foreground);'
+    }));
+
+    // ---------- failures ----------
+    const fk = v.replace('edit', '');
+    const F = {
+      offline: { cloud: true, title: t.offTitle, body: isEdit ? t.offBodyEdit : t.offBody },
+      server: { alert: true, title: t.srvTitle, body: isEdit ? t.srvBodyEdit : t.srvBody },
+      practice: { plane: true, title: t.pracTitle, body: t.pracBody },
+      throttle: { clock: true, title: t.thrTitle, body: t.thrBody }
+    };
+    const f = Object.assign({ cloud: false, alert: false, plane: false, clock: false }, F[fk] || F.offline);
+
+    // ---------- questions ----------
+    const Q = {
+      age: { title: t.qAge, options: [t.u18, t.a1864, t.a65], why: t.qAgeWhy, next: 'WizardQShift.dc.html' },
+      shift: { title: t.qShift, options: [t.no, t.yes], why: t.qShiftWhy, next: 'WizardQCaffeine.dc.html' },
+      caffeine: { title: t.qCaf, options: [t.no, t.yes], why: t.qCafWhy, next: 'WizardFineTuneGuest.dc.html' },
+      eye: { title: t.qEye, options: [t.no, t.yes], why: t.qEyeWhy, next: 'WizardFineTuneGuest.dc.html' },
+      clot: { title: t.qClot, options: [t.no, t.yes], why: t.qClotWhy, next: 'WizardFineTuneGuest.dc.html' },
+      bipolar: { title: t.qBip, options: [t.no, t.yes], why: t.qBipWhy, next: 'WizardFineTune.dc.html' },
+      pregnant: { title: t.qPreg, options: [t.no, t.yes], why: t.qPregWhy, next: 'WizardFineTune.dc.html' }
+    };
+    const q = Object.assign({}, Q[screen === 'question' ? v : 'age'] || Q.age);
+    q.disclaimer = guest && v === 'age';
+    q.optStyle = 'display: flex; align-items: center; min-height: ' + (large ? 72 : 64) + 'px; padding: 0 20px; box-sizing: border-box; border-radius: 20px; border: 2px solid var(--border); background: var(--card); color: var(--foreground); text-decoration: none; font-size: ' + (large ? 22 : 18) + 'px; line-height: ' + (large ? 28 : 24) + 'px; font-weight: 600;';
+    q.whyStyle = 'margin: 4px 4px 0; font-size: ' + (large ? 16 : 13) + 'px; line-height: ' + (large ? 22 : 18) + 'px; color: var(--muted-foreground);';
+
+    // ---------- no plan ----------
+    const ex = v === 'shift' ? { lines: [t.shiftWork], note: t.exNoteSaved, href: 'WizardQShift.dc.html' }
+      : isEdit ? { lines: [t.shiftWork, t.doctor], note: t.exNoteEdit, href: 'WizardQShift.dc.html' }
+      : { lines: [t.under18], note: t.exNote, href: 'WizardQAge.dc.html' };
+
+    // ---------- fine-tune ----------
+    const R = t.rows;
+    const ftDefs = {
+      member: [['room', R.room, '', 1], ['wake', R.wake, '08:30', 1], ['seat', R.seat, t.val.windowLeft], ['checkout', R.checkout, ''], ['busy', R.busy, ''], ['drinks', R.drinks, t.val.twoADay]],
+      guest: [['room', R.room, '', 1], ['wake', R.wake, '', 1], ['seat', R.seat, ''], ['drinks', R.drinks, ''], ['light', R.light, ''], ['blue', R.blue, '']],
+      multi: [['room', R.roomAt + C.dxb, '', 1], ['room', R.roomAt + C.tyo, '', 1], ['seat', R.seat + ' · AMS → DXB', t.val.windowLeft], ['seat', R.seat + ' · DXB → NRT', ''], ['checkout', R.checkoutAt + C.dxb, ''], ['wake', R.wake, '08:30']],
+      sleep: [['room', R.room, t.val.fromTime, 1], ['wake', R.wake, '08:30', 1], ['free', R.free, t.val.same]],
+      none: []
+    };
+    const ftKey = guest ? 'guest' : (v === 'multi' || v === 'sleep' || v === 'none') ? v : 'member';
+    const sheetHref = { seat: 'WizardFineTuneSheet', room: 'WizardSheetRoom', checkout: 'WizardSheetCheckout', wake: 'WizardSheetWake', busy: 'WizardSheetBusy', free: 'WizardSheetFreeSleep', drinks: 'WizardSheetDrinks', light: 'WizardSheetLight', blue: 'WizardSheetBlue' };
+    const ftRows = ftDefs[ftKey].map(([k, label, value, needed], i) => ({
+      href: sheetHref[k] + '.dc.html', label, value: value || t.add, needed: !!needed,
+      style: 'display: flex; align-items: center; gap: 8px; min-height: 52px; padding: 6px 12px 6px 16px; box-sizing: border-box; color: var(--foreground); text-decoration: none;' + (i ? ' border-top: 1px solid var(--border);' : ''),
+      valueStyle: 'font-size: 15px; line-height: 20px; white-space: nowrap; ' + (value ? 'color: var(--foreground);' : 'color: var(--dawn-text);')
+    }));
+    const ft = { rows: ftRows, hasRows: ftRows.length > 0, prepDays: '3', showSwitch: !guest, sleepOn: v === 'sleep' ? 'true' : 'false', sleepOpen: v === 'sleep', switchHref: v === 'sleep' ? 'WizardFineTune.dc.html' : 'WizardFineTuneSleep.dc.html' };
+
+    // ---------- ready ----------
+    const RV = t.rv;
+    const withReturn = ['retnew', 'onefree', 'editreturn', 'editreturnnone', 'editchanged'].indexOf(v) >= 0;
+    const rowS = (i) => 'display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 5px 10px 5px 16px; box-sizing: border-box; color: var(--foreground); text-decoration: none;' + (i ? ' border-top: 1px solid var(--border);' : '');
+    let rows;
+    if (guest) {
+      rows = [[t.lbl.route, 'AMS → NRT', 'WizardWhereGuest'], [t.lbl.flight, RV.flight, 'WizardOutboundGuest'], [t.lbl.sleep, RV.sleepGuest, 'WizardSleep'], [t.lbl.questions, RV.q3, 'WizardQAge'], [t.lbl.extras, RV.extras0, 'WizardFineTuneGuest']];
+    } else {
+      const ret = v === 'editweb' ? RV.web : v === 'editnoreturn' ? RV.removed : withReturn ? (v === 'editchanged' ? RV.retMoved : RV.ret) : RV.oneWay;
+      const flight = v === 'retnew' ? RV.flightVia : RV.flight;
+      const extras = v === 'adjusted' ? RV.extrasWake : RV.extras;
+      rows = [[t.lbl.route, 'AMS → NRT', 'WizardWhere'], [t.lbl.flight, flight, v === 'retnew' ? 'WizardOutboundStop' : 'WizardOutbound'], [t.lbl.ret, ret, v === 'editweb' ? 'WizardReturnWeb' : 'WizardReturn'], [t.lbl.sleep, RV.sleep, 'WizardFineTuneSleep'], [t.lbl.extras, extras, 'WizardFineTune']];
+      if (v === 'adjusted') rows.push([t.lbl.wake, RV.wakeAssumed, 'WizardSheetWake']);
+    }
+    const rdRows = rows.map(([label, value, href], i) => ({ label, value, href: href + '.dc.html', a11y: label + ', ' + value + '. ' + t.rowHint, style: rowS(i) }));
+    const muted = 'font-size: 13px; line-height: 18px; color: var(--muted-foreground);';
+    const red = 'font-size: 13px; line-height: 18px; color: var(--destructive); font-weight: 600;';
+    const noCredits = v === 'nocredits' || v === 'editreturnnone';
+    let priceLabel = t.price, price = t.credit1, rlines = [[t.balance, muted]];
+    if (noCredits) rlines = [[t.balanceNone, red]];
+    if (v === 'unlimited') { priceLabel = ''; price = t.unlimited; rlines = []; }
+    if (v === 'free') { price = t.free; rlines = [[t.freeLine, muted]]; }
+    if (v === 'onefree') { rlines = [[t.oneFreeLine, muted], [t.balance, muted]]; }
+    if (guest) { rlines = v === 'free' ? [[t.guestFree, muted]] : [[t.guestBalance, muted]]; if (v === 'free') price = t.free; }
+    if (isEdit && !withReturn) { price = t.free; rlines = v === 'editnoreturn' ? [[t.noRefund, muted]] : []; }
+    if (isEdit) rlines.push([withReturn ? t.editReturnNote : t.editNote, muted]);
+    const rd = {
+      summary: withReturn ? t.summaryReturn : t.summary, dates: withReturn ? t.datesReturn : v === 'editweb' ? t.datesWeb : t.dates, rows: rdRows,
+      priceLabel, price, lines: rlines.map(([text, style]) => ({ text, style })), editNote: false, editNoteText: ''
+    };
+    if (v === 'adjusted') s.banner = bannerOf('info', t.adjTitle, t.adjBody);
+    if (v === 'editchanged') s.banner = bannerOf('info', t.changedTitle, t.changedBody);
+    if (v === 'saveoffline') s.banner = bannerOf('error', t.saveOffTitle, t.saveOffBody);
+    if (v === 'saveserver') s.banner = bannerOf('error', t.saveSrvTitle, t.saveSrvBody);
+
+    // ---------- pages ----------
+    const failSecondary = { secondary: t.closeBtn, secondaryHref: closeHref };
+    const P = {
+      where: { title: t.whereTitle, sub: t.whereSub, ctaHref: 'WizardOutbound.dc.html', ctaOn: !sameErr && !emptyW },
+      outbound: o.isHome
+        ? { title: t.retFlightTitle, sub: t.retFlightSub, ctaHref: 'WizardChecking.dc.html', ctaOn: outOn }
+        : { title: t.outTitle, sub: v === 'dup' ? t.dupSub : t.outSub, ctaHref: guest ? 'WizardSleep.dc.html' : 'WizardReturn.dc.html', ctaOn: outOn },
+      ret: { title: t.retTitle, cta: '', noCtaHint: t.tapHint },
+      sleep: { title: t.sleepTitle, sub: guest ? t.sleepSubGuest : t.sleepSub, ctaHref: guest ? 'WizardCheckingGuest.dc.html' : 'WizardChecking.dc.html' },
+      checking: { title: isEdit ? t.editCheckTitle : again ? t.againTitle : t.checkTitle, sub: t.checkSub, cta: '' },
+      fail: fk === 'practice' ? Object.assign({ title: isEdit ? t.editCheckTitle : t.checkTitle, cta: t.pracCta, ctaHref: 'WizardChecking.dc.html' }, failSecondary)
+        : fk === 'throttle' ? Object.assign({ title: isEdit ? t.editCheckTitle : t.checkTitle, cta: t.retryIn, ctaOn: false }, failSecondary)
+        : Object.assign({ title: isEdit ? t.editCheckTitle : t.checkTitle, cta: t.retry, ctaHref: isEdit ? 'WizardCheckingEdit.dc.html' : 'WizardChecking.dc.html' }, failSecondary),
+      question: { eyebrow: t.qEyebrow, title: q.title, cta: '', noCtaHint: t.tapHint },
+      excluded: { title: t.exTitle, cta: t.changeAnswers, ctaHref: ex.href, secondary: t.closeBtn, secondaryHref: guest ? 'Main.dc.html' : isEdit ? 'Plan.dc.html' : 'Trips.dc.html', ctaPlain: true },
+      finetune: v === 'none' ? { title: t.ftTitle, sub: t.ftSubNone, cta: t.done, ctaHref: 'WizardReady.dc.html' }
+        : { title: t.ftTitle, sub: t.ftSub, cta: v === 'busy' ? t.checkingBtn : t.cont, ctaBusy: v === 'busy', ctaOn: v !== 'busy', ctaHref: guest ? 'WizardReadyGuest.dc.html' : 'WizardReady.dc.html' },
+      ready: {
+        title: isEdit ? t.editTitle : t.readyTitle,
+        cta: v === 'checking' ? t.checkingBtn : noCredits ? t.buyCredits : isEdit ? t.update : t.make,
+        ctaBusy: v === 'checking', ctaOn: v !== 'checking' && v !== 'edit',
+        ctaHref: guest ? 'GuestSignup.dc.html' : noCredits ? 'SetPaywall.dc.html' : 'WizardCalculating.dc.html',
+        secondary: noCredits ? t.closeBtn : '', secondaryHref: closeHref
+      },
+      calc: { title: t.calcTitle, sub: t.calcSub, cta: '' }
+    }[screen] || {};
+    s = Object.assign(s, P);
+    const enabled = s.ctaOn !== false;
+
+    // ---------- banner ----------
+    const bn = s.banner;
+    const banner = bn ? {
+      show: true, hasTitle: !!bn.title, title: bn.title, body: bn.body,
+      style: 'display: flex; gap: 10px; padding: 12px 14px; border-radius: 18px; font-size: 14px; line-height: 20px; color: var(--card-foreground); ' + (bn.tone === 'error'
+        ? 'background: color-mix(in oklab, var(--destructive) 10%, var(--card)); border: 1px solid color-mix(in oklab, var(--destructive) 35%, transparent);'
+        : 'background: color-mix(in oklab, var(--dawn) 12%, var(--card)); border: 1px solid color-mix(in oklab, var(--dawn) 40%, transparent);')
+    } : { show: false, hasTitle: false, title: '', body: '', style: '' };
+
+    // ---------- alert ----------
+    const keepMap = { where: 'WizardWhere', outbound: guest ? 'WizardOutboundGuest' : 'WizardOutbound', ret: 'WizardReturn', finetune: 'WizardFineTune', ready: isEdit ? 'WizardEditReturn' : 'WizardReady', sleep: 'WizardSleep' };
+    const A = {
+      discard: { title: t.discardTitle, body: t.discardBody, go: t.discard, goHref: 'Trips.dc.html' },
+      guest: { title: t.discardTitle, body: t.discardGuestBody, go: t.discard, goHref: 'Main.dc.html' },
+      edit: { title: t.discardEditTitle, body: t.discardEditBody, go: t.discardChanges, goHref: 'Plan.dc.html' }
+    };
+    const al = A[alertKind] ? Object.assign({ gridStyle: 'display: grid; grid-template-columns: ' + ((A[alertKind].go.length > 12 || t.keepEditing.length > 12) ? '1fr' : '1fr 1fr') + '; gap: 8px; margin-top: 14px;', show: true, keep: t.keepEditing, keepHref: (keepMap[screen] || 'WizardOutbound') + '.dc.html' }, A[alertKind]) : { show: false, gridStyle: '', title: '', body: '', keep: '', keepHref: '#', go: '', goHref: '#' };
+
+    return {
+      theme: this.props.theme ?? 'light', lang, t, nav, is, w, o, r, chrono, checks, slow, f, q, ex, ft, rd, banner, al,
+      calcLine: 'AMS → NRT · ' + t.calcDays,
+      mainStyle: 'position: absolute; left: 0; right: 0; top: 76px; bottom: ' + (s.secondary ? 140 : 100) + 'px; padding: 12px 20px 0; display: flex; flex-direction: column; gap: 14px; overflow: hidden;',
+      eyebrow: s.eyebrow, hasEyebrow: !!s.eyebrow, title: s.title,
+      titleStyle: 'margin: 0; font-family: var(--font-display); font-weight: 400; letter-spacing: -0.01em; ' + (s.title.length > 80 ? (large ? 'font-size: 29px; line-height: 35px;' : 'font-size: 24px; line-height: 30px;') : (large ? 'font-size: 36px; line-height: 42px;' : 'font-size: 30px; line-height: 36px;')),
+      sub: s.sub, hasSub: !!s.sub,
+      hasCta: !!s.cta, noCta: !s.cta && !!s.noCtaHint, noCtaHint: s.noCtaHint,
+      cta: s.cta, ctaHref: enabled ? s.ctaHref : '#', ctaDisabled: enabled ? 'false' : 'true', ctaBusy: !!s.ctaBusy,
+      ctaStyle: 'display: flex; align-items: center; justify-content: center; gap: 8px; height: 52px; border-radius: 9999px; text-decoration: none; font-size: 17px; font-weight: 600; ' + (s.ctaPlain ? 'background: var(--surface-2); color: var(--foreground);' : 'background: var(--primary); color: var(--primary-foreground);') + (enabled ? '' : (s.ctaBusy ? ' opacity: 0.7; pointer-events: none;' : ' opacity: 0.4; pointer-events: none;')),
+      hasSecondary: !!s.secondary, secondary: s.secondary, secondaryHref: s.secondaryHref
+    };
+  }
+}
+</script>
+</body>
+</html>

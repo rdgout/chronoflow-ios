@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Terms update</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="ds/chronoflow/components/bundle.css">
+<script src="ds/chronoflow/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Figtree';src:url("/_blob/74876cc764ebb15bf4ae98bcdbf3140c") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/741b1ce40b46479a73d934d0d5be9774") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/079d83fda74d66d1f31e35072f71201d") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/991830890debdac04981f1a27656ed5c") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Fraunces';src:url("/_blob/fc815083784d00806d267d81858d2414") format("woff2");font-weight:400 500;font-style:normal;font-display:swap}
+body{margin:0}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="position: relative; width: 375px; height: 812px; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; gap: 20px; padding: 24px 16px 32px; background: var(--background); color: var(--foreground); font-family: var(--font-sans);">
+  <div style="display: flex; align-items: center; gap: 10px; height: 44px;">
+    <img src="/_blob/c59f1dcbf603a4fea627677b2761c5eb" alt="" width="28" height="28" style="width: 28px; height: 28px;">
+    <span style="font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dawn-text);">Before you continue</span>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 8px;">
+    <h1 style="margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 32px; line-height: 38px; letter-spacing: -0.01em;">We've updated our terms</h1>
+    <p style="margin: 0; font-size: 16px; line-height: 24px; color: var(--muted-foreground);">The new terms and privacy policy apply from <span style="color: var(--foreground); font-weight: 500;">{{effective}}</span>. Please accept them to keep using ChronoFlow.</p>
+  </div>
+
+  <section aria-labelledby="tu-what" style="display: flex; flex-direction: column; gap: 12px; padding: 18px; border-radius: 22px; background: var(--surface-2);">
+    <h2 id="tu-what" style="margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">What changed</h2>
+    <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px;">
+      <sc-for list="{{changes}}" as="c" hint-placeholder-count="3">
+        <li style="display: flex; gap: 12px; font-size: 15px; line-height: 22px;">
+          <span aria-hidden="true" style="width: 6px; height: 6px; margin-top: 8px; flex-shrink: 0; border-radius: 9999px; background: var(--dawn);"></span>
+          <span style="flex: 1;"><span style="font-weight: 600;">{{c.title}}</span> <span style="color: var(--muted-foreground);">{{c.body}}</span></span>
+        </li>
+      </sc-for>
+    </ul>
+    <a href="PolicyReader.dc.html" class="cf-press" style="display: flex; align-items: center; gap: 12px; min-height: 52px; margin-top: 4px; padding: 0 14px; border-radius: 16px; background: var(--card); color: var(--foreground); text-decoration: none;">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10 13H8"></path><path d="M16 17H8"></path><path d="M16 13h-2"></path></svg>
+      <span style="flex: 1; font-size: 15px; line-height: 22px; font-weight: 500;">Read the full terms and privacy policy</span>
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--muted-foreground);"><path d="m9 18 6-6-6-6"></path></svg>
+    </a>
+  </section>
+
+  <div style="flex: 1;"></div>
+
+  <sc-if value="{{failed}}" hint-placeholder-val="{{ false }}">
+    <div role="alert" style="display: flex; gap: 10px; padding: 12px 14px; border-radius: 18px; background: color-mix(in oklab, var(--destructive) 10%, var(--card)); border: 1px solid color-mix(in oklab, var(--destructive) 35%, transparent); color: var(--card-foreground);"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px; color: var(--destructive);"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="8" y2="12"></line><line x1="12" x2="12.01" y1="16" y2="16"></line></svg><span style="flex: 1; font-size: 14px; line-height: 20px;"><span style="display: block; font-weight: 600;">Couldn't save your answer.</span>Check your connection and try again. You can keep reading the policy meanwhile.</span></div>
+  </sc-if>
+  <div style="display: grid; gap: 8px;">
+    <a href="{{acceptHref}}" class="inline-flex shrink-0 items-center justify-center gap-2 text-sm font-medium whitespace-nowrap transition-colors rounded-full bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6" style="height: 48px; text-decoration: none;">{{acceptLabel}}</a>
+    <a href="{{signOutHref}}" class="inline-flex shrink-0 items-center justify-center gap-2 text-sm font-medium whitespace-nowrap transition-colors rounded-full hover:bg-accent hover:text-accent-foreground h-10 px-6" style="height: 48px; color: var(--foreground); text-decoration: none;">Sign out</a>
+    <p style="margin: 4px 0 0; font-size: 12px; line-height: 16px; text-align: center; color: var(--muted-foreground);">Shown after sign-in, before the walkthrough. Your trips stay saved if you sign out.</p>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"state":{"editor":"enum","options":["ready","failed"],"default":"ready"},"$preview":{"width":375,"height":812}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      theme: this.props.theme ?? 'light',
+      failed: this.props.state === 'failed',
+      acceptLabel: this.props.state === 'failed' ? 'Try again' : 'Accept and continue',
+      acceptHref: 'Walkthrough.dc.html',
+      signOutHref: 'AuthSignIn.dc.html',
+      effective: '[effective date]',
+      changes: [
+        { title: '[Change one]', body: '[One sentence on what changes for the user.]' },
+        { title: '[Change two]', body: '[One sentence on what changes for the user.]' },
+        { title: '[Change three]', body: '[One sentence on what changes for the user.]' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

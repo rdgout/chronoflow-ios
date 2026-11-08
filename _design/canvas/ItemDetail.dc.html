@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Plan step: avoid bright light</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="ds/chronoflow/components/bundle.css">
+<script src="ds/chronoflow/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Figtree';src:url("/_blob/74876cc764ebb15bf4ae98bcdbf3140c") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/741b1ce40b46479a73d934d0d5be9774") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/079d83fda74d66d1f31e35072f71201d") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/991830890debdac04981f1a27656ed5c") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Fraunces';src:url("/_blob/fc815083784d00806d267d81858d2414") format("woff2");font-weight:400 500;font-style:normal;font-display:swap}
+body{margin:0}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="position: relative; width: 390px; height: 844px; overflow: hidden; background: var(--background); color: var(--foreground); font-family: var(--font-sans);">
+  <div aria-hidden="true" style="position: absolute; inset: 0;">
+    <dc-import name="Today" theme="{{theme}}" hint-size="390px,844px"></dc-import>
+  </div>
+  <a href="Today.dc.html" aria-label="Close" style="position: absolute; inset: 0; background: oklch(0.15 0.03 272 / 0.5);"></a>
+
+  <section role="dialog" aria-modal="true" aria-labelledby="item-title" style="position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; gap: 16px; padding: 12px 20px 32px; border-radius: 38px 38px 0 0; background: var(--card); color: var(--card-foreground); box-shadow: var(--shadow-soft);">
+    <span aria-hidden="true" style="align-self: center; width: 36px; height: 5px; border-radius: 9999px; background: rgba(120, 120, 128, 0.4);"></span>
+    <div style="display: flex; align-items: flex-start; gap: 12px;">
+      <x-import component-from-global-scope="ChronoFlow.CategorySwatch" category="avoid_light" size="md"></x-import>
+      <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px;">
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <x-import component-from-global-scope="ChronoFlow.PriorityTag" priority="core"></x-import>
+          <sc-if value="{{s.running}}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="ChronoFlow.Badge" variant="dawn">Now</x-import></sc-if>
+          <sc-if value="{{s.done}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="ChronoFlow.Badge" variant="secondary">Done</x-import></sc-if>
+          <sc-if value="{{s.skipped}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="ChronoFlow.Badge" variant="outline">Skipped</x-import></sc-if>
+        </div>
+        <h2 id="item-title" style="margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 24px; line-height: 32px; letter-spacing: -0.01em;">Avoid bright light</h2>
+        <p style="margin: 0; font-size: 14px; line-height: 20px; color: var(--muted-foreground); font-variant-numeric: tabular-nums;">07:30 → 10:30 Tokyo time · 45 min left</p>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 6px;">
+      <h3 style="margin: 0; font-family: var(--font-sans); font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">Why</h3>
+      <p style="margin: 0; font-size: 16px; line-height: 24px;">Bright light this early would nudge your clock the wrong way. From 11:00, light helps it shift towards Tokyo time.</p>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 6px;">
+      <h3 style="margin: 0; font-family: var(--font-sans); font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">How</h3>
+      <ul style="margin: 0; padding: 0 0 0 20px; display: flex; flex-direction: column; gap: 4px; font-size: 16px; line-height: 24px;">
+        <li>Wear sunglasses outside, even when it's cloudy.</li>
+        <li>Keep indoor lights dim and warm.</li>
+        <li>On the train, sit away from the window.</li>
+      </ul>
+    </div>
+
+    <sc-if value="{{s.open}}" hint-placeholder-val="{{ true }}">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <x-import component-from-global-scope="ChronoFlow.Button" variant="outline" size="lg" on-click="{{skip}}">Skip</x-import>
+        <x-import component-from-global-scope="ChronoFlow.Button" size="lg" on-click="{{markDone}}">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+          Mark as done
+        </x-import>
+      </div>
+    </sc-if>
+    <sc-if value="{{s.closed}}" hint-placeholder-val="{{ false }}">
+      <div style="display: grid;">
+        <x-import component-from-global-scope="ChronoFlow.Button" variant="outline" size="lg" on-click="{{undo}}">Undo</x-import>
+      </div>
+    </sc-if>
+    <p style="margin: 0; font-size: 12px; line-height: 16px; color: var(--muted-foreground); text-align: center;">Checking off changes your progress, never your plan.</p>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { status: 'running' };
+  }
+  renderVals() {
+    const st = this.state.status;
+    return {
+      theme: this.props.theme ?? 'light',
+      s: { running: st === 'running', done: st === 'done', skipped: st === 'skipped', open: st === 'running', closed: st !== 'running' },
+      markDone: () => this.setState({ status: 'done' }),
+      skip: () => this.setState({ status: 'skipped' }),
+      undo: () => this.setState({ status: 'running' })
+    };
+  }
+}
+</script>
+</body>
+</html>
