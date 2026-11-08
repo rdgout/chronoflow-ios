@@ -183,8 +183,6 @@ import Testing
             for (index, trip) in account.trips.enumerated() {
                 let old = originals.trips[index]
                 let detail = try #require(account.details[trip.card.id])
-                let delta = instant(trip.card.departureUtc).timeIntervalSince(
-                    instant(old.card.departureUtc))
                 let before = try strings(in: old.detail)
                 let after = try strings(in: detail)
                 var calendar = Calendar(identifier: .gregorian)
@@ -200,7 +198,8 @@ import Testing
                 dateFormatter.dateFormat = "yyyy-MM-dd"
                 for (path, text) in before {
                     if text.hasSuffix("Z") && text.contains("T"), let new = after[path] {
-                        #expect(instant(new).timeIntervalSince(instant(text)) == delta)
+                        let elapsed = instant(new).timeIntervalSince(instant(text))
+                        #expect(abs(elapsed - Double(dayDelta) * 86400) <= 3600)
                     } else if !path.contains(".checkKey.") && !path.hasSuffix(".labelDate")
                         && !path.hasSuffix(".labelRange"),
                         text.range(of: #"^\d{4}-\d{2}-\d{2}$"#, options: .regularExpression) != nil

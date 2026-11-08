@@ -19,25 +19,53 @@
             let days = calendar.dateComponents(
                 [.day], from: calendar.startOfDay(for: instant(source)), to: calendar.startOfDay(for: target)
             ).day!
-            let shifted = calendar.date(byAdding: .day, value: days, to: instant(source))!
-            let delta = shifted.timeIntervalSince(instant(source))
             let dateFormatter = DateFormatter()
             dateFormatter.locale = Locale(identifier: "en_US_POSIX")
             dateFormatter.calendar = calendar
             dateFormatter.timeZone = zone
             dateFormatter.dateFormat = "yyyy-MM-dd"
 
-            func transform(_ value: Any) -> Any {
+            func transform(_ value: Any, zone: String) -> Any {
                 if let object = value as? [String: Any] {
-                    return object.mapValues(transform)
+                    let zones = object["zones"] as? [[String: Any]]
+                    let displayZone =
+                        object["displayTz"] as? String ?? object["tz"] as? String
+                        ?? zones?.first?["tz"] as? String ?? zone
+                    let from = object["from"] as? [String: Any]
+                    let to = object["to"] as? [String: Any]
+                    let legs = object["legs"] as? [[String: Any]]
+                    let lastArrival = legs?.last?["to"] as? [String: Any]
+                    return object.reduce(into: [String: Any]()) { result, entry in
+                        let (key, value) = entry
+                        let fieldZone: String
+                        switch key {
+                        case "markedAt":
+                            result[key] = value
+                            return
+                        case "departureUtc", "departLocal": fieldZone = from?["zone"] as? String ?? displayZone
+                        case "arrivalUtc", "arriveLocal": fieldZone = to?["zone"] as? String ?? displayZone
+                        case "endUtc":
+                            fieldZone = lastArrival?["zone"] as? String ?? zones?.last?["tz"] as? String ?? displayZone
+                        case "arrivalLandingUtc", "assumedReturn": fieldZone = fixture.card.to.zone
+                        default: fieldZone = displayZone
+                        }
+                        result[key] = transform(value, zone: fieldZone)
+                    }
                 }
-                if let array = value as? [Any] { return array.map(transform) }
+                if let array = value as? [Any] { return array.map { transform($0, zone: zone) } }
                 guard let text = value as? String else { return value }
+                var calendar = calendar
+                calendar.timeZone = TimeZone(identifier: zone)!
                 if text.range(of: #"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?Z$"#, options: .regularExpression) != nil {
-                    return (instant(text) + delta).ISO8601Format()
+                    return calendar.date(byAdding: .day, value: days, to: instant(text))!.ISO8601Format()
                 }
-                if text.range(of: #"^\d{4}-\d{2}-\d{2}$"#, options: .regularExpression) != nil,
-                    let date = dateFormatter.date(from: text),
+                guard text.range(of: #"^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2})?$"#, options: .regularExpression) != nil else {
+                    return text
+                }
+                dateFormatter.calendar = calendar
+                dateFormatter.timeZone = calendar.timeZone
+                dateFormatter.dateFormat = text.contains("T") ? "yyyy-MM-dd'T'HH:mm" : "yyyy-MM-dd"
+                if let date = dateFormatter.date(from: text),
                     let shifted = calendar.date(byAdding: .day, value: days, to: date)
                 {
                     return dateFormatter.string(from: shifted)
@@ -46,7 +74,7 @@
             }
             func move<Value: Codable>(_ value: Value) throws -> Value {
                 let object = try JSONSerialization.jsonObject(with: JSONEncoder().encode(value))
-                let data = try JSONSerialization.data(withJSONObject: transform(object))
+                let data = try JSONSerialization.data(withJSONObject: transform(object, zone: zone.identifier))
                 return try JSONDecoder().decode(Value.self, from: data)
             }
             var card = try move(fixture.card)
@@ -94,7 +122,7 @@
                     detail.checkState.marks[index].key = rebased
                 }
             }
-            let hashInput = "\(fixture.detail.plan.meta.inputHash):\(delta)"
+            let hashInput = "\(fixture.detail.plan.meta.inputHash):\(days)"
             let hash = SHA256.hash(data: Data(hashInput.utf8)).map { String(format: "%02x", $0) }.joined()
             detail.plan.meta.inputHash = hash
             detail.checkState.planInputHash = hash

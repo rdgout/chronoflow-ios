@@ -1554,6 +1554,9 @@ Every UI round verifies Matrix A-style coverage on 17e:
   - Verify: `make quick`, `make contracts-check`.
   - Host verification (2026-11-07): all Phase 12 tests and `make contracts-check` pass; an enum-literal mutation is rejected. `make quick` passes lint and every package test except the existing `APICookieTests.realRedirectCookieHandlingIsDisabled`, which cannot bind a loopback socket in this sandbox (`EPERM`). Token/asset host tests and all 85 signing/resource/runner fixtures pass separately. No simulator commands were run; full quick remains pending outside this socket restriction.
 
+**Phase 12 fix round 1 (2026-11-08)**
+- [x] Rebase each instant by calendar days in its display zone, preserving wall times across Amsterdam and New York DST boundaries; cover cards, plan days/zones, blocks, parameters and timeline ticks with host tests.
+
 ### Phase 13: Plan generation through the API, no UI (`feat/phase-13-trip-generation`), no blockers
 
 Built against the trip-wizard contract with URLProtocol fixtures and the mock. Live acceptance comes with 16c.
