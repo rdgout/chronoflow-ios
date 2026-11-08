@@ -41,6 +41,13 @@
         let total: Int
         let skipped: Int
         let language: Language
+        private var summary: String {
+            PlanStrings.text(
+                "{{done}} of {{total}} done", language: language,
+                ["done": String(done), "total": String(total)])
+                + (skipped > 0
+                    ? ", " + PlanStrings.text("{{count}} skipped", language: language, count: skipped) : "")
+        }
         var body: some View {
             PlanFlowRow(spacing: PlanUITokens.space2) {
                 ProgressView(value: Double(done), total: Double(total))
@@ -58,15 +65,10 @@
                     Text(PlanStrings.text("{{count}} skipped", language: language, count: skipped))
                 }
             }.font(Typography.screenMeta.font).foregroundStyle(ColorToken.mutedForeground.color)
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(
-                    PlanStrings.text(
-                        "{{done}} of {{total}} done", language: language,
-                        ["done": String(done), "total": String(total)])
-                        + (skipped > 0
-                            ? ", " + PlanStrings.text("{{count}} skipped", language: language, count: skipped) : "")
-                )
-                .accessibilityIdentifier("today.progress")
+                .frame(minHeight: AuthTokens.touch)
+                .accessibilityRepresentation {
+                    Text(summary).frame(minHeight: AuthTokens.touch).accessibilityIdentifier("today.progress")
+                }
         }
     }
 

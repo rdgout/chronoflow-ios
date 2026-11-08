@@ -47,7 +47,7 @@ together. Reference capture/review remains the user's task.
 
 ```sh
 make generate
-make targeted DEVICES="17e" ONLY="AppTests/AppTabsSnapshotTests AppTests/StepSheetSnapshotTests AppTests/TodaySnapshotTests AppTests/TodayRowSnapshotTests AppTests/TripsSnapshotTests"
+make targeted DEVICES="17e" ONLY="AppTests/StepSheetSnapshotTests AppTests/TodaySnapshotTests AppTests/TodayRowSnapshotTests AppTests/TripsSnapshotTests"
 make targeted DEVICES="17e" ONLY="AppTests/StepSheetLayoutTests AppTests/TodayControlTests AppTests/TodayLayoutTests AppTests/TripsLayoutTests"
 make targeted DEVICES="17e" ONLY="AppUITests/AppTabsTests AppUITests/TodayTests AppUITests/StepSheetTests AppUITests/LegendTests AppUITests/TripsTests AppUITests/PlanAuditTests AppUITests/AuthSessionTests"
 ```
@@ -178,3 +178,64 @@ Logs: `build/plan-failures-lint-final.log`, `build/plan-failures-host-final.log`
 behavior and snapshot comparison remain for the user's 17e run. No references changed.
 Delivery: one atomic `build/commits/1.patch` against `baf799d`, with its Conventional
 Commit subject in `build/commits/messages.txt`.
+
+
+## Second simulator rerun repair (2026-11-08, base 229bcfd)
+
+1. The UIKit accessibility walker returns no SwiftUI children on the supplied runtime.
+   Layout tests now collect actual content/container/text frames with SwiftUI geometry
+   callbacks through an optional environment observer (including across NavigationStack).
+   They check both scroll extremes, including lazy content, and still fail on missing
+   measurements, horizontal overflow or a rail violation. The new collector regression
+   measures deliberately overflowing content, then reconfigures it and checks the new
+   64 pt bounds instead of retaining stale frames. Native scroll-frame underlap remains
+   valid; the four-inset viewport diagnostics are retained.
+2. Sheet existence did not establish a finished presentation. The audit waits for
+   stable sheet/title/time/footer/Skip/Done frames before taking its source screenshot.
+   Clipping remains a strict failure, with no animation/clipping exemption.
+3. The synthesized progress Other element still attracted hit-region audits at 14.7 pt.
+   It now has a static Text accessibility representation and a generated 44 pt minimum
+   for both the row and representation; the real-app tab flow checks its type and height.
+   The saved log shows the Flight title originally at y=781.17 under the glass, then
+   y=639.17 after reveal; the subsequent subtitle report is y=658.5 after that movement.
+   Mutating scroll position in an audit callback invalidated later frame attribution.
+   Findings and original text metadata are now frozen without scrolling during the
+   audit. Each finding is then independently attributed and revealed; the complete
+   per-line screenshot measurement must still reach 4.5:1. Missing identity, pixels,
+   lines or a real contrast failure remains a failure. No token contrast exemption.
+4. System bordered styles produced the filled Skip, while the inherited foreground
+   overrode the primary label. Sheet actions now use the existing design-system
+   AuthButton (native Button): outline Skip/Undo, primaryForeground on primary with
+   the supplied check glyph, generated 48 pt size and existing busy/disabled treatment.
+   Upcoming actions remain enabled, matching the current behavior and ItemDetail.
+5. Remove AppTabsSnapshotTests/SystemTabsSnapshotHost and their runner snapshot entries.
+   Their scene/account/tab-controller harness never reached trips.empty on the user's
+   runtime. Production-app UI captures replace this unreliable harness.
+6. AppTabsTests signs in through launchPlanAccount and retains full-screen screenshots
+   named today-tabs, trips-tabs, settings-tabs, today-tabs-minimized,
+   trips-tabs-minimized and both *-tabs-expanded captures. Separate iOS 26+ tests scroll
+   Today and My trips, require actual content movement and no nested scroll view,
+   wait for stable minimized geometry (or hidden non-selected items) with the selected
+   tab still hittable, then scroll back and require all three items and the original
+   expanded bar/item dimensions. The existing runner entry includes these methods.
+   Production screens already have one direct ScrollView under each NavigationStack;
+   no gesture interception or wrapper scroll view was added.
+
+Strict make lint and direct iOS 17 app/AppTests/AppUITests source compilation pass.
+The final make host-tests run has only the existing loopback-cookie listener EPERM;
+remaining generator/resource/runner tiers pass separately (10 TokenGen, 7 AssetGen
+and 98 resource/runner fixtures). Final verification logs are build/round2-lint-final.log,
+build/round2-host-final.log, build/round2-host-remainder.log and
+build/round2-typecheck-final.log. Direct Swift SDK compilation checks iOS 17 source
+compatibility without launching CoreSimulator. No simulator, recording or reference
+update is claimed. The changed progress height and sheet buttons need snapshot review.
+
+Delivery is one atomic build/commits/1.patch against 229bcfd, with its Conventional
+Commit subject in build/commits/messages.txt. To validate on the user's host:
+
+```sh
+make generate
+make targeted DEVICES="17e" ONLY="AppTests/StepSheetLayoutTests AppTests/TodayLayoutTests AppTests/TripsLayoutTests AppTests/TodayControlTests"
+make targeted DEVICES="17e" ONLY="AppUITests/PlanAuditTests AppUITests/AppTabsTests AppUITests/StepSheetTests"
+make targeted DEVICES="17e" ONLY="AppTests/StepSheetSnapshotTests AppTests/TodaySnapshotTests AppTests/TripsSnapshotTests"
+```

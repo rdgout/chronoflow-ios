@@ -3,7 +3,14 @@ import UIKit
 import XCTest
 
 nonisolated final class PlanAuditTests: XCTestCase {
-    @MainActor func testTodayPrimaryState() async throws { try await audit { _ in } }
+    @MainActor func testTodayPrimaryState() async throws {
+        try await audit { app in
+            XCTAssertTrue(app.staticTexts["today.progress"].waitForExistence(timeout: 8))
+            _ = try UIWait.stableFrames(
+                [app.scrollViews["today.screen"], app.staticTexts["today.progress"], app.tabBars.firstMatch], timeout: 8
+            )
+        }
+    }
     @MainActor func testTripsPrimaryState() async throws {
         try await audit { app in
             app.tabBars.buttons["My trips"].tap()
@@ -17,7 +24,15 @@ nonisolated final class PlanAuditTests: XCTestCase {
             XCTAssertTrue(row.waitForExistence(timeout: 12))
             AuthUIFlow.reveal(row, in: app, scroll: app.scrollViews["today.screen"])
             row.tap()
-            XCTAssertTrue(app.scrollViews["step.sheet"].waitForExistence(timeout: 4), app.debugDescription)
+            let sheet = app.scrollViews["step.sheet"]
+            XCTAssertTrue(sheet.waitForExistence(timeout: 4), app.debugDescription)
+            let title = app.staticTexts.matching(NSPredicate(format: "identifier ENDSWITH %@", "|step.title"))
+                .firstMatch
+            let time = app.staticTexts.matching(NSPredicate(format: "identifier ENDSWITH %@", "|step.time")).firstMatch
+            let footer = app.staticTexts.matching(NSPredicate(format: "identifier ENDSWITH %@", "|step.footer"))
+                .firstMatch
+            _ = try UIWait.stableFrames(
+                [sheet, title, time, footer, app.buttons["step.done"], app.buttons["step.skip"]], timeout: 8)
         }
     }
     @MainActor func testLegendPrimaryState() async throws {
@@ -25,50 +40,89 @@ nonisolated final class PlanAuditTests: XCTestCase {
             XCTAssertTrue(app.scrollViews["legend.sheet"].waitForExistence(timeout: 4))
         }
     }
-    @MainActor private func audit(legend: Bool = false, _ navigate: (XCUIApplication) -> Void) async throws {
+    @MainActor private func audit(legend: Bool = false, _ navigate: (XCUIApplication) throws -> Void) async throws {
         try await FontRegistry.register()
         let appearance = XCUIDevice.shared.appearance
         defer { XCUIDevice.shared.appearance = appearance }
         try DeviceAppearance.set(.light)
         let app = launchPlanAccount(presentLegend: legend)
         defer { app.terminate() }
-        navigate(app)
+        try navigate(app)
+        _ = try UIWait.stableFrames([app.scrollViews.firstMatch], timeout: 8)
+        attach(app, name: "plan-audit-settled")
         // The user settled the root xxLarge cap on 2026-11-06 (plan Phase 5 fix round 3).
         let types: XCUIAccessibilityAuditType = .all.subtracting(.dynamicType)
         XCTAssertEqual(types, .all.subtracting(.dynamicType), "Honor the root xxLarge cap; keep every other audit")
+        let sources = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@", "plan.text."))
+            .allElementsBoundByIndex.map { TextSource(identifier: $0.identifier, label: $0.label, frame: $0.frame) }
+        var findings: [Finding] = []
+        // Capture every finding before contrast measurements scroll the original audit scene.
         try app.performAccessibilityAudit(for: types) { issue in
-            let element = issue.element
-            let reportedFrame = element?.frame
+            findings.append(Finding(issue: issue, disabled: Self.disabledControl(issue: issue, in: app)))
+            return true
+        }
+        for finding in findings {
             var measurement = "not eligible"
             var measured = false
-            if issue.auditType == .contrast {
-                (measured, measurement) = self.measuredText(issue: issue, in: app)
+            if finding.type == .contrast {
+                (measured, measurement) = measuredText(finding: finding, sources: sources, in: app)
             }
-            let disabled = Self.disabledControl(issue: issue, in: app)
-            let ignored = measured || disabled
+            let ignored = measured || finding.disabled
             let message = """
-                Plan accessibility auditType=\(issue.auditType) \
-                identifier=\(element?.identifier ?? "<nil>") label=\(element?.label ?? "<nil>") \
-                frame=\(String(describing: reportedFrame)) compactDescription=\(issue.compactDescription) \
-                measuredText=\(measured) disabledControl=\(disabled) ignored=\(ignored)
+                Plan accessibility auditType=\(finding.type) \
+                identifier=\(finding.identifier ?? "<nil>") label=\(finding.label ?? "<nil>") \
+                frame=\(String(describing: finding.frame)) compactDescription=\(finding.description) \
+                measuredText=\(measured) disabledControl=\(finding.disabled) ignored=\(ignored)
                 \(measurement)
                 """
             print(message)
             let attachment = XCTAttachment(string: message)
             attachment.lifetime = .keepAlways
-            self.add(attachment)
+            add(attachment)
             if !ignored { XCTFail(message) }
-            return ignored
         }
     }
 
+    private struct TextSource {
+        let identifier: String
+        let label: String
+        let frame: CGRect
+    }
+
+    private struct Finding {
+        let type: XCUIAccessibilityAuditType
+        let identifier: String?
+        let label: String?
+        let frame: CGRect?
+        let description: String
+        let disabled: Bool
+
+        @MainActor init(issue: XCUIAccessibilityAuditIssue, disabled: Bool) {
+            type = issue.auditType
+            identifier = issue.element?.identifier
+            label = issue.element?.label
+            frame = issue.element?.frame
+            description = issue.compactDescription
+            self.disabled = disabled
+        }
+    }
+
+    @MainActor private func attach(_ app: XCUIApplication, name: String) {
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
     @MainActor private func measuredText(
-        issue: XCUIAccessibilityAuditIssue, in app: XCUIApplication
+        finding: Finding, sources: [TextSource], in app: XCUIApplication
     ) -> (Bool, String) {
-        guard let element = issue.element else { return (false, "No attributed element") }
-        if element.identifier == "legend.close" {
+        guard let identifier = finding.identifier, let reportedFrame = finding.frame else {
+            return (false, "No attributed element")
+        }
+        if identifier == "legend.close" {
             let close = app.buttons["legend.close"]
-            guard close.exists, close.frame == element.frame, close.label == element.label else {
+            guard close.exists, close.frame == reportedFrame, close.label == finding.label else {
                 return (false, "Close control identity/frame mismatch")
             }
             let frame = close.frame
@@ -77,22 +131,24 @@ nonisolated final class PlanAuditTests: XCTestCase {
                 viewport: app.frame, ink: .label, lineHeight: frame.height)
             return (
                 PlanLayoutEvidence.passingText(
-                    issueIdentifier: element.identifier, issueFrame: element.frame,
+                    issueIdentifier: identifier, issueFrame: reportedFrame,
                     identifier: close.identifier, frame: frame, minimum: minimum), description
             )
         }
-        let reportedFrame = element.frame
-        let candidates = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@", "plan.text."))
-            .allElementsBoundByIndex.filter { candidate in
-                PlanLayoutEvidence.attributedText(
-                    issueIdentifier: element.identifier, issueFrame: reportedFrame,
-                    identifier: candidate.identifier, frame: candidate.frame)
-            }
-        guard candidates.count == 1, let text = candidates.first else {
-            return (false, "No unique text identifier and frame; candidates=\(candidates.count)")
+        let candidates = sources.filter { source in
+            PlanLayoutEvidence.attributedText(
+                issueIdentifier: identifier, issueFrame: reportedFrame,
+                identifier: source.identifier, frame: source.frame)
         }
-        let originalFrame = text.frame
-        let label = text.label
+        guard candidates.count == 1, let source = candidates.first else {
+            return (false, "No unique original text identifier and frame; candidates=\(candidates.count)")
+        }
+        let live = app.staticTexts.matching(identifier: source.identifier).allElementsBoundByIndex
+        guard live.count == 1, let text = live.first, text.label == source.label else {
+            return (false, "Original text no longer has a unique live identity: \(source.identifier)")
+        }
+        let originalFrame = source.frame
+        let label = source.label
         let styles: [Typography.Style] = [
             Typography.screenHero, Typography.screenPageTitle, Typography.screenPageTitleLg,
             Typography.screenCardTitle, Typography.screenSectionTitle, Typography.screenDayTitle,
@@ -108,7 +164,7 @@ nonisolated final class PlanAuditTests: XCTestCase {
         }
         let scrolls = app.scrollViews.allElementsBoundByIndex.filter {
             $0.descendants(matching: .staticText).matching(identifier: text.identifier).allElementsBoundByIndex
-                .contains { $0.frame == originalFrame && $0.label == label }
+                .contains { $0.frame == text.frame && $0.label == label }
         }
         guard scrolls.count == 1, let scroll = scrolls.first else {
             return (false, "No unique scroll for \(text.identifier), frame=\(originalFrame)")
@@ -131,7 +187,7 @@ nonisolated final class PlanAuditTests: XCTestCase {
             lineHeight: style.uiFont(compatibleWith: traits).lineHeight)
         return (
             PlanLayoutEvidence.passingText(
-                issueIdentifier: element.identifier, issueFrame: reportedFrame,
+                issueIdentifier: identifier, issueFrame: reportedFrame,
                 identifier: text.identifier, frame: originalFrame, minimum: minimum),
             "reportedFrame=\(reportedFrame) originalTextFrame=\(originalFrame)\n" + description
         )

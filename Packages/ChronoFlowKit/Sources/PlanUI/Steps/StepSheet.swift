@@ -64,13 +64,9 @@
                                 "Your plan changed after you opened it, for example because you edited the trip. Your other check-offs are kept."
                             )
                         ).foregroundStyle(ColorToken.mutedForeground.color)
-                        Button {
-                            dismiss()
-                        } label: {
-                            Text(t("See today's steps")).frame(maxWidth: .infinity)
-                        }.buttonStyle(.borderedProminent).frame(minHeight: PlanUITokens.actionMinHeight)
+                        AuthButton(t("See today's steps"), minimumHeight: PlanUITokens.actionMinHeight) { dismiss() }
                     }
-                }.padding(PlanUITokens.space5).padding(.top, PlanUITokens.space4)
+                }.padding(PlanUITokens.space5).padding(.top, PlanUITokens.space4).planContentBounds()
             }
             .tint(ColorToken.primary.color).controlSize(.large)
             .font(Typography.screenBodyLg.font).foregroundStyle(ColorToken.cardForeground.color)
@@ -107,8 +103,10 @@
                         HStack { badges(block, mark: mark, running: running) }
                         VStack(alignment: .leading) { badges(block, mark: mark, running: running) }
                     }
-                    Text(t(stepLabelKey(block.type) ?? "Note")).planTextStyle(Typography.screenCardTitle)
-                        .accessibilityAddTraits(.isHeader)
+                    Text(t(stepLabelKey(block.type) ?? "Note")).planTextStyle(
+                        Typography.screenCardTitle, context: "step.title"
+                    )
+                    .accessibilityAddTraits(.isHeader)
                     Text(
                         running
                             ? time + " · "
@@ -120,7 +118,7 @@
                                             language: language, duration: true)
                                     ]) : time
                     )
-                    .planTextStyle(Typography.screenBody, color: .mutedForeground)
+                    .planTextStyle(Typography.screenBody, color: .mutedForeground, context: "step.time")
                     .monospacedDigit()
                 }
             }
@@ -135,11 +133,9 @@
             section("How", lines: instructions, options: options, bullets: true)
             if key != nil {
                 if mark != nil {
-                    Button {
+                    AuthButton(t("Undo"), kind: .outline, minimumHeight: PlanUITokens.actionMinHeight) {
                         Task { await change(nil) }
-                    } label: {
-                        Text(t("Undo")).frame(maxWidth: .infinity)
-                    }.buttonStyle(.bordered).accessibilityFocused($actionFocus, equals: .undo)
+                    }.accessibilityFocused($actionFocus, equals: .undo)
                         .accessibilityIdentifier("step.undo").disabled(busy)
                 } else {
                     ViewThatFits(in: .horizontal) {
@@ -149,21 +145,16 @@
                 }
             }
             Text(t("Checking off changes your progress, never your plan."))
-                .planTextStyle(Typography.screenMeta, color: .mutedForeground)
+                .planTextStyle(Typography.screenMeta, color: .mutedForeground, context: "step.footer")
                 .frame(maxWidth: .infinity).multilineTextAlignment(.center)
         }
         @ViewBuilder private var actions: some View {
-            Button {
+            AuthButton(t("Skip"), kind: .outline, minimumHeight: PlanUITokens.actionMinHeight) {
                 Task { await change(.skipped) }
-            } label: {
-                Text(t("Skip")).frame(maxWidth: .infinity)
-            }.buttonStyle(.bordered).accessibilityIdentifier(
-                "step.skip")
-            Button {
+            }.accessibilityIdentifier("step.skip")
+            AuthButton(t("Mark as done"), glyph: .check, minimumHeight: PlanUITokens.actionMinHeight) {
                 Task { await change(.done) }
-            } label: {
-                Label(t("Mark as done"), systemImage: "checkmark").frame(maxWidth: .infinity)
-            }.buttonStyle(.borderedProminent).accessibilityFocused($actionFocus, equals: .done)
+            }.accessibilityFocused($actionFocus, equals: .done)
                 .accessibilityIdentifier("step.done")
         }
         @ViewBuilder private func badges(_ block: BlockView, mark: CheckMark?, running: Bool) -> some View {

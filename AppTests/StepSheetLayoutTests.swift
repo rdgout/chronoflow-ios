@@ -1,9 +1,35 @@
+import DesignSystem
 import PlanCore
 import PlanUI
+import SwiftUI
 import UIKit
 import XCTest
 
 nonisolated final class StepSheetLayoutTests: XCTestCase {
+    @MainActor func testContentCollectorMeasuresOverflowAndReconfiguration() async throws {
+        let fixture = try XCTUnwrap(AuthDeviceFixture.all().first { $0.name == "duo" })
+        let content = PlanMeasuredContent()
+        func probe(offset: CGFloat) -> some View {
+            ScrollView {
+                Text(verbatim: "Geometry probe")
+                    .frame(width: 64, height: 64).offset(x: offset).planContentBounds()
+            }.capturePlanContent(in: content)
+        }
+        let host = try AuthTestHost(
+            probe(offset: fixture.size.width), size: fixture.size, insets: fixture.insets, scale: fixture.scale)
+        defer { host.close() }
+        try await host.settle()
+        XCTAssertEqual(content.frames.count, 1)
+        XCTAssertTrue(content.frames.contains { $0.maxX > fixture.size.width - fixture.insets.right })
+        host.configure(probe(offset: 0))
+        try await host.settle()
+        let frame = try XCTUnwrap(content.frames.first)
+        XCTAssertEqual(content.frames.count, 1)
+        XCTAssertEqual(frame.size, CGSize(width: 64, height: 64))
+        XCTAssertGreaterThanOrEqual(frame.minX, fixture.insets.left)
+        XCTAssertLessThanOrEqual(frame.maxX, fixture.size.width - fixture.insets.right)
+    }
+
     @MainActor func testStepActionsAndLegendScrollWithinEveryLeanProfile() async throws {
         try await AuthTestHost.registerFonts()
         let formatter = try await PlanScreenFixture.formatter()
@@ -11,25 +37,47 @@ nonisolated final class StepSheetLayoutTests: XCTestCase {
         let block = try XCTUnwrap(detail.plan.blocks.first { $0.actionable && $0.checkKey != nil })
         for fixture in try AuthDeviceFixture.all() where ["se", "17e", "duo"].contains(fixture.name) {
             for language in ["en", "nl"] {
+                let content = PlanMeasuredContent()
                 let host = try AuthTestHost(
                     StepSheet(
                         detail: detail, blockID: block.id, now: PlanScreenFixture.now, formatter: formatter,
-                        change: { _ in }),
+                        change: { _ in }
+                    ).capturePlanContent(in: content),
                     size: fixture.size, insets: fixture.insets, language: language, category: .extraExtraLarge,
                     scale: fixture.scale)
                 defer { host.close() }
                 try await host.settle()
-                try assertPlanScrollFits(host)
+                try await assertPlanScrollFits(host, content: content)
                 XCTAssertTrue(recoveryTextFields(host.window).isEmpty)
-                host.configure(LegendSheet(), language: language, category: .extraExtraLarge)
+                host.configure(
+                    LegendSheet().capturePlanContent(in: content), language: language, category: .extraExtraLarge)
                 try await host.settle()
-                try assertPlanScrollFits(host)
+                try await assertPlanScrollFits(host, content: content)
             }
         }
     }
 }
 
-@MainActor func assertPlanScrollFits(_ host: AuthTestHost) throws {
+@MainActor final class PlanMeasuredContent {
+    private var measurements: [UUID: CGRect] = [:]
+    var frames: [CGRect] { Array(measurements.values) }
+
+    func record(_ identity: UUID, _ frame: CGRect?) {
+        if let frame, !frame.isEmpty, !frame.isNull, !frame.isInfinite {
+            measurements[identity] = frame
+        } else {
+            measurements[identity] = nil
+        }
+    }
+}
+
+extension View {
+    @MainActor func capturePlanContent(in content: PlanMeasuredContent) -> some View {
+        environment(\.planContentMeasure, content.record)
+    }
+}
+
+@MainActor func assertPlanScrollFits(_ host: AuthTestHost, content: PlanMeasuredContent) async throws {
     let scrolls = authScrollViews(host.controller.view)
     XCTAssertFalse(scrolls.isEmpty)
     for scroll in scrolls where !scroll.isHidden && scroll.bounds.width > 0 {
@@ -47,45 +95,23 @@ nonisolated final class StepSheetLayoutTests: XCTestCase {
             x: safe.left, y: safe.top, width: host.window.bounds.width - safe.left - safe.right,
             height: host.window.bounds.height - safe.top - safe.bottom)
         XCTAssertFalse(visible.intersection(safeFrame).isEmpty, context)
-        // Native scroll views can underlap chrome; the accessible content must honor the rail.
-        var visited: Set<ObjectIdentifier> = []
-        var contentCount = 0
-        @MainActor func checkContent(_ element: NSObject) {
-            guard visited.insert(ObjectIdentifier(element)).inserted else { return }
-            if let identifier = (element as? any UIAccessibilityIdentification)?.accessibilityIdentifier,
-                [
-                    "plan.text.", "today.step.", "today.trip", "today.progress", "trip.", "trips.section.",
-                    "plan.loading", "trips.loading",
-                ].contains(where: identifier.hasPrefix),
-                element.isAccessibilityElement
-            {
-                let frame = host.window.convert(element.accessibilityFrame, from: nil)
-                if !frame.isEmpty && !frame.isInfinite {
-                    contentCount += 1
-                    XCTAssertGreaterThanOrEqual(frame.minX, safe.left - 1, "\(identifier) frame=\(frame) \(context)")
-                    XCTAssertLessThanOrEqual(
-                        frame.maxX, host.window.bounds.width - safe.right + 1,
-                        "\(identifier) frame=\(frame) \(context)")
-                }
-            }
-            if let view = element as? UIView { view.subviews.forEach(checkContent) }
-            if let elements = element.accessibilityElements {
-                elements.compactMap { $0 as? NSObject }.forEach(checkContent)
-            }
-            let count = element.accessibilityElementCount()
-            if count > 0 && count != NSNotFound {
-                for index in 0..<count {
-                    if let child = element.accessibilityElement(at: index) as? NSObject { checkContent(child) }
-                }
+        for atBottom in [false, true] {
+            scroll.setContentOffset(
+                CGPoint(
+                    x: -adjusted.left,
+                    y: atBottom
+                        ? max(-adjusted.top, scroll.contentSize.height - scroll.bounds.height + adjusted.bottom)
+                        : -adjusted.top), animated: false)
+            try await host.settle()
+            XCTAssertFalse(content.frames.isEmpty, "Missing measured SwiftUI content: \(context)")
+            for frame in content.frames {
+                XCTAssertFalse(
+                    frame.isEmpty || frame.isInfinite || frame.isNull, "Invalid content: \(frame) \(context)")
+                XCTAssertGreaterThanOrEqual(frame.minX, safe.left - 1, "content=\(frame) \(context)")
+                XCTAssertLessThanOrEqual(
+                    frame.maxX, host.window.bounds.width - safe.right + 1, "content=\(frame) \(context)")
             }
         }
-        checkContent(scroll)
-        XCTAssertGreaterThan(contentCount, 0, "Missing accessible content: \(context)")
-        scroll.setContentOffset(
-            CGPoint(
-                x: -adjusted.left,
-                y: max(-adjusted.top, scroll.contentSize.height - scroll.bounds.height + adjusted.bottom)),
-            animated: false)
         XCTAssertTrue(scroll.contentOffset.y.isFinite)
     }
 }

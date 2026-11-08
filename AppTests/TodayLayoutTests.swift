@@ -11,12 +11,13 @@ nonisolated final class TodayLayoutTests: XCTestCase {
             for language in ["en", "nl"] {
                 for state in TodaySnapshotState.allCases {
                     let screen = try todayFixture(state, formatter: formatter)
+                    let content = PlanMeasuredContent()
                     let host = try AuthTestHost(
-                        NavigationStack { screen }, size: fixture.size,
+                        NavigationStack { screen }.capturePlanContent(in: content), size: fixture.size,
                         insets: fixture.insets, language: language, category: .extraExtraLarge, scale: fixture.scale)
                     defer { host.close() }
                     try await host.settle()
-                    try assertPlanScrollFits(host)
+                    try await assertPlanScrollFits(host, content: content)
                 }
             }
         }

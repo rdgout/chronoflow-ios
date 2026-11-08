@@ -12,9 +12,10 @@ extension View {
     ) -> some View {
         if let color {
             font(style.font).foregroundStyle(color.color)
-                .accessibilityIdentifier(style.planTextIdentifier(color: color, context: context))
+                .accessibilityIdentifier(style.planTextIdentifier(color: color, context: context)).planContentBounds()
         } else {
             font(style.font).accessibilityIdentifier(style.planTextIdentifier(color: .foreground, context: context))
+                .planContentBounds()
         }
     }
 }
