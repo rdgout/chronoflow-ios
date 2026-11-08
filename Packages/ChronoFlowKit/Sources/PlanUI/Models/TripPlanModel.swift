@@ -12,13 +12,14 @@ import PlanCore
     public private(set) var prepared: PreparedPlan?
     public var language: Language = .en { didSet { if language != oldValue { rebuildLayouts() } } }
     public var timeFormat: TimeFormat = .value24 { didSet { if timeFormat != oldValue { rebuildLayouts() } } }
+    @ObservationIgnored var onTripAvailable: (() -> Void)?
     @ObservationIgnored private var marks: [CheckMark] = []
     @ObservationIgnored private var pendingChecks: [CheckOffChange] = []
     public private(set) var detail: TripDetail?
     public private(set) var layouts: [String: DayLayout] = [:]
     public private(set) var now: Date
     public private(set) var error: (any Error)?
-    public var hiddenCategories: [BlockType] = [] { didSet { rebuildLayouts() } }
+    public var hiddenCategories: [BlockType] = [] { didSet { if hiddenCategories != oldValue { rebuildLayouts() } } }
     public var nowOffsets: [String: Double] {
         layouts.compactMapValues { nowLineOffset($0.day, now: now) }
     }
@@ -57,6 +58,7 @@ import PlanCore
                         self?.tripRecord = snapshot.trip
                         self?.hasLoaded = true
                         if let trip = snapshot.trip {
+                            self?.onTripAvailable?()
                             self?.card = try? await decoder.card(trip)
                             self?.adaptation = try? await decoder.adaptation(trip)
                         }

@@ -11,14 +11,14 @@ struct TripPageTests {
             for stored in [false, true] {
                 for online in [false, true] {
                     for awaiting in [false, true] {
-                        for fetch in [TripPageFetch.idle, .loading, .loaded, .failed, .notFound] {
+                        for fetch in [TripPageFetch.idle, .loading, .loaded, .offline, .failed, .notFound] {
                             let result = TripPageState.resolve(
                                 keepOffline: keep, stored: stored, online: online, fetch: fetch, awaitingSync: awaiting)
                             if stored {
                                 #expect(result == .ready)
-                            } else if awaiting || keep {
+                            } else if keep {
                                 #expect(result == .loading)
-                            } else if !online {
+                            } else if !online || fetch == .offline {
                                 #expect(result == .remoteOffline)
                             } else if case .failed = fetch {
                                 #expect(result == .server)
@@ -44,7 +44,7 @@ struct TripPageTests {
         #expect(
             TripPageState.resolve(
                 keepOffline: false, stored: false, online: true, fetch: .idle, missingAfterSync: true,
-                awaitingSync: true) == .loading)
+                awaitingSync: true) == .remoteLoading)
     }
 
     @Test func openingOrderAndReplacement() throws {

@@ -1706,6 +1706,12 @@ Performance decisions (2026-11-08): the synthetic fixtures are structural worklo
 
 Host verification (2026-11-08): `make quick` passes strict lint and package suites except the known `APICookieTests.realRedirectCookieHandlingIsDisabled` sandbox EPERM. The remaining token/asset/runner/resource checks run separately because that expected package failure short-circuits make. Host benchmark means: S3 14 ms, 30 days 41 ms, 60 days 83 ms (Debug process; not device claims). The live read gate, runtime/snapshot review and optimized simulator measurements are left to the user, as requested. Git index writes were denied during the final perf commit; ordered `build/commits/1.patch`–`3.patch` plus `messages.txt` reproduce this work on `5def5a1`.
 
+**15 fix round 1 (worktree B, 2026-11-08)**
+- [x] Keep offline fetch failures distinct, refetch on reconnect, scope awaitingSync to missing, and observe account time-format/hidden-category preferences.
+- [ ] Isolate scroll geometry from observable rendering, cache minute text and stable day inputs, and replace full-day rasters within the traversal memory budget.
+- [ ] Match tile alpha, borders, patterns, content, gutter/grid and zone-divider styling to the boards/RN; position VoiceOver children at their drawn blocks.
+- [ ] Restore header/menu/remote/list/notice board behavior and en/nl plural counts; preserve host and Release performance coverage. No snapshot recording.
+
 **15e: Wide trip page** (blocked on OQ 35: PlanWide, PlanWideScrolled and PlanWideDayMenu HTML)
 - [ ] From a 600 pt window width, portrait only: timeline and list side by side, a 280 pt list column growing to 320 pt from 900 pt, no view button (`reqWideTrip`). Duo folded and every iPhone keep the phone layout. Until the user re-exports the wide boards and this lands, Duo unfolded uses the phone layout at full width (settled OQ 35).
   - Tests: wide snapshots at 669 pt; a size-change test (phone → 669 pt → phone) that keeps the day, scroll position and open sheet; `make duo`.

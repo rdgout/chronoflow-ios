@@ -12,10 +12,9 @@ nonisolated public enum TripPageState: String, CaseIterable, Sendable {
     ) -> Self {
         if tombstoned { return .notFound }
         if stored { return noPlan ? .noPlan : .ready }
-        if awaitingSync { return .loading }
-        if missingAfterSync { return .notFound }
+        if missingAfterSync && !awaitingSync { return .notFound }
         if keepOffline { return .loading }
-        if !online { return .remoteOffline }
+        if !online || fetch == .offline { return .remoteOffline }
         switch fetch {
         case .notFound: return .notFound
         case .failed: return .server
@@ -24,7 +23,7 @@ nonisolated public enum TripPageState: String, CaseIterable, Sendable {
     }
 }
 
-nonisolated public enum TripPageFetch: Sendable { case idle, loading, loaded, notFound, failed }
+nonisolated public enum TripPageFetch: Sendable { case idle, loading, loaded, offline, notFound, failed }
 
 nonisolated public struct TripPageAnchor: Sendable, Equatable {
     public var dayID: String?
