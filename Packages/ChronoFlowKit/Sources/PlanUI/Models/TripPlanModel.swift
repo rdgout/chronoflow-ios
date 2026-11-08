@@ -5,6 +5,13 @@ import Observation
 import PlanCore
 
 @Observable public final class TripPlanModel {
+    public private(set) var tripRecord: TripRecord?
+    public private(set) var card: TripCardView?
+    public private(set) var hasLoaded = false
+    public private(set) var prepared: PreparedPlan?
+    public var language: Language = .en { didSet { if language != oldValue { rebuildLayouts() } } }
+    public var timeFormat: TimeFormat = .value24 { didSet { if timeFormat != oldValue { rebuildLayouts() } } }
+    @ObservationIgnored private var marks: [CheckMark] = []
     public private(set) var detail: TripDetail?
     public private(set) var layouts: [String: DayLayout] = [:]
     public private(set) var now: Date
@@ -45,6 +52,15 @@ import PlanCore
                 do {
                     for try await snapshot in try await repository.detailValues(tripID: tripID) {
                         guard !Task.isCancelled else { break }
+                        self?.tripRecord = snapshot.trip
+                        self?.hasLoaded = true
+                        if let trip = snapshot.trip { self?.card = try? await decoder.card(trip) }
+                        self?.marks = snapshot.checks.map {
+                            CheckMark(
+                                key: CheckKeyView(
+                                    type: BlockType(rawValue: $0.type), localDate: $0.localDate, ordinal: $0.ordinal),
+                                status: CheckStatus(rawValue: $0.status), markedAt: $0.markedAt)
+                        }
                         guard let trip = snapshot.trip, trip.deletedAt == nil, !trip.deletedLocally,
                             snapshot.plan != nil
                         else {
@@ -55,6 +71,7 @@ import PlanCore
                             self?.detail = nil
                             self?.error = nil
                             self?.layouts = [:]
+                            self?.prepared = nil
                             continue
                         }
                         do {
@@ -104,10 +121,19 @@ import PlanCore
         }
         let decoder = decoder
         let hidden = hiddenCategories
+        let language = language
+        let timeFormat = timeFormat
+        let marks = marks
         layoutTask = Task { [weak self] in
             let layouts = await decoder.layouts(detail, hidden: hidden)
             guard !Task.isCancelled, self?.layoutRevision == revision else { return }
-            self?.layouts = layouts
+            do {
+                let prepared = try await decoder.prepare(
+                    detail, hidden: hidden, language: language, timeFormat: timeFormat, marks: marks)
+                guard !Task.isCancelled, self?.layoutRevision == revision else { return }
+                self?.layouts = layouts
+                self?.prepared = prepared
+            } catch { if !Task.isCancelled { self?.error = error } }
         }
     }
 

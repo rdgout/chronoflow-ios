@@ -32,6 +32,11 @@ public actor PlanDecoder {
         var inputHash: String
         var version: String?
     }
+    private var layoutCache: [String: (PlanView, TimelinePresentationView, [BlockType], [String: DayLayout])] = [:]
+    private var preparedCache: [String: (TripDetail, Language, TimeFormat, [CheckMark], [BlockType], PreparedPlan)] =
+        [:]
+    private var formatter: CopyLineFormatter?
+    public private(set) var layoutCount = 0
     private var cache: [Key: (Data, TripDetail)] = [:]
     public private(set) var decodeCount = 0
     public private(set) var decodedOnMainThread = false
@@ -90,10 +95,39 @@ public actor PlanDecoder {
     }
 
     public func layouts(_ detail: TripDetail, hidden: [BlockType]) -> [String: DayLayout] {
-        layoutPlan(withoutOptionalSteps(detail.plan), timeline: detail.timeline, hidden: hidden)
+        assertWorker()
+        let id = detail.trip.id
+        if let cached = layoutCache[id], cached.0 == detail.plan, cached.1 == detail.timeline, cached.2 == hidden {
+            return cached.3
+        }
+        let result = layoutPlan(withoutOptionalSteps(detail.plan), timeline: detail.timeline, hidden: hidden)
+        layoutCache[id] = (detail.plan, detail.timeline, hidden, result)
+        layoutCount += 1
+        return result
     }
 
-    public func evict(tripID: String) { cache = cache.filter { $0.key.trip != tripID } }
+    public func evict(tripID: String) {
+        cache = cache.filter { $0.key.trip != tripID }
+        layoutCache[tripID] = nil
+        preparedCache[tripID] = nil
+    }
+
+    public func card(_ record: TripRecord) throws -> TripCardView { try record.card.decode(TripCardView.self) }
+
+    public func prepare(
+        _ detail: TripDetail, hidden: [BlockType], language: Language, timeFormat: TimeFormat, marks: [CheckMark]
+    ) async throws -> PreparedPlan {
+        let id = detail.trip.id
+        if let c = preparedCache[id], c.0 == detail, c.1 == language, c.2 == timeFormat, c.3 == marks, c.4 == hidden {
+            return c.5
+        }
+        if formatter == nil { formatter = CopyLineFormatter(catalog: try await CopyCatalog.load()) }
+        let result = preparePlan(
+            detail, layouts: layouts(detail, hidden: hidden), formatter: formatter!, language: language,
+            timeFormat: timeFormat, marks: marks)
+        preparedCache[id] = (detail, language, timeFormat, marks, hidden, result)
+        return result
+    }
 
     private func assertWorker() {
         decodedOnMainThread = decodedOnMainThread || Thread.isMainThread

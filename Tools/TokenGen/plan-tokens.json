@@ -1,11 +1,31 @@
 {
   "source": "plan.md Phase 14b, canvas.json planCompactNote; RN timeline.ts spacing references",
   "type": {
-    "planTitle": {"size": 17, "lineHeight": 22, "weight": 600},
-    "planSubtitle": {"size": 12, "lineHeight": 15, "weight": 400},
-    "planLane": {"size": 11, "lineHeight": 14, "weight": 500},
-    "planCompactDate": {"size": 10, "lineHeight": 12, "weight": 400},
-    "planListLine": {"size": 13, "lineHeight": 18, "weight": 400}
+    "planTitle": {
+      "size": 17,
+      "lineHeight": 22,
+      "weight": 600
+    },
+    "planSubtitle": {
+      "size": 12,
+      "lineHeight": 15,
+      "weight": 400
+    },
+    "planLane": {
+      "size": 11,
+      "lineHeight": 14,
+      "weight": 500
+    },
+    "planCompactDate": {
+      "size": 10,
+      "lineHeight": 12,
+      "weight": 400
+    },
+    "planListLine": {
+      "size": 13,
+      "lineHeight": 18,
+      "weight": 400
+    }
   },
   "spacingMultipliers": {
     "pointsPerHour": 10,
@@ -13,7 +33,33 @@
     "tileInset": 0.5,
     "minLaneWidth": 11,
     "minColumnWidth": 7.5,
-    "minTickSpacing": 7.5
+    "minTickSpacing": 7.5,
+    "border": 0.25,
+    "emphasisBorder": 0.5,
+    "coreBorder": 0.75,
+    "gutter": 4,
+    "cardPadding": 4,
+    "sectionGap": 3,
+    "rowGap": 2,
+    "smallGap": 1,
+    "icon": 4,
+    "touch": 11,
+    "cardRadius": 6.5,
+    "rowRadius": 5.5,
+    "tileRadius": 3.5,
+    "tilePadding": 1.5,
+    "patternStep": 2,
+    "patternLine": 0.5,
+    "dotStep": 1.75,
+    "dotRadius": 0.25,
+    "compactFadeDistance": 6,
+    "line": 0.25,
+    "dot": 1.5,
+    "compactHeaderHeight": 8,
+    "skeletonSummary": 30,
+    "skeletonTimeline": 95,
+    "prioritySampleWidth": 10,
+    "prioritySampleHeight": 7
   },
   "spacingTokens": {
     "minTileHeight": "space-6",

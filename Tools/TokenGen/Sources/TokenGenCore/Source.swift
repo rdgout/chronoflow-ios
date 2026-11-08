@@ -4,10 +4,10 @@ public struct DesignSource {
     public static let names = [
         "sky-top", "sky-mid", "sky-horizon", "sky-title", "sky-copy", "sky-copy-background", "dawn", "dawn-foreground",
         "background", "foreground", "card", "card-foreground", "input", "border", "ring",
-        "surface-2", "secondary", "secondary-foreground", "muted", "cat-sleep", "cat-sleep-fg", "cat-light",
-        "cat-light-fg", "cat-moderate", "cat-moderate-fg", "cat-dark", "cat-dark-fg", "cat-caffeine", "cat-caffeine-fg",
-        "cat-travel", "cat-travel-fg", "muted-foreground", "primary", "primary-foreground", "accent",
-        "accent-foreground", "destructive", "dawn-text",
+        "surface-2", "muted", "secondary", "secondary-foreground", "now",
+        "cat-sleep", "cat-sleep-fg", "cat-light", "cat-light-fg", "cat-moderate", "cat-moderate-fg",
+        "cat-dark", "cat-dark-fg", "cat-caffeine", "cat-caffeine-fg", "cat-travel", "cat-travel-fg",
+        "muted-foreground", "primary", "primary-foreground", "accent", "accent-foreground", "destructive", "dawn-text",
     ]
     public let root: URL
     public let tokens: [String: Any]

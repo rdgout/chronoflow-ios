@@ -1,0 +1,19 @@
+import AppCore
+import Foundation
+
+nonisolated public struct PageCopy: Sendable {
+    public let language: Language
+    private let bundle: Bundle
+
+    public init(language: Language) {
+        self.language = language
+        bundle =
+            Bundle.module.url(forResource: language.rawValue, withExtension: "lproj")
+            .flatMap(Bundle.init(url:)) ?? .module
+    }
+
+    public func callAsFunction(_ key: String, _ arguments: String...) -> String {
+        let value = bundle.localizedString(forKey: key, value: nil, table: "Localizable")
+        return arguments.isEmpty ? value : String(format: value, arguments: arguments)
+    }
+}
