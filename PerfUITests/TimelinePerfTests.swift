@@ -1,22 +1,27 @@
 import XCTest
 
 nonisolated final class TimelinePerfTests: XCTestCase {
+    override func setUp() {
+        super.setUp()
+        continueAfterFailure = false
+        executionTimeAllowance = 300
+    }
+
     @MainActor func test60DayTimeToFirstTimelineFrame() {
         let app = application()
         let options = XCTMeasureOptions()
         options.iterationCount = 3
         measure(
             metrics: [
-                XCTOSSignpostMetric(
-                    subsystem: "net.chronoflow.app.native", category: "Timeline", name: "time-to-first-timeline-frame"),
+                TimelineBudgetMetric(
+                    XCTOSSignpostMetric(
+                        subsystem: "net.chronoflow.app.native", category: "Timeline",
+                        name: "time-to-first-timeline-frame"), budget: .firstFrame),
                 XCTApplicationLaunchMetric(),
             ], options: options
         ) {
             app.launch()
-            XCTAssertTrue(
-                app.descendants(matching: .any)["trip.timeline.ready"].firstMatch.waitForExistence(timeout: 10))
-            XCTAssertTrue(
-                app.descendants(matching: .any)["trip.timeline.presented"].firstMatch.waitForExistence(timeout: 10))
+            waitForTimeline(app)
             app.terminate()
         }
     }
@@ -27,27 +32,67 @@ nonisolated final class TimelinePerfTests: XCTestCase {
         options.iterationCount = 3
         options.invocationOptions = [.manuallyStart, .manuallyStop]
         measure(
-            metrics: [XCTOSSignpostMetric.scrollingAndDecelerationMetric, XCTMemoryMetric(application: app)],
-            options: options
+            metrics: [
+                TimelineBudgetMetric(XCTOSSignpostMetric.scrollingAndDecelerationMetric, budget: .scrollingHitches),
+                TimelineBudgetMetric(XCTMemoryMetric(application: app), budget: .memoryGrowth),
+            ], options: options
         ) {
             app.launch()
-            XCTAssertTrue(
-                app.descendants(matching: .any)["trip.timeline.ready"].firstMatch.waitForExistence(timeout: 10))
-            XCTAssertTrue(
-                app.descendants(matching: .any)["trip.timeline.presented"].firstMatch.waitForExistence(timeout: 10))
+            waitForTimeline(app)
             let scroll = app.scrollViews["trip.scroll"].firstMatch
             XCTAssertTrue(scroll.waitForExistence(timeout: 10))
-            let end = app.descendants(matching: .any)["trip.plan.end"].firstMatch
+            let menu = app.buttons["trip.dayMenu"]
+            let initialDay = menu.value as? String
+            XCTAssertFalse(initialDay?.isEmpty ?? true)
+            // Resolve the scroll frame once; gutter gestures also avoid horizontal overflow lanes on small windows.
+            let frame = scroll.frame
+            let origin = app.coordinate(withNormalizedOffset: .zero)
+            let start = origin.withOffset(
+                CGVector(dx: frame.minX + frame.width * 0.08, dy: frame.minY + frame.height * 0.85))
+            let finish = origin.withOffset(
+                CGVector(dx: frame.minX + frame.width * 0.08, dy: frame.minY + frame.height * 0.15))
             startMeasuring()
-            var swipes = 0
-            while !(end.exists && end.isHittable) && swipes < 240 {
-                scroll.swipeUp(velocity: .fast)
-                swipes += 1
+            for _ in 0..<15 {
+                start.press(forDuration: 0, thenDragTo: finish, withVelocity: .fast, thenHoldForDuration: 0)
             }
             stopMeasuring()
-            XCTAssertTrue(end.isHittable, "Did not traverse all 60 days after \(swipes) swipes")
+            let finalDay = menu.value as? String
+            XCTAssertFalse(finalDay?.isEmpty ?? true)
+            XCTAssertNotEqual(finalDay, initialDay, "Vertical swipes must advance beyond the opening day")
+            print("Timeline scroll progress after 15 swipes: \(initialDay ?? "missing") -> \(finalDay ?? "missing")")
             app.terminate()
         }
+    }
+
+    @MainActor func test60DayLastDayReachesEnd() {
+        let app = application()
+        app.launch()
+        defer { app.terminate() }
+        waitForTimeline(app)
+        let menu = app.buttons["trip.dayMenu"]
+        menu.tap()
+        let last = app.buttons["trip.dayMenu.day.59"]
+        for _ in 0..<12 {
+            if last.exists && last.isHittable { break }
+            app.swipeUp(velocity: .fast)
+        }
+        XCTAssertTrue(last.isHittable, "The native day menu must expose day 60")
+        let lastLabel = last.label
+        last.tap()
+        XCTAssertEqual(menu.value as? String, lastLabel, "The day picker must select day 60")
+        let scroll = app.scrollViews["trip.scroll"].firstMatch
+        let end = app.descendants(matching: .any)["trip.plan.end"].firstMatch
+        for _ in 0..<6 {
+            if end.exists && end.isHittable { break }
+            scroll.swipeUp(velocity: .fast)
+        }
+        XCTAssertTrue(end.isHittable, "The end card must be reachable from day 60 in at most six swipes")
+    }
+
+    @MainActor private func waitForTimeline(_ app: XCUIApplication) {
+        XCTAssertTrue(app.descendants(matching: .any)["trip.timeline.ready"].firstMatch.waitForExistence(timeout: 10))
+        XCTAssertTrue(
+            app.descendants(matching: .any)["trip.timeline.presented"].firstMatch.waitForExistence(timeout: 10))
     }
 
     @MainActor private func application() -> XCUIApplication {

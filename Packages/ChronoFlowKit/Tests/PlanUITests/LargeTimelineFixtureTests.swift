@@ -42,6 +42,21 @@ struct LargeTimelineFixtureTests {
         }
     }
 
+    @Test func sixtyDayGridHeightMatchesTheRepeatedUTCSpans() async throws {
+        let fixture = try MockTimelineFixtures.fixture(named: "large60")
+        let layouts = layoutPlan(fixture.detail.plan, timeline: fixture.detail.timeline)
+        let cycleHours: [Double] = [24, 24, 13.5, 25.5, 24, 24]
+        let heights = fixture.detail.plan.days.map { layouts[$0.id]!.height }
+        #expect(heights == (0..<10).flatMap { _ in cycleHours.map { $0 * PlanMetrics.pointsPerHour } })
+        #expect(heights.reduce(0, +) == 54_000)
+        let prepared = preparePlan(
+            fixture.detail, layouts: layouts, formatter: CopyLineFormatter(catalog: try await CopyCatalog.load()),
+            language: .en)
+        print(
+            "60-day layout: grids=\(heights.reduce(0, +))pt; gaps=\(Double(62) * PlanMetrics.sectionGap)pt; warning headers=\(prepared.days.filter { $0.warningCount > 0 }.count); list rows=\(prepared.days.reduce(0) { $0 + $1.blocks.count }); zone rows=\(prepared.days.flatMap(\.blocks).filter { $0.block.type == .zoneChange }.count); widths=\(Set(layouts.values.map(\.minWidth)).sorted())"
+        )
+    }
+
     @Test func defaultMockHasNoPerformanceTrips() throws {
         #if DEBUG
             let original = try MockAppSeed.make(now: Date())

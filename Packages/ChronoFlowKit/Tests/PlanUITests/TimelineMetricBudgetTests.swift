@@ -1,0 +1,91 @@
+import Testing
+import XCTest
+
+nonisolated struct TimelineMetricBudgetTests {
+    private func sample(_ id: String, _ value: Double, _ unit: String, name: String = "") -> XCTPerformanceMeasurement {
+        XCTPerformanceMeasurement(identifier: id, displayName: name, doubleValue: value, unitSymbol: unit)
+    }
+
+    @Test func budgetsRejectRegressionsMissingMetricsAndUnknownUnits() throws {
+        let frame = "com.apple.dt.XCTMetric_OSSignpost-time-to-first-timeline-frame.duration"
+        let hitch = "com.apple.dt.XCTMetric_OSSignpost-Scrolling.animation.hitch.time.ratio"
+        try TimelineBudgetMetric.Budget.firstFrame.validate([sample(frame, 0.8, "s")])
+        try TimelineBudgetMetric.Budget.scrollingHitches.validate([sample(hitch, 5, "ms/s")])
+        try TimelineBudgetMetric.Budget.scrollingHitches.validate([sample(hitch, 0.5, "%")])
+        try TimelineBudgetMetric.Budget.scrollingHitches.validate([sample(hitch, 0.005, "s/s")])
+        #expect(throws: (any Error).self) {
+            try TimelineBudgetMetric.Budget.firstFrame.validate([sample(frame, 0.801, "s")])
+        }
+        for value in [5.01, .infinity, .nan, -1] {
+            #expect(throws: (any Error).self) {
+                try TimelineBudgetMetric.Budget.scrollingHitches.validate([sample(hitch, value, "ms/s")])
+            }
+        }
+        #expect(throws: (any Error).self) { try TimelineBudgetMetric.Budget.scrollingHitches.validate([]) }
+        #expect(throws: (any Error).self) {
+            try TimelineBudgetMetric.Budget.scrollingHitches.validate([sample(hitch, 0, "unknown")])
+        }
+        #expect(throws: (any Error).self) {
+            try TimelineBudgetMetric.Budget.scrollingHitches.validate([sample(hitch + ".adjusted", 0, "ms/s")])
+        }
+        let memory = sample("memory", 40 * 1_024, "KiB", name: "Memory Physical (app)")
+        try TimelineBudgetMetric.Budget.memoryGrowth.validate([memory])
+        #expect(throws: (any Error).self) {
+            try TimelineBudgetMetric.Budget.memoryGrowth.validate([
+                sample("memory", 41, "MiB", name: "Memory Physical (app)")
+            ])
+        }
+    }
+
+    @Test func copiedMetricForwardsLifecycleAndReturnsMeasurements() throws {
+        let fake = FixtureMetric()
+        let metric = TimelineBudgetMetric(fake, budget: .firstFrame)
+        let copy = try #require(metric.copy() as? TimelineBudgetMetric)
+        #expect(copy !== metric)
+        #expect(fake.copies.count == 1)
+        let delegate = fake.copies[0]
+        copy.willBeginMeasuring()
+        copy.didStopMeasuring()
+        #expect(delegate.started && delegate.stopped)
+        let timestamp = XCTPerformanceMeasurementTimestamp()
+        delegate.samples = [sample("time-to-first-timeline-frame.duration", 0.53, "s")]
+        #expect(try copy.reportMeasurements(from: timestamp, to: timestamp).count == 1)
+        delegate.samples.append(sample("time-to-first-timeline-frame.duration", 0.81, "s"))
+        #expect(throws: (any Error).self) { try TimelineBudgetMetric.Budget.firstFrame.validate(delegate.samples) }
+    }
+}
+
+nonisolated private final class FixtureMetric: NSObject, XCTMetric {
+    var copies: [FixtureMetric] = []
+    var started = false
+    var stopped = false
+    var samples: [XCTPerformanceMeasurement] = []
+    func copy(with zone: NSZone? = nil) -> Any {
+        let copy = FixtureMetric()
+        copy.samples = samples
+        copies.append(copy)
+        return copy
+    }
+    func willBeginMeasuring() { started = true }
+    func didStopMeasuring() { stopped = true }
+    func reportMeasurements(
+        from startTime: XCTPerformanceMeasurementTimestamp, to endTime: XCTPerformanceMeasurementTimestamp
+    ) throws -> [XCTPerformanceMeasurement] { samples }
+}
+
+nonisolated final class TimelineMetricReportingTests: XCTestCase {
+    func testOverBudgetReportFailsTheXCTestMeasurement() {
+        let options = XCTExpectedFailure.Options()
+        options.issueMatcher = { $0.compactDescription.contains("Timeline budget exceeded") }
+        XCTExpectFailure("An over-budget metric must fail the performance test", options: options)
+        let metric = FixtureMetric()
+        metric.samples = [
+            XCTPerformanceMeasurement(
+                identifier: "time-to-first-timeline-frame.duration", displayName: "First frame",
+                doubleValue: 0.81, unitSymbol: "s")
+        ]
+        let measureOptions = XCTMeasureOptions()
+        measureOptions.iterationCount = 1
+        measure(metrics: [TimelineBudgetMetric(metric, budget: .firstFrame)], options: measureOptions) {}
+    }
+}

@@ -86,7 +86,8 @@ public struct TripPageView: View {
                             }
                             ForEach(prepared.days) { day in
                                 TripDayRow(
-                                    day: day, layout: model.plan.layouts[day.id], model: model.plan,
+                                    day: day, layout: model.plan.layouts[day.id],
+                                    clock: model.plan.dayClock(for: day.id),
                                     timeline: model.timeline, copy: copy, renderer: renderer, symbols: timelineSymbols,
                                     viewportHeight: geometry.size.height, onBlock: onBlock,
                                     onFrame: onFirstTimelineFrame
@@ -147,7 +148,7 @@ public struct TripPageView: View {
                     if model.state == .ready, let prepared = model.plan.prepared {
                         Menu {
                             Section(copy("Go to a day")) {
-                                ForEach(prepared.days) { day in
+                                ForEach(Array(prepared.days.enumerated()), id: \.element.id) { index, day in
                                     Button {
                                         jump(day.id, proxy: proxy)
                                     } label: {
@@ -157,6 +158,7 @@ public struct TripPageView: View {
                                             Text(verbatim: day.title + " · " + day.date)
                                         }
                                     }
+                                    .accessibilityIdentifier("trip.dayMenu.day.\(index)")
                                 }
                             }
                         } label: {
@@ -167,7 +169,12 @@ public struct TripPageView: View {
                                     Image(systemName: "chevron.down")
                                 }.font(Typography.planSubtitle.font).foregroundStyle(ColorToken.mutedForeground.color)
                             }
-                        }.accessibilityLabel(dayMenuLabel).accessibilityIdentifier("trip.dayMenu")
+                        }.accessibilityLabel(dayMenuLabel).accessibilityValue(
+                            Text(
+                                verbatim: model.plan.prepared?.days.first { $0.id == model.anchor.dayID }.map {
+                                    $0.title + " · " + $0.date
+                                } ?? "")
+                        ).accessibilityIdentifier("trip.dayMenu")
                     } else {
                         Text(verbatim: model.plan.prepared?.title ?? cardTitle).font(Typography.planTitle.font)
                             .lineLimit(1)
