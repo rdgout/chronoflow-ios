@@ -33,7 +33,9 @@ nonisolated final class SettingsPagesTests: XCTestCase {
         XCTAssertTrue(chronotype.waitForExistence(timeout: 8))
         chronotype.tap()
         app.buttons["Night owl"].tap()
-        XCTAssertTrue(app.staticTexts["settings.bodyClock.saved"].waitForExistence(timeout: 8))
+        let saved = app.descendants(matching: .any)["settings.bodyClock.saved.about"]
+        XCTAssertTrue(saved.waitForExistence(timeout: 8))
+        XCTAssertTrue(saved.isHittable)
         XCTAssertTrue(chronotype.label.contains("Night owl"))
         app.navigationBars.buttons.element(boundBy: 0).tap()
         open("settings.bodyClock", app: app)

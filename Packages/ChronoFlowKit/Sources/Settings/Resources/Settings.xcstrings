@@ -222,6 +222,23 @@
         }
       }
     },
+    "Saved": {
+      "comment": "RN exact English key: Saved",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opgeslagen"
+          }
+        }
+      }
+    },
     "Saved on this phone · syncs when you're online": {
       "comment": "RN exact English key: Saved on this phone · syncs when you're online",
       "localizations": {

@@ -8,6 +8,27 @@ import Testing
 @testable import DataAccess
 
 @Suite @MainActor struct SettingsBodyClockTests {
+    @Test func chronotypeSelectionIsSavedLocallyAndQueuedBeforeShowingSaved() async throws {
+        let f = try await SettingsPageFixture.make()
+        let model = SettingsBodyClockModel(answers: JSONObject(["ageBand": .string("18_64")])) { patch in
+            try await f.model().enqueue(.settings(section: .bodyClock, patch: patch))
+        }
+        await model.change(.about, ["chronotype": .string("late")])
+        #expect(model.saved == [.about] && !model.failure && model.errors.isEmpty)
+        try await f.database.close()
+        try await f.database.open(accountID: f.id)
+        let rows = try await SettingsRepository(database: f.database).settings()
+        let body = try #require(try rows.first { $0.section == "bodyClock" }?.value.decode(JSONObject.self))
+        #expect(body["chronotype"] == .string("late"))
+        #expect(body["ageBand"] == .string("18_64"))
+        let pending = try await OutboxRepository(database: f.database).pending()
+        #expect(pending.count == 1 && pending.first?.kind == "settings")
+        let payload = try #require(try pending.first?.payload.decode(JSONObject.self))
+        #expect(payload["section"] == .string("bodyClock"))
+        #expect(payload["patch"]?.object?["chronotype"] == .string("late"))
+        try await f.close()
+    }
+
     @Test func invalidSleepStaysInDraftAndDoesNotReachOutboxUntilBothTimesAreValid() async {
         var writes: [JSONObject] = []
         let stored = JSONObject([

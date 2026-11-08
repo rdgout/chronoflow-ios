@@ -57,10 +57,6 @@
                         Text(t("We couldn't save your change. Please try again.")).foregroundStyle(
                             ColorToken.destructive.color)
                     }
-                    if !model.saved.isEmpty {
-                        Text(t("Saved on this phone · syncs when you're online")).accessibilityIdentifier(
-                            "settings.bodyClock.saved")
-                    }
                 }
             }.onChange(of: answers) { _, value in model.receive(value) }
                 .sheet(item: $selectedTime) { selection in
@@ -70,7 +66,7 @@
                 }
         }
         private var about: some View {
-            Section(t("About you")) {
+            Section {
                 choice(
                     .about, "chronotype", "When do you naturally feel most awake?",
                     [
@@ -80,10 +76,12 @@
                 choice(
                     .about, "ageBand", "Your age",
                     [("under_18", "Under 18"), ("18_64", "18–64"), ("65_plus", "65 or older")])
+            } header: {
+                groupHeader(.about)
             }
         }
         private var sleep: some View {
-            Section(t("Sleep schedule")) {
+            Section {
                 Text(t("On a normal work or school day.")).foregroundStyle(ColorToken.mutedForeground.color)
                 time("habitualBed", "Usual bedtime")
                 time("habitualWake", "Usual wake time")
@@ -94,10 +92,12 @@
                     time("freeDayBed", "Free-day bedtime")
                     time("freeDayWake", "Free-day wake time")
                 }
+            } header: {
+                groupHeader(.sleep)
             }
         }
         private var caffeine: some View {
-            Section(t("Caffeine")) {
+            Section {
                 choice(
                     .caffeine, "caffeineHabit", "Do you usually drink caffeine?",
                     [("cups", "Yes"), ("non_user", "No")])
@@ -124,10 +124,12 @@
                 yesNo(.caffeine, "caffeineSensitive", "Does caffeine affect you strongly?")
                 yesNo(.health, "caffeineRuledOut", "Have you been told to avoid caffeine?")
                 yesNo(.caffeine, "oralContraception", "Do you use oral contraception?")
+            } header: {
+                groupHeader(.caffeine)
             }
         }
         private var light: some View {
-            Section(t("Light equipment")) {
+            Section {
                 Text(t("Optional. If you have any of these, your plan can use them."))
                 choice(
                     .light, "lightDevice", "Do you have a light box, light visor or light glasses?",
@@ -146,10 +148,12 @@
                     ).keyboardType(.decimalPad).accessibilityIdentifier("settings.bodyClock.blueBlockerMdfd")
                     error("blueBlockerMdfd")
                 }
+            } header: {
+                groupHeader(.light)
             }
         }
         private var health: some View {
-            Section(t("Health checks")) {
+            Section {
                 Text(t("Your answers help tailor the timing advice. They are stored in your account."))
                 yesNo(.health, "pregnancy", "Are you pregnant or breastfeeding?")
                 yesNo(.health, "bipolar", "Do you have bipolar disorder?")
@@ -163,7 +167,24 @@
                     .health, "shiftWork",
                     "In the past 14 days, have you worked night or rotating shifts, or had a very irregular sleep schedule?"
                 )
+            } header: {
+                groupHeader(.health)
             }
+        }
+        private func groupHeader(_ group: BodyClockGroup) -> some View {
+            HStack {
+                Text(t(group.title))
+                Spacer()
+                if model.saved.contains(group) {
+                    Label {
+                        Text(t("Saved"))
+                    } icon: {
+                        Image(systemName: "checkmark").foregroundStyle(ColorToken.dawnText.color)
+                            .accessibilityHidden(true)
+                    }.accessibilityElement(children: .combine)
+                        .accessibilityIdentifier("settings.bodyClock.saved.\(group.rawValue)")
+                }
+            }.accessibilityElement(children: .contain)
         }
         private func count(_ key: String) -> Int {
             if case .number(let value) = model.answers[key] { NSDecimalNumber(decimal: value).intValue } else { 0 }
