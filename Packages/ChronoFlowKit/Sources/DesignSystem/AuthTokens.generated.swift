@@ -2,6 +2,8 @@
 import Foundation
 
 nonisolated public enum AuthTokens {
+    public static var headingBadge: CGFloat { 48 }
+    public static var headingGlyph: CGFloat { 24 }
     public static var gutter: CGFloat { 16 }
     public static var bottom: CGFloat { 24 }
     public static var touch: CGFloat { 44 }

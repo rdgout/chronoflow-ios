@@ -6,7 +6,7 @@
     public enum AuthElement: String, CaseIterable {
         case brand, heading, card, footer, email, password, submit, forgot, signup, forgotLabel, signupLabel
         case code, modeToggle, passkey, subtitle
-        case notice, openEmail, backToSignIn
+        case notice, openEmail, backToSignIn, confirmation
     }
 
     public struct AuthScreen<Card: View, Footer: View>: View {
@@ -14,18 +14,21 @@
         let scrollIdentifier: String
         let title: String
         let description: String
+        let headingGlyph: AuthGlyph?
         let back: () -> Void
         let card: Card
         let footer: Footer
         let measure: (AuthElement, CGRect) -> Void
         public init(
-            scrollIdentifier: String, title: String, description: String, back: @escaping () -> Void,
+            scrollIdentifier: String, title: String, description: String, headingGlyph: AuthGlyph? = nil,
+            back: @escaping () -> Void,
             measure: @escaping (AuthElement, CGRect) -> Void = { _, _ in },
             @ViewBuilder card: () -> Card, @ViewBuilder footer: () -> Footer
         ) {
             self.scrollIdentifier = scrollIdentifier
             self.title = title
             self.description = description
+            self.headingGlyph = headingGlyph
             self.back = back
             self.measure = measure
             self.card = card()
@@ -37,6 +40,17 @@
                     VStack(alignment: .leading, spacing: 0) {
                         AuthBrand(back: back).authMeasure(.brand, measure)
                         VStack(alignment: .leading, spacing: AuthTokens.fieldGap) {
+                            if let headingGlyph {
+                                headingGlyph.image.resizable().frame(
+                                    width: AuthTokens.headingGlyph, height: AuthTokens.headingGlyph
+                                )
+                                .foregroundStyle(
+                                    (headingGlyph == .check ? ColorToken.dawnForeground : .destructive).color
+                                )
+                                .frame(width: AuthTokens.headingBadge, height: AuthTokens.headingBadge)
+                                .background((headingGlyph == .check ? ColorToken.dawn : .card).color, in: Circle())
+                                .padding(.bottom, AuthTokens.fieldGap).accessibilityHidden(true)
+                            }
                             WelcomeText(title, style: Typography.authHeading, color: .skyTitle).accessibilityAddTraits(
                                 .isHeader
                             )

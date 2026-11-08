@@ -15,7 +15,7 @@ public func authGlyphOutputs(root: URL) throws -> [String: Data] {
     for (name, marker) in [
         ("AuthBack", "m15 18-6-6 6-6"), ("AuthEye", "M2.062"),
         ("AuthAlert", "<circle cx=\"12\" cy=\"12\" r=\"10\""),
-        ("AuthCheck", "M20 6 9 17l-5-5"), ("AuthKey", "M2.586 17.414"),
+        ("AuthProblem", "m21.73 18-8-14"), ("AuthCheck", "M20 6 9 17l-5-5"), ("AuthKey", "M2.586 17.414"),
     ] {
         guard let svg = svgs.first(where: { $0.contains(marker) }) else {
             throw GenerationError.invalid("Missing auth glyph: \(name)")

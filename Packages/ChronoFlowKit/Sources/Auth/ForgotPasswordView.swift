@@ -11,18 +11,28 @@
         @State private var request: Task<Void, Never>?
         @State private var frames: [AuthElement: CGRect] = [:]
         let measure: (AuthElement, CGRect) -> Void
+        let expired: Bool
 
-        public init(model: ForgotPasswordModel, measure: @escaping (AuthElement, CGRect) -> Void = { _, _ in }) {
+        public init(
+            model: ForgotPasswordModel, expired: Bool = false,
+            measure: @escaping (AuthElement, CGRect) -> Void = { _, _ in }
+        ) {
             _model = State(initialValue: model)
             self.measure = measure
+            self.expired = expired
         }
 
         private func copy(_ key: String) -> String { AuthCopy.string(key, locale: locale) }
 
         public var body: some View {
             AuthScreen(
-                scrollIdentifier: "forgot.scroll", title: copy("Reset your password"),
-                description: copy("Enter your email and we'll send you a link to choose a new one."),
+                scrollIdentifier: "forgot.scroll",
+                title: copy(expired && model.sentEmail == nil ? "This link has expired" : "Reset your password"),
+                description: copy(
+                    expired && model.sentEmail == nil
+                        ? "Reset links work once and expire after an hour. We can send you a new one."
+                        : "Enter your email and we'll send you a link to choose a new one."),
+                headingGlyph: expired && model.sentEmail == nil ? .problem : nil,
                 back: back, measure: report
             ) {
                 if let email = model.sentEmail {
@@ -55,8 +65,15 @@
                             AuthKeyboardReveal(
                                 field: focus == "forgot.email" ? frames[.email] : nil, submit: frames[.submit])
                         }
-                    AuthButton(copy("Send reset link"), busy: model.form.busy, action: submit)
-                        .accessibilityIdentifier("forgot.submit").authMeasure(.submit, report)
+                    AuthButton(
+                        copy(expired ? "Send a new link" : "Send reset link"), busy: model.form.busy,
+                        minimumHeight: expired ? AuthTokens.footerHeight : AuthTokens.touch, action: submit
+                    )
+                    .accessibilityIdentifier("forgot.submit").authMeasure(.submit, report)
+                    if expired {
+                        AuthButton(copy("Back to sign in"), kind: .ghost, action: back)
+                            .accessibilityIdentifier("forgot.back").authMeasure(.backToSignIn, report)
+                    }
                 }
             } footer: {
                 EmptyView()

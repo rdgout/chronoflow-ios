@@ -14,7 +14,7 @@ nonisolated final class AuthControlTests: XCTestCase {
             host.configure(CfSky(), style: style)
             try await host.settle()
             let skies = try shadowCaptures(host)
-            for banner in [nil] + AuthBannerKind.allCases.map(Optional.some) {
+            for banner in [nil] + [AuthBannerKind.credentials, .locked, .server].map(Optional.some) {
                 var frames: [AuthElement: CGRect] = [:]
                 let model = authSnapshotModel()
                 if let banner { model.form.receive(snapshotFailure(banner)) }

@@ -28,6 +28,9 @@ import XCTest
     }
 
     static func scroll(in app: XCUIApplication) -> XCUIElement {
+        for screen in ["reset.scroll"] {
+            if app.scrollViews[screen].exists { return app.scrollViews[screen] }
+        }
         let forgot = app.scrollViews["forgot.scroll"]
         if forgot.exists { return forgot }
         let twoFactor = app.scrollViews["two-factor.scroll"]

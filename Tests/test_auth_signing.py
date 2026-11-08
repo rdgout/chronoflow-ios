@@ -22,7 +22,7 @@ class AuthSigningTests(unittest.TestCase):
         self.assertIn('CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*] = Config/Device.entitlements', config)
         self.assertNotIn('CODE_SIGN_ENTITLEMENTS', (ROOT / 'Config/Base.xcconfig').read_text())
         data = plistlib.loads((ROOT / 'Config/Device.entitlements').read_bytes())
-        self.assertEqual(data, {'com.apple.developer.associated-domains': ['webcredentials:app.chronoflow.net']})
+        self.assertEqual(data, {'com.apple.developer.associated-domains': ['webcredentials:app.chronoflow.net', 'applinks:app.chronoflow.net']})
 
     def test_normal_simulator_and_adhoc_builds_have_no_entitlements(self):
         self.assertEqual(self.run_guard(PLATFORM_NAME='iphonesimulator', CODE_SIGN_IDENTITY='-'), 0)

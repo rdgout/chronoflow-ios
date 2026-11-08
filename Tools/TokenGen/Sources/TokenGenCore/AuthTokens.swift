@@ -103,6 +103,7 @@ func authTokens(root: URL, board: String, bundle: String, css: String, json: [St
     let border = try value(one(#"^([0-9.]+px) solid "#, banner["border"] ?? ""))
     let cssBorder = try value(one(#"\.border\{[^}]*border-width:([0-9.]+px)"#, css))
     let metrics: [(String, Double)] = try [
+        ("headingBadge", spacing * 12), ("headingGlyph", spacing * 6),
         ("gutter", same([shellPadding[0], shellPadding[1]], "shell gutters")), ("bottom", shellPadding[2]),
         (
             "touch",
