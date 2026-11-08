@@ -106,6 +106,7 @@ SUITES = {'AppTests': {'logic': ('AuthControlTests', 'AuthLayoutTests', 'AuthSna
                               'MockAccountTripsTests',
                               'MockPersistenceTests',
                               'DataSourceParityTests')},
+ 'TripWizardTests': {'host': ('TripGenerationTests',)},
  'SyncTests': {'host': ('LocalMutationsTests',
                         'OutboxFlusherTests',
                         'FullPullTests',

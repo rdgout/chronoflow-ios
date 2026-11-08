@@ -12,6 +12,7 @@ let package = Package(
         .library(name: "LocalStore", targets: ["LocalStore"]),
         .library(name: "DataAccess", targets: ["DataAccess"]),
         .library(name: "Sync", targets: ["Sync"]),
+        .library(name: "TripWizard", targets: ["TripWizard"]),
         .library(name: "Launch", targets: ["Launch"]),
         .library(name: "Welcome", targets: ["Welcome"]),
         .library(name: "Auth", targets: ["Auth"]),
@@ -43,7 +44,14 @@ let package = Package(
         .testTarget(
             name: "LocalStoreTests", dependencies: ["LocalStore"], resources: [.copy("Fixtures")],
             swiftSettings: [.defaultIsolation(nil)]),
-        .target(name: "Sync", dependencies: ["AppCore", "LocalStore"], swiftSettings: [.defaultIsolation(nil)]),
+        .target(name: "TripWizard", dependencies: ["AppCore", "DataAccess"], swiftSettings: [.defaultIsolation(nil)]),
+        .testTarget(
+            name: "TripWizardTests", dependencies: ["TripWizard", "Sync", "DataAccess", "LocalStore"],
+            resources: [.copy("Fixtures")],
+            swiftSettings: [.defaultIsolation(nil)]),
+        .target(
+            name: "Sync", dependencies: ["AppCore", "LocalStore", "TripWizard"], swiftSettings: [.defaultIsolation(nil)]
+        ),
         .testTarget(name: "SyncTests", dependencies: ["Sync", "DataAccess"], swiftSettings: [.defaultIsolation(nil)]),
         .target(
             name: "Launch",

@@ -46,6 +46,34 @@ DataAccess object files were checked for absent demo identities, recovery code, 
 and seed symbols. New Debug/Release hosted tests type-check for iOS 17 against the existing app
 modules; hosted execution remains open. No xcodebuild or simulator was run for this fix.
 
+## Member trip generation — Phase 13
+
+The `TripWizard` package product is nonisolated and depends only on AppCore and DataAccess.
+`TripGenerationService` accepts an injected data source and Sendable effects. The Sync target's
+`TripGenerationEffects.storing` adapter binds profile merges and trip pulls to an existing database/session
+epoch, preserving pending body-clock edits and raw detail bytes. It requests sync through the caller's
+existing trigger, without constructing another sync engine or adding wizard writes to the outbox.
+
+Review calls deduplicate by instance, sorted input/profile bytes, token and review revision (plus edit
+context), with a 30 s cancellable deadline over the API's 90 s write timeout. `answerPrompts` applies
+profile, leg, stay and top-level fields using the server's scope, then re-reviews. Save returns the
+updated caller-owned `TripGenerationState`; keep that state, including `savedTripId`, for retries.
+Expiry/credits clear its identity and return `reReviewNeeded`; other typed failures retain it. There
+is no automatic retry or connectivity refusal. A supplied saved ID skips POST, and a successful
+identity is also cached in the session-scoped actor. Successful saves pull list/detail best-effort
+and request sync. End the actor with `cancel()` at session teardown; recovery persistence is Phase 16a.
+
+The mock uses the shared seven RN templates, route selection and calendar/DST rebasing. It persists
+member drafts, receipts, paid directions and exact generated-trip input snapshots in optional fields
+so older mock-state files still restore. Seeded trips reconstruct input from flight blocks, using DTO
+defaults for wizard answers absent from the old seed; newly saved inputs round-trip exactly. Mock
+planning stays fixture-based. API wire fixtures and their exact pinned backend sources live in
+`Tests/DataAccessTests/Fixtures/wizard/SOURCE.md`. No backend runs or UI changes are needed.
+
+Verification is host-only: `make quick` and `make contracts-check`. The Phase 13 run passes all new
+suites and strict lint; only the known cookie-test loopback `EPERM` prevents a zero exit from quick.
+The remaining quick targets pass separately. See `build/phase13-{quick,host-tools,host-fixtures,contracts-check}.log`.
+
 ## Trip contracts — Phase 12
 
 `make contracts` regenerates committed `AppCore/Contracts/Generated/TripPlan.swift`.
