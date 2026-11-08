@@ -6,6 +6,8 @@
 
     struct RoutePlaceholder: View {
         let route: Route
+        var destination: String?
+        private var routeName: String { destination.map { "\(route.rawValue).\($0)" } ?? route.rawValue }
         @State private var cacheStatus = "pending"
         @State private var syncStatus = "pending"
         @State private var signingOut = false
@@ -15,8 +17,8 @@
         }
 
         var body: some View {
-            Text(String(format: String(localized: "Debug route: %@"), route.rawValue))
-                .accessibilityIdentifier("route.\(route.rawValue)")
+            Text(String(format: String(localized: "Debug route: %@"), routeName))
+                .accessibilityIdentifier("route.\(routeName)")
                 .accessibilityValue(authTestEnabled ? "\(cacheStatus):\(syncStatus)" : "")
                 .onTapGesture {
                     guard authTestEnabled, !signingOut,

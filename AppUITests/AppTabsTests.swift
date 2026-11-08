@@ -18,7 +18,7 @@ nonisolated final class AppTabsTests: XCTestCase {
         _ = try expandedTabs(in: app, selected: "My trips")
         capture(app, name: "trips-tabs")
         app.tabBars.buttons["Settings"].tap()
-        XCTAssertTrue(app.staticTexts["route.settings"].waitForExistence(timeout: 4))
+        XCTAssertTrue(app.descendants(matching: .any)["settings.screen"].firstMatch.waitForExistence(timeout: 4))
         _ = try expandedTabs(in: app, selected: "Settings")
         capture(app, name: "settings-tabs")
         app.tabBars.buttons["Today"].tap()

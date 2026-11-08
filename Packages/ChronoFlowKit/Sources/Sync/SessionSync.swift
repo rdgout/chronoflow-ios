@@ -9,6 +9,9 @@ public actor SessionSync {
     private let unauthorized: @Sendable (UInt64) async -> Void
     private let verification: @Sendable (UInt64) async -> Void
     private var lifecycle: SyncLifecycle?
+    private var eventTask: Task<Void, Never>?
+    private var observers: [UUID: AsyncStream<SyncEvent>.Continuation] = [:]
+    private var latestEvent: SyncEvent?
     private var enabled = true
     private var generation: UInt64 = 0
     private let scheduler: SyncScheduler
@@ -48,8 +51,13 @@ public actor SessionSync {
         }
         generation &+= 1
         let generation = generation
+        latestEvent = nil
         let old = lifecycle
         lifecycle = nil
+        let oldEvents = eventTask
+        eventTask = nil
+        oldEvents?.cancel()
+        await oldEvents?.value
         await old?.stop()
         guard self.generation == generation else { return }
         guard let database = await accounts.activeDatabase(), let id = try? AccountID(session.accountId) else { return }
@@ -63,6 +71,14 @@ public actor SessionSync {
         self.lifecycle = lifecycle
         attachedEpoch = epoch
         retryContext = nil
+        let events = await lifecycle.engine.events()
+        guard self.generation == generation else { return }
+        eventTask = Task { [weak self] in
+            for await event in events {
+                guard !Task.isCancelled else { return }
+                await self?.publish(event, generation: generation)
+            }
+        }
         do { try await lifecycle.start() } catch {
             await lifecycle.stop()
             if self.generation == generation { self.lifecycle = nil }
@@ -88,6 +104,22 @@ public actor SessionSync {
     public func refreshNow() async throws -> SyncResult? { try await lifecycle?.refreshNow() }
     public func stop() async { await detach(preservingRetry: false) }
 
+    public func events() -> AsyncStream<SyncEvent> {
+        let id = UUID()
+        let (stream, continuation) = AsyncStream<SyncEvent>.makeStream(bufferingPolicy: .bufferingNewest(1))
+        observers[id] = continuation
+        if let latestEvent { continuation.yield(latestEvent) }
+        continuation.onTermination = { [weak self] _ in Task { await self?.removeObserver(id) } }
+        return stream
+    }
+
+    private func removeObserver(_ id: UUID) { observers[id] = nil }
+    private func publish(_ event: SyncEvent, generation: UInt64) {
+        guard self.generation == generation else { return }
+        latestEvent = event
+        for observer in observers.values { observer.yield(event) }
+    }
+
     private func detach(preservingRetry: Bool) async {
         generation &+= 1
         let generation = generation
@@ -95,10 +127,19 @@ public actor SessionSync {
         attachedEpoch = nil
         let previous = lifecycle
         lifecycle = nil
+        latestEvent = nil
+        let previousEvents = eventTask
+        eventTask = nil
+        previousEvents?.cancel()
+        await previousEvents?.value
         if !preservingRetry { retryContext = nil }
         await previous?.stop()
         if preservingRetry, self.generation == generation, let epoch, let previous {
             retryContext = (epoch, await previous.retryState)
         }
+    }
+    deinit {
+        eventTask?.cancel()
+        for observer in observers.values { observer.finish() }
     }
 }

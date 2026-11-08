@@ -3,6 +3,7 @@ import DesignSystem
 import LocalStore
 import PlanCore
 import PlanUI
+import Settings
 import SwiftUI
 import UIKit
 
@@ -12,6 +13,7 @@ struct AppTabs: View {
     var native: NativeSessionController?
     @State private var selection: Tab = .today
     @State private var home: PlanHomeModel?
+    @State private var settingsHome = SettingsHomeModel()
     @State private var tripsPath: [TripPageRoute] = []
     @State private var path: [TripPageRoute] = []
     private struct StepSelection: Identifiable {
@@ -61,8 +63,17 @@ struct AppTabs: View {
                 trips.navigationDestination(for: TripPageRoute.self) { TripPageDestination(route: $0, native: native) }
             }
             .tabItem { Label(t("My trips"), systemImage: "airplane") }.tag(Tab.trips)
-            NavigationStack { seam(.settings) }
-                .tabItem { Label(t("Settings"), systemImage: "gearshape") }.tag(Tab.settings)
+            NavigationStack {
+                SettingsHomeView(model: settingsHome)
+                    .navigationDestination(for: SettingsDestination.self) { destination in
+                        #if DEBUG
+                            RoutePlaceholder(route: .settings, destination: destination.rawValue)
+                        #else
+                            EmptyView()
+                        #endif
+                    }
+            }
+            .tabItem { Label(t("Settings"), systemImage: "gearshape") }.tag(Tab.settings)
         }
         .accessibilityIdentifier("app.tabs").tint(ColorToken.primary.color)
         .task {
@@ -71,6 +82,14 @@ struct AppTabs: View {
                 let permit = await native.controller.mutationPermit(for: snapshot),
                 await native.controller.activeSession() == snapshot, !Task.isCancelled
             else { return }
+            #if DEBUG
+                await seedSettingsPending(native: native, database: database, snapshot: snapshot, permit: permit)
+            #endif
+            guard await native.controller.activeSession() == snapshot, !Task.isCancelled else { return }
+            let settings = SettingsHomeModel(
+                database: database, controller: native.controller, session: snapshot, sync: native.sync)
+            settingsHome = settings
+            settings.start()
             var clock: any PlanClock = SystemPlanClock()
             #if DEBUG
                 if ProcessInfo.processInfo.environment["CF_PLAN_TEST_FREEZE_CLOCK"] == "1",
@@ -88,6 +107,7 @@ struct AppTabs: View {
                     update.presence == .signedIn(accountID: snapshot.session.accountId)
                 else {
                     model.stop()
+                    settings.stop()
                     home = nil
                     step = nil
                     return
@@ -96,6 +116,7 @@ struct AppTabs: View {
         }
         .onDisappear {
             home?.stop()
+            settingsHome.stop()
             home = nil
         }
         .onChange(of: home?.hero?.card.id, initial: true) { _, _ in home?.selectHero() }
