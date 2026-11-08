@@ -1,7 +1,6 @@
 import AppCore
 import DesignSystem
 import LocalStore
-import PlanUI
 import Settings
 import SwiftUI
 import UIKit
@@ -35,48 +34,46 @@ import XCTest
             settings: settings, outbox: includePending ? pending : []), now: Date(timeIntervalSince1970: 1_794_132_000))
 }
 
-@MainActor private struct SettingsSnapshotTabs: View {
+@MainActor private struct SettingsSnapshotHome: View {
     @Environment(\.locale) private var locale
     let model: SettingsHomeModel
-    private var language: Language { locale.language.languageCode?.identifier == "nl" ? .nl : .en }
     var body: some View {
-        TabView {
-            ColorToken.background.color.tabItem {
-                Label(PlanStrings.text("Today", language: language), systemImage: "square.grid.2x2")
-            }
-            ColorToken.background.color.tabItem {
-                Label(PlanStrings.text("My trips", language: language), systemImage: "airplane")
-            }
-            NavigationStack { SettingsHomeView(model: model) }
-                .tabItem { Label(PlanStrings.text("Settings", language: language), systemImage: "gearshape") }
-        }.tint(ColorToken.primary.color)
+        VStack(alignment: .leading, spacing: 0) {
+            Text(
+                SettingsStrings.text("Settings", language: locale.language.languageCode?.identifier == "nl" ? .nl : .en)
+            )
+            .font(Typography.screenPageTitleLg.font).foregroundStyle(ColorToken.foreground.color)
+            .padding(.horizontal, PlanUITokens.space4).padding(.top, PlanUITokens.space1)
+            .accessibilityAddTraits(.isHeader).accessibilityIdentifier("settings.title")
+            SettingsHomeView(model: model)
+        }.background(ColorToken.background.color)
     }
 }
 
 nonisolated final class SettingsSnapshotTests: XCTestCase {
-    @MainActor func testHomeAndNativePendingSheetAcrossAllProfiles() async throws {
+    @MainActor func testHomeAndPendingContentAcrossAllProfiles() async throws {
         try await AuthTestHost.registerFonts()
         for fixture in try AuthDeviceFixture.all() where fixture.device != nil {
+            let host = try AuthTestHost(EmptyView(), size: fixture.size, insets: fixture.insets, scale: fixture.scale)
+            defer { host.close() }
             for style in [UIUserInterfaceStyle.light, .dark] {
                 for language in ["en", "nl"] {
                     for category in [UIContentSizeCategory.large, .extraExtraLarge] {
                         let variant = PlanSnapshotVariant(style: style, language: language, category: category)
-                        let model = try settingsFixture()
-                        let host = SystemTabsSnapshotHost(
-                            SettingsSnapshotTabs(model: model), fixture: fixture, variant: variant)
-                        defer { host.close() }
-                        let home = try await host.capture(selectedIndex: 2, contentIdentifier: "settings.screen")
-                        assertContentFits(host, root: host.controller.view)
+                        host.configure(
+                            SettingsSnapshotHome(model: try settingsFixture()),
+                            style: style, language: language, category: category)
+                        try await host.settle()
+                        let home = try capture(
+                            host, fixture: fixture, required: ["settings.title", "settings.profile", "settings.sync"])
                         try verifyPlanSnapshot(
                             home, suite: "Settings", state: "home", fixture: fixture, variant: variant)
-                        host.close()
-                        let pendingModel = try settingsFixture(pending: true)
-                        let pendingHost = SystemTabsSnapshotHost(
-                            SettingsSnapshotTabs(model: pendingModel), fixture: fixture, variant: variant)
-                        defer { pendingHost.close() }
-                        _ = try await pendingHost.capture(selectedIndex: 2, contentIdentifier: "settings.screen")
-                        pendingModel.showsPending = true
-                        let pending = try await sheetImage(pendingHost)
+                        host.configure(
+                            SignOutPendingSheet(model: try settingsFixture(pending: true)),
+                            style: style, language: language, category: category)
+                        try await host.settle()
+                        let pending = try capture(
+                            host, fixture: fixture, required: ["settings.pending.title", "settings.pending.items"])
                         try verifyPlanSnapshot(
                             pending, suite: "Settings", state: "pending", fixture: fixture, variant: variant)
                     }
@@ -85,21 +82,50 @@ nonisolated final class SettingsSnapshotTests: XCTestCase {
         }
     }
 
-    @MainActor private func assertContentFits(_ host: SystemTabsSnapshotHost, root: UIView) {
+    @MainActor func testCaptureRejectsBlankContent() throws {
+        let fixture = try XCTUnwrap(AuthDeviceFixture.authSnapshotProfiles().first)
+        let host = try AuthTestHost(
+            ColorToken.background.color, size: fixture.size, insets: fixture.insets, scale: fixture.scale)
+        defer { host.close() }
+        XCTAssertThrowsError(try capture(host, fixture: fixture, required: ["settings.pending.title"]))
+    }
+
+    @MainActor private func capture(
+        _ host: AuthTestHost, fixture: AuthDeviceFixture, required: [String]
+    ) throws -> UIImage {
+        let image = try host.image()
+        let frames = contentFrames(host, fixture: fixture)
+        let raster = try SnapshotRaster(image: XCTUnwrap(image.cgImage))
+        guard raster.width == Int(fixture.size.width * fixture.scale),
+            raster.height == Int(fixture.size.height * fixture.scale)
+        else { throw CaptureFailure.invalid("Capture does not match the profile dimensions") }
+        let viewport = host.window.bounds.inset(by: fixture.insets)
+        for identifier in required {
+            guard let frame = frames[identifier] else {
+                throw CaptureFailure.invalid("Missing \(identifier); refusing to record")
+            }
+            let visible = frame.intersection(viewport)
+            guard !visible.isNull, !visible.isEmpty,
+                AuthSnapshotCapture.hasInk(raster, in: visible, scale: fixture.scale)
+            else { throw CaptureFailure.invalid("Blank \(identifier); refusing to record") }
+        }
+        return image
+    }
+
+    @MainActor private func contentFrames(_ host: AuthTestHost, fixture: AuthDeviceFixture) -> [String: CGRect] {
         var visited: Set<ObjectIdentifier> = []
-        var count = 0
-        let window = host.container.window
-        let insets = host.fixture.insets
+        var frames: [String: CGRect] = [:]
+        let window = host.window
+        let insets = fixture.insets
         func check(_ element: NSObject) {
             guard visited.insert(ObjectIdentifier(element)).inserted else { return }
             if let identifier = (element as? any UIAccessibilityIdentification)?.accessibilityIdentifier,
                 identifier.hasPrefix("settings."),
-                !["settings.screen", "settings.pending", "settings.pending.items"].contains(identifier),
-                element.isAccessibilityElement
+                !["settings.screen", "settings.pending"].contains(identifier)
             {
                 let frame = window.convert(element.accessibilityFrame, from: nil)
                 if !frame.isEmpty, !frame.isInfinite {
-                    count += 1
+                    frames[identifier] = frame
                     XCTAssertGreaterThanOrEqual(frame.minX, insets.left - 1, "\(identifier): \(frame)")
                     XCTAssertLessThanOrEqual(
                         frame.maxX, window.bounds.width - insets.right + 1, "\(identifier): \(frame)")
@@ -117,46 +143,9 @@ nonisolated final class SettingsSnapshotTests: XCTestCase {
                 }
             }
         }
-        check(root)
-        XCTAssertGreaterThan(count, 0, "Missing Settings accessibility content for \(host.fixture.name)")
+        check(host.controller.view)
+        return frames
     }
 
-    @MainActor private func sheetImage(_ host: SystemTabsSnapshotHost) async throws -> UIImage {
-        func presented(_ controller: UIViewController) -> UIViewController? {
-            if let modal = controller.presentedViewController { return modal }
-            return controller.children.lazy.compactMap { presented($0) }.first
-        }
-        let deadline = ContinuousClock.now + .seconds(5)
-        var previous: CGRect?
-        var matches = 0
-        while ContinuousClock.now < deadline {
-            try await Task.sleep(for: .milliseconds(50))
-            host.container.window.layoutIfNeeded()
-            guard let modal = presented(host.controller), !modal.isBeingPresented, modal.view.window != nil else {
-                continue
-            }
-            let frame = modal.view.convert(modal.view.bounds, to: host.container.window)
-            matches = frame == previous ? matches + 1 : 0
-            previous = frame
-            guard matches >= 3 else { continue }
-            XCTAssertTrue(frame.intersects(host.container.window.bounds))
-            assertContentFits(host, root: modal.view)
-            let format = UIGraphicsImageRendererFormat()
-            format.scale = host.fixture.scale
-            format.opaque = false
-            format.preferredRange = .standard
-            var rendered = false
-            let window = host.container.window
-            let image = UIGraphicsImageRenderer(size: window.bounds.size, format: format).image { _ in
-                rendered = window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
-            }
-            XCTAssertTrue(rendered)
-            XCTAssertEqual(image.cgImage?.width, Int(host.fixture.size.width * host.fixture.scale))
-            XCTAssertEqual(image.cgImage?.height, Int(host.fixture.size.height * host.fixture.scale))
-            return image
-        }
-        throw NSError(
-            domain: "SettingsSnapshot", code: 1,
-            userInfo: [NSLocalizedDescriptionKey: "Pending sheet did not present; refusing to record"])
-    }
+    private enum CaptureFailure: Error { case invalid(String) }
 }
