@@ -1261,6 +1261,9 @@ OQ 21 is settled: “Server policy”. Ship the approved production-policy hint 
 
 #### Phase 11d: Verify email waiting/failed and recovery acceptance (`feat/phase-11d-verify`)
 
+- [x] Fix round 1: ignore verify links for verified accounts, consume pending links only for their matching account, and clear them on sign-out, session replacement and verified sign-in. Host tests cover matching/foreign accounts, coalesced session epochs, repeat links and stale delivery; no simulator acceptance is inferred.
+  Host verification for this fix round: `make -k quick` passes strict lint, 364/365 package tests, 10 TokenGen tests, 4 AssetGen tests and 89 signing/resource/runner fixtures. Only the known APICookieTests loopback sandbox EPERM fails. Static iOS 17 compilation passes for the changed package/app code. No simulators or reference recording were run.
+
 OQ 25 is settled: “Assume the links will automatically send you to the app”. Ship the recorded Verify translations and native universal-link/`NSUserActivity` entry for W’s exact signed verify URL. Preserve `{id, hash, expires, signature}` in the authenticated request. Reuse 11b’s associated domain and entry router; test cold/warm activities and malformed/tampered links. Real email opening still requires the server AASA with the confirmed team/bundle ID (OQ 4). OQ 29 permits only the explicit Back/different-email discard behavior here.
 
 - [x] Mount AuthVerify waiting and verifyFailed for `.verify`; authenticated signed verify request when typed/mock or universal-link input exists, otherwise users/me check. Recheck on activation/email-app return, guard account/email/epoch, persist verified status and request sync, then existing gate route. Resend deadline uses server seconds; 429/reset of deadline cannot be bypassed by backgrounding. Back/Use a different email calls explicit discard/wipe; no mock inbox, toast or email-changed UI.

@@ -15,7 +15,8 @@ final class AuthSessionServices {
     private let navigator: RootNavigator
     private let verification: @MainActor (UInt64) async -> Void
     private(set) var verifyModel: VerifyEmailModel?
-    private var pendingVerification: AuthLink?
+    private let verificationLinks = VerificationLinkInbox()
+    @ObservationIgnored private var verificationSubscription: Task<Void, Never>?
     #if DEBUG
         let authUITestEnabled: Bool
     #endif
@@ -117,32 +118,43 @@ final class AuthSessionServices {
         }
 
         native.observe()
+        verificationSubscription = Task { [weak self, controller = native.controller] in
+            for await _ in await controller.updates() {
+                guard !Task.isCancelled, let self else { return }
+                await synchronizeVerificationSession()
+            }
+        }
     }
-    func verificationContext() async -> VerificationContext? {
+    func verificationContext(requireUnverified: Bool = false) async -> VerificationContext? {
         guard let snapshot = await nativeSession.controller.activeSession(),
             let database = await nativeSession.accounts.activeDatabase(),
             let account = try? await AccountRepository(database: database).account(),
             account.id == snapshot.session.accountId,
+            !requireUnverified || !account.hasVerifiedEmail,
             await nativeSession.controller.activeSession() == snapshot
         else { return nil }
         return VerificationContext(accountID: account.id, email: account.email, epoch: snapshot.epoch)
     }
 
     func receiveVerificationLink(_ input: SignedVerificationInput?) async {
-        pendingVerification = .verify(input)
-        if await nativeSession.controller.activeSession() == nil {
+        guard await synchronizeVerificationSession(), verificationLinks.receive(input) else { return }
+        if await nativeSession.controller.presence == .signedOut {
             model.clearSecrets()
             navigator.navigate(to: .signIn)
             return
         }
         await prepareVerification()
-        guard let verifyModel, verifyModel.isActive else { return }
+        guard let verifyModel, verifyModel.isActive,
+            await verificationContext(requireUnverified: true) == verifyModel.context
+        else { return }
         navigator.navigate(to: .verify)
         await verifyModel.activate()
     }
 
     func prepareVerification() async {
-        guard let context = await verificationContext() else { return }
+        guard await synchronizeVerificationSession(),
+            let context = await verificationContext(requireUnverified: true)
+        else { return }
         if verifyModel?.context != context || verifyModel?.isActive != true {
             verifyModel?.cancel()
             let mail: (@MainActor () async -> SignedVerificationInput?)?
@@ -196,10 +208,31 @@ final class AuthSessionServices {
                 },
                 mail: mail)
         }
-        if case .verify(let input) = pendingVerification {
-            pendingVerification = nil
+        if let input = verificationLinks.take(for: context) {
             verifyModel?.receiveLink(input)
         }
     }
 
+    @discardableResult private func synchronizeVerificationSession() async -> Bool {
+        let controller = nativeSession.controller
+        let epoch = await controller.epoch
+        guard let presence = await controller.presence else { return false }
+        var verified = false
+        if case .signedIn(let id) = presence {
+            guard let snapshot = await controller.activeSession(), snapshot.epoch == epoch,
+                let database = await nativeSession.accounts.activeDatabase(),
+                let account = try? await AccountRepository(database: database).account(), account.id == id
+            else { return false }
+            verified = account.hasVerifiedEmail
+        }
+        guard await controller.epoch == epoch, await controller.presence == presence else { return false }
+        verificationLinks.sessionChanged(presence: presence, epoch: epoch, hasVerifiedEmail: verified)
+        if let verifyModel, verifyModel.context.epoch != epoch {
+            verifyModel.cancel()
+            self.verifyModel = nil
+        }
+        return true
+    }
+
+    deinit { verificationSubscription?.cancel() }
 }

@@ -17,7 +17,10 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
             await nativeSession.controller.epoch == epoch
         else { return }
         await authServices?.prepareVerification()
-        guard await nativeSession.controller.epoch == epoch else { return }
+        guard await nativeSession.controller.epoch == epoch,
+            await authServices?.verificationContext(requireUnverified: true)?.epoch == epoch,
+            authServices?.verifyModel?.isActive == true
+        else { return }
         navigator.navigate(to: .verify)
     }
 }
