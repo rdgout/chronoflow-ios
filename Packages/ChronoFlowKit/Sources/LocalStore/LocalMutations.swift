@@ -80,11 +80,19 @@ extension OutboxRepository {
                 var value =
                     try SettingsRecord.fetchOne(db, key: section.rawValue)?.value.decode(JSONObject.self)
                     ?? JSONObject()
+                var invalidDrafts = value["invalidDrafts"]?.object ?? [:]
                 for (key, entry) in patch.fields {
+                    invalidDrafts[key] = nil
                     let parts = key.split(separator: "_")
                     let localKey =
                         String(parts[0]) + parts.dropFirst().map { $0.prefix(1).uppercased() + $0.dropFirst() }.joined()
                     value[localKey] = entry
+                }
+                if section == .bodyClock {
+                    value["invalidDrafts"] = .object(invalidDrafts)
+                    if patch["habitual_bed"] != nil || patch["habitual_wake"] != nil {
+                        try SettingsRecord(section: "sleepAnswered", value: .encoding(true)).save(db)
+                    }
                 }
                 try SettingsRecord(section: section.rawValue, value: .encoding(value)).save(db)
                 if section == .bodyClock { try SettingsRecord.deleteOne(db, key: "readiness") }

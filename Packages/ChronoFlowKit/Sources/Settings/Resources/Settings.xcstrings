@@ -839,6 +839,1068 @@
           }
         }
       }
+    },
+    "Every plan is built from these answers. Changes save automatically.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every plan is built from these answers. Changes save automatically."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elk plan is gebaseerd op deze antwoorden. Wijzigingen worden automatisch opgeslagen."
+          }
+        }
+      }
+    },
+    "About you": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About you"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Over jou"
+          }
+        }
+      }
+    },
+    "Sleep schedule": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sleep schedule"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slaapritme"
+          }
+        }
+      }
+    },
+    "Light equipment": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light equipment"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lichtmiddelen"
+          }
+        }
+      }
+    },
+    "Health checks": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Health checks"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gezondheidsvragen"
+          }
+        }
+      }
+    },
+    "When do you naturally feel most awake?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When do you naturally feel most awake?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wanneer voel je je van nature het meest wakker?"
+          }
+        }
+      }
+    },
+    "Early bird": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Early bird"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vroege vogel"
+          }
+        }
+      }
+    },
+    "In between": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In between"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ertussenin"
+          }
+        }
+      }
+    },
+    "Night owl": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Night owl"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nachtuil"
+          }
+        }
+      }
+    },
+    "Not sure": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not sure"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weet ik niet"
+          }
+        }
+      }
+    },
+    "Your age": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your age"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je leeftijd"
+          }
+        }
+      }
+    },
+    "Under 18": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Under 18"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jonger dan 18"
+          }
+        }
+      }
+    },
+    "18–64": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "18–64"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "18–64"
+          }
+        }
+      }
+    },
+    "65 or older": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "65 or older"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "65 of ouder"
+          }
+        }
+      }
+    },
+    "On a normal work or school day.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On a normal work or school day."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Op een normale werk- of schooldag."
+          }
+        }
+      }
+    },
+    "Usual bedtime": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usual bedtime"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gewone bedtijd"
+          }
+        }
+      }
+    },
+    "Usual wake time": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usual wake time"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gewone opstaantijd"
+          }
+        }
+      }
+    },
+    "Do your free days follow the same schedule?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do your free days follow the same schedule?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volg je op vrije dagen hetzelfde schema?"
+          }
+        }
+      }
+    },
+    "Yes": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yes"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ja"
+          }
+        }
+      }
+    },
+    "No": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nee"
+          }
+        }
+      }
+    },
+    "Not set": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not set"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niet ingesteld"
+          }
+        }
+      }
+    },
+    "Free-day bedtime": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free-day bedtime"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bedtijd op vrije dagen"
+          }
+        }
+      }
+    },
+    "Free-day wake time": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free-day wake time"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wektijd op vrije dagen"
+          }
+        }
+      }
+    },
+    "Do you usually drink caffeine?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do you usually drink caffeine?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drink je normaal cafeïne?"
+          }
+        }
+      }
+    },
+    "What do you drink on a normal day?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What do you drink on a normal day?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wat drink je op een gewone dag?"
+          }
+        }
+      }
+    },
+    "Coffee": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coffee"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koffie"
+          }
+        }
+      }
+    },
+    "Tea": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tea"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thee"
+          }
+        }
+      }
+    },
+    "Soft drinks": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Soft drinks"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frisdrank"
+          }
+        }
+      }
+    },
+    "Energy drinks": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Energy drinks"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Energiedrank"
+          }
+        }
+      }
+    },
+    "Does caffeine affect you strongly?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Does caffeine affect you strongly?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heeft cafeïne een sterk effect op je?"
+          }
+        }
+      }
+    },
+    "Have you been told to avoid caffeine?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Have you been told to avoid caffeine?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Is je verteld dat je cafeïne moet vermijden?"
+          }
+        }
+      }
+    },
+    "Do you use oral contraception?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do you use oral contraception?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gebruik je de anticonceptiepil?"
+          }
+        }
+      }
+    },
+    "Optional. If you have any of these, your plan can use them.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional. If you have any of these, your plan can use them."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optioneel. Als je deze hulpmiddelen hebt, kan je plan ze gebruiken."
+          }
+        }
+      }
+    },
+    "Do you have a light box, light visor or light glasses?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do you have a light box, light visor or light glasses?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heb je een lichtbox, lichtvizier of lichtbril?"
+          }
+        }
+      }
+    },
+    "None": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geen"
+          }
+        }
+      }
+    },
+    "Light box or visor": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light box or visor"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lichtbox of lichtvizier"
+          }
+        }
+      }
+    },
+    "Light glasses": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light glasses"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lichtbril"
+          }
+        }
+      }
+    },
+    "Blue-blocking glasses": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blue-blocking glasses"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blauwlichtfilterbril"
+          }
+        }
+      }
+    },
+    "Yes, rating unknown": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yes, rating unknown"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ja, waarde onbekend"
+          }
+        }
+      }
+    },
+    "Yes, I know the rating": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yes, I know the rating"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ja, ik ken de beoordeling"
+          }
+        }
+      }
+    },
+    "Rating (mDFD)": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rating (mDFD)"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waarde (mDFD)"
+          }
+        }
+      }
+    },
+    "Your answers help tailor the timing advice. They are stored in your account.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your answers help tailor the timing advice. They are stored in your account."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je antwoorden helpen het timingadvies af te stemmen. Ze worden in je account bewaard."
+          }
+        }
+      }
+    },
+    "Are you pregnant or breastfeeding?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Are you pregnant or breastfeeding?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ben je zwanger of geef je borstvoeding?"
+          }
+        }
+      }
+    },
+    "Do you have bipolar disorder?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do you have bipolar disorder?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heb je een bipolaire stoornis?"
+          }
+        }
+      }
+    },
+    "Do you have an eye disease, or take medicine that makes your eyes sensitive to light?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do you have an eye disease, or take medicine that makes your eyes sensitive to light?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heb je een oogziekte, of gebruik je medicijnen die je ogen gevoelig maken voor licht?"
+          }
+        }
+      }
+    },
+    "Do you have a risk factor for blood clots, such as a past clot or a clotting disorder?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do you have a risk factor for blood clots, such as a past clot or a clotting disorder?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heb je een risicofactor voor bloedstolsels, zoals een eerdere trombose of een stollingsstoornis?"
+          }
+        }
+      }
+    },
+    "In the past 14 days, have you worked night or rotating shifts, or had a very irregular sleep schedule?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In the past 14 days, have you worked night or rotating shifts, or had a very irregular sleep schedule?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heb je de afgelopen 14 dagen in nacht- of wisseldiensten gewerkt, of een heel onregelmatig slaapritme gehad?"
+          }
+        }
+      }
+    },
+    "Check your bedtime and wake-up time.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check your bedtime and wake-up time."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controleer je bedtijd en opstatijd."
+          }
+        }
+      }
+    },
+    "Choose one of the available options.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose one of the available options."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kies een van de beschikbare opties."
+          }
+        }
+      }
+    },
+    "Add at least one drink to save this answer.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add at least one drink to save this answer."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voeg minstens één drankje toe om dit antwoord op te slaan."
+          }
+        }
+      }
+    },
+    "Enter a rating between 0.1 and 9.9.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a rating between 0.1 and 9.9."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vul een waarde tussen 0,1 en 9,9 in."
+          }
+        }
+      }
+    },
+    "No plan available": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No plan available"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geen plan beschikbaar"
+          }
+        }
+      }
+    },
+    "Based on your health answers, light and caffeine timing may not be right for you, so we can't build a plan. Your doctor can tell you what's safe when you travel.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Based on your health answers, light and caffeine timing may not be right for you, so we can't build a plan. Your doctor can tell you what's safe when you travel."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Op basis van je gezondheidsantwoorden is het timen van licht en cafeïne mogelijk niet geschikt voor je. Daarom kunnen we geen plan maken. Je arts kan je vertellen wat veilig is als je reist."
+          }
+        }
+      }
+    },
+    "Almost ready": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Almost ready"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bijna klaar"
+          }
+        }
+      }
+    },
+    "Go to the first one": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Go to the first one"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ga naar de eerste"
+          }
+        }
+      }
+    },
+    "Required answers complete": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Required answers complete"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verplichte antwoorden ingevuld"
+          }
+        }
+      }
+    },
+    "You can build a plan for any trip.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can build a plan for any trip."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je kunt een plan maken voor elke reis."
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuleren"
+          }
+        }
+      }
+    },
+    "Done": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klaar"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

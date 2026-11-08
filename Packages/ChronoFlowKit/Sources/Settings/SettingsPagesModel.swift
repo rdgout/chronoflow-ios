@@ -7,6 +7,7 @@ import Observation
     public private(set) var account: AccountRecord?
     public private(set) var settings: [String: JSONObject] = [:]
     public private(set) var loaded = false
+    public private(set) var settingsLoaded = false
     public private(set) var failure = false
     @ObservationIgnored private let database: AccountDatabase
     @ObservationIgnored private let permit: SessionMutationPermit
@@ -42,6 +43,7 @@ import Observation
                 do {
                     for try await rows in try await SettingsRepository(database: database).values() {
                         guard !Task.isCancelled, let self, self.active else { return }
+                        self.settingsLoaded = true
                         self.settings = Dictionary(
                             uniqueKeysWithValues: rows.compactMap { row in
                                 guard let value = try? row.value.decode(JSONObject.self) else { return nil }

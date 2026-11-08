@@ -25,6 +25,22 @@ nonisolated final class SettingsPagesTests: XCTestCase {
         XCTAssertTrue(app.buttons["settings.account.profile"].label.contains("Settings Test"))
     }
 
+    @MainActor func testBodyClockAutomaticallySavesAnswer() {
+        let app = launchSettingsPages()
+        defer { app.terminate() }
+        open("settings.bodyClock", app: app)
+        let chronotype = app.buttons["settings.bodyClock.chronotype"]
+        XCTAssertTrue(chronotype.waitForExistence(timeout: 8))
+        chronotype.tap()
+        app.buttons["Night owl"].tap()
+        XCTAssertTrue(app.staticTexts["settings.bodyClock.saved"].waitForExistence(timeout: 8))
+        XCTAssertTrue(chronotype.label.contains("Night owl"))
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        open("settings.bodyClock", app: app)
+        XCTAssertTrue(app.buttons["settings.bodyClock.chronotype"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["settings.bodyClock.chronotype"].label.contains("Night owl"))
+    }
+
     @MainActor private func launchSettingsPages() -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = AuthUIFlow.arguments()
