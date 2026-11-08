@@ -64,6 +64,30 @@ class ContractsGeneratorTests(unittest.TestCase):
         self.assertIn('public var answer: [String: JSONValue]', result)
         self.assertIn('public var airports: [String: ApiAirportSuggestion]', result)
 
+    def test_request_graph_encodes_nulls_but_omits_optional_keys(self):
+        check_output = subprocess.check_output
+
+        def source_or_formatter(command, **kwargs):
+            if command[0] == 'git':
+                if not command[-1].endswith('/Data/Api/index.ts'):
+                    return ''
+                definitions = {name: '{\nreadonly value: string,\n}' for name in GENERATOR['ROOT_TYPES']}
+                definitions.update({
+                    'ApiTripInput': '{\nreadonly child: RequestChild,\n}',
+                    'RequestChild': ('{\nreadonly required: string | null,\n'
+                                     'readonly optional?: string,\nreadonly optional_nullable?: string | null,\n}'),
+                    'ApiTripReview': '{\nreadonly response: string | null,\n}',
+                })
+                return ''.join(f'export type {name} = {body};\n' for name, body in definitions.items())
+            return check_output(command, **kwargs)
+
+        with patch.object(GENERATOR['subprocess'], 'check_output', side_effect=source_or_formatter):
+            result = GENERATOR['generate'](ROOT)
+        self.assertIn('try container.encode(required, forKey: .required)', result)
+        self.assertIn('try container.encodeIfPresent(optional, forKey: .optional)', result)
+        self.assertIn('try container.encodeIfPresent(optionalNullable, forKey: .optionalNullable)', result)
+        self.assertNotIn('try container.encode(response,', result)
+
 
 if __name__ == '__main__':
     unittest.main()

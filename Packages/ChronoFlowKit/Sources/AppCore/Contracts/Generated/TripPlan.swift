@@ -527,6 +527,23 @@ public struct ApiTripInput: Codable, Sendable, Equatable {
         self.preDepartureBusyIntervals = preDepartureBusyIntervals
     }
 
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(outbound, forKey: .outbound)
+        try container.encode(`return`, forKey: .`return`)
+        try container.encode(tripEndKind, forKey: .tripEndKind)
+        try container.encode(tripEndNights, forKey: .tripEndNights)
+        try container.encode(tripEndCheckOutDate, forKey: .tripEndCheckOutDate)
+        try container.encode(preparationDays, forKey: .preparationDays)
+        try container.encode(fastDelayOptIn, forKey: .fastDelayOptIn)
+        try container.encode(override, forKey: .override)
+        try container.encode(latestWake, forKey: .latestWake)
+        try container.encode(feasibleNightBed, forKey: .feasibleNightBed)
+        try container.encode(feasibleNightWake, forKey: .feasibleNightWake)
+        try container.encode(preDepartureBusyAnswered, forKey: .preDepartureBusyAnswered)
+        try container.encode(preDepartureBusyIntervals, forKey: .preDepartureBusyIntervals)
+    }
+
     enum CodingKeys: String, CodingKey {
         case outbound
         case `return`
@@ -608,6 +625,20 @@ public struct ApiTripInputLeg: Codable, Sendable, Equatable {
         self.stay = stay
     }
 
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(fromIata, forKey: .fromIata)
+        try container.encode(toIata, forKey: .toIata)
+        try container.encode(departLocal, forKey: .departLocal)
+        try container.encode(arriveLocal, forKey: .arriveLocal)
+        try container.encode(flightNumber, forKey: .flightNumber)
+        try container.encode(seatLieFlat, forKey: .seatLieFlat)
+        try container.encode(seatWindow, forKey: .seatWindow)
+        try container.encode(leaveForAirportLocal, forKey: .leaveForAirportLocal)
+        try container.encode(airportTransferMin, forKey: .airportTransferMin)
+        try container.encode(stay, forKey: .stay)
+    }
+
     enum CodingKeys: String, CodingKey {
         case fromIata = "from_iata"
         case toIata = "to_iata"
@@ -638,6 +669,14 @@ public struct ApiTripInputOverride: Codable, Sendable, Equatable {
         self.habitualBed = habitualBed
         self.habitualWake = habitualWake
         self.chronotype = chronotype
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(use, forKey: .use)
+        try container.encode(habitualBed, forKey: .habitualBed)
+        try container.encode(habitualWake, forKey: .habitualWake)
+        try container.encode(chronotype, forKey: .chronotype)
     }
 
     enum CodingKeys: String, CodingKey {
@@ -692,6 +731,17 @@ public struct ApiTripInputStay: Codable, Sendable, Equatable {
         self.arrivalTransferMin = arrivalTransferMin
         self.transferMode = transferMode
         self.busyIntervals = busyIntervals
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(bedAvailableMode, forKey: .bedAvailableMode)
+        try container.encode(bedAvailableFromLocal, forKey: .bedAvailableFromLocal)
+        try container.encode(checkOutLocal, forKey: .checkOutLocal)
+        try container.encode(lateCheckOutOrDayRoom, forKey: .lateCheckOutOrDayRoom)
+        try container.encode(arrivalTransferMin, forKey: .arrivalTransferMin)
+        try container.encode(transferMode, forKey: .transferMode)
+        try container.encode(busyIntervals, forKey: .busyIntervals)
     }
 
     enum CodingKeys: String, CodingKey {

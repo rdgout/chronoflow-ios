@@ -138,6 +138,33 @@ import TripWizard
         #expect(await source.count("review") == 2)
     }
 
+    @Test func answeringPromptsPreservesExplicitNulls() async throws {
+        let source = try GenerationSource()
+        let probe = EffectProbe()
+        let service = TripGenerationService(source: source, effects: await probe.effects())
+        let input = try generationInput()
+        var review = try generationReview()
+        review.prompts = [
+            ApiReviewPrompt(
+                id: "busy", kind: .preDepartureBusyHours, blocking: false, required: false,
+                text: CopyLine(key: "", args: []), scope: ApiReviewPromptScope(), target: .trip,
+                fields: ["pre_departure_busy_answered"], answer: [:],
+                shape: ApiReviewPromptShape(kind: .intervals, options: []))
+        ]
+        let result = try await service.answerPrompts(
+            instance: "one", input: ApiTripReviewInput(input: input), review: review,
+            answers: ["busy": ["pre_departure_busy_answered": .bool(true)]])
+        var expected = try JSONDecoder().decode(
+            JSONObject.self,
+            from: Data(
+                contentsOf: Bundle.module.url(forResource: "input", withExtension: "json", subdirectory: "Fixtures")!))
+        expected["pre_departure_busy_answered"] = .bool(true)
+        let submitted = try #require(await source.reviewInputs.first)
+        for value in [submitted.input, result.input.input] {
+            #expect(try JSONDecoder().decode(JSONObject.self, from: JSONEncoder().encode(value)) == expected)
+        }
+    }
+
     @Test func answersFollowReturnLegStayAndTopLevelScopes() async throws {
         let source = try GenerationSource()
         let probe = EffectProbe()

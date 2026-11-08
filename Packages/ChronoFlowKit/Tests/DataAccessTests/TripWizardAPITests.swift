@@ -34,19 +34,13 @@ import Testing
                 }
                 #expect(body["draft_token"] == .null && body["input_revision"] == .number(0))
                 #expect(body["review_revision"] == .null && body["guest_secret"] == nil)
+                var expected = try JSONDecoder().decode(
+                    JSONObject.self, from: fixture("wizard/review-request.json"))
                 if request.url!.path.contains("trip/review") {
-                    #expect(body["source_revision"] == .string(String(repeating: "a", count: 64)))
-                } else {
-                    let expected = try JSONDecoder().decode(
-                        JSONObject.self, from: fixture("wizard/review-request.json"))
-                    let expectedInput = try JSONDecoder().decode(
-                        ApiTripInput.self, from: fixture("wizard/review-request.json"))
-                    let encodedInput = try JSONDecoder().decode(
-                        JSONObject.self, from: JSONEncoder().encode(expectedInput))
-                    #expect(Set(body.fields.keys).isSubset(of: Set(expected.fields.keys)))
-                    for (key, value) in encodedInput.fields { #expect(body[key] == value) }
-                    #expect(body["profile"] == expected["profile"])
+                    expected["source_revision"] = .string(String(repeating: "a", count: 64))
+                    expected["profile"] = nil
                 }
+                #expect(body == expected)
                 return .init(200, response)
             case ("POST", "/v1/trips"), ("PUT", "/v1/trips/trip"):
                 #expect(request.timeoutInterval == 90)
@@ -72,11 +66,13 @@ import Testing
         #expect(review.status == .ok && review.canSave && review.summary != nil)
         let identity = try ApiTripSaveInput(identity: review.identity)
         #expect(try await source.saveTrip(identity: identity).tripId == review.identity.token)
+        let editInput = try await source.tripInput(id: "trip")
+        #expect(editInput.input == input)
+        #expect(editInput.input.outbound.legs[0].stay.bedAvailableMode == nil)
         _ = try await source.reviewTripEdit(
-            ApiTripReviewInput(input: input), id: "trip", sourceRevision: String(repeating: "a", count: 64))
+            ApiTripReviewInput(input: editInput.input), id: "trip", sourceRevision: editInput.sourceRevision)
         _ = try await source.updateTrip(
             id: "trip", identity: identity, sourceRevision: String(repeating: "a", count: 64))
-        #expect(try await source.tripInput(id: "trip").input == input)
         #expect(
             try await source.searchAirports(query: "São Paulo & city+airport", limit: 7).first?.timezone
                 == "Europe/Amsterdam")

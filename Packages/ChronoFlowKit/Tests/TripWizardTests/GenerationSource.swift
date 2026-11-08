@@ -8,6 +8,7 @@ actor GenerationSource: DataSource {
     let reviewValue: ApiTripReview
     var counts: [String: Int] = [:]
     var reviewFailure: DataFailure?
+    var reviewInputs: [ApiTripReviewInput] = []
     var saveFailure: DataFailure?
     var lastEdit: TripEditContext?
     var beforeReview: @Sendable () async throws -> Void = {}
@@ -41,6 +42,7 @@ actor GenerationSource: DataSource {
         await withCheckedContinuation { waiters.append((method, count, $0)) }
     }
     func reviewTrip(_ input: ApiTripReviewInput) async throws -> ApiTripReview {
+        reviewInputs.append(input)
         record("review")
         try await beforeReview()
         if let reviewFailure { throw reviewFailure }
