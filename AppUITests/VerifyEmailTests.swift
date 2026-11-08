@@ -17,3 +17,7 @@ nonisolated final class VerifyEmailTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["route.terms"].waitForExistence(timeout: 12))
     }
 }
+
+@MainActor func tamperedVerificationURL() -> String {
+    "https://app.chronoflow.net/email/verify/\(MockScenarioValues.demoID)/\(String(repeating: "0", count: 40))?expires=4102444800&signature=\(String(repeating: "0", count: 64))"
+}

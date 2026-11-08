@@ -2552,3 +2552,43 @@ time require the user run; no higher watchdog or new board exception was introdu
 board PNG export workflow for visual approval. DeviceSigned still reads DEVELOPMENT_TEAM from ignored
 Config/Local.xcconfig and adds applinks:app.chronoflow.net alongside webcredentials. System email-link
 opening still needs server AASA deployment with the confirmed team/bundle ID and physical acceptance.
+
+## Phases 11b–11d — simulator fix round 2 (8 November 2026)
+
+Input: branch `feat/phase-11d-verify`, HEAD `64ca779`, and the user's full failure log
+`/private/tmp/claude-501/-Users-rickgout-Sites-chronoflow-ios/297ae62c-d4a3-4567-8832-5e7859cd8a0a/scratchpad/codex/p11bcd-sim1-failures.txt`.
+The user reports Reset/SignUp/Verify snapshot compare passing. All 364 recorded references
+are preserved byte-for-byte in their phase patches: 104 / 130 / 130.
+
+The three ordered patches in `build/commits` apply on HEAD. They also apply immediately
+after the corresponding sub-phase tip, retaining prior fixes: `1.patch` after `9228e7b`,
+`2.patch` after `a1dcaee` plus patch 1, `3.patch` after `64ca779` plus patches 1–2.
+`messages.txt` maps each patch to its phase and Conventional Commit subject. Shared native
+field, AutoFill-entry and audit helpers are in 11b; sign-up entry/assertions/references are
+in 11c; verification/recovery fixtures and references are in 11d. Commits are assembled in
+an isolated packaging repository because this workspace's Git metadata is read-only.
+
+Host verification: `make quick`, followed by `make -k quick` to finish the other tiers,
+passes strict formatting lint, 366/367 package tests, 10 TokenGen tests, 4 AssetGen tests
+and all 89 signing/resource/runner fixtures. Only the known loopback listener EPERM in
+`APICookieTests.realRedirectCookieHandlingIsDisabled` fails. Direct Swift 6 compilation
+against `arm64-apple-ios17.0-simulator` passes for all changed package/app modules and
+hosted/UI test sources. This invokes swiftc only; it does not start a simulator.
+Logs: `build/round2-11b-quick.log`, `build/round2-final-quick.log`,
+`build/round2-typecheck.log` and `build/recovery-typecheck/*.log`.
+
+Run the revised suites on the one 17e, without recording:
+
+```sh
+make generate
+make targeted DEVICES="17e" ONLY="AppTests/ResetPasswordControlTests AppTests/SignUpControlTests AppTests/ResetPasswordSnapshotTests AppTests/SignUpSnapshotTests AppTests/VerifyEmailSnapshotTests AppUITests/ResetPasswordTests AppUITests/SignUpTests AppUITests/VerifyEmailTests AppUITests/AccountRecoveryTests"
+TEST_RUN_TIMEOUT=14400 make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppUITests/AuthAuditTests"
+```
+
+Select the whole AuthAuditTests suite to retain light, Dark and XXLarge methods for every
+state. Audit methods now launch at most two variants each; collect actual method times
+from `build/test-results/17e/Debug-serial.xcresult` and require each to finish well below
+600 seconds. The four-hour limit above applies to the complete serial audit suite; it does
+not change the 600-second per-method watchdog. No timing or runtime pass is inferred from host compilation. No recording,
+`make check`, Duo runtime or seven-simulator matrix ran in this fix round. Existing board
+review, server AASA/team ID and physical-mail/passkey acceptance remain open.

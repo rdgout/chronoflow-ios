@@ -3,12 +3,6 @@ import UIKit
 import XCTest
 
 nonisolated final class AuthAuditTests: XCTestCase {
-    @MainActor private var variants: [(String, XCUIDevice.Appearance, Bool)] {
-        [XCUIDevice.Appearance.light, .dark].flatMap { appearance in
-            ["en", "nl"].map { ($0, appearance, false) }
-        } + [("en", .light, true)]
-    }
-
     private enum Profile { case light, dark, xxLarge }
 
     @MainActor private func variants(for profile: Profile) -> [(String, XCUIDevice.Appearance, Bool)] {
@@ -358,43 +352,121 @@ nonisolated final class AuthAuditTests: XCTestCase {
         }
     }
 
-    @MainActor func testVerifyWaitingInLeanAuditMatrix() async throws { try await auditVerify(state: "waiting") }
-    @MainActor func testVerifyCountdownInLeanAuditMatrix() async throws { try await auditVerify(state: "countdown") }
-    @MainActor func testVerifyFailedInLeanAuditMatrix() async throws { try await auditVerify(state: "failed") }
-    @MainActor func testVerifyServerInLeanAuditMatrix() async throws { try await auditVerify(state: "server") }
-    @MainActor func testVerifyThrottleInLeanAuditMatrix() async throws { try await auditVerify(state: "throttle") }
-    @MainActor func testVerifyOfflineInLeanAuditMatrix() async throws { try await auditVerify(state: "offline") }
+    @MainActor func testVerifyWaitingInLeanAuditMatrix() async throws {
+        try await auditVerify(state: "waiting", profile: .light)
+    }
+    @MainActor func testVerifyWaitingInLeanAuditMatrixDark() async throws {
+        try await auditVerify(state: "waiting", profile: .dark)
+    }
+    @MainActor func testVerifyWaitingInLeanAuditMatrixXXLarge() async throws {
+        try await auditVerify(state: "waiting", profile: .xxLarge)
+    }
+    @MainActor func testVerifyCountdownInLeanAuditMatrix() async throws {
+        try await auditVerify(state: "countdown", profile: .light)
+    }
+    @MainActor func testVerifyCountdownInLeanAuditMatrixDark() async throws {
+        try await auditVerify(state: "countdown", profile: .dark)
+    }
+    @MainActor func testVerifyCountdownInLeanAuditMatrixXXLarge() async throws {
+        try await auditVerify(state: "countdown", profile: .xxLarge)
+    }
+    @MainActor func testVerifyFailedInLeanAuditMatrix() async throws {
+        try await auditVerify(state: "failed", profile: .light)
+    }
+    @MainActor func testVerifyFailedInLeanAuditMatrixDark() async throws {
+        try await auditVerify(state: "failed", profile: .dark)
+    }
+    @MainActor func testVerifyFailedInLeanAuditMatrixXXLarge() async throws {
+        try await auditVerify(state: "failed", profile: .xxLarge)
+    }
+    @MainActor func testVerifyServerInLeanAuditMatrix() async throws {
+        try await auditVerify(state: "server", profile: .light)
+    }
+    @MainActor func testVerifyServerInLeanAuditMatrixDark() async throws {
+        try await auditVerify(state: "server", profile: .dark)
+    }
+    @MainActor func testVerifyServerInLeanAuditMatrixXXLarge() async throws {
+        try await auditVerify(state: "server", profile: .xxLarge)
+    }
+    @MainActor func testVerifyThrottleInLeanAuditMatrix() async throws {
+        try await auditVerify(state: "throttle", profile: .light)
+    }
+    @MainActor func testVerifyThrottleInLeanAuditMatrixDark() async throws {
+        try await auditVerify(state: "throttle", profile: .dark)
+    }
+    @MainActor func testVerifyThrottleInLeanAuditMatrixXXLarge() async throws {
+        try await auditVerify(state: "throttle", profile: .xxLarge)
+    }
+    @MainActor func testVerifyOfflineInLeanAuditMatrix() async throws {
+        try await auditVerify(state: "offline", profile: .light)
+    }
+    @MainActor func testVerifyOfflineInLeanAuditMatrixDark() async throws {
+        try await auditVerify(state: "offline", profile: .dark)
+    }
+    @MainActor func testVerifyOfflineInLeanAuditMatrixXXLarge() async throws {
+        try await auditVerify(state: "offline", profile: .xxLarge)
+    }
     @MainActor func testVerifySignOutErrorInLeanAuditMatrix() async throws {
-        try await auditVerify(state: "signOutError")
+        try await auditVerify(state: "signOutError", profile: .light)
+    }
+    @MainActor func testVerifySignOutErrorInLeanAuditMatrixDark() async throws {
+        try await auditVerify(state: "signOutError", profile: .dark)
+    }
+    @MainActor func testVerifySignOutErrorInLeanAuditMatrixXXLarge() async throws {
+        try await auditVerify(state: "signOutError", profile: .xxLarge)
     }
 
     @MainActor func testVerifyFailedServerInLeanAuditMatrix() async throws {
-        try await auditVerify(state: "failedServer")
+        try await auditVerify(state: "failedServer", profile: .light)
+    }
+    @MainActor func testVerifyFailedServerInLeanAuditMatrixDark() async throws {
+        try await auditVerify(state: "failedServer", profile: .dark)
+    }
+    @MainActor func testVerifyFailedServerInLeanAuditMatrixXXLarge() async throws {
+        try await auditVerify(state: "failedServer", profile: .xxLarge)
     }
     @MainActor func testVerifyFailedThrottleInLeanAuditMatrix() async throws {
-        try await auditVerify(state: "failedThrottle")
+        try await auditVerify(state: "failedThrottle", profile: .light)
+    }
+    @MainActor func testVerifyFailedThrottleInLeanAuditMatrixDark() async throws {
+        try await auditVerify(state: "failedThrottle", profile: .dark)
+    }
+    @MainActor func testVerifyFailedThrottleInLeanAuditMatrixXXLarge() async throws {
+        try await auditVerify(state: "failedThrottle", profile: .xxLarge)
     }
     @MainActor func testVerifyFailedOfflineInLeanAuditMatrix() async throws {
-        try await auditVerify(state: "failedOffline")
+        try await auditVerify(state: "failedOffline", profile: .light)
+    }
+    @MainActor func testVerifyFailedOfflineInLeanAuditMatrixDark() async throws {
+        try await auditVerify(state: "failedOffline", profile: .dark)
+    }
+    @MainActor func testVerifyFailedOfflineInLeanAuditMatrixXXLarge() async throws {
+        try await auditVerify(state: "failedOffline", profile: .xxLarge)
     }
 
-    @MainActor private func auditVerify(state: String) async throws {
+    @MainActor private func auditVerify(state: String, profile: Profile) async throws {
         try await FontRegistry.register()
         let previous = XCUIDevice.shared.appearance
         defer { XCUIDevice.shared.appearance = previous }
-        for (language, appearance, xxLarge) in variants {
+        for (language, appearance, xxLarge) in variants(for: profile) {
             try DeviceAppearance.set(appearance)
             let app = XCUIApplication()
             app.launchArguments = AuthUIFlow.arguments(language: language, xxLarge: xxLarge)
             app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
             app.launchEnvironment["CF_AUTH_TEST_VERIFY_STATE"] = state
             if state.hasPrefix("failed") {
-                app.launchEnvironment["CF_AUTH_TEST_LINK"] = "https://app.chronoflow.net/email/verify/invalid"
+                app.launchEnvironment["CF_AUTH_TEST_UNVERIFIED"] = "1"
+                app.launchEnvironment["CF_AUTH_TEST_LINK"] = tamperedVerificationURL()
             }
             app.launch()
             defer { app.terminate() }
-            openSignUp(app)
-            fillSignUp(app, email: "verify@example.com")
+            if state.hasPrefix("failed") {
+                AuthUIFlow.openSignIn(app)
+                AuthUIFlow.signIn(app, email: MockScenarioValues.demoEmail)
+            } else {
+                openSignUp(app)
+                fillSignUp(app, email: "verify@example.com")
+            }
             let first = app.buttons[state.hasPrefix("failed") ? "verify.retry" : "verify.open-email"]
             XCTAssertTrue(first.waitForExistence(timeout: 8))
             AuthUIFlow.waitUntilEnabled(first)
@@ -421,12 +493,12 @@ nonisolated final class AuthAuditTests: XCTestCase {
                 XCTAssertTrue(AuthUIFlow.control("verify.sign-out-error", in: app).waitForExistence(timeout: 6))
             }
             let identifiers =
-                state.hasPrefix("failed")
-                ? ["auth.back", "verify.retry", "verify.resend"]
-                : ["auth.back", "verify.open-email", "verify.resend", "verify.different-email"]
-                    + (["countdown", "throttle"].contains(state) ? ["verify.countdown"] : [])
-                    + (["server", "throttle", "failedServer", "failedThrottle"].contains(state) ? ["auth.banner"] : [])
-                    + (state == "signOutError" ? ["verify.sign-out-error"] : [])
+                (state.hasPrefix("failed")
+                    ? ["auth.back", "verify.retry", "verify.resend"]
+                    : ["auth.back", "verify.open-email", "verify.resend", "verify.different-email"])
+                + (["countdown", "throttle"].contains(state) ? ["verify.countdown"] : [])
+                + (["server", "throttle", "failedServer", "failedThrottle"].contains(state) ? ["auth.banner"] : [])
+                + (state == "signOutError" ? ["verify.sign-out-error"] : [])
             auditControls(
                 app, identifiers: identifiers, language: "\(language), verify-\(state)", appearance: appearance,
                 xxLarge: xxLarge)

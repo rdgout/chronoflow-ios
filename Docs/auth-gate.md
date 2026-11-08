@@ -395,3 +395,40 @@ simulator run. Existing 78 Forgot references remain byte-identical; the AX5 font
 
 Run the suites in Docs/tooling.md. Real AASA/team registration, physical links/passkeys, unbuilt gate
 destinations and Phase 6–8 launch acceptance remain open; this work does not claim TestFlight readiness.
+
+### Phases 11b–11d simulator fix round 2 (8 November 2026)
+
+The user recorded 104 Reset, 130 SignUp and 130 Verify references and reports their
+compare suites passing. The phase patches include those exact PNGs without rerecording.
+The supplied controls/layout/link/session passes remain evidence for the previous build;
+this round's changed flows and audits still need the focused simulator rerun below.
+
+Native SwiftUI TextField/SecureField keep `.textContentType(.newPassword)`. SwiftUI exposes
+no passwordRules API; the traits probe and unsupported assertions are removed under the
+user's OQ 21 decision. The server enforces the full policy. Accessibility identifiers,
+labels and hints attach to the input before decorative modifiers; the audit requires one
+match for every scheduled identifier.
+
+UI entry declines the system strong-password sheet using `GenerateStrongPasswordButton`
+and `xmark`, checking the app and SpringBoard without localized labels. It checks native
+field focus before typing and retries at most three times, including before confirmation.
+The app's AutoFill traits stay enabled. Audits dismiss the keyboard, settle geometry and
+reveal every scheduled control before checking it. Only contrast issues geometrically
+inside a scheduled but clipped control wait for that control's visible audit; other issue
+types and unrelated frames remain strict. Each distinct scroll position is audited once.
+
+The unattributed wordmark exception now uses every current auth screen's unique
+`auth.brand` geometry and rendered wordmark pixels (`skyTitle` over the sky), requiring a
+complete finite minimum of at least 4.5:1. It retains the 0.01 pt Float/Double containment
+tolerance. Banner pixels cannot exempt a wordmark, and named controls cannot use this
+exception. Reset form/done do not expect Back. All 37 audit states keep en/nl × light/dark
+plus en/light xxLarge, split into light, Dark and XXLarge test methods with at most two
+launches per method. The XCTest 600-second watchdog is unchanged; measured per-method
+runtime remains user-host acceptance.
+
+Unbindable malformed verify URLs are ignored across authentication, as required by round
+1's account binding. A separate structurally valid but tampered URL for the seeded
+unverified demo account is retained until sign-in and produces the failed screen. Failed
+Verify audits use that fixture, including an isolated Debug-only mock 429 for failed-state
+resend. Sign-up/mail/relaunch and cross-account wipe flows continue through the shared
+native AutoFill entry helper. No authentication/link-binding rule is relaxed.

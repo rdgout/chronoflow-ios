@@ -39,7 +39,7 @@ nonisolated final class AccountRecoveryTests: XCTestCase {
         AuthUIFlow.openSignIn(app)
         XCTAssertFalse(app.scrollViews["verify.scroll"].exists)
     }
-    @MainActor func testMalformedSignedLinkWaitsForAuthenticationAndShowsFailed() {
+    @MainActor func testMalformedUnboundLinkIsIgnoredAcrossAuthentication() {
         let app = XCUIApplication()
         app.launchArguments = AuthUIFlow.arguments()
         app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
@@ -47,7 +47,22 @@ nonisolated final class AccountRecoveryTests: XCTestCase {
         app.launchEnvironment["CF_AUTH_TEST_LINK"] = "https://app.chronoflow.net/email/verify/invalid"
         app.launch()
         defer { app.terminate() }
-        XCTAssertTrue(app.textFields["sign-in.email"].waitForExistence(timeout: 12))
+        AuthUIFlow.openSignIn(app)
+        AuthUIFlow.signIn(app, email: MockScenarioValues.demoEmail)
+        XCTAssertTrue(app.buttons["verify.open-email"].waitForExistence(timeout: 8))
+        XCTAssertFalse(app.buttons["verify.retry"].exists)
+    }
+
+    @MainActor func testTamperedAccountBoundLinkWaitsForAuthenticationAndShowsFailed() {
+        let app = XCUIApplication()
+        app.launchArguments = AuthUIFlow.arguments()
+        app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
+        app.launchEnvironment["CF_AUTH_TEST_UNVERIFIED"] = "1"
+        app.launchEnvironment["CF_AUTH_TEST_LINK"] = tamperedVerificationURL()
+        app.launch()
+        defer { app.terminate() }
+        AuthUIFlow.openSignIn(app)
+        XCTAssertFalse(app.buttons["verify.retry"].exists)
         AuthUIFlow.signIn(app, email: MockScenarioValues.demoEmail)
         XCTAssertTrue(app.buttons["verify.retry"].waitForExistence(timeout: 8))
     }
