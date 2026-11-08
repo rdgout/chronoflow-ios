@@ -57,7 +57,7 @@
                             .frame(width: PlanUITokens.stepGoneCircleSize, height: PlanUITokens.stepGoneCircleSize)
                             .foregroundStyle(ColorToken.dawnText.color)
                             .background(ColorToken.muted.color, in: Circle()).accessibilityHidden(true)
-                        Text(t("This step is no longer in your plan")).font(Typography.screenCardTitle.font)
+                        Text(t("This step is no longer in your plan")).planTextStyle(Typography.screenCardTitle)
                             .accessibilityAddTraits(.isHeader)
                         Text(
                             t(
@@ -107,7 +107,7 @@
                         HStack { badges(block, mark: mark, running: running) }
                         VStack(alignment: .leading) { badges(block, mark: mark, running: running) }
                     }
-                    Text(t(stepLabelKey(block.type) ?? "Note")).font(Typography.screenCardTitle.font)
+                    Text(t(stepLabelKey(block.type) ?? "Note")).planTextStyle(Typography.screenCardTitle)
                         .accessibilityAddTraits(.isHeader)
                     Text(
                         running
@@ -120,7 +120,7 @@
                                             language: language, duration: true)
                                     ]) : time
                     )
-                    .font(Typography.screenBody.font).foregroundStyle(ColorToken.mutedForeground.color)
+                    .planTextStyle(Typography.screenBody, color: .mutedForeground)
                     .monospacedDigit()
                 }
             }
@@ -149,7 +149,7 @@
                 }
             }
             Text(t("Checking off changes your progress, never your plan."))
-                .font(Typography.screenMeta.font).foregroundStyle(ColorToken.mutedForeground.color)
+                .planTextStyle(Typography.screenMeta, color: .mutedForeground)
                 .frame(maxWidth: .infinity).multilineTextAlignment(.center)
         }
         @ViewBuilder private var actions: some View {
@@ -180,10 +180,8 @@
             -> some View
         {
             VStack(alignment: .leading, spacing: PlanUITokens.space2) {
-                Text(t(title).uppercased()).font(Typography.screenLabel.font).foregroundStyle(
-                    ColorToken.mutedForeground.color
-                )
-                .accessibilityAddTraits(.isHeader)
+                Text(t(title).uppercased()).planTextStyle(Typography.screenLabel, color: .mutedForeground)
+                    .accessibilityAddTraits(.isHeader)
                 ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
                     HStack(alignment: .top, spacing: PlanUITokens.space3) {
                         if bullets {

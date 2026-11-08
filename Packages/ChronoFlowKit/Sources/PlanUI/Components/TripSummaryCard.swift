@@ -38,10 +38,10 @@
                             text: t(
                                 trip.status == .active ? "Active" : trip.status == .completed ? "Completed" : "Upcoming"
                             ), active: trip.status == .active)
-                        if let number = card.flightNumber { Text(number).font(Typography.screenMeta.font) }
+                        if let number = card.flightNumber { Text(number).planTextStyle(Typography.screenMeta) }
                         Spacer(minLength: 0)
                         Text(formatter.formatOffset(Double(card.offsetDifferenceMinutes), language: language))
-                            .font(Typography.screenMeta.font).foregroundStyle(ColorToken.mutedForeground.color)
+                            .planTextStyle(Typography.screenMeta, color: .mutedForeground)
                     }
                     HStack(spacing: PlanUITokens.space3) {
                         airport(card.from)
@@ -51,7 +51,9 @@
                         airport(card.to, trailing: true)
                     }
                     HStack(spacing: PlanUITokens.space2) {
-                        Text(times).font(Typography.screenBody.font).monospacedDigit()
+                        Text(times).planTextStyle(
+                            Typography.screenBody, color: .mutedForeground, context: "\(card.id).times"
+                        ).monospacedDigit()
                         if next == nil {
                             Spacer(minLength: 0)
                             Image(systemName: "chevron.right").font(.system(size: PlanUITokens.space5))
@@ -62,33 +64,36 @@
                         HStack(spacing: PlanUITokens.space3) {
                             CategorySwatch(next.type)
                             VStack(alignment: .leading, spacing: PlanUITokens.space1) {
-                                Text(nextLabel(next)).font(Typography.screenEyebrow.font).foregroundStyle(
-                                    ColorToken.dawnText.color)
+                                Text(nextLabel(next)).planTextStyle(Typography.screenEyebrow, color: .dawnText)
                                 Text(
                                     formatter.format(
                                         next.text,
                                         options: CopyFormat(
                                             language: language, timeFormat: timeFormat, displayZone: next.displayTz))
                                 )
-                                .font(Typography.screenBodyLg.font)
+                                .planTextStyle(Typography.screenBodyLg)
                             }
                             Spacer(minLength: 0)
                             Image(systemName: "chevron.right").accessibilityHidden(true)
                         }.padding(PlanUITokens.space3).background(
                             ColorToken.surface2.color, in: RoundedRectangle(cornerRadius: PlanUITokens.radius2Xl))
                     } else if showPlanStart && trip.status == .upcoming {
-                        Text(startLabel).font(Typography.screenLabel.font).foregroundStyle(ColorToken.dawnText.color)
+                        Text(startLabel).planTextStyle(Typography.screenLabel, color: .dawnText)
                     }
                 }.planCard(active: trip.status == .active, completed: trip.status == .completed)
+                    .contentShape(RoundedRectangle(cornerRadius: PlanUITokens.radius3Xl))
             }
             .buttonStyle(.plain).foregroundStyle(ColorToken.cardForeground.color)
             .accessibilityIdentifier("trip.\(card.id)").accessibilityElement(children: .combine)
         }
         private func airport(_ airport: AirportRef, trailing: Bool = false) -> some View {
             VStack(alignment: trailing ? .trailing : .leading) {
-                Text(airport.iata).font(Typography.screenPageTitle.font)
+                Text(airport.iata).planTextStyle(
+                    Typography.screenPageTitle, context: "\(trip.card.id).\(trailing ? "to" : "from").iata")
                 if let city = airport.city {
-                    Text(city).font(Typography.screenBody.font).foregroundStyle(ColorToken.mutedForeground.color)
+                    Text(city).planTextStyle(
+                        Typography.screenBody, color: .mutedForeground,
+                        context: "\(trip.card.id).\(trailing ? "to" : "from").city")
                 }
             }.frame(maxWidth: .infinity, alignment: trailing ? .trailing : .leading)
         }

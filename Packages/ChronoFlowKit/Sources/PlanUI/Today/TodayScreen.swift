@@ -76,7 +76,7 @@
                     .frame(width: PlanUITokens.space14, height: PlanUITokens.space14)
                     .foregroundStyle(ColorToken.dawnText.color).background(ColorToken.muted.color, in: Circle())
                     .accessibilityHidden(true)
-                Text(t("No trips yet")).font(Typography.screenCardTitle.font).accessibilityAddTraits(.isHeader)
+                Text(t("No trips yet")).planTextStyle(Typography.screenCardTitle).accessibilityAddTraits(.isHeader)
                 Text(t("Add your flights and you get a day-by-day plan for sleep, light and caffeine."))
                     .foregroundStyle(ColorToken.mutedForeground.color)
             }.font(Typography.screenBodyLg.font).multilineTextAlignment(.center).frame(maxWidth: .infinity)
@@ -91,7 +91,8 @@
                     .frame(width: PlanUITokens.space14, height: PlanUITokens.space14)
                     .foregroundStyle(ColorToken.dawnText.color).background(ColorToken.muted.color, in: Circle())
                     .accessibilityHidden(true)
-                Text(t("No trips coming up")).font(Typography.screenCardTitle.font).accessibilityAddTraits(.isHeader)
+                Text(t("No trips coming up")).planTextStyle(Typography.screenCardTitle).accessibilityAddTraits(
+                    .isHeader)
                 Text(
                     t(
                         "Your last trip, {{route}}, ended on {{date}}. Plan the next one when you know your flights.",
@@ -110,7 +111,7 @@
         }
         private func future(_ trip: TripListValue) -> some View {
             VStack(alignment: .leading, spacing: PlanUITokens.space2) {
-                Text(t("Nothing to do today")).font(Typography.screenSectionTitle.font).accessibilityAddTraits(
+                Text(t("Nothing to do today")).planTextStyle(Typography.screenSectionTitle).accessibilityAddTraits(
                     .isHeader)
                 Text(t("Keep your usual sleep times."))
                 if let days = trip.preparationDays, days > 0 {
@@ -134,7 +135,7 @@
                             arguments: ["count": String(day.postArrivalIndex ?? 0)],
                             count: Double(day.postArrivalIndex ?? 0))
                     )
-                    .font(Typography.screenSectionTitle.font).accessibilityAddTraits(.isHeader)
+                    .planTextStyle(Typography.screenSectionTitle).accessibilityAddTraits(.isHeader)
                     if let status = day.status {
                         DayStatusPill(status: status, text: t(dayStatusLabelKey(status) ?? ""))
                     }
@@ -150,7 +151,8 @@
                     VStack(spacing: PlanUITokens.space2) {
                         Image(systemName: "calendar.badge.checkmark").font(.system(size: PlanUITokens.space6))
                             .accessibilityHidden(true)
-                        Text(t("Nothing scheduled right now.")).font(Typography.screenBodyLg.font)
+                        Text(t("Nothing scheduled right now.")).planTextStyle(
+                            Typography.screenBodyLg, color: .mutedForeground)
                     }.foregroundStyle(ColorToken.mutedForeground.color).multilineTextAlignment(.center)
                         .frame(maxWidth: .infinity).padding(PlanUITokens.space6)
                         .overlay {
@@ -163,7 +165,9 @@
             }
             VStack(alignment: .leading, spacing: PlanUITokens.space2) {
                 heading("Up next")
-                if view.upcomingSteps.isEmpty { Text(t("No more scheduled items.")).font(Typography.screenBodyLg.font) }
+                if view.upcomingSteps.isEmpty {
+                    Text(t("No more scheduled items.")).planTextStyle(Typography.screenBodyLg)
+                }
                 ForEach(view.upcomingSteps, id: \.id) { row($0, view: view, running: false) }
             }
             if view.importantHidden || view.allCategoriesHidden {
@@ -190,9 +194,8 @@
             }
         }
         private func heading(_ key: String) -> some View {
-            Text(t(key).uppercased()).font(Typography.screenLabel.font).foregroundStyle(
-                ColorToken.mutedForeground.color
-            ).accessibilityAddTraits(.isHeader)
+            Text(t(key).uppercased()).planTextStyle(Typography.screenLabel, color: .mutedForeground)
+                .accessibilityAddTraits(.isHeader)
         }
         private func row(_ block: BlockView, view: TodayPlan, running: Bool) -> some View {
             let mark =

@@ -14,9 +14,12 @@ struct AppTabs: View {
     @State private var home: PlanHomeModel?
     @State private var tripsPath: [TripPageRoute] = []
     @State private var path: [TripPageRoute] = []
-    @State private var stepTripID: String?
-    @State private var stepID: String?
-    @State private var showingStep = false
+    private struct StepSelection: Identifiable {
+        let tripID: String
+        let blockID: String
+        var id: String { "\(tripID)/\(blockID)" }
+    }
+    @State private var step: StepSelection?
     #if DEBUG
         @State private var showingLegend = false
     #endif
@@ -77,8 +80,7 @@ struct AppTabs: View {
                 else {
                     model.stop()
                     home = nil
-                    showingStep = false
-                    clearStep()
+                    step = nil
                     return
                 }
             }
@@ -91,22 +93,17 @@ struct AppTabs: View {
         .onChange(of: home?.trips.trips.filter { $0.status == .active }.map { $0.card.id }, initial: true) { _, ids in
             for id in ids ?? [] { _ = home?.detail(for: id) }
         }
-        .sheet(isPresented: $showingStep, onDismiss: clearStep) {
-            if let home, let formatter = home.formatter, let stepID, let stepTripID {
+        .sheet(item: $step) { selection in
+            if let home, let formatter = home.formatter {
                 StepSheet(
-                    detail: home.details[stepTripID]?.detail, blockID: stepID, now: home.trips.now,
+                    detail: home.details[selection.tripID]?.detail, blockID: selection.blockID, now: home.trips.now,
                     formatter: formatter, timeFormat: home.timeFormat, busy: home.changingCheck
                 ) { status in
-                    await home.setCheck(tripID: stepTripID, blockID: stepID, status: status)
+                    await home.setCheck(tripID: selection.tripID, blockID: selection.blockID, status: status)
                 }
             }
         }
 
-    }
-
-    private func clearStep() {
-        stepID = nil
-        stepTripID = nil
     }
 
     @ViewBuilder private var today: some View {
@@ -117,9 +114,9 @@ struct AppTabs: View {
                 hidden: home.hidden, timeFormat: home.timeFormat,
                 openTrip: { path.append(TripPageRoute(tripID: $0)) },
                 openStep: {
-                    stepTripID = home.hero?.card.id
-                    stepID = $0
-                    showingStep = true
+                    if let tripID = home.hero?.card.id {
+                        step = StepSelection(tripID: tripID, blockID: $0)
+                    }
                 }, settings: { selection = .settings },
                 pastTrips: { selection = .trips }
             )

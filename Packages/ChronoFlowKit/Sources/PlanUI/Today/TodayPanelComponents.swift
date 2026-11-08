@@ -11,7 +11,9 @@
         var body: some View {
             HStack(spacing: PlanUITokens.space1) {
                 if adapted { Image(systemName: "checkmark").accessibilityHidden(true) }
-                Text(text)
+                Text(text).planTextStyle(
+                    Typography.screenMeta,
+                    color: adapted ? .dawnForeground : status == .partiallyAdapted ? .secondaryForeground : .dawnText)
             }.font(Typography.screenMeta.font)
                 .padding(.horizontal, PlanUITokens.space2).padding(.vertical, PlanUITokens.space1 / 2)
                 .foregroundStyle(
@@ -44,12 +46,7 @@
                 ProgressView(value: Double(done), total: Double(total))
                     .progressViewStyle(.linear).tint(ColorToken.dawn.color)
                     .frame(width: PlanUITokens.progressTrackWidth)
-                    .accessibilityLabel(
-                        PlanStrings.text(
-                            "{{done}} of {{total}} done", language: language,
-                            ["done": String(done), "total": String(total)])
-                    )
-                    .accessibilityValue(Text(""))
+                    .accessibilityHidden(true)
                 HStack(spacing: PlanUITokens.space2) {
                     Image(systemName: "checkmark")
                     Text(
@@ -61,6 +58,15 @@
                     Text(PlanStrings.text("{{count}} skipped", language: language, count: skipped))
                 }
             }.font(Typography.screenMeta.font).foregroundStyle(ColorToken.mutedForeground.color)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(
+                    PlanStrings.text(
+                        "{{done}} of {{total}} done", language: language,
+                        ["done": String(done), "total": String(total)])
+                        + (skipped > 0
+                            ? ", " + PlanStrings.text("{{count}} skipped", language: language, count: skipped) : "")
+                )
+                .accessibilityIdentifier("today.progress")
         }
     }
 

@@ -104,7 +104,7 @@
             self.variant = variant
         }
         var body: some View {
-            Text(text).font(Typography.screenMeta.font).padding(.horizontal, PlanUITokens.space2)
+            Text(text).planTextStyle(Typography.screenMeta, color: foreground).padding(.horizontal, PlanUITokens.space2)
                 .padding(.vertical, AuthTokens.borderWidth)
                 .foregroundStyle(foreground.color)
                 .background {
@@ -130,7 +130,7 @@
     struct PriorityTag: View {
         let text: String
         var body: some View {
-            Text(text).font(Typography.screenPriorityTag.font)
+            Text(text).planTextStyle(Typography.screenPriorityTag)
                 .padding(.horizontal, PlanUITokens.space1 + PlanUITokens.space1 / 2)
                 .padding(.vertical, AuthTokens.borderWidth)
                 .background(ColorToken.background.color.opacity(PlanUITokens.priorityTagOpacity), in: Capsule())

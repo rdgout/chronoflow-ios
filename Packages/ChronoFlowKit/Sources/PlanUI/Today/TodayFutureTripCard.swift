@@ -26,10 +26,10 @@
                         PlanBadge(text: t("Upcoming"))
                         Spacer(minLength: 0)
                         Text(days == 0 ? t("Today") : t("In {{count}} days", count: days))
-                            .font(Typography.screenMeta.font).foregroundStyle(ColorToken.mutedForeground.color)
+                            .planTextStyle(Typography.screenMeta, color: .mutedForeground)
                     }
                     Text(t("{{from}} → {{to}}", ["from": card.from.iata, "to": card.to.iata]))
-                        .font(Typography.screenPageTitle.font)
+                        .planTextStyle(Typography.screenPageTitle)
                     Text(
                         t(
                             card.flightNumber == nil
@@ -42,13 +42,12 @@
                                     Double(card.offsetDifferenceMinutes), language: language),
                             ])
                     )
-                    .font(Typography.screenBody.font).foregroundStyle(ColorToken.mutedForeground.color)
+                    .planTextStyle(Typography.screenBody, color: .mutedForeground)
                     if let next {
                         HStack(spacing: PlanUITokens.space3) {
                             CategorySwatch(next.type)
                             VStack(alignment: .leading, spacing: PlanUITokens.space1) {
-                                Text(startLabel).font(Typography.screenEyebrow.font)
-                                    .foregroundStyle(ColorToken.dawnText.color)
+                                Text(startLabel).planTextStyle(Typography.screenEyebrow, color: .dawnText)
                                 Text(
                                     formatter.format(next.text, options: options(next))
                                         + t(
@@ -64,7 +63,7 @@
                             .background(
                                 ColorToken.surface2.color, in: RoundedRectangle(cornerRadius: PlanUITokens.radius2Xl))
                     }
-                }.planCard()
+                }.planCard().contentShape(RoundedRectangle(cornerRadius: PlanUITokens.radius3Xl))
             }.buttonStyle(.plain).foregroundStyle(ColorToken.cardForeground.color)
                 .accessibilityIdentifier("trip.\(card.id)").accessibilityElement(children: .combine)
         }

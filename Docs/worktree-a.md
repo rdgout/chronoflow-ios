@@ -125,3 +125,56 @@ No simulator commands ran and no references were recorded. Runtime capture,
 comparison and visual reference acceptance remain for the user's recording pass.
 The repair is delivered as `build/commits/1.patch` against `a792f50`, with its
 Conventional Commit subject in `build/commits/messages.txt`.
+
+## Simulator failure repair (2026-11-08, base baf799d)
+
+Read the user's failure list and the original `build/test-results/17e/Debug-compare.xcresult`
+and `Debug-serial.xcresult`, including their saved audit screenshots. This work ran no
+simulator, simulator build, recording, clean or device-matrix command. Direct Swift SDK
+compilation only checks types; it does not establish runtime acceptance.
+
+| Failure | Decision and repair |
+| --- | --- |
+| StepSheetLayoutTests/testStepActionsAndLegendScrollWithinEveryLeanProfile | Test bug. The native scroll frame underlaps the Duo rail. Bound actual accessible content against the window's left/right insets, require accessible content to be found, retain zero horizontal overflow, and diagnose the adjusted viewport using all four insets. |
+| TodayLayoutTests/testEveryTodayStateScrollsWithinTheThreeProfilesAtXXLarge | Same test bug. The Duo window is 466 pt wide with a 19 pt right inset: the content limit is 447 pt (448 including the existing 1 pt tolerance). A full-width native scroll frame is not the content's frame. The shared helper now checks actual content. The user's passing TodayControlTests already verified row frames inside this same rail. |
+| TripsLayoutTests/testListEmptyAndLoadingStayInsideEveryRailAtXXLarge | Same shared test bug. Check actual list/empty/loading accessibility frames against the supplied rail rather than requiring the native scroll frame to avoid it. |
+| StepSheetTests/testTodayStepCanBeDoneUndoneSkippedAndReopened | App bug. Separate optional trip/block state and a presentation Boolean could mount an empty first sheet. One Identifiable selection now carries both IDs through sheet(item:). The UI flow also really dismisses/reopens after Skip, verifies the persisted Undo action, and taps the row's padded trailing edge. |
+| PlanAuditTests/testStepSheetPrimaryState | Same app presentation bug, before any audit ran. The audit now reaches the item-backed sheet; presentation assertion failures include the app tree. |
+| PlanAuditTests/testTodayPrimaryState | The saved activity log identifies the 80 × 4 progress indicator as the hit-region finding: an app accessibility bug. Keep the native visual progress bar and expose its row as one spoken done/skipped summary. Plain row/card labels also receive content shapes covering their padding. The two contrast findings are Flight and its time subtitle under the floating tab bar, not low-contrast token pairs. Uniquely identify each text by style/token and block context, match its reported frame, reveal that same text above native chrome, and require fresh passing pixels. Dynamic Type findings came from an unrestricted audit despite the settled root cap. |
+| PlanAuditTests/testTripsPrimaryState | Test bugs: the three contrast findings are Los Angeles, Amsterdam and the interval of the lower upcoming card, beneath the floating tab bar. Trip/airport/interval identifiers retain identity through reveal and measurement. Apply the same strict pixel policy and root-cap audit selection. |
+| PlanAuditTests/testLegendPrimaryState | Test bugs: the contrast finding is the native Close control's glass boundary; its saved text crop measures 19.7134:1 using RenderedTextContrast. Preserve native rendering, add legend.close, and accept only an exact control identity/frame with a fresh complete ≥ 4.5:1 measurement. The cropped failure image is a host regression fixture, not a new screen reference. The Close Dynamic Type finding follows the same root-cap policy. |
+
+Plan audits use the already-settled `all.subtracting(.dynamicType)` type set, as Auth
+and Welcome do (plan Phase 5 fix round 3). No per-view cap was added. The existing
+xxLarge layout/profile suites remain; host tests verify that all plan text styles
+are scalable, and UIKit font assertions compare large, xxLarge and AX5 at the cap.
+
+Contrast exceptions require unique identifier/frame attribution before measurement,
+the same label and unique live identifier after reveal, complete visible-line
+measurements and a finite minimum ≥ 4.5:1. The reading viewport uses the window's four
+safe-area insets plus the current navigation/tab bar frames. Neither clipping nor
+being beneath glass grants an exception by itself. Native Close uses its own system
+label ink and single-line control frame. Every other failure remains strict; disabled
+buttons/switches require matching live identifier, label and frame and only qualify
+for contrast/hit-region exceptions. Audit failures and retained attachments print
+identifier, label, original/revealed frames, viewport, measured lines/ratios and the
+exception decision. The original Close crop is exported attachment
+`FEC19E96-DD4F-4F31-B15C-5A3099F846E1.png` from the user's legend audit.
+
+Host verification: `make lint` passes. `make host-tests` reports 442/443 package tests
+passing; the only failure is the existing
+`APICookieTests.realRedirectCookieHandlingIsDisabled` loopback listener EPERM.
+All five PlanLayoutEvidenceTests pass, including the saved native Close crop,
+contrast pairs in both appearances (and actual dimmed completed-card pairs),
+all seven device profiles/reversed insets, scalable fonts and fail-closed attribution.
+The remaining host tiers pass separately: 10 TokenGen tests, 7 AssetGen tests and
+98 signing/resource/runner fixtures. Direct Swift 6 iOS 17 SDK compilation checks
+the package modules, app, AppTests and AppUITests without launching a simulator.
+
+Logs: `build/plan-failures-lint-final.log`, `build/plan-failures-host-final.log`,
+`build/plan-failures-host-remainder.log`, `build/plan-failures-evidence-final.log`,
+`build/plan-failures-typecheck-final.log` and
+`build/plan-failures-typecheck-tests-final.log`. Runtime presentation, audit reveal
+behavior and snapshot comparison remain for the user's 17e run. No references changed.
+Delivery: one atomic `build/commits/1.patch` against `baf799d`, with its Conventional
+Commit subject in `build/commits/messages.txt`.

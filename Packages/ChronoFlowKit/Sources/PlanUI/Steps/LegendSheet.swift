@@ -19,30 +19,29 @@
                             t(
                                 "Each kind of step has its own icon and pattern, so you can tell them apart without colour."
                             )
-                        ).font(Typography.screenBody.font).foregroundStyle(ColorToken.mutedForeground.color)
+                        ).planTextStyle(Typography.screenBody, color: .mutedForeground)
                         ForEach(Array(groups.enumerated()), id: \.offset) { _, group in
                             VStack(alignment: .leading, spacing: PlanUITokens.space3) {
-                                Text(t(group.0).uppercased()).font(Typography.screenLabel.font).foregroundStyle(
-                                    ColorToken.mutedForeground.color
+                                Text(t(group.0).uppercased()).planTextStyle(
+                                    Typography.screenLabel, color: .mutedForeground
                                 ).accessibilityAddTraits(
                                     .isHeader)
                                 ForEach(group.1, id: \.rawValue) { type in
                                     HStack(spacing: PlanUITokens.space3) {
                                         CategorySwatch(type)
                                         VStack(alignment: .leading) {
-                                            Text(t(stepLabelKey(type) ?? "Note")).font(Typography.screenBodyLg.font)
-                                            Text(t(legendDescription(type))).font(Typography.screenBody.font)
-                                                .foregroundStyle(ColorToken.mutedForeground.color)
+                                            Text(t(stepLabelKey(type) ?? "Note")).planTextStyle(Typography.screenBodyLg)
+                                            Text(t(legendDescription(type))).planTextStyle(
+                                                Typography.screenBody, color: .mutedForeground)
                                         }
                                     }.accessibilityElement(children: .combine)
                                 }
                             }
                         }
-                        Text(t("How important")).font(Typography.screenLabel.font).foregroundStyle(
-                            ColorToken.mutedForeground.color
-                        ).accessibilityAddTraits(.isHeader)
+                        Text(t("How important")).planTextStyle(Typography.screenLabel, color: .mutedForeground)
+                            .accessibilityAddTraits(.isHeader)
                         VStack(alignment: .leading, spacing: PlanUITokens.space2) {
-                            Text(t("Priority")).font(Typography.screenLabel.font).accessibilityAddTraits(.isHeader)
+                            Text(t("Priority")).planTextStyle(Typography.screenLabel).accessibilityAddTraits(.isHeader)
                             LazyVGrid(
                                 columns: [
                                     GridItem(.flexible(), alignment: .leading),
@@ -55,8 +54,8 @@
                                         VStack(alignment: .leading) {
                                             Text(t(priorityKey(priority))).font(
                                                 Typography.screenBody.font.weight(.medium))
-                                            Text(t(priorityDescription(priority))).font(Typography.screenMeta.font)
-                                                .foregroundStyle(ColorToken.mutedForeground.color)
+                                            Text(t(priorityDescription(priority))).planTextStyle(
+                                                Typography.screenMeta, color: .mutedForeground)
                                         }
                                     }.accessibilityElement(children: .combine)
                                 }
@@ -65,7 +64,11 @@
                     }.padding(PlanUITokens.space5)
                 }
                 .navigationTitle(t("What the steps mean")).navigationBarTitleDisplayMode(.inline)
-                .toolbar { ToolbarItem(placement: .confirmationAction) { Button(t("Close")) { dismiss() } } }
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button(t("Close")) { dismiss() }.accessibilityIdentifier("legend.close")
+                    }
+                }
                 .background(ColorToken.card.color).accessibilityIdentifier("legend.sheet")
             }.presentationDragIndicator(.visible)
         }

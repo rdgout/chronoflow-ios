@@ -43,10 +43,10 @@
                             Image(systemName: "airplane").font(.system(size: PlanUITokens.space6))
                                 .frame(width: PlanUITokens.space14, height: PlanUITokens.space14)
                                 .background(ColorToken.muted.color, in: Circle()).accessibilityHidden(true)
-                            Text(t("No trips yet")).font(Typography.screenCardTitle.font).accessibilityAddTraits(
+                            Text(t("No trips yet")).planTextStyle(Typography.screenCardTitle).accessibilityAddTraits(
                                 .isHeader)
                             Text(t("Your upcoming, active and past trips show up here."))
-                                .font(Typography.screenBodyLg.font).foregroundStyle(ColorToken.mutedForeground.color)
+                                .planTextStyle(Typography.screenBodyLg, color: .mutedForeground)
                         }.multilineTextAlignment(.center).frame(maxWidth: .infinity)
                             .padding(.vertical, PlanUITokens.space8).planEmptyCard().accessibilityIdentifier(
                                 "trips.empty")
@@ -59,7 +59,7 @@
                                             ? "Active" : section.status == .upcoming ? "Upcoming" : "Completed"
                                     ).uppercased()
                                 )
-                                .font(Typography.screenLabel.font).foregroundStyle(ColorToken.mutedForeground.color)
+                                .planTextStyle(Typography.screenLabel, color: .mutedForeground)
                                 .accessibilityAddTraits(.isHeader)
                                 .accessibilityIdentifier("trips.section.\(section.status.rawValue)")
                                 ForEach(section.trips, id: \.card.id) { trip in
