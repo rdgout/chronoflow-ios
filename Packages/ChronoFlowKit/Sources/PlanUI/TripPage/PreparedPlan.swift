@@ -8,6 +8,7 @@ nonisolated public struct PreparedBlock: Sendable, Equatable, Identifiable {
     public var title: String
     public var interval: String
     public var priority: String
+    public var reason: String?
     public var instructions: String
     public var accessibilityLabel: String
     public var status: CheckStatus?
@@ -34,10 +35,11 @@ nonisolated public struct PreparedDay: Sendable, Equatable, Identifiable {
 }
 
 nonisolated public struct PreparedPlan: Sendable, Equatable {
+    public var revision: String
     public var days: [PreparedDay]
     public var title: String
     public var subtitle: String
-    public var rationale: String?
+    public var shift: String?
     public var summary: String
     public var endText: String
     public var assumedEnd: String?
@@ -46,15 +48,20 @@ nonisolated public struct PreparedPlan: Sendable, Equatable {
 
 nonisolated public func preparePlan(
     _ detail: TripDetail, layouts: [String: DayLayout], formatter: CopyLineFormatter,
-    language: Language, timeFormat: TimeFormat = .value24, marks: [CheckMark] = []
+    language: Language, timeFormat: TimeFormat = .value24, marks: [CheckMark] = [], pendingChecks: [CheckOffChange] = []
 ) -> PreparedPlan {
     let copy = PageCopy(language: language)
     let options = CopyFormat(language: language, timeFormat: timeFormat, trip: detail.trip)
     let plan = detail.plan
     let visible = withoutOptionalSteps(plan)
-    let index = Dictionary(
+    let dayBlocks = timelineBlocksByDay(visible)
+    var index = Dictionary(
         (detail.checkState.marks + marks).map { (checkIdentity($0.key), $0.status) },
         uniquingKeysWith: { _, new in new })
+    for change in pendingChecks {
+        let key = CheckKeyView(type: change.type, localDate: change.localDate, ordinal: change.ordinal)
+        index[checkIdentity(key)] = change.status
+    }
     let days = plan.days.compactMap { day -> PreparedDay? in
         guard let layout = layouts[day.id] else { return nil }
         let placed = timelineLanes.flatMap { layout.placed[$0] ?? [] }
@@ -90,6 +97,7 @@ nonisolated public func preparePlan(
                 }
                 return PreparedBlock(
                     block: block, title: title, interval: interval, priority: priority,
+                    reason: p?.presentation.reasons.first.map { formatter.format($0, options: options) },
                     instructions: ([block.text] + (block.secondaryText.map { [$0] } ?? [])).map {
                         formatter.format($0, options: options)
                     }.joined(separator: " "),
@@ -98,7 +106,10 @@ nonisolated public func preparePlan(
             }
         let notices = noticeItems(plan, notices: detail.notices, day: day)
         let summary = [BlockType.sleep, .seekLight].map { type in
-            let intervals = summaryIntervals(day, blocks: visible.blocks, type: type)
+            let intervals = summaryIntervals(day, blocks: dayBlocks[day.id] ?? [], type: type)
+            if intervals.isEmpty, type == .seekLight, let line = day.noLightText {
+                return formatter.format(line, options: options)
+            }
             return copy(type == .sleep ? "Sleep" : "Light") + " "
                 + intervals.map {
                     formatter.formatInstant($0.start.ISO8601Format(), options: options, zone: $0.tz) + "–"
@@ -128,14 +139,26 @@ nonisolated public func preparePlan(
     let endLines = endNote?.lines ?? endSummary?.endCopy ?? []
     var seen: [CopyLine] = []
     let end = (endSummary?.expectedAdaptedText.map { [$0] } ?? []) + endLines.filter { $0.key != "How this plan ends" }
-    let endText = end.filter { line in
+    let stateKey: String? =
+        switch endNote?.endState ?? endSummary?.endState {
+        case .adapted: endSummary?.expectedAdaptedText == nil ? "Expected adapted" : nil
+        case .likelyAdapted: "Likely adapted"
+        case .stillAdapting: "Still adjusting"
+        case .partialTarget: "Partial shift"
+        case .smallShift: "Keep your usual rhythm"
+        case .returnPlanStarts: "Return plan starts"
+        case .homeTime: "Stay closer to home time"
+        case .hold: "Holding this shift"
+        default: nil
+        }
+    let ending = end.filter { line in
         if seen.contains(line) { return false }
         seen.append(line)
         return true
     }.map { formatter.format($0, options: options) }.joined(separator: " ")
-    let assumed = hasReturn ? nil : plan.meta.assumedReturn
+    let endText = [stateKey.map { copy($0) }, ending.isEmpty ? nil : ending].compactMap { $0 }.joined(separator: " · ")
     let zone = plan.days.last?.zones.last?.tz ?? detail.trip.to.zone
-    let assumedEnd = assumed.map {
+    let assumedEnd = (hasReturn ? nil : plan.meta.assumedReturn).map {
         [
             copy("Assumed trip end"), formatter.formatDate($0.leaveUtc, language: language, zone: zone),
             formatter.formatInstant($0.leaveUtc, options: options, zone: zone), zoneLabel(zone, trip: detail.trip),
@@ -143,22 +166,22 @@ nonisolated public func preparePlan(
                 ? copy("Based on your check-out date") : copy("Based on %@ nights", String($0.nights)),
         ].joined(separator: " · ")
     }
-    let summary = [
-        plan.summary?.preparation.bestCaseText, plan.summary?.expectedAdaptedText, plan.summary?.forecastUncertain,
-    ].compactMap { $0 }.map { formatter.format($0, options: options) }.joined(separator: " ")
+    let summary = [plan.summary?.rationale, plan.summary?.expectedAdaptedText].compactMap { $0 }.map {
+        formatter.format($0, options: options)
+    }.joined(separator: " ")
     return PreparedPlan(
-        days: days,
+        revision: detail.plan.meta.inputHash + "|" + detail.detailVersion, days: days,
         title: "\(detail.trip.from.city ?? detail.trip.from.iata) → \(detail.trip.to.city ?? detail.trip.to.iata)",
         subtitle: [
             formatter.formatDate(detail.trip.departLocal, language: language),
             plan.days.last.map { formatter.formatDate($0.labelDate, language: language) },
             detail.trip.legs.first?.flightNumber,
         ].compactMap { $0 }.joined(separator: " · "),
-        rationale: plan.summary.map { formatter.format($0.rationale, options: options) }, summary: summary,
+        shift: plan.summary.map { clockShiftText($0.adaptation, formatter: formatter, options: options) },
+        summary: summary,
         endText: endText.isEmpty ? copy("There are no more steps in this plan.") : endText, assumedEnd: assumedEnd,
-        returnDayID: hasReturn
-            ? plan.days.first { day in day.phase == .travel && day.startUtc > (detail.plan.meta.arrivalLandingUtc ?? "")
-            }?.id : nil)
+        returnDayID: returnDayID(detail))
+
 }
 
 nonisolated public func checkIdentity(_ key: CheckKeyView) -> String {
@@ -171,4 +194,29 @@ nonisolated public func priorityKey(_ priority: Priority) -> String {
     case .optional: "Optional"
     default: "Information"
     }
+}
+
+nonisolated private func returnDayID(_ detail: TripDetail) -> String? {
+    let positions = Set(detail.trip.legs.filter(\.returnLeg).map(\.position))
+    guard
+        let flight = detail.plan.blocks.first(where: {
+            if case .flight(let params) = $0.params { return positions.contains(params.legIndex) }
+            return false
+        })
+    else { return nil }
+    return detail.plan.days.first {
+        planDate($0.startUtc) <= planDate(flight.startUtc) && planDate(flight.startUtc) < planDate($0.endUtc)
+    }?.id
+}
+
+nonisolated func clockShiftText(_ adaptation: AdaptationView, formatter: CopyLineFormatter, options: CopyFormat)
+    -> String
+{
+    let copy = PageCopy(language: options.language)
+    guard adaptation.direction != .none else { return copy("No clock shift planned") }
+    let duration =
+        adaptation.shiftMin % 60 == 0
+        ? copy("%@ hours", String(adaptation.shiftMin / 60))
+        : formatter.formatMinutes(Double(adaptation.shiftMin), language: options.language, duration: true)
+    return copy(adaptation.direction == .earlier ? "We advance your clock %@" : "We delay your clock %@", duration)
 }

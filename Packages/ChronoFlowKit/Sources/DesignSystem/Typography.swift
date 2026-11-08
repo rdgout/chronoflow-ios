@@ -48,6 +48,16 @@ public enum Typography {
         #endif
     }
 
+    public static var planCardTitle: Style {
+        Style(face: .fraunces400Opsz20, metrics: PlanTypeMetrics.planCardTitle, relativeTo: .title2)
+    }
+    public static var planDayTitle: Style {
+        Style(face: .fraunces400Opsz20, metrics: PlanTypeMetrics.planDayTitle, relativeTo: .title3)
+    }
+    public static var planRemoteTitle: Style {
+        Style(face: .fraunces400Opsz20, metrics: PlanTypeMetrics.planRemoteTitle, relativeTo: .title2)
+    }
+
     public static var planTitle: Style {
         Style(face: PlanTypeMetrics.planTitleFace, metrics: PlanTypeMetrics.planTitle, relativeTo: .headline)
     }

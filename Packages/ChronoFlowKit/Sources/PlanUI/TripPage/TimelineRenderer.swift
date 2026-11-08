@@ -25,6 +25,7 @@ public actor TimelineRenderer {
         day: PreparedDay, layout: DayLayout, width: Double, scale: Double, fontSize: Double,
         appearance: TokenAppearance, symbols: [String: CGImage]
     ) throws -> CGImage {
+        try Task.checkCancellation()
         let key = day.id
         if let c = cache[key], c.day == day, c.layout == layout, c.width == width, c.scale == scale,
             c.fontSize == fontSize, c.appearance == appearance
@@ -35,6 +36,7 @@ public actor TimelineRenderer {
         let image = try rasterTimeline(
             day: day, layout: layout, width: width, scale: scale,
             fontSize: fontSize, appearance: appearance, symbols: symbols)
+        try Task.checkCancellation()
         cache[key] = Entry(
             day: day, layout: layout, width: width, scale: scale, fontSize: fontSize, appearance: appearance,
             image: image)
@@ -49,7 +51,8 @@ public actor TimelineRenderer {
     }
 }
 
-@MainActor final class TimelineSymbols {
+@MainActor public final class TimelineSymbols {
+    public init() {}
     private var cache: [String: [String: CGImage]] = [:]
     func images(appearance: TokenAppearance, scale: Double) -> [String: CGImage] {
         let key = "\(appearance.rawValue)-\(scale)"
@@ -109,7 +112,7 @@ nonisolated private func rasterTimeline(
                 NSAttributedString.Key(kCTForegroundColorAttributeName as String): color,
             ])
         let typesetter = CTTypesetterCreateWithAttributedString(attributed)
-        let lineHeight = fontSize / 11 * 14
+        let lineHeight = fontSize / PlanMetrics.laneLabelSize * PlanMetrics.laneLabelLineHeight
         var start = 0
         var y = rect.minY
         while start < attributed.length && y + lineHeight <= rect.maxY {
@@ -165,17 +168,20 @@ nonisolated private func rasterTimeline(
         guard let block = blocks[tile.blockID] else { continue }
         let style = PlanCategoryStyle(block.block.type)
         let rect = tile.frame
-        let path = CGPath(
-            roundedRect: rect, cornerWidth: PlanMetrics.tileRadius, cornerHeight: PlanMetrics.tileRadius, transform: nil
-        )
+        let radius = block.block.type == .caffeineServing ? min(rect.width, rect.height) / 2 : PlanMetrics.tileRadius
+        let path = tilePath(rect, top: tile.continuesBefore ? 0 : radius, bottom: tile.continuesAfter ? 0 : radius)
         context.saveGState()
+        context.setAlpha(
+            block.status != nil
+                ? PlanMetrics.markedOpacity : block.block.priority == .optional ? PlanMetrics.optionalOpacity : 1)
+        context.beginTransparencyLayer(auxiliaryInfo: nil)
         context.addPath(path)
         context.setFillColor(color(style.fill))
         context.fillPath()
         context.addPath(path)
         context.clip()
         if let pattern = style.pattern {
-            context.setAlpha(0.12)
+            context.setAlpha(pattern == .dots ? PlanMetrics.dotOpacity : PlanMetrics.hatchOpacity)
             context.setFillColor(color(style.foreground))
             context.setStrokeColor(color(style.foreground))
             if pattern == .dots {
@@ -196,13 +202,17 @@ nonisolated private func rasterTimeline(
             context.setAlpha(1)
         }
         if block.block.priority == .core {
+            context.setAlpha(PlanMetrics.coreBorderOpacity)
             line(
                 rect.minX, rect.minY, rect.minX, rect.maxY, token: style.foreground,
                 thickness: PlanMetrics.coreBorder * 2)
         }
         context.setStrokeColor(color(block.block.type == .noCaffeine ? .catCaffeine : style.foreground))
         context.setLineWidth(PlanMetrics.border)
-        context.setLineDash(phase: 0, lengths: style.dashed ? [PlanMetrics.smallGap, PlanMetrics.smallGap] : [])
+        context.setLineDash(
+            phase: 0,
+            lengths: (style.dashed || block.block.priority == .optional)
+                ? [PlanMetrics.smallGap, PlanMetrics.smallGap] : [])
         context.addPath(path)
         context.strokePath()
         let icon = symbols[block.block.type.rawValue]
@@ -220,19 +230,42 @@ nonisolated private func rasterTimeline(
             context.draw(icon, in: CGRect(origin: .zero, size: iconRect.size))
             context.restoreGState()
         }
+        if block.block.type == .noCaffeine {
+            line(
+                iconRect.minX, iconRect.maxY, iconRect.maxX, iconRect.minY, token: style.foreground,
+                thickness: PlanMetrics.emphasisBorder)
+        }
         if !iconOnly {
             let top = iconRect.maxY + PlanMetrics.smallGap
             let remaining = rect.height - (top - rect.minY) - inset - (tile.continuesAfter ? PlanMetrics.icon : 0)
+            let lineHeight = fontSize / PlanMetrics.laneLabelSize * PlanMetrics.laneLabelLineHeight
+            let titleHeight = min(remaining, lineHeight * 2)
             text(
                 block.title,
-                rect: CGRect(
-                    x: rect.minX + inset, y: top, width: rect.width - inset * 2, height: max(0, remaining / 2)),
+                rect: CGRect(x: rect.minX + inset, y: top, width: rect.width - inset * 2, height: titleHeight),
                 color: color(style.foreground), font: titleFont, wrap: true)
+            let intervalTop = top + titleHeight + PlanMetrics.smallGap
+            let intervalHeight = max(0, min(lineHeight * 2, rect.maxY - intervalTop - inset))
             text(
                 block.interval,
                 rect: CGRect(
-                    x: rect.minX + inset, y: top + max(0, remaining / 2), width: rect.width - inset * 2,
-                    height: max(0, remaining / 2)), color: color(style.foreground), font: font, wrap: true)
+                    x: rect.minX + inset, y: intervalTop, width: rect.width - inset * 2, height: intervalHeight),
+                color: color(style.foreground), font: font, wrap: true)
+            let tagTop = intervalTop + intervalHeight + PlanMetrics.smallGap
+            if tagTop + lineHeight < rect.maxY - inset {
+                text(
+                    block.priority,
+                    rect: CGRect(x: rect.minX + inset, y: tagTop, width: rect.width - inset * 2, height: lineHeight),
+                    color: color(style.foreground), font: font)
+                if let reason = block.reason {
+                    text(
+                        reason,
+                        rect: CGRect(
+                            x: rect.minX + inset, y: tagTop + lineHeight + PlanMetrics.smallGap,
+                            width: rect.width - inset * 2, height: max(0, rect.maxY - tagTop - lineHeight - inset)),
+                        color: color(style.foreground), font: font, wrap: true)
+                }
+            }
         }
         if let status = block.status {
             text(
@@ -253,6 +286,7 @@ nonisolated private func rasterTimeline(
                 x, y + (up ? 0 : PlanMetrics.smallGap), x + PlanMetrics.smallGap, y + (up ? PlanMetrics.smallGap : 0),
                 token: style.foreground)
         }
+        context.endTransparencyLayer()
         context.restoreGState()
     }
     for divider in layout.dividers {
@@ -281,4 +315,21 @@ nonisolated private func rasterTimeline(
     }
     guard let image = context.makeImage() else { throw TimelineRenderFailure.image }
     return image
+}
+
+nonisolated private func tilePath(_ rect: CGRect, top: Double, bottom: Double) -> CGPath {
+    let top = min(top, rect.width / 2, rect.height / 2)
+    let bottom = min(bottom, rect.width / 2, rect.height / 2)
+    let path = CGMutablePath()
+    path.move(to: CGPoint(x: rect.minX + top, y: rect.minY))
+    path.addLine(to: CGPoint(x: rect.maxX - top, y: rect.minY))
+    path.addQuadCurve(to: CGPoint(x: rect.maxX, y: rect.minY + top), control: CGPoint(x: rect.maxX, y: rect.minY))
+    path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - bottom))
+    path.addQuadCurve(to: CGPoint(x: rect.maxX - bottom, y: rect.maxY), control: CGPoint(x: rect.maxX, y: rect.maxY))
+    path.addLine(to: CGPoint(x: rect.minX + bottom, y: rect.maxY))
+    path.addQuadCurve(to: CGPoint(x: rect.minX, y: rect.maxY - bottom), control: CGPoint(x: rect.minX, y: rect.maxY))
+    path.addLine(to: CGPoint(x: rect.minX, y: rect.minY + top))
+    path.addQuadCurve(to: CGPoint(x: rect.minX + top, y: rect.minY), control: CGPoint(x: rect.minX, y: rect.minY))
+    path.closeSubpath()
+    return path
 }

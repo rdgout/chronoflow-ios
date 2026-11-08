@@ -51,8 +51,8 @@ struct PriorityTag: View {
     var body: some View {
         Text(verbatim: label).font(Typography.planCompactDate.font)
             .padding(.horizontal, PlanMetrics.tilePadding).padding(.vertical, PlanMetrics.border)
-            .background(ColorToken.background.color.opacity(0.4), in: Capsule())
-            .overlay(Capsule().strokeBorder(.foreground.opacity(0.4), lineWidth: PlanMetrics.border))
+            .background(ColorToken.background.color.opacity(PlanMetrics.tagOpacity), in: Capsule())
+            .overlay(Capsule().strokeBorder(.foreground.opacity(PlanMetrics.tagOpacity), lineWidth: PlanMetrics.border))
     }
 }
 

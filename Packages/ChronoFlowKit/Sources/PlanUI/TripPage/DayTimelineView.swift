@@ -16,18 +16,20 @@ public struct DayTimelineView: View {
     @Environment(\.displayScale) private var displayScale
     @ScaledMetric(relativeTo: .caption2) private var fontSize = Typography.planLane.size
     @State private var image: Image?
-    @State private var symbols = TimelineSymbols()
+    private let symbols: TimelineSymbols
     @State private var renderFailed = false
 
     public init(
         day: PreparedDay, layout: DayLayout, now: Date, nowText: String, copy: PageCopy,
-        renderer: TimelineRenderer, onBlock: @escaping (String) -> Void = { _ in }, onFrame: @escaping () -> Void = {}
+        renderer: TimelineRenderer, symbols: TimelineSymbols = TimelineSymbols(),
+        onBlock: @escaping (String) -> Void = { _ in }, onFrame: @escaping () -> Void = {}
     ) {
         self.day = day
         self.layout = layout
         self.now = now
         self.nowText = nowText
         self.copy = copy
+        self.symbols = symbols
         self.renderer = renderer
         self.onBlock = onBlock
         self.onFrame = onFrame

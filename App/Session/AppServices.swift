@@ -11,11 +11,15 @@ nonisolated struct AppServices: Sendable {
     #if DEBUG
         private let authTest: AuthUITestConfiguration?
         private let authTestSeed: MockServerState?
+        private let timelineSeed: MockServerState?
         var authUITestEnabled: Bool { authTest != nil }
     #endif
 
     func sessionCredentials() -> KeychainSessionStore {
         #if DEBUG
+            if timelineSeed != nil {
+                return KeychainSessionStore(service: StorageNamespace.mock.keychainService + ".timeline-fixtures")
+            }
             if let authTest { return authTest.credentials }
         #endif
         return KeychainSessionStore(namespace: namespace)
@@ -25,6 +29,10 @@ nonisolated struct AppServices: Sendable {
         -> MockDataSource
     {
         #if DEBUG
+            if let timelineSeed {
+                return MockDataSource(
+                    store: isolatedMockStore ?? MemoryMockStateStore(), seed: timelineSeed, bearer: bearer)
+            }
             if let authTest {
                 return MockDataSource(
                     store: FileMockStateStore(applicationSupport: applicationSupport),
@@ -44,7 +52,8 @@ nonisolated struct AppServices: Sendable {
     ) throws {
         #if DEBUG
             isolatedMockStore =
-                ProcessInfo.processInfo.arguments.contains("-cf.isolatedMockServer")
+                (ProcessInfo.processInfo.arguments.contains("-cf.isolatedMockServer")
+                    || ProcessInfo.processInfo.arguments.contains("-cf.timeline-fixtures"))
                 ? MemoryMockStateStore() : nil
         #else
             isolatedMockStore = nil
@@ -70,6 +79,9 @@ nonisolated struct AppServices: Sendable {
             baseURL: info["CHRONOFLOW_API_BASE_URL"] as? String ?? "https://api.chronoflow.net/v1",
             release: release, testing: testing || authTestRequested)
         #if DEBUG
+            timelineSeed =
+                try factory.namespace == .mock && ProcessInfo.processInfo.arguments.contains("-cf.timeline-fixtures")
+                ? MockAppSeed.make(now: Date(), walkthroughSeen: true, includeTimelinePerformanceTrips: true) : nil
             authTest = requestedAuthTest
             authTestSeed = try authTest.map {
                 try MockAppSeed.make(now: Date(), unverified: $0.unverified, walkthroughSeen: $0.walkthroughSeen)
@@ -86,7 +98,11 @@ nonisolated struct AppServices: Sendable {
                 for: .applicationSupportDirectory, in: .userDomainMask
             ).first
         #if DEBUG
-            if let test = services.authTest, let support = root { root = test.applicationSupport(in: support) }
+            if services.timelineSeed != nil, let support = root {
+                root = support.appending(path: "TimelineFixtures")
+            } else if let test = services.authTest, let support = root {
+                root = test.applicationSupport(in: support)
+            }
         #endif
         return (services, root)
     }

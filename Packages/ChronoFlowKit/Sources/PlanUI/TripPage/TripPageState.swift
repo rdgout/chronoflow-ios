@@ -56,7 +56,8 @@ nonisolated public func openingDay(
 
 nonisolated public func replacementAnchor(_ anchor: TripPageAnchor, days: [DayView]) -> TripPageAnchor {
     guard let date = anchor.labelDate,
-        let day = days.first(where: { $0.labelDate == date })
+        let day = days.first(where: { $0.id == anchor.dayID && $0.labelDate == date })
+            ?? days.first(where: { $0.labelDate == date })
             ?? days.min(by: {
                 abs(planDate($0.labelDate + "T12:00:00Z").timeIntervalSince(planDate(date + "T12:00:00Z")))
                     < abs(planDate($1.labelDate + "T12:00:00Z").timeIntervalSince(planDate(date + "T12:00:00Z")))

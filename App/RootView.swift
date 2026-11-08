@@ -35,7 +35,7 @@ struct RootView: View {
     }
 
     @ViewBuilder private var content: some View {
-        #if DEBUG
+        #if DEBUG || CHRONOFLOW_TIMELINE_PERF
             if let trip = TripPageDiagnosticRoot.requestedTrip {
                 TripPageDiagnosticRoot(requestedTrip: trip)
             } else {

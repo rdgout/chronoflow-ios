@@ -37,6 +37,49 @@ import XCTest
         }
     }
 
+    func testEndCardStates() async throws {
+        try await AuthTestHost.registerFonts()
+        let formatter = CopyLineFormatter(catalog: try await CopyCatalog.load())
+        for fixture in try AuthDeviceFixture.authSnapshotProfiles() {
+            for (style, language, category) in fixture.authSnapshotVariants {
+                for noText in [false, true] {
+                    let context = try await TripSnapshotContext(state: .ready, language: language)
+                    context.model.start()
+                    try await context.wait()
+                    var detail = try XCTUnwrap(context.model.plan.detail)
+                    if noText {
+                        detail.plan.summary = nil
+                        for index in detail.plan.days.indices {
+                            detail.plan.days[index].notes.removeAll { $0.role == .end }
+                        }
+                    }
+                    let prepared = preparePlan(
+                        detail, layouts: context.model.plan.layouts, formatter: formatter,
+                        language: language == "nl" ? .nl : .en)
+                    let view = ScrollView {
+                        EndOfPlanCard(plan: prepared, copy: PageCopy(language: language == "nl" ? .nl : .en)).padding(
+                            PlanMetrics.gutter)
+                    }
+                    let host = try AuthTestHost(
+                        view, size: fixture.size, insets: fixture.insets, style: style, language: language,
+                        category: category, scale: fixture.scale)
+                    try await host.settle()
+                    let name =
+                        "\(fixture.snapshotName)-\(style.rawValue)-\(language)-\(category.rawValue)-end-\(noText ? "no-text" : "text")"
+                    let reference = URL(filePath: #filePath).deletingLastPathComponent().appending(
+                        path: "__Snapshots__/TripPage/\(name).png")
+                    if let failure = try SnapshotReference.verify(
+                        png: XCTUnwrap(host.image().pngData()), reference: reference, record: false)
+                    {
+                        XCTFail(failure)
+                    }
+                    host.close()
+                    try await context.close()
+                }
+            }
+        }
+    }
+
     func testListAndEnd() async throws {
         try await AuthTestHost.registerFonts()
         for fixture in try AuthDeviceFixture.authSnapshotProfiles() {
@@ -83,7 +126,7 @@ import XCTest
         let seed = try await Task.detached {
             try MockAppSeed.make(now: Date(timeIntervalSince1970: 1_794_100_000), walkthroughSeen: true)
         }.value
-        let account = try XCTUnwrap(seed.accounts[MockScenarioValues.demoID])
+        let account = try XCTUnwrap(seed.accounts["0199a3c0-0000-7000-8000-000000000000"])
         let item = try XCTUnwrap(account.trips.first)
         var detail = try XCTUnwrap(account.details[item.card.id])
         if state == .noPlan { detail.plan.status = .noPlan }
@@ -91,7 +134,8 @@ import XCTest
         let repository = TripRepository(database: database)
         let keep = state == .loading || state == .ready || state == .noPlan
         let record = try TripRecord(
-            id: item.card.id, card: .encoding(item.card), currentInputHash: item.planInputHash, keepOffline: keep,
+            id: item.card.id, card: .encoding(item.card), adaptation: item.adaptation.map { try .encoding($0) },
+            currentInputHash: item.planInputHash, keepOffline: keep,
             departureUtc: item.card.departureUtc)
         try await repository.upsert(record)
         if state == .ready || state == .noPlan {

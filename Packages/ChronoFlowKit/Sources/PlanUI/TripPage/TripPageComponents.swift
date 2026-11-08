@@ -4,7 +4,8 @@ import PlanCore
 import SwiftUI
 
 struct DualClocks: View {
-    let trip: TripDetailView
+    let from: AirportRef
+    let to: AirportRef
     let now: Date
     let formatter: CopyLineFormatter
     let options: CopyFormat
@@ -12,8 +13,8 @@ struct DualClocks: View {
     var body: some View {
         let copy = PageCopy(language: options.language)
         HStack(spacing: PlanMetrics.rowGap) {
-            ForEach(Array([trip.from, trip.to].enumerated()), id: \.offset) { index, place in
-                let active = place.zone == activeZone && (index == 0 || trip.from.zone != trip.to.zone)
+            ForEach(Array([from, to].enumerated()), id: \.offset) { index, place in
+                let active = place.zone == activeZone && (index == 0 || from.zone != to.zone)
                 VStack(alignment: .leading, spacing: PlanMetrics.smallGap) {
                     Text(
                         verbatim: copy(
@@ -38,16 +39,21 @@ struct DualClocks: View {
     }
 }
 
-struct EndOfPlanCard: View {
+public struct EndOfPlanCard: View {
     let plan: PreparedPlan
     let copy: PageCopy
     let select: (String) -> Void
-    var body: some View {
+    public init(plan: PreparedPlan, copy: PageCopy, select: @escaping (String) -> Void = { _ in }) {
+        self.plan = plan
+        self.copy = copy
+        self.select = select
+    }
+    public var body: some View {
         PlanCard {
             VStack(spacing: PlanMetrics.sectionGap) {
                 Image(systemName: "moon").frame(width: PlanMetrics.touch, height: PlanMetrics.touch)
                     .foregroundStyle(ColorToken.dawnForeground.color).background(ColorToken.dawn.color, in: Circle())
-                Text(verbatim: copy("End of this plan")).font(Typography.welcomeWordmark.font).accessibilityAddTraits(
+                Text(verbatim: copy("End of this plan")).font(Typography.planCardTitle.font).accessibilityAddTraits(
                     .isHeader)
                 Text(verbatim: plan.endText).font(Typography.authBody.font).foregroundStyle(
                     ColorToken.mutedForeground.color)
@@ -56,7 +62,7 @@ struct EndOfPlanCard: View {
                     Button(copy("See your return plan")) { select(day) }.buttonStyle(.borderedProminent)
                 }
             }.frame(maxWidth: .infinity).multilineTextAlignment(.center)
-        }.accessibilityIdentifier("trip.plan.end")
+        }.accessibilityElement(children: .contain).accessibilityIdentifier("trip.plan.end")
     }
 }
 

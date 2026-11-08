@@ -32,9 +32,10 @@ public actor PlanDecoder {
         var inputHash: String
         var version: String?
     }
-    private var layoutCache: [String: (PlanView, TimelinePresentationView, [BlockType], [String: DayLayout])] = [:]
-    private var preparedCache: [String: (TripDetail, Language, TimeFormat, [CheckMark], [BlockType], PreparedPlan)] =
-        [:]
+    private var layoutCache: [Key: (PlanView, TimelinePresentationView, [BlockType], [String: DayLayout])] = [:]
+    private var preparedCache:
+        [Key: (TripDetail, Language, TimeFormat, [CheckMark], [BlockType], [CheckOffChange], PreparedPlan)] =
+            [:]
     private var formatter: CopyLineFormatter?
     public private(set) var layoutCount = 0
     private var cache: [Key: (Data, TripDetail)] = [:]
@@ -96,11 +97,12 @@ public actor PlanDecoder {
 
     public func layouts(_ detail: TripDetail, hidden: [BlockType]) -> [String: DayLayout] {
         assertWorker()
-        let id = detail.trip.id
+        let id = Key(trip: detail.trip.id, inputHash: detail.plan.meta.inputHash, version: detail.detailVersion)
         if let cached = layoutCache[id], cached.0 == detail.plan, cached.1 == detail.timeline, cached.2 == hidden {
             return cached.3
         }
         let result = layoutPlan(withoutOptionalSteps(detail.plan), timeline: detail.timeline, hidden: hidden)
+        layoutCache = layoutCache.filter { $0.key.trip != detail.trip.id }
         layoutCache[id] = (detail.plan, detail.timeline, hidden, result)
         layoutCount += 1
         return result
@@ -108,24 +110,32 @@ public actor PlanDecoder {
 
     public func evict(tripID: String) {
         cache = cache.filter { $0.key.trip != tripID }
-        layoutCache[tripID] = nil
-        preparedCache[tripID] = nil
+        layoutCache = layoutCache.filter { $0.key.trip != tripID }
+        preparedCache = preparedCache.filter { $0.key.trip != tripID }
+    }
+
+    public func adaptation(_ record: TripRecord) throws -> AdaptationView? {
+        try record.adaptation?.decode(AdaptationView.self)
     }
 
     public func card(_ record: TripRecord) throws -> TripCardView { try record.card.decode(TripCardView.self) }
 
     public func prepare(
-        _ detail: TripDetail, hidden: [BlockType], language: Language, timeFormat: TimeFormat, marks: [CheckMark]
+        _ detail: TripDetail, hidden: [BlockType], language: Language, timeFormat: TimeFormat, marks: [CheckMark],
+        pendingChecks: [CheckOffChange] = []
     ) async throws -> PreparedPlan {
-        let id = detail.trip.id
-        if let c = preparedCache[id], c.0 == detail, c.1 == language, c.2 == timeFormat, c.3 == marks, c.4 == hidden {
-            return c.5
+        let id = Key(trip: detail.trip.id, inputHash: detail.plan.meta.inputHash, version: detail.detailVersion)
+        if let c = preparedCache[id], c.0 == detail, c.1 == language, c.2 == timeFormat, c.3 == marks, c.4 == hidden,
+            c.5 == pendingChecks
+        {
+            return c.6
         }
         if formatter == nil { formatter = CopyLineFormatter(catalog: try await CopyCatalog.load()) }
         let result = preparePlan(
             detail, layouts: layouts(detail, hidden: hidden), formatter: formatter!, language: language,
-            timeFormat: timeFormat, marks: marks)
-        preparedCache[id] = (detail, language, timeFormat, marks, hidden, result)
+            timeFormat: timeFormat, marks: marks, pendingChecks: pendingChecks)
+        preparedCache = preparedCache.filter { $0.key.trip != detail.trip.id }
+        preparedCache[id] = (detail, language, timeFormat, marks, hidden, pendingChecks, result)
         return result
     }
 

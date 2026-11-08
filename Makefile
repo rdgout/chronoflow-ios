@@ -8,7 +8,7 @@ SIM_CONCURRENCY ?=
 SIM_RUNNER := SIM_CONCURRENCY=$(SIM_CONCURRENCY) python3 -I Scripts/launch-simulators.py
 ICON_EXISTING ?=
 
-.PHONY: generate format lint test snapshots audits duo perf tokens fonts assets auth-board-pngs generators-check launch-resources-check check simulator-check matrix targeted quick host-tests package-tests token-tests asset-tests contracts contracts-check plan-copy icon-probe icon-audit
+.PHONY: generate format lint test snapshots audits duo perf perf-timeline tokens fonts assets auth-board-pngs generators-check launch-resources-check check simulator-check matrix targeted quick contracts contracts-check plan-copy host-tests package-tests token-tests asset-tests icon-probe icon-audit
 
 icon-probe:
 	python3 -I Scripts/probe-app-icon.py $(if $(ICON_EXISTING),--existing "$(ICON_EXISTING)",)
@@ -49,7 +49,10 @@ targeted:
 	$(SIM_RUNNER) --no-generate --devices $(DEVICES) --only $(foreach selector,$(ONLY),'$(selector)') $(if $(filter 1,$(REUSE_BUILD)),--reuse-build,)
 
 perf:
-	$(SIM_RUNNER) --no-generate --devices 17e --mode perf
+	$(SIM_RUNNER) --no-generate --devices 17e --mode perf --only PerfUITests/LaunchPerfTests
+
+perf-timeline:
+	$(SIM_RUNNER) --devices 17e --mode perf --only PerfUITests/TimelinePerfTests
 
 tokens:
 	sh Scripts/swiftpm.sh run TokenGen TokenGen

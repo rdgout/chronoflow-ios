@@ -5,7 +5,7 @@ public enum PlanMetrics {
     public static var cardRadius: Double { 26.0000000000 }
     public static var compactFadeDistance: Double { 24.0000000000 }
     public static var compactHeaderHeight: Double { 32.0000000000 }
-    public static var coreBorder: Double { 3.0000000000 }
+    public static var coreBorder: Double { 4.0000000000 }
     public static var dot: Double { 6.0000000000 }
     public static var dotRadius: Double { 1.0000000000 }
     public static var dotStep: Double { 7.0000000000 }
@@ -28,13 +28,23 @@ public enum PlanMetrics {
     public static var skeletonSummary: Double { 120.0000000000 }
     public static var skeletonTimeline: Double { 380.0000000000 }
     public static var smallGap: Double { 4.0000000000 }
+    public static var textPlateRadius: Double { 10.0000000000 }
     public static var tileInset: Double { 2.0000000000 }
     public static var tilePadding: Double { 6.0000000000 }
     public static var tileRadius: Double { 14.0000000000 }
     public static var touch: Double { 44.0000000000 }
+    public static var zonePadding: Double { 20.0000000000 }
     public static var gutterMarkerSize: Double { 24.0000000000 }
     public static var laneGap: Double { 4.0000000000 }
     public static var minTileHeight: Double { 24.0000000000 }
     public static var tinyTileHeight: Double { 56.0000000000 }
+    public static var coreBorderOpacity: Double { 0.7000000000 }
+    public static var dotOpacity: Double { 0.1600000000 }
+    public static var hatchOpacity: Double { 0.1200000000 }
+    public static var markedOpacity: Double { 0.6000000000 }
+    public static var optionalOpacity: Double { 0.7500000000 }
+    public static var tagOpacity: Double { 0.4000000000 }
+    public static var laneLabelSize: Double { 11 }
+    public static var laneLabelLineHeight: Double { 14 }
     public static var pointsPerMinute: Double { pointsPerHour / 60 }
 }

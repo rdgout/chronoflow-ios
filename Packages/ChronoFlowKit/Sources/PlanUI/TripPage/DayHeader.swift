@@ -62,7 +62,7 @@ struct DayHeader: View {
     }
 
     private var heading: some View {
-        (Text(verbatim: day.title).font(Typography.welcomeWordmark.font)
+        (Text(verbatim: day.title).font(Typography.planDayTitle.font)
             + Text(verbatim: " · " + day.date).font(Typography.planListLine.font).foregroundColor(
                 ColorToken.mutedForeground.color))
             .accessibilityAddTraits(.isHeader)

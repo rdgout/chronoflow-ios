@@ -14,6 +14,7 @@ public struct TripPageView: View {
     @State private var viewport = CGSize.zero
     @State private var showLegend = false
     @State private var renderer = TimelineRenderer()
+    @State private var timelineSymbols = TimelineSymbols()
     public var onBlock: (String) -> Void = { _ in }
     public var onActions: (() -> Void)?
     public var onSettings: (() -> Void)?
@@ -73,6 +74,12 @@ public struct TripPageView: View {
                             ForEach(prepared.days) { day in
                                 VStack(spacing: 0) {
                                     DayHeader(day: day, copy: copy)
+                                        .background(
+                                            GeometryReader { geo in
+                                                Color.clear.preference(
+                                                    key: DayFrames.self,
+                                                    value: ["header." + day.id: geo.frame(in: .named("trip.scroll"))])
+                                            })
                                     if model.timeline, let layout = model.plan.layouts[day.id] {
                                         LaneHeadings(copy: copy)
                                         DayTimelineView(
@@ -82,7 +89,7 @@ public struct TripPageView: View {
                                                 options: CopyFormat(
                                                     language: model.plan.language, timeFormat: model.plan.timeFormat))
                                                 ?? "",
-                                            copy: copy, renderer: renderer, onBlock: onBlock,
+                                            copy: copy, renderer: renderer, symbols: timelineSymbols, onBlock: onBlock,
                                             onFrame: onFirstTimelineFrame)
                                     } else {
                                         DayListView(day: day, onBlock: onBlock)
@@ -129,7 +136,7 @@ public struct TripPageView: View {
                         guard new != nil else { return }
                         let previous = model.anchor
                         model.acceptPreparedPlan()
-                        if old == nil || old?.days.map(\.id) != new?.days.map(\.id) {
+                        if old == nil || old?.revision != new?.revision || old?.days.map(\.id) != new?.days.map(\.id) {
                             let anchor =
                                 old == nil
                                 ? model.anchor : replacementAnchor(previous, days: model.plan.detail?.plan.days ?? [])
@@ -202,11 +209,10 @@ public struct TripPageView: View {
         if let id = model.anchor.dayID, let frame = frames[id],
             let day = model.plan.prepared?.days.first(where: { $0.id == id })
         {
-            let distance = -frame.minY
+            let remaining = frames["header." + id]?.maxY ?? frame.minY
             let opacity =
                 reduceMotion
-                ? (distance >= PlanMetrics.compactHeaderHeight ? 1.0 : 0)
-                : min(1, max(0, distance / PlanMetrics.compactFadeDistance))
+                ? (remaining <= 0 ? 1.0 : 0) : min(1, max(0, 1 - remaining / PlanMetrics.compactFadeDistance))
             VStack(spacing: 0) {
                 if model.timeline {
                     LaneHeadings(copy: copy)
@@ -234,7 +240,7 @@ public struct TripPageView: View {
                     VStack(alignment: .leading, spacing: PlanMetrics.smallGap) {
                         Text(verbatim: copy("Your plan")).font(Typography.eyebrow.font).foregroundStyle(
                             ColorToken.dawnText.color)
-                        if let rationale = prepared.rationale {
+                        if let rationale = prepared.shift {
                             Text(verbatim: rationale).font(Typography.welcomeWordmark.font)
                         }
                     }
@@ -248,7 +254,7 @@ public struct TripPageView: View {
                     ColorToken.mutedForeground.color)
                 if let detail = model.plan.detail, let formatter {
                     DualClocks(
-                        trip: detail.trip, now: model.plan.now, formatter: formatter,
+                        from: detail.trip.from, to: detail.trip.to, now: model.plan.now, formatter: formatter,
                         options: CopyFormat(language: model.plan.language, timeFormat: model.plan.timeFormat),
                         activeZone: detail.plan.days.flatMap(\.zones).first {
                             planDate($0.startUtc) <= model.plan.now && model.plan.now < planDate($0.endUtc)
@@ -259,7 +265,24 @@ public struct TripPageView: View {
     }
 
     private var remoteSummary: some View {
-        PlanCard { Text(verbatim: cardTitle).font(Typography.welcomeWordmark.font) }
+        PlanCard {
+            VStack(alignment: .leading, spacing: PlanMetrics.sectionGap) {
+                Text(verbatim: copy("Your plan")).font(Typography.eyebrow.font).foregroundStyle(
+                    ColorToken.dawnText.color)
+                if let adaptation = model.plan.adaptation, let formatter {
+                    Text(
+                        verbatim: clockShiftText(
+                            adaptation, formatter: formatter, options: CopyFormat(language: model.plan.language))
+                    ).font(Typography.welcomeWordmark.font)
+                }
+                if let card = model.plan.card, let formatter {
+                    DualClocks(
+                        from: card.from, to: card.to, now: model.plan.now, formatter: formatter,
+                        options: CopyFormat(language: model.plan.language, timeFormat: model.plan.timeFormat),
+                        activeZone: nil)
+                }
+            }
+        }
     }
     private var skeleton: some View {
         VStack(spacing: PlanMetrics.sectionGap) {
@@ -300,7 +323,9 @@ public struct TripPageView: View {
         VStack(spacing: PlanMetrics.sectionGap) {
             Image(systemName: icon).frame(width: PlanMetrics.touch, height: PlanMetrics.touch).background(
                 ColorToken.muted.color, in: Circle())
-            Text(verbatim: copy(title)).font(Typography.welcomeWordmark.font).accessibilityAddTraits(.isHeader)
+            Text(verbatim: copy(title)).font(
+                title == "No plan yet" ? Typography.planCardTitle.font : Typography.planRemoteTitle.font
+            ).accessibilityAddTraits(.isHeader)
             Text(verbatim: copy(text)).font(Typography.authBody.font).foregroundStyle(ColorToken.mutedForeground.color)
             actions()
         }.padding(PlanMetrics.cardPadding).frame(maxWidth: .infinity).multilineTextAlignment(.center)

@@ -49,17 +49,18 @@ public struct DayListView: View {
         .overlay {
             if let pattern = style.pattern {
                 if pattern == .dots {
-                    PlanPattern(dots: true).fill(style.foreground.color.opacity(0.1))
+                    PlanPattern(dots: true).fill(style.foreground.color.opacity(PlanMetrics.dotOpacity))
                 } else {
                     PlanPattern(dots: false).stroke(
-                        style.foreground.color.opacity(0.1), lineWidth: PlanMetrics.patternLine)
+                        style.foreground.color.opacity(PlanMetrics.hatchOpacity), lineWidth: PlanMetrics.patternLine)
                 }
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: PlanMetrics.rowRadius))
         .overlay(
             RoundedRectangle(cornerRadius: PlanMetrics.rowRadius).strokeBorder(
-                block.block.type == .noCaffeine ? ColorToken.catCaffeine.color : style.foreground.color.opacity(0.4),
+                block.block.type == .noCaffeine
+                    ? ColorToken.catCaffeine.color : style.foreground.color.opacity(PlanMetrics.tagOpacity),
                 style: StrokeStyle(lineWidth: PlanMetrics.border, dash: style.dashed ? [PlanMetrics.smallGap] : []))
         )
         .overlay(alignment: .leading) {
@@ -78,17 +79,18 @@ struct ZoneChangeCard: View {
         Button {
             onBlock(block.id)
         } label: {
-            VStack(alignment: .leading, spacing: PlanMetrics.rowGap) {
-                Label {
-                    Text(verbatim: block.title).font(Typography.planTitle.font)
-                } icon: {
-                    Image(systemName: "mappin.circle.fill")
+            HStack(alignment: .top, spacing: PlanMetrics.sectionGap) {
+                Image(systemName: "mappin").frame(width: PlanMetrics.touch, height: PlanMetrics.touch)
+                    .foregroundStyle(ColorToken.dawnForeground.color).background(ColorToken.dawn.color, in: Circle())
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: PlanMetrics.rowGap) {
+                    Text(verbatim: block.title).font(Typography.planCardTitle.font)
+                    if let text = block.zoneInstruction { plate(text, font: Typography.authHint.font) }
+                    if let comparison = block.zoneComparison {
+                        plate(comparison, font: Typography.planSubtitle.font).monospacedDigit()
+                    }
                 }
-                if let text = block.zoneInstruction { Text(verbatim: text).font(Typography.planListLine.font) }
-                if let comparison = block.zoneComparison {
-                    Text(verbatim: comparison).font(Typography.planSubtitle.font).monospacedDigit()
-                }
-            }.padding(PlanMetrics.cardPadding).frame(maxWidth: .infinity, alignment: .leading)
+            }.padding(PlanMetrics.zonePadding).frame(maxWidth: .infinity, alignment: .leading)
                 .foregroundStyle(ColorToken.skyTitle.color).background { CfSky() }
                 .clipShape(RoundedRectangle(cornerRadius: PlanMetrics.cardRadius))
         }.buttonStyle(.plain).accessibilityLabel(
@@ -96,4 +98,11 @@ struct ZoneChangeCard: View {
                 verbatim: [block.title, block.zoneInstruction, block.zoneComparison].compactMap { $0 }.joined(
                     separator: ". ")))
     }
+    private func plate(_ text: String, font: Font) -> some View {
+        Text(verbatim: text).font(font).foregroundStyle(ColorToken.skyCopy.color)
+            .padding(.horizontal, PlanMetrics.rowGap).padding(.vertical, PlanMetrics.smallGap)
+            .background(
+                ColorToken.skyCopyBackground.color, in: RoundedRectangle(cornerRadius: PlanMetrics.textPlateRadius))
+    }
+
 }

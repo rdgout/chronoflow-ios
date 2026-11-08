@@ -61,6 +61,7 @@ targets:
       configs:
         Perf:
           CHRONOFLOW_READINESS: signed-out
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) CHRONOFLOW_TIMELINE_PERF"
     preBuildScripts:
       - name: Require device signing for associated domains
         script: sh "$SRCROOT/Scripts/check-device-entitlements.sh"

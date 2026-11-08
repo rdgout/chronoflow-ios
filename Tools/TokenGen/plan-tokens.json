@@ -25,6 +25,21 @@
       "size": 13,
       "lineHeight": 18,
       "weight": 400
+    },
+    "planCardTitle": {
+      "size": 24,
+      "lineHeight": 32,
+      "weight": 400
+    },
+    "planDayTitle": {
+      "size": 18,
+      "lineHeight": 26,
+      "weight": 400
+    },
+    "planRemoteTitle": {
+      "size": 22,
+      "lineHeight": 28,
+      "weight": 400
     }
   },
   "spacingMultipliers": {
@@ -36,7 +51,7 @@
     "minTickSpacing": 7.5,
     "border": 0.25,
     "emphasisBorder": 0.5,
-    "coreBorder": 0.75,
+    "coreBorder": 1,
     "gutter": 4,
     "cardPadding": 4,
     "sectionGap": 3,
@@ -59,12 +74,22 @@
     "skeletonSummary": 30,
     "skeletonTimeline": 95,
     "prioritySampleWidth": 10,
-    "prioritySampleHeight": 7
+    "prioritySampleHeight": 7,
+    "zonePadding": 5,
+    "textPlateRadius": 2.5
   },
   "spacingTokens": {
     "minTileHeight": "space-6",
     "tinyTileHeight": "space-14",
     "gutterMarkerSize": "space-6",
     "laneGap": "space-1"
+  },
+  "scalars": {
+    "hatchOpacity": 0.12,
+    "dotOpacity": 0.16,
+    "markedOpacity": 0.6,
+    "optionalOpacity": 0.75,
+    "coreBorderOpacity": 0.7,
+    "tagOpacity": 0.4
   }
 }

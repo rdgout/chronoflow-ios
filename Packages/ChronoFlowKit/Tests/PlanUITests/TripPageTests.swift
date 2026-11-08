@@ -70,7 +70,33 @@ struct TripPageTests {
         let anchor = TripPageAnchor(dayID: days[2].id, labelDate: days[2].labelDate, offset: 180)
         #expect(replacementAnchor(anchor, days: new).dayID == "replacement")
         #expect(replacementAnchor(anchor, days: new).offset == 180)
+        var duplicateDate = days
+        duplicateDate[0].labelDate = days[2].labelDate
+        #expect(replacementAnchor(anchor, days: duplicateDate).dayID == days[2].id)
         #expect(replacementAnchor(anchor, days: Array(new.suffix(1))).dayID == new.last?.id)
+    }
+
+    @Test func pendingOldHashMarksAndUndoOverrideTheNewPlan() async throws {
+        var detail = try fixtureDetail()
+        let key = try #require(
+            detail.plan.blocks.first { $0.actionable && $0.checkKey != nil && !isOptionalStep($0) }?.checkKey)
+        detail.checkState.marks = [CheckMark(key: key, status: .done, markedAt: detail.trip.departureUtc)]
+        let old = CheckOffChange(
+            tripID: detail.trip.id, planInputHash: "previous-hash", type: key.type, localDate: key.localDate,
+            ordinal: key.ordinal, status: .skipped)
+        let decoder = PlanDecoder()
+        let marked = try await decoder.prepare(
+            detail, hidden: [], language: .en, timeFormat: .value24, marks: [], pendingChecks: [old])
+        #expect(marked.days.flatMap(\.blocks).first { $0.block.checkKey == key }?.status == .skipped)
+        var undo = old
+        undo.status = nil
+        let undone = try await decoder.prepare(
+            detail, hidden: [], language: .en, timeFormat: .value24, marks: [], pendingChecks: [old, undo])
+        #expect(undone.days.flatMap(\.blocks).first { $0.block.checkKey == key }?.status == nil)
+        #expect(await decoder.layoutCount == 1)
+        detail.detailVersion += "-replacement"
+        _ = try await decoder.prepare(detail, hidden: [], language: .en, timeFormat: .value24, marks: [])
+        #expect(await decoder.layoutCount == 2)
     }
 
     @Test func preparationCachesLayoutsAndPreservesMarkLabels() async throws {

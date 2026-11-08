@@ -7,11 +7,13 @@ import PlanCore
 @Observable public final class TripPlanModel {
     public private(set) var tripRecord: TripRecord?
     public private(set) var card: TripCardView?
+    public private(set) var adaptation: AdaptationView?
     public private(set) var hasLoaded = false
     public private(set) var prepared: PreparedPlan?
     public var language: Language = .en { didSet { if language != oldValue { rebuildLayouts() } } }
     public var timeFormat: TimeFormat = .value24 { didSet { if timeFormat != oldValue { rebuildLayouts() } } }
     @ObservationIgnored private var marks: [CheckMark] = []
+    @ObservationIgnored private var pendingChecks: [CheckOffChange] = []
     public private(set) var detail: TripDetail?
     public private(set) var layouts: [String: DayLayout] = [:]
     public private(set) var now: Date
@@ -54,7 +56,11 @@ import PlanCore
                         guard !Task.isCancelled else { break }
                         self?.tripRecord = snapshot.trip
                         self?.hasLoaded = true
-                        if let trip = snapshot.trip { self?.card = try? await decoder.card(trip) }
+                        if let trip = snapshot.trip {
+                            self?.card = try? await decoder.card(trip)
+                            self?.adaptation = try? await decoder.adaptation(trip)
+                        }
+                        self?.pendingChecks = snapshot.pendingChecks
                         self?.marks = snapshot.checks.map {
                             CheckMark(
                                 key: CheckKeyView(
@@ -124,12 +130,14 @@ import PlanCore
         let language = language
         let timeFormat = timeFormat
         let marks = marks
+        let pendingChecks = pendingChecks
         layoutTask = Task { [weak self] in
             let layouts = await decoder.layouts(detail, hidden: hidden)
             guard !Task.isCancelled, self?.layoutRevision == revision else { return }
             do {
                 let prepared = try await decoder.prepare(
-                    detail, hidden: hidden, language: language, timeFormat: timeFormat, marks: marks)
+                    detail, hidden: hidden, language: language, timeFormat: timeFormat, marks: marks,
+                    pendingChecks: pendingChecks)
                 guard !Task.isCancelled, self?.layoutRevision == revision else { return }
                 self?.layouts = layouts
                 self?.prepared = prepared
