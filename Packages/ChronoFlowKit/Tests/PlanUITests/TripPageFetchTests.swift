@@ -17,6 +17,47 @@ private actor DetailRequests {
 }
 
 struct TripPageFetchTests {
+    @Test @MainActor func injectedOfflinePathAndClockStayFrozenAfterStarting() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let database = AccountDatabase(applicationSupport: root)
+        try await database.open(accountID: "00000000-0000-4000-8000-000000000018")
+        let repository = TripRepository(database: database)
+        let fixture = try MockTimelineFixtures.fixture(named: "S3")
+        let adaptation = try #require(fixture.detail.plan.summary?.adaptation)
+        try await repository.upsert(
+            TripRecord(
+                id: fixture.card.id, card: .encoding(fixture.card), adaptation: .encoding(adaptation),
+                keepOffline: false, departureUtc: fixture.card.departureUtc))
+        let now = planDate(fixture.detail.plan.days[1].startUtc)
+        let requests = DetailRequests()
+        let model = TripPageModel(
+            tripID: fixture.card.id, repository: repository, retention: PlanRetention(), path: nil,
+            clock: TestPlanClock(now), now: now, fetchDetail: { try await requests.fetch($0) })
+        model.online = false
+        model.start()
+        defer { model.stop() }
+        try await ModelTests().eventually { model.plan.card != nil && model.plan.adaptation != nil }
+        for _ in 0..<10 {
+            await Task.yield()
+            model.start()
+            #expect(!model.online)
+            #expect(model.state == .remoteOffline)
+            #expect(model.plan.now == now)
+            #expect(await requests.count == 0)
+        }
+        model.online = true
+        try await ModelTests().eventually { model.fetch == .offline }
+        #expect(model.state == .remoteOffline)
+        #expect(await requests.count == 1)
+        model.retry()
+        try await ModelTests().eventually { model.fetch == .loaded }
+        #expect(model.state == .remoteLoading)
+        #expect(await requests.count == 2)
+        model.stop()
+        try await database.close()
+    }
+
     @Test @MainActor func offlineFailureReconnectAndLivePreferences() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }

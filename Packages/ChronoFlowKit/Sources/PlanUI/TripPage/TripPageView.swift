@@ -26,9 +26,10 @@ public struct TripPageView: View {
     public var onToday: (() -> Void)?
     public var onFirstTimelineFrame: () -> Void = {}
 
-    public init(model: TripPageModel) {
+    public init(model: TripPageModel, formatter: CopyLineFormatter? = nil) {
         _model = State(initialValue: model)
         _copy = State(initialValue: PageCopy(language: model.plan.language))
+        _formatter = State(initialValue: formatter)
     }
     public init(
         tripID: String, repository: TripRepository, retention: PlanRetention,
@@ -52,7 +53,7 @@ public struct TripPageView: View {
             model.plan.language = locale.language.languageCode?.identifier == "nl" ? .nl : .en
             copy = PageCopy(language: model.plan.language)
             model.start()
-            formatter = try? await CopyCatalog.load().mapFormatter()
+            if formatter == nil { formatter = try? await CopyCatalog.load().mapFormatter() }
         }
         .onChange(of: locale) { _, value in
             model.plan.language = value.language.languageCode?.identifier == "nl" ? .nl : .en

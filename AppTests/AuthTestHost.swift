@@ -9,6 +9,7 @@ import XCTest
     let controller: UIHostingController<AnyView>
     let container: SnapshotContainer
     let scale: CGFloat
+    var prepareCapture: (UIWindow) -> Void = { _ in }
     private var revision = 0
     var window: UIWindow { container.window }
 
@@ -112,6 +113,7 @@ import XCTest
                 layer.sublayers?.forEach(display)
             }
             layout(window)
+            prepareCapture(window)
             display(window.layer)
             CATransaction.flush()
         }

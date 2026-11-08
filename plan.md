@@ -1733,6 +1733,15 @@ Performance enforcement verification: `make lint`, focused host guards (includin
 
 Runner repair verification: strict lint, eight focused metric/fixture host tests, token/asset and resource/runner checks pass; the full package run has only the known APICookieTests sandbox EPERM. Perf sources type-check against the iOS 17 simulator target. `Docs/perf-timeline.md` records the SDK-compatible replacement for the supplied no-argument start hook and the pending runtime acceptance.
 
+**15 snapshot determinism repair (worktree B, 2026-11-08)**
+
+- [x] Preserve the user's nonisolated XCTest class, MainActor test methods and environment-controlled recording. Disable the fixture's real path monitor so its initial connected update cannot overwrite the remoteOffline hint and retry the successful stub fetch.
+- [x] Start fixtures before mounting, await card/adaptation/preparation and active-day minute text, inject the loaded copy formatter, and await a timeline drawing callback before pixel settling. Keep the fixed seed instant and frozen plan clock for dual clocks and the now line. Refuse page-state recording/comparison unless two fresh roots produce identical decoded PNG pixels.
+- [x] Keep Auth/Welcome's committed-layer CPU capture. Opt only trip page captures into opaque token-backed native navigation backgrounds, disabled shared glass/visual effects and hidden scroll-edge effects; retain native controls and exact pixel comparisons. Disable SwiftUI capture animations. Handle successful recording as Auth/Welcome do, without reporting it as a failed assertion. Include TripPage in the snapshot runner's list and cover isolated record-then-compare forwarding with a mocked host test.
+- [ ] User re-records/reviews the 130 TripPage references and compares them on 17e. Existing uncommitted PNGs are preserved and excluded from the patch; no simulator, iOS build or reference recording/comparison was run for this repair.
+
+Snapshot repair verification: strict lint, all PlanUI host tests (including injected-offline/frozen-clock/reconnect coverage), token/asset and resource/runner checks pass. The full package run reports only the known `APICookieTests.realRedirectCookieHandlingIsDisabled` sandbox EPERM. The supplied differing byte offsets map to rows 0, 85 and 90 of the 1170-pixel-wide 17e capture, within native navigation chrome. Runtime confirmation of the scoped chrome normalization and fresh-root guard remains the user's hosted rerun.
+
 **15e: Wide trip page** (blocked on OQ 35: PlanWide, PlanWideScrolled and PlanWideDayMenu HTML)
 - [ ] From a 600 pt window width, portrait only: timeline and list side by side, a 280 pt list column growing to 320 pt from 900 pt, no view button (`reqWideTrip`). Duo folded and every iPhone keep the phone layout. Until the user re-exports the wide boards and this lands, Duo unfolded uses the phone layout at full width (settled OQ 35).
   - Tests: wide snapshots at 669 pt; a size-change test (phone → 669 pt → phone) that keeps the day, scroll position and open sheet; `make duo`.
