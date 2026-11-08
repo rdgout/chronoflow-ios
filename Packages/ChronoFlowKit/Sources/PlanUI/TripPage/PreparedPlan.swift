@@ -23,6 +23,8 @@ nonisolated public struct PreparedDay: Sendable, Equatable, Identifiable {
     public var day: DayView
     public var title: String
     public var date: String
+    public var weekday: String
+    public var dayMonth: String
     public var zone: String
     public var status: String?
     public var summary: String
@@ -31,6 +33,7 @@ nonisolated public struct PreparedDay: Sendable, Equatable, Identifiable {
     public var warningCount: Int
     public var progress: String
     public var blocks: [PreparedBlock]
+    public var dividerLabels: [String]
     public var ticks: [String]
 }
 
@@ -121,7 +124,10 @@ nonisolated public func preparePlan(
             day: day,
             title: formatter.catalog.text(
                 dayLabelKey(day.labelPhase) ?? "", language: language, count: Double(day.postArrivalIndex ?? 0)),
-            date: formatter.dayDateLabel(day, language: language), zone: dayZoneLabel(day, trip: detail.trip),
+            date: formatter.dayDateLabel(day, language: language),
+            weekday: formatter.formatWeekday(day.labelDate, language: language),
+            dayMonth: formatter.formatDayMonth(day.labelDate, language: language),
+            zone: dayZoneLabel(day, trip: detail.trip),
             status: day.status.flatMap(dayStatusLabelKey).map { formatter.catalog.text($0, language: language) },
             summary: summary, headline: day.headline.map { formatter.format($0, options: options) },
             notices: notices.map {
@@ -131,6 +137,7 @@ nonisolated public func preparePlan(
             progress: copy(
                 "%@ of %@ steps done", String(actionable.filter { $0.status == .done }.count), String(actionable.count)),
             blocks: blocks,
+            dividerLabels: layout.dividers.map { copy("%@ time from here", zoneLabel($0.after.tz, trip: detail.trip)) },
             ticks: layout.ticks.map { formatter.formatInstant($0.tick.atUtc, options: options, zone: $0.tick.tz) })
     }
     let hasReturn = detail.trip.legs.contains(where: \.returnLeg)

@@ -8,6 +8,7 @@ import PlanCore
     public private(set) var tripRecord: TripRecord?
     public private(set) var card: TripCardView?
     public private(set) var adaptation: AdaptationView?
+    public private(set) var metadata = ""
     public private(set) var hasLoaded = false
     public private(set) var prepared: PreparedPlan?
     public var language: Language = .en { didSet { if language != oldValue { rebuildLayouts() } } }
@@ -17,7 +18,13 @@ import PlanCore
     @ObservationIgnored private var pendingChecks: [CheckOffChange] = []
     public private(set) var detail: TripDetail?
     public private(set) var layouts: [String: DayLayout] = [:]
-    public private(set) var now: Date
+    public private(set) var now: Date {
+        didSet {
+            updateDayClocks()
+            refreshClockText()
+        }
+    }
+    public private(set) var nowTexts: [String: String] = [:]
     public private(set) var error: (any Error)?
     public var hiddenCategories: [BlockType] = [] { didSet { if hiddenCategories != oldValue { rebuildLayouts() } } }
     public var nowOffsets: [String: Double] {
@@ -28,9 +35,25 @@ import PlanCore
     @ObservationIgnored private let clock: any PlanClock
     @ObservationIgnored private let decoder: PlanDecoder
     @ObservationIgnored private let mutationPermit: SessionMutationPermit?
+    @ObservationIgnored private var clockTask: Task<Void, Never>?
     @ObservationIgnored private var layoutTask: Task<Void, Never>?
     @ObservationIgnored private var layoutRevision = 0
     @ObservationIgnored private var tasks: [Task<Void, Never>] = []
+    @ObservationIgnored private var dayClocks: [String: DayClockState] = [:]
+
+    func dayClock(for id: String) -> DayClockState {
+        if let clock = dayClocks[id] { return clock }
+        let clock = DayClockState()
+        dayClocks[id] = clock
+        return clock
+    }
+
+    private func updateDayClocks() {
+        for (id, clock) in dayClocks {
+            let active = layouts[id].flatMap { nowLineOffset($0.day, now: now) } != nil
+            clock.update(now: active ? now : .distantPast, text: active ? nowTexts[id] ?? "" : "")
+        }
+    }
 
     public init(
         tripID: String, repository: TripRepository, clock: any PlanClock = SystemPlanClock(),
@@ -40,8 +63,8 @@ import PlanCore
         self.repository = repository
         self.clock = clock
         self.decoder = decoder
-        self.now = now
         self.mutationPermit = mutationPermit
+        self.now = now
     }
 
     public func start() {
@@ -61,6 +84,7 @@ import PlanCore
                             self?.onTripAvailable?()
                             self?.card = try? await decoder.card(trip)
                             self?.adaptation = try? await decoder.adaptation(trip)
+                            self?.refreshMetadata()
                         }
                         self?.pendingChecks = snapshot.pendingChecks
                         self?.marks = snapshot.checks.map {
@@ -77,15 +101,19 @@ import PlanCore
                             self?.layoutTask?.cancel()
                             self?.layoutRevision += 1
                             self?.detail = nil
+                            self?.refreshMetadata()
                             self?.error = nil
                             self?.layouts = [:]
                             self?.prepared = nil
+                            self?.nowTexts = [:]
+                            self?.updateDayClocks()
                             continue
                         }
                         do {
                             let value = try await decoder.detail(snapshot)
                             guard !Task.isCancelled else { break }
                             self?.detail = value
+                            self?.refreshMetadata()
                             self?.rebuildLayouts()
                             self?.error = nil
                         } catch { if !Task.isCancelled { self?.error = error } }
@@ -116,10 +144,41 @@ import PlanCore
         for task in tasks { task.cancel() }
         tasks.removeAll()
         layoutTask?.cancel()
+        clockTask?.cancel()
         layoutRevision += 1
     }
 
+    private func refreshClockText() {
+        clockTask?.cancel()
+        let layouts = layouts
+        let now = now
+        let language = language
+        let timeFormat = timeFormat
+        let decoder = decoder
+        clockTask = Task { [weak self] in
+            guard
+                let texts = try? await decoder.nowTexts(
+                    layouts: layouts, now: now, language: language, timeFormat: timeFormat),
+                !Task.isCancelled
+            else { return }
+            self?.nowTexts = texts
+            self?.updateDayClocks()
+        }
+    }
+
+    private func refreshMetadata() {
+        guard let card else {
+            metadata = ""
+            return
+        }
+        metadata = tripMetaText(
+            start: card.departLocal, end: detail?.plan.days.last?.labelDate ?? tripRecord?.planEndDate,
+            flights: detail.map { $0.trip.legs.filter { !$0.returnLeg }.compactMap(\.flightNumber) }
+                ?? card.flightNumber.map { [$0] } ?? [], language: language)
+    }
+
     private func rebuildLayouts() {
+        refreshMetadata()
         layoutTask?.cancel()
         layoutRevision += 1
         let revision = layoutRevision
@@ -142,12 +201,17 @@ import PlanCore
                     pendingChecks: pendingChecks)
                 guard !Task.isCancelled, self?.layoutRevision == revision else { return }
                 self?.layouts = layouts
+                for id in layouts.keys { _ = self?.dayClock(for: id) }
+                self?.dayClocks = self?.dayClocks.filter { layouts[$0.key] != nil } ?? [:]
+                self?.updateDayClocks()
                 self?.prepared = prepared
+                self?.refreshClockText()
             } catch { if !Task.isCancelled { self?.error = error } }
         }
     }
 
     deinit {
+        clockTask?.cancel()
         for task in tasks { task.cancel() }
         layoutTask?.cancel()
     }

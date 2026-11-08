@@ -75,11 +75,13 @@ nonisolated struct PlanPattern: Shape {
             for y in stride(from: PlanMetrics.dotStep / 2, to: rect.height, by: PlanMetrics.dotStep) {
                 for x in stride(from: PlanMetrics.dotStep / 2, to: rect.width, by: PlanMetrics.dotStep) {
                     path.addEllipse(
-                        in: CGRect(x: x, y: y, width: PlanMetrics.dotRadius * 2, height: PlanMetrics.dotRadius * 2))
+                        in: CGRect(
+                            x: x - PlanMetrics.dotRadius, y: y - PlanMetrics.dotRadius,
+                            width: PlanMetrics.dotRadius * 2, height: PlanMetrics.dotRadius * 2))
                 }
             }
         } else {
-            for x in stride(from: -rect.height, to: rect.width, by: PlanMetrics.patternStep) {
+            for x in stride(from: -rect.height, to: rect.width, by: PlanMetrics.patternStep * sqrt(2)) {
                 path.move(to: CGPoint(x: x, y: rect.height))
                 path.addLine(to: CGPoint(x: x + rect.height, y: 0))
             }

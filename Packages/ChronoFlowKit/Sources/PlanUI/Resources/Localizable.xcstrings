@@ -1328,6 +1328,22 @@
           }
         }
       }
+    },
+    "%@ time from here": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ time from here"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vanaf hier %@-tijd"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

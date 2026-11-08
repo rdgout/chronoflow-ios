@@ -76,7 +76,7 @@ struct DayNavigation: View {
             step(-1, label: "Previous day", icon: "chevron.left")
             ScrollViewReader { proxy in
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: PlanMetrics.rowGap) {
+                    LazyHStack(spacing: PlanMetrics.rowGap) {
                         ForEach(days) { day in
                             Button {
                                 select(day.id)

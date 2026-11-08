@@ -71,6 +71,12 @@ public enum Typography {
         Style(
             face: PlanTypeMetrics.planCompactDateFace, metrics: PlanTypeMetrics.planCompactDate, relativeTo: .caption2)
     }
+    public static var planNow: Style {
+        Style(face: PlanTypeMetrics.planNowFace, metrics: PlanTypeMetrics.planNow, relativeTo: .caption2)
+    }
+    public static var planPriority: Style {
+        Style(face: PlanTypeMetrics.planPriorityFace, metrics: PlanTypeMetrics.planPriority, relativeTo: .caption2)
+    }
     public static var planListLine: Style {
         Style(face: PlanTypeMetrics.planListLineFace, metrics: PlanTypeMetrics.planListLine, relativeTo: .subheadline)
     }

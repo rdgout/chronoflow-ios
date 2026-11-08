@@ -40,6 +40,21 @@
       "size": 22,
       "lineHeight": 28,
       "weight": 400
+    },
+    "planNow": {
+      "size": 10,
+      "lineHeight": 16,
+      "weight": 600
+    },
+    "planPriority": {
+      "size": 10,
+      "lineHeight": 14,
+      "weight": 500
+    },
+    "planBlockLabel": {
+      "size": 11,
+      "lineHeight": 14,
+      "weight": 600
     }
   },
   "spacingMultipliers": {
@@ -76,7 +91,11 @@
     "prioritySampleWidth": 10,
     "prioritySampleHeight": 7,
     "zonePadding": 5,
-    "textPlateRadius": 2.5
+    "textPlateRadius": 2.5,
+    "blockIcon": 3.5,
+    "detailsThreshold": 19,
+    "zonePillPadding": 2,
+    "zonePillVerticalPadding": 0.5
   },
   "spacingTokens": {
     "minTileHeight": "space-6",
@@ -90,6 +109,10 @@
     "markedOpacity": 0.6,
     "optionalOpacity": 0.75,
     "coreBorderOpacity": 0.7,
-    "tagOpacity": 0.4
+    "tagOpacity": 0.4,
+    "optionalBorderOpacity": 0.5,
+    "gridOpacity": 0.6,
+    "markedRowOpacity": 0.7,
+    "warningOpacity": 0.1
   }
 }

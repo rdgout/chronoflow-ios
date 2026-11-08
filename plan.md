@@ -1708,8 +1708,8 @@ Host verification (2026-11-08): `make quick` passes strict lint and package suit
 
 **15 fix round 1 (worktree B, 2026-11-08)**
 - [x] Keep offline fetch failures distinct, refetch on reconnect, scope awaitingSync to missing, and observe account time-format/hidden-category preferences.
-- [ ] Isolate scroll geometry from observable rendering, cache minute text and stable day inputs, and replace full-day rasters within the traversal memory budget.
-- [ ] Match tile alpha, borders, patterns, content, gutter/grid and zone-divider styling to the boards/RN; position VoiceOver children at their drawn blocks.
+- [x] Isolate scroll geometry from observable rendering, cache minute text and stable day inputs, and replace full-day rasters within the traversal memory budget.
+- [x] Match tile alpha, borders, patterns, content, gutter/grid and zone-divider styling to the boards/RN; position VoiceOver children at their drawn blocks.
 - [ ] Restore header/menu/remote/list/notice board behavior and en/nl plural counts; preserve host and Release performance coverage. No snapshot recording.
 
 **15e: Wide trip page** (blocked on OQ 35: PlanWide, PlanWideScrolled and PlanWideDayMenu HTML)

@@ -5,9 +5,16 @@ import SwiftUI
 
 public struct DayListView: View {
     public let day: PreparedDay
+    public var now: Date
+    public var copy: PageCopy
     public var onBlock: (String) -> Void
-    public init(day: PreparedDay, onBlock: @escaping (String) -> Void = { _ in }) {
+    public init(
+        day: PreparedDay, now: Date = .distantPast, copy: PageCopy = PageCopy(language: .en),
+        onBlock: @escaping (String) -> Void = { _ in }
+    ) {
         self.day = day
+        self.now = now
+        self.copy = copy
         self.onBlock = onBlock
     }
 

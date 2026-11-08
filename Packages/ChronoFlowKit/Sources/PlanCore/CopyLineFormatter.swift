@@ -82,6 +82,10 @@ public struct CopyLineFormatter: Sendable {
         dateText(value, language: language, zone: zone, template: month ? "EEE d MMM" : "EEE d")
     }
 
+    public func formatWeekday(_ value: String, language: Language) -> String {
+        dateText(value, language: language, zone: "UTC", template: "EEE")
+    }
+
     public func formatMonthYear(_ value: String, language: Language, zone: String = "UTC") -> String {
         dateText(value, language: language, zone: zone, template: "MMM yyyy")
     }

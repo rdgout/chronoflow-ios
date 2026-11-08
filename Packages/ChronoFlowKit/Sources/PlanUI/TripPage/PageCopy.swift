@@ -1,7 +1,7 @@
 import AppCore
 import Foundation
 
-nonisolated public struct PageCopy: Sendable {
+nonisolated public struct PageCopy: Sendable, Equatable {
     public let language: Language
     private let bundle: Bundle
 
@@ -11,6 +11,8 @@ nonisolated public struct PageCopy: Sendable {
             Bundle.module.url(forResource: language.rawValue, withExtension: "lproj")
             .flatMap(Bundle.init(url:)) ?? .module
     }
+
+    public static func == (lhs: Self, rhs: Self) -> Bool { lhs.language == rhs.language }
 
     public func callAsFunction(_ key: String, _ arguments: String...) -> String {
         let value = bundle.localizedString(forKey: key, value: nil, table: "Localizable")

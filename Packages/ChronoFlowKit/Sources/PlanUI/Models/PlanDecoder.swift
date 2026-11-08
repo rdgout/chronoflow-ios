@@ -139,6 +139,15 @@ public actor PlanDecoder {
         return result
     }
 
+    public func nowTexts(layouts: [String: DayLayout], now: Date, language: Language, timeFormat: TimeFormat)
+        async throws -> [String: String]
+    {
+        if formatter == nil { formatter = CopyLineFormatter(catalog: try await CopyCatalog.load()) }
+        let options = CopyFormat(language: language, timeFormat: timeFormat)
+        return layouts.filter { nowLineOffset($0.value.day, now: now) != nil }
+            .mapValues { formatter!.nowLabel($0, now: now, options: options) }
+    }
+
     private func assertWorker() {
         decodedOnMainThread = decodedOnMainThread || Thread.isMainThread
         precondition(!Thread.isMainThread, "Plan decoding must run off the main thread")

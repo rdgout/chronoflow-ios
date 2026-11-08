@@ -14,12 +14,33 @@ by trip/input hash/detail version with a raw-payload guard. Block bucketing avoi
 the whole trip for every day. Calendar-based local dates avoid allocating date formatters
 for every interval. Marks and preference changes invalidate presentation appropriately.
 
-A worker rasterises static day drawings using generated P3 colours, registered fonts,
-patterns, packed tiles, ticks and zone/continuation markers. The Canvas blits the prepared
-image and adds the minute-driven now line. Packing, date formatting, text layout, patterns
-and symbol rendering stay outside the draw closure. System-symbol images are shared by
-all days. A four-day LRU bounds the raster cache; views release their images on disappearance.
-Accessibility children use the same time-ordered prepared blocks as the list.
+Scroll geometry is consumed by a plain tracker, outside SwiftUI/Observation state. The
+relative offset is retained in an `@ObservationIgnored` field for plan replacement; the
+observable anchor changes only when the day ID changes. The navigation subtitle changes
+only at a header boundary. On iOS, the compact header's continuous fade updates the hosted
+view's alpha directly, including Reduce Motion and accessibility visibility. The same
+preference-based tracker works on iOS 17; it never publishes per-frame geometry.
+
+Equatable day rows keep stable content, layout, language and action inputs. Clock readers
+are isolated children. `PlanDecoder` computes now text off-main for the active day once per
+PlanClock tick (and after a content/preference change). A minute tick can move the now line
+without invalidating the static drawing. The day navigation uses a lazy horizontal stack.
+
+A worker records static day drawings as immutable **vector PDF display lists**, including
+text, patterns, symbols, ticks, tiles and labelled zone dividers. Canvas draws these vectors
+directly in lazy strips no taller than half the page viewport (with a touch-height floor).
+There are no full-height app-owned RGBA day images. The actor cache is bounded by **4 MiB
+of vector payload and four entries**, rather than four 13–16 MB rasters. Shared small symbol
+images are the only app-owned rasters. Views release their vector drawing on disappearance.
+Host regression tests traverse all 60 days at phone and Duo widths, enforce a 512 KiB
+per-drawing ceiling and the cache limit, and verify cache reuse/invalidation. The latest
+symbol-free host fixture drawing peaks at 38,657 bytes; this is a display-list size, not a
+process-memory measurement. System Canvas backing and PDF/font caches still count toward
+the unchanged 40 MiB **process-growth** budget below and require the optimized UI run.
+
+Accessibility children use each tile's hit frame, gutter-marker position, zone-divider pill
+and visible tick position. The now element occupies its drawn line/pill region. The pill
+sizes to its localized text and scaled 600-weight tabular font, including 12-hour time.
 
 ## Fixtures and direct launch
 
@@ -81,7 +102,7 @@ seven-device matrix. `make perf` still runs only the original launch benchmark.
 `net.chronoflow.app.native` / `Timeline` / `time-to-first-timeline-frame` signpost, plus
 `XCTApplicationLaunchMetric`. The custom interval begins after fixture/database seeding,
 just before creating the page model. It includes repository observation, decode, layout,
-label preparation and the first day raster. It ends after the splash overlay is gone and
+label preparation and the first day vector drawing. It ends after the splash overlay is gone and
 two display-link callbacks have passed with a ready timeline. Thus it represents a visible
 committed frame, not simply a SwiftUI `onAppear`. Launch time is reported separately and
 includes the diagnostic fixture setup. Tests wait for `trip.timeline.presented` so a missing
@@ -91,7 +112,7 @@ signpost/failed raster cannot silently pass.
 from the **first** day through all 60 days to the end card, with a 240-swipe guard. It measures
 `XCTOSSignpostMetric.scrollingAndDecelerationMetric` and process memory. Three iterations
 relaunch the app, so the first traversal creates day drawings lazily; this does not merely
-exercise a previously warmed whole-trip raster cache.
+exercise a previously warmed whole-trip drawing cache.
 
 | Metric | Acceptance budget | Aim |
 | --- | ---: | ---: |
