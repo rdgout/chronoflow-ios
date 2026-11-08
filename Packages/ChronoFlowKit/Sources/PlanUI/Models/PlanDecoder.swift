@@ -3,11 +3,27 @@ import Foundation
 import LocalStore
 import PlanCore
 
-public struct TripListValue: Sendable, Equatable {
+public nonisolated struct TripListValue: Sendable, Equatable {
     public var card: TripCardView
     public var planStartUtc: String?
     public var planEndUtc: String?
     public var status: TripStatus
+    public var planStartZone: String? = nil
+    public var planEndDate: String? = nil
+    public var preparationDays: Int? = nil
+
+    public init(
+        card: TripCardView, planStartUtc: String?, planEndUtc: String?, status: TripStatus,
+        planStartZone: String? = nil, planEndDate: String? = nil, preparationDays: Int? = nil
+    ) {
+        self.card = card
+        self.planStartUtc = planStartUtc
+        self.planEndUtc = planEndUtc
+        self.status = status
+        self.planStartZone = planStartZone
+        self.planEndDate = planEndDate
+        self.preparationDays = preparationDays
+    }
 }
 
 public actor PlanDecoder {
@@ -32,7 +48,9 @@ public actor PlanDecoder {
                     TripListValue(
                         card: card, planStartUtc: record.planStartUtc, planEndUtc: record.planEndUtc,
                         status: tripDisplayStatus(
-                            card, planStartUtc: record.planStartUtc, planEndUtc: record.planEndUtc, now: now)))
+                            card, planStartUtc: record.planStartUtc, planEndUtc: record.planEndUtc, now: now),
+                        planStartZone: record.planStartZone,
+                        planEndDate: record.planEndDate, preparationDays: record.preparationDays))
             } catch { firstError = firstError ?? error }
         }
         return (values, firstError)

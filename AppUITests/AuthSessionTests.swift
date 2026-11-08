@@ -36,7 +36,7 @@ nonisolated final class AuthSessionTests: XCTestCase {
         AuthUIFlow.signIn(app, email: MockScenarioValues.demoEmail)
         assertRoute("verify", in: app)
         XCTAssertFalse(app.staticTexts["route.walkthrough"].exists)
-        XCTAssertFalse(app.staticTexts["route.today"].exists)
+        XCTAssertFalse(app.scrollViews["today.screen"].exists)
         app.terminate()
         app.launch()
         assertRoute("verify", in: app)
@@ -55,7 +55,7 @@ nonisolated final class AuthSessionTests: XCTestCase {
         assertRoute("today", in: app)
         let offlineAttempt = XCTNSPredicateExpectation(
             predicate: NSPredicate(format: "value == %@", "cached:failed-offline"),
-            object: app.staticTexts["route.today"])
+            object: diagnostics(app))
         XCTAssertEqual(XCTWaiter.wait(for: [offlineAttempt], timeout: 12), .completed)
         signOut(app, route: "today")
         app.terminate()
@@ -64,7 +64,7 @@ nonisolated final class AuthSessionTests: XCTestCase {
         AuthUIFlow.openSignIn(app)
         XCTAssertEqual(app.textFields["sign-in.email"].value as? String, "")
         XCTAssertEqual(app.secureTextFields["sign-in.password"].value as? String, "")
-        XCTAssertFalse(app.staticTexts["route.today"].exists)
+        XCTAssertFalse(app.scrollViews["today.screen"].exists)
         XCTAssertFalse(app.scrollViews["verify.scroll"].exists)
         XCTAssertFalse(app.textFields["two-factor.code"].exists)
         XCTAssertFalse(app.images["launch.opening"].exists)
@@ -77,7 +77,7 @@ nonisolated final class AuthSessionTests: XCTestCase {
         let code = app.textFields["two-factor.code"]
         XCTAssertTrue(code.waitForExistence(timeout: 8))
         XCTAssertFalse(app.staticTexts["route.walkthrough"].exists)
-        XCTAssertFalse(app.staticTexts["route.today"].exists)
+        XCTAssertFalse(app.scrollViews["today.screen"].exists)
         if recovery {
             AuthUIFlow.reveal(app.buttons["two-factor.toggle"], in: app)
             app.buttons["two-factor.toggle"].tap()
@@ -112,6 +112,8 @@ nonisolated final class AuthSessionTests: XCTestCase {
     @MainActor private func assertRoute(_ route: String, in app: XCUIApplication) {
         if route == "verify" {
             XCTAssertTrue(app.scrollViews["verify.scroll"].waitForExistence(timeout: 12))
+        } else if route == "today" {
+            XCTAssertTrue(app.scrollViews["today.screen"].waitForExistence(timeout: 12))
         } else {
             XCTAssertTrue(app.staticTexts["route.\(route)"].waitForExistence(timeout: 12))
         }
@@ -119,10 +121,17 @@ nonisolated final class AuthSessionTests: XCTestCase {
         XCTAssertFalse(app.staticTexts["welcome.wordmark"].exists)
     }
 
+    @MainActor private func diagnostics(_ app: XCUIApplication) -> XCUIElement {
+        app.tabBars.buttons["Settings"].tap()
+        let element = app.staticTexts["route.settings"]
+        XCTAssertTrue(element.waitForExistence(timeout: 4))
+        return element
+    }
+
     @MainActor private func waitForCache(in app: XCUIApplication) {
         let cached = XCTNSPredicateExpectation(
             predicate: NSPredicate(format: "value == %@", "cached:idle"),
-            object: app.staticTexts["route.today"])
+            object: diagnostics(app))
         XCTAssertEqual(XCTWaiter.wait(for: [cached], timeout: 12), .completed)
     }
 
@@ -133,7 +142,7 @@ nonisolated final class AuthSessionTests: XCTestCase {
             AuthUIFlow.reveal(different, in: app)
             different.tap()
         } else {
-            app.staticTexts["route.\(route)"].tap()
+            diagnostics(app).tap()
         }
         XCTAssertTrue(app.textFields["sign-in.email"].waitForExistence(timeout: 8))
         if route == "verify" {

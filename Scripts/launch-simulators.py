@@ -29,7 +29,7 @@ MATRIX = {
     "duo": ("iPhone Duo", "iPhone-Duo", DUO_RUNTIME),
 }
 # Each suite has one scheduling policy. Fixed geometry fixtures are logic; running-window/scale assertions are matrix.
-SUITES = {'AppTests': {'logic': ('AuthControlTests', 'AuthLayoutTests', 'AuthSnapshotGuardTests', 'AuthSubtitleContrastTests', 'TwoFactorControlTests', 'TwoFactorLayoutTests', 'ForgotPasswordControlTests', 'ForgotPasswordLayoutTests', 'ResetPasswordControlTests', 'ResetPasswordLayoutTests', 'SignUpControlTests', 'SignUpLayoutTests', 'VerifyEmailControlTests', 'VerifyEmailLayoutTests', 'AuthUniversalLinkTests', 'LaunchArgumentLogicTests',
+SUITES = {'AppTests': {'logic': ('StepSheetLayoutTests', 'TodayControlTests', 'TodayLayoutTests', 'AuthControlTests', 'AuthLayoutTests', 'AuthSnapshotGuardTests', 'AuthSubtitleContrastTests', 'TwoFactorControlTests', 'TwoFactorLayoutTests', 'ForgotPasswordControlTests', 'ForgotPasswordLayoutTests', 'ResetPasswordControlTests', 'ResetPasswordLayoutTests', 'SignUpControlTests', 'SignUpLayoutTests', 'VerifyEmailControlTests', 'VerifyEmailLayoutTests', 'AuthUniversalLinkTests', 'LaunchArgumentLogicTests',
                         'RasterPixelLogicTests',
                         'ContentSizeCapLogicTests',
                         'AppIconTests',
@@ -56,11 +56,11 @@ SUITES = {'AppTests': {'logic': ('AuthControlTests', 'AuthLayoutTests', 'AuthSna
                          'WelcomeHandOverTests',
                          'LaunchImageMutationTests',
                          'SnapshotContainerTests'),
-              'profiles': ('LaunchSnapshotTests', 'WelcomeSnapshotTests', 'AuthSnapshotTests', 'TwoFactorSnapshotTests', 'ForgotPasswordSnapshotTests', 'ResetPasswordSnapshotTests', 'SignUpSnapshotTests', 'VerifyEmailSnapshotTests'),
+              'profiles': ('AppTabsSnapshotTests', 'StepSheetSnapshotTests', 'TodaySnapshotTests', 'TodayRowSnapshotTests', 'LaunchSnapshotTests', 'WelcomeSnapshotTests', 'AuthSnapshotTests', 'TwoFactorSnapshotTests', 'ForgotPasswordSnapshotTests', 'ResetPasswordSnapshotTests', 'SignUpSnapshotTests', 'VerifyEmailSnapshotTests'),
               'reference': ('LaunchFrameParityTests', 'LaunchStoryboardTests'),
               'release': ('ReleaseReadinessTests',)},
  'RenderTests': {'profiles': ('WelcomeRenderingTests',)},
- 'AppUITests': {'logic': ('SignInTests', 'TwoFactorTests', 'ForgotPasswordTests', 'ResetPasswordTests', 'SignUpTests', 'VerifyEmailTests', 'AccountRecoveryTests', 'AuthSessionTests', 'AuthAuditTests', 'ReadinessTests', 'WelcomeLogicTests'),
+ 'AppUITests': {'logic': ('AppTabsTests', 'TodayTests', 'StepSheetTests', 'LegendTests', 'PlanAuditTests', 'SignInTests', 'TwoFactorTests', 'ForgotPasswordTests', 'ResetPasswordTests', 'SignUpTests', 'VerifyEmailTests', 'AccountRecoveryTests', 'AuthSessionTests', 'AuthAuditTests', 'ReadinessTests', 'WelcomeLogicTests'),
                 'reference': ('LaunchToWelcomeTests', 'LaunchSceneTests', 'LaunchSceneDarkTests'),
                 'matrix': ('SignInKeyboardTests', 'TwoFactorKeyboardTests', 'ForgotPasswordKeyboardTests', 'WelcomeTests', 'WelcomeEnglishAccessibilityTests', 'WelcomeDutchAccessibilityTests')},
  'AppCoreTests': {'host': ('AuthLinkTests', 'CatalogTests',
@@ -127,12 +127,12 @@ SUITES = {'AppTests': {'logic': ('AuthControlTests', 'AuthLayoutTests', 'AuthSna
                               'SessionAccountDatabaseTests',
                               'AccountWiperTests',
                               'AccountReadinessTests')}}
-SNAPSHOTS = ("AppTests/LaunchSnapshotTests", "AppTests/WelcomeSnapshotTests", "AppTests/WelcomeSnapshotGuardTests", "RenderTests/WelcomeRenderingTests", "AppTests/AuthSnapshotTests", "AppTests/TwoFactorSnapshotTests", "AppTests/ForgotPasswordSnapshotTests", "AppTests/ResetPasswordSnapshotTests", "AppTests/SignUpSnapshotTests", "AppTests/VerifyEmailSnapshotTests", "AppTests/AuthSnapshotGuardTests")
+SNAPSHOTS = ("AppTests/LaunchSnapshotTests", "AppTests/WelcomeSnapshotTests", "AppTests/WelcomeSnapshotGuardTests", "RenderTests/WelcomeRenderingTests", "AppTests/AuthSnapshotTests", "AppTests/TwoFactorSnapshotTests", "AppTests/ForgotPasswordSnapshotTests", "AppTests/ResetPasswordSnapshotTests", "AppTests/SignUpSnapshotTests", "AppTests/VerifyEmailSnapshotTests", "AppTests/AuthSnapshotGuardTests", "AppTests/AppTabsSnapshotTests", "AppTests/StepSheetSnapshotTests", "AppTests/TodaySnapshotTests", "AppTests/TodayRowSnapshotTests")
 XCODEBUILD_COMMON = ["xcodebuild", "-project", "ChronoFlow.xcodeproj", "-derivedDataPath", "build/DerivedData",
                      "-onlyUsePackageVersionsFromResolvedFile"]
 
 # Device-wide mutations must be registered here; launch/window-scoped traits are clone-safe.
-SERIAL_TESTS = ("AppUITests/AuthSessionTests", "AppUITests/AuthAuditTests", "AppUITests/LaunchSceneTests", "AppUITests/LaunchSceneDarkTests", "AppUITests/LaunchToWelcomeTests")
+SERIAL_TESTS = ("AppUITests/PlanAuditTests", "AppUITests/AuthSessionTests", "AppUITests/AuthAuditTests", "AppUITests/LaunchSceneTests", "AppUITests/LaunchSceneDarkTests", "AppUITests/LaunchToWelcomeTests")
 PARALLEL_TARGETS = {"AppTests", "AppUITests", "RenderTests"}
 
 
