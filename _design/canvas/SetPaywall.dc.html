@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Plans for your next trip</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="ds/chronoflow/components/bundle.css">
+<script src="ds/chronoflow/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Figtree';src:url("/_blob/74876cc764ebb15bf4ae98bcdbf3140c") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/741b1ce40b46479a73d934d0d5be9774") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/079d83fda74d66d1f31e35072f71201d") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/991830890debdac04981f1a27656ed5c") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Fraunces';src:url("/_blob/fc815083784d00806d267d81858d2414") format("woff2");font-weight:400 500;font-style:normal;font-display:swap}
+body{margin:0}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="position: relative; width: 375px; height: 812px; overflow: hidden; background: var(--background); color: var(--foreground); font-family: var(--font-sans);">
+  <div aria-hidden="true" style="position: absolute; inset: 0;">
+    <dc-import name="SetPlanCredits" variant="credits" theme="{{theme}}" hint-size="375px,812px"></dc-import>
+  </div>
+  <a href="SetPlanCredits.dc.html" aria-label="Close" style="position: absolute; inset: 0; background: oklch(0.15 0.03 272 / 0.5);"></a>
+
+  <section role="dialog" aria-modal="true" aria-labelledby="pw-title" style="position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; gap: 16px; padding: 12px 20px 32px; border-radius: 38px 38px 0 0; background: var(--card); color: var(--card-foreground); box-shadow: var(--shadow-soft);">
+    <span aria-hidden="true" style="align-self: center; width: 36px; height: 5px; border-radius: 9999px; background: rgba(120, 120, 128, 0.4);"></span>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <h2 id="pw-title" style="margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 24px; line-height: 32px; letter-spacing: -0.01em;">Buy on chronoflow.app</h2>
+      <p style="margin: 0; font-size: 16px; line-height: 24px; color: var(--muted-foreground);">Credits and plans are sold on our website. You'll be signed in already.</p>
+    </div>
+    <ol style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px;">
+        <li style="display: flex; gap: 12px; align-items: flex-start; font-size: 15px; line-height: 22px;"><span aria-hidden="true" style="display: grid; place-items: center; width: 24px; height: 24px; flex-shrink: 0; border-radius: 9999px; background: var(--surface-2); font-size: 13px; font-weight: 600;">1</span><span>Pick a credit or unlimited trips on the website.</span></li>
+        <li style="display: flex; gap: 12px; align-items: flex-start; font-size: 15px; line-height: 22px;"><span aria-hidden="true" style="display: grid; place-items: center; width: 24px; height: 24px; flex-shrink: 0; border-radius: 9999px; background: var(--surface-2); font-size: 13px; font-weight: 600;">2</span><span>Pay there, the same way as on your computer.</span></li>
+        <li style="display: flex; gap: 12px; align-items: flex-start; font-size: 15px; line-height: 22px;"><span aria-hidden="true" style="display: grid; place-items: center; width: 24px; height: 24px; flex-shrink: 0; border-radius: 9999px; background: var(--surface-2); font-size: 13px; font-weight: 600;">3</span><span>Come back here. Your balance updates by itself.</span></li>
+    </ol>
+    <div style="display: grid; gap: 8px;">
+      <a href="SetPlanCredits.dc.html" class="inline-flex shrink-0 items-center justify-center gap-2 text-sm font-medium whitespace-nowrap transition-colors rounded-full bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6" style="height: 48px; text-decoration: none;">Continue to the website<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></svg></a>
+      <a href="SetPlanCredits.dc.html" class="inline-flex shrink-0 items-center justify-center gap-2 text-sm font-medium whitespace-nowrap transition-colors rounded-full hover:bg-accent hover:text-accent-foreground h-10 px-6" style="color: var(--foreground); text-decoration: none;">Not now</a>
+    </div>
+    <p style="margin: 0; font-size: 12px; line-height: 16px; text-align: center; color: var(--muted-foreground);">The sign-in link works once and expires after a few minutes.</p>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":375,"height":812}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light' };
+  }
+}
+</script>
+</body>
+</html>

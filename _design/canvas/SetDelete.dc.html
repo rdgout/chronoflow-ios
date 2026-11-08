@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Delete account confirmation</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="ds/chronoflow/components/bundle.css">
+<script src="ds/chronoflow/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Figtree';src:url("/_blob/74876cc764ebb15bf4ae98bcdbf3140c") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/741b1ce40b46479a73d934d0d5be9774") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/079d83fda74d66d1f31e35072f71201d") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/991830890debdac04981f1a27656ed5c") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Fraunces';src:url("/_blob/fc815083784d00806d267d81858d2414") format("woff2");font-weight:400 500;font-style:normal;font-display:swap}
+body{margin:0}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="position: relative; width: 375px; height: 812px; overflow: hidden; background: var(--background); color: var(--foreground); font-family: var(--font-sans);">
+  <div aria-hidden="true" style="position: absolute; inset: 0;">
+    <dc-import name="SetAccount" theme="{{theme}}" hint-size="375px,812px"></dc-import>
+  </div>
+  <a href="SetAccount.dc.html" aria-label="Close" style="position: absolute; inset: 0; background: oklch(0.15 0.03 272 / 0.5);"></a>
+
+  <section role="dialog" aria-modal="true" aria-labelledby="delete-title" style="position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; gap: 16px; padding: 12px 20px 32px; border-radius: 38px 38px 0 0; background: var(--card); color: var(--card-foreground); box-shadow: var(--shadow-soft);">
+    <span aria-hidden="true" style="align-self: center; width: 36px; height: 5px; border-radius: 9999px; background: rgba(120, 120, 128, 0.4);"></span>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <h2 id="delete-title" style="margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 24px; line-height: 32px; letter-spacing: -0.01em;">Delete your account?</h2>
+      <p style="margin: 0; font-size: 16px; line-height: 24px; color: var(--muted-foreground);">Your trips, plans, body-clock answers and any credits left are deleted for good, here and on the web. This can't be undone.</p>
+    </div>
+    <div style="display: grid; gap: 8px;">
+      <a href="PasswordPromptDelete.dc.html" class="inline-flex shrink-0 items-center justify-center gap-2 text-sm font-medium whitespace-nowrap transition-colors rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 h-10 px-6" style="height: 48px; text-decoration: none;">Delete my account</a>
+      <p style="margin: 0; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; line-height: 18px; color: var(--muted-foreground);"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: var(--muted-foreground);"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>You'll be asked for your password next.</p>
+      <a href="SetAccount.dc.html" class="inline-flex shrink-0 items-center justify-center gap-2 text-sm font-medium whitespace-nowrap transition-colors rounded-full hover:bg-accent hover:text-accent-foreground h-10 px-6" style="color: var(--foreground); text-decoration: none;">Keep my account</a>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":375,"height":812}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light' };
+  }
+}
+</script>
+</body>
+</html>

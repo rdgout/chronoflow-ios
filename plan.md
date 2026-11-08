@@ -1857,6 +1857,20 @@ User decision, 2026-11-08: “Make the walkthrough pages first. So we can safely
 
 **Verification (2026-11-08):** `make lint`, all eight new Terms host tests, iOS 17 package/app/UI compiler checks, 17 generator tests and 100 resource/runner fixtures pass. `make quick` reports the existing cookie-listener EPERM and timeline timing limits under parallel load; all three timeline cases pass in isolation. No simulator or snapshots. One atomic patch and message are delivered under `build/commits/`; see `Docs/phase-17g-terms.md` for board decisions and deferred legal metadata/runtime acceptance.
 
+**17h: Settings pages** (`feat/phase-17h-settings-pages`)
+
+User decision, 2026-11-08: build the Settings destination pages in order, using RN's Set* boards and behaviour, native List/Form/NavigationStack controls and paired RN en/nl copy. This lifts the destination-page and Preferences replay deferrals for this phase. Keep edits to shared plan/catalog/runner entries scoped to 17h. No simulator or snapshot execution; run `make lint` and `make quick`, and deliver atomic patches under `build/commits/`.
+
+- [x] Import the non-Wide Settings boards at RN `e24872a`, including password-prompt states needed by security/deletion, and append SHA-256 provenance to `rn-canvas.json`.
+- [ ] Account + Profile: display name/email and edit the name through the existing `profile` outbox → PATCH users/me. Preserve pending values and validate before enqueueing. Email changes require the drawn online password-confirmation flow.
+- [ ] Body clock: build the drawn answer groups, automatic local saves through `settings` → PATCH account/body-clock, validation and D24 pending-value protection.
+- [ ] Preferences + Language: appearance, time format, category visibility and local language choice; replay the 17f Walkthrough and return to Preferences on Skip/Done.
+- [ ] Security: password change, supported passkey list/add and two-factor setup/codes/manage with memory-only credentials; derive missing contracts from real backend routes.
+- [ ] Plan & credits: cached balance/state with Loading, Offline and NoLink; no purchases, checkout or cancellation implementation.
+- [ ] Data + delete: implement only backend-supported actions; use the exact drawn destructive confirmation and password flow.
+
+Deferrals: Reminders and notification permissions/delivery remain excluded. Optional timeline items remain excluded by the 5 Nov compact-timeline decision. Purchases, paywall checkout and cancellation remain excluded. Unbuilt destinations stay hidden in Release. Register host/UI suites in the 17h runner entries; no snapshot suites.
+
 ### Phase 18 (later, separate decision): guest wizard and claim
 
 Boards: WizardWhereGuest, WizardOutboundGuest, WizardCheckingGuest, WizardFineTuneGuest, WizardReadyGuest and GuestSignup*. Covers `reviewGuestTrip` (5/min per device+IP, 30/min per IP), `draft_token`/`guest_secret` on register and login, and routing by `SessionResult.tripId` (`Kit/Sources/AppCore/SessionController.swift:44,52`; null after a two-factor login, a known backend gap). Depends on 11c and replaces the OQ 12/17 seams. Listed so the work is not lost, not scheduled.

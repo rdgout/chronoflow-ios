@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Body clock answers</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="ds/chronoflow/components/bundle.css">
+<script src="ds/chronoflow/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Figtree';src:url("/_blob/74876cc764ebb15bf4ae98bcdbf3140c") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/741b1ce40b46479a73d934d0d5be9774") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/079d83fda74d66d1f31e35072f71201d") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/991830890debdac04981f1a27656ed5c") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Fraunces';src:url("/_blob/fc815083784d00806d267d81858d2414") format("woff2");font-weight:400 500;font-style:normal;font-display:swap}
+body{margin:0}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="position: relative; width: 375px; height: 3700px; overflow: hidden; background: var(--background); color: var(--foreground); font-family: var(--font-sans);">
+  <header class="ios ios-navbar">
+    <span><a href="SetHome.dc.html" class="ios ios-glass ios-back"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>Settings</a></span>
+    <span></span>
+    <span></span>
+  </header>
+
+  <main style="padding: 4px 16px 40px; display: flex; flex-direction: column; gap: 24px;">
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <h1 class="ios-largetitle">Body clock</h1>
+      <p style="margin: 0; font-size: 16px; line-height: 24px; color: var(--muted-foreground);">Every plan is built from these answers. Changes save automatically.</p>
+    </div>
+
+    <!-- Readiness: one of three states -->
+    <sc-if value="{{state.blocked}}" hint-placeholder-val="{{ false }}">
+      <section aria-live="polite" style="display: flex; flex-direction: column; gap: 8px; padding: 20px; border-radius: 26px; border: 1px solid color-mix(in oklab, var(--dawn) 40%, transparent); background: color-mix(in oklab, var(--dawn) 10%, var(--card));">
+        <p style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 16px; line-height: 24px; font-weight: 600;">
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--dawn-text);"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>
+          No plan available
+        </p>
+        <p style="margin: 0; font-size: 14px; line-height: 20px;">Based on your health answers, light and caffeine timing may not be right for you, so we can't build a plan. Your doctor can tell you what's safe when you travel.</p>
+      </section>
+    </sc-if>
+    <sc-if value="{{state.incomplete}}" hint-placeholder-val="{{ true }}">
+      <section aria-live="polite" style="display: flex; flex-direction: column; gap: 12px; padding: 20px; border-radius: 26px; border: 1px solid var(--border); background: var(--card); box-shadow: var(--shadow-soft);">
+        <p style="margin: 0; font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dawn-text);">Almost ready</p>
+        <p style="margin: 0; font-family: var(--font-display); font-size: 20px; line-height: 28px; letter-spacing: -0.01em;">{{state.needText}}</p>
+        <x-import component-from-global-scope="ChronoFlow.DayProgress" done="{{state.done}}" total="{{state.total}}"></x-import>
+        <a href="#q-first-missing" class="inline-flex shrink-0 items-center justify-center gap-2 text-sm font-medium whitespace-nowrap transition-colors rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-6" style="text-decoration: none;">Go to the first one</a>
+      </section>
+    </sc-if>
+    <sc-if value="{{state.complete}}" hint-placeholder-val="{{ false }}">
+      <section aria-live="polite" style="display: flex; align-items: center; gap: 12px; padding: 20px; border-radius: 26px; border: 1px solid var(--border); background: var(--card); box-shadow: var(--shadow-soft);">
+        <span aria-hidden="true" style="display: grid; place-items: center; width: 36px; height: 36px; flex-shrink: 0; border-radius: 9999px; background: var(--dawn); color: var(--dawn-foreground);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span>
+        <span style="flex: 1;"><span style="display: block; font-size: 16px; line-height: 24px; font-weight: 600;">Required answers complete</span><span style="display: block; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">You can build a plan for any trip.</span></span>
+      </section>
+    </sc-if>
+
+    <!-- About you -->
+    <section aria-labelledby="about-title" style="display: flex; flex-direction: column; gap: 16px; padding: 20px; border-radius: 26px; border: 1px solid var(--border); background: var(--card); box-shadow: var(--shadow-soft);">
+      <h2 id="about-title" style="margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 20px; line-height: 28px; letter-spacing: -0.01em;">About you</h2>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <p id="chrono-label" style="margin: 0; font-size: 16px; line-height: 24px; font-weight: 500;">When do you naturally feel most awake?</p>
+        <div role="radiogroup" aria-labelledby="chrono-label" style="display: flex; flex-direction: column; gap: 8px;">
+          <sc-for list="{{chronotypes}}" as="c" hint-placeholder-count="4">
+            <x-import component-from-global-scope="ChronoFlow.ChoiceCard" title="{{c.title}}" hint="{{c.hint}}" selected="{{c.selected}}" on-select="{{c.pick}}"></x-import>
+          </sc-for>
+        </div>
+      </div>
+      <sc-for list="{{aboutQs}}" as="q" hint-placeholder-count="1">
+        <div id="{{q.anchor}}" style="{{q.boxStyle}}">
+          <p id="{{q.labelId}}" style="margin: 0; font-size: 16px; line-height: 24px; font-weight: 500;">{{q.label}}</p>
+          <sc-if value="{{q.missing}}" hint-placeholder-val="{{ false }}"><span style="display: flex;"><x-import component-from-global-scope="ChronoFlow.Badge" variant="dawn">Needs an answer</x-import></span></sc-if>
+          <div role="radiogroup" aria-labelledby="{{q.labelId}}" style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <sc-for list="{{q.options}}" as="o" hint-placeholder-count="2">
+              <button type="button" role="radio" aria-checked="{{o.checked}}" onClick="{{o.pick}}" style="{{o.style}}"><sc-if value="{{o.selected}}" hint-placeholder-val="{{ false }}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--dawn-text);"><path d="M20 6 9 17l-5-5"></path></svg></sc-if>{{o.label}}</button>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </section>
+
+    <!-- Sleep schedule -->
+    <section aria-labelledby="sleep-title" style="display: flex; flex-direction: column; gap: 16px; padding: 20px; border-radius: 26px; border: 1px solid var(--border); background: var(--card); box-shadow: var(--shadow-soft);">
+      <h2 id="sleep-title" style="margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 20px; line-height: 28px; letter-spacing: -0.01em;">Sleep schedule</h2>
+      <p style="margin: 0; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">On a normal work or school day.</p>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;">
+        <a href="PickerTime.dc.html" aria-label="Usual bedtime, 23:00. Change" style="text-decoration: none; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-height: 84px; padding: 14px 16px; box-sizing: border-box; border-radius: 22px; border: 1px solid var(--border); background: var(--surface-2); color: var(--foreground); font: inherit; text-align: left;">
+          <span style="font-size: 14px; line-height: 20px; color: var(--muted-foreground);">Usual bedtime</span>
+          <span style="font-size: 24px; line-height: 32px; font-weight: 600; font-variant-numeric: tabular-nums;">23:00</span>
+        </a>
+        <a href="PickerTime.dc.html" aria-label="Usual wake time, 07:00. Change" style="text-decoration: none; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-height: 84px; padding: 14px 16px; box-sizing: border-box; border-radius: 22px; border: 1px solid var(--border); background: var(--surface-2); color: var(--foreground); font: inherit; text-align: left;">
+          <span style="font-size: 14px; line-height: 20px; color: var(--muted-foreground);">Usual wake time</span>
+          <span style="font-size: 24px; line-height: 32px; font-weight: 600; font-variant-numeric: tabular-nums;">07:00</span>
+        </a>
+      </div>
+      <sc-for list="{{sleepQs}}" as="q" hint-placeholder-count="1">
+        <div id="{{q.anchor}}" style="{{q.boxStyle}}">
+          <p id="{{q.labelId}}" style="margin: 0; font-size: 16px; line-height: 24px; font-weight: 500;">{{q.label}}</p>
+          <sc-if value="{{q.missing}}" hint-placeholder-val="{{ false }}"><span style="display: flex;"><x-import component-from-global-scope="ChronoFlow.Badge" variant="dawn">Needs an answer</x-import></span></sc-if>
+          <div role="radiogroup" aria-labelledby="{{q.labelId}}" style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <sc-for list="{{q.options}}" as="o" hint-placeholder-count="2">
+              <button type="button" role="radio" aria-checked="{{o.checked}}" onClick="{{o.pick}}" style="{{o.style}}"><sc-if value="{{o.selected}}" hint-placeholder-val="{{ false }}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--dawn-text);"><path d="M20 6 9 17l-5-5"></path></svg></sc-if>{{o.label}}</button>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+      <sc-if value="{{showFreeDays}}" hint-placeholder-val="{{ true }}">
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <p style="margin: 0; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">On free days</p>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;">
+            <button type="button" aria-label="Free-day bedtime, 00:30. Change" style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-height: 84px; padding: 14px 16px; box-sizing: border-box; border-radius: 22px; border: 1px solid var(--border); background: var(--surface-2); color: var(--foreground); font: inherit; text-align: left;">
+              <span style="font-size: 14px; line-height: 20px; color: var(--muted-foreground);">Bedtime</span>
+              <span style="font-size: 24px; line-height: 32px; font-weight: 600; font-variant-numeric: tabular-nums;">00:30</span>
+            </button>
+            <button type="button" aria-label="Free-day wake time, 09:00. Change" style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-height: 84px; padding: 14px 16px; box-sizing: border-box; border-radius: 22px; border: 1px solid var(--border); background: var(--surface-2); color: var(--foreground); font: inherit; text-align: left;">
+              <span style="font-size: 14px; line-height: 20px; color: var(--muted-foreground);">Wake time</span>
+              <span style="font-size: 24px; line-height: 32px; font-weight: 600; font-variant-numeric: tabular-nums;">09:00</span>
+            </button>
+          </div>
+        </div>
+      </sc-if>
+    </section>
+
+    <!-- Caffeine -->
+    <section aria-labelledby="caff-title" style="display: flex; flex-direction: column; gap: 16px; padding: 20px; border-radius: 26px; border: 1px solid var(--border); background: var(--card); box-shadow: var(--shadow-soft);">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+        <h2 id="caff-title" style="margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 20px; line-height: 28px; letter-spacing: -0.01em;">Caffeine</h2>
+        <span role="status" style="display: inline-flex; align-items: center; gap: 4px; font-size: 12px; line-height: 16px; color: var(--muted-foreground);"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--dawn-text);"><path d="M20 6 9 17l-5-5"></path></svg>Saved</span>
+      </div>
+      <sc-for list="{{caffUsualQs}}" as="q" hint-placeholder-count="1">
+        <div id="{{q.anchor}}" style="{{q.boxStyle}}">
+          <p id="{{q.labelId}}" style="margin: 0; font-size: 16px; line-height: 24px; font-weight: 500;">{{q.label}}</p>
+          <div role="radiogroup" aria-labelledby="{{q.labelId}}" style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <sc-for list="{{q.options}}" as="o" hint-placeholder-count="2">
+              <button type="button" role="radio" aria-checked="{{o.checked}}" onClick="{{o.pick}}" style="{{o.style}}"><sc-if value="{{o.selected}}" hint-placeholder-val="{{ false }}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--dawn-text);"><path d="M20 6 9 17l-5-5"></path></svg></sc-if>{{o.label}}</button>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+      <sc-if value="{{drinksCaffeine}}" hint-placeholder-val="{{ true }}">
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <p style="margin: 0; font-size: 16px; line-height: 24px; font-weight: 500;">What do you drink on a normal day?</p>
+          <ul style="margin: 0; padding: 0; list-style: none; border-radius: 22px; border: 1px solid var(--border); overflow: hidden;">
+            <sc-for list="{{drinks}}" as="d" hint-placeholder-count="4">
+              <li style="{{d.rowStyle}}">
+                <span style="flex: 1; min-width: 0; font-size: 16px; line-height: 24px;">{{d.label}}</span>
+                <x-import component-from-global-scope="ChronoFlow.Button" variant="outline" size="touch" aria-label="{{d.lessLabel}}" on-click="{{d.less}}" disabled="{{d.atZero}}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path></svg></x-import>
+                <span aria-live="polite" style="width: 64px; text-align: center; font-size: 14px; line-height: 20px; font-variant-numeric: tabular-nums;">{{d.countText}}</span>
+                <x-import component-from-global-scope="ChronoFlow.Button" variant="outline" size="touch" aria-label="{{d.moreLabel}}" on-click="{{d.more}}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg></x-import>
+              </li>
+            </sc-for>
+          </ul>
+        </div>
+      </sc-if>
+      <sc-for list="{{caffQs}}" as="q" hint-placeholder-count="3">
+        <div id="{{q.anchor}}" style="{{q.boxStyle}}">
+          <p id="{{q.labelId}}" style="margin: 0; font-size: 16px; line-height: 24px; font-weight: 500;">{{q.label}}</p>
+          <sc-if value="{{q.missing}}" hint-placeholder-val="{{ false }}"><span style="display: flex;"><x-import component-from-global-scope="ChronoFlow.Badge" variant="dawn">Needs an answer</x-import></span></sc-if>
+          <sc-if value="{{q.hasHint}}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">{{q.hint}}</p></sc-if>
+          <div role="radiogroup" aria-labelledby="{{q.labelId}}" style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <sc-for list="{{q.options}}" as="o" hint-placeholder-count="2">
+              <button type="button" role="radio" aria-checked="{{o.checked}}" onClick="{{o.pick}}" style="{{o.style}}"><sc-if value="{{o.selected}}" hint-placeholder-val="{{ false }}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--dawn-text);"><path d="M20 6 9 17l-5-5"></path></svg></sc-if>{{o.label}}</button>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </section>
+
+    <!-- Light equipment -->
+    <section aria-labelledby="light-title" style="display: flex; flex-direction: column; gap: 16px; padding: 20px; border-radius: 26px; border: 1px solid var(--border); background: var(--card); box-shadow: var(--shadow-soft);">
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <h2 id="light-title" style="margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 20px; line-height: 28px; letter-spacing: -0.01em;">Light equipment</h2>
+        <p style="margin: 0; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">Optional. If you have any of these, your plan can use them.</p>
+      </div>
+      <sc-for list="{{lightQs}}" as="q" hint-placeholder-count="3">
+        <div id="{{q.anchor}}" style="{{q.boxStyle}}">
+          <p id="{{q.labelId}}" style="margin: 0; font-size: 16px; line-height: 24px; font-weight: 500;">{{q.label}}</p>
+          <div role="radiogroup" aria-labelledby="{{q.labelId}}" style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <sc-for list="{{q.options}}" as="o" hint-placeholder-count="2">
+              <button type="button" role="radio" aria-checked="{{o.checked}}" onClick="{{o.pick}}" style="{{o.style}}"><sc-if value="{{o.selected}}" hint-placeholder-val="{{ false }}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--dawn-text);"><path d="M20 6 9 17l-5-5"></path></svg></sc-if>{{o.label}}</button>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+      <sc-if value="{{showRating}}" hint-placeholder-val="{{ true }}">
+        <x-import component-from-global-scope="ChronoFlow.Field" id="mdfd" label="Rating (mDFD)" inputmode="decimal" default-value="2.1" hint="Melanopic daylight filtering density. It's on the box or the maker's website."></x-import>
+      </sc-if>
+    </section>
+
+    <!-- Health checks -->
+    <section aria-labelledby="health-title" style="display: flex; flex-direction: column; gap: 16px; padding: 20px; border-radius: 26px; border: 1px solid var(--border); background: var(--card); box-shadow: var(--shadow-soft);">
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <h2 id="health-title" style="margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 20px; line-height: 28px; letter-spacing: -0.01em;">Health checks</h2>
+        <p style="margin: 0; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">Required. Bright light and caffeine timing aren't safe for everyone, so we check first.</p>
+      </div>
+      <sc-for list="{{healthQs}}" as="q" hint-placeholder-count="5">
+        <div id="{{q.anchor}}" style="{{q.boxStyle}}">
+          <p id="{{q.labelId}}" style="margin: 0; font-size: 16px; line-height: 24px; font-weight: 500;">{{q.label}}</p>
+          <sc-if value="{{q.missing}}" hint-placeholder-val="{{ false }}"><span style="display: flex;"><x-import component-from-global-scope="ChronoFlow.Badge" variant="dawn">Needs an answer</x-import></span></sc-if>
+          <sc-if value="{{q.hasHint}}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">{{q.hint}}</p></sc-if>
+          <div role="radiogroup" aria-labelledby="{{q.labelId}}" style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <sc-for list="{{q.options}}" as="o" hint-placeholder-count="2">
+              <button type="button" role="radio" aria-checked="{{o.checked}}" onClick="{{o.pick}}" style="{{o.style}}"><sc-if value="{{o.selected}}" hint-placeholder-val="{{ false }}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--dawn-text);"><path d="M20 6 9 17l-5-5"></path></svg></sc-if>{{o.label}}</button>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":375,"height":3700}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      chronotype: 'between',
+      a: {
+        age: '30-44', freeSame: 'no', usual: 'yes', strong: 'no', avoid: null, pill: 'no',
+        lightbox: 'no', visor: 'no', blue: 'rating',
+        pregnant: 'no', bipolar: 'no', eyes: 'no', clots: null, shifts: null
+      },
+      drinks: { coffee: 2, tea: 1, soda: 0, energy: 0 }
+    };
+  }
+  renderVals() {
+    const a = this.state.a;
+    const yesNo = [{ id: 'yes', label: 'Yes' }, { id: 'no', label: 'No' }];
+    const required = ['age', 'freeSame', 'usual', 'avoid', 'pregnant', 'bipolar', 'eyes', 'clots', 'shifts'];
+    const missingIds = required.filter((id) => a[id] == null);
+    let firstMissing = missingIds[0];
+    const pill = (on) =>
+      'display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px; box-sizing: border-box; border-radius: 9999px; font-family: var(--font-sans); font-size: 14px; line-height: 20px; background: var(--card); color: var(--foreground); ' +
+      (on ? 'border: 2px solid var(--dawn); font-weight: 600;' : 'border: 2px solid var(--border); font-weight: 500;');
+    const q = (id, label, options, opts) => {
+      const o = opts || {};
+      const missing = required.includes(id) && a[id] == null;
+      return {
+        id, label, hint: o.hint || '', hasHint: !!o.hint, missing,
+        anchor: id === firstMissing ? 'q-first-missing' : 'q-' + id,
+        labelId: 'label-' + id,
+        boxStyle: 'display: flex; flex-direction: column; gap: 8px; ' + (missing
+          ? 'padding: 12px; margin: 0 -12px; border-radius: 22px; border: 1px solid color-mix(in oklab, var(--dawn) 40%, transparent); background: color-mix(in oklab, var(--dawn) 10%, transparent);'
+          : 'padding: 0;'),
+        options: options.map((op) => ({
+          ...op,
+          selected: a[id] === op.id,
+          checked: a[id] === op.id ? 'true' : 'false',
+          style: pill(a[id] === op.id),
+          pick: () => this.setState({ a: { ...this.state.a, [id]: op.id } })
+        }))
+      };
+    };
+    const blocked = a.pregnant === 'yes' || a.bipolar === 'yes' || a.eyes === 'yes';
+    const n = missingIds.length;
+    const types = [
+      { id: 'early', title: 'Early bird', hint: 'You wake early without an alarm and fade in the evening.' },
+      { id: 'between', title: 'In between', hint: 'Your energy follows a normal working day.' },
+      { id: 'owl', title: 'Night owl', hint: 'You come alive late and find early starts hard.' },
+      { id: 'unsure', title: 'Not sure', hint: 'We use your sleep times instead.' }
+    ];
+    const drinkDefs = [
+      { id: 'coffee', label: 'Coffee', unit: 'cup' },
+      { id: 'tea', label: 'Tea', unit: 'cup' },
+      { id: 'soda', label: 'Soft drinks', unit: 'can' },
+      { id: 'energy', label: 'Energy drinks', unit: 'can' }
+    ];
+    return {
+      theme: this.props.theme ?? 'light',
+      state: {
+        blocked,
+        incomplete: !blocked && n > 0,
+        complete: !blocked && n === 0,
+        needText: n === 1 ? 'We need 1 more answer before we can build a plan' : 'We need ' + n + ' more answers before we can build a plan',
+        done: required.length - n,
+        total: required.length
+      },
+      chronotypes: types.map((t) => ({ ...t, selected: this.state.chronotype === t.id, pick: () => this.setState({ chronotype: t.id }) })),
+      aboutQs: [q('age', 'Your age', [{ id: '18-29', label: '18–29' }, { id: '30-44', label: '30–44' }, { id: '45-59', label: '45–59' }, { id: '60+', label: '60 or over' }])],
+      sleepQs: [q('freeSame', 'Do your free days follow the same schedule?', yesNo)],
+      showFreeDays: a.freeSame === 'no',
+      caffUsualQs: [q('usual', 'Do you usually drink caffeine?', yesNo)],
+      drinksCaffeine: a.usual === 'yes',
+      drinks: drinkDefs.map((d, i) => {
+        const c = this.state.drinks[d.id];
+        return {
+          ...d,
+          countText: c + ' a day',
+          atZero: c === 0,
+          lessLabel: 'Fewer ' + d.label.toLowerCase(),
+          moreLabel: 'More ' + d.label.toLowerCase(),
+          rowStyle: 'display: flex; align-items: center; gap: 4px; min-height: 60px; padding: 8px 8px 8px 16px; box-sizing: border-box;' + (i > 0 ? ' border-top: 1px solid var(--border);' : ''),
+          less: () => this.setState({ drinks: { ...this.state.drinks, [d.id]: Math.max(0, c - 1) } }),
+          more: () => this.setState({ drinks: { ...this.state.drinks, [d.id]: c + 1 } })
+        };
+      }),
+      caffQs: [
+        q('strong', 'Does caffeine affect you strongly?', [{ id: 'yes', label: 'Yes' }, { id: 'no', label: 'No' }, { id: 'unsure', label: 'Not sure' }], { hint: 'For example, one cup keeps you awake or makes you jittery.' }),
+        q('avoid', 'Have you been told to avoid caffeine?', yesNo, { hint: 'By a doctor, midwife or pharmacist.' }),
+        q('pill', 'Do you take oral contraception?', yesNo, { hint: 'It slows how fast your body clears caffeine.' })
+      ],
+      lightQs: [
+        q('lightbox', 'Light box', yesNo),
+        q('visor', 'Visor or light glasses', yesNo),
+        q('blue', 'Blue-blocking glasses', [{ id: 'no', label: 'No' }, { id: 'unknown', label: 'Yes, rating unknown' }, { id: 'rating', label: 'Yes, I know the rating' }])
+      ],
+      showRating: a.blue === 'rating',
+      healthQs: [
+        q('pregnant', 'Are you pregnant or breastfeeding?', yesNo),
+        q('bipolar', 'Have you been diagnosed with bipolar disorder?', yesNo),
+        q('eyes', 'Do you have an eye condition, or take medicine that makes you sensitive to light?', yesNo),
+        q('clots', 'Are you at higher risk of blood clots?', yesNo, { hint: 'For example after recent surgery, or if you have had a clot before.' }),
+        q('shifts', 'Do you work shifts or have an irregular sleep pattern?', yesNo)
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
