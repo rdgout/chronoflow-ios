@@ -53,7 +53,7 @@
                     .background(ColorToken.background.color)
                 }.ignoresSafeArea()
             }
-            .accessibilityIdentifier("walkthrough.screen")
+            .accessibilityElement(children: .contain).accessibilityIdentifier("walkthrough.screen")
             .onChange(of: model.page) { _, _ in titleFocused = true }
         }
 

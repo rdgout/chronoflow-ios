@@ -71,10 +71,7 @@ hosts initialization on a ZStack with the generated background colour. Missing
 session, database or mutation permit retries every 100 ms until ready or cancelled;
 database identity and the session epoch are checked before creating the model.
 
-Three hosted WalkthroughDestinationTests mount the actual destination and require
-its counter, Skip and Next without user input, including a session and a database
-that become available after mounting. They are registered in the simulator runner.
-The hosted tests inspect accessibility elements; they do not record screenshots.
+The walkthrough container uses `accessibilityElement(children: .contain)` so its screen identifier does not replace the counter, Skip and Next identifiers. The UI journeys in WalkthroughTests cover mounting without input; the hosted destination tests were removed because the hosted window does not populate the SwiftUI accessibility tree.
 
 The seen override already applies to both seeded accounts. A Mac regression now
 checks both values of that override for both accounts. Settings keeps the seen seed
@@ -110,7 +107,7 @@ To execute the affected suites later on 17e:
 
 ```sh
 make generate
-make targeted DEVICES="17e" ONLY="AppTests/WalkthroughDestinationTests AppUITests/WalkthroughTests AppUITests/SettingsTests AppUITests/AppTabsTests AppUITests/TodayTests AppUITests/TripsTests AppUITests/StepSheetTests AppUITests/TripPageStepTests AppUITests/LegendTests AppUITests/PlanAuditTests"
+make targeted DEVICES="17e" ONLY="AppUITests/WalkthroughTests AppUITests/SettingsTests AppUITests/AppTabsTests AppUITests/TodayTests AppUITests/TripsTests AppUITests/StepSheetTests AppUITests/TripPageStepTests AppUITests/LegendTests AppUITests/PlanAuditTests"
 ```
 
 Follow-up delivery: `build/commits/1.patch` and `build/commits/messages.txt`, one
