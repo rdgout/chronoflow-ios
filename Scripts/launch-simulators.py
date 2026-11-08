@@ -744,6 +744,7 @@ def test_pass(destination, configuration, selected, label, record=False, intro_o
 
 def recording_selection(selected, mode, recording):
     baseline = (SNAPSHOTS[0], SNAPSHOTS[1], "AppTests/AuthSnapshotTests", "AppTests/TwoFactorSnapshotTests", "AppTests/ForgotPasswordSnapshotTests", "AppTests/ResetPasswordSnapshotTests", "AppTests/SignUpSnapshotTests", "AppTests/VerifyEmailSnapshotTests")
+    baseline += tuple(s for s in selected if s.split("/")[1].endswith("SnapshotTests") and s.split("/")[:2] != SNAPSHOTS[0].split("/")[:2] and s not in baseline)
     candidates = baseline if recording == "all" or (recording == "1" and mode == "snapshots") else baseline[:1] if recording == "launch" or mode == "launch-snapshots" else baseline[1:]
     return [s for s in selected if any(s == c or s.startswith(c + "/") for c in candidates)]
 
