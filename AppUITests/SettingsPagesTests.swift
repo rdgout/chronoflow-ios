@@ -61,8 +61,14 @@ nonisolated final class SettingsPagesTests: XCTestCase {
         XCTAssertTrue(app.buttons["settings.preferences.replay"].waitForExistence(timeout: 8))
         open("settings.preferences.replay", app: app)
         for index in 0..<3 {
+            let counter = app.staticTexts["walkthrough.counter"]
+            let page = XCTNSPredicateExpectation(
+                predicate: NSPredicate(format: "label == %@", "\(index + 1) OF 3"), object: counter)
+            XCTAssertEqual(XCTWaiter.wait(for: [page], timeout: 6), .completed)
             let next = app.buttons[index == 2 ? "walkthrough.done" : "walkthrough.next"]
             XCTAssertTrue(next.waitForExistence(timeout: 6))
+            do { _ = try UIWait.stableFrames([counter, next], timeout: 6) } catch { XCTFail("\(error)") }
+            XCTAssertTrue(next.isHittable)
             next.tap()
         }
         XCTAssertTrue(app.buttons["settings.preferences.replay"].waitForExistence(timeout: 8))
