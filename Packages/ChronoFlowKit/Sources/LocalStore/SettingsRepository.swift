@@ -1,3 +1,4 @@
+import AppCore
 import GRDB
 
 public struct SettingsRepository: Sendable {
@@ -13,6 +14,12 @@ public struct SettingsRepository: Sendable {
     }
 
     public func upsert(_ record: SettingsRecord) async throws { try await database.write { try record.save($0) } }
+
+    public func upsertSecurity(_ value: JSONObject, permit: SessionMutationPermit) async throws {
+        try await database.write(permit: permit) { db in
+            try SettingsRecord(section: "security", value: .encoding(value)).save(db)
+        }
+    }
 
     public func remove(section: String) async throws {
         _ = try await database.write { try SettingsRecord.deleteOne($0, key: section) }

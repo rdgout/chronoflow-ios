@@ -68,6 +68,7 @@ struct AppTabs: View {
                 case .profile: SettingsProfileView(store: settingsPages)
                 case .bodyClock: SettingsBodyClockView(store: settingsPages)
                 case .preferences: SettingsPreferencesView(store: settingsPages)
+                case .security: SettingsSecurityView(store: settingsPages)
                 default:
                     #if DEBUG
                         RoutePlaceholder(route: .settings, destination: destination.rawValue)
@@ -126,7 +127,8 @@ struct AppTabs: View {
             let pages = SettingsPagesModel(
                 database: database, permit: permit,
                 isCurrent: { await native.controller.activeSession() == snapshot },
-                requestSync: { await native.sync?.requestSync() })
+                requestSync: { await native.sync?.requestSync() },
+                security: { try await native.accountSecurity($0, session: snapshot) })
             settingsPages = pages
             pages.start()
             var clock: any PlanClock = SystemPlanClock()

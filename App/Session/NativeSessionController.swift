@@ -85,6 +85,13 @@ final class NativeSessionController {
         reference.set(controller)
     }
 
+    func accountSecurity(_ change: AccountSecurityChange, session: SessionSnapshot) async throws
+        -> AccountSecurityResult
+    {
+        guard let sync else { throw DataFailure.unsupported(.security) }
+        return try await sync.accountSecurity(change, session: session.session, epoch: session.epoch)
+    }
+
     func routeAcceptedSession(
         navigator: RootNavigator, verification: @escaping @MainActor (UInt64) async -> Void
     ) async {

@@ -12,6 +12,7 @@ import Observation
     @ObservationIgnored private let database: AccountDatabase
     @ObservationIgnored private let permit: SessionMutationPermit
     @ObservationIgnored private let isCurrent: @Sendable () async -> Bool
+    @ObservationIgnored private let security: @MainActor (AccountSecurityChange) async throws -> AccountSecurityResult
     @ObservationIgnored private let requestSync: @Sendable () async -> Void
     @ObservationIgnored private var tasks: [Task<Void, Never>] = []
     @ObservationIgnored private var active = true
@@ -19,12 +20,16 @@ import Observation
     public init(
         database: AccountDatabase, permit: SessionMutationPermit,
         isCurrent: @escaping @Sendable () async -> Bool,
-        requestSync: @escaping @Sendable () async -> Void = {}
+        requestSync: @escaping @Sendable () async -> Void = {},
+        security: @escaping @MainActor (AccountSecurityChange) async throws -> AccountSecurityResult = { _ in
+            throw DataFailure.unsupported(.security)
+        }
     ) {
         self.database = database
         self.permit = permit
         self.isCurrent = isCurrent
         self.requestSync = requestSync
+        self.security = security
     }
 
     public func start() {
@@ -64,6 +69,25 @@ import Observation
         guard active, await isCurrent(), !Task.isCancelled else { throw CancellationError() }
         try await OutboxRepository(database: database).enqueue(change, permit: permit)
         await requestSync()
+    }
+
+    public func performSecurity(_ change: AccountSecurityChange) async throws -> AccountSecurityResult {
+        guard active, await isCurrent(), !Task.isCancelled else { throw CancellationError() }
+        let result = try await security(change)
+        guard active, await isCurrent(), !Task.isCancelled, let id = await database.accountID else {
+            throw CancellationError()
+        }
+        if case .snapshot(let value) = result {
+            try await database.write(permit: permit) { db in try StoreApplication.snapshot(value, accountID: id, db: db)
+            }
+        } else if case .confirmTwoFactor = change, case .codes = result {
+            var value = settings["security"] ?? JSONObject()
+            value["twoFactorEnabled"] = .bool(true)
+            value["twoFactorConfirmedAt"] = .null
+            try await SettingsRepository(database: database).upsertSecurity(value, permit: permit)
+        }
+        await requestSync()
+        return result
     }
 
     public func stop() {

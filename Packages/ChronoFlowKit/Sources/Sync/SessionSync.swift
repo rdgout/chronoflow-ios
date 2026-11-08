@@ -105,6 +105,29 @@ public actor SessionSync {
     public func refreshNow() async throws -> SyncResult? { try await lifecycle?.refreshNow() }
     public func stop() async { await detach(preservingRetry: false) }
 
+    public func accountSecurity(_ change: AccountSecurityChange, session: StoredSession, epoch: UInt64) async throws
+        -> AccountSecurityResult
+    {
+        guard enabled, await isCurrent(session, epoch) else { throw CancellationError() }
+        if attachedEpoch != epoch || lifecycle == nil { await start(session: session, epoch: epoch) }
+        guard enabled, attachedEpoch == epoch, let lifecycle, await isCurrent(session, epoch) else {
+            throw CancellationError()
+        }
+        do {
+            let result = try await lifecycle.engine.accountSecurity(change)
+            guard await isCurrent(session, epoch) else { throw CancellationError() }
+            return result
+        } catch let failure as DataFailure {
+            guard await isCurrent(session, epoch) else { throw CancellationError() }
+            switch failure {
+            case .unauthorized: await unauthorized(epoch)
+            case .emailUnverified: await verification(epoch)
+            default: break
+            }
+            throw failure
+        }
+    }
+
     public func fetchDetail(tripID: String, session: StoredSession, epoch: UInt64) async throws {
         guard enabled, await isCurrent(session, epoch) else { throw CancellationError() }
         if attachedEpoch != epoch || lifecycle == nil { await start(session: session, epoch: epoch) }

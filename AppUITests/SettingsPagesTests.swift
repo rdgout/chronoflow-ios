@@ -81,6 +81,43 @@ nonisolated final class SettingsPagesTests: XCTestCase {
         XCTAssertTrue(app.buttons["settings.account.language"].label.contains("Taal"))
     }
 
+    @MainActor func testSecurityPasswordAndTwoFactorSetupCodesAndDisable() {
+        let app = launchSettingsPages()
+        defer { app.terminate() }
+        open("settings.security", app: app)
+        open("settings.security.password", app: app)
+        fillSecret("settings.password.current", "password", app: app)
+        fillSecret("settings.password.new", "New password1!", app: app)
+        fillSecret("settings.password.confirmation", "New password1!", app: app)
+        open("settings.password.save", app: app)
+        XCTAssertTrue(app.staticTexts["settings.security.feedback"].waitForExistence(timeout: 8))
+        XCTAssertEqual(app.staticTexts["settings.security.feedback"].label, "Password updated")
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        open("settings.security.twoFactor", app: app)
+        open("settings.twoFactor.enable", app: app)
+        fillSecret("settings.security.prompt.password", "New password1!", app: app)
+        open("settings.security.prompt.submit", app: app)
+        let code = app.textFields["settings.twoFactor.code"]
+        XCTAssertTrue(code.waitForExistence(timeout: 8))
+        AuthUIFlow.reveal(code, in: app)
+        code.tap()
+        code.typeText("123456")
+        open("settings.twoFactor.confirm", app: app)
+        XCTAssertTrue(app.staticTexts["settings.twoFactor.recoveryCode"].firstMatch.waitForExistence(timeout: 8))
+        open("settings.twoFactor.disable", app: app)
+        fillSecret("settings.security.prompt.password", "New password1!", app: app)
+        open("settings.security.prompt.submit", app: app)
+        XCTAssertTrue(app.buttons["settings.twoFactor.enable"].waitForExistence(timeout: 8))
+    }
+
+    @MainActor private func fillSecret(_ identifier: String, _ value: String, app: XCUIApplication) {
+        let field = app.secureTextFields[identifier]
+        XCTAssertTrue(field.waitForExistence(timeout: 8))
+        AuthUIFlow.reveal(field, in: app)
+        field.tap()
+        field.typeText(value)
+    }
+
     @MainActor private func launchSettingsPages() -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments =

@@ -47,6 +47,16 @@ public actor SyncEngine {
     }
     private func removeObserver(_ id: UUID) { observers.removeValue(forKey: id) }
 
+    public func accountSecurity(_ change: AccountSecurityChange) async throws -> AccountSecurityResult {
+        try epoch.check()
+        guard !stopped, let source else { throw CancellationError() }
+        let result = try await source.accountSecurity(change)
+        try Task.checkCancellation()
+        try epoch.check()
+        guard !stopped else { throw CancellationError() }
+        return result
+    }
+
     public func fetchDetail(tripID: String) async throws {
         try epoch.check()
         guard !stopped, let source else { throw CancellationError() }

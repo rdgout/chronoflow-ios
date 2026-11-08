@@ -2315,6 +2315,1194 @@
           }
         }
       }
+    },
+    "Password": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wachtwoord"
+          }
+        }
+      }
+    },
+    "Change your password": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change your password"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wijzig je wachtwoord"
+          }
+        }
+      }
+    },
+    "Current password": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current password"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Huidig wachtwoord"
+          }
+        }
+      }
+    },
+    "New password": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New password"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nieuw wachtwoord"
+          }
+        }
+      }
+    },
+    "Confirm new password": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm new password"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bevestig je nieuwe wachtwoord"
+          }
+        }
+      }
+    },
+    "Change password": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change password"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wachtwoord wijzigen"
+          }
+        }
+      }
+    },
+    "The passwords don't match yet.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The passwords don't match yet."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De wachtwoorden komen nog niet overeen."
+          }
+        }
+      }
+    },
+    "Enter your password.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter your password."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vul je wachtwoord in."
+          }
+        }
+      }
+    },
+    "Password updated": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password updated"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wachtwoord bijgewerkt"
+          }
+        }
+      }
+    },
+    "Check the highlighted field.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the highlighted field."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controleer het gemarkeerde veld."
+          }
+        }
+      }
+    },
+    "The provided password was incorrect.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The provided password was incorrect."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Het opgegeven wachtwoord is onjuist."
+          }
+        }
+      }
+    },
+    "Two-factor authentication": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Two-factor authentication"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tweestapsverificatie"
+          }
+        }
+      }
+    },
+    "A code from an app when you sign in": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A code from an app when you sign in"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een code uit een app bij het inloggen"
+          }
+        }
+      }
+    },
+    "On": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aan"
+          }
+        }
+      }
+    },
+    "Off": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uit"
+          }
+        }
+      }
+    },
+    "Ask for a code from an authenticator app each time you sign in with your password, so a stolen password isn't enough.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask for a code from an authenticator app each time you sign in with your password, so a stolen password isn't enough."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vraag bij elke keer inloggen met je wachtwoord om een code uit een authenticator-app, zodat een gestolen wachtwoord niet genoeg is."
+          }
+        }
+      }
+    },
+    "You need an authenticator app, like the one built into Passwords on iPhone.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You need an authenticator app, like the one built into Passwords on iPhone."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je hebt een authenticator-app nodig, zoals die in Wachtwoorden op de iPhone."
+          }
+        }
+      }
+    },
+    "You get recovery codes for when you lose your phone.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You get recovery codes for when you lose your phone."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je krijgt herstelcodes voor als je je telefoon kwijtraakt."
+          }
+        }
+      }
+    },
+    "Signing in with a passkey doesn't ask for a code.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signing in with a passkey doesn't ask for a code."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inloggen met een passkey vraagt geen code."
+          }
+        }
+      }
+    },
+    "Turn on two-factor": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn on two-factor"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tweestapsverificatie aanzetten"
+          }
+        }
+      }
+    },
+    "You'll be asked for your password first.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You'll be asked for your password first."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je wordt eerst om je wachtwoord gevraagd."
+          }
+        }
+      }
+    },
+    "1 · Scan this code with your authenticator app": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 · Scan this code with your authenticator app"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 · Scan deze code met je authenticator-app"
+          }
+        }
+      }
+    },
+    "Using this phone? Copy the setup key into the app instead.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Using this phone? Copy the setup key into the app instead."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gebruik je deze telefoon? Kopieer dan de instelsleutel naar de app."
+          }
+        }
+      }
+    },
+    "Copy": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopiëren"
+          }
+        }
+      }
+    },
+    "2 · Enter the 6-digit code it shows": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2 · Enter the 6-digit code it shows"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2 · Vul de getoonde 6-cijferige code in"
+          }
+        }
+      }
+    },
+    "6-digit code": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "6-digit code"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "6-cijferige code"
+          }
+        }
+      }
+    },
+    "QR code for your authenticator app": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR code for your authenticator app"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR-code voor je authenticator-app"
+          }
+        }
+      }
+    },
+    "Recovery codes": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recovery codes"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herstelcodes"
+          }
+        }
+      }
+    },
+    "Show recovery codes": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show recovery codes"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herstelcodes tonen"
+          }
+        }
+      }
+    },
+    "Each code works once and is then replaced": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Each code works once and is then replaced"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elke code werkt één keer en wordt daarna vervangen"
+          }
+        }
+      }
+    },
+    "If you lose your phone, sign in with one of these. Each code works once and is then replaced. Keep them somewhere safe.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you lose your phone, sign in with one of these. Each code works once and is then replaced. Keep them somewhere safe."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raak je je telefoon kwijt, log dan in met een van deze codes. Elke code werkt één keer en wordt daarna vervangen. Bewaar ze op een veilige plek."
+          }
+        }
+      }
+    },
+    "Download": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloaden"
+          }
+        }
+      }
+    },
+    "Make new codes": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make new codes"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nieuwe codes maken"
+          }
+        }
+      }
+    },
+    "Your current codes stop working": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your current codes stop working"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je huidige codes werken dan niet meer"
+          }
+        }
+      }
+    },
+    "Turn off two-factor": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn off two-factor"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tweestapsverificatie uitzetten"
+          }
+        }
+      }
+    },
+    "Sign in with only your password or passkey": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in with only your password or passkey"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log in met alleen je wachtwoord of passkey"
+          }
+        }
+      }
+    },
+    "Each of these asks for your password first.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Each of these asks for your password first."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elk van deze vraagt eerst om je wachtwoord."
+          }
+        }
+      }
+    },
+    "Since {{date}}": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Since {{date}}"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sinds {{date}}"
+          }
+        }
+      }
+    },
+    "Confirm it's you": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm it's you"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bevestig dat jij het bent"
+          }
+        }
+      }
+    },
+    "Checking…": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking…"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controleren…"
+          }
+        }
+      }
+    },
+    "Enter your password to turn on two-factor authentication.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter your password to turn on two-factor authentication."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voer je wachtwoord in om tweestapsverificatie aan te zetten."
+          }
+        }
+      }
+    },
+    "Enter your password to turn off two-factor authentication.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter your password to turn off two-factor authentication."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voer je wachtwoord in om tweestapsverificatie uit te zetten."
+          }
+        }
+      }
+    },
+    "Enter your password to show your recovery codes.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter your password to show your recovery codes."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voer je wachtwoord in om je herstelcodes te tonen."
+          }
+        }
+      }
+    },
+    "Enter your password to make new recovery codes. Your current codes stop working.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter your password to make new recovery codes. Your current codes stop working."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voer je wachtwoord in om nieuwe herstelcodes te maken. Je huidige codes werken dan niet meer."
+          }
+        }
+      }
+    },
+    "Continue": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doorgaan"
+          }
+        }
+      }
+    },
+    "Turn off": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn off"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uitzetten"
+          }
+        }
+      }
+    },
+    "Show codes": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show codes"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codes tonen"
+          }
+        }
+      }
+    },
+    "Needs a connection.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs a connection."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbinding nodig."
+          }
+        }
+      }
+    },
+    "Too many attempts.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too many attempts."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te veel pogingen."
+          }
+        }
+      }
+    },
+    "Something went wrong": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Something went wrong"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er ging iets mis"
+          }
+        }
+      }
+    },
+    "That code didn't work. Codes change every 30 seconds; try the newest one.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That code didn't work. Codes change every 30 seconds; try the newest one."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die code werkt niet. Codes veranderen elke 30 seconden; probeer de nieuwste code."
+          }
+        }
+      }
+    },
+    "Enter the 6-digit code from your authenticator app.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the 6-digit code from your authenticator app."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vul de 6-cijferige code uit je authenticator-app in."
+          }
+        }
+      }
+    },
+    "Two-factor is on. Save your recovery codes now.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Two-factor is on. Save your recovery codes now."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tweestapsverificatie staat aan. Bewaar nu je herstelcodes."
+          }
+        }
+      }
+    },
+    "Two-factor authentication is already on.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Two-factor authentication is already on."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tweestapsverificatie staat al aan."
+          }
+        }
+      }
+    },
+    "Two-factor authentication is off.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Two-factor authentication is off."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tweestapsverificatie staat uit."
+          }
+        }
+      }
+    },
+    "Start two-factor setup again.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start two-factor setup again."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start de tweestapsverificatie opnieuw op."
+          }
+        }
+      }
+    },
+    "Try again in {{seconds}} seconds.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try again in {{seconds}} seconds."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Probeer het over {{seconds}} seconden opnieuw."
+          }
+        }
+      }
+    },
+    "Forgot password?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forgot password?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wachtwoord vergeten?"
+          }
+        }
+      }
+    },
+    "Reset your password?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset your password?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je wachtwoord opnieuw instellen?"
+          }
+        }
+      }
+    },
+    "Send link": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send link"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link sturen"
+          }
+        }
+      }
+    },
+    "We'll send a link to {{email}}. You stay signed in on this phone.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We'll send a link to {{email}}. You stay signed in on this phone."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We sturen een link naar {{email}}. Je blijft op deze telefoon aangemeld."
+          }
+        }
+      }
+    },
+    "Check your inbox.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check your inbox."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bekijk je inbox."
+          }
+        }
+      }
+    },
+    "Use at least {{min}} characters.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use at least {{min}} characters."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gebruik minstens {{min}} tekens."
+          }
+        }
+      }
+    },
+    "Use both uppercase and lowercase letters.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use both uppercase and lowercase letters."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gebruik hoofdletters en kleine letters."
+          }
+        }
+      }
+    },
+    "Use at least one number.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use at least one number."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gebruik minstens één cijfer."
+          }
+        }
+      }
+    },
+    "Use at least one symbol.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use at least one symbol."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gebruik minstens één symbool."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

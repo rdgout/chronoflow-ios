@@ -3,6 +3,7 @@ import CryptoKit
 import Foundation
 
 public enum MockMethod: String, Sendable, CaseIterable {
+    case accountSecurity
     case passkeyOptions, passkeyLogin, signIn, completeTwoFactor, signUp, requestPasswordReset, resetPassword
     case verificationStatus, resendVerificationEmail, verifyEmail, signOut, fetchIdentity, fetchAccount, fetchTrips,
         fetchTripDetail, send, searchAirports, reviewTrip, reviewTripEdit, saveTrip, updateTrip, tripInput
@@ -23,6 +24,7 @@ public actor MockDataSource: DataSource {
     private var requestToken: String?
     private var offline: Bool
     private let mutationsOffline: Bool
+    private var pendingTwoFactor: Set<String> = []
     private var failures: [MockMethod: DataFailure] = [:]
 
     public init(
@@ -736,4 +738,83 @@ extension MockDataSource {
         return hasReturn ? [.outbound, .return] : [.outbound]
     }
 
+}
+
+extension MockDataSource {
+    public func accountSecurity(_ change: AccountSecurityChange) async throws -> AccountSecurityResult {
+        try await begin(.accountSecurity)
+        let accountID = try accountID(verified: true)
+        if case .confirmTwoFactor = change {
+            try limit("two-factor-confirm:\(accountID)", count: 5)
+        } else {
+            try limit("credential:\(accountID)", count: 6)
+        }
+        let current: String?
+        switch change {
+        case .password(let value, _, _), .enableTwoFactor(let value), .disableTwoFactor(let value),
+            .revealRecoveryCodes(let value), .regenerateRecoveryCodes(let value):
+            current = value
+        case .confirmTwoFactor, .requestPasswordReset: current = nil
+        }
+        if let current, current != state!.accounts[accountID]!.password {
+            throw validation("current_password", "The provided password was incorrect.")
+        }
+        let enabled = state!.accounts[accountID]!.snapshot.security["twoFactorEnabled"] == .bool(true)
+        switch change {
+        case .requestPasswordReset(let email):
+            try await requestPasswordReset(email: email)
+            return .changed
+        case .password(_, let password, let confirmation):
+            try self.password(password, confirmation: confirmation)
+            try update { $0.accounts[accountID]?.password = password }
+            return .changed
+        case .enableTwoFactor:
+            guard !enabled else {
+                throw DataFailure.validation(
+                    fields: ["form": FieldMessage(key: "Two-factor authentication is already on.")], status: 409)
+            }
+            pendingTwoFactor.insert(accountID)
+            return .setup(
+                ApiTwoFactorSetup(
+                    secretKey: "JBSWY3DPEHPK3PXP",
+                    otpauthUrl: "otpauth://totp/ChronoFlow?secret=JBSWY3DPEHPK3PXP&issuer=ChronoFlow"))
+        case .confirmTwoFactor(let code):
+            guard !enabled else { throw validation("form", "Two-factor authentication is already on.") }
+            guard pendingTwoFactor.contains(accountID) else {
+                throw DataFailure.validation(
+                    fields: ["form": FieldMessage(key: "Start two-factor setup again.")], status: 409)
+            }
+            guard code == "123456" else {
+                throw validation("code", "The authentication code was not accepted. Try again.")
+            }
+            let timestamp = now().ISO8601Format()
+            let codes = (0..<8).map { "\(String(UUID().uuidString.prefix(8)).lowercased())-\($0)" }
+            try update {
+                $0.accounts[accountID]?.twoFactorCode = "123456"
+                $0.accounts[accountID]?.snapshot.security["twoFactorEnabled"] = .bool(true)
+                $0.accounts[accountID]?.snapshot.security["twoFactorConfirmedAt"] = .string(timestamp)
+                $0.accounts[accountID]?.recoveryCodes = Set(codes)
+            }
+            pendingTwoFactor.remove(accountID)
+            return .codes(ApiRecoveryCodes(recoveryCodes: codes))
+        case .disableTwoFactor:
+            try update {
+                $0.accounts[accountID]?.twoFactorCode = nil
+                $0.accounts[accountID]?.snapshot.security["twoFactorEnabled"] = .bool(false)
+                $0.accounts[accountID]?.snapshot.security["twoFactorConfirmedAt"] = .null
+                $0.accounts[accountID]?.recoveryCodes = []
+            }
+            return .snapshot(state!.accounts[accountID]!.snapshot)
+        case .revealRecoveryCodes, .regenerateRecoveryCodes:
+            guard enabled else {
+                throw DataFailure.validation(
+                    fields: ["form": FieldMessage(key: "Two-factor authentication is off.")], status: 409)
+            }
+            if case .regenerateRecoveryCodes = change {
+                let codes = Set((0..<8).map { "\(String(UUID().uuidString.prefix(8)).lowercased())-\($0)" })
+                try update { $0.accounts[accountID]?.recoveryCodes = codes }
+            }
+            return .codes(ApiRecoveryCodes(recoveryCodes: state!.accounts[accountID]!.recoveryCodes.sorted()))
+        }
+    }
 }

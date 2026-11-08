@@ -154,7 +154,15 @@ public actor APIClient {
                 fields[field] = FieldMessage(key: key, arguments: envelope.args?[field] ?? [:])
             }
             return .validation(fields: fields, status: status)
-        case (409, "conflict"): return .conflict(status: status)
+        case (409, "conflict"):
+            let message = envelope.message
+            if [
+                "Two-factor authentication is already on.", "Two-factor authentication is off.",
+                "Start two-factor setup again.",
+            ].contains(message) {
+                return .validation(fields: ["form": FieldMessage(key: message)], status: status)
+            }
+            return .conflict(status: status)
         default: return .server(status: status)
         }
     }
