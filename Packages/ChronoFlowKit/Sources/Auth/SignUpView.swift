@@ -23,7 +23,8 @@
         public var body: some View {
             AuthScreen(
                 scrollIdentifier: "sign-up.scroll", title: copy("Create an account"),
-                description: copy("Save your trips and get reminders on this phone."), back: back, measure: report
+                description: copy("Save your trips and get reminders on this phone."), compact: true, back: back,
+                measure: report
             ) {
                 if let banner = model.form.banner {
                     AuthBanner(title: copy(banner.title(for: .signUp)), message: copy(banner.body(for: .signUp)))

@@ -84,6 +84,48 @@ import Testing
         await model.submit(language: .en)
         #expect(model.sessionFailure == .credentialWrite && model.password.isEmpty && model.confirmation.isEmpty)
     }
+    @Test(arguments: [
+        "Use at least one symbol.", "The passwords don't match yet.",
+        "This password has appeared in a data leak. Choose a different password.",
+    ])
+    func emailTakenPreservesOtherFieldErrorsInTheSameResponse(passwordMessage: String) async throws {
+        let source = try authTestSource()
+        let model = SignUpModel(
+            source: source, navigation: AuthNavigation(), deviceIdentity: { "0199a3c0-0000-7000-8000-000000000001" },
+            deviceName: "test", accept: { _ in Issue.record("Invalid registration accepted") })
+        let field = passwordMessage == "The passwords don't match yet." ? "password_confirmation" : "password"
+        let remaining = [
+            "name": FieldMessage(key: "Please fill this in."), field: FieldMessage(key: passwordMessage),
+        ]
+        await source.failNext(
+            method: .signUp,
+            error: .validation(
+                fields: remaining.merging(["email": FieldMessage(key: "This email address is already in use.")]) {
+                    first, _ in first
+                }, status: 422))
+        model.editEmail("demo@example.com")
+        model.editPassword("NewPassword123!")
+        model.editConfirmation("NewPassword123!")
+        await model.submit(language: .en)
+        #expect(model.form.banner == .emailTaken)
+        #expect(model.form.fields == remaining)
+        #expect(model.password.isEmpty && model.confirmation.isEmpty)
+        #expect(model.email == "demo@example.com")
+    }
+
+    @Test func emailTakenKeepsBannerWhenOtherMessagesNeedTheFallback() {
+        let mapped = AuthFailureMapping(
+            .validation(
+                fields: [
+                    "email": FieldMessage(key: "This email address is already in use."),
+                    "password": FieldMessage(key: "unknown English"),
+                    "device_id": FieldMessage(key: "Please fill this in."),
+                    "name": FieldMessage(key: "Please fill this in."),
+                ], status: 422),
+            displayedFields: ["name", "email", "password", "password_confirmation"], context: .signUp)
+        #expect(mapped.banner == .emailTaken)
+        #expect(mapped.fields == ["name": FieldMessage(key: "Please fill this in.")])
+    }
     @Test func oneToggleControlsBothPasswordsAndBusyCancellationStopsAcceptance() async {
         let gate = ForgotRequestGate()
         let source = MockDataSource(delay: { 1 }, sleep: { _ in await gate.wait() })

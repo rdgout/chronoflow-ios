@@ -51,7 +51,6 @@ nonisolated public struct AuthFailureMapping: Sendable, Equatable {
         case .validation(let messages, _):
             if context == .signUp, messages["email"]?.key == "This email address is already in use." {
                 banner = .emailTaken
-                return
             }
             if context == .signIn
                 && messages.values.contains(where: {
@@ -66,6 +65,7 @@ nonisolated public struct AuthFailureMapping: Sendable, Equatable {
                 context == .twoFactor
                 && !displayedFields.intersection(proofFields).isDisjoint(with: messages.keys)
             for (name, message) in messages {
+                if banner == .emailTaken && name == "email" { continue }
                 if activeProofHasError && proofFields.contains(name) && !displayedFields.contains(name) { continue }
                 if displayedFields.contains(name), AuthCopy.supports(message) {
                     if context == .twoFactor && name == "code"
@@ -76,7 +76,7 @@ nonisolated public struct AuthFailureMapping: Sendable, Equatable {
                     } else {
                         fields[name] = message
                     }
-                } else {
+                } else if banner == nil {
                     banner = .server
                 }
             }

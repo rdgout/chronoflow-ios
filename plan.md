@@ -1249,6 +1249,8 @@ OQ 21: “Server policy”; OQ 22/27: “RN's honest copy” (user 2026-11-07). 
 
 #### Phase 11c: Sign up (`feat/phase-11c-sign-up`)
 
+- [x] Fix round 1: select the board's compact heading margin and preserve simultaneous name/password/confirmation field errors alongside the email-taken banner. Cover mixed 422 responses and password clearing in host tests; board rendering remains user-host acceptance.
+
 OQ 21 is settled: “Server policy”. Ship the approved production-policy hint and native iOS AutoFill password rules, with no client validation; OQ 28’s shared field messages now ship in the catalog. The verify gate remains the existing seam until 11d.
 
 - [x] Build AuthSignUp name/email/password/confirmation, one native shared Show/Hide Toggle, consent web links, Create account and existing-account footer. Wire `signUp`, language/device identity, taken/server/field errors; clear passwords after every attempt and save unverified session through the same controller, then `.verify`. Do not implement guest claim recovery, reminders, policy reader or walkthrough here.
