@@ -4,176 +4,75 @@ import UIKit
 import XCTest
 
 nonisolated final class AuthAuditTests: XCTestCase {
-    private enum Profile { case light, dark, xxLarge }
-
-    @MainActor private func variants(for profile: Profile) -> [(String, XCUIDevice.Appearance, Bool)] {
-        switch profile {
-        case .light: [("en", .light, false), ("nl", .light, false)]
-        case .dark: [("en", .dark, false), ("nl", .dark, false)]
-        case .xxLarge: [("en", .light, true)]
+    @MainActor private func variants() -> [(String, XCUIDevice.Appearance, Bool)] {
+        guard ProcessInfo.processInfo.environment["AUTH_AUDIT_FULL"] == "1" else {
+            return [("en", .light, false)]
         }
+        return [
+            ("en", .light, false), ("nl", .light, false),
+            ("en", .dark, false), ("nl", .dark, false),
+            ("en", .light, true),
+        ]
     }
 
-    @MainActor func testSignInInLeanAuditMatrix() async throws {
-        try await auditSignInOrTwoFactor(mode: 0, profile: .light)
+    @MainActor func testSignInAudit() async throws {
+        try await auditSignInOrTwoFactor(mode: 0)
     }
-    @MainActor func testSignInInLeanAuditMatrixDark() async throws {
-        try await auditSignInOrTwoFactor(mode: 0, profile: .dark)
+    @MainActor func testTwoFactorCodeAudit() async throws {
+        try await auditSignInOrTwoFactor(mode: 1)
     }
-    @MainActor func testSignInInLeanAuditMatrixXXLarge() async throws {
-        try await auditSignInOrTwoFactor(mode: 0, profile: .xxLarge)
+    @MainActor func testTwoFactorRecoveryAudit() async throws {
+        try await auditSignInOrTwoFactor(mode: 2)
     }
-    @MainActor func testTwoFactorCodeInLeanAuditMatrix() async throws {
-        try await auditSignInOrTwoFactor(mode: 1, profile: .light)
+    @MainActor func testForgotFormAudit() async throws {
+        try await auditForgot(state: "form")
     }
-    @MainActor func testTwoFactorCodeInLeanAuditMatrixDark() async throws {
-        try await auditSignInOrTwoFactor(mode: 1, profile: .dark)
+    @MainActor func testForgotSentAudit() async throws {
+        try await auditForgot(state: "sent")
     }
-    @MainActor func testTwoFactorCodeInLeanAuditMatrixXXLarge() async throws {
-        try await auditSignInOrTwoFactor(mode: 1, profile: .xxLarge)
+    @MainActor func testForgotFieldAudit() async throws {
+        try await auditForgot(state: "field")
     }
-    @MainActor func testTwoFactorRecoveryInLeanAuditMatrix() async throws {
-        try await auditSignInOrTwoFactor(mode: 2, profile: .light)
+    @MainActor func testForgotServerAudit() async throws {
+        try await auditForgot(state: "server")
     }
-    @MainActor func testTwoFactorRecoveryInLeanAuditMatrixDark() async throws {
-        try await auditSignInOrTwoFactor(mode: 2, profile: .dark)
+    @MainActor func testForgotThrottleAudit() async throws {
+        try await auditForgot(state: "throttle")
     }
-    @MainActor func testTwoFactorRecoveryInLeanAuditMatrixXXLarge() async throws {
-        try await auditSignInOrTwoFactor(mode: 2, profile: .xxLarge)
-    }
-    @MainActor func testForgotFormInLeanAuditMatrix() async throws {
-        try await auditForgot(state: "form", profile: .light)
-    }
-    @MainActor func testForgotFormInLeanAuditMatrixDark() async throws {
-        try await auditForgot(state: "form", profile: .dark)
-    }
-    @MainActor func testForgotFormInLeanAuditMatrixXXLarge() async throws {
-        try await auditForgot(state: "form", profile: .xxLarge)
-    }
-    @MainActor func testForgotSentInLeanAuditMatrix() async throws {
-        try await auditForgot(state: "sent", profile: .light)
-    }
-    @MainActor func testForgotSentInLeanAuditMatrixDark() async throws {
-        try await auditForgot(state: "sent", profile: .dark)
-    }
-    @MainActor func testForgotSentInLeanAuditMatrixXXLarge() async throws {
-        try await auditForgot(state: "sent", profile: .xxLarge)
-    }
-    @MainActor func testForgotFieldInLeanAuditMatrix() async throws {
-        try await auditForgot(state: "field", profile: .light)
-    }
-    @MainActor func testForgotFieldInLeanAuditMatrixDark() async throws {
-        try await auditForgot(state: "field", profile: .dark)
-    }
-    @MainActor func testForgotFieldInLeanAuditMatrixXXLarge() async throws {
-        try await auditForgot(state: "field", profile: .xxLarge)
-    }
-    @MainActor func testForgotServerInLeanAuditMatrix() async throws {
-        try await auditForgot(state: "server", profile: .light)
-    }
-    @MainActor func testForgotServerInLeanAuditMatrixDark() async throws {
-        try await auditForgot(state: "server", profile: .dark)
-    }
-    @MainActor func testForgotServerInLeanAuditMatrixXXLarge() async throws {
-        try await auditForgot(state: "server", profile: .xxLarge)
-    }
-    @MainActor func testForgotThrottleInLeanAuditMatrix() async throws {
-        try await auditForgot(state: "throttle", profile: .light)
-    }
-    @MainActor func testForgotThrottleInLeanAuditMatrixDark() async throws {
-        try await auditForgot(state: "throttle", profile: .dark)
-    }
-    @MainActor func testForgotThrottleInLeanAuditMatrixXXLarge() async throws {
-        try await auditForgot(state: "throttle", profile: .xxLarge)
-    }
-    @MainActor func testForgotOfflineInLeanAuditMatrix() async throws {
-        try await auditForgot(state: "offline", profile: .light)
-    }
-    @MainActor func testForgotOfflineInLeanAuditMatrixDark() async throws {
-        try await auditForgot(state: "offline", profile: .dark)
-    }
-    @MainActor func testForgotOfflineInLeanAuditMatrixXXLarge() async throws {
-        try await auditForgot(state: "offline", profile: .xxLarge)
+    @MainActor func testForgotOfflineAudit() async throws {
+        try await auditForgot(state: "offline")
     }
 
-    @MainActor func testResetFormInLeanAuditMatrix() async throws {
-        try await auditReset(state: "form", profile: .light)
+    @MainActor func testResetFormAudit() async throws {
+        try await auditReset(state: "form")
     }
-    @MainActor func testResetFormInLeanAuditMatrixDark() async throws {
-        try await auditReset(state: "form", profile: .dark)
+    @MainActor func testResetPasswordAudit() async throws {
+        try await auditReset(state: "password")
     }
-    @MainActor func testResetFormInLeanAuditMatrixXXLarge() async throws {
-        try await auditReset(state: "form", profile: .xxLarge)
+    @MainActor func testResetConfirmationAudit() async throws {
+        try await auditReset(state: "confirmation")
     }
-    @MainActor func testResetPasswordInLeanAuditMatrix() async throws {
-        try await auditReset(state: "password", profile: .light)
+    @MainActor func testResetExpiredAudit() async throws {
+        try await auditReset(state: "expired")
     }
-    @MainActor func testResetPasswordInLeanAuditMatrixDark() async throws {
-        try await auditReset(state: "password", profile: .dark)
+    @MainActor func testResetDoneAudit() async throws {
+        try await auditReset(state: "done")
     }
-    @MainActor func testResetPasswordInLeanAuditMatrixXXLarge() async throws {
-        try await auditReset(state: "password", profile: .xxLarge)
+    @MainActor func testResetServerAudit() async throws {
+        try await auditReset(state: "server")
     }
-    @MainActor func testResetConfirmationInLeanAuditMatrix() async throws {
-        try await auditReset(state: "confirmation", profile: .light)
+    @MainActor func testResetThrottleAudit() async throws {
+        try await auditReset(state: "throttle")
     }
-    @MainActor func testResetConfirmationInLeanAuditMatrixDark() async throws {
-        try await auditReset(state: "confirmation", profile: .dark)
-    }
-    @MainActor func testResetConfirmationInLeanAuditMatrixXXLarge() async throws {
-        try await auditReset(state: "confirmation", profile: .xxLarge)
-    }
-    @MainActor func testResetExpiredInLeanAuditMatrix() async throws {
-        try await auditReset(state: "expired", profile: .light)
-    }
-    @MainActor func testResetExpiredInLeanAuditMatrixDark() async throws {
-        try await auditReset(state: "expired", profile: .dark)
-    }
-    @MainActor func testResetExpiredInLeanAuditMatrixXXLarge() async throws {
-        try await auditReset(state: "expired", profile: .xxLarge)
-    }
-    @MainActor func testResetDoneInLeanAuditMatrix() async throws {
-        try await auditReset(state: "done", profile: .light)
-    }
-    @MainActor func testResetDoneInLeanAuditMatrixDark() async throws {
-        try await auditReset(state: "done", profile: .dark)
-    }
-    @MainActor func testResetDoneInLeanAuditMatrixXXLarge() async throws {
-        try await auditReset(state: "done", profile: .xxLarge)
-    }
-    @MainActor func testResetServerInLeanAuditMatrix() async throws {
-        try await auditReset(state: "server", profile: .light)
-    }
-    @MainActor func testResetServerInLeanAuditMatrixDark() async throws {
-        try await auditReset(state: "server", profile: .dark)
-    }
-    @MainActor func testResetServerInLeanAuditMatrixXXLarge() async throws {
-        try await auditReset(state: "server", profile: .xxLarge)
-    }
-    @MainActor func testResetThrottleInLeanAuditMatrix() async throws {
-        try await auditReset(state: "throttle", profile: .light)
-    }
-    @MainActor func testResetThrottleInLeanAuditMatrixDark() async throws {
-        try await auditReset(state: "throttle", profile: .dark)
-    }
-    @MainActor func testResetThrottleInLeanAuditMatrixXXLarge() async throws {
-        try await auditReset(state: "throttle", profile: .xxLarge)
-    }
-    @MainActor func testResetOfflineInLeanAuditMatrix() async throws {
-        try await auditReset(state: "offline", profile: .light)
-    }
-    @MainActor func testResetOfflineInLeanAuditMatrixDark() async throws {
-        try await auditReset(state: "offline", profile: .dark)
-    }
-    @MainActor func testResetOfflineInLeanAuditMatrixXXLarge() async throws {
-        try await auditReset(state: "offline", profile: .xxLarge)
+    @MainActor func testResetOfflineAudit() async throws {
+        try await auditReset(state: "offline")
     }
 
-    @MainActor private func auditReset(state: String, profile: Profile) async throws {
+    @MainActor private func auditReset(state: String) async throws {
         try await FontRegistry.register()
         let previous = XCUIDevice.shared.appearance
         defer { XCUIDevice.shared.appearance = previous }
-        for (language, appearance, xxLarge) in variants(for: profile) {
+        for (language, appearance, xxLarge) in variants() {
             try DeviceAppearance.set(appearance)
             let app = XCUIApplication()
             app.launchArguments = AuthUIFlow.arguments(language: language, xxLarge: xxLarge)
@@ -216,102 +115,42 @@ nonisolated final class AuthAuditTests: XCTestCase {
         }
     }
 
-    @MainActor func testSignUpFormInLeanAuditMatrix() async throws {
-        try await auditSignUp(state: "form", profile: .light)
+    @MainActor func testSignUpFormAudit() async throws {
+        try await auditSignUp(state: "form")
     }
-    @MainActor func testSignUpFormInLeanAuditMatrixDark() async throws {
-        try await auditSignUp(state: "form", profile: .dark)
+    @MainActor func testSignUpEmptyAudit() async throws {
+        try await auditSignUp(state: "empty")
     }
-    @MainActor func testSignUpFormInLeanAuditMatrixXXLarge() async throws {
-        try await auditSignUp(state: "form", profile: .xxLarge)
+    @MainActor func testSignUpEmailAudit() async throws {
+        try await auditSignUp(state: "email")
     }
-    @MainActor func testSignUpEmptyInLeanAuditMatrix() async throws {
-        try await auditSignUp(state: "empty", profile: .light)
+    @MainActor func testSignUpTakenAudit() async throws {
+        try await auditSignUp(state: "taken")
     }
-    @MainActor func testSignUpEmptyInLeanAuditMatrixDark() async throws {
-        try await auditSignUp(state: "empty", profile: .dark)
+    @MainActor func testSignUpPasswordAudit() async throws {
+        try await auditSignUp(state: "password")
     }
-    @MainActor func testSignUpEmptyInLeanAuditMatrixXXLarge() async throws {
-        try await auditSignUp(state: "empty", profile: .xxLarge)
+    @MainActor func testSignUpConfirmationAudit() async throws {
+        try await auditSignUp(state: "confirmation")
     }
-    @MainActor func testSignUpEmailInLeanAuditMatrix() async throws {
-        try await auditSignUp(state: "email", profile: .light)
+    @MainActor func testSignUpVisibleAudit() async throws {
+        try await auditSignUp(state: "visible")
     }
-    @MainActor func testSignUpEmailInLeanAuditMatrixDark() async throws {
-        try await auditSignUp(state: "email", profile: .dark)
+    @MainActor func testSignUpServerAudit() async throws {
+        try await auditSignUp(state: "server")
     }
-    @MainActor func testSignUpEmailInLeanAuditMatrixXXLarge() async throws {
-        try await auditSignUp(state: "email", profile: .xxLarge)
+    @MainActor func testSignUpThrottleAudit() async throws {
+        try await auditSignUp(state: "throttle")
     }
-    @MainActor func testSignUpTakenInLeanAuditMatrix() async throws {
-        try await auditSignUp(state: "taken", profile: .light)
-    }
-    @MainActor func testSignUpTakenInLeanAuditMatrixDark() async throws {
-        try await auditSignUp(state: "taken", profile: .dark)
-    }
-    @MainActor func testSignUpTakenInLeanAuditMatrixXXLarge() async throws {
-        try await auditSignUp(state: "taken", profile: .xxLarge)
-    }
-    @MainActor func testSignUpPasswordInLeanAuditMatrix() async throws {
-        try await auditSignUp(state: "password", profile: .light)
-    }
-    @MainActor func testSignUpPasswordInLeanAuditMatrixDark() async throws {
-        try await auditSignUp(state: "password", profile: .dark)
-    }
-    @MainActor func testSignUpPasswordInLeanAuditMatrixXXLarge() async throws {
-        try await auditSignUp(state: "password", profile: .xxLarge)
-    }
-    @MainActor func testSignUpConfirmationInLeanAuditMatrix() async throws {
-        try await auditSignUp(state: "confirmation", profile: .light)
-    }
-    @MainActor func testSignUpConfirmationInLeanAuditMatrixDark() async throws {
-        try await auditSignUp(state: "confirmation", profile: .dark)
-    }
-    @MainActor func testSignUpConfirmationInLeanAuditMatrixXXLarge() async throws {
-        try await auditSignUp(state: "confirmation", profile: .xxLarge)
-    }
-    @MainActor func testSignUpVisibleInLeanAuditMatrix() async throws {
-        try await auditSignUp(state: "visible", profile: .light)
-    }
-    @MainActor func testSignUpVisibleInLeanAuditMatrixDark() async throws {
-        try await auditSignUp(state: "visible", profile: .dark)
-    }
-    @MainActor func testSignUpVisibleInLeanAuditMatrixXXLarge() async throws {
-        try await auditSignUp(state: "visible", profile: .xxLarge)
-    }
-    @MainActor func testSignUpServerInLeanAuditMatrix() async throws {
-        try await auditSignUp(state: "server", profile: .light)
-    }
-    @MainActor func testSignUpServerInLeanAuditMatrixDark() async throws {
-        try await auditSignUp(state: "server", profile: .dark)
-    }
-    @MainActor func testSignUpServerInLeanAuditMatrixXXLarge() async throws {
-        try await auditSignUp(state: "server", profile: .xxLarge)
-    }
-    @MainActor func testSignUpThrottleInLeanAuditMatrix() async throws {
-        try await auditSignUp(state: "throttle", profile: .light)
-    }
-    @MainActor func testSignUpThrottleInLeanAuditMatrixDark() async throws {
-        try await auditSignUp(state: "throttle", profile: .dark)
-    }
-    @MainActor func testSignUpThrottleInLeanAuditMatrixXXLarge() async throws {
-        try await auditSignUp(state: "throttle", profile: .xxLarge)
-    }
-    @MainActor func testSignUpOfflineInLeanAuditMatrix() async throws {
-        try await auditSignUp(state: "offline", profile: .light)
-    }
-    @MainActor func testSignUpOfflineInLeanAuditMatrixDark() async throws {
-        try await auditSignUp(state: "offline", profile: .dark)
-    }
-    @MainActor func testSignUpOfflineInLeanAuditMatrixXXLarge() async throws {
-        try await auditSignUp(state: "offline", profile: .xxLarge)
+    @MainActor func testSignUpOfflineAudit() async throws {
+        try await auditSignUp(state: "offline")
     }
 
-    @MainActor private func auditSignUp(state: String, profile: Profile) async throws {
+    @MainActor private func auditSignUp(state: String) async throws {
         try await FontRegistry.register()
         let previous = XCUIDevice.shared.appearance
         defer { XCUIDevice.shared.appearance = previous }
-        for (language, appearance, xxLarge) in variants(for: profile) {
+        for (language, appearance, xxLarge) in variants() {
             try DeviceAppearance.set(appearance)
             let app = XCUIApplication()
             app.launchArguments = AuthUIFlow.arguments(language: language, xxLarge: xxLarge)
@@ -339,103 +178,43 @@ nonisolated final class AuthAuditTests: XCTestCase {
         }
     }
 
-    @MainActor func testVerifyWaitingInLeanAuditMatrix() async throws {
-        try await auditVerify(state: "waiting", profile: .light)
+    @MainActor func testVerifyWaitingAudit() async throws {
+        try await auditVerify(state: "waiting")
     }
-    @MainActor func testVerifyWaitingInLeanAuditMatrixDark() async throws {
-        try await auditVerify(state: "waiting", profile: .dark)
+    @MainActor func testVerifyCountdownAudit() async throws {
+        try await auditVerify(state: "countdown")
     }
-    @MainActor func testVerifyWaitingInLeanAuditMatrixXXLarge() async throws {
-        try await auditVerify(state: "waiting", profile: .xxLarge)
+    @MainActor func testVerifyFailedAudit() async throws {
+        try await auditVerify(state: "failed")
     }
-    @MainActor func testVerifyCountdownInLeanAuditMatrix() async throws {
-        try await auditVerify(state: "countdown", profile: .light)
+    @MainActor func testVerifyServerAudit() async throws {
+        try await auditVerify(state: "server")
     }
-    @MainActor func testVerifyCountdownInLeanAuditMatrixDark() async throws {
-        try await auditVerify(state: "countdown", profile: .dark)
+    @MainActor func testVerifyThrottleAudit() async throws {
+        try await auditVerify(state: "throttle")
     }
-    @MainActor func testVerifyCountdownInLeanAuditMatrixXXLarge() async throws {
-        try await auditVerify(state: "countdown", profile: .xxLarge)
+    @MainActor func testVerifyOfflineAudit() async throws {
+        try await auditVerify(state: "offline")
     }
-    @MainActor func testVerifyFailedInLeanAuditMatrix() async throws {
-        try await auditVerify(state: "failed", profile: .light)
-    }
-    @MainActor func testVerifyFailedInLeanAuditMatrixDark() async throws {
-        try await auditVerify(state: "failed", profile: .dark)
-    }
-    @MainActor func testVerifyFailedInLeanAuditMatrixXXLarge() async throws {
-        try await auditVerify(state: "failed", profile: .xxLarge)
-    }
-    @MainActor func testVerifyServerInLeanAuditMatrix() async throws {
-        try await auditVerify(state: "server", profile: .light)
-    }
-    @MainActor func testVerifyServerInLeanAuditMatrixDark() async throws {
-        try await auditVerify(state: "server", profile: .dark)
-    }
-    @MainActor func testVerifyServerInLeanAuditMatrixXXLarge() async throws {
-        try await auditVerify(state: "server", profile: .xxLarge)
-    }
-    @MainActor func testVerifyThrottleInLeanAuditMatrix() async throws {
-        try await auditVerify(state: "throttle", profile: .light)
-    }
-    @MainActor func testVerifyThrottleInLeanAuditMatrixDark() async throws {
-        try await auditVerify(state: "throttle", profile: .dark)
-    }
-    @MainActor func testVerifyThrottleInLeanAuditMatrixXXLarge() async throws {
-        try await auditVerify(state: "throttle", profile: .xxLarge)
-    }
-    @MainActor func testVerifyOfflineInLeanAuditMatrix() async throws {
-        try await auditVerify(state: "offline", profile: .light)
-    }
-    @MainActor func testVerifyOfflineInLeanAuditMatrixDark() async throws {
-        try await auditVerify(state: "offline", profile: .dark)
-    }
-    @MainActor func testVerifyOfflineInLeanAuditMatrixXXLarge() async throws {
-        try await auditVerify(state: "offline", profile: .xxLarge)
-    }
-    @MainActor func testVerifySignOutErrorInLeanAuditMatrix() async throws {
-        try await auditVerify(state: "signOutError", profile: .light)
-    }
-    @MainActor func testVerifySignOutErrorInLeanAuditMatrixDark() async throws {
-        try await auditVerify(state: "signOutError", profile: .dark)
-    }
-    @MainActor func testVerifySignOutErrorInLeanAuditMatrixXXLarge() async throws {
-        try await auditVerify(state: "signOutError", profile: .xxLarge)
+    @MainActor func testVerifySignOutErrorAudit() async throws {
+        try await auditVerify(state: "signOutError")
     }
 
-    @MainActor func testVerifyFailedServerInLeanAuditMatrix() async throws {
-        try await auditVerify(state: "failedServer", profile: .light)
+    @MainActor func testVerifyFailedServerAudit() async throws {
+        try await auditVerify(state: "failedServer")
     }
-    @MainActor func testVerifyFailedServerInLeanAuditMatrixDark() async throws {
-        try await auditVerify(state: "failedServer", profile: .dark)
+    @MainActor func testVerifyFailedThrottleAudit() async throws {
+        try await auditVerify(state: "failedThrottle")
     }
-    @MainActor func testVerifyFailedServerInLeanAuditMatrixXXLarge() async throws {
-        try await auditVerify(state: "failedServer", profile: .xxLarge)
-    }
-    @MainActor func testVerifyFailedThrottleInLeanAuditMatrix() async throws {
-        try await auditVerify(state: "failedThrottle", profile: .light)
-    }
-    @MainActor func testVerifyFailedThrottleInLeanAuditMatrixDark() async throws {
-        try await auditVerify(state: "failedThrottle", profile: .dark)
-    }
-    @MainActor func testVerifyFailedThrottleInLeanAuditMatrixXXLarge() async throws {
-        try await auditVerify(state: "failedThrottle", profile: .xxLarge)
-    }
-    @MainActor func testVerifyFailedOfflineInLeanAuditMatrix() async throws {
-        try await auditVerify(state: "failedOffline", profile: .light)
-    }
-    @MainActor func testVerifyFailedOfflineInLeanAuditMatrixDark() async throws {
-        try await auditVerify(state: "failedOffline", profile: .dark)
-    }
-    @MainActor func testVerifyFailedOfflineInLeanAuditMatrixXXLarge() async throws {
-        try await auditVerify(state: "failedOffline", profile: .xxLarge)
+    @MainActor func testVerifyFailedOfflineAudit() async throws {
+        try await auditVerify(state: "failedOffline")
     }
 
-    @MainActor private func auditVerify(state: String, profile: Profile) async throws {
+    @MainActor private func auditVerify(state: String) async throws {
         try await FontRegistry.register()
         let previous = XCUIDevice.shared.appearance
         defer { XCUIDevice.shared.appearance = previous }
-        for (language, appearance, xxLarge) in variants(for: profile) {
+        for (language, appearance, xxLarge) in variants() {
             try DeviceAppearance.set(appearance)
             let app = XCUIApplication()
             app.launchArguments = AuthUIFlow.arguments(language: language, xxLarge: xxLarge)
@@ -493,12 +272,12 @@ nonisolated final class AuthAuditTests: XCTestCase {
         }
     }
 
-    @MainActor private func auditSignInOrTwoFactor(mode: Int, profile: Profile) async throws {
+    @MainActor private func auditSignInOrTwoFactor(mode: Int) async throws {
         try await FontRegistry.register()
         let device = XCUIDevice.shared
         let previous = device.appearance
         defer { device.appearance = previous }
-        for (language, appearance, xxLarge) in variants(for: profile) {
+        for (language, appearance, xxLarge) in variants() {
             try DeviceAppearance.set(appearance)
             let app = XCUIApplication()
             app.launchArguments = AuthUIFlow.arguments(language: language, xxLarge: xxLarge)
@@ -532,12 +311,12 @@ nonisolated final class AuthAuditTests: XCTestCase {
         }
     }
 
-    @MainActor private func auditForgot(state: String, profile: Profile) async throws {
+    @MainActor private func auditForgot(state: String) async throws {
         try await FontRegistry.register()
         let device = XCUIDevice.shared
         let previous = device.appearance
         defer { device.appearance = previous }
-        for (language, appearance, xxLarge) in variants(for: profile) {
+        for (language, appearance, xxLarge) in variants() {
             try DeviceAppearance.set(appearance)
             let app = launchForgotApp(
                 language: language, xxLarge: xxLarge, failure: state, offline: state == "offline")
@@ -616,7 +395,8 @@ nonisolated final class AuthAuditTests: XCTestCase {
             }
             controls[identifier] = matches.element
         }
-        let ordered = identifiers.sorted { controls[$0]!.frame.minY < controls[$1]!.frame.minY }
+        let initialFrames = controls.mapValues(\.frame)
+        let ordered = identifiers.sorted { initialFrames[$0]!.minY < initialFrames[$1]!.minY }
         var pending = Set(identifiers)
         for identifier in ordered where pending.contains(identifier) {
             let control = controls[identifier]!
@@ -627,18 +407,20 @@ nonisolated final class AuthAuditTests: XCTestCase {
                 XCTFail("Audit frames did not settle for \(identifier): \(error)")
                 return
             }
-            let viewport = AuthUIFlow.viewport(
-                in: app, scrollFrame: scroll.frame, includingNavigationBar: identifier == "auth.back")
-            guard AuthScrollGesture.fullyVisible(control.frame, in: viewport) else {
+            let contentViewport = AuthUIFlow.viewport(in: app, scrollFrame: scroll.frame)
+            let navigationViewport = AuthUIFlow.viewport(
+                in: app, scrollFrame: scroll.frame, includingNavigationBar: true)
+            let viewport = identifier == "auth.back" ? navigationViewport : contentViewport
+            let frames = controls.mapValues(\.frame)
+            guard AuthScrollGesture.fullyVisible(frames[identifier]!, in: viewport) else {
                 XCTFail(
                     "Expected fully visible \(identifier) before auditing: frame=\(control.frame), viewport=\(viewport)"
                 )
                 return
             }
             let visible = pending.filter {
-                let viewport = AuthUIFlow.viewport(
-                    in: app, scrollFrame: scroll.frame, includingNavigationBar: $0 == "auth.back")
-                return AuthScrollGesture.fullyVisible(controls[$0]!.frame, in: viewport)
+                AuthScrollGesture.fullyVisible(
+                    frames[$0]!, in: $0 == "auth.back" ? navigationViewport : contentViewport)
             }
             for identifier in visible {
                 XCTAssertTrue(
@@ -646,7 +428,7 @@ nonisolated final class AuthAuditTests: XCTestCase {
             }
             audit(
                 app, language: language, appearance: appearance, stage: identifier, xxLarge: xxLarge,
-                forgotBannerState: forgotBannerState, controls: controls)
+                forgotBannerState: forgotBannerState, controls: controls, frames: frames, viewport: contentViewport)
             pending.subtract(visible)
         }
         XCTAssertTrue(pending.isEmpty, "Controls never audited fully inside the viewport: \(pending.sorted())")
@@ -654,10 +436,9 @@ nonisolated final class AuthAuditTests: XCTestCase {
 
     @MainActor private func audit(
         _ app: XCUIApplication, language: String, appearance: XCUIDevice.Appearance, stage: String, xxLarge: Bool,
-        forgotBannerState: String?, controls: [String: XCUIElement]
+        forgotBannerState: String?, controls: [String: XCUIElement], frames: [String: CGRect], viewport: CGRect
     ) {
-        let viewport = AuthUIFlow.viewport(in: app, scrollFrame: AuthUIFlow.scroll(in: app).frame)
-        let controlFrames = controls.values.map(\.frame)
+        let controlFrames = Array(frames.values)
         let screenshot = app.screenshot()
         let attachment = XCTAttachment(screenshot: screenshot)
         attachment.name = "Auth audit source [\(language), \(appearance), \(stage)]"
@@ -670,8 +451,8 @@ nonisolated final class AuthAuditTests: XCTestCase {
             XCTFail("Cannot decode auth audit screenshot [\(language), \(stage)]: \(error)")
             return
         }
-        let brand = AuthUIFlow.control("auth.brand", in: app)
-        let brandFrame: CGRect? = brand.exists ? brand.frame : nil
+        let brand = controls["auth.brand"]!
+        let brandFrame = frames["auth.brand"]
         var brandMinimum: Double?
         var brandMeasurement = "not visible"
         if let brandFrame, viewport.insetBy(dx: -Self.frameTolerance, dy: -Self.frameTolerance).contains(brandFrame) {
@@ -696,8 +477,10 @@ nonisolated final class AuthAuditTests: XCTestCase {
         var backMinimum: Double?
         var backFrame: CGRect?
         var backMeasurement = "not visible"
-        if let back = controls["sign-up.back"], AuthScrollGesture.fullyVisible(back.frame, in: viewport) {
-            backFrame = back.frame
+        if let back = controls["sign-up.back"], let frame = frames["sign-up.back"],
+            AuthScrollGesture.fullyVisible(frame, in: viewport)
+        {
+            backFrame = frame
             (backMinimum, backMeasurement) = textContrast(
                 back, raster: raster, in: app, appearance: appearance, xxLarge: xxLarge, footer: true)
             print("Sign-up footer contrast [\(language), \(appearance), \(stage)]: \(backMeasurement)")

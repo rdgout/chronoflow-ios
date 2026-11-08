@@ -923,6 +923,19 @@ class RunnerTests(unittest.TestCase):
         self.assertIn('-only-testing:' + method, commands[1])
         self.assertEqual(commands[1][commands[1].index('-parallel-testing-enabled') + 1], 'NO')
 
+    def test_full_auth_audit_is_opt_in_and_forwarded_to_the_test_runner(self):
+        for value in ['', '0', '1']:
+            with patch.dict(os.environ, {'AUTH_AUDIT_FULL': value, 'TEST_RUNNER_AUTH_AUDIT_FULL': 'stale'}):
+                self.commands.clear()
+                self.environments.clear()
+                status, output = self.execute(aliases=['17e'], only=['AppUITests/AuthAuditTests'], reuse_build=True)
+            self.assertEqual(status, 0, output)
+            environments = [env for command, env in zip(self.commands, self.environments)
+                            if command in self.commands_for_tests()]
+            self.assertTrue(environments)
+            self.assertTrue(all(env.get('TEST_RUNNER_AUTH_AUDIT_FULL') == ('1' if value == '1' else None)
+                                for env in environments))
+
     def test_intro_order_regression_uses_two_processes_and_separate_results(self):
         with patch.dict(os.environ, {'SNAPSHOT_RECORD': 'all', 'TEST_RUNNER_CF_INTRO_ORDER': 'invalid'}):
             status, output = self.execute(aliases=['se'], intro_order_check=True, reuse_build=True)

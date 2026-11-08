@@ -6,7 +6,9 @@ import XCTest
             "-cf.reduceMotion", "-AppleLanguages", "(\(language))", "-AppleLocale",
             language == "nl" ? "nl_NL" : "en_US",
         ]
-        if xxLarge { result += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryXXL"] }
+        result += [
+            "-UIPreferredContentSizeCategoryName", xxLarge ? "UICTContentSizeCategoryXXL" : "UICTContentSizeCategoryL",
+        ]
         return result
     }
 

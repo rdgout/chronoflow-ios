@@ -59,6 +59,60 @@ Phase 9a–9d stack and its review records below.
 | Duo spot check | `make duo` | Opt-in runtime smoke after Duo-specific runtime changes | — |
 | Requested matrix | `make matrix` | All seven runtime destinations, LPT-balanced logic/Release once; profile/system-reference tests once on 17e | No default or CI invocation |
 
+Auth audit cost decision (2026-11-08, supersedes the dated five-variant default recipes below):
+`make check`, the runner default and targeted `AuthAuditTests` run **one method per distinct screen state**,
+English/light/default size, **one app launch per method**. There are 37 screen-state methods, plus six
+policy guards that do not launch the app. The suite target is **under 15 minutes on 17e**; this is a
+runtime acceptance target, not a host-verified timing. No default Dark/XXLarge variant methods run.
+This separate audit budget supersedes the earlier five-minute whole-check target for this suite.
+Each audit position covers all fully visible controls; pending controls must be revealed in full inside
+the safe viewport above any keyboard and audited before the method ends. Failures include state,
+language, appearance, element/stage, frames and rendered text minima. One screenshot is decoded per position.
+
+```sh
+# Default audit coverage and functional verification, without recording:
+make generate
+make targeted DEVICES="17e" ONLY="AppUITests/VerifyEmailTests AppUITests/AccountRecoveryTests AppUITests/AuthAuditTests"
+# Full five-variant lean matrix: en/nl × light/dark at default size, plus en/light xxLarge:
+make audits
+# Equivalent opt-in using targeted selection:
+AUTH_AUDIT_FULL=1 make targeted DEVICES="17e" ONLY="AppUITests/AuthAuditTests"
+# Lean audit suite alone (make audits otherwise opts into the full matrix):
+AUTH_AUDIT_FULL=0 make audits
+```
+
+`make audits` defaults to a 5,400-second overall pass cap, overridable with `TEST_RUN_TIMEOUT`;
+`REUSE_BUILD=1` is available after an unchanged build. The full matrix code remains in the same
+37 methods and launches each of its five variants serially. The runner forwards `AUTH_AUDIT_FULL=1`
+as `TEST_RUNNER_AUTH_AUDIT_FULL` to XCTest, removing any stale prefixed value for default runs.
+
+Reset/SignUp audit setup uses `CF_AUTH_TEST_AUDIT_SCREEN` / `CF_AUTH_TEST_AUDIT_STATE` only with a valid
+isolated `CF_AUTH_TEST_ID`; that UUID also forces the Debug mock factory. Inputs are prefilled before
+presentation, and submission still uses the actual button and model/server path. Only audits suppress
+new-password error focus, so they do not invoke the system strong-password sheet. Functional typing,
+AutoFill traits and keyboard tests retain the native path. Reset server/throttle setup waits for
+`auth.banner` explicitly. Every rejected audit issue records an attributed XCTest failure and attachment;
+returning handled to XCTest prevents its duplicate unattributed “Contrast failed”.
+
+`sign-up.back` is measured using RenderedTextContrast, generated skyCopy/authLabel tokens, and the
+centered text region from the current font/wrapping/button padding. An exception requires the matching
+named contrast issue, matching current button geometry and a complete finite minimum **≥ 4.5:1**.
+Lower, clipped or unmeasurable results fail with diagnostics. No ratio or runtime pass is inferred here.
+The supplied compare xcresult shows `route.walkthrough` immediately after verification and after relaunch:
+mock registration accepts current terms, so Verify/AccountRecovery expectations now use that gate.
+All 364 Reset/SignUp/Verify reference PNGs remain unchanged.
+
+Fix-round-3 host verification: `make -k quick` passes strict formatting lint, **367/368 package tests**,
+10 TokenGen tests, 4 AssetGen tests and **90 signing/resource/runner fixtures** (3 + 10 + 77).
+Only the known `APICookieTests.realRedirectCookieHandlingIsDisabled` loopback listener EPERM fails.
+Direct Swift 6 compilation against `arm64-apple-ios17.0-simulator` passes for Auth, ChronoFlow,
+AppTests and AppUITests; no simulator is started. Logs: `build/round3-quick.log`,
+`build/round3-final-quick.log`, `build/round3-typecheck.log` and `build/round3-typecheck/*.log`.
+The three ordered patches in `build/commits` apply on `42297c8`, with subjects in `messages.txt`.
+Commits are assembled in an isolated packaging repository because workspace Git metadata is read-only.
+Runtime UI/audit results, current footer ratios and the under-15-minute target remain unverified;
+run the commands above on 17e. No snapshot recording, `make check`, Duo or seven-simulator matrix ran.
+
 `Scripts/ci.sh` runs `make generate check`. The Make default is check. The runner's own default is
 also check on 17e; only `--matrix` or explicit compatibility matrix flags request all seven.
 `make test` and `make snapshots` select subsets on 17e. No default flow calls Duo or the matrix.
