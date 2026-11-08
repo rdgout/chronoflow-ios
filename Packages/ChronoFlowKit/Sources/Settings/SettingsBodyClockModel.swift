@@ -42,6 +42,7 @@ public enum BodyClockGroup: String, CaseIterable, Sendable {
     public private(set) var failure = false
     @ObservationIgnored private var edits: [String: JSONValue] = [:]
     @ObservationIgnored private let save: @MainActor (JSONObject) async throws -> Void
+    @ObservationIgnored private var revisions: [BodyClockGroup: Int] = [:]
     @ObservationIgnored private var tail: Task<Void, Never>?
 
     public init(answers: JSONObject, save: @escaping @MainActor (JSONObject) async throws -> Void) {
@@ -62,6 +63,8 @@ public enum BodyClockGroup: String, CaseIterable, Sendable {
             edits[key] = value
         }
         normalize(group)
+        let revision = (revisions[group] ?? 0) + 1
+        revisions[group] = revision
         saved.remove(group)
         errors = errors.filter { !group.fields.contains($0.key) }
         let invalid = Self.validate(group, answers)
@@ -78,7 +81,7 @@ public enum BodyClockGroup: String, CaseIterable, Sendable {
             guard !Task.isCancelled else { return }
             do {
                 try await save(body)
-                self?.saved.insert(group)
+                if self?.revisions[group] == revision { self?.saved.insert(group) }
                 self?.failure = false
             } catch is CancellationError {
             } catch { self?.failure = true }

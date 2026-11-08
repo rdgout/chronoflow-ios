@@ -47,6 +47,8 @@ struct SettingsPageFixture {
         await model.submit()
         #expect(writes == ["My draft"])
         #expect(model.name == "My draft" && model.saved && model.errorKey == nil)
+        model.receive(remote)
+        #expect(!model.saved && model.name == "Other device")
     }
 
     @Test func sessionUpsertPreservesPendingProfileAcrossRelaunch() async throws {

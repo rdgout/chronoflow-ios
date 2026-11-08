@@ -1878,6 +1878,8 @@ User decision, 2026-11-08: build the Settings destination pages in order, using 
 
 Replay follow-up: use the existing NavigationStack with the bars hidden rather than a full-screen cover, so presenting replay cannot tear down the tab's session models. The UI journey changes a preference again after both replay exits. UI-test theme/language defaults are UUID-scoped under the existing authenticated test gate.
 
+Save-feedback follow-up: clear Profile's saved state when an observed account value replaces it, and bind Body clock's saved indicator to the latest section edit. A delayed earlier save cannot mark a newer invalid draft as saved; regression tests cover both cases.
+
 Deferrals: Reminders and notification permissions/delivery remain excluded. Optional timeline items remain excluded by the 5 Nov compact-timeline decision. Purchases, paywall checkout and cancellation remain excluded. Unbuilt destinations stay hidden in Release. Register host/UI suites in the 17h runner entries; no snapshot suites.
 
 ### Phase 18 (later, separate decision): guest wizard and claim

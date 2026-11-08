@@ -19,6 +19,7 @@ import Observation
     }
 
     public func receive(_ account: AccountRecord) {
+        if account.name != storedName { saved = false }
         if name == storedName { name = account.name }
         storedName = account.name
         email = account.email

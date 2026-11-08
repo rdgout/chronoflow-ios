@@ -83,6 +83,27 @@ import Testing
         try await f.close()
     }
 
+    @Test func completionOfAnOlderSaveDoesNotMarkANewerInvalidDraftAsSaved() async {
+        let began = AsyncStream<Void>.makeStream()
+        let release = AsyncStream<Void>.makeStream()
+        let model = SettingsBodyClockModel(answers: JSONObject()) { _ in
+            began.continuation.yield()
+            for await _ in release.stream { break }
+        }
+        let first = Task {
+            await model.change(.sleep, ["habitualBed": .string("23:00"), "habitualWake": .string("07:00")])
+        }
+        var iterator = began.stream.makeAsyncIterator()
+        _ = await iterator.next()
+        await model.change(.sleep, ["habitualWake": .string("23:30")])
+        release.continuation.yield()
+        await first.value
+        #expect(!model.saved.contains(.sleep) && model.errors["habitualWake"] != nil)
+        #expect(model.answers["habitualWake"] == .string("23:30"))
+        began.continuation.finish()
+        release.continuation.finish()
+    }
+
     @Test func sleepDurationChecksClockBoundsAndCrossesMidnight() {
         #expect(SettingsBodyClockModel.sleepMinutes(bed: "23:00", wake: "07:00") == 480)
         #expect(SettingsBodyClockModel.sleepMinutes(bed: "24:00", wake: "07:00") == nil)
