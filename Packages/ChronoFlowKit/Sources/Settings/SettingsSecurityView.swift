@@ -157,7 +157,11 @@
                             .accessibilityIdentifier("settings.twoFactor.recoveryCode")
                     }
                     Button(t("Copy")) { copy(model.codes.joined(separator: "\n")) }
-                    ShareLink(item: model.codes.joined(separator: "\n")) { Text(t("Download")) }
+                    ShareLink(
+                        item: SettingsRecoveryDocument(
+                            text: model.codes.joined(separator: "\n"), name: t("Recovery codes") + ".txt"),
+                        preview: SharePreview(t("Recovery codes"))
+                    ) { Text(t("Download")) }
                 }
             }
             Section {

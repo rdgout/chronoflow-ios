@@ -1880,6 +1880,8 @@ Replay follow-up: use the existing NavigationStack with the bars hidden rather t
 
 Save-feedback follow-up: clear Profile's saved state when an observed account value replaces it, and bind Body clock's saved indicator to the latest section edit. A delayed earlier save cannot mark a newer invalid draft as saved; regression tests cover both cases.
 
+Recovery-code export follow-up: Download exports a named plain-text document through CoreTransferable and the system share sheet. It supplies data from memory without first writing a private temporary file; the user chooses where to save or share it.
+
 Deferrals: Reminders and notification permissions/delivery remain excluded. Optional timeline items remain excluded by the 5 Nov compact-timeline decision. Purchases, paywall checkout and cancellation remain excluded. Unbuilt destinations stay hidden in Release. Register host/UI suites in the 17h runner entries; no snapshot suites.
 
 ### Phase 18 (later, separate decision): guest wizard and claim
