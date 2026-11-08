@@ -133,7 +133,8 @@ nonisolated public func preparePlan(
         return PreparedDay(
             day: day,
             title: formatter.catalog.text(
-                dayLabelKey(day.labelPhase) ?? "", language: language, count: Double(day.postArrivalIndex ?? 0)),
+                dayLabelKey(day.labelPhase) ?? "", language: language,
+                arguments: ["count": String(day.postArrivalIndex ?? 0)], count: Double(day.postArrivalIndex ?? 0)),
             date: formatter.dayDateLabel(day, language: language),
             weekday: formatter.formatWeekday(day.labelDate, language: language),
             dayMonth: formatter.formatDayMonth(day.labelDate, language: language),
