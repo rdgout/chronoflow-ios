@@ -24,3 +24,9 @@ The unchanged 844 frames are compared even in record mode; only its two Welcome-
 154 baselines were recorded on 2026-11-06. PNG approval and side-by-side review against exported board frames remain open.
 `_design/frames/` has not been exported. Do not generate replacement board frames from app rendering.
 Re-check these snapshots if the physical-device D3 proof changes the layer tree.
+
+Test-speed decision (2026-11-06): the current per-model profiles are in
+`Packages/ChronoFlowKit/Tests/SnapshotSupport/profiles.json`. Full coverage stays on SE/17e/Duo/Pro Max;
+17/Air/18 Pro keep the compact selection. There are 118 retained references. Retained PNGs have
+not been re-recorded; visual acceptance and the SE fresh/warmed-process comparison remain open.
+Use the current commands at the top of `Docs/tooling.md`; earlier recording notes above are historical.

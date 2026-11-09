@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 import plistlib
 import re
+import runpy
 import struct
 import subprocess
 import unittest
@@ -43,9 +44,10 @@ class LaunchResourcesTests(unittest.TestCase):
         self.assertFalse((ROOT / "Packages/ChronoFlowKit/Tests/WelcomeTests/WelcomeSnapshotTests.swift").exists())
         self.assertTrue((source.parent / "__Snapshots__/README.md").exists())
         self.assertNotIn("SnapshotTesting", (source.parent / "WelcomeSnapshotReference.swift").read_text())
-        command = subprocess.check_output(["make", "-n", "snapshots"], cwd=ROOT, text=True)
+        runner = runpy.run_path(str(ROOT / "Scripts/launch-simulators.py"))
+        command = runner["selection"]("snapshots", "17e")
         for suite in ["AppTests/WelcomeSnapshotTests", "AppTests/WelcomeSnapshotGuardTests"]:
-            self.assertIn("-only-testing:" + suite, command)
+            self.assertIn(suite, command)
         project = (ROOT / "project.yml").read_text()
         self.assertIn("excludes: [__Snapshots__]", project)
 
@@ -53,7 +55,7 @@ class LaunchResourcesTests(unittest.TestCase):
         for target in ["test", "snapshots"]:
             with self.subTest(target=target):
                 command = subprocess.check_output(["make", "-n", target], cwd=ROOT, text=True)
-                self.assertIn("-testLanguage en -testRegion US", command)
+                self.assertIn("--devices 17e --mode " + target, command)
 
     def test_splash_baselines_cover_all_frames_at_each_devices_own_scale(self):
         directory = ROOT / "Packages/ChronoFlowKit/Tests/LaunchTests/__Snapshots__/LaunchSnapshotTests"
@@ -74,7 +76,10 @@ class LaunchResourcesTests(unittest.TestCase):
             self.assertEqual(data[:8], b"\x89PNG\r\n\x1a\n")
             self.assertEqual(struct.unpack(">II", data[16:24]), (int(width) * int(scale), int(height) * int(scale)))
         self.assertEqual(set(devices), {"iPhone14-6", "iPhone18-5", "iPhone18-3", "iPhone18-4", "iPhone19-2", "iPhone19-3", "iPhone19-4"})
+        catalog = json.loads((ROOT / "Packages/ChronoFlowKit/Tests/SnapshotSupport/profiles.json").read_text())
         for model, (_, coverage) in devices.items():
+            device = catalog["devices"][model.replace("-", ",", 1)]
+            frames = catalog["profiles"][device["profile"]]["launchFrames"]
             self.assertEqual(coverage, {(style, frame) for style in ["light", "dark"] for frame in frames}, model)
 
     def test_hosted_tests_reuse_the_apps_package_products(self):

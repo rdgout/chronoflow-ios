@@ -14,3 +14,9 @@ Snapshots and capture guards require the ChronoFlow app host. Baselines stay bes
 Final references cover large and xxLarge; an AX5/XXXL equality guard compares both frames and pixels
 with xxLarge in both languages and appearances on every D1c device. Missing baselines fail unless
 recording is explicitly enabled. Comparison uses decoded RGBA pixels, not PNG byte identity.
+
+Test-speed decision (2026-11-06): the current per-model profiles are in
+`Packages/ChronoFlowKit/Tests/SnapshotSupport/profiles.json`. Full coverage stays on SE/17e/Duo/Pro Max;
+17/Air/18 Pro keep the compact selection. There are 160 retained references. Retained PNGs have
+not been re-recorded; visual acceptance and the SE fresh/warmed-process comparison remain open.
+Use the current commands at the top of `Docs/tooling.md`; earlier recording notes above are historical.

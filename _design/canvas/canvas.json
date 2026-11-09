@@ -3130,6 +3130,15 @@
    "w": 669,
    "x": 749,
    "y": 16600
+  },
+  "AppIcon.dc.html": {
+   "h": 2040,
+   "is_interactive": true,
+   "radius": 24,
+   "title": "App icon · Default, Dark, Tinted, Liquid Glass, Android",
+   "w": 1400,
+   "x": -3360,
+   "y": 0
   }
  },
  "createdOnFiles": {
@@ -4333,7 +4342,8 @@
   "PlanListScrolled.dc.html",
   "PlanScrolledDark.dc.html",
   "PlanWideScrolled.dc.html",
-  "PlanWideDayMenu.dc.html"
+  "PlanWideDayMenu.dc.html",
+  "AppIcon.dc.html"
  ],
  "pages": [
   {

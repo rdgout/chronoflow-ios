@@ -1,7 +1,7 @@
 import CoreGraphics
 import XCTest
 
-extension LaunchSceneTests {
+nonisolated final class LaunchImageComparisonTests: XCTestCase {
     func testOnePointOffsetsAndWrongOpacityAreRejectedAtBothDisplayScales() {
         for scale in [2, 3] {
             let width = 80 * scale

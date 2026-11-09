@@ -6,9 +6,10 @@ XCODEGEN ?= /opt/homebrew/bin/xcodegen
 DESTINATION := platform=iOS Simulator,name=iPhone 17e,OS=27.2
 XCODEBUILD := xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData -onlyUsePackageVersionsFromResolvedFile
 SWIFT_PATHS := App AppTests AppUITests PerfUITests Packages/ChronoFlowKit/Package.swift Packages/ChronoFlowKit/Sources Packages/ChronoFlowKit/Tests $(wildcard Tools/*/Package.swift Tools/*/Sources Tools/*/Tests)
-UI_SUITES := DesignSystemTests LaunchTests WelcomeTests AppTests/WelcomeSnapshotTests AppTests/WelcomeSnapshotGuardTests
+SIM_CONCURRENCY ?= 4
+SIM_RUNNER := SIM_CONCURRENCY=$(SIM_CONCURRENCY) python3 -I Scripts/launch-simulators.py
 
-.PHONY: generate format lint test snapshots duo perf tokens fonts assets generators-check launch-resources-check check
+.PHONY: generate format lint test snapshots duo perf tokens fonts assets generators-check launch-resources-check check simulator-check matrix targeted
 
 generate:
 	$(XCODEGEN) generate
@@ -22,14 +23,22 @@ lint:
 	xcrun swift format lint --strict -r $(SWIFT_PATHS)
 
 test:
-	$(XCODEBUILD) -destination '$(DESTINATION)' -scheme ChronoFlow -testLanguage en -testRegion US $(addprefix -skip-testing:,$(UI_SUITES)) test
+	$(SIM_RUNNER) --no-generate --devices 17e --mode test
 
 snapshots:
-	$(XCODEBUILD) -destination '$(DESTINATION)' -scheme ChronoFlow -testLanguage en -testRegion US $(addprefix -only-testing:,$(UI_SUITES)) test
+	$(SIM_RUNNER) --no-generate --devices 17e --mode snapshots
+
+simulator-check:
+	$(SIM_RUNNER) --no-generate --devices 17e
 
 duo:
-	@destination="$$(python3 Scripts/duo-destination.py)" && \
-		$(XCODEBUILD) -destination "$$destination" -scheme ChronoFlow -testLanguage en -testRegion US -only-testing:AppTests -only-testing:AppUITests/WindowTests -only-testing:AppUITests/LaunchSceneTests -only-testing:AppUITests/ReadinessTests -only-testing:AppUITests/WelcomeTests -only-testing:WelcomeTests test
+	$(SIM_RUNNER) --no-generate --devices duo
+
+matrix:
+	$(SIM_RUNNER) --welcome
+
+targeted:
+	$(SIM_RUNNER) --no-generate --devices $(DEVICES) --only $(ONLY) $(if $(filter 1,$(REUSE_BUILD)),--reuse-build,)
 
 perf:
 	$(XCODEBUILD) -destination '$(DESTINATION)' -scheme Perf -configuration Release test
@@ -53,4 +62,4 @@ launch-resources-check:
 	python3 -I Tests/test_launch_resources.py
 	python3 -I Tests/test_launch_simulators.py
 
-check: lint generators-check launch-resources-check test snapshots
+check: lint generators-check launch-resources-check simulator-check

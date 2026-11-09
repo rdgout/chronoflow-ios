@@ -1,0 +1,23 @@
+{
+  "devices": {
+    "iPhone14,6": {"alias": "se", "profile": "full"},
+    "iPhone18,5": {"alias": "17e", "profile": "full"},
+    "iPhone18,3": {"alias": "17", "profile": "compact"},
+    "iPhone18,4": {"alias": "air", "profile": "compact"},
+    "iPhone19,2": {"alias": "18pro", "profile": "compact"},
+    "iPhone19,3": {"alias": "18promax", "profile": "full"},
+    "iPhone19,4": {"alias": "duo", "profile": "full"}
+  },
+  "profiles": {
+    "full": {
+      "dynamicType": ["xSmall", "small", "medium", "large", "xLarge", "xxLarge", "xxxLarge", "accessibility1", "accessibility2", "accessibility3", "accessibility4", "accessibility5"],
+      "introTimes": [2400, 2450, 2700, 3200, 3300],
+      "launchFrames": ["ready-0", "ready-700", "ready-1400", "ready-1700", "ready-1900", "slow-2600", "slow-4900", "welcome-1500", "welcome-1950", "welcome-2400", "reduceMotion-0"]
+    },
+    "compact": {
+      "dynamicType": ["large", "xxLarge"],
+      "introTimes": [2700, 3300],
+      "launchFrames": ["ready-0", "ready-1400", "slow-2600", "welcome-2400", "reduceMotion-0"]
+    }
+  }
+}

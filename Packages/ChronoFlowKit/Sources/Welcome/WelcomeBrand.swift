@@ -25,10 +25,12 @@ import SwiftUI
                         moonAnchorStore?.update($0)
                     }
                     .accessibilityHidden(true)
-                WelcomeText(WelcomeCopy.string("ChronoFlow", locale: locale), style: Typography.welcomeWordmark)
-                    .foregroundStyle(ColorToken.skyTitle.color)
-                    .accessibilityIdentifier("welcome.wordmark")
-                    .modifier(IntroItem(index: 0))
+                WelcomeText(
+                    WelcomeCopy.string("ChronoFlow", locale: locale), style: Typography.welcomeWordmark,
+                    color: .skyTitle
+                )
+                .accessibilityIdentifier("welcome.wordmark")
+                .modifier(IntroItem(index: 0))
             }
         }
     }

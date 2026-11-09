@@ -16,6 +16,7 @@ let package = Package(
         .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", .upToNextMinor(from: "1.19.0"))
     ],
     targets: [
+        .target(name: "SnapshotSupport", path: "Tests/SnapshotSupport", exclude: ["profiles.json"]),
         .target(
             name: "DesignSystem", resources: [.process("Resources")], swiftSettings: [.defaultIsolation(MainActor.self)]
         ),
@@ -40,7 +41,9 @@ let package = Package(
         .testTarget(name: "AppCoreTests", dependencies: ["AppCore"], swiftSettings: [.defaultIsolation(nil)]),
         .testTarget(
             name: "LaunchTests",
-            dependencies: ["Launch", .product(name: "SnapshotTesting", package: "swift-snapshot-testing")],
+            dependencies: [
+                "Launch", "SnapshotSupport", .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
+            ],
             exclude: ["__Snapshots__"],
             swiftSettings: [.defaultIsolation(MainActor.self)]
         ),

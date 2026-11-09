@@ -29,15 +29,19 @@ ChronoFlow is a jet-lag planner. It plans sleep, light and caffeine for a trip. 
 | Command | What it does |
 | --- | --- |
 | `make generate` | Generate `ChronoFlow.xcodeproj` from `project.yml` (the project file is not committed) |
-| `make check` | Lint, generator freshness and host tests, unit tests and snapshots; run before every commit |
+| `make check` | Lint, generators/host checks, one combined 17e test/snapshot run plus isolated Release logic; build each configuration once |
 | `make format` | Format owned Swift sources with the toolchain formatter |
 | `make lint` | Run strict Swift formatting lint on the host |
 | `make test` / `make snapshots` | Run the individual suites on the pinned iPhone 17e / iOS 27.2 |
-| `make duo` | Run window/UI checks on the first available iPhone Duo on its iPhone19-4 iOS 27.2 runtime; resolve its destination dynamically |
+| `make duo` | Run matrix suites on Duo, resolved by device type and its iPhone19-4 runtime |
+| `make matrix` | Full seven-device matrix; logic/Release only on 17e; SIM_CONCURRENCY=4 (1–4 configurable) |
+| `make targeted DEVICES="se duo" ONLY="AppTests/WelcomeSnapshotTests"` | Build once and run selected suites on these aliases; REUSE_BUILD=1 skips the build after an unchanged build-for-testing |
 | `make perf` | Run the Release `Perf` scheme (launch metric scaffold until Phase 7) |
 | `make tokens` / `make fonts` / `make assets` | Regenerate the committed tokens, static fonts and launch assets |
 | `make generators-check` | Verify generated outputs, fonts and raster assets and run their host tests; first run needs network (see `Docs/tooling.md`) |
 | `Scripts/ci.sh` | Run `make generate check` locally |
+
+Test-speed decision (2026-11-06): no matrix clean/reboot; uninstall for fresh app state. Results are under `build/test-results/<alias>/`. Per-model snapshot profiles keep full coverage on SE/17e/Duo/Pro Max and compact coverage on 17/Air/18 Pro. See `Docs/tooling.md` for recording and timing commands.
 
 Simulators: Xcode 27.2 with iOS 27.2 runtimes (iPhone SE 3rd gen, 17e, 17, Air, 18 Pro, 18 Pro Max, iPhone Duo). Duo runs on its own runtime (`com.apple.CoreSimulator.SimRuntime.iOS-27-2-iPhone19-4`, build 24B91016s); the regular runtime (24B8117) has no Duo device type. Use `make duo`, which resolves by device type and runtime instead of name/OS or a fixed UDID. No iOS 17 simulator runtime is downloadable for Xcode 27.
 

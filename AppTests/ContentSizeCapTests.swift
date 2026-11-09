@@ -8,19 +8,6 @@ import XCTest
 
 nonisolated final class ContentSizeCapTests: XCTestCase {
     @MainActor
-    func testEveryLargerCategoryClampsAndSmallerCategoriesArePreserved() {
-        for category: UIContentSizeCategory in [
-            .extraExtraExtraLarge, .accessibilityMedium, .accessibilityLarge, .accessibilityExtraLarge,
-            .accessibilityExtraExtraLarge, .accessibilityExtraExtraExtraLarge,
-        ] {
-            XCTAssertEqual(ContentSizeCap.clamp(category), .extraExtraLarge)
-        }
-        for category: UIContentSizeCategory in [.extraSmall, .small, .medium, .large, .extraLarge, .extraExtraLarge] {
-            XCTAssertEqual(ContentSizeCap.clamp(category), category)
-        }
-    }
-
-    @MainActor
     func testAX5FontsFallbackRowAndRenderedStatusEqualXXLarge() async throws {
         try await FontRegistry.register()
         let normal = UITraitCollection(preferredContentSizeCategory: .large)
@@ -85,5 +72,20 @@ nonisolated final class ContentSizeCapTests: XCTestCase {
         }
         XCTAssertEqual(try XCTUnwrap(delegate.window).maximumContentSizeCategory, .extraExtraLarge)
         XCTAssertEqual(try XCTUnwrap(delegate.overlayWindow).maximumContentSizeCategory, .extraExtraLarge)
+    }
+}
+
+nonisolated final class ContentSizeCapLogicTests: XCTestCase {
+    @MainActor
+    func testEveryLargerCategoryClampsAndSmallerCategoriesArePreserved() {
+        for category: UIContentSizeCategory in [
+            .extraExtraExtraLarge, .accessibilityMedium, .accessibilityLarge, .accessibilityExtraLarge,
+            .accessibilityExtraExtraLarge, .accessibilityExtraExtraExtraLarge,
+        ] {
+            XCTAssertEqual(ContentSizeCap.clamp(category), .extraExtraLarge)
+        }
+        for category: UIContentSizeCategory in [.extraSmall, .small, .medium, .large, .extraLarge, .extraExtraLarge] {
+            XCTAssertEqual(ContentSizeCap.clamp(category), category)
+        }
     }
 }

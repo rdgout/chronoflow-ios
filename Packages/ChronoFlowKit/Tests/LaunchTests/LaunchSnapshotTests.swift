@@ -1,6 +1,7 @@
 #if canImport(UIKit)
     import AppCore
     import DesignSystem
+    import SnapshotSupport
     import SnapshotTesting
     import Testing
     import UIKit
@@ -16,6 +17,7 @@
             let insets = host.insets
             let model = ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] ?? UIDevice.current.model
             let device = "\(model)-\(Int(size.width))x\(Int(size.height))-\(Int(scale))x"
+            let profile = try SnapshotProfile.current()
             let record = ProcessInfo.processInfo.environment["SNAPSHOT_RECORD"] == "1"
             for style in [UIUserInterfaceStyle.light, .dark] {
                 let traits = UITraitCollection {
@@ -23,7 +25,7 @@
                     $0.displayScale = scale
                     $0.preferredContentSizeCategory = .large
                 }
-                for frame in LaunchSnapshotCase.all {
+                for frame in LaunchSnapshotCase.all.filter({ profile.launchFrames.contains($0.name) }) {
                     let scene = LaunchScene(size: size, traits: traits, reduceMotion: frame.mode == .reduceMotion)
                     if frame.mode == .slow { try prepareEnglishStatus(scene) }
                     scene.apply(
@@ -63,6 +65,37 @@
             scene.statusLine.prepareText(string, compatibleWith: scene.traits)
             let text = try #require(scene.statusLine.text?.string as? NSAttributedString)
             #expect(text.string == string)
+        }
+
+        @Test func localizedStatusAtDefaultAndCapFitsTheRunningWindow() async throws {
+            try await FontRegistry.register()
+            let host = SnapshotWindow()
+            defer { host.close() }
+            for style in [UIUserInterfaceStyle.light, .dark] {
+                for category in [UIContentSizeCategory.large, .extraExtraLarge] {
+                    for language in ["en", "nl"] {
+                        let path = try #require(Bundle.module.path(forResource: language, ofType: "lproj"))
+                        let bundle = try #require(Bundle(path: path))
+                        let traits = host.window.traitCollection.modifyingTraits {
+                            $0.userInterfaceStyle = style
+                            $0.preferredContentSizeCategory = category
+                            $0.displayScale = host.window.screen.scale
+                        }
+                        let scene = LaunchScene(size: host.window.bounds.size, traits: traits, reduceMotion: false)
+                        let string = bundle.localizedString(forKey: "Getting your plan ready", value: nil, table: nil)
+                        #expect(string == (language == "nl" ? "Je plan wordt klaargezet" : "Getting your plan ready"))
+                        scene.statusLine.prepareText(string, compatibleWith: traits)
+                        let text = try #require(scene.statusLine.text)
+                        let ink = text.frame.union(scene.statusLine.replicator.frame).offsetBy(
+                            dx: scene.statusLine.frame.minX, dy: scene.statusLine.frame.minY)
+                        let insets = host.insets
+                        let safe = CGRect(
+                            x: insets.left, y: 0, width: scene.size.width - insets.left - insets.right,
+                            height: scene.size.height)
+                        #expect(safe.contains(ink), "\(language), \(category), \(ink) outside \(safe)")
+                    }
+                }
+            }
         }
 
         @Test func settledInkClearsTheSunAndPathApex() async throws {

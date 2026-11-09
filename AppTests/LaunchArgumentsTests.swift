@@ -7,27 +7,6 @@ import XCTest
 
 nonisolated final class LaunchArgumentsTests: XCTestCase {
     @MainActor
-    func testDefaultsAndInvalidValues() {
-        for arguments in [
-            [], ["-cf.freezeAt"], ["-cf.freezeAt", "nan"], ["-cf.freezeAt", "-1"],
-            ["-cf.freezeAt", "inf"], ["-cf.freezeAt", "60001"], ["-cf.mode", "unknown"],
-        ] {
-            let parsed = LaunchArguments(arguments)
-            XCTAssertNil(parsed.freezeAt)
-            XCTAssertNil(parsed.mode)
-            XCTAssertEqual(parsed.readyAt, .milliseconds(4600))
-        }
-        let parsed = LaunchArguments([
-            "-cf.freezeAt", "700", "-cf.mode", "slow", "-cf.readyAt", "3500",
-            "-cf.mainThreadStall", "500", "-cf.reduceMotion",
-        ])
-        XCTAssertEqual(parsed.freezeAt, .milliseconds(700))
-        XCTAssertEqual(parsed.mainThreadStall, .milliseconds(500))
-        XCTAssertEqual(parsed.readyAt, .milliseconds(3500))
-        XCTAssertTrue(parsed.reduceMotion)
-    }
-
-    @MainActor
     func testWelcomeFallbackUsesTheCurrentTextSizeAndAllSafeInsets() throws {
         let normal = LaunchArguments.fallbackRowHeight(
             compatibleWith: UITraitCollection {
@@ -68,5 +47,28 @@ nonisolated final class LaunchArgumentsTests: XCTestCase {
             }
             XCTAssertEqual(actual, expected)
         }
+    }
+}
+
+nonisolated final class LaunchArgumentLogicTests: XCTestCase {
+    @MainActor
+    func testDefaultsAndInvalidValues() {
+        for arguments in [
+            [], ["-cf.freezeAt"], ["-cf.freezeAt", "nan"], ["-cf.freezeAt", "-1"],
+            ["-cf.freezeAt", "inf"], ["-cf.freezeAt", "60001"], ["-cf.mode", "unknown"],
+        ] {
+            let parsed = LaunchArguments(arguments)
+            XCTAssertNil(parsed.freezeAt)
+            XCTAssertNil(parsed.mode)
+            XCTAssertEqual(parsed.readyAt, .milliseconds(4600))
+        }
+        let parsed = LaunchArguments([
+            "-cf.freezeAt", "700", "-cf.mode", "slow", "-cf.readyAt", "3500",
+            "-cf.mainThreadStall", "500", "-cf.reduceMotion",
+        ])
+        XCTAssertEqual(parsed.freezeAt, .milliseconds(700))
+        XCTAssertEqual(parsed.mainThreadStall, .milliseconds(500))
+        XCTAssertEqual(parsed.readyAt, .milliseconds(3500))
+        XCTAssertTrue(parsed.reduceMotion)
     }
 }
