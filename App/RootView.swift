@@ -60,6 +60,8 @@ struct RootView: View {
                     guest: { navigator.navigate(to: .guestWizard) })
             } else if route == .today {
                 AppTabs(native: authServices?.nativeSession)
+            } else if route == .terms, let native = authServices?.nativeSession {
+                TermsDestination(native: native).id(navigator.revision)
             } else if route == .walkthrough, let native = authServices?.nativeSession {
                 WalkthroughDestination(native: native)
                     .environment(\.forcesReduceMotion, forcesReduceMotion)

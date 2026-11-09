@@ -38,7 +38,8 @@ nonisolated struct AppServices: Sendable {
                     store: FileMockStateStore(applicationSupport: applicationSupport),
                     seed: authTestSeed,
                     offline: authTest.offline,
-                    mutationsOffline: authTest.settingsPending || authTest.walkthroughPending, bearer: bearer)
+                    mutationsOffline: authTest.settingsPending || authTest.walkthroughPending || authTest.termsPending,
+                    bearer: bearer)
             }
         #endif
         return MockDataSource(
@@ -85,7 +86,9 @@ nonisolated struct AppServices: Sendable {
                 ? MockAppSeed.make(now: Date(), walkthroughSeen: true, includeTimelinePerformanceTrips: true) : nil
             authTest = requestedAuthTest
             authTestSeed = try authTest.map {
-                try MockAppSeed.make(now: Date(), unverified: $0.unverified, walkthroughSeen: $0.walkthroughSeen)
+                try MockAppSeed.make(
+                    now: Date(), unverified: $0.unverified, walkthroughSeen: $0.walkthroughSeen,
+                    termsPending: $0.termsPending)
             }
         #endif
     }

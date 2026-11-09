@@ -51,5 +51,12 @@ public func assetOutputs(root: URL) throws -> [String: Data] {
         moon.swiftSource, root: root)
     outputs.merge(try authGlyphOutputs(root: root)) { _, new in new }
     outputs.merge(try appIconOutputs(root: root)) { _, new in new }
+    let terms = "Packages/ChronoFlowKit/Sources/Settings/Resources/Terms.xcassets"
+    outputs["\(terms)/Contents.json"] = try jsonData(["info": info])
+    outputs["\(terms)/TermsBrand.imageset/Contents.json"] = try jsonData([
+        "info": info, "images": [["idiom": "universal", "filename": "TermsBrand.png"]],
+    ])
+    outputs["\(terms)/TermsBrand.imageset/TermsBrand.png"] = try Data(
+        contentsOf: root.appending(path: "_design/icon/ios/AppIcon-default.png"))
     return outputs
 }

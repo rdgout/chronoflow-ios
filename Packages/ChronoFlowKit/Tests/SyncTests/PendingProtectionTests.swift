@@ -16,6 +16,9 @@ import Testing
                 .settings(section: .preferences, patch: JSONObject(["time_format": .string("12")])), index: 1)
             _ = try await store.enqueue(.profile(ProfileChange(name: "Edited", email: "demo@example.com")), index: 2)
             _ = try await store.enqueue(.walkthrough, index: 3)
+            try await SettingsRepository(database: store.database).upsert(
+                SettingsRecord(
+                    section: "policies", value: .encoding(AccountPolicies(termsVersion: "new", privacyVersion: "1"))))
             _ = try await store.enqueue(.policies(version: "new"), index: 4)
             _ = try await store.enqueue(.checkOff(check()), index: 5)
         })

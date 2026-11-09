@@ -11,6 +11,7 @@
 
         public static func make(
             now: Date, unverified: Bool = false, walkthroughSeen: Bool = false,
+            termsPending: Bool = false,
             includeTimelinePerformanceTrips: Bool = false
         ) throws
             -> MockServerState
@@ -32,6 +33,11 @@
                 language: .en, now: now)
             snapshot.hasVerifiedEmail = !unverified
             snapshot.settings = fixtures.settings
+            if termsPending {
+                snapshot.settings.policies = AccountPolicies(
+                    termsVersion: fixtures.settings.policies.termsVersion,
+                    privacyVersion: fixtures.settings.policies.privacyVersion)
+            }
             snapshot.readiness = MockSettings.readiness(fixtures.settings.bodyClock)
             snapshot.billing["checkout"] = .null
             snapshot.security = JSONObject([

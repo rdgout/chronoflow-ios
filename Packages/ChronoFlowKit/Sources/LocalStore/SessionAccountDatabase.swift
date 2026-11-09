@@ -41,8 +41,7 @@ public actor SessionAccountDatabase: SessionAccountStore {
                 try account.walkthroughSeen
                 || StoreApplication.pending(db).contains { $0.kind == "walkthrough" }
             try record.save(db)
-            let data = try JSONEncoder().encode(account.policies)
-            try SettingsRecord(section: "policies", value: JSONDocument(String(decoding: data, as: UTF8.self))).save(db)
+            try StoreApplication.setting("policies", value: .encoding(account.policies), db: db)
         }
     }
 

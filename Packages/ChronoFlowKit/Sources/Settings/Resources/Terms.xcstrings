@@ -1,0 +1,262 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Accept and continue": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accept and continue"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Akkoord en verder"
+          }
+        }
+      }
+    },
+    "Before you continue": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Before you continue"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voordat je verdergaat"
+          }
+        }
+      }
+    },
+    "Check your connection and try again. You can keep reading the policy meanwhile.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check your connection and try again. You can keep reading the policy meanwhile."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controleer je verbinding en probeer het opnieuw. Je kunt de voorwaarden intussen blijven lezen."
+          }
+        }
+      }
+    },
+    "Couldn't save your answer.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't save your answer."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je antwoord kon niet worden opgeslagen."
+          }
+        }
+      }
+    },
+    "Read the full terms and privacy policy": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read the full terms and privacy policy"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lees de volledige voorwaarden en het privacybeleid"
+          }
+        }
+      }
+    },
+    "Sign out": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign out"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uitloggen"
+          }
+        }
+      }
+    },
+    "Something went wrong": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Something went wrong"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er ging iets mis"
+          }
+        }
+      }
+    },
+    "The new terms and privacy policy apply from [effective date]. Please accept them to keep using ChronoFlow.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The new terms and privacy policy apply from [effective date]. Please accept them to keep using ChronoFlow."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De nieuwe voorwaarden en het privacybeleid gelden vanaf [ingangsdatum]. Accepteer ze om ChronoFlow te blijven gebruiken."
+          }
+        }
+      }
+    },
+    "Try again": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try again"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opnieuw proberen"
+          }
+        }
+      }
+    },
+    "We've updated our terms": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We've updated our terms"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We hebben onze voorwaarden bijgewerkt"
+          }
+        }
+      }
+    },
+    "What changed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What changed"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wat is er veranderd"
+          }
+        }
+      }
+    },
+    "Your trips stay saved if you sign out.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your trips stay saved if you sign out."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je reizen blijven bewaard als je uitlogt."
+          }
+        }
+      }
+    },
+    "[Change one]": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Change one]"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Wijziging één]"
+          }
+        }
+      }
+    },
+    "[Change three]": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Change three]"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Wijziging drie]"
+          }
+        }
+      }
+    },
+    "[Change two]": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Change two]"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Wijziging twee]"
+          }
+        }
+      }
+    },
+    "[One sentence on what changes for the user.]": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[One sentence on what changes for the user.]"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Eén zin over wat er voor de gebruiker verandert.]"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

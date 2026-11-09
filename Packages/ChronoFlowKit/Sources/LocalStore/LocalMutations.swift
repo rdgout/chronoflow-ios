@@ -89,11 +89,16 @@ extension OutboxRepository {
                 try SettingsRecord(section: section.rawValue, value: .encoding(value)).save(db)
                 if section == .bodyClock { try SettingsRecord.deleteOne(db, key: "readiness") }
             case .policies(let version):
-                var value =
-                    try SettingsRecord.fetchOne(db, key: "policies")?.value.decode(JSONObject.self) ?? JSONObject()
+                guard var value = try SettingsRecord.fetchOne(db, key: "policies")?.value.decode(JSONObject.self),
+                    value["termsVersion"]?.string == version, !version.isEmpty
+                else { throw LocalMutationFailure.invalidPayload }
+                let pending = try StoreApplication.pending(db).first(where: {
+                    $0.dependency == "settings:policies" && (try? $0.change) == .policies(version: version)
+                })
                 value["acceptedTermsVersion"] = .string(version)
-                value["acceptedTermsAt"] = .string(createdAt)
+                value["acceptedTermsAt"] = .string(pending?.createdAt ?? createdAt)
                 try SettingsRecord(section: "policies", value: .encoding(value)).save(db)
+                if let pending { return pending }
             case .profile(let profile):
                 guard profile.email.lowercased() == account.email.lowercased() else {
                     throw LocalMutationFailure.onlineOnly
