@@ -44,6 +44,13 @@ import XCTest
                 .environment(\.dynamicTypeSize, ContentSizeCap.clamp(DynamicTypeSize(category) ?? .large))
                 .environment(\.displayScale, scale)
                 .environment(\.colorScheme, style == .dark ? .dark : .light)
+                .environment(
+                    \.planPageSafeBounds,
+                    CGRect(
+                        x: insets.left, y: insets.top,
+                        width: window.bounds.width - insets.left - insets.right,
+                        height: window.bounds.height - insets.top - insets.bottom)
+                )
                 .safeAreaInset(edge: .top, spacing: 0) { Color.clear.frame(height: insets.top) }
                 .safeAreaInset(edge: .bottom, spacing: 0) { Color.clear.frame(height: insets.bottom) }
                 .safeAreaInset(edge: .leading, spacing: 0) { Color.clear.frame(width: insets.left) }

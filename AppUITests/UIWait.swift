@@ -3,6 +3,41 @@ import XCTest
 #if os(iOS)
     @MainActor
     enum UIWait {
+        static func accessibilityAudit(
+            in app: XCUIApplication, types: XCUIAccessibilityAuditType, timeout: TimeInterval,
+            handler: @escaping (XCUIAccessibilityAuditIssue) throws -> Bool
+        ) throws {
+            let deadline = AuditDeadline()
+            let message = "Native Plan accessibility audit exceeded \(timeout)s; terminated the app to unblock XCTest"
+            // XCTest's synchronous audit pumps the run loop and has no cancellation/timeout argument.
+            let timer = Timer(timeInterval: timeout, repeats: false) { _ in
+                MainActor.assumeIsolated {
+                    deadline.expired = true
+                    print(message)
+                    app.terminate()
+                }
+            }
+            RunLoop.main.add(timer, forMode: .common)
+            defer { timer.invalidate() }
+            try XCTContext.runActivity(named: "Native Plan accessibility audit (\(timeout)s deadline)") { _ in
+                do {
+                    try app.performAccessibilityAudit(for: types, handler)
+                } catch {
+                    if deadline.expired { throw timeoutError(message) }
+                    throw error
+                }
+                if deadline.expired { throw timeoutError(message) }
+            }
+        }
+
+        private final class AuditDeadline {
+            var expired = false
+        }
+
+        private static func timeoutError(_ message: String) -> NSError {
+            NSError(domain: "UIWait", code: 1, userInfo: [NSLocalizedDescriptionKey: message])
+        }
+
         static func stableFrames(_ elements: [XCUIElement], timeout: TimeInterval = 60) throws -> [CGRect] {
             try waitForFrames(elements, timeout: timeout, isReady: { _ in true }, message: "UI frames did not settle")
         }

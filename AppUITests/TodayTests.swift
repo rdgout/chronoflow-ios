@@ -1,11 +1,12 @@
 import XCTest
 
-@MainActor func launchPlanAccount(presentLegend: Bool = false) -> XCUIApplication {
+@MainActor func launchPlanAccount(presentLegend: Bool = false, freezePlanClock: Bool = false) -> XCUIApplication {
     let app = XCUIApplication()
     app.launchArguments = AuthUIFlow.arguments()
     app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
     app.launchEnvironment["CF_AUTH_TEST_WALKTHROUGH_SEEN"] = "1"
     if presentLegend { app.launchEnvironment["CF_PLAN_TEST_SHEET"] = "legend" }
+    if freezePlanClock { app.launchEnvironment["CF_PLAN_TEST_FREEZE_CLOCK"] = "1" }
     app.launch()
     AuthUIFlow.openSignIn(app)
     AuthUIFlow.signIn(app, email: MockScenarioValues.demoEmail)
@@ -38,9 +39,11 @@ nonisolated final class StepSheetTests: XCTestCase {
         let row = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "today.step.actionable."))
             .firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 12))
+        let identifier = row.identifier
         AuthUIFlow.reveal(row, in: app, scroll: app.scrollViews["today.screen"])
         row.tap()
         let done = app.buttons["step.done"]
+        XCTAssertTrue(app.scrollViews["step.sheet"].waitForExistence(timeout: 4), app.debugDescription)
         XCTAssertTrue(done.waitForExistence(timeout: 4))
         AuthUIFlow.reveal(done, in: app, scroll: app.scrollViews["step.sheet"])
         done.tap()
@@ -50,6 +53,17 @@ nonisolated final class StepSheetTests: XCTestCase {
         let skip = app.buttons["step.skip"]
         XCTAssertTrue(skip.waitForExistence(timeout: 6))
         skip.tap()
+        XCTAssertTrue(undo.waitForExistence(timeout: 6))
+        let sheet = app.scrollViews["step.sheet"]
+        for _ in 0..<4 where sheet.exists {
+            sheet.swipeDown()
+            if sheet.waitForNonExistence(timeout: 1) { break }
+        }
+        XCTAssertTrue(sheet.waitForNonExistence(timeout: 4), app.debugDescription)
+        let reopened = app.buttons[identifier]
+        AuthUIFlow.reveal(reopened, in: app, scroll: app.scrollViews["today.screen"])
+        reopened.coordinate(withNormalizedOffset: CGVector(dx: 0.99, dy: 0.5)).tap()
+        XCTAssertTrue(sheet.waitForExistence(timeout: 4), app.debugDescription)
         XCTAssertTrue(undo.waitForExistence(timeout: 6))
     }
 }

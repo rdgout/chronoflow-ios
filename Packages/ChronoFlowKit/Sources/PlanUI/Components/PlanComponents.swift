@@ -92,13 +92,79 @@
     }
 
     struct PlanBadge: View {
+        enum Variant { case dawn, secondary, outline }
         let text: String
-        var active = false
+        var variant: Variant
+        init(text: String, active: Bool = false) {
+            self.text = text
+            variant = active ? .dawn : .secondary
+        }
+        init(text: String, variant: Variant) {
+            self.text = text
+            self.variant = variant
+        }
         var body: some View {
-            Text(text).font(Typography.screenMeta.font).padding(.horizontal, PlanUITokens.space2)
+            Text(text).planTextStyle(Typography.screenMeta, color: foreground).padding(.horizontal, PlanUITokens.space2)
                 .padding(.vertical, AuthTokens.borderWidth)
-                .foregroundStyle((active ? ColorToken.dawnForeground : .foreground).color)
-                .background((active ? ColorToken.dawn : .secondary).color, in: Capsule())
+                .foregroundStyle(foreground.color)
+                .background {
+                    if variant != .outline {
+                        Capsule().fill((variant == .dawn ? ColorToken.dawn : .secondary).color)
+                    }
+                }
+                .overlay {
+                    if variant == .outline {
+                        Capsule().strokeBorder(ColorToken.border.color, lineWidth: AuthTokens.borderWidth)
+                    }
+                }
+        }
+        private var foreground: ColorToken {
+            switch variant {
+            case .dawn: .dawnForeground
+            case .secondary: .secondaryForeground
+            case .outline: .foreground
+            }
+        }
+    }
+
+    struct PriorityTag: View {
+        let text: String
+        var body: some View {
+            Text(text).planTextStyle(Typography.screenPriorityTag)
+                .padding(.horizontal, PlanUITokens.space1 + PlanUITokens.space1 / 2)
+                .padding(.vertical, AuthTokens.borderWidth)
+                .background(ColorToken.background.color.opacity(PlanUITokens.priorityTagOpacity), in: Capsule())
+                .overlay {
+                    Capsule().strokeBorder(
+                        ColorToken.foreground.color.opacity(PlanUITokens.priorityTagOpacity),
+                        lineWidth: AuthTokens.borderWidth)
+                }
+        }
+    }
+
+    struct PrioritySample: View {
+        let priority: Priority
+        var body: some View {
+            let shape = RoundedRectangle(cornerRadius: PlanUITokens.radiusLg)
+            shape.fill((priority == .info ? ColorToken.muted : .catSleep).color)
+                .overlay {
+                    shape.strokeBorder(
+                        priority == .optional
+                            ? ColorToken.foreground.color.opacity(PlanUITokens.priorityOptionalOpacity)
+                            : ColorToken.border.color,
+                        style: StrokeStyle(
+                            lineWidth: AuthTokens.borderWidth,
+                            dash: priority == .optional ? [PlanUITokens.space1] : []))
+                }
+                .overlay(alignment: .leading) {
+                    if priority == .core {
+                        Rectangle().fill(ColorToken.foreground.color.opacity(PlanUITokens.priorityCoreOpacity))
+                            .frame(width: PlanUITokens.space1)
+                    }
+                }
+                .clipShape(shape).saturation(priority == .info ? PlanUITokens.priorityInfoSaturation : 1)
+                .frame(width: PlanUITokens.prioritySampleWidth, height: PlanUITokens.prioritySampleHeight)
+                .accessibilityHidden(true)
         }
     }
 
@@ -112,7 +178,7 @@
                             style: StrokeStyle(lineWidth: AuthTokens.focusWidth, dash: [PlanUITokens.space1]))
                 }
         }
-        func planCard(active: Bool = false) -> some View {
+        func planCard(active: Bool = false, completed: Bool = false) -> some View {
             padding(PlanUITokens.space5)
                 .background(ColorToken.card.color, in: RoundedRectangle(cornerRadius: PlanUITokens.radius3Xl))
                 .overlay {
@@ -121,6 +187,7 @@
                             (active ? ColorToken.dawn : .border).color,
                             lineWidth: active ? AuthTokens.focusWidth : AuthTokens.borderWidth)
                 }
+                .opacity(completed ? PlanUITokens.completedCardOpacity : 1)
         }
     }
 #endif

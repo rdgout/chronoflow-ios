@@ -8,13 +8,22 @@ import UIKit
     let insets: MoonTarget.Insets?
     private weak var previousKeyWindow: UIWindow?
 
-    init(size: CGSize? = nil, insets: MoonTarget.Insets? = nil, scale: CGFloat? = nil) {
+    init(
+        size: CGSize? = nil, insets: MoonTarget.Insets? = nil, scale: CGFloat? = nil,
+        nativeSafeArea: Bool = false
+    ) {
         let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
         guard let scene = scenes.first(where: { $0.activationState == .foregroundActive }) ?? scenes.first else {
             preconditionFailure("Snapshots require an app-hosted window scene")
         }
         previousKeyWindow = scene.keyWindow
-        window = UIWindow(windowScene: scene)
+        if nativeSafeArea, let insets {
+            window = ProfileSnapshotWindow(
+                scene: scene,
+                insets: UIEdgeInsets(top: insets.top, left: insets.left, bottom: insets.bottom, right: insets.right))
+        } else {
+            window = UIWindow(windowScene: scene)
+        }
         window.frame = CGRect(origin: .zero, size: size ?? scene.coordinateSpace.bounds.size)
         self.scale = scale ?? scene.screen.scale
         self.insets = insets
@@ -38,4 +47,18 @@ import UIKit
         window.rootViewController = nil
         previousKeyWindow?.makeKey()
     }
+}
+
+@MainActor private final class ProfileSnapshotWindow: UIWindow {
+    private let profileInsets: UIEdgeInsets
+
+    init(scene: UIWindowScene, insets: UIEdgeInsets) {
+        profileInsets = insets
+        super.init(windowScene: scene)
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    // UIKit containers must inherit the profile's safe area instead of the executing simulator's notch.
+    override var safeAreaInsets: UIEdgeInsets { profileInsets }
 }

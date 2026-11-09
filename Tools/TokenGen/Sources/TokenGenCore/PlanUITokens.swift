@@ -21,7 +21,8 @@ func planUITokens(root: URL) throws -> Data {
         try JSONSerialization.jsonObject(
             with: Data(contentsOf: root.appending(path: "Tools/TokenGen/PlanUI.source.json"))) as! [String: Any]
     for key in patterns.keys.sorted() where key != "source" {
-        code += "public static var \(key): \(key.hasSuffix("Opacity") ? "Double" : "CGFloat") { \(patterns[key]!) }\n"
+        code +=
+            "public static var \(key): \(["Opacity", "Ratio", "Saturation"].contains(where: key.hasSuffix) ? "Double" : "CGFloat") { \(patterns[key]!) }\n"
     }
     code += "}\nextension Typography {\n"
     for group in (json["type"] as! [String: Any])["groups"] as! [[String: Any]] {

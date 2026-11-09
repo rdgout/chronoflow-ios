@@ -29,7 +29,7 @@ MATRIX = {
     "duo": ("iPhone Duo", "iPhone-Duo", DUO_RUNTIME),
 }
 # Each suite has one scheduling policy. Fixed geometry fixtures are logic; running-window/scale assertions are matrix.
-SUITES = {'AppTests': {'logic': ('StepSheetLayoutTests', 'TodayControlTests', 'TodayLayoutTests', 'AuthControlTests', 'AuthLayoutTests', 'AuthSnapshotGuardTests', 'AuthSubtitleContrastTests', 'TwoFactorControlTests', 'TwoFactorLayoutTests', 'ForgotPasswordControlTests', 'ForgotPasswordLayoutTests', 'ResetPasswordControlTests', 'ResetPasswordLayoutTests', 'SignUpControlTests', 'SignUpLayoutTests', 'VerifyEmailControlTests', 'VerifyEmailLayoutTests', 'AuthUniversalLinkTests', 'LaunchArgumentLogicTests',
+SUITES = {'AppTests': {'logic': ('TripsLayoutTests', 'StepSheetLayoutTests', 'TodayControlTests', 'TodayLayoutTests', 'AuthControlTests', 'AuthLayoutTests', 'AuthSnapshotGuardTests', 'AuthSubtitleContrastTests', 'TwoFactorControlTests', 'TwoFactorLayoutTests', 'ForgotPasswordControlTests', 'ForgotPasswordLayoutTests', 'ResetPasswordControlTests', 'ResetPasswordLayoutTests', 'SignUpControlTests', 'SignUpLayoutTests', 'VerifyEmailControlTests', 'VerifyEmailLayoutTests', 'AuthUniversalLinkTests', 'LaunchArgumentLogicTests',
                         'RasterPixelLogicTests',
                         'ContentSizeCapLogicTests',
                         'AppIconTests',
@@ -56,11 +56,11 @@ SUITES = {'AppTests': {'logic': ('StepSheetLayoutTests', 'TodayControlTests', 'T
                          'WelcomeHandOverTests',
                          'LaunchImageMutationTests',
                          'SnapshotContainerTests'),
-              'profiles': ('AppTabsSnapshotTests', 'StepSheetSnapshotTests', 'TodaySnapshotTests', 'TodayRowSnapshotTests', 'LaunchSnapshotTests', 'WelcomeSnapshotTests', 'AuthSnapshotTests', 'TwoFactorSnapshotTests', 'ForgotPasswordSnapshotTests', 'ResetPasswordSnapshotTests', 'SignUpSnapshotTests', 'VerifyEmailSnapshotTests'),
+              'profiles': ('StepSheetSnapshotTests', 'TodaySnapshotTests', 'TodayRowSnapshotTests', 'TripsSnapshotTests', 'LaunchSnapshotTests', 'WelcomeSnapshotTests', 'AuthSnapshotTests', 'TwoFactorSnapshotTests', 'ForgotPasswordSnapshotTests', 'ResetPasswordSnapshotTests', 'SignUpSnapshotTests', 'VerifyEmailSnapshotTests'),
               'reference': ('LaunchFrameParityTests', 'LaunchStoryboardTests'),
               'release': ('ReleaseReadinessTests',)},
  'RenderTests': {'profiles': ('WelcomeRenderingTests',)},
- 'AppUITests': {'logic': ('AppTabsTests', 'TodayTests', 'StepSheetTests', 'LegendTests', 'PlanAuditTests', 'SignInTests', 'TwoFactorTests', 'ForgotPasswordTests', 'ResetPasswordTests', 'SignUpTests', 'VerifyEmailTests', 'AccountRecoveryTests', 'AuthSessionTests', 'AuthAuditTests', 'ReadinessTests', 'WelcomeLogicTests'),
+ 'AppUITests': {'logic': ('TripsTests', 'AppTabsTests', 'TodayTests', 'StepSheetTests', 'LegendTests', 'PlanAuditTests', 'SignInTests', 'TwoFactorTests', 'ForgotPasswordTests', 'ResetPasswordTests', 'SignUpTests', 'VerifyEmailTests', 'AccountRecoveryTests', 'AuthSessionTests', 'AuthAuditTests', 'ReadinessTests', 'WelcomeLogicTests'),
                 'reference': ('LaunchToWelcomeTests', 'LaunchSceneTests', 'LaunchSceneDarkTests'),
                 'matrix': ('SignInKeyboardTests', 'TwoFactorKeyboardTests', 'ForgotPasswordKeyboardTests', 'WelcomeTests', 'WelcomeEnglishAccessibilityTests', 'WelcomeDutchAccessibilityTests')},
  'AppCoreTests': {'host': ('AuthLinkTests', 'CatalogTests',
@@ -78,7 +78,7 @@ SUITES = {'AppTests': {'logic': ('StepSheetLayoutTests', 'TodayControlTests', 'T
                            'StoredDataReadinessTests',
                            'DeviceIdentityTests',
                            'SmokeTests')},
- 'DesignSystemTests': {'logic': ('AuthBoardContrastTests', 'ExactLineTextLayoutTests', 'PrimitiveTests', 'SmokeTests', 'TypographyTests'),
+ 'DesignSystemTests': {'logic': ('PlanPageGeometryTests', 'PlanLayoutEvidenceTests', 'AuthBoardContrastTests', 'ExactLineTextLayoutTests', 'PrimitiveTests', 'SmokeTests', 'TypographyTests'),
                        'matrix': ('LaunchImagesTests',)},
  'LaunchTests': {'logic': ('FlightPathTests',
                            'LaunchGlowTests',
@@ -108,7 +108,7 @@ SUITES = {'AppTests': {'logic': ('StepSheetLayoutTests', 'TodayControlTests', 'T
                               'DataSourceParityTests')},
  'TripWizardTests': {'host': ('TripGenerationTests', 'TripGenerationRecoveryTests')},
  'PlanCoreTests': {'host': ('CopyTests', 'TimelineTests', 'LabelTests')},
- 'PlanUITests': {'host': ('ModelTests',)},
+ 'PlanUITests': {'host': ('ModelTests', 'PlanStringsTests')},
  'SyncTests': {'host': ('LocalMutationsTests',
                         'OutboxFlusherTests',
                         'FullPullTests',
@@ -127,7 +127,7 @@ SUITES = {'AppTests': {'logic': ('StepSheetLayoutTests', 'TodayControlTests', 'T
                               'SessionAccountDatabaseTests',
                               'AccountWiperTests',
                               'AccountReadinessTests')}}
-SNAPSHOTS = ("AppTests/LaunchSnapshotTests", "AppTests/WelcomeSnapshotTests", "AppTests/WelcomeSnapshotGuardTests", "RenderTests/WelcomeRenderingTests", "AppTests/AuthSnapshotTests", "AppTests/TwoFactorSnapshotTests", "AppTests/ForgotPasswordSnapshotTests", "AppTests/ResetPasswordSnapshotTests", "AppTests/SignUpSnapshotTests", "AppTests/VerifyEmailSnapshotTests", "AppTests/AuthSnapshotGuardTests", "AppTests/AppTabsSnapshotTests", "AppTests/StepSheetSnapshotTests", "AppTests/TodaySnapshotTests", "AppTests/TodayRowSnapshotTests")
+SNAPSHOTS = ("AppTests/LaunchSnapshotTests", "AppTests/WelcomeSnapshotTests", "AppTests/WelcomeSnapshotGuardTests", "RenderTests/WelcomeRenderingTests", "AppTests/AuthSnapshotTests", "AppTests/TwoFactorSnapshotTests", "AppTests/ForgotPasswordSnapshotTests", "AppTests/ResetPasswordSnapshotTests", "AppTests/SignUpSnapshotTests", "AppTests/VerifyEmailSnapshotTests", "AppTests/AuthSnapshotGuardTests", "AppTests/StepSheetSnapshotTests", "AppTests/TodaySnapshotTests", "AppTests/TodayRowSnapshotTests", "AppTests/TripsSnapshotTests")
 XCODEBUILD_COMMON = ["xcodebuild", "-project", "ChronoFlow.xcodeproj", "-derivedDataPath", "build/DerivedData",
                      "-onlyUsePackageVersionsFromResolvedFile"]
 
@@ -744,6 +744,7 @@ def test_pass(destination, configuration, selected, label, record=False, intro_o
 
 def recording_selection(selected, mode, recording):
     baseline = (SNAPSHOTS[0], SNAPSHOTS[1], "AppTests/AuthSnapshotTests", "AppTests/TwoFactorSnapshotTests", "AppTests/ForgotPasswordSnapshotTests", "AppTests/ResetPasswordSnapshotTests", "AppTests/SignUpSnapshotTests", "AppTests/VerifyEmailSnapshotTests")
+    baseline += tuple(s for s in selected if s.split("/")[1].endswith("SnapshotTests") and s.split("/")[:2] != SNAPSHOTS[0].split("/")[:2] and s not in baseline)
     candidates = baseline if recording == "all" or (recording == "1" and mode == "snapshots") else baseline[:1] if recording == "launch" or mode == "launch-snapshots" else baseline[1:]
     return [s for s in selected if any(s == c or s.startswith(c + "/") for c in candidates)]
 

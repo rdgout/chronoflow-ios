@@ -89,6 +89,7 @@ let package = Package(
         .testTarget(
             name: "DesignSystemTests",
             dependencies: ["DesignSystem", "SnapshotSupport"],
+            resources: [.copy("Fixtures/PlanAudit")],
             swiftSettings: [.defaultIsolation(MainActor.self)]
         ),
         .testTarget(name: "ToolingTests", swiftSettings: [.defaultIsolation(nil)]),

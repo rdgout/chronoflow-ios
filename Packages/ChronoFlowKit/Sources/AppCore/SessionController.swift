@@ -120,6 +120,7 @@ public actor SessionController: SessionControlling {
     public private(set) var presence: SessionPresence?
     public private(set) var epoch: UInt64 = 0
     public private(set) var storedSession: StoredSession?
+    private var mutationPermit: SessionMutationPermit?
 
     public init(
         credentials: any SessionStore, accounts: any SessionAccountStore,
@@ -139,6 +140,10 @@ public actor SessionController: SessionControlling {
             return nil
         }
         return SessionSnapshot(session: storedSession, epoch: epoch)
+    }
+
+    public func mutationPermit(for snapshot: SessionSnapshot) -> SessionMutationPermit? {
+        activeSession() == snapshot ? mutationPermit : nil
     }
 
     public func updates() -> AsyncStream<SessionUpdate> {
@@ -418,6 +423,8 @@ public actor SessionController: SessionControlling {
     }
 
     private func publish(_ value: SessionPresence) {
+        mutationPermit?.invalidate()
+        mutationPermit = if case .signedIn = value { SessionMutationPermit() } else { nil }
         epoch &+= 1
         presence = value
         for observer in observers.values { observer.yield(SessionUpdate(presence: value, epoch: epoch)) }

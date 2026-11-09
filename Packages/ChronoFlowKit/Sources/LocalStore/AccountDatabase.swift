@@ -96,6 +96,23 @@ public actor AccountDatabase {
     }
 
     public func write<Value: Sendable>(
+        permit: SessionMutationPermit?, _ updates: @Sendable @escaping (Database) throws -> Value
+    ) async throws -> Value {
+        guard let permit else { return try await write(updates) }
+        guard let pool else { throw StoreFailure.closed }
+        return try await pool.writeWithoutTransaction { db in
+            try permit.whileValid {
+                var result: Value?
+                try db.inTransaction {
+                    result = try updates(db)
+                    return .commit
+                }
+                return result!
+            }
+        }
+    }
+
+    public func write<Value: Sendable>(
         epoch: SyncEpoch, _ updates: @Sendable @escaping (Database) throws -> Value
     ) async throws -> Value {
         try epoch.check()

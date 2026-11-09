@@ -19,12 +19,29 @@ nonisolated public enum PlanUITokens {
     public static var radius3Xl: CGFloat { 26 }
     public static var radiusFull: CGFloat { 9999 }
     public static var markedOpacity: Double { 0.45 }
+    public static var actionMinHeight: CGFloat { 48 }
+    public static var completedCardOpacity: Double { 0.9 }
+    public static var futureCardSpacing: CGFloat { 14 }
+    public static var loadingHeadingHeight: CGFloat { 18 }
+    public static var loadingHeadingWidthRatio: Double { 0.3 }
     public static var patternDotDiameter: CGFloat { 2 }
     public static var patternDotOpacity: Double { 0.16 }
     public static var patternDotSpacing: CGFloat { 7 }
     public static var patternHatchOpacity: Double { 0.12 }
     public static var patternHatchSpacing: CGFloat { 8 }
     public static var patternHatchWidth: CGFloat { 2 }
+    public static var priorityCoreOpacity: Double { 0.7 }
+    public static var priorityInfoSaturation: Double { 0.5 }
+    public static var priorityOptionalOpacity: Double { 0.5 }
+    public static var prioritySampleHeight: CGFloat { 28 }
+    public static var prioritySampleWidth: CGFloat { 40 }
+    public static var priorityTagOpacity: Double { 0.4 }
+    public static var progressTrackWidth: CGFloat { 80 }
+    public static var statusBorderOpacity: Double { 0.5 }
+    public static var stepGoneCircleSize: CGFloat { 48 }
+    public static var stepGoneIconSize: CGFloat { 22 }
+    public static var tripsLoadingFirstHeight: CGFloat { 260 }
+    public static var tripsLoadingSecondHeight: CGFloat { 180 }
 }
 extension Typography {
     public static var screenHero: Style {

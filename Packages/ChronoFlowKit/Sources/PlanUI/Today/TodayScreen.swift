@@ -48,15 +48,24 @@
                         empty
                     } else if let hero = selectTodayTrip(trips, now: now) {
                         let view = detail.map { todayView($0, marks: $0.checkState.marks, now: now, hidden: hidden) }
-                        TripSummaryCard(
-                            trip: hero, now: now, formatter: formatter, next: view?.nextStep, timeFormat: timeFormat
-                        ) { openTrip(hero.card.id) }
-                        .accessibilityIdentifier("today.trip")
+                        Group {
+                            if hero.status == .upcoming {
+                                TodayFutureTripCard(
+                                    trip: hero, now: now, formatter: formatter, next: view?.nextStep,
+                                    timeFormat: timeFormat
+                                ) { openTrip(hero.card.id) }
+                            } else {
+                                TripSummaryCard(
+                                    trip: hero, now: now, formatter: formatter, next: view?.nextStep,
+                                    timeFormat: timeFormat
+                                ) { openTrip(hero.card.id) }
+                            }
+                        }.accessibilityIdentifier("today.trip")
                         if hero.status == .upcoming { future(hero) } else if let view { panel(view) }
                     } else if let ended = lastEndedTrip(trips, now: now) {
                         completed(ended)
                     }
-                }.padding(PlanUITokens.space4)
+                }.planContentBounds().padding(PlanUITokens.space4).planPageRail()
             }
             .background(ColorToken.background.color).foregroundStyle(ColorToken.foreground.color)
             .navigationTitle(t("Today")).accessibilityIdentifier("today.screen")
@@ -67,7 +76,7 @@
                     .frame(width: PlanUITokens.space14, height: PlanUITokens.space14)
                     .foregroundStyle(ColorToken.dawnText.color).background(ColorToken.muted.color, in: Circle())
                     .accessibilityHidden(true)
-                Text(t("No trips yet")).font(Typography.screenCardTitle.font).accessibilityAddTraits(.isHeader)
+                Text(t("No trips yet")).planTextStyle(Typography.screenCardTitle).accessibilityAddTraits(.isHeader)
                 Text(t("Add your flights and you get a day-by-day plan for sleep, light and caffeine."))
                     .foregroundStyle(ColorToken.mutedForeground.color)
             }.font(Typography.screenBodyLg.font).multilineTextAlignment(.center).frame(maxWidth: .infinity)
@@ -82,7 +91,8 @@
                     .frame(width: PlanUITokens.space14, height: PlanUITokens.space14)
                     .foregroundStyle(ColorToken.dawnText.color).background(ColorToken.muted.color, in: Circle())
                     .accessibilityHidden(true)
-                Text(t("No trips coming up")).font(Typography.screenCardTitle.font).accessibilityAddTraits(.isHeader)
+                Text(t("No trips coming up")).planTextStyle(Typography.screenCardTitle).accessibilityAddTraits(
+                    .isHeader)
                 Text(
                     t(
                         "Your last trip, {{route}}, ended on {{date}}. Plan the next one when you know your flights.",
@@ -101,19 +111,18 @@
         }
         private func future(_ trip: TripListValue) -> some View {
             VStack(alignment: .leading, spacing: PlanUITokens.space2) {
-                Text(t("Nothing to do today")).font(Typography.screenSectionTitle.font).accessibilityAddTraits(
+                Text(t("Nothing to do today")).planTextStyle(Typography.screenSectionTitle).accessibilityAddTraits(
                     .isHeader)
                 Text(t("Keep your usual sleep times."))
                 if let days = trip.preparationDays, days > 0 {
                     Text(
-                        t(
-                            "Your {{count}} preparation days start on {{date}}.",
+                        PlanStrings.text(
+                            "Your {{count}} preparation days start on {{date}}.", language: language,
                             [
-                                "count": String(days),
                                 "date": formatter.formatWeekdayDate(
                                     trip.planStartUtc ?? trip.card.departureUtc, language: language,
-                                    zone: trip.planStartZone ?? trip.card.from.zone),
-                            ]))
+                                    zone: trip.planStartZone ?? trip.card.from.zone)
+                            ], count: days))
                 }
             }.font(Typography.screenBody.font).planCard().accessibilityIdentifier("today.future")
         }
@@ -126,41 +135,45 @@
                             arguments: ["count": String(day.postArrivalIndex ?? 0)],
                             count: Double(day.postArrivalIndex ?? 0))
                     )
-                    .font(Typography.screenSectionTitle.font).accessibilityAddTraits(.isHeader)
+                    .planTextStyle(Typography.screenSectionTitle).accessibilityAddTraits(.isHeader)
                     if let status = day.status {
-                        PlanBadge(
-                            text: t(dayStatusLabelKey(status) ?? ""),
-                            active: status == .adapted || status == .adaptedSlowerClock)
+                        DayStatusPill(status: status, text: t(dayStatusLabelKey(status) ?? ""))
                     }
                 }
                 if let progress = view.dayProgress, progress.total > 0 {
-                    ProgressView(value: Double(progress.done), total: Double(progress.total)) {
-                        Text(
-                            t(
-                                "{{done}}/{{total}} done",
-                                ["done": String(progress.done), "total": String(progress.total)]))
-                    }.tint(ColorToken.dawn.color).font(Typography.screenMeta.font)
-                    if progress.skipped > 0 {
-                        Text(t("{{count}} skipped", ["count": String(progress.skipped)])).font(
-                            Typography.screenMeta.font)
-                    }
+                    DayProgressRow(
+                        done: progress.done, total: progress.total, skipped: progress.skipped, language: language)
                 }
             }
             VStack(alignment: .leading, spacing: PlanUITokens.space2) {
                 heading("Right now")
                 if view.currentSteps.isEmpty {
-                    Text(t("Nothing scheduled right now.")).font(Typography.screenBodyLg.font).planCard()
+                    VStack(spacing: PlanUITokens.space2) {
+                        Image(systemName: "calendar.badge.checkmark").font(.system(size: PlanUITokens.space6))
+                            .accessibilityHidden(true)
+                        Text(t("Nothing scheduled right now.")).planTextStyle(
+                            Typography.screenBodyLg, color: .mutedForeground)
+                    }.foregroundStyle(ColorToken.mutedForeground.color).multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity).padding(PlanUITokens.space6)
+                        .overlay {
+                            RoundedRectangle(cornerRadius: PlanUITokens.radius3Xl).strokeBorder(
+                                ColorToken.border.color,
+                                style: StrokeStyle(lineWidth: AuthTokens.borderWidth, dash: [PlanUITokens.space1]))
+                        }
                 }
                 ForEach(view.currentSteps, id: \.id) { row($0, view: view, running: true) }
             }
             VStack(alignment: .leading, spacing: PlanUITokens.space2) {
                 heading("Up next")
-                if view.upcomingSteps.isEmpty { Text(t("No more scheduled items.")).font(Typography.screenBodyLg.font) }
+                if view.upcomingSteps.isEmpty {
+                    Text(t("No more scheduled items.")).planTextStyle(Typography.screenBodyLg)
+                }
                 ForEach(view.upcomingSteps, id: \.id) { row($0, view: view, running: false) }
             }
             if view.importantHidden || view.allCategoriesHidden {
                 Button(action: settings) {
-                    Label {
+                    HStack(spacing: PlanUITokens.space3) {
+                        Image(systemName: "eye.slash").accessibilityHidden(true)
                         VStack(alignment: .leading) {
                             Text(
                                 t(
@@ -169,17 +182,20 @@
                             Text(t("Show them in Settings › Preferences")).foregroundStyle(
                                 ColorToken.mutedForeground.color)
                         }
-                    } icon: {
-                        Image(systemName: "eye.slash")
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.right").foregroundStyle(ColorToken.mutedForeground.color)
+                            .accessibilityHidden(true)
                     }
-                }.buttonStyle(.plain).font(Typography.screenBody.font).planCard().accessibilityIdentifier(
+                    .padding(.vertical, PlanUITokens.space2).padding(.horizontal, PlanUITokens.space3)
+                    .frame(minHeight: PlanUITokens.space14)
+                    .background(ColorToken.surface2.color, in: RoundedRectangle(cornerRadius: PlanUITokens.radiusXl))
+                }.buttonStyle(.plain).font(Typography.screenBody.font).accessibilityIdentifier(
                     "today.hidden")
             }
         }
         private func heading(_ key: String) -> some View {
-            Text(t(key).uppercased()).font(Typography.screenLabel.font).foregroundStyle(
-                ColorToken.mutedForeground.color
-            ).accessibilityAddTraits(.isHeader)
+            Text(t(key).uppercased()).planTextStyle(Typography.screenLabel, color: .mutedForeground)
+                .accessibilityAddTraits(.isHeader)
         }
         private func row(_ block: BlockView, view: TodayPlan, running: Bool) -> some View {
             let mark =

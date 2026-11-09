@@ -58,10 +58,11 @@
                 HStack(spacing: PlanUITokens.space3) {
                     CategorySwatch(block.type).opacity(mark == nil ? 1 : PlanUITokens.markedOpacity)
                     VStack(alignment: .leading) {
-                        Text(title).font(Typography.screenBodyLg.font)
-                            .foregroundStyle((mark == nil ? ColorToken.foreground : .mutedForeground).color)
-                        Text(subtitle).font(Typography.screenBody.font).foregroundStyle(
-                            ColorToken.mutedForeground.color
+                        Text(title).planTextStyle(
+                            Typography.screenBodyLg, color: mark == nil ? .foreground : .mutedForeground,
+                            context: "\(block.id).title")
+                        Text(subtitle).planTextStyle(
+                            Typography.screenBody, color: .mutedForeground, context: "\(block.id).subtitle"
                         ).monospacedDigit()
                     }.frame(maxWidth: .infinity, alignment: .leading)
                     if let mark {
@@ -80,6 +81,7 @@
                             .accessibilityHidden(true)
                     }
                 }.frame(minHeight: PlanUITokens.space14).padding(PlanUITokens.space2)
+                    .contentShape(Rectangle())
             }.buttonStyle(.plain).accessibilityElement(children: .combine)
                 .accessibilityIdentifier(
                     "today.step.\(block.actionable && block.checkKey != nil ? "actionable." : "")\(block.id)"

@@ -116,6 +116,7 @@ targets:
       - path: Packages/ChronoFlowKit/Tests/ToolingTests/AuthScrollGesture.swift
       - path: Packages/ChronoFlowKit/Tests/ToolingTests/AuthAuditPolicy.swift
       - path: Packages/ChronoFlowKit/Tests/SnapshotSupport/RenderedTextContrast.swift
+      - path: Packages/ChronoFlowKit/Tests/SnapshotSupport/PlanLayoutEvidence.swift
       - path: Packages/ChronoFlowKit/Tests/SnapshotSupport/SnapshotReference.swift
       - path: Packages/ChronoFlowKit/Tests/SnapshotSupport/WelcomeSnapshotPixels.swift
       - path: AppTests/WelcomeAuditPolicy.swift

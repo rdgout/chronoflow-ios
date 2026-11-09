@@ -24,6 +24,79 @@ struct AuthScrollGestureTests {
         }
     }
 
+    @Test func auditAcceptsFullVisibilityWhenBottomClearanceCannotBeScrolledIntoPlace() {
+        let visible = CGRect(x: 19, y: 64, width: 400, height: 600)
+        let preferred = visible.insetBy(dx: 0, dy: 16)
+        let lastText = CGRect(x: 35, y: visible.maxY - 20, width: 300, height: 17)
+        var reveal = AuthScrollGesture.TextRevealProgress()
+        #expect(reveal.observe(frame: lastText, visible: visible, preferred: preferred, canScroll: true) == .scroll)
+        #expect(
+            reveal.observe(frame: lastText, visible: visible, preferred: preferred, canScroll: true)
+                == .measure(visible))
+    }
+
+    @Test func auditFailsWhenPinnedTextStillCrossesTheActualChromeBoundary() {
+        let visible = CGRect(x: 0, y: 64, width: 400, height: 600)
+        let preferred = visible.insetBy(dx: 0, dy: 16)
+        for text in [
+            CGRect(x: 16, y: visible.maxY - 5, width: 300, height: 17),
+            CGRect(x: 16, y: visible.minY - 5, width: 300, height: 17),
+        ] {
+            var reveal = AuthScrollGesture.TextRevealProgress()
+            #expect(reveal.observe(frame: text, visible: visible, preferred: preferred, canScroll: true) == .scroll)
+            #expect(reveal.observe(frame: text, visible: visible, preferred: preferred, canScroll: true) == .blocked)
+        }
+    }
+
+    @Test func auditMeasuresNonScrollingSheetTextWithoutRequiringAnImpossibleMargin() {
+        let visible = CGRect(x: 0, y: 64, width: 400, height: 600)
+        let preferred = visible.insetBy(dx: 0, dy: 16)
+        let text = CGRect(x: 16, y: visible.minY + 2, width: 300, height: 17)
+        var reveal = AuthScrollGesture.TextRevealProgress()
+        #expect(
+            reveal.observe(frame: text, visible: visible, preferred: preferred, canScroll: false) == .measure(visible))
+        #expect(
+            reveal.observe(
+                frame: text.offsetBy(dx: 0, dy: -10), visible: visible, preferred: preferred, canScroll: false)
+                == .blocked)
+    }
+
+    @Test func auditKeepsSeekingClearanceWhileContentOrChromeMakesProgress() {
+        let visible = CGRect(x: 0, y: 64, width: 400, height: 600)
+        let preferred = visible.insetBy(dx: 0, dy: 16)
+        var reveal = AuthScrollGesture.TextRevealProgress()
+        let text = CGRect(x: 16, y: visible.maxY - 10, width: 300, height: 17)
+        #expect(reveal.observe(frame: text, visible: visible, preferred: preferred, canScroll: true) == .scroll)
+        let shifted = text.offsetBy(dx: 0, dy: -10)
+        #expect(reveal.observe(frame: shifted, visible: visible, preferred: preferred, canScroll: true) == .scroll)
+        let revealed = shifted.offsetBy(dx: 0, dy: -20)
+        #expect(
+            reveal.observe(frame: revealed, visible: visible, preferred: preferred, canScroll: true)
+                == .measure(preferred))
+    }
+
+    @Test func auditRevealsTheWholeSubtitleAboveExpandedOrCollapsedSystemChrome() throws {
+        let window = CGRect(x: 0, y: 0, width: 390, height: 844)
+        let safe = CGRect(x: 0, y: 47, width: 390, height: 763)
+        let navigation = CGRect(x: 0, y: 47, width: 390, height: 106)
+        let subtitle = CGRect(x: 68, y: 800.5, width: 219.333, height: 17)
+        for barTop in [CGFloat(718), 761] {
+            let tabBar = CGRect(x: 0, y: barTop, width: 390, height: window.maxY - barTop)
+            let viewport = AuthScrollGesture.readingViewport(
+                safe, navigationBar: navigation, tabBar: tabBar, clearance: 16)
+            #expect(viewport.minY > navigation.maxY)
+            #expect(viewport.maxY < tabBar.minY)
+            #expect(!viewport.contains(subtitle))
+            let gesture = try #require(AuthScrollGesture.reveal(subtitle, in: viewport))
+            #expect(viewport.contains(gesture.start))
+            #expect(viewport.contains(gesture.end))
+            let revealed = subtitle.offsetBy(dx: 0, dy: gesture.end.y - gesture.start.y)
+            #expect(viewport.contains(revealed))
+            #expect(AuthScrollGesture.reveal(revealed, in: viewport) == nil)
+            #expect(!viewport.contains(subtitle.offsetBy(dx: 0, dy: viewport.maxY - subtitle.midY)))
+        }
+    }
+
     @Test func navigationViewportIncludesBackButtonWithoutChangingContentOrKeyboardBounds() {
         let window = CGRect(x: 10, y: 20, width: 390, height: 844)
         let safeArea = window.insetBy(dx: 24, dy: 47)

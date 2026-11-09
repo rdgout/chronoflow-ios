@@ -10,16 +10,18 @@
         public let now: Date
         public let formatter: CopyLineFormatter
         public var next: BlockView?
+        public var showPlanStart: Bool
         public var timeFormat: TimeFormat
         public var open: () -> Void
         public init(
             trip: TripListValue, now: Date, formatter: CopyLineFormatter, next: BlockView? = nil,
-            timeFormat: TimeFormat = .value24, open: @escaping () -> Void
+            timeFormat: TimeFormat = .value24, showPlanStart: Bool = true, open: @escaping () -> Void
         ) {
             self.trip = trip
             self.now = now
             self.formatter = formatter
             self.next = next
+            self.showPlanStart = showPlanStart
             self.timeFormat = timeFormat
             self.open = open
         }
@@ -36,10 +38,10 @@
                             text: t(
                                 trip.status == .active ? "Active" : trip.status == .completed ? "Completed" : "Upcoming"
                             ), active: trip.status == .active)
-                        if let number = card.flightNumber { Text(number).font(Typography.screenMeta.font) }
+                        if let number = card.flightNumber { Text(number).planTextStyle(Typography.screenMeta) }
                         Spacer(minLength: 0)
                         Text(formatter.formatOffset(Double(card.offsetDifferenceMinutes), language: language))
-                            .font(Typography.screenMeta.font).foregroundStyle(ColorToken.mutedForeground.color)
+                            .planTextStyle(Typography.screenMeta, color: .mutedForeground)
                     }
                     HStack(spacing: PlanUITokens.space3) {
                         airport(card.from)
@@ -48,39 +50,50 @@
                         Spacer(minLength: 0)
                         airport(card.to, trailing: true)
                     }
-                    Text(times).font(Typography.screenBody.font).foregroundStyle(ColorToken.mutedForeground.color)
-                        .monospacedDigit()
+                    HStack(spacing: PlanUITokens.space2) {
+                        Text(times).planTextStyle(
+                            Typography.screenBody, color: .mutedForeground, context: "\(card.id).times"
+                        ).monospacedDigit()
+                        if next == nil {
+                            Spacer(minLength: 0)
+                            Image(systemName: "chevron.right").font(.system(size: PlanUITokens.space5))
+                                .accessibilityHidden(true)
+                        }
+                    }.foregroundStyle(ColorToken.mutedForeground.color)
                     if let next {
                         HStack(spacing: PlanUITokens.space3) {
                             CategorySwatch(next.type)
                             VStack(alignment: .leading, spacing: PlanUITokens.space1) {
-                                Text(nextLabel(next)).font(Typography.screenEyebrow.font).foregroundStyle(
-                                    ColorToken.dawnText.color)
+                                Text(nextLabel(next)).planTextStyle(Typography.screenEyebrow, color: .dawnText)
                                 Text(
                                     formatter.format(
                                         next.text,
                                         options: CopyFormat(
                                             language: language, timeFormat: timeFormat, displayZone: next.displayTz))
                                 )
-                                .font(Typography.screenBodyLg.font)
+                                .planTextStyle(Typography.screenBodyLg)
                             }
                             Spacer(minLength: 0)
                             Image(systemName: "chevron.right").accessibilityHidden(true)
                         }.padding(PlanUITokens.space3).background(
                             ColorToken.surface2.color, in: RoundedRectangle(cornerRadius: PlanUITokens.radius2Xl))
-                    } else if trip.status == .upcoming {
-                        Text(startLabel).font(Typography.screenLabel.font).foregroundStyle(ColorToken.dawnText.color)
+                    } else if showPlanStart && trip.status == .upcoming {
+                        Text(startLabel).planTextStyle(Typography.screenLabel, color: .dawnText)
                     }
-                }.planCard(active: trip.status == .active)
+                }.planCard(active: trip.status == .active, completed: trip.status == .completed)
+                    .contentShape(RoundedRectangle(cornerRadius: PlanUITokens.radius3Xl))
             }
             .buttonStyle(.plain).foregroundStyle(ColorToken.cardForeground.color)
             .accessibilityIdentifier("trip.\(card.id)").accessibilityElement(children: .combine)
         }
         private func airport(_ airport: AirportRef, trailing: Bool = false) -> some View {
             VStack(alignment: trailing ? .trailing : .leading) {
-                Text(airport.iata).font(Typography.screenPageTitle.font)
+                Text(airport.iata).planTextStyle(
+                    Typography.screenPageTitle, context: "\(trip.card.id).\(trailing ? "to" : "from").iata")
                 if let city = airport.city {
-                    Text(city).font(Typography.screenBody.font).foregroundStyle(ColorToken.mutedForeground.color)
+                    Text(city).planTextStyle(
+                        Typography.screenBody, color: .mutedForeground,
+                        context: "\(trip.card.id).\(trailing ? "to" : "from").city")
                 }
             }.frame(maxWidth: .infinity, alignment: trailing ? .trailing : .leading)
         }
