@@ -13,6 +13,7 @@ actor GenerationSource: DataSource {
     var snapshots: [ApiTripInputSnapshot] = []
     var editRequests: [TripEditContext] = []
     var operations: [String] = []
+    var loseNextSaveResponse = false
     var saveFailure: DataFailure?
     var lastEdit: TripEditContext?
     var beforeReview: @Sendable () async throws -> Void = {}
@@ -32,6 +33,7 @@ actor GenerationSource: DataSource {
         self.beforeReview = beforeReview
         self.beforeSave = beforeSave
     }
+    func loseSaveResponseOnce() { loseNextSaveResponse = true }
     func count(_ method: String) -> Int { counts[method, default: 0] }
     func queueReviews(_ results: [Result<ApiTripReview, DataFailure>]) { reviewResults = results }
     func queueSnapshots(_ values: [ApiTripInputSnapshot]) { snapshots = values }
@@ -69,7 +71,14 @@ actor GenerationSource: DataSource {
         record("save")
         try await beforeSave()
         if let saveFailure { throw saveFailure }
-        if let mock { return try await mock.saveTrip(identity: identity) }
+        if let mock {
+            let saved = try await mock.saveTrip(identity: identity)
+            if loseNextSaveResponse {
+                loseNextSaveResponse = false
+                throw DataFailure.offline
+            }
+            return saved
+        }
         return ApiTripSaveResult(tripId: "created")
     }
     func updateTrip(id: String, identity: ApiTripSaveInput, sourceRevision: String) async throws -> ApiTripSaveResult {

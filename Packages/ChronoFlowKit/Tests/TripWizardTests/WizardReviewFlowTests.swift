@@ -23,7 +23,7 @@ import TripWizard
         #expect(model.sleepComplete)
         #expect(model.finishSleep())
         try await finishCheck(fixture)
-        #expect(model.draft.state.step == .continuation && !model.draft.state.sleepNeeded)
+        #expect(model.draft.state.step == .ready && !model.draft.state.sleepNeeded)
         #expect(model.lastInputStep == .sleep)
         #expect(await fixture.source.reviewInputs.last?.profile?["chronotype"] == .null)
         #expect(
@@ -61,7 +61,7 @@ import TripWizard
         await fixture.source.configure()
         fixture.model.beginChecking()
         try await finishCheck(fixture, count: 2)
-        #expect(fixture.model.draft.state.step == .continuation)
+        #expect(fixture.model.draft.state.step == .ready)
         try await fixture.model.discard()
         try await fixture.database.close()
     }
@@ -181,7 +181,7 @@ import TripWizard
         try await eventually { fixture.model.draft.state.step == .checking }
         #expect(fixture.model.progress >= progress)
         try await finishCheck(fixture, count: 2, start: 1.75)
-        #expect(fixture.model.draft.state.step == .continuation)
+        #expect(fixture.model.draft.state.step == .ready)
         let input = try #require(await fixture.source.reviewInputs.last)
         #expect(input.profile?["shift_work"] == .bool(false) && input.identity == first.identity)
         try await fixture.model.discard()

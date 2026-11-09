@@ -204,10 +204,18 @@
                     canSave: false,
                     itinerary: ApiReviewItinerary(legs: [], layovers: []))
             }
-            return draft
+            return WizardCompletionBoardSeed.apply(draft, board: board)
         }
 
         static func freeze(_ model: MemberWizardModel, board: String) {
+            if [.fineTune, .ready, .calculating].contains(model.draft.state.step) {
+                model.freezeCompletionBoard(
+                    reviewing: board == "WizardFineTuneBusy" || board == "WizardReadyChecking",
+                    answerError: board == "WizardSheetBlueError"
+                        ? "Enter a rating between 0.1 and 9.9."
+                        : board == "WizardSheetDrinksError" ? "Add at least one drink to save this answer." : nil,
+                    retry: board == "WizardSaveThrottle" ? 42 : 0)
+            }
             let failure: DataFailure? =
                 board == "WizardCheckOffline"
                 ? .offline

@@ -1,4 +1,5 @@
 import AppCore
+import DataAccess
 import Foundation
 import PlanCore
 import Testing
@@ -51,11 +52,32 @@ import TripWizardUI
         }
     }
 
+    @Test func optionalPromptCopyAndNewControlsHaveDutch() async throws {
+        let catalog = try await CopyCatalog.load()
+        let formatter = CopyLineFormatter(catalog: catalog)
+        for prompt in MockWizardPrompts.make(input: try generationInput(), profile: JSONObject()) {
+            #expect(catalog.contains(prompt.text.key))
+            #expect(
+                formatter.format(prompt.text, options: CopyFormat(language: .en))
+                    != formatter.format(prompt.text, options: CopyFormat(language: .nl)))
+        }
+        for key in [
+            "Fine-tune your plan", "Ready to plan", "Make my plan", "Calculating your plan…", "Helps a lot",
+            "Use different sleep times for this trip", "We couldn't save your plan", "Saving needs a connection",
+            "{{count}} days of steps",
+        ] {
+            #expect(WizardStrings.text(key, locale: Locale(identifier: "nl_NL")) != key)
+        }
+        #expect(
+            WizardStrings.text("{{count}} credits", locale: Locale(identifier: "nl_NL"), arguments: ["count": "2"])
+                == "2 credits")
+    }
+
     @Test func runtimeUsesTheSelectedLanguageAndInterpolation() {
         let dutch = Locale(identifier: "nl_NL")
         #expect(WizardStrings.text("Where are you flying?", locale: dutch) == "Waar vlieg je heen?")
         #expect(WizardStrings.text("Time in {{city}}", locale: dutch, arguments: ["city": "Tokio"]) == "Tijd in Tokio")
         #expect(WizardStrings.text("Continue", locale: Locale(identifier: "en_GB")) == "Continue")
-        #expect(WizardStrings.text("{{count}} credits", locale: dutch, arguments: ["count": "1"]) == "1 tegoed")
+        #expect(WizardStrings.text("{{count}} credits", locale: dutch, arguments: ["count": "1"]) == "1 credit")
     }
 }

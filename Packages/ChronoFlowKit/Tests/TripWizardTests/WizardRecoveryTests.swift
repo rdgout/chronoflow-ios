@@ -74,7 +74,8 @@ import TripWizard
         var saved = try await store.start()
         saved.state.savedTripId = "saved"
         try await store.persist(saved)
-        #expect(try await store.recover() == nil)
+        #expect(try await store.recover()?.state.savedTripId == "saved")
+        try await store.didSave(instance: saved.state.instance)
         let expired = try await store.start()
         clock.advance(1800)
         #expect(try await store.recover() == nil)

@@ -79,6 +79,15 @@ import XCTest
 }
 
 @MainActor enum WizardScreenUIFlow {
+    static func launchCompletion(_ board: String, language: String = "en") -> XCUIApplication {
+        let app = ScreenTestApp.makeApplication()
+        app.launchArguments = AuthUIFlow.arguments(language: language)
+        AuthUIFlow.launchSignedIn(
+            app, walkthroughSeen: true, extraEnv: ["CF_WIZARD_BOARD_CAPTURE": board, "CF_WIZARD_AUTO_OPEN": "1"])
+        XCTAssertTrue(app.staticTexts["wizard.title"].waitForExistence(timeout: 10))
+        return app
+    }
+
     static func launch(_ board: String, language: String = "en") -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = AuthUIFlow.arguments(language: language)

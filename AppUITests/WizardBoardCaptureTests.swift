@@ -74,6 +74,11 @@
                     if app.alerts.firstMatch.exists {
                         app.alerts.buttons[language == "nl" ? "Verder bewerken" : "Keep editing"].tap()
                     }
+                    if board == "WizardCalculating" {
+                        app.terminate()
+                        continue
+                    }
+                    if app.buttons["wizard.answer.cancel"].exists { app.buttons["wizard.answer.cancel"].tap() }
                     if app.otherElements["wizard.airport-search"].exists {
                         app.buttons[language == "nl" ? "Annuleren" : "Cancel"].tap()
                     }
@@ -90,6 +95,9 @@
         }
 
         private static func screen(_ board: String) -> String {
+            if board.hasPrefix("WizardFineTune") || board.hasPrefix("WizardSheet") { return "wizard.fine-tune" }
+            if board.hasPrefix("WizardReady") || board.hasPrefix("WizardSave") { return "wizard.ready" }
+            if board == "WizardCalculating" { return "wizard.calculating" }
             if board.hasPrefix("WizardWhere") || board == "WizardAirportFrom" || board == "WizardStopSearch"
                 || board == "WizardStopSearchSecond"
             {
@@ -121,6 +129,14 @@
                 "WizardQAge", "WizardQBipolar", "WizardQPregnant", "WizardQShift", "WizardQCaffeine", "WizardQEye",
                 "WizardQClot",
                 "WizardExcluded", "WizardExcludedShift", "WizardDiscard",
+                "WizardFineTune", "WizardFineTuneBusy", "WizardFineTuneMulti", "WizardFineTuneNone",
+                "WizardFineTuneSleep",
+                "WizardFineTuneSheet", "WizardSheet", "WizardSheetBlue", "WizardSheetBlueError", "WizardSheetBusy",
+                "WizardSheetCheckout", "WizardSheetDrinks", "WizardSheetDrinksError", "WizardSheetFreeSleep",
+                "WizardSheetLight", "WizardSheetRoom", "WizardSheetWake", "WizardReady", "WizardReadyReturn",
+                "WizardReadyUnlimited", "WizardReadyFree", "WizardReadyOneFree", "WizardReadyAdjusted",
+                "WizardReadyNoCredits", "WizardReadyChecking", "WizardCalculating", "WizardSaveOffline",
+                "WizardSaveServer",
             ]
         }
     }

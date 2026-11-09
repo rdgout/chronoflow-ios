@@ -9,7 +9,7 @@ nonisolated final class TripWizardTests: XCTestCase {
         executionTimeAllowance = 240
     }
 
-    @MainActor func testWhereWithStopTimesOneWaySleepAndChecking() {
+    @MainActor func testWhereWithStopTimesOneWaySleepFineTuneAndSave() {
         let app = XCUIApplication()
         defer { app.terminate() }
         app.launchArguments = AuthUIFlow.arguments()
@@ -50,7 +50,22 @@ nonisolated final class TripWizardTests: XCTestCase {
         AuthUIFlow.waitUntilEnabled(sleep)
         sleep.tap()
         XCTAssertTrue(app.otherElements["wizard.checking"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.buttons["wizard.choice.question.18_64"].waitForExistence(timeout: 10))
+        let age = app.buttons["wizard.choice.question.18_64"]
+        XCTAssertTrue(age.waitForExistence(timeout: 10))
+        age.tap()
+        let fineTune = app.buttons["wizard.fine-tune.continue"]
+        XCTAssertTrue(fineTune.waitForExistence(timeout: 12))
+        fineTune.tap()
+        let save = app.buttons["wizard.ready.continue"]
+        XCTAssertTrue(save.waitForExistence(timeout: 8))
+        XCTAssertTrue(save.isEnabled)
+        save.tap()
+        let calculating = app.otherElements["wizard.calculating"]
+        if calculating.waitForExistence(timeout: 3) {
+            XCTAssertFalse(app.buttons["wizard.close"].exists)
+        }
+        XCTAssertTrue(app.scrollViews["trip.scroll"].waitForExistence(timeout: 20))
+        XCTAssertFalse(app.otherElements["wizard.ready"].exists)
     }
 
     @MainActor private func choose(_ code: String, side: String, in app: XCUIApplication) {
