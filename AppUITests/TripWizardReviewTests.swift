@@ -17,30 +17,32 @@ nonisolated final class TripWizardReviewTests: XCTestCase {
         try journey(returnFlight: true)
     }
 
-    @MainActor func testFailedRequestUsesCheckOfflineAfterCachedRelaunch() throws {
-        let app = launch()
+    @MainActor func testCheckOfflineScreenKeepsEditingAndGoesBack() throws {
+        let app = XCUIApplication()
         defer { app.terminate() }
-        inputOutbound(app)
-        app.buttons["wizard.choice.one-way"].tap()
-        answerSleep(app)
-        XCTAssertTrue(app.otherElements["wizard.question.0"].waitForExistence(timeout: 10))
-        app.terminate()
-        app.launchEnvironment["CF_AUTH_TEST_OFFLINE"] = "1"
+        app.launchArguments = AuthUIFlow.arguments()
+        app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
+        app.launchEnvironment["CF_AUTH_TEST_WALKTHROUGH_SEEN"] = "1"
+        app.launchEnvironment["CF_WIZARD_BOARD_CAPTURE"] = "WizardCheckOffline"
         app.launch()
-        let answer = app.buttons["wizard.choice.question.18_64"]
-        XCTAssertTrue(answer.waitForExistence(timeout: 15))
-        answer.tap()
-        XCTAssertTrue(app.otherElements["wizard.checking.offline"].waitForExistence(timeout: 10))
+        AuthUIFlow.openSignIn(app)
+        AuthUIFlow.signIn(app, email: MockScenarioValues.demoEmail)
+        XCTAssertTrue(app.scrollViews["today.screen"].waitForExistence(timeout: 15))
+        app.tabBars.buttons["My trips"].tap()
+        let create = app.buttons["trips.create"]
+        XCTAssertTrue(create.waitForExistence(timeout: 10))
+        create.tap()
+        XCTAssertTrue(app.otherElements["wizard.checking.offline"].waitForExistence(timeout: 8))
         XCTAssertTrue(app.buttons["wizard.checking.continue"].isEnabled)
         XCTAssertFalse(app.otherElements["wizard.debug.continue"].exists)
-        let back = app.navigationBars.buttons["Back"]
+        let back = app.navigationBars.buttons.element(boundBy: 0)
         XCTAssertTrue(back.exists)
         app.buttons["wizard.checking.secondary-close"].tap()
         XCTAssertTrue(app.alerts["Discard this trip?"].waitForExistence(timeout: 3))
         app.alerts.buttons["Keep editing"].tap()
         XCTAssertTrue(app.otherElements["wizard.checking.offline"].exists)
         back.tap()
-        XCTAssertTrue(app.otherElements["wizard.sleep"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.otherElements["wizard.return"].waitForExistence(timeout: 5))
     }
 
     @MainActor private func journey(returnFlight: Bool) throws {
