@@ -37,6 +37,7 @@ nonisolated final class WizardRouteScreenTests: XCTestCase {
                 XCTAssertFalse(next.isEnabled)
                 XCTAssertTrue(app.descendants(matching: .any)["wizard.where.same"].exists)
                 XCTAssertFalse(app.segmentedControls["wizard.route.stops"].exists)
+                XCTAssertFalse(app.staticTexts["From your last trip"].exists)
             } else if board == "WizardWhereLimit" {
                 let limit = app.staticTexts["wizard.route.limit"]
                 AuthUIFlow.reveal(limit, in: app, scroll: app.scrollViews.firstMatch)
@@ -92,17 +93,43 @@ nonisolated final class WizardRouteScreenTests: XCTestCase {
         XCTAssertFalse(app.buttons["wizard.remove-stop.1"].exists)
     }
 
-    @MainActor func testTwoErrorsRemainUnderTheirCardsAndContinueReturnsToTheFirst() throws {
+    @MainActor func testBoardErrorAppearsOnlyUnderTheSecondFlight() {
         let app = WizardScreenUIFlow.launch("WizardOutboundTwoErrors")
         defer { app.terminate() }
-        XCTAssertTrue(app.descendants(matching: .any)["wizard.0.arrival.error"].exists)
-        let later = app.descendants(matching: .any)["wizard.1.departure.error"]
-        AuthUIFlow.reveal(later, in: app, scroll: app.scrollViews.firstMatch)
-        XCTAssertEqual(later.label, "This flight leaves before the previous one lands.")
-        app.buttons["wizard.outbound.continue"].tap()
+        let error = app.descendants(matching: .any)["wizard.1.arrival.error"]
+        AuthUIFlow.reveal(error, in: app, scroll: app.scrollViews.firstMatch)
+        XCTAssertEqual(error.label, "Check the departure and arrival times.")
+        for identifier in ["wizard.0.departure.error", "wizard.0.arrival.error", "wizard.1.departure.error"] {
+            XCTAssertFalse(app.descendants(matching: .any)[identifier].exists)
+        }
+    }
+
+    @MainActor func testContinueScrollsBackToTheOffscreenFirstError() throws {
+        let app = WizardScreenUIFlow.launch("WizardOutboundScrollErrors")
+        defer { app.terminate() }
+        let scroll = app.scrollViews.firstMatch
         let first = app.descendants(matching: .any)["wizard.0.arrival.error"]
-        _ = try UIWait.stableFrames([first], timeout: 5)
+        let later = app.descendants(matching: .any)["wizard.4.departure.error"]
+        AuthUIFlow.reveal(later, in: app, scroll: scroll)
+        _ = try UIWait.stableFrames([first, later], timeout: 5)
+        XCTAssertEqual(later.label, "This flight leaves before the previous one lands.")
+        XCTAssertFalse(first.isHittable)
+        XCTAssertLessThan(first.frame.maxY, scroll.frame.minY)
+        let next = app.buttons["wizard.outbound.continue"]
+        XCTAssertTrue(next.isHittable && next.isEnabled)
+        next.tap()
+        let returned = XCTNSPredicateExpectation(
+            predicate: NSPredicate { _, _ in first.isHittable && scroll.frame.contains(first.frame) }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [returned], timeout: 5), .completed)
         XCTAssertTrue(first.isHittable)
+    }
+
+    @MainActor func testEmptyPillsAnnounceNotSetInDutch() {
+        let app = WizardScreenUIFlow.launch("WizardOutboundEmpty", language: "nl")
+        defer { app.terminate() }
+        for side in ["departure", "arrival"] {
+            XCTAssertEqual(app.buttons["wizard.0.\(side).date-time"].value as? String, "niet ingesteld")
+        }
     }
 
     @MainActor func testEmptyAndFilledPickerShareTheSheetAndOnlyDoneWrites() {

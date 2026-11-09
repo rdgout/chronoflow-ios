@@ -37,7 +37,7 @@
             draft.state.step = .outbound
             if board.hasPrefix("WizardWhere") || board == "WizardAirportFrom" {
                 draft.state.step = .whereTo
-                draft.state.fromLastTrip = board == "WizardWhere"
+                draft.state.fromLastTrip = board == "WizardWhere" || board == "WizardWhereSame"
                 if board == "WizardWhereEmpty" || board == "WizardAirportFrom" {
                     draft.form = WizardForm()
                     draft.state.entered = false
@@ -74,7 +74,7 @@
             }
             if [
                 "WizardOutboundStop", "WizardOutboundStopNew", "WizardOutboundStopEmpty", "WizardOutboundOvernight",
-                "WizardOutboundThree", "WizardOutboundTwoErrors",
+                "WizardOutboundThree", "WizardOutboundTwoErrors", "WizardOutboundScrollErrors",
             ].contains(board) {
                 draft.form.insertStop(airports[2], beforeDestinationOf: 0)
                 if board != "WizardOutboundStopNew" && board != "WizardOutboundStopEmpty" {
@@ -92,10 +92,23 @@
                 draft.form.legs[1].arriveLocal = "2026-10-13T11:20"
             }
             if board == "WizardOutboundTwoErrors" {
+                draft.form.legs[1].arriveLocal = "2026-10-12T16:35"
+                draft.fieldErrors["legs.1.arriveLocal"] = FieldMessage(key: "Check the departure and arrival times.")
+            }
+            if board == "WizardOutboundScrollErrors" {
+                draft.form.insertStop(airports[3], beforeDestinationOf: 1)
+                draft.form.insertStop(airports[2], beforeDestinationOf: 2)
+                draft.form.insertStop(airports[3], beforeDestinationOf: 3)
                 draft.form.legs[0].arriveLocal = "2026-10-11T23:25"
-                draft.form.legs[1].departLocal = "2026-10-11T22:05"
+                draft.form.legs[1].arriveLocal = "2026-10-13T11:20"
+                draft.form.legs[2].departLocal = "2026-10-13T13:00"
+                draft.form.legs[2].arriveLocal = "2026-10-13T17:00"
+                draft.form.legs[3].departLocal = "2026-10-13T19:00"
+                draft.form.legs[3].arriveLocal = "2026-10-14T04:00"
+                draft.form.legs[4].departLocal = "2026-10-14T03:00"
+                draft.form.legs[4].arriveLocal = "2026-10-14T14:30"
                 draft.fieldErrors["legs.0.arriveLocal"] = FieldMessage(key: "Check the departure and arrival times.")
-                draft.fieldErrors["legs.1.departLocal"] = FieldMessage(
+                draft.fieldErrors["legs.4.departLocal"] = FieldMessage(
                     key: "This flight leaves before the previous one lands.")
             }
             if board == "WizardReturn" || board == "WizardReturnWeb" {
