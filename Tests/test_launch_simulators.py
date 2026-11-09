@@ -503,6 +503,49 @@ class ClassificationTests(unittest.TestCase):
         ]}
         self.assertEqual([n['target'] for n in runner.result_nodes(value)], ['AppTests', 'AppUITests'])
 
+    def test_unreadable_serial_bundle_does_not_blame_passing_suites_for_another_failure(self):
+        selected = ['AppUITests/AuthSessionTests', 'AppUITests/LaunchSceneDarkTests']
+        with tempfile.TemporaryDirectory(dir=ROOT / 'build') as directory:
+            log = Path(directory) / 'Debug-serial.log'
+            log.write_text("Test Case '-[AppUITests.AuthSessionTests testSession]' failed (1.0 seconds).\n"
+                           "Test Case '-[AppUITests.LaunchSceneDarkTests testDarkOpeningAccessibilityAndFrozenScreenshotMatchesSampleAt700]' passed (2.0 seconds).\n"
+                           "Test Suite 'LaunchSceneDarkTests' passed.\nExecuted 1 test, with 0 failures\n")
+            destination = SimpleNamespace(alias='17e', directory_name='17e-isolated')
+            with patch.dict(runner.read_results.__globals__, run=Mock(side_effect=RuntimeError('invalid result bundle'))):
+                results = runner.read_results(destination, 'Debug-serial', selected, Path(directory) / 'Debug-serial.xcresult', 65, log)
+            self.assertEqual([result.suite for result in results], ['Debug-serial results', 'Debug-serial AppUITests/AuthSessionTests'])
+            self.assertIn('invalid result bundle', results[0].detail)
+            self.assertIn('Debug-serial.xcresult', results[0].detail)
+            self.assertIn('testSession', results[1].detail)
+            self.assertTrue(all(not result.passed for result in results))
+
+    def test_unreadable_bundle_without_scoped_failures_reports_only_the_pass_error(self):
+        with tempfile.TemporaryDirectory(dir=ROOT / 'build') as directory:
+            log = Path(directory) / 'Debug-serial.log'
+            log.write_text('✘ Test testDarkOpeningAccessibilityAndFrozenScreenshotMatchesSampleAt700() recorded an issue\n')
+            with patch.dict(runner.read_results.__globals__, run=Mock(return_value=SimpleNamespace(stdout='{}'))):
+                results = runner.read_results(SimpleNamespace(alias='17e'), 'Debug-serial',
+                                              ['AppUITests/LaunchSceneTests', 'AppUITests/LaunchSceneDarkTests'],
+                                              Path(directory) / 'Debug-serial.xcresult', 0, log)
+            self.assertEqual(len(results), 1)
+            self.assertEqual(results[0].suite, 'Debug-serial results')
+            self.assertIn('no executed test cases', results[0].detail)
+            self.assertIn('unscoped log failures: testDarkOpeningAccessibilityAndFrozenScreenshotMatchesSampleAt700()', results[0].detail)
+            self.assertFalse(results[0].passed)
+
+    def test_unreadable_compare_bundle_scopes_clone_failures_and_keeps_reader_stderr(self):
+        with tempfile.TemporaryDirectory(dir=ROOT / 'build') as directory:
+            log = Path(directory) / 'Debug-compare.log'
+            log.write_text("Test case 'SignInTests.testReturnChainKeyboardSubmitAndPasswordClearing()' failed on 'Clone 1 of iPhone 17e - AppUITests-Runner (123)' (12.0 seconds)\n")
+            error = subprocess.CalledProcessError(1, ['xcresulttool'], stderr='Info.plist is missing')
+            with patch.dict(runner.read_results.__globals__, run=Mock(side_effect=error)):
+                results = runner.read_results(SimpleNamespace(alias='17e'), 'Debug-compare',
+                                              ['AppUITests/SignInTests', 'AppUITests/SignInKeyboardTests'],
+                                              Path(directory) / 'Debug-compare.xcresult', 65, log)
+            self.assertEqual([result.suite for result in results], ['Debug-compare results', 'Debug-compare AppUITests/SignInTests'])
+            self.assertIn('Info.plist is missing', results[0].detail)
+            self.assertIn('SignInTests/testReturnChainKeyboardSubmitAndPasswordClearing()', results[1].detail)
+
     def test_ui_suite_named_like_package_target_matches_unqualified_and_qualified_identifiers(self):
         method = 'testDutchAX5TextCanScrollToBothActions()'
         for identifier in ['WelcomeTests/' + method, 'AppUITests/WelcomeTests/' + method]:

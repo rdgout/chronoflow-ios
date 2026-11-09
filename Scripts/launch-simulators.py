@@ -964,13 +964,27 @@ def read_results(destination, label, selected, bundle, returncode, log, timing=N
         return results
     except (subprocess.CalledProcessError, OSError, ValueError, RuntimeError) as error:
         detail = str(error)
-    failures = []
-    if log.exists():
-        content = log.read_text(errors="replace")
-        failures = re.findall(r"Test Case '([^']+)' failed|[✘×] Test (.+?) (?:failed|recorded an issue)", content)
-    names = [a or b for a, b in failures]
-    return [Result(destination.alias, label + " " + suite, False,
-                   "; ".join(names) or detail + "; see " + str(log.relative_to(ROOT))) for suite in selected]
+        if isinstance(error, subprocess.CalledProcessError) and error.stderr:
+            detail += ": " + error.stderr.strip()
+    results = [Result(destination.alias, label + " results", False,
+                      "Could not read executed tests: " + detail + "; bundle=" + str(bundle.relative_to(ROOT))
+                      + "; see " + str(log.relative_to(ROOT)))]
+    content = log.read_text(errors="replace") if log.exists() else ""
+    nodes = []
+    for target, suite, method in re.findall(r"Test Case '-\[(\w+)\.(\w+) ([^]]+)\]' failed", content):
+        nodes.append(dict(target=target, nodeIdentifier=f"{suite}/{method}"))
+    for suite, method, target in re.findall(
+            r"Test case '(\w+)[./]([^']+)' failed on '[^']+ - (\w+)-Runner \(\d+\)'", content):
+        nodes.append(dict(target=target, nodeIdentifier=f"{suite}/{method}"))
+    unscoped = re.findall(r"[✘×] Test (.+?) (?:failed|recorded an issue)", content)
+    if unscoped:
+        results[0].detail += "; unscoped log failures: " + "; ".join(dict.fromkeys(unscoped))
+    for suite in selected:
+        failures = [node["nodeIdentifier"] for node in matching_nodes(nodes, suite)]
+        if failures:
+            results.append(Result(destination.alias, label + " " + suite, False, "; ".join(failures)))
+    # An unreadable bundle is a pass-level error, never evidence that every selected suite failed.
+    return results
 
 
 def test_pass(destination, configuration, selected, label, record=False, intro_order=None, timing=None, workers=1, skipped=()):

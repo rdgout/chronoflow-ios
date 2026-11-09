@@ -2138,7 +2138,7 @@ Main restoration validation: source comparison confirms the two methods and enti
 
 - [x] Compare requested launch-only arguments and environment against the cold process seed, including removed keys and duplicate overrides; cold-launch when they differ. Preserve caller-authored arguments for scene validation because XCTest adds argv defaults. End editing and resign first responder before reset teardown; keep the 12 s acknowledgement ceiling. Cover language/content-size cold launches and a Dutch/XXLarge in-edit reset with process/count assertions.
 - [x] Separate successful Verify resend countdown from throttle failure, wait for actual countdown/error state before auditing, and add contextual assertion messages plus host fixture coverage.
-- [ ] Scope unreadable xcresult errors to their pass, retain reader diagnostics, and attribute log failures only to their own suite. Cover serial/clone logs and keep incomplete result extraction failing the gate.
+- [x] Scope unreadable xcresult errors to their pass, retain reader diagnostics, and attribute log failures only to their own suite. Cover serial/clone logs and keep incomplete result extraction failing the gate.
 - [ ] Run lint/quick and iOS source checks, deliver atomic patches on `caa72aa` if worktree metadata remains read-only, and record exact 17e reruns and acceptance limits.
 
 ## Open questions for the user
