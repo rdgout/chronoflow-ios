@@ -2095,6 +2095,17 @@ User decision 2026-11-06: implement these when the named states exist; this roun
 - [ ] **Keep pending local edits on login upsert.** Trigger: future profile/name editing, walkthrough completion or Settings UI tasks begin writing to the outbox through Phase 9c's `OutboxRepository.enqueue(_:)` local-mutation task. Evidence: `Sources/LocalStore/SessionAccountDatabase.swift:29–45` overwrites name, walkthroughSeen and policies; RN `src/db/store-account.ts:10–23,46–64` preserves queued name/walkthrough edits and settings sections. Same-account sign-in is reachable while already signed in (`Sources/AppCore/SessionController.swift:354–359` reopens without a wipe). Fix: preserve pending local values/sections transactionally during login upsert, matching the existing Phase 9c full-pull protection; test same-account login with queued edits before enabling those producers.
 - [x] **Missing policies skip the terms gate (latent).** Trigger: the future terms screen task replaces Phase 4's `.terms` route seam and makes the Phase 10a/11d terms gate visible. Evidence: RN `src/session/gate.ts:78–79` keeps missing policies loading; `Sources/LocalStore/AccountReadinessRepository.swift:17` falls through to walkthrough/app. Fix: match RN's unresolved-policy loading behavior before choosing a destination, preserving its explicit first-load allowance; test missing → loaded policies and terms precedence with the terms screen.
 
+## Hosted test repair follow-up (user, 2026-11-09)
+
+- [x] Keep Debug plan fixtures out of the Release readiness test build without exposing app seeds.
+- [ ] Restore key-window and visible-content guards at layout settlement; measure contrast from committed rendered content.
+- [ ] Keep Step/Legend content within asymmetric horizontal safe areas.
+- [ ] Route committed unverified sessions after request cancellation and restore.
+- [ ] Restore cheap default Welcome self-comparisons and auth capture guards, without references.
+- [ ] Cover AppServices default file-store wiring through both factories.
+- [ ] Replace unreliable tab minimization UI observations with configuration coverage and stable native tab navigation.
+- [ ] Correct the tier map, pass lint/host and Debug/Release compile checks, and deliver atomic follow-up commits or patches.
+
 ## Open questions for the user
 
 | # | Question | Default | Blocks |
