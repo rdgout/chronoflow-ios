@@ -17,7 +17,7 @@ nonisolated final class SignUpTests: XCTestCase {
         let submit = app.buttons["sign-up.submit"]
         AuthUIFlow.reveal(submit, in: app)
         submit.tap()
-        XCTAssertTrue(app.staticTexts["route.verify"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.scrollViews["verify.scroll"].waitForExistence(timeout: 8))
     }
 }
 
@@ -25,7 +25,9 @@ nonisolated final class SignUpTests: XCTestCase {
     AuthUIFlow.openSignIn(app)
     AuthUIFlow.reveal(app.buttons["sign-in.signup"], in: app)
     app.buttons["sign-in.signup"].tap()
-    XCTAssertTrue(app.textFields["sign-up.name"].waitForExistence(timeout: 4))
+    XCTAssertTrue(
+        app.textFields["sign-up.name"].waitForExistence(timeout: 4),
+        "Expected sign-up.name after opening Create account")
 }
 
 @MainActor func fillSignUp(
@@ -39,8 +41,10 @@ nonisolated final class SignUpTests: XCTestCase {
         let field =
             identifier.contains("password") || identifier.contains("confirmation")
             ? app.secureTextFields[identifier] : app.textFields[identifier]
-        AuthUIFlow.reveal(field, in: app)
-        field.tap()
-        field.typeText(value + (identifier == "sign-up.confirmation" && !submit ? "" : "\n"))
+        guard
+            AuthUIFlow.type(
+                value + (identifier == "sign-up.confirmation" && !submit ? "" : "\n"), into: field, in: app,
+                newPassword: identifier == "sign-up.password" || identifier == "sign-up.confirmation")
+        else { return }
     }
 }

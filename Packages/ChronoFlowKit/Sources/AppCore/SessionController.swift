@@ -77,6 +77,13 @@ public protocol SessionAccountStore: Sendable {
     func open(accountID: AccountID) async throws
     func upsert(_ account: SessionAccount) async throws
     func close() async throws
+    func markEmailVerified(accountID: AccountID, email: String) async throws -> Bool
+}
+
+extension SessionAccountStore {
+    public func markEmailVerified(accountID: AccountID, email: String) async throws -> Bool {
+        throw SessionFailure.databaseUnavailable
+    }
 }
 
 public protocol SessionControlling: Sendable {
@@ -179,8 +186,42 @@ public actor SessionController: SessionControlling {
         }
     }
 
+    public func confirmEmailVerification(expected: SessionSnapshot, email: String) async throws -> Bool {
+        let generation = generation
+        let previous = tail
+        let task = Task { [weak self] in
+            await previous?.value
+            guard let self else { return false }
+            return try await self.performVerification(expected: expected, email: email, generation: generation)
+        }
+        tail = Task { _ = await task.result }
+        return try await withTaskCancellationHandler {
+            try await task.value
+        } onCancel: {
+            task.cancel()
+        }
+    }
+
+    private func performVerification(expected: SessionSnapshot, email: String, generation: UInt64) async throws -> Bool
+    {
+        try Task.checkCancellation()
+        guard self.generation == generation, activeSession() == expected else { return false }
+        let updated = try await accounts.markEmailVerified(
+            accountID: AccountID(expected.session.accountId), email: email)
+        try Task.checkCancellation()
+        guard updated, self.generation == generation, activeSession() == expected else { return false }
+        await requestSync(expected.epoch)
+        return self.generation == generation && activeSession() == expected
+    }
+
     public func signOut(discardPending: Bool, unauthorized: Bool = false) async throws -> SignOutResult {
         try await enqueueSignOut(discardPending: discardPending, unauthorized: unauthorized, expectedEpoch: nil)
+    }
+
+    public func signOut(expected: SessionSnapshot, discardPending: Bool) async throws -> SignOutResult {
+        guard activeSession() == expected else { return .signedOut }
+        return try await enqueueSignOut(
+            discardPending: discardPending, unauthorized: false, expectedEpoch: expected.epoch)
     }
 
     public func unauthorized(epoch: UInt64) async throws -> SignOutResult {

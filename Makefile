@@ -7,7 +7,7 @@ SWIFT_PATHS := App AppTests AppUITests RenderTests PerfUITests Packages/ChronoFl
 SIM_CONCURRENCY ?=
 SIM_RUNNER := SIM_CONCURRENCY=$(SIM_CONCURRENCY) python3 -I Scripts/launch-simulators.py
 
-.PHONY: generate format lint test snapshots duo perf tokens fonts assets auth-board-pngs generators-check launch-resources-check check simulator-check matrix targeted quick host-tests package-tests token-tests asset-tests
+.PHONY: generate format lint test snapshots audits duo perf tokens fonts assets auth-board-pngs generators-check launch-resources-check check simulator-check matrix targeted quick host-tests package-tests token-tests asset-tests
 
 generate:
 	$(XCODEGEN) generate
@@ -25,6 +25,9 @@ test:
 
 snapshots:
 	$(SIM_RUNNER) --no-generate --devices 17e --mode snapshots
+
+audits:
+	AUTH_AUDIT_FULL=$(or $(AUTH_AUDIT_FULL),1) TEST_RUN_TIMEOUT=$(or $(TEST_RUN_TIMEOUT),5400) $(SIM_RUNNER) --no-generate --devices 17e --only AppUITests/AuthAuditTests $(if $(filter 1,$(REUSE_BUILD)),--reuse-build,)
 
 simulator-check:
 	$(SIM_RUNNER) --no-generate --devices 17e

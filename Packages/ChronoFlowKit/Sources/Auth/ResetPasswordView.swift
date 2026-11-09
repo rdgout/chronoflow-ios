@@ -10,9 +10,14 @@
         @State private var request: Task<Void, Never>?
         @State private var frames: [AuthElement: CGRect] = [:]
         let measure: (AuthElement, CGRect) -> Void
-        public init(model: ResetPasswordModel, measure: @escaping (AuthElement, CGRect) -> Void = { _, _ in }) {
+        let automaticallyFocusesErrors: Bool
+        public init(
+            model: ResetPasswordModel, automaticallyFocusesErrors: Bool = true,
+            measure: @escaping (AuthElement, CGRect) -> Void = { _, _ in }
+        ) {
             _model = State(initialValue: model)
             self.measure = measure
+            self.automaticallyFocusesErrors = automaticallyFocusesErrors
         }
         private func copy(_ key: String) -> String { AuthCopy.string(key, locale: locale) }
         public var body: some View {
@@ -80,7 +85,7 @@
             .onChange(of: model.form.busy) {
                 if model.form.busy {
                     focus = nil
-                } else if model.form.failure != nil {
+                } else if automaticallyFocusesErrors, model.form.failure != nil {
                     focus =
                         model.form.fields["password_confirmation"] != nil && model.form.fields["password"] == nil
                         ? "reset.confirmation" : "reset.password"

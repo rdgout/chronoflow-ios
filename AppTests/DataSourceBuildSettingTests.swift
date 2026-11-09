@@ -1,4 +1,5 @@
 import AppCore
+import Auth
 import Foundation
 import Testing
 
@@ -6,6 +7,39 @@ import Testing
 @testable import DataAccess
 
 @MainActor @Suite struct DataSourceBuildSettingTests {
+    #if DEBUG
+        @Test func auditPrefillsRequireAnIsolatedMockFixtureAndRetainFailureInputs() throws {
+            let audit = ["CF_AUTH_TEST_AUDIT_SCREEN": "sign-up", "CF_AUTH_TEST_AUDIT_STATE": "confirmation"]
+            #expect(AuthUITestConfiguration(environment: audit) == nil)
+            var environment = audit
+            environment["CF_AUTH_TEST_ID"] = UUID().uuidString
+            let configuration = try #require(AuthUITestConfiguration(environment: environment))
+            let source = MockDataSource(seed: MockServerState())
+            let signup = SignUpModel(
+                source: source, navigation: AuthNavigation(), deviceIdentity: { UUID().uuidString },
+                deviceName: "test", accept: { _ in })
+            configuration.prefill(signup)
+            #expect(signup.name == "Traveller" && signup.email == "new@example.com")
+            #expect(signup.password == "NewPassword123!" && signup.confirmation == "different")
+            let reset = ResetPasswordModel(
+                link: ResetPasswordLink(token: "test", email: "demo@example.com"), source: source,
+                navigation: AuthNavigation())
+            configuration.prefill(reset)
+            #expect(reset.password.isEmpty && reset.confirmation.isEmpty)
+            environment["CF_AUTH_TEST_AUDIT_SCREEN"] = "reset"
+            environment["CF_AUTH_TEST_AUDIT_STATE"] = "server"
+            try #require(AuthUITestConfiguration(environment: environment)).prefill(reset)
+            #expect(reset.password == "NewPassword123!" && reset.confirmation == "NewPassword123!")
+        }
+
+        @Test func recoveryUIFixtureForcesMockEvenWhenTheBuildRequestsAPI() throws {
+            let services = try AppServices(
+                info: ["CHRONOFLOW_DATA_SOURCE": "api"], testing: false,
+                environment: ["CF_AUTH_TEST_ID": UUID().uuidString])
+            #expect(services.factory.source == .mock && services.authUITestEnabled)
+        }
+    #endif
+
     @Test func builtSettingsAndTestSelection() throws {
         let info = try #require(Bundle.main.infoDictionary)
         #expect(["mock", "api"].contains(try #require(info["CHRONOFLOW_DATA_SOURCE"] as? String)))

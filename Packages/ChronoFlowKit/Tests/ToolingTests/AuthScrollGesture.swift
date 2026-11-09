@@ -15,6 +15,14 @@ nonisolated enum AuthScrollGesture {
         return viewport
     }
 
+    static func fullyVisible(_ frame: CGRect, in viewport: CGRect) -> Bool {
+        guard !frame.isEmpty, !frame.isInfinite, !frame.isNull,
+            !viewport.isEmpty, !viewport.isInfinite, !viewport.isNull
+        else { return false }
+        // AX audit coordinates round-trip through Float.
+        return viewport.insetBy(dx: -0.01, dy: -0.01).contains(frame)
+    }
+
     static func reveal(_ frame: CGRect, in viewport: CGRect) -> (start: CGPoint, end: CGPoint)? {
         guard !viewport.isEmpty, !viewport.isInfinite, !viewport.isNull else { return nil }
         let upward = frame.maxY > viewport.maxY

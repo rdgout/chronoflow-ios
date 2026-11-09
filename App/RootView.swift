@@ -24,6 +24,7 @@ struct RootView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     var navigator = RootNavigator()
     var authModel: SignInModel?
+    var authServices: AuthSessionServices?
     var moonAnchorStore: MoonAnchorStore?
     var launchIntro: LaunchIntro?
     var forcesReduceMotion = false
@@ -45,6 +46,8 @@ struct RootView: View {
                 AuthRootView(
                     model: authModel, back: { navigator.navigate(to: .welcome) },
                     guest: { navigator.navigate(to: .guestWizard) })
+            } else if route == .verify, let model = authServices?.verifyModel {
+                VerifyEmailView(model: model).id(ObjectIdentifier(model))
             } else {
                 #if DEBUG
                     RoutePlaceholder(route: route)

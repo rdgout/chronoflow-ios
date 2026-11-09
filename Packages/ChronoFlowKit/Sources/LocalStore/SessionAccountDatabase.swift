@@ -44,6 +44,18 @@ public actor SessionAccountDatabase: SessionAccountStore {
         }
     }
 
+    public func markEmailVerified(accountID: AccountID, email: String) async throws -> Bool {
+        guard let database, await database.accountID == accountID else { return false }
+        return try await database.write { db in
+            guard var record = try AccountRecord.fetchOne(db, key: accountID.rawValue), record.email == email else {
+                return false
+            }
+            record.hasVerifiedEmail = true
+            try record.save(db)
+            return true
+        }
+    }
+
     public func close() async throws {
         isClosing = true
         defer { isClosing = false }

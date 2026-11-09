@@ -1,4 +1,5 @@
 import AppCore
+import LocalStore
 import UIKit
 
 @main
@@ -11,6 +12,15 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func verificationRequired(epoch: UInt64) async {
         guard let nativeSession, await nativeSession.controller.epoch == epoch else { return }
+        guard let database = await nativeSession.accounts.activeDatabase(),
+            let account = try? await AccountRepository(database: database).account(), !account.hasVerifiedEmail,
+            await nativeSession.controller.epoch == epoch
+        else { return }
+        await authServices?.prepareVerification()
+        guard await nativeSession.controller.epoch == epoch,
+            await authServices?.verificationContext(requireUnverified: true)?.epoch == epoch,
+            authServices?.verifyModel?.isActive == true
+        else { return }
         navigator.navigate(to: .verify)
     }
 }

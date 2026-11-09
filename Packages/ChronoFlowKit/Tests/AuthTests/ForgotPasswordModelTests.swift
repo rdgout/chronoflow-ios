@@ -5,6 +5,25 @@ import Foundation
 import Testing
 
 @MainActor struct ForgotPasswordModelTests {
+    @Test func mockMailDeliveryUsesTheSubmittedRecipientEvenAfterLaterEdits() async throws {
+        let navigation = AuthNavigation()
+        var recipients: [String] = []
+        let model = ForgotPasswordModel(
+            source: try authTestSource(), navigation: navigation, email: "unknown@example.com",
+            mail: {
+                recipients.append($0)
+                return false
+            })
+        await model.submit()
+        model.editEmail("demo@example.com")
+        await model.openEmail { _ in
+            Issue.record("Mock mail opened a real mail app")
+            return true
+        }
+        #expect(recipients == ["unknown@example.com"])
+        #expect(model.sentEmail == "unknown@example.com" && navigation.path.isEmpty)
+    }
+
     @Test func existingAndUnknownAddressesHaveIdenticalSuccessWithoutASession() async throws {
         let source = try authTestSource()
         for email in ["demo@example.com", "unknown@example.com"] {

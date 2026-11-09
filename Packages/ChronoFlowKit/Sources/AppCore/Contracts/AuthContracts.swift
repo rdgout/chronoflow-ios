@@ -94,7 +94,7 @@ public struct ResetPasswordInput: Codable, Sendable, Equatable {
     }
 }
 
-public struct SignedVerificationInput: Codable, Sendable, Equatable {
+public struct SignedVerificationInput: Codable, Sendable, Hashable {
     public var id: String
     public var hash: String
     public var expires: Int

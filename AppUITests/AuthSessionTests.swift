@@ -30,7 +30,7 @@ nonisolated final class AuthSessionTests: XCTestCase {
         try twoFactor(recovery: true)
     }
 
-    @MainActor func testUnverifiedAccountUsesVerifySeamOnSignInAndRestore() {
+    @MainActor func testUnverifiedAccountUsesVerifyScreenOnSignInAndRestore() {
         let app = launch(unverified: true)
         AuthUIFlow.openSignIn(app)
         AuthUIFlow.signIn(app, email: MockScenarioValues.demoEmail)
@@ -65,7 +65,7 @@ nonisolated final class AuthSessionTests: XCTestCase {
         XCTAssertEqual(app.textFields["sign-in.email"].value as? String, "")
         XCTAssertEqual(app.secureTextFields["sign-in.password"].value as? String, "")
         XCTAssertFalse(app.staticTexts["route.today"].exists)
-        XCTAssertFalse(app.staticTexts["route.verify"].exists)
+        XCTAssertFalse(app.scrollViews["verify.scroll"].exists)
         XCTAssertFalse(app.textFields["two-factor.code"].exists)
         XCTAssertFalse(app.images["launch.opening"].exists)
     }
@@ -110,7 +110,11 @@ nonisolated final class AuthSessionTests: XCTestCase {
     }
 
     @MainActor private func assertRoute(_ route: String, in app: XCUIApplication) {
-        XCTAssertTrue(app.staticTexts["route.\(route)"].waitForExistence(timeout: 12))
+        if route == "verify" {
+            XCTAssertTrue(app.scrollViews["verify.scroll"].waitForExistence(timeout: 12))
+        } else {
+            XCTAssertTrue(app.staticTexts["route.\(route)"].waitForExistence(timeout: 12))
+        }
         XCTAssertFalse(app.images["launch.opening"].exists)
         XCTAssertFalse(app.staticTexts["welcome.wordmark"].exists)
     }
@@ -123,9 +127,20 @@ nonisolated final class AuthSessionTests: XCTestCase {
     }
 
     @MainActor private func signOut(_ app: XCUIApplication, route: String) {
-        app.staticTexts["route.\(route)"].tap()
+        if route == "verify" {
+            let different = app.buttons["verify.different-email"]
+            AuthUIFlow.waitUntilEnabled(different)
+            AuthUIFlow.reveal(different, in: app)
+            different.tap()
+        } else {
+            app.staticTexts["route.\(route)"].tap()
+        }
         XCTAssertTrue(app.textFields["sign-in.email"].waitForExistence(timeout: 8))
-        XCTAssertFalse(app.staticTexts["route.\(route)"].exists)
+        if route == "verify" {
+            XCTAssertFalse(app.scrollViews["verify.scroll"].exists)
+        } else {
+            XCTAssertFalse(app.staticTexts["route.\(route)"].exists)
+        }
         XCTAssertFalse(app.images["launch.opening"].exists)
         XCTAssertFalse(app.staticTexts["welcome.wordmark"].exists)
     }

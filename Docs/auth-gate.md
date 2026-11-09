@@ -352,3 +352,123 @@ Forgot AX5/xxLarge native input frame and text rect allow at most `1 / scale` pt
 their pixel comparison excludes only the union of both native input bounds expanded by one device
 pixel. Every other pixel and all measured labels, buttons, banners, notices and other elements remain
 exact, as do native font metrics. Default-size references remain byte-identical.
+## Phases 11b–11d — native recovery acceptance (2026-11-08)
+
+Implemented: Reset form/field/server/throttle/offline, expired editable-email recovery and done;
+Sign up with a single native visibility Toggle and inline terms/privacy links; Verify waiting/failed,
+resend deadlines/errors and explicit discard. Reset's approved copy promises no session and says other
+devices are signed out. The production password policy is server-only; both new-password fields carry
+matching iOS passwordRules. AuthField font and height logic is unchanged.
+
+Backend contract was inspected read-only with `git show HEAD:…` at
+`841be4bd84fe2136f9c00eb794506812385959db`. Reset is public POST auth/reset-password → 204;
+registration is public POST auth/register → an unverified session; resend and signed verify are
+bearer-authenticated POST email/verification-notification and email/verify; status uses GET users/me.
+URLProtocol fixtures cover the encoded reset token/email and exact signed id/hash/expires/signature
+body. Existing API suites cover public bearer exclusion, registration language/device fields and
+204 results. Mock server journeys consume recipient/account-scoped mail data with no inbox UI or
+external mail/network. Debug auth UI fixture IDs force the mock factory even with an API build setting.
+
+Universal-link input is HTTPS app.chronoflow.net/reset-password/{token}?email=… or
+/email/verify/{id}/{hash}?expires=…&signature=… . Native browsing-activity tests cover cold capture and
+warm dispatch; malformed recognized links select expired/failed. Signed values are never re-signed.
+Unauthenticated verification waits for sign-in. The DeviceSigned entitlement includes applinks and
+webcredentials, using the configurable Local.xcconfig team; simulator/mock entry needs neither a team
+nor an entitlement. These tests do not prove AASA deployment or physical email-app dispatch.
+
+Verification writes are scoped to account/email/session epoch and share the session controller's
+transition queue. The DB transaction checks the stored email and changes only the verified flag.
+Older sync drains before the write; the normal sync request and gate route follow it. Delayed
+unverified callbacks inspect the stored flag. Explicit discard also carries its captured session.
+The maximum server deadline survives users/me's zero delay and foregrounding; no client cooldown is
+invented. Failed resend respects the same deadline. Storage failure UI, inbox, toast, email-changed,
+guest-claim recovery, terms reader and walkthrough remain outside these boards/phases.
+
+Snapshot coverage is intentionally lean and unrecorded: Reset 8 states/104 references, Sign up 10/130,
+Verify 10/130. Each state has en/nl × light/dark at default size on 17e, SE and Duo profiles, plus one
+17e en/light xxLarge reference. Control/layout tests include native AutoFill and visibility semantics,
+server error focus, all four safe insets and last-action reachability with keyboard insets. Each audit
+method handles one state and five appearance/language/type variants, using the existing strict policy
+and same-frame subtitle pixel measurement. No new unconditional contrast exceptions are added.
+Runtime timing, real keyboard behavior, VoiceOver, board frames and visual acceptance await the user's
+simulator run. Existing 78 Forgot references remain byte-identical; the AX5 font/height fix is separate.
+
+Run the suites in Docs/tooling.md. Real AASA/team registration, physical links/passkeys, unbuilt gate
+destinations and Phase 6–8 launch acceptance remain open; this work does not claim TestFlight readiness.
+
+### Phases 11b–11d simulator fix round 2 (8 November 2026)
+
+The user recorded 104 Reset, 130 SignUp and 130 Verify references and reports their
+compare suites passing. The phase patches include those exact PNGs without rerecording.
+The supplied controls/layout/link/session passes remain evidence for the previous build;
+this round's changed flows and audits still need the focused simulator rerun below.
+
+Native SwiftUI TextField/SecureField keep `.textContentType(.newPassword)`. SwiftUI exposes
+no passwordRules API; the traits probe and unsupported assertions are removed under the
+user's OQ 21 decision. The server enforces the full policy. Accessibility identifiers,
+labels and hints attach to the input before decorative modifiers; the audit requires one
+match for every scheduled identifier.
+
+UI entry declines the system strong-password sheet using `GenerateStrongPasswordButton`
+and `xmark`, checking the app and SpringBoard without localized labels. It checks native
+field focus before typing and retries at most three times, including before confirmation.
+The app's AutoFill traits stay enabled. Audits dismiss the keyboard, settle geometry and
+reveal every scheduled control before checking it. Only contrast issues geometrically
+inside a scheduled but clipped control wait for that control's visible audit; other issue
+types and unrelated frames remain strict. Each distinct scroll position is audited once.
+
+The unattributed wordmark exception now uses every current auth screen's unique
+`auth.brand` geometry and rendered wordmark pixels (`skyTitle` over the sky), requiring a
+complete finite minimum of at least 4.5:1. It retains the 0.01 pt Float/Double containment
+tolerance. Banner pixels cannot exempt a wordmark, and named controls cannot use this
+exception. Reset form/done do not expect Back. All 37 audit states keep en/nl × light/dark
+plus en/light xxLarge, split into light, Dark and XXLarge test methods with at most two
+launches per method. The XCTest 600-second watchdog is unchanged; measured per-method
+runtime remains user-host acceptance.
+
+Unbindable malformed verify URLs are ignored across authentication, as required by round
+1's account binding. A separate structurally valid but tampered URL for the seeded
+unverified demo account is retained until sign-in and produces the failed screen. Failed
+Verify audits use that fixture, including an isolated Debug-only mock 429 for failed-state
+resend. Sign-up/mail/relaunch and cross-account wipe flows continue through the shared
+native AutoFill entry helper. No authentication/link-binding rule is relaxed.
+
+### Phases 11b–11d audit policy fix round 4 (8 November 2026)
+
+The user reports round-3 VerifyEmailTests and AccountRecoveryTests passing on 17e.
+The default AuthAuditTests suite takes 1,287 seconds (21.5 minutes), accepted by the
+user; the remaining reported failures concern contrast attribution and policy.
+
+The user-approved measured text exception applies across all implemented auth screens,
+including the `sign-up.back` footer. That footer requires its exact identifier and
+matching button geometry, plus a complete finite rendered minimum ≥ 4.5:1 using
+`skyCopy`/`skyCopyBackground`. Subtitle and unattributed wordmark exceptions retain
+their identifier/geometry rules and the same minimum. Geometry attribution retains
+the existing 0.01 pt Float/Double tolerance; localized copy never identifies an issue.
+
+Each eligible contrast issue captures fresh control frames, labels, viewport and pixels
+inside the audit handler. Frames are checked immediately before and after the screenshot;
+changed geometry retries at most three times, then fails. Measurement consumes only that
+capture's values, with no later element/frame reads or raster reused from an earlier
+scroll position. Issue geometry must belong to the measured element. Missing, clipped,
+unmeasurable or subthreshold text cannot receive the measured exception. Existing
+scheduled-control reveal/defer checks and proactive footer/banner ratio checks remain.
+
+Under the user's WCAG 1.4.3 decision, inactive UI components are exempt from contrast:
+ignore only an exact `.contrast` issue whose element reports `isEnabled == false` in
+the audit handler. This covers disabled `verify.resend` during countdown/throttle,
+including failed verification. An enabled or missing element gets no disabled exception;
+clipping, hit-region, trait and combined issue types remain strict. Diagnostics retain
+the enabled state and exception decision.
+
+This round uses host verification only. Revised simulator audits remain the user's run;
+no updated runtime pass, recording or visual acceptance is claimed.
+
+Host results: `make quick` passes strict lint and the new policy regressions, stopping
+only at the known `APICookieTests.realRedirectCookieHandlingIsDisabled` loopback EPERM.
+The remaining quick tiers pass separately: 10 TokenGen tests, 4 AssetGen tests and
+90 signing/resource/runner fixtures. Static Swift 6 compilation against the iOS 17
+simulator target passes for the app, hosted tests and all UI tests without executing a
+simulator. Logs: `build/round4-quick.log`, `build/round4-quick-rest.log`,
+`build/round4-final-fixtures.log` and `build/round4-typecheck.log` (the final fixture
+run includes classification of the new host policy suite).

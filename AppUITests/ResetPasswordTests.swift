@@ -31,11 +31,7 @@ nonisolated final class ResetPasswordTests: XCTestCase {
 
 @MainActor func fillReset(_ app: XCUIApplication, password: String, confirmation: String) {
     let field = app.secureTextFields["reset.password"]
-    AuthUIFlow.reveal(field, in: app)
-    field.tap()
-    field.typeText(password + "\n")
+    guard AuthUIFlow.type(password + "\n", into: field, in: app, newPassword: true) else { return }
     let confirm = app.secureTextFields["reset.confirmation"]
-    AuthUIFlow.reveal(confirm, in: app)
-    confirm.tap()
-    confirm.typeText(confirmation + "\n")
+    AuthUIFlow.type(confirmation + "\n", into: confirm, in: app, newPassword: true)
 }

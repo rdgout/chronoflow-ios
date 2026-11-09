@@ -5,6 +5,51 @@ import Testing
 @testable import DataAccess
 
 @Suite struct APIDataSourceTests {
+    @Test func nativeLinkInputsReachExactPublicResetAndAuthenticatedSignedVerificationBodies() async throws {
+        let id = "0199a3c0-0000-7000-8000-000000000001"
+        let hash = String(repeating: "a", count: 40)
+        let signature = String(repeating: "b", count: 64)
+        let resetURL = try #require(
+            URL(string: "https://app.chronoflow.net/reset-password/a%252Fb?email=a%2Bb%40example.com"))
+        let verifyURL = try #require(
+            URL(
+                string:
+                    "https://app.chronoflow.net/email/verify/\(id)/\(hash)?expires=1800000000&signature=\(signature)"))
+        guard case .reset(let reset) = AuthLink(url: resetURL), case .verify(let signed?) = AuthLink(url: verifyURL)
+        else {
+            Issue.record("Link parsing failed")
+            return
+        }
+        let verification = try fixtureText("auth/verification.json")
+        let server = StubServer { request in
+            let body = try requestJSON(request)
+            if request.url?.path == "/v1/auth/reset-password" {
+                #expect(request.value(forHTTPHeaderField: "Authorization") == nil)
+                #expect(body["token"] == .string("a%2Fb") && body["email"] == .string("a+b@example.com"))
+                #expect(
+                    body["password"] == .string("NewPassword123!")
+                        && body["password_confirmation"] == .string("NewPassword123!"))
+                return .init(204)
+            }
+            #expect(request.url?.path == "/v1/email/verify")
+            #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer artificial-old-token")
+            #expect(
+                body
+                    == JSONObject([
+                        "id": .string(id), "hash": .string(hash), "expires": .number(1_800_000_000),
+                        "signature": .string(signature),
+                    ]))
+            return .init(200, verification)
+        }
+        let source = APIDataSource(client: try server.client())
+        try await source.resetPassword(
+            ResetPasswordInput(
+                token: reset.token, email: reset.email, password: "NewPassword123!",
+                passwordConfirmation: "NewPassword123!"))
+        _ = try await source.verifyEmail(signed)
+        #expect(server.requests.count == 2)
+    }
+
     @Test func publicAuthRoutesAndSignedVerification() async throws {
         let session = try fixtureText("auth/session.json")
         let twoFactor = try fixtureText("auth/two-factor.json")

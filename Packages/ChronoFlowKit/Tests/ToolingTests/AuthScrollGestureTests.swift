@@ -2,6 +2,28 @@ import CoreGraphics
 import Testing
 
 struct AuthScrollGestureTests {
+    @Test func auditCoverageRequiresTheWholeControlInsideTheSafeKeyboardViewport() {
+        let window = CGRect(x: 0, y: 0, width: 390, height: 844)
+        let safeArea = CGRect(x: 0, y: 47, width: 390, height: 763)
+        let keyboard = CGRect(x: 0, y: 550, width: 390, height: 294)
+        let viewport = AuthScrollGesture.viewport(
+            window: window, safeArea: safeArea, scroll: window, keyboard: keyboard)
+        let footer = CGRect(x: 16, y: 791, width: 358, height: 48)
+        let consent = CGRect(x: 48, y: 530, width: 294, height: 39)
+        let visible = CGRect(x: 36, y: 490, width: 318, height: 44)
+        #expect(AuthScrollGesture.fullyVisible(visible, in: viewport))
+        #expect(!AuthScrollGesture.fullyVisible(footer, in: viewport))
+        #expect(!AuthScrollGesture.fullyVisible(consent, in: viewport))
+        #expect(!AuthScrollGesture.fullyVisible(footer, in: safeArea))
+        #expect(AuthScrollGesture.fullyVisible(footer.offsetBy(dx: 0, dy: -310), in: viewport))
+        #expect(AuthScrollGesture.fullyVisible(CGRect(x: 36, y: 506, width: 318, height: 44.000001), in: viewport))
+        #expect(!AuthScrollGesture.fullyVisible(CGRect(x: 36, y: 506, width: 318, height: 44.1), in: viewport))
+        for invalid in [CGRect.zero, .null, .infinite] {
+            #expect(!AuthScrollGesture.fullyVisible(invalid, in: viewport))
+            #expect(!AuthScrollGesture.fullyVisible(visible, in: invalid))
+        }
+    }
+
     @Test func navigationViewportIncludesBackButtonWithoutChangingContentOrKeyboardBounds() {
         let window = CGRect(x: 10, y: 20, width: 390, height: 844)
         let safeArea = window.insetBy(dx: 24, dy: 47)
