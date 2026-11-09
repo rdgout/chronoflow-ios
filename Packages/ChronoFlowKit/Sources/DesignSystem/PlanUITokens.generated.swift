@@ -53,8 +53,14 @@ nonisolated public enum PlanUITokens {
     public static var wizardAirportFontSize: CGFloat { 20 }
     public static var wizardAirportHeight: CGFloat { 76 }
     public static var wizardAirportLineHeight: CGFloat { 26 }
+    public static var wizardArcDotRadius: CGFloat { 5 }
+    public static var wizardArcFontSize: CGFloat { 26 }
+    public static var wizardArcHeight: CGFloat { 40 }
+    public static var wizardArcLineHeight: CGFloat { 32 }
     public static var wizardButtonHeight: CGFloat { 52 }
     public static var wizardCardRadius: CGFloat { 16 }
+    public static var wizardCheckingGap: CGFloat { 18 }
+    public static var wizardCheckingPadding: CGFloat { 22 }
     public static var wizardChoiceFontSize: CGFloat { 18 }
     public static var wizardChoiceGap: CGFloat { 10 }
     public static var wizardChoiceHeight: CGFloat { 76 }
@@ -66,6 +72,14 @@ nonisolated public enum PlanUITokens {
     public static var wizardControlGap: CGFloat { 6 }
     public static var wizardDisabledOpacity: Double { 0.4 }
     public static var wizardEmptyOpacity: Double { 0.35 }
+    public static var wizardFailureBodyFontSize: CGFloat { 15 }
+    public static var wizardFailureBodyLineHeight: CGFloat { 22 }
+    public static var wizardFailureDashLength: CGFloat { 3 }
+    public static var wizardFailureIconCircle: CGFloat { 52 }
+    public static var wizardFailureIconSize: CGFloat { 24 }
+    public static var wizardFailurePadding: CGFloat { 28 }
+    public static var wizardFailureTitleFontSize: CGFloat { 22 }
+    public static var wizardFailureTitleLineHeight: CGFloat { 28 }
     public static var wizardFlightRowHeight: CGFloat { 64 }
     public static var wizardHintBottom: CGFloat { 10 }
     public static var wizardHintFontSize: CGFloat { 13 }
@@ -88,7 +102,10 @@ nonisolated public enum PlanUITokens {
     public static var wizardSearchCodeWidth: CGFloat { 44 }
     public static var wizardSearchNameLineHeight: CGFloat { 21 }
     public static var wizardSearchRowHeight: CGFloat { 60 }
+    public static var wizardSecondaryFontSize: CGFloat { 16 }
+    public static var wizardSecondaryLineHeight: CGFloat { 22 }
     public static var wizardSheetRadius: CGFloat { 38 }
+    public static var wizardSpinnerSize: CGFloat { 14 }
     public static var wizardStopDotGap: CGFloat { 4 }
     public static var wizardStopDotWidth: CGFloat { 2 }
     public static var wizardStopGlyphSize: CGFloat { 14 }
@@ -140,6 +157,30 @@ extension Typography {
         Style(
             face: .figtree500, size: screenBodyLg.size, lineHeight: screenBodyLg.lineHeight,
             tracking: screenBodyLg.tracking, relativeTo: screenBodyLg.relativeTo)
+    }
+    public static var wizardFailureTitle: Style {
+        Style(
+            face: .fraunces400Opsz20, size: PlanUITokens.wizardFailureTitleFontSize,
+            lineHeight: PlanUITokens.wizardFailureTitleLineHeight,
+            tracking: screenBody.tracking, relativeTo: .title3)
+    }
+    public static var wizardFailureBody: Style {
+        Style(
+            face: .figtree400, size: PlanUITokens.wizardFailureBodyFontSize,
+            lineHeight: PlanUITokens.wizardFailureBodyLineHeight,
+            tracking: screenBody.tracking, relativeTo: .body)
+    }
+    public static var wizardSecondary: Style {
+        Style(
+            face: .figtree500, size: PlanUITokens.wizardSecondaryFontSize,
+            lineHeight: PlanUITokens.wizardSecondaryLineHeight,
+            tracking: screenBody.tracking, relativeTo: .body)
+    }
+    public static var wizardArc: Style {
+        Style(
+            face: .fraunces400Opsz32, size: PlanUITokens.wizardArcFontSize,
+            lineHeight: PlanUITokens.wizardArcLineHeight,
+            tracking: screenBody.tracking, relativeTo: .title2)
     }
     public static var wizardNavTitle: Style {
         Style(

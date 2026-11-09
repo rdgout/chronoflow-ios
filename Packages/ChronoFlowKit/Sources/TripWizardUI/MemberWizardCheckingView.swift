@@ -24,29 +24,45 @@
                     if let failure = model.checking.failure {
                         checkFailure(failure)
                     } else {
-                        VStack(alignment: .leading, spacing: PlanUITokens.space4) {
+                        VStack(alignment: .leading, spacing: PlanUITokens.wizardCheckingGap) {
                             WizardCheckingArc(
                                 from: model.draft.form.legs[0].fromIata,
                                 to: model.draft.form.legs[model.draft.form.returnBoundary - 1].toIata)
-                            ForEach(Array(checkingLines.enumerated()), id: \.offset) { index, line in
-                                WizardCheckLine(
-                                    label: t(line), done: model.checking.ticks > index,
-                                    busy: model.checking.ticks == index,
-                                    accessibility: checkLineLabel(index))
+                            VStack(alignment: .leading, spacing: PlanUITokens.space3) {
+                                ForEach(Array(checkingLines.enumerated()), id: \.offset) { index, line in
+                                    WizardCheckLine(
+                                        label: t(line), done: model.checking.ticks > index,
+                                        busy: model.checking.ticks == index,
+                                        accessibility: checkLineLabel(index))
+                                }
                             }
                             if model.checking.slow {
                                 Text(t("This is taking longer than usual. You can keep this screen open."))
                                     .font(Typography.wizardHint.font).foregroundStyle(ColorToken.mutedForeground.color)
                                     .accessibilityIdentifier("wizard.checking.slow")
                             }
-                        }.padding(PlanUITokens.space5)
-                            .background(
-                                ColorToken.card.color, in: RoundedRectangle(cornerRadius: PlanUITokens.radius3Xl)
-                            )
-                            .overlay {
-                                RoundedRectangle(cornerRadius: PlanUITokens.radius3Xl).strokeBorder(
-                                    ColorToken.border.color, lineWidth: AuthTokens.borderWidth)
-                            }
+                        }.padding(.horizontal, PlanUITokens.space5).padding(
+                            .vertical, PlanUITokens.wizardCheckingPadding
+                        )
+                        .background(
+                            ColorToken.card.color, in: RoundedRectangle(cornerRadius: PlanUITokens.radius3Xl)
+                        )
+                        .overlay {
+                            RoundedRectangle(cornerRadius: PlanUITokens.radius3Xl).strokeBorder(
+                                ColorToken.border.color, lineWidth: AuthTokens.borderWidth)
+                        }
+                        .background {
+                            let spread = scheme == .dark ? AuthTokens.darkShadowSpread : AuthTokens.lightShadowSpread
+                            RoundedRectangle(cornerRadius: max(0, PlanUITokens.radius3Xl + spread))
+                                .fill(ColorToken.card.color)
+                                .shadow(
+                                    color: ColorToken.authShadow.color,
+                                    radius: scheme == .dark
+                                        ? AuthTokens.darkShadowRadius : AuthTokens.lightShadowRadius,
+                                    y: scheme == .dark ? AuthTokens.darkShadowY : AuthTokens.lightShadowY
+                                )
+                                .padding(-spread)
+                        }
                     }
                 }
             )
@@ -90,7 +106,7 @@
                 kind = "offline"
                 title = "Checking needs a connection"
                 body = "Connect to the internet and try again."
-                symbol = "wifi.slash"
+                symbol = "icloud.slash"
             case .throttled:
                 kind = "throttle"
                 title = "Wait a moment"
@@ -106,21 +122,25 @@
                 symbol = "exclamationmark.circle"
             }
             return VStack(spacing: PlanUITokens.space3) {
-                Image(systemName: symbol).font(Typography.screenPageTitle.font).foregroundStyle(
+                Image(systemName: symbol).font(.system(size: PlanUITokens.wizardFailureIconSize)).foregroundStyle(
                     ColorToken.mutedForeground.color
                 )
-                .frame(minWidth: AuthTokens.touch, minHeight: AuthTokens.touch).background(
+                .frame(width: PlanUITokens.wizardFailureIconCircle, height: PlanUITokens.wizardFailureIconCircle)
+                .background(
                     ColorToken.muted.color, in: Circle()
                 ).accessibilityHidden(true)
-                Text(t(title)).font(Typography.screenSectionTitle.font)
-                Text(t(body, ["count": String(model.retrySeconds)])).font(Typography.wizardSubtitle.font)
-                    .foregroundStyle(ColorToken.mutedForeground.color)
-            }.multilineTextAlignment(.center).frame(maxWidth: .infinity).padding(PlanUITokens.space5)
+                WelcomeText(t(title), style: Typography.wizardFailureTitle, color: .foreground)
+                WelcomeText(
+                    t(body, ["count": String(model.retrySeconds)]), style: Typography.wizardFailureBody,
+                    color: .mutedForeground)
+            }.multilineTextAlignment(.center).frame(maxWidth: .infinity)
+                .padding(.horizontal, PlanUITokens.space5).padding(.vertical, PlanUITokens.wizardFailurePadding)
                 .overlay {
-                    RoundedRectangle(cornerRadius: PlanUITokens.wizardCardRadius).strokeBorder(
+                    RoundedRectangle(cornerRadius: PlanUITokens.radius3Xl).strokeBorder(
                         ColorToken.border.color,
                         style: StrokeStyle(
-                            lineWidth: AuthTokens.borderWidth, dash: [PlanUITokens.space1, PlanUITokens.space1]))
+                            lineWidth: AuthTokens.borderWidth,
+                            dash: [PlanUITokens.wizardFailureDashLength, PlanUITokens.wizardFailureDashLength]))
                 }
                 .accessibilityElement(children: .contain).accessibilityIdentifier("wizard.checking.\(kind)")
         }
@@ -130,36 +150,41 @@
             if questions.indices.contains(index) {
                 let prompt = questions[index]
                 wizardShell(
-                    title: serverCopy(prompt.text), subtitle: t("A few quick questions"), id: "question.\(index)"
+                    title: serverCopy(prompt.text), eyebrow: t("A few quick questions"), id: "question.\(index)",
+                    answerHint: true
                 ) {
-                    if let field = prompt.fields.first {
-                        if prompt.kind == .screening, prompt.shape.kind == .boolean {
-                            ForEach([false, true], id: \.self) { value in
-                                choice(
-                                    value ? "Yes" : "No", selected: model.draft.state.profile[field] == .bool(value),
-                                    id: "question.\(value)"
-                                ) {
-                                    model.answerQuestion(.bool(value))
+                    VStack(alignment: .leading, spacing: PlanUITokens.wizardChoiceGap) {
+                        if let field = prompt.fields.first {
+                            if prompt.kind == .screening, prompt.shape.kind == .boolean {
+                                ForEach([false, true], id: \.self) { value in
+                                    choice(
+                                        value ? "Yes" : "No",
+                                        selected: model.draft.state.profile[field] == .bool(value),
+                                        id: "question.\(value)"
+                                    ) {
+                                        model.answerQuestion(.bool(value))
+                                    }
+                                }
+                            } else if prompt.kind == .ageBand {
+                                ForEach(prompt.shape.options, id: \.self) { value in
+                                    let labels = ["under_18": "Under 18", "18_64": "18–64", "65_plus": "65 or older"]
+                                    choice(
+                                        labels[value] ?? value,
+                                        selected: model.draft.state.profile[field] == .string(value),
+                                        id: "question.\(value)"
+                                    ) {
+                                        model.answerQuestion(.string(value))
+                                    }
                                 }
                             }
-                        } else if prompt.kind == .ageBand {
-                            ForEach(prompt.shape.options, id: \.self) { value in
-                                let labels = ["under_18": "Under 18", "18_64": "18–64", "65_plus": "65 or older"]
-                                choice(
-                                    labels[value] ?? value,
-                                    selected: model.draft.state.profile[field] == .string(value),
-                                    id: "question.\(value)"
-                                ) {
-                                    model.answerQuestion(.string(value))
-                                }
+                            if let why = Self.questionWhy[field] {
+                                Text(t(why)).font(Typography.wizardHint.font).foregroundStyle(
+                                    ColorToken.mutedForeground.color
+                                )
+                                .padding(.top, PlanUITokens.space1).padding(.horizontal, PlanUITokens.space1)
                             }
-                        }
-                        if let why = Self.questionWhy[field] {
-                            Text(t(why)).font(Typography.wizardHint.font).foregroundStyle(
-                                ColorToken.mutedForeground.color)
                         }
                     }
-                    tapHint
                 }
             }
         }
@@ -181,10 +206,10 @@
                 title: t("No plan available"), id: "excluded", button: t("Change my answers"),
                 action: { model.changeExcludedAnswers() },
                 content: {
-                    VStack(alignment: .leading, spacing: PlanUITokens.space3) {
+                    VStack(alignment: .leading, spacing: PlanUITokens.wizardChoiceGap) {
                         ForEach(Array((model.draft.state.review?.reasons ?? []).enumerated()), id: \.offset) {
                             _, line in
-                            Text(serverCopy(line)).font(Typography.wizardSubtitle.font)
+                            WelcomeText(serverCopy(line), style: Typography.screenBodyLg, color: .foreground)
                         }
                     }.frame(maxWidth: .infinity, alignment: .leading).padding(PlanUITokens.space5)
                         .background(
@@ -223,7 +248,8 @@
                         if reduced {
                             Circle().fill(ColorToken.mutedForeground.color).padding(PlanUITokens.space2)
                         } else {
-                            ProgressView().controlSize(.small)
+                            ProgressView().controlSize(.mini).tint(ColorToken.mutedForeground.color)
+                                .frame(width: PlanUITokens.wizardSpinnerSize, height: PlanUITokens.wizardSpinnerSize)
                         }
                     }
                 }.frame(width: PlanUITokens.space6, height: PlanUITokens.space6).accessibilityHidden(true)
@@ -239,7 +265,7 @@
         let to: String
         var body: some View {
             HStack(spacing: PlanUITokens.space3) {
-                Text(from).font(Typography.screenPageTitle.font)
+                Text(from).font(Typography.wizardArc.font)
                 TimelineView(.animation(paused: reduced)) { context in
                     Canvas { graphics, size in
                         let inset = PlanUITokens.space2
@@ -253,20 +279,21 @@
                         graphics.stroke(
                             arc, with: .color(ColorToken.dawn.color),
                             style: StrokeStyle(
-                                lineWidth: AuthTokens.focusWidth, dash: [PlanUITokens.space1, PlanUITokens.space2]))
+                                lineWidth: AuthTokens.focusWidth,
+                                dash: [PlanUITokens.space1, PlanUITokens.wizardControlGap]))
                         let phase =
                             reduced ? 0.65 : (sin(context.date.timeIntervalSinceReferenceDate * .pi / 1.8) + 1) / 2
                         let point = CGPoint(
                             x: inset + width * phase, y: inset + height * (1 - 2 * phase) * (1 - 2 * phase))
-                        let radius = PlanUITokens.space1
+                        let radius = PlanUITokens.wizardArcDotRadius
                         graphics.fill(
                             Path(
                                 ellipseIn: CGRect(
                                     x: point.x - radius, y: point.y - radius, width: radius * 2, height: radius * 2)),
                             with: .color(ColorToken.dawn.color))
                     }
-                }.frame(height: AuthTokens.touch)
-                Text(to).font(Typography.screenPageTitle.font)
+                }.frame(height: PlanUITokens.wizardArcHeight)
+                Text(to).font(Typography.wizardArc.font)
             }.accessibilityHidden(true)
         }
     }

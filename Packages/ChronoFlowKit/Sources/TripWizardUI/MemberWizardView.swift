@@ -8,6 +8,7 @@
 
     public struct MemberWizardView: View {
         @Environment(\.locale) var locale
+        @Environment(\.colorScheme) var scheme
         @Bindable var model: MemberWizardModel
         let dismiss: () -> Void
         @State var path: [Destination]

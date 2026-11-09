@@ -45,6 +45,22 @@ func planUITokens(root: URL) throws -> Data {
             Style(face: .figtree500, size: screenBodyLg.size, lineHeight: screenBodyLg.lineHeight,
                   tracking: screenBodyLg.tracking, relativeTo: screenBodyLg.relativeTo)
         }
+        public static var wizardFailureTitle: Style {
+            Style(face: .fraunces400Opsz20, size: PlanUITokens.wizardFailureTitleFontSize, lineHeight: PlanUITokens.wizardFailureTitleLineHeight,
+                  tracking: screenBody.tracking, relativeTo: .title3)
+        }
+        public static var wizardFailureBody: Style {
+            Style(face: .figtree400, size: PlanUITokens.wizardFailureBodyFontSize, lineHeight: PlanUITokens.wizardFailureBodyLineHeight,
+                  tracking: screenBody.tracking, relativeTo: .body)
+        }
+        public static var wizardSecondary: Style {
+            Style(face: .figtree500, size: PlanUITokens.wizardSecondaryFontSize, lineHeight: PlanUITokens.wizardSecondaryLineHeight,
+                  tracking: screenBody.tracking, relativeTo: .body)
+        }
+        public static var wizardArc: Style {
+            Style(face: .fraunces400Opsz32, size: PlanUITokens.wizardArcFontSize, lineHeight: PlanUITokens.wizardArcLineHeight,
+                  tracking: screenBody.tracking, relativeTo: .title2)
+        }
         public static var wizardNavTitle: Style {
             Style(face: .figtree500, size: PlanUITokens.wizardRouteFontSize, lineHeight: PlanUITokens.wizardRouteLineHeight,
                   tracking: screenBody.tracking, relativeTo: .subheadline)

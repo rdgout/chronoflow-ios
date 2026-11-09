@@ -73,10 +73,13 @@ import TripWizard
         try await eventually { fixture.model.retrySeconds == 3 }
         fixture.model.beginChecking()
         #expect(await fixture.source.count("review") == 1)
+        try await eventually { fixture.clock.deadlines.contains(1) }
         fixture.clock.advance(to: 1)
         try await eventually { fixture.model.retrySeconds == 2 }
+        try await eventually { fixture.clock.deadlines.contains(2) }
         fixture.clock.advance(to: 2)
         try await eventually { fixture.model.retrySeconds == 1 }
+        try await eventually { fixture.clock.deadlines.contains(2.4) }
         fixture.clock.advance(to: 2.4)
         try await eventually { fixture.model.retrySeconds == 0 }
         #expect(await fixture.source.count("review") == 1)

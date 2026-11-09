@@ -31,6 +31,14 @@ nonisolated final class TripWizardReviewTests: XCTestCase {
         XCTAssertTrue(app.otherElements["wizard.checking.offline"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.buttons["wizard.checking.continue"].isEnabled)
         XCTAssertFalse(app.otherElements["wizard.debug.continue"].exists)
+        let back = app.navigationBars.buttons["Back"]
+        XCTAssertTrue(back.exists)
+        app.buttons["wizard.checking.secondary-close"].tap()
+        XCTAssertTrue(app.alerts["Discard this trip?"].waitForExistence(timeout: 3))
+        app.alerts.buttons["Keep editing"].tap()
+        XCTAssertTrue(app.otherElements["wizard.checking.offline"].exists)
+        back.tap()
+        XCTAssertTrue(app.otherElements["wizard.sleep"].waitForExistence(timeout: 5))
     }
 
     @MainActor private func journey(returnFlight: Bool) throws {

@@ -44,7 +44,8 @@
         }
 
         func wizardShell<Content: View>(
-            title: String, subtitle: String? = nil, id: String, button: String? = nil, answerHint: Bool = false,
+            title: String, subtitle: String? = nil, eyebrow: String? = nil, id: String, button: String? = nil,
+            answerHint: Bool = false,
             enabled: Bool = true, action: @escaping () -> Void = {}, @ViewBuilder content: () -> Content
         ) -> some View {
             VStack(spacing: 0) {
@@ -59,10 +60,17 @@
                 ScrollView {
                     VStack(alignment: .leading, spacing: PlanUITokens.wizardContentGap) {
                         VStack(alignment: .leading, spacing: PlanUITokens.wizardControlGap) {
-                            Text(title).font(
-                                (title.count > 80 ? Typography.wizardLongTitle : Typography.screenPageTitle).font
+                            if let eyebrow {
+                                Text(eyebrow.uppercased()).font(Typography.screenEyebrow.font)
+                                    .tracking(Typography.screenEyebrow.tracking).foregroundStyle(
+                                        ColorToken.dawnText.color)
+                            }
+                            WelcomeText(
+                                title,
+                                style: title.count > 80 ? Typography.wizardLongTitle : Typography.screenPageTitle,
+                                color: .foreground
                             )
-                            .accessibilityAddTraits(.isHeader)
+                            .accessibilityAddTraits(.isHeader).accessibilityIdentifier("wizard.title")
                             if let subtitle {
                                 Text(subtitle).font(Typography.wizardSubtitle.font).foregroundStyle(
                                     ColorToken.mutedForeground.color)
@@ -75,7 +83,15 @@
             .background(ColorToken.background.color).foregroundStyle(ColorToken.foreground.color)
             .safeAreaInset(edge: .bottom) {
                 if let button {
-                    VStack(spacing: PlanUITokens.space2) {
+                    VStack(spacing: PlanUITokens.wizardControlGap) {
+                        if id == "excluded" || (id == "checking" && model.checking.failure != nil) {
+                            Button(t("Close")) {
+                                if id == "excluded" { close() } else { confirmingDiscard = true }
+                            }
+                            .buttonStyle(.plain).font(Typography.wizardSecondary.font)
+                            .foregroundStyle(ColorToken.foreground.color).frame(minHeight: AuthTokens.touch)
+                            .disabled(closing).accessibilityIdentifier("wizard.\(id).secondary-close")
+                        }
                         Button {
                             guard !continuing, !closing, enabled else { return }
                             continuing = true
@@ -85,14 +101,13 @@
                             Text(button).font(Typography.wizardButton.font)
                                 .frame(maxWidth: .infinity, minHeight: PlanUITokens.wizardButtonHeight)
                         }
-                        .buttonStyle(.plain).foregroundStyle(ColorToken.primaryForeground.color)
-                        .background(ColorToken.primary.color, in: Capsule())
+                        .buttonStyle(.plain).foregroundStyle(
+                            (id == "excluded" ? ColorToken.foreground : .primaryForeground).color
+                        )
+                        .background((id == "excluded" ? ColorToken.surface2 : .primary).color, in: Capsule())
                         .disabled(!enabled || closing || continuing || model.persistenceFailed)
                         .opacity(enabled ? 1 : PlanUITokens.wizardDisabledOpacity)
                         .accessibilityIdentifier("wizard.\(id).continue")
-                        if id == "excluded" || (id == "checking" && model.checking.failure != nil) {
-                            Button(t("Close")) { close() }.frame(minHeight: AuthTokens.touch)
-                        }
                     }.padding(.horizontal, PlanUITokens.space5).padding(.vertical, PlanUITokens.space3)
                         .background(ColorToken.background.color)
                 } else if answerHint {
@@ -103,7 +118,7 @@
             }
             .navigationTitle(t("New trip")).navigationBarTitleDisplayMode(.inline)
             .toolbarRole(.editor)
-            .navigationBarBackButtonHidden(id == "checking")
+            .navigationBarBackButtonHidden(id == "checking" && model.checking.failure == nil)
             .background { if id == "checking" { WizardSwipeBack() } }
             .toolbar {
                 ToolbarItem(placement: .principal) {
