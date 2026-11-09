@@ -55,3 +55,8 @@ The runner resolves/creates it by iPhone 17e type and regular runtime, excludes 
 prepares destinations in background threads during builds. Results stay under `17e/` and
 `17e-isolated/`; summaries and `timings.json` merge under 17e. `SIM_CONCURRENCY=1` keeps one
 destination; recording and intro-order diagnostics retain their existing single-device sequence.
+
+`ReadinessRelease` builds only the hosted `ReleaseReadinessTests` target from its own directory,
+with `TEST_HOST`/`BUNDLE_LOADER` and only a ChronoFlow dependency. Select it with
+`make targeted DEVICES="17e" ONLY="ReleaseReadinessTests/ReleaseReadinessTests"`.
+Regenerate the project before running; Release no longer compiles the Debug AppTests bundle.

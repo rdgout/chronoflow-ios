@@ -1,7 +1,7 @@
 AppTests/UITestReseedTests
 AppTests/DataSourceBuildSettingTests
 AppTests/DataSourceFactoryHostedTests
-AppTests/ReleaseReadinessTests
+ReleaseReadinessTests/ReleaseReadinessTests
 AppUITests/UIReseedTests
 AppUITests/AuthSessionTests
 AppUITests/ReadinessTests

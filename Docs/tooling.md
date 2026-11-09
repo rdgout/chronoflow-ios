@@ -290,7 +290,7 @@ accepts SwiftPM filters and configurations.
 |---|---|---|
 | AccountStorageLifecycleTests, SessionLifecycleTests, KeychainSessionStoreTests, DataSourceBuildSettingTests, DataSourceFactoryHostedTests, SyncLifecycleTests, AccountWipeTests, SessionReadinessTests | logic | Debug AppTests, once on 17e in check |
 | LaunchConnectionTests | matrix (live app lifecycle) | Debug AppTests on 17e in check; other runtimes only when requested |
-| ReleaseReadinessTests | release | Isolated Release AppTests, once on 17e in check |
+| ReleaseReadinessTests | release | Isolated hosted ReleaseReadinessTests, once on 17e in check |
 
 None of these suites uses the profile-rendering policy. Runner fixtures verify both selection and
 the resulting check commands, including configuration, destination and exactly-once execution.
@@ -1160,7 +1160,7 @@ Duo remains on its iPhone19-4 runtime. `make duo` now includes the readiness UI 
 The hosted Keychain round-trip uses a unique test service. AppTests still links only ChronoFlow
 through TEST_HOST/BUNDLE_LOADER; package host tests use an in-memory SessionStore.
 
-The dedicated `ReadinessRelease` scheme lists only AppTests. Its command enables testability for
+The dedicated `ReadinessRelease` scheme lists only the small hosted ReleaseReadinessTests target. Its command enables testability for
 the hosted `@testable import ChronoFlow`; the `Perf` scheme keeps its normal Release settings.
 Package test bundles run only in Debug, where their `@testable` imports are supported. Selecting
 a test with `-only-testing` does not remove other test targets from a scheme's build graph.
@@ -1202,7 +1202,7 @@ Validate the Release signed-out restriction separately on the pinned simulator:
 xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData \
   -onlyUsePackageVersionsFromResolvedFile -scheme ReadinessRelease -configuration Release \
   -destination 'platform=iOS Simulator,name=iPhone 17e,OS=27.2' -testLanguage en -testRegion US \
-  ENABLE_TESTABILITY=YES -only-testing:AppTests/ReleaseReadinessTests test
+  ENABLE_TESTABILITY=YES -only-testing:ReleaseReadinessTests/ReleaseReadinessTests test
 ```
 
 Direct hosted-test compilation must use `-swift-version 6 -default-isolation MainActor`, with
@@ -1577,7 +1577,7 @@ xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData \
   -onlyUsePackageVersionsFromResolvedFile -scheme ReadinessRelease -configuration Release \
   -destination 'platform=iOS Simulator,id=D788B715-AA0A-4B5A-882B-323E1F984769' \
   -testLanguage en -testRegion US -parallel-testing-enabled NO ENABLE_TESTABILITY=YES \
-  -only-testing:AppTests/ReleaseReadinessTests test
+  -only-testing:ReleaseReadinessTests/ReleaseReadinessTests test
 ```
 
 ## Phase 9b: data-source contracts, API and mock (6 November 2026)
@@ -1853,13 +1853,13 @@ make targeted DEVICES="17e" ONLY="AppTests/SyncLifecycleTests"
 make targeted DEVICES="17e" ONLY="AppTests/AccountWipeTests"
 make targeted DEVICES="17e" ONLY="AppTests/SessionReadinessTests"
 make targeted DEVICES="17e" ONLY="AppTests/LaunchConnectionTests"
-make targeted DEVICES="17e" ONLY="AppTests/ReleaseReadinessTests"
+make targeted DEVICES="17e" ONLY="ReleaseReadinessTests/ReleaseReadinessTests"
 ```
 
 To build each configuration once and run the selection together:
 
 ```sh
-make targeted DEVICES="17e" ONLY="AppTests/SyncLifecycleTests AppTests/AccountWipeTests AppTests/SessionReadinessTests AppTests/LaunchConnectionTests AppTests/ReleaseReadinessTests AppTests/SessionLifecycleTests"
+make targeted DEVICES="17e" ONLY="AppTests/SyncLifecycleTests AppTests/AccountWipeTests AppTests/SessionReadinessTests AppTests/LaunchConnectionTests ReleaseReadinessTests/ReleaseReadinessTests AppTests/SessionLifecycleTests"
 ```
 
 make check remains an orchestrator-only integrated check on 17e. **make duo is not needed** for 9d:
@@ -1936,7 +1936,7 @@ make targeted DEVICES="17e" ONLY="AppTests/SyncLifecycleTests"
 make targeted DEVICES="17e" ONLY="AppTests/SessionReadinessTests"
 make targeted DEVICES="17e" ONLY="AppTests/AccountWipeTests"
 make targeted DEVICES="17e" ONLY="AppTests/LaunchConnectionTests"
-make targeted DEVICES="17e" ONLY="AppTests/ReleaseReadinessTests"
+make targeted DEVICES="17e" ONLY="ReleaseReadinessTests/ReleaseReadinessTests"
 ```
 
 
@@ -1967,7 +1967,7 @@ After applying the patches and the separate reference commit, run outside the sa
 ```sh
 make generate
 make targeted DEVICES="17e" ONLY="AppTests/AccountStorageLifecycleTests AppTests/SessionLifecycleTests AppTests/KeychainSessionStoreTests AppTests/DataSourceBuildSettingTests AppTests/DataSourceFactoryHostedTests AppTests/SyncLifecycleTests AppTests/AccountWipeTests AppTests/SessionReadinessTests AppTests/LaunchConnectionTests"
-make targeted DEVICES="17e" ONLY="AppTests/ReleaseReadinessTests"
+make targeted DEVICES="17e" ONLY="ReleaseReadinessTests/ReleaseReadinessTests"
 make check
 ```
 
@@ -2808,3 +2808,8 @@ The runner resolves/creates it by iPhone 17e type and regular runtime, excludes 
 prepares destinations in background threads during builds. Results stay under `17e/` and
 `17e-isolated/`; summaries and `timings.json` merge under 17e. `SIM_CONCURRENCY=1` keeps one
 destination; recording and intro-order diagnostics retain their existing single-device sequence.
+
+`ReadinessRelease` builds only the hosted `ReleaseReadinessTests` target from its own directory,
+with `TEST_HOST`/`BUNDLE_LOADER` and only a ChronoFlow dependency. Select it with
+`make targeted DEVICES="17e" ONLY="ReleaseReadinessTests/ReleaseReadinessTests"`.
+Regenerate the project before running; Release no longer compiles the Debug AppTests bundle.

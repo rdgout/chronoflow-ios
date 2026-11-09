@@ -23,7 +23,7 @@ PHASE9_HOSTED = (
     'AppTests/KeychainSessionStoreTests', 'AppTests/DataSourceBuildSettingTests',
     'AppTests/DataSourceFactoryHostedTests', 'AppTests/SyncLifecycleTests',
     'AppTests/SeededSessionIntegrationTests', 'AppTests/AccountWipeTests', 'AppTests/SessionReadinessTests',
-    'AppTests/LaunchConnectionTests', 'AppTests/ReleaseReadinessTests',
+    'AppTests/LaunchConnectionTests', 'ReleaseReadinessTests/ReleaseReadinessTests',
 )
 
 AUTH_HOSTED = (
@@ -276,7 +276,7 @@ with runner['forward_run_signals']():
 
     def test_timeout_marks_selection_failed_and_skips_later_passes(self):
         destination = runner.Destination('duo', 'test', 'Booted')
-        selected = ['AppUITests/SignInTests', 'AppUITests/AuthSessionTests', 'AppTests/ReleaseReadinessTests']
+        selected = ['AppUITests/SignInTests', 'AppUITests/AuthSessionTests', 'ReleaseReadinessTests/ReleaseReadinessTests']
         namespace = runner.test_pass.__globals__
         for inactive in (False, True):
             execute = Mock(side_effect=runner.TestRunTimeout('test', 0.1, inactive=inactive))
@@ -523,12 +523,26 @@ class ClassificationTests(unittest.TestCase):
             self.assertEqual(len(runner.matching_nodes(nodes, 'WelcomeTests/SmokeTests')), 1)
 
     def test_release_only_configuration_is_isolated(self):
-        result = runner.configurations(['AppTests/ReleaseReadinessTests', 'AppUITests/WelcomeTests'])
-        self.assertEqual(result, {'Debug': ['AppUITests/WelcomeTests'], 'Release': ['AppTests/ReleaseReadinessTests']})
+        result = runner.configurations(['ReleaseReadinessTests/ReleaseReadinessTests', 'AppUITests/WelcomeTests'])
+        self.assertEqual(result, {'Debug': ['AppUITests/WelcomeTests'], 'Release': ['ReleaseReadinessTests/ReleaseReadinessTests']})
         project = (ROOT / 'project.yml').read_text()
         scheme = project.split('\n  ReadinessRelease:\n')[1].split('\n  Perf:\n')[0]
-        self.assertIn('targets: [AppTests]', scheme)
+        self.assertIn('targets: [ReleaseReadinessTests]', scheme)
         self.assertNotIn('ENABLE_TESTABILITY', project)
+        target = project.split('\n  ReleaseReadinessTests:\n', 1)[1].split('\n  RenderTests:', 1)[0]
+        self.assertIn('type: bundle.unit-test', target)
+        self.assertIn('TARGETED_DEVICE_FAMILY: "1"', target)
+        self.assertIn('SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO', target)
+        self.assertIn('TEST_HOST:', target)
+        self.assertIn('BUNDLE_LOADER: "$(TEST_HOST)"', target)
+        self.assertEqual(re.findall(r'- target: (\w+)', target), ['ChronoFlow'])
+        self.assertNotIn('- package:', target)
+        self.assertIn('- ReleaseReadinessTests', target)
+        node = {'nodeType': 'Test Target', 'name': 'ReleaseReadinessTests', 'children': [
+            {'nodeType': 'Test Case', 'nodeIdentifier': 'ReleaseReadinessTests/testRelease'}]}
+        self.assertEqual(len(runner.matching_nodes(list(runner.result_nodes(node)),
+                             'ReleaseReadinessTests/ReleaseReadinessTests')), 1)
+
 
     def test_release_readiness_and_perf_build_for_the_simulator_without_signing_overrides(self):
         project = (ROOT / 'project.yml').read_text()
@@ -773,7 +787,7 @@ class RunnerTests(unittest.TestCase):
                 status, output = self.execute(mode='check')
                 self.assertEqual(status, 1, output)
                 self.assertRegex(output, r'FAIL 17e Debug-(?:compare|serial) ' + re.escape(suite))
-                self.assertIn('PASS 17e Release-compare AppTests/ReleaseReadinessTests', output)
+                self.assertIn('PASS 17e Release-compare ReleaseReadinessTests/ReleaseReadinessTests', output)
         self.result_fail = None
 
     def test_trip_snapshots_record_then_compare_without_leaking_record_flags(self):
@@ -808,7 +822,7 @@ class RunnerTests(unittest.TestCase):
             self.environments.clear()
             with patch.dict(os.environ, {'SNAPSHOT_RECORD': record, 'TEST_RUNNER_SNAPSHOT_RECORD': '1'}):
                 status, output = self.execute(mode='check', aliases=['17e', 'duo'],
-                    only=list(AUTH_HOSTED + AUTH_UI) + ['AppTests/ReleaseReadinessTests'])
+                    only=list(AUTH_HOSTED + AUTH_UI) + ['ReleaseReadinessTests/ReleaseReadinessTests'])
             self.assertEqual(status, 0, output)
             recorded = [c for c, e in zip(self.commands, self.environments) if e.get('TEST_RUNNER_SNAPSHOT_RECORD')]
             self.assertEqual(len(recorded), int(record in ['1', 'all']))
@@ -817,7 +831,7 @@ class RunnerTests(unittest.TestCase):
                 self.assertEqual([v for v in command if v.startswith('-only-testing:')],
                                  ['-only-testing:' + suite for suite in AUTH_SNAPSHOTS])
                 self.assertEqual(command[command.index('-parallel-testing-enabled') + 1], 'NO')
-            for suite in AUTH_UI + ('AppTests/AuthSnapshotGuardTests', 'AppTests/ReleaseReadinessTests'):
+            for suite in AUTH_UI + ('AppTests/AuthSnapshotGuardTests', 'ReleaseReadinessTests/ReleaseReadinessTests'):
                 for c, env in zip(self.commands, self.environments):
                     if '-only-testing:' + suite in c:
                         self.assertNotIn('TEST_RUNNER_SNAPSHOT_RECORD', env)
@@ -825,13 +839,13 @@ class RunnerTests(unittest.TestCase):
     def test_auth_record_failure_still_runs_compare_audit_and_release(self):
         self.command_failure = lambda c: c[-1] == 'test-without-building' and any('record.xcresult' in a for a in c)
         with patch.dict(os.environ, SNAPSHOT_RECORD='1'):
-            status, output = self.execute(mode='check', only=list(AUTH_HOSTED + AUTH_UI) + ['AppTests/ReleaseReadinessTests'])
+            status, output = self.execute(mode='check', only=list(AUTH_HOSTED + AUTH_UI) + ['ReleaseReadinessTests/ReleaseReadinessTests'])
         self.assertEqual(status, 1, output)
         self.assertIn('xcodebuild exited 65', output)
         for suite in tuple(s for s in AUTH_HOSTED if s not in AUTH_SNAPSHOTS) + AUTH_UI:
             self.assertTrue(any('-only-testing:' + suite in c and not any('record.xcresult' in a for a in c)
                                 for c in self.commands_for_tests()), suite)
-        self.assertIn('PASS 17e Release-compare AppTests/ReleaseReadinessTests', output)
+        self.assertIn('PASS 17e Release-compare ReleaseReadinessTests/ReleaseReadinessTests', output)
 
     def test_isolated_device_is_reused_by_type_and_runtime_and_never_a_clone(self):
         primary = runner.resolve('17e', self.devices)
@@ -874,7 +888,7 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(status, 0, output)
         timings = json.loads((self.scratch / 'build/test-results/timings.json').read_text())['devices']['17e']
         self.assertIn('AppUITests/AuthSessionTests', timings['suites'])
-        self.assertIn('AppTests/ReleaseReadinessTests', timings['suites'])
+        self.assertIn('ReleaseReadinessTests/ReleaseReadinessTests', timings['suites'])
         self.assertIn('AppTests/AuthControlTests', timings['suites'])
         self.assertEqual(set(timings['selection']), set(runner.selection('check', '17e')))
         bundles = [c[c.index('-resultBundlePath') + 1] for c in self.commands_for_tests()]
@@ -1022,7 +1036,7 @@ class RunnerTests(unittest.TestCase):
         status, output = self.execute()
         self.assertEqual(status, 1)
         self.assertIn('FAIL se Debug-compare AppUITests/WelcomeTests: AppUITests/WelcomeTests/testExample()', output)
-        self.assertRegex(output, r'PASS \w+ Release-compare AppTests/ReleaseReadinessTests')
+        self.assertRegex(output, r'PASS \w+ Release-compare ReleaseReadinessTests/ReleaseReadinessTests')
         self.assertIn('PASS duo Debug-compare AppTests/DeviceGeometrySmokeTests', output)
 
     def test_failed_case_durations_are_kept_without_turning_failures_into_passes(self):
