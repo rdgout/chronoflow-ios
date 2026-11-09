@@ -89,7 +89,7 @@ struct AppTabs: View {
                 case .reminders: RemindersDestination(native: native)
                 case .plan:
                     SettingsPlanView(store: settingsPages, offline: settingsHome.offline) {
-                        try? await native?.refreshNow()
+                        _ = try? await native?.refreshNow()
                     }
                 default:
                     #if DEBUG
@@ -279,7 +279,11 @@ struct AppTabs: View {
             onSettings: { selection = .settings })
     }
 
-    @ViewBuilder private var today: some View {
+    private var today: some View {
+        ZStack { todayContent }.planRefreshable { try await native?.refreshNow() }
+    }
+
+    @ViewBuilder private var todayContent: some View {
         if let home, let formatter = home.formatter {
             TodayScreen(
                 trips: home.trips.trips, detail: home.selected?.detail, now: home.trips.now,
@@ -294,24 +298,34 @@ struct AppTabs: View {
                 pastTrips: { selection = .trips }
             )
         } else if native != nil {
-            PlanLoadingView(label: t("Loading today"))
+            ScrollView {
+                PlanLoadingView(label: t("Loading today")).padding(PlanUITokens.space4).planPageRail()
+                    .planRefreshContent()
+            }
+            .navigationTitle(t("Today")).background(ColorToken.background.color)
+            .accessibilityElement(children: .contain).accessibilityIdentifier("today.screen")
         } else {
             seam(.today)
         }
     }
-    @ViewBuilder private var trips: some View {
+    private var trips: some View {
+        ZStack { tripsContent }.planRefreshable { try await native?.refreshNow() }
+    }
+
+    @ViewBuilder private var tripsContent: some View {
         if let home, let formatter = home.formatter {
             TripsScreen(
                 trips: home.trips.trips, details: home.details.compactMapValues { $0.detail },
                 now: home.trips.now, loading: !home.synced || !home.trips.hasLoaded, formatter: formatter,
                 timeFormat: home.timeFormat, hidden: home.hidden,
                 open: { tripsPath.append(TripPageRoute(tripID: $0)) },
-                create: { openWizard() },
-                refresh: { try? await native?.refreshNow() })
+                create: { openWizard() })
         } else if native != nil {
             ScrollView {
-                TripsLoadingView().padding(PlanUITokens.space4).planPageRail()
-            }.navigationTitle(t("My trips")).background(ColorToken.background.color)
+                TripsLoadingView().padding(PlanUITokens.space4).planPageRail().planRefreshContent()
+            }
+            .navigationTitle(t("My trips")).background(ColorToken.background.color)
+            .accessibilityElement(children: .contain).accessibilityIdentifier("trips.screen")
         } else {
             seam(.trips)
         }

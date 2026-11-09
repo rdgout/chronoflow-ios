@@ -65,10 +65,11 @@
                     } else if let ended = lastEndedTrip(trips, now: now) {
                         completed(ended)
                     }
-                }.planContentBounds().padding(PlanUITokens.space4).planPageRail()
+                }.planContentBounds().padding(PlanUITokens.space4).planPageRail().planRefreshContent()
             }
             .background(ColorToken.background.color).foregroundStyle(ColorToken.foreground.color)
-            .navigationTitle(t("Today")).accessibilityIdentifier("today.screen")
+            .navigationTitle(t("Today")).accessibilityElement(children: .contain)
+            .accessibilityIdentifier("today.screen")
         }
         private var empty: some View {
             VStack(spacing: PlanUITokens.space3) {
@@ -80,7 +81,8 @@
                 Text(t("Add your flights and you get a day-by-day plan for sleep, light and caffeine."))
                     .foregroundStyle(ColorToken.mutedForeground.color)
             }.font(Typography.screenBodyLg.font).multilineTextAlignment(.center).frame(maxWidth: .infinity)
-                .padding(.vertical, PlanUITokens.space8).planEmptyCard().accessibilityIdentifier("today.empty")
+                .padding(.vertical, PlanUITokens.space8).planEmptyCard().accessibilityElement(children: .contain)
+                .accessibilityIdentifier("today.empty")
         }
         private func completed(_ trip: TripListValue) -> some View {
             let endDate = min(

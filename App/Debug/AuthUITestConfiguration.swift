@@ -11,6 +11,7 @@
         let termsPending: Bool
         let unverified: Bool
         let walkthroughSeen: Bool
+        let refreshUpdatesTrip: Bool
         let auditScreen: String?
         let auditState: String?
 
@@ -23,6 +24,7 @@
             termsPending = environment["CF_AUTH_TEST_TERMS_PENDING"] == "1"
             unverified = environment["CF_AUTH_TEST_UNVERIFIED"] == "1"
             walkthroughSeen = environment["CF_AUTH_TEST_WALKTHROUGH_SEEN"] == "1"
+            refreshUpdatesTrip = environment["CF_REFRESH_TEST_UPDATE_TRIP"] == "1"
             auditScreen = environment["CF_AUTH_TEST_AUDIT_SCREEN"]
             auditState = environment["CF_AUTH_TEST_AUDIT_STATE"]
         }

@@ -16,7 +16,7 @@ nonisolated enum TripsSnapshotState: String, CaseIterable { case list, empty, lo
     }
     return TripsScreen(
         trips: state == .empty ? [] : trips, details: account.details, now: PlanScreenFixture.now,
-        loading: state == .loading, formatter: formatter, open: { _ in }, refresh: {})
+        loading: state == .loading, formatter: formatter, open: { _ in })
 }
 
 nonisolated final class TripsSnapshotTests: XCTestCase {

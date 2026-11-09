@@ -13,7 +13,10 @@ nonisolated struct AppServices: Sendable {
         private let authTest: AuthUITestConfiguration?
         private let authTestSeed: MockServerState?
         private let timelineSeed: MockServerState?
+        private let refreshScenario: RefreshUITestScenario?
         var authUITestEnabled: Bool { authTest != nil }
+
+        func prepareRefreshUITest() async { await refreshScenario?.arm() }
     #endif
 
     func sessionCredentials() -> KeychainSessionStore {
@@ -53,6 +56,7 @@ nonisolated struct AppServices: Sendable {
                     seed: authTestSeed,
                     offline: authTest.offline,
                     mutationsOffline: authTest.settingsPending || authTest.walkthroughPending || authTest.termsPending,
+                    remoteTripUpdate: { await refreshScenario?.consume() ?? false },
                     bearer: bearer)
             }
         #endif
@@ -99,11 +103,18 @@ nonisolated struct AppServices: Sendable {
                 try factory.namespace == .mock && ProcessInfo.processInfo.arguments.contains("-cf.timeline-fixtures")
                 ? MockAppSeed.make(now: Date(), walkthroughSeen: true, includeTimelinePerformanceTrips: true) : nil
             authTest = requestedAuthTest
+            refreshScenario = requestedAuthTest?.refreshUpdatesTrip == true ? RefreshUITestScenario() : nil
             authTestSeed = try authTest.map {
-                SettingsBoardCaptureFixture.seed(
-                    try MockAppSeed.make(
-                        now: Date(), unverified: $0.unverified, walkthroughSeen: $0.walkthroughSeen,
-                        termsPending: $0.termsPending))
+                var seed = try MockAppSeed.make(
+                    now: Date(), unverified: $0.unverified, walkthroughSeen: $0.walkthroughSeen,
+                    termsPending: $0.termsPending)
+                if environment["CF_REFRESH_TEST_EMPTY_TRIPS"] == "1" {
+                    for id in seed.accounts.keys {
+                        seed.accounts[id]?.trips = []
+                        seed.accounts[id]?.details = [:]
+                    }
+                }
+                return SettingsBoardCaptureFixture.seed(seed)
             }
         #endif
     }

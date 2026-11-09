@@ -15,12 +15,11 @@
         public var hidden: [BlockType]
         public var open: (String) -> Void
         public var create: (() -> Void)?
-        public var refresh: () async -> Void
 
         public init(
             trips: [TripListValue], details: [String: TripDetail], now: Date, loading: Bool,
             formatter: CopyLineFormatter, timeFormat: TimeFormat = .value24, hidden: [BlockType] = [],
-            open: @escaping (String) -> Void, create: (() -> Void)? = nil, refresh: @escaping () async -> Void
+            open: @escaping (String) -> Void, create: (() -> Void)? = nil
         ) {
             self.trips = trips
             self.details = details
@@ -31,7 +30,6 @@
             self.hidden = hidden
             self.open = open
             self.create = create
-            self.refresh = refresh
         }
         private var language: Language { locale.language.languageCode?.identifier == "nl" ? .nl : .en }
         private func t(_ key: String) -> String { PlanStrings.text(key, language: language) }
@@ -54,7 +52,10 @@
                                     .buttonBorderShape(.capsule).accessibilityIdentifier("trips.create-empty")
                             }
                         }.multilineTextAlignment(.center).frame(maxWidth: .infinity)
-                            .padding(.vertical, PlanUITokens.space8).planEmptyCard().accessibilityIdentifier(
+                            .padding(.vertical, PlanUITokens.space8).planEmptyCard().accessibilityElement(
+                                children: .contain
+                            )
+                            .accessibilityIdentifier(
                                 "trips.empty")
                     } else {
                         ForEach(tripSections(trips), id: \.status.rawValue) { section in
@@ -82,18 +83,19 @@
                             }
                         }
                     }
-                }.planContentBounds().padding(PlanUITokens.space4).planPageRail()
-            }.refreshable { await refresh() }
-                .navigationTitle(t("My trips")).accessibilityIdentifier("trips.screen")
-                .toolbar {
-                    if let create {
-                        ToolbarItem(placement: .topBarTrailing) {
-                            Button(action: create) { Image(systemName: "plus") }
-                                .accessibilityLabel(t("New trip")).accessibilityIdentifier("trips.create")
-                        }
+                }.planContentBounds().padding(PlanUITokens.space4).planPageRail().planRefreshContent()
+            }
+            .navigationTitle(t("My trips")).accessibilityElement(children: .contain)
+            .accessibilityIdentifier("trips.screen")
+            .toolbar {
+                if let create {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button(action: create) { Image(systemName: "plus") }
+                            .accessibilityLabel(t("New trip")).accessibilityIdentifier("trips.create")
                     }
                 }
-                .background(ColorToken.background.color).foregroundStyle(ColorToken.foreground.color)
+            }
+            .background(ColorToken.background.color).foregroundStyle(ColorToken.foreground.color)
         }
     }
 #endif

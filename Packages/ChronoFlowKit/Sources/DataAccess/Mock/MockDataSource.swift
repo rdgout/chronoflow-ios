@@ -24,12 +24,14 @@ public actor MockDataSource: DataSource {
     private var requestToken: String?
     private var offline: Bool
     private let mutationsOffline: Bool
+    private let remoteTripUpdate: @Sendable () async -> Bool
     private var pendingTwoFactor: Set<String> = []
     private var failures: [MockMethod: DataFailure] = [:]
 
     public init(
         store: any MockStateStore = MemoryMockStateStore(), seed: MockServerState? = nil, offline: Bool = false,
         mutationsOffline: Bool = false,
+        remoteTripUpdate: @escaping @Sendable () async -> Bool = { false },
         now: @escaping @Sendable () -> Date = { Date() },
         delay: @escaping @Sendable () -> TimeInterval = { Double.random(in: 0.3...0.8) },
         sleep: @escaping APIClient.Sleep = { try await Task.sleep(for: .seconds($0)) },
@@ -41,6 +43,7 @@ public actor MockDataSource: DataSource {
         self.seed = seed
         self.offline = offline
         self.mutationsOffline = mutationsOffline
+        self.remoteTripUpdate = remoteTripUpdate
         self.now = now
         self.delay = delay
         self.sleep = sleep
@@ -388,7 +391,32 @@ public actor MockDataSource: DataSource {
     }
     public func fetchTrips() async throws -> [TripListItem] {
         try await begin(.fetchTrips)
-        return state!.accounts[try accountID(verified: true)]!.trips
+        let owner = try accountID(verified: true)
+        if await remoteTripUpdate() {
+            try update { state in
+                guard var account = state.accounts[owner], !account.trips.isEmpty else { return }
+                let flight = account.trips[0].card.flightNumber == "CF123" ? "CF456" : "CF123"
+                account.trips[0].card.flightNumber = flight
+                let tripID = account.trips[0].card.id
+                if var detail = account.details[tripID] {
+                    if !detail.trip.legs.isEmpty { detail.trip.legs[0].flightNumber = flight }
+                    detail.detailVersion = "refresh-" + flight
+                    account.details[tripID] = detail
+                    account.trips[0].detailVersion = detail.detailVersion
+                }
+                state.accounts[owner] = account
+            }
+        }
+        return state!.accounts[owner]!.trips
+    }
+
+    public func replaceRemoteTrips(_ trips: [TripListItem], details: [String: TripDetail]) throws {
+        try load()
+        let owner = try accountID(verified: true)
+        try update {
+            $0.accounts[owner]?.trips = trips
+            $0.accounts[owner]?.details = details
+        }
     }
     public func fetchTripDetail(id: String) async throws -> TripDetailResponse {
         try await begin(.fetchTripDetail)
