@@ -76,13 +76,13 @@
                     ? (route.count == 3 ? t("Stop") : t("Stop {{number}}", ["number": String(position)])) : t("To")
             let index = start + max(0, position - 1)
             let field = position == 0 ? "legs.\(start).fromIata" : "legs.\(index).toIata"
-            let same = position == route.count - 1 && !airport.iata.isEmpty && airport.iata == route.first?.iata
+            let same = route.first?.iata.isEmpty == false && route.first?.iata == route.last?.iata
+            let invalid = (same && position == route.count - 1) || model.draft.fieldErrors[field] != nil
             return HStack(spacing: PlanUITokens.space2) {
                 routeAirportRow(
                     label, airport: airport, locked: home && position == 0,
-                    lastTrip: !home && position == 0 && model.draft.state.fromLastTrip,
+                    lastTrip: !home && position == 0 && model.draft.state.fromLastTrip && !same,
                     reserveSwap: !home && route.count == 2,
-                    invalid: same || model.draft.fieldErrors[field] != nil,
                     identifier: position == 0 ? "wizard.from" : isStop ? "wizard.stop.\(position)" : "wizard.to"
                 ) {
                     model.openAirport(
@@ -97,13 +97,27 @@
                     } label: {
                         Image(systemName: "xmark").font(.system(size: PlanUITokens.wizardStopGlyphSize))
                             .foregroundStyle(ColorToken.mutedForeground.color)
-                            .frame(minWidth: AuthTokens.touch, minHeight: AuthTokens.touch)
+                            .frame(width: PlanUITokens.wizardStopRemoveSize, height: PlanUITokens.wizardStopRemoveSize)
                             .background(Color.wizardPickerFill, in: Circle())
+                            .frame(minWidth: AuthTokens.touch, minHeight: AuthTokens.touch)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(t("Remove stop in {{city}}", ["city": airport.city ?? airport.iata]))
                     .accessibilityIdentifier("wizard.remove-stop.\(position)")
                     .padding(.trailing, PlanUITokens.space3)
+                }
+            }
+            .overlay {
+                if invalid {
+                    UnevenRoundedRectangle(
+                        topLeadingRadius: position == 0 ? PlanUITokens.wizardCardRadius : 0,
+                        bottomLeadingRadius: position == route.count - 1 ? PlanUITokens.wizardCardRadius : 0,
+                        bottomTrailingRadius: position == route.count - 1 ? PlanUITokens.wizardCardRadius : 0,
+                        topTrailingRadius: position == 0 ? PlanUITokens.wizardCardRadius : 0
+                    )
+                    .strokeBorder(ColorToken.destructive.color, lineWidth: AuthTokens.focusWidth)
+                    .allowsHitTesting(false)
                 }
             }
         }
@@ -151,7 +165,7 @@
 
         private func routeAirportRow(
             _ label: String, airport: WizardRouteAirport, locked: Bool, lastTrip: Bool, reserveSwap: Bool,
-            invalid: Bool, identifier: String, action: @escaping () -> Void
+            identifier: String, action: @escaping () -> Void
         ) -> some View {
             Button(action: action) {
                 HStack {
@@ -178,12 +192,6 @@
                 .padding(.leading, PlanUITokens.space4)
                 .padding(.trailing, reserveSwap ? PlanUITokens.space16 : PlanUITokens.space3)
                 .padding(.vertical, PlanUITokens.space2)
-                .overlay {
-                    if invalid {
-                        RoundedRectangle(cornerRadius: PlanUITokens.wizardCardRadius)
-                            .strokeBorder(ColorToken.destructive.color, lineWidth: AuthTokens.focusWidth)
-                    }
-                }
             }
             .buttonStyle(.plain).disabled(locked).accessibilityIdentifier(identifier)
             .accessibilityLabel(
