@@ -69,16 +69,11 @@ final class AuthSessionServices {
                     }
                 }
                 if services.authUITestEnabled,
-                    let state = UITestRuntime.environment["CF_AUTH_TEST_VERIFY_STATE"],
-                    ["server", "offline", "failedServer", "failedOffline", "failedThrottle"].contains(state)
+                    let failure = AuthUITestConfiguration(environment: UITestRuntime.environment)?
+                        .verificationResendFailure
                 {
                     Task {
-                        await mock.failNext(
-                            method: .resendVerificationEmail,
-                            error: state.lowercased().hasSuffix("offline")
-                                ? .offline
-                                : state == "failedThrottle"
-                                    ? .throttled(retryAfterSeconds: 60, status: 429) : .server(status: 503))
+                        await mock.failNext(method: .resendVerificationEmail, error: failure)
                     }
                 }
                 if UITestRuntime.arguments.contains("-cf.forgotServerFailure") {

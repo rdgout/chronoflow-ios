@@ -1,4 +1,5 @@
 #if DEBUG
+    import AppCore
     import DataAccess
     import Foundation
     import Testing
@@ -66,6 +67,22 @@
                 #expect(
                     AuthUITestConfiguration(environment: ["CF_AUTH_TEST_ID": id, "CF_UI_TEST_PROFILE": profile])?
                         .fastLaunch == false)
+            }
+        }
+
+        @Test func verificationAuditFailuresKeepSuccessfulCountdownDistinctFromThrottle() throws {
+            for (state, expected): (String, DataFailure?) in [
+                ("waiting", nil), ("countdown", nil), ("failed", nil), ("signOutError", nil),
+                ("throttle", .throttled(retryAfterSeconds: 60, status: 429)),
+                ("failedThrottle", .throttled(retryAfterSeconds: 60, status: 429)),
+                ("server", .server(status: 503)), ("failedServer", .server(status: 503)),
+                ("offline", .offline), ("failedOffline", .offline),
+            ] {
+                let configuration = try #require(
+                    AuthUITestConfiguration(environment: [
+                        "CF_AUTH_TEST_ID": UUID().uuidString, "CF_AUTH_TEST_VERIFY_STATE": state,
+                    ]))
+                #expect(configuration.verificationResendFailure == expected, "Unexpected resend fixture for \(state)")
             }
         }
     }

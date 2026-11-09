@@ -1,4 +1,5 @@
 #if DEBUG
+    import AppCore
     import Foundation
 
     public struct AuthUITestConfiguration: Sendable {
@@ -15,6 +16,7 @@
         public let auditScreen: String?
         public let auditState: String?
         public let signedInAccount: String?
+        public let verificationResendFailure: DataFailure?
 
         public init?(environment: [String: String] = ProcessInfo.processInfo.environment) {
             guard let value = environment["CF_AUTH_TEST_ID"], let uuid = UUID(uuidString: value) else { return nil }
@@ -33,6 +35,13 @@
             auditState = environment["CF_AUTH_TEST_AUDIT_STATE"]
             signedInAccount = environment["CF_AUTH_TEST_SIGNED_IN"].flatMap {
                 ["demo", "twofactor"].contains($0) ? $0 : nil
+            }
+            switch environment["CF_AUTH_TEST_VERIFY_STATE"] {
+            case "throttle", "failedThrottle":
+                verificationResendFailure = .throttled(retryAfterSeconds: 60, status: 429)
+            case "server", "failedServer": verificationResendFailure = .server(status: 503)
+            case "offline", "failedOffline": verificationResendFailure = .offline
+            default: verificationResendFailure = nil
             }
         }
 

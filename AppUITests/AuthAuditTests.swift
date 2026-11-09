@@ -108,30 +108,52 @@ nonisolated class AuthAuditCase: ScreenTestCase {
             }
             AuthUIFlow.launchSignedIn(app, walkthroughSeen: true)
             let first = app.buttons[state.hasPrefix("failed") ? "verify.retry" : "verify.open-email"]
-            XCTAssertTrue(first.waitUntil(.exists, timeout: 12))
+            let context = "Verify audit [\(language), \(appearance), xxLarge=\(xxLarge), \(state)]"
+            XCTAssertTrue(
+                first.waitUntil(.exists, timeout: 12), "\(context): expected \(first.identifier) after seed readiness")
             AuthUIFlow.waitUntilEnabled(first)
             if ["countdown", "throttle", "server", "offline", "failedServer", "failedThrottle", "failedOffline"]
                 .contains(state)
             {
                 let resend = app.buttons["verify.resend"]
                 let enabled = { () -> Bool in
-                    resend.isEnabled
+                    resend.exists && resend.isEnabled
                 }
-                XCTAssertTrue(UIWait.until(timeout: 6, condition: enabled))
+                XCTAssertTrue(
+                    UIWait.until(timeout: 6, condition: enabled),
+                    "\(context): resend never became enabled after status check")
                 AuthUIFlow.reveal(resend, in: app)
                 resend.tap()
-                if state != "offline" && state != "failedOffline" {
-                    XCTAssertTrue(AuthUIFlow.control("auth.banner", in: app).waitUntil(.exists, timeout: 6))
+                if ["server", "throttle", "failedServer", "failedThrottle"].contains(state) {
+                    XCTAssertTrue(
+                        AuthUIFlow.control("auth.banner", in: app).waitUntil(.exists, timeout: 6),
+                        "\(context): expected resend failure banner")
+                }
+                if ["countdown", "throttle"].contains(state) {
+                    let countingDown = { () -> Bool in
+                        AuthUIFlow.control("verify.countdown", in: app).exists && !resend.isEnabled
+                    }
+                    XCTAssertTrue(
+                        UIWait.until(timeout: 6, condition: countingDown),
+                        "\(context): expected fresh resend countdown and disabled resend")
                 }
                 if state == "countdown" {
+                    XCTAssertFalse(
+                        AuthUIFlow.control("auth.banner", in: app).exists,
+                        "\(context): successful resend must not show an error banner")
                     XCUIDevice.shared.press(.home)
                     app.activate()
+                    XCTAssertTrue(
+                        AuthUIFlow.control("verify.countdown", in: app).waitUntil(.exists, timeout: 6),
+                        "\(context): countdown disappeared after foreground status refresh")
                 }
             } else if state == "signOutError" {
                 let back = app.buttons["verify.different-email"]
                 AuthUIFlow.reveal(back, in: app)
                 back.tap()
-                XCTAssertTrue(AuthUIFlow.control("verify.sign-out-error", in: app).waitUntil(.exists, timeout: 6))
+                XCTAssertTrue(
+                    AuthUIFlow.control("verify.sign-out-error", in: app).waitUntil(.exists, timeout: 6),
+                    "\(context): expected failed sign-out copy")
             }
             let identifiers =
                 (state.hasPrefix("failed")
