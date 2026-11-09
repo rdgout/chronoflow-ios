@@ -4,6 +4,30 @@ import Testing
 @testable import DesignSystem
 
 struct AuthBoardContrastTests {
+    @Test func subtitleAndBannerTokenPairsPassAAInBothAppearances() {
+        for appearance in TokenAppearance.allCases {
+            func channels(_ token: ColorToken) -> [Double] {
+                let color = token.components(for: appearance)
+                #expect(color.alpha == 1)
+                return [color.red, color.green, color.blue]
+            }
+            for (text, background) in [
+                (ColorToken.skyTitle, ColorToken.skyTop), (.skyTitle, .skyMid),
+                (.cardForeground, .card), (.cardForeground, .authErrorBackground),
+            ] {
+                let ratio = contrast(channels(text), channels(background))
+                #expect(ratio >= 4.5, "\(text)/\(background), \(appearance): \(ratio):1")
+            }
+            let top = channels(.skyTop)
+            let mid = channels(.skyMid)
+            for step in 0...1000 {
+                let fraction = Double(step) / 1000
+                let sky = zip(top, mid).map { $0 + ($1 - $0) * fraction }
+                #expect(contrast(channels(.skyTitle), sky) >= 4.5)
+            }
+        }
+    }
+
     @Test func createAccountTextContrastAdaptationKeepsDawnTextOnBothCards() {
         let recorded = [(2.54559840, 5.44405243), (9.28883594, 9.28883594)]
         for (index, appearance) in TokenAppearance.allCases.enumerated() {

@@ -185,9 +185,9 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
                               'DataSourceParityTests',
                               'AccountSecurityAPITests',
                               'SettingsDeleteAPITests')},
- 'DesignSystemTests': {'logic': ('PlanPageGeometryTests',
+ 'DesignSystemTests': {'host': ('AuthBoardContrastTests',),
+                       'logic': ('PlanPageGeometryTests',
                                  'PlanLayoutEvidenceTests',
-                                 'AuthBoardContrastTests',
                                  'ExactLineTextLayoutTests',
                                  'PrimitiveTests',
                                  'SmokeTests',
@@ -709,7 +709,6 @@ def expand(only):
 
 
 IOS_METHODS = (
-    "DesignSystemTests/AuthBoardContrastTests",
     "DesignSystemTests/LaunchImagesTests",
     "DesignSystemTests/TypographyTests/uiFontsUseTheExactFacesAndKeepTheSplashFixed()",
     "DesignSystemTests/ExactLineTextLayoutTests/scaledHeadlinePitchAndGlyphsFitNaturalLabels()",

@@ -2121,7 +2121,7 @@ Apply the two ordered patches in `build/commits` and commit each corresponding l
 
 ```sh
 make generate
-make targeted DEVICES="17e" ONLY="DesignSystemTests/AuthBoardContrastTests AppTests/AuthControlTests AppTests/AuthLayoutTests AppUITests/SignInTests AppUITests/AuthAuditTests"
+make targeted DEVICES="17e" ONLY="AppTests/AuthControlTests AppTests/AuthLayoutTests AppUITests/SignInTests AppUITests/AuthAuditTests"
 ```
 
 This builds once and keeps the guard, native controls and all 24 audits in one result bundle:
@@ -2140,7 +2140,7 @@ all four gates, with and without cancellation after credential commit, followed 
 Those 16 native integration scenarios are type-checked; hosted execution remains for the commands below.
 
 AuthTests suites use the host policy in quick. AuthControlTests/AuthLayoutTests are hosted logic;
-AuthBoardContrastTests remains logic and is explicitly included in check's UIKit selection.
+AuthBoardContrastTests now runs on the Mac host; check no longer repeats its token arithmetic in the UIKit selection.
 SignInTests is UI logic; AuthAuditTests is registered for the serial device-appearance pass.
 AuthSnapshotTests uses profiles and SNAPSHOTS, with SnapshotContainer windows, shared full/compact
 profile fixtures, exact safe-area insets, window reuse and CPU layer capture. The zero-inset board and
@@ -2159,7 +2159,7 @@ Run the integrated Auth selection on 17e, then record only after review:
 
 ```sh
 make generate
-make targeted DEVICES="17e" ONLY="DesignSystemTests/AuthBoardContrastTests AppTests/AuthControlTests AppTests/AuthLayoutTests AppTests/SessionReadinessTests AppUITests/SignInTests AppUITests/AuthAuditTests"
+make targeted DEVICES="17e" ONLY="AppTests/AuthControlTests AppTests/AuthLayoutTests AppTests/SessionReadinessTests AppUITests/SignInTests AppUITests/AuthAuditTests"
 SNAPSHOT_RECORD=1 make targeted DEVICES="17e" ONLY="AppTests/AuthSnapshotTests"
 REUSE_BUILD=1 make targeted DEVICES="17e" ONLY="AppTests/AuthSnapshotTests"
 ```
