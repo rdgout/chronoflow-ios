@@ -69,7 +69,7 @@ import XCTest
                 try await view { frames[$0] = $1 }, size: fixture.size, insets: insets, language: language,
                 category: .extraExtraLarge, scale: fixture.scale)
             defer { host.close() }
-            try await host.settle()
+            try await host.settleLayout { Array(frames.values) }
             for (element, frame) in frames {
                 XCTAssertGreaterThanOrEqual(frame.minX, insets.left + AuthTokens.gutter - 0.5, element.rawValue)
                 XCTAssertLessThanOrEqual(
@@ -81,7 +81,7 @@ import XCTest
                     x: 0,
                     y: max(0, scroll.contentSize.height - scroll.bounds.height + scroll.adjustedContentInset.bottom)),
                 animated: false)
-            try await host.settle()
+            try await host.settleLayout { Array(frames.values) }
             let viewport = scroll.convert(scroll.bounds, to: host.window).intersection(
                 host.window.bounds.inset(by: insets))
             let last = frames[.footer] ?? frames[.backToSignIn] ?? frames[.submit]

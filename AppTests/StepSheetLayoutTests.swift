@@ -24,7 +24,7 @@ nonisolated final class StepSheetLayoutTests: XCTestCase {
                         size: fixture.size, insets: fixture.insets, language: language, category: category,
                         scale: fixture.scale)
                     defer { host.close() }
-                    try await host.settle()
+                    try await host.settleLayout { content.frames }
                     let font = style.uiFont(compatibleWith: .init(preferredContentSizeCategory: category))
                     let left = fixture.insets.left + PlanUITokens.space5 + PlanUITokens.space8 + PlanUITokens.space3
                     let right = fixture.size.width - fixture.insets.right - PlanUITokens.space5
@@ -60,11 +60,11 @@ nonisolated final class StepSheetLayoutTests: XCTestCase {
         let host = try AuthTestHost(
             probe(offset: fixture.size.width), size: fixture.size, insets: fixture.insets, scale: fixture.scale)
         defer { host.close() }
-        try await host.settle()
+        try await host.settleLayout { content.frames }
         XCTAssertEqual(content.frames.count, 1)
         XCTAssertTrue(content.frames.contains { $0.maxX > fixture.size.width - fixture.insets.right })
         host.configure(probe(offset: 0))
-        try await host.settle()
+        try await host.settleLayout { content.frames }
         let frame = try XCTUnwrap(content.frames.first)
         XCTAssertEqual(content.frames.count, 1)
         XCTAssertEqual(frame.size, CGSize(width: 64, height: 64))
@@ -88,12 +88,12 @@ nonisolated final class StepSheetLayoutTests: XCTestCase {
                     size: fixture.size, insets: fixture.insets, language: language, category: .extraExtraLarge,
                     scale: fixture.scale)
                 defer { host.close() }
-                try await host.settle()
+                try await host.settleLayout { content.frames }
                 try await assertPlanScrollFits(host, content: content)
                 XCTAssertTrue(recoveryTextFields(host.window).isEmpty)
                 host.configure(
                     LegendSheet().capturePlanContent(in: content), language: language, category: .extraExtraLarge)
-                try await host.settle()
+                try await host.settleLayout { content.frames }
                 try await assertPlanScrollFits(host, content: content)
             }
         }
@@ -151,7 +151,7 @@ extension View {
                     y: atBottom
                         ? max(-adjusted.top, scroll.contentSize.height - scroll.bounds.height + adjusted.bottom)
                         : -adjusted.top), animated: false)
-            try await host.settle()
+            try await host.settleLayout { content.frames }
             XCTAssertFalse(content.frames.isEmpty, "Missing measured SwiftUI content: \(context)")
             for frame in content.frames {
                 XCTAssertFalse(

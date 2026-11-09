@@ -21,7 +21,7 @@ nonisolated final class ForgotPasswordLayoutTests: XCTestCase {
                     ForgotPasswordView(model: await forgotPasswordSnapshotModel(sent: sent, state: .fieldError)) {
                         frames[$0] = $1
                     }, category: category)
-                try await host.settle()
+                try await host.settleLayout { Array(frames.values) }
                 let field = forgotPasswordNativeField(in: host.window)
                 let native =
                     field.map {
@@ -90,7 +90,7 @@ nonisolated final class ForgotPasswordLayoutTests: XCTestCase {
                             size: fixture.size, insets: insets, language: language, category: category,
                             scale: fixture.scale)
                         defer { host.close() }
-                        try await host.settle()
+                        try await host.settleLayout { Array(frames.values) }
                         let scroll = try XCTUnwrap(authScrollViews(host.controller.view).first)
                         let viewport = scroll.convert(scroll.bounds, to: host.window).intersection(
                             host.window.bounds.inset(by: insets))
@@ -103,7 +103,7 @@ nonisolated final class ForgotPasswordLayoutTests: XCTestCase {
                             "\(alias), \(language), \(category), sent=\(sent), viewport=\(viewport), maximumOffset=\(maximum)"
                         XCTAssertGreaterThanOrEqual(maximum, scroll.contentOffset.y + needed, context)
                         scroll.setContentOffset(CGPoint(x: scroll.contentOffset.x, y: maximum), animated: false)
-                        try await host.settle()
+                        try await host.settleLayout { Array(frames.values) }
                         let revealed = try XCTUnwrap(frames[sent ? .backToSignIn : .submit])
                         XCTAssertTrue(viewport.contains(revealed), "Last control \(revealed) outside \(context)")
                         XCTAssertLessThanOrEqual(revealed.maxY + AuthTokens.fieldGap, viewport.maxY, context)
@@ -127,7 +127,7 @@ nonisolated final class ForgotPasswordLayoutTests: XCTestCase {
                                 }, size: fixture.size, insets: fixture.insets, language: language, category: category,
                                 scale: fixture.scale)
                             defer { host.close() }
-                            try await host.settle()
+                            try await host.settleLayout { Array(frames.values) }
                             XCTAssertEqual(
                                 Set(frames.keys),
                                 Set([AuthElement.brand, .heading, .subtitle, .card]).union(

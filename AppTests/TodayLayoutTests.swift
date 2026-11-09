@@ -55,7 +55,7 @@ nonisolated final class TodayNothingNowLayoutTests: XCTestCase {
             NavigationStack { screen }.capturePlanContent(in: content), size: fixture.size,
             insets: fixture.insets, language: "nl", category: .extraExtraLarge, scale: fixture.scale)
         defer { host.close() }
-        try await host.settle()
+        try await host.settleLayout { content.frames }
         try await assertPlanScrollFits(host, content: content, horizontalGutter: PlanUITokens.space4)
     }
 }

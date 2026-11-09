@@ -59,6 +59,40 @@ import XCTest
                 .id(revision))
     }
 
+    func settleLayout(measuring frames: () -> [CGRect]) async throws {
+        var previous: [CGRect] = []
+        var matches = 0
+        let deadline = ContinuousClock.now + .seconds(5)
+        for _ in 1...12 {
+            try await Task.sleep(for: .milliseconds(10))
+            guard ContinuousClock.now < deadline else { break }
+            layout()
+            let current = frames().sorted {
+                [$0.minX, $0.minY, $0.width, $0.height].lexicographicallyPrecedes(
+                    [$1.minX, $1.minY, $1.width, $1.height])
+            }
+            matches = !current.isEmpty && current == previous ? matches + 1 : 0
+            if matches == 2 {
+                XCTAssertEqual(controller.view.bounds.size, window.bounds.size)
+                XCTAssertTrue(controller.safeAreaRegions.isEmpty)
+                XCTAssertEqual(controller.traitCollection.displayScale, scale)
+                return
+            }
+            previous = current
+        }
+        throw CaptureFailure.didNotSettle("Layout: revision \(revision), size \(window.bounds.size)")
+    }
+
+    private func layout() {
+        UIView.performWithoutAnimation {
+            @MainActor func visit(_ view: UIView) {
+                view.layoutIfNeeded()
+                view.subviews.forEach(visit)
+            }
+            visit(window)
+        }
+    }
+
     func settle() async throws {
         var previous: SnapshotRaster?
         var matches = 0
@@ -104,15 +138,11 @@ import XCTest
     func image() throws -> UIImage {
         window.makeKeyAndVisible()
         UIView.performWithoutAnimation {
-            @MainActor func layout(_ view: UIView) {
-                view.layoutIfNeeded()
-                view.subviews.forEach(layout)
-            }
             func display(_ layer: CALayer) {
                 layer.displayIfNeeded()
                 layer.sublayers?.forEach(display)
             }
-            layout(window)
+            layout()
             prepareCapture(window)
             display(window.layer)
             CATransaction.flush()

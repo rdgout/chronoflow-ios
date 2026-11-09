@@ -21,7 +21,7 @@ nonisolated final class TwoFactorLayoutTests: XCTestCase {
                             size: fixture.size, insets: insets, language: language, category: category,
                             scale: fixture.scale)
                         defer { host.close() }
-                        try await host.settle()
+                        try await host.settleLayout { Array(frames.values) }
                         let scroll = try XCTUnwrap(authScrollViews(host.controller.view).first)
                         let viewport = scroll.convert(scroll.bounds, to: host.window).intersection(
                             host.window.bounds.inset(by: insets))
@@ -34,7 +34,7 @@ nonisolated final class TwoFactorLayoutTests: XCTestCase {
                             "\(alias), \(language), \(category), recovery=\(recovery), viewport=\(viewport), maximumOffset=\(maximum)"
                         XCTAssertGreaterThanOrEqual(maximum, scroll.contentOffset.y + needed, context)
                         scroll.setContentOffset(CGPoint(x: scroll.contentOffset.x, y: maximum), animated: false)
-                        try await host.settle()
+                        try await host.settleLayout { Array(frames.values) }
                         let revealed = try XCTUnwrap(frames[.modeToggle])
                         XCTAssertTrue(viewport.contains(revealed), "Last control \(revealed) outside \(context)")
                         XCTAssertLessThanOrEqual(revealed.maxY + AuthTokens.fieldGap, viewport.maxY, context)
@@ -58,7 +58,7 @@ nonisolated final class TwoFactorLayoutTests: XCTestCase {
                                 }, size: fixture.size, insets: fixture.insets, language: language, category: category,
                                 scale: fixture.scale)
                             defer { host.close() }
-                            try await host.settle()
+                            try await host.settleLayout { Array(frames.values) }
                             XCTAssertEqual(
                                 Set(frames.keys), [.brand, .heading, .subtitle, .card, .code, .submit, .modeToggle])
                             let brand = try XCTUnwrap(frames[.brand])

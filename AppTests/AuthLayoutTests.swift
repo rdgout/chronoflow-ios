@@ -17,7 +17,7 @@ nonisolated final class AuthLayoutTests: XCTestCase {
                         SignInView(model: model, back: {}, guest: {}, measure: { frames[$0] = $1 }), size: fixture.size,
                         insets: fixture.insets, language: language, category: category, scale: fixture.scale)
                     defer { host.close() }
-                    try await host.settle()
+                    try await host.settleLayout { Array(frames.values) }
                     XCTAssertEqual(
                         Set(frames.keys),
                         Set([
@@ -51,7 +51,7 @@ nonisolated final class AuthLayoutTests: XCTestCase {
                 SignInView(model: authSnapshotModel(), back: {}, guest: {}, measure: { frames[$0] = $1 }),
                 size: fixture.size, insets: fixture.insets)
             defer { host.close() }
-            try await host.settle()
+            try await host.settleLayout { Array(frames.values) }
             let card = try XCTUnwrap(frames[.card])
             let forgot = try XCTUnwrap(frames[.forgot])
             let signup = try XCTUnwrap(frames[.signup])
@@ -71,7 +71,7 @@ nonisolated final class AuthLayoutTests: XCTestCase {
                 .frame(width: AuthTokens.touch * 5),
             size: fixture.size, insets: fixture.insets, language: "nl", category: .extraExtraLarge)
         defer { host.close() }
-        try await host.settle()
+        try await host.settleLayout { Array(frames.values) }
         for (element, style) in [
             (AuthElement.forgotLabel, Typography.authLabel), (.signupLabel, Typography.authStrong),
         ] {
