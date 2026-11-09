@@ -120,7 +120,8 @@ nonisolated final class RefreshTests: XCTestCase {
                 } else {
                     "DEBUG refresh counter missing"
                 }
-            XCTFail("\(reason); DEBUG count: \(String(describing: count)). \(app.debugDescription)")
+            let outcome = elements.first { $0.identifier == "refresh.debug.outcome" }?.label ?? "missing"
+            XCTFail("\(reason); DEBUG count: \(String(describing: count)); outcome: \(outcome)")
             return
         }
         attachScreenshot("Refresh feedback after wait: \(text)")

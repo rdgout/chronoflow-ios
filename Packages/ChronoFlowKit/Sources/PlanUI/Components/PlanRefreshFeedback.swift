@@ -61,6 +61,11 @@ private struct PlanRefreshFeedback: ViewModifier {
                         .accessibilityIdentifier("refresh.debug.count")
                         .accessibilityValue(Text(verbatim: String(model.debugRefreshCount)))
                 }
+                .overlay(alignment: .bottomTrailing) {
+                    Text(verbatim: model.debugOutcome)
+                        .font(.caption2).opacity(0.01).allowsHitTesting(false)
+                        .accessibilityIdentifier("refresh.debug.outcome")
+                }
             } else {
                 content
             }

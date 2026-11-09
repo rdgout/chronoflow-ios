@@ -37,6 +37,7 @@ public struct RefreshFeedback: Sendable, Equatable {
     public private(set) var presentationID = UUID()
     #if DEBUG
         public private(set) var debugRefreshCount = 0
+        public private(set) var debugOutcome = "none"
     #endif
     public init() {}
 
@@ -54,10 +55,23 @@ public struct RefreshFeedback: Sendable, Equatable {
         do {
             if let result = try await action() {
                 feedback = RefreshFeedback.outcome(result, userInitiated: userInitiated)
+                #if DEBUG
+                    debugOutcome = "result:\(result.state):\(feedback.count)"
+                #endif
+            } else {
+                #if DEBUG
+                    debugOutcome = "nil"
+                #endif
             }
         } catch is CancellationError {
+            #if DEBUG
+                debugOutcome = "cancelled"
+            #endif
             return
         } catch {
+            #if DEBUG
+                debugOutcome = "error:\(error)"
+            #endif
             let state: SyncState = (error as? DataFailure) == .offline ? .offline : .failed
             feedback = RefreshFeedback.outcome(
                 SyncResult(state: state, pendingCount: 0), userInitiated: userInitiated)
