@@ -48,13 +48,12 @@ public struct RefreshFeedback: Sendable, Equatable {
             presentationID = UUID()
         }
         do {
-            let result = try await action()
-            try Task.checkCancellation()
-            if let result { feedback = RefreshFeedback.outcome(result, userInitiated: userInitiated) }
+            if let result = try await action() {
+                feedback = RefreshFeedback.outcome(result, userInitiated: userInitiated)
+            }
         } catch is CancellationError {
             return
         } catch {
-            guard !Task.isCancelled else { return }
             let state: SyncState = (error as? DataFailure) == .offline ? .offline : .failed
             feedback = RefreshFeedback.outcome(
                 SyncResult(state: state, pendingCount: 0), userInitiated: userInitiated)

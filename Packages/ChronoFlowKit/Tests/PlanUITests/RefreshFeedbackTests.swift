@@ -93,4 +93,16 @@ import Testing
         await model.refresh { nil }
         #expect(model.feedback.isEmpty)
     }
+
+    @Test func finishedSyncIsReportedWhenTheGestureTaskIsCancelled() async {
+        let model = RefreshFeedbackModel()
+        let task = Task { @MainActor in
+            await model.refresh {
+                withUnsafeCurrentTask { $0?.cancel() }
+                return SyncResult(state: .idle, pendingCount: 0)
+            }
+        }
+        await task.value
+        #expect(model.feedback.first?.key == "Up to date")
+    }
 }
