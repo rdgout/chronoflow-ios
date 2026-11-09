@@ -438,7 +438,29 @@ nonisolated final class AuthAuditTests: XCTestCase {
         _ app: XCUIApplication, language: String, appearance: XCUIDevice.Appearance, stage: String, xxLarge: Bool,
         forgotBannerState: String?, controls: [String: XCUIElement]
     ) {
-        guard let source = captureAudit(app, controls: controls, context: "\(language), \(appearance), \(stage)") else {
+        // The combined audit resizes text while checking clipping, invalidating contrast capture geometry.
+        for types in [XCUIAccessibilityAuditType.contrast, .all.subtracting([.dynamicType, .contrast])] {
+            do {
+                _ = try UIWait.stableFrames(Array(controls.values) + [AuthUIFlow.scroll(in: app)], timeout: 6)
+            } catch {
+                XCTFail("Audit layout did not settle [\(language), \(appearance), \(stage), \(types)]: \(error)")
+                return
+            }
+            audit(
+                app, types: types, language: language, appearance: appearance, stage: stage, xxLarge: xxLarge,
+                forgotBannerState: forgotBannerState, controls: controls)
+        }
+    }
+
+    @MainActor private func audit(
+        _ app: XCUIApplication, types: XCUIAccessibilityAuditType, language: String,
+        appearance: XCUIDevice.Appearance, stage: String, xxLarge: Bool,
+        forgotBannerState: String?, controls: [String: XCUIElement]
+    ) {
+        guard
+            let source = captureAudit(
+                app, controls: controls, context: "\(language), \(appearance), \(stage), \(types)")
+        else {
             return
         }
         if ["server", "throttle"].contains(forgotBannerState ?? ""), app.scrollViews["forgot.scroll"].exists {
@@ -462,7 +484,7 @@ nonisolated final class AuthAuditTests: XCTestCase {
             }
         }
         do {
-            try app.performAccessibilityAudit(for: .all.subtracting(.dynamicType)) { issue in
+            try app.performAccessibilityAudit(for: types) { issue in
                 let element = issue.element
                 let identifier = element?.identifier
                 let frame = element?.frame

@@ -17,6 +17,7 @@ import Testing
         #expect(model.form.failure == .validation(fields: messages, status: 422))
         #expect(model.form.fields == [model.field: messages[model.field]!])
         #expect(model.form.banner == nil && model.code.isEmpty && !model.form.busy)
+        #expect(model.form.takeAnnouncement(locale: Locale(identifier: "en")) == messages[model.field]?.key)
         #expect(model.form.takeAnnouncement(locale: Locale(identifier: "en")) == nil)
     }
 
@@ -127,7 +128,7 @@ import Testing
             #expect(
                 model.form.banner
                     == (failure == .offline
-                        ? nil : failure == .throttled(retryAfterSeconds: 73, status: 429) ? .locked : .server))
+                        ? .offline : failure == .throttled(retryAfterSeconds: 73, status: 429) ? .locked : .server))
             if model.form.banner == .locked {
                 #expect(model.form.retryAfterSeconds == 73)
                 #expect(
@@ -199,14 +200,18 @@ import Testing
         #expect(await session.accepted.isEmpty)
     }
 
-    @Test func sessionStorageFailureRemainsTypedAndNeverRoutes() async throws {
+    @Test(arguments: [
+        SessionFailure.credentialsUnavailable, .databaseUnavailable, .credentialWrite, .invalidResult, .superseded,
+    ])
+    func sessionStorageFailureRemainsTypedAndShowsTheServerBanner(_ failure: SessionFailure) async throws {
         let session = AuthTestSession()
-        await session.fail(.databaseUnavailable)
+        await session.fail(failure)
         let signIn = try await challenged(twoFactorSource(), session: session)
         let model = try #require(signIn.twoFactor)
         model.editCode("123456")
         await model.submit()
-        #expect(model.sessionFailure == .databaseUnavailable && model.form.banner == nil && model.code.isEmpty)
+        #expect(model.sessionFailure == failure && model.form.banner == .server && model.code.isEmpty)
+        #expect(model.form.takeAnnouncement(locale: Locale(identifier: "nl")) != nil)
         #expect(await session.accepted.isEmpty)
     }
 

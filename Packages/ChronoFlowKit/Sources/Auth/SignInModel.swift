@@ -127,10 +127,8 @@ import Observation
     }
     private func receive(_ error: any Error) {
         guard !(error is CancellationError), error as? PasskeyFailure != .canceled else { return }
-        // Storage errors have no board and remain a typed service seam without a designed presentation.
         if let failure = error as? SessionFailure {
             sessionFailure = failure
-            return
         }
         form.receive(error as? DataFailure ?? .server(status: nil))
     }

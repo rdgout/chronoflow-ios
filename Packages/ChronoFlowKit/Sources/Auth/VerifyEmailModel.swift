@@ -78,6 +78,8 @@ nonisolated public struct VerificationContext: Sendable, Equatable {
     }
     public func check(silent: Bool = false) async {
         guard active, !completed, form.begin(.checkVerification) else { return }
+        signOutFailure = nil
+        sessionFailure = nil
         let revision = revision
         let submitted = input
         let malformed = invalidLink
@@ -110,12 +112,15 @@ nonisolated public struct VerificationContext: Sendable, Equatable {
         } catch {
             guard await isCurrent(revision), !(error is CancellationError) else { return }
             if let failure = error as? SessionFailure { sessionFailure = failure }
+            if !silent || sessionFailure != nil { form.receive(error as? DataFailure ?? .server(status: nil)) }
             if !silent { state = .failed }
         }
     }
     public func resend() async {
         tick()
         guard active, !completed, canResend, form.begin(.resendVerification) else { return }
+        signOutFailure = nil
+        sessionFailure = nil
         let revision = revision
         defer { form.finish() }
         do {
@@ -127,6 +132,7 @@ nonisolated public struct VerificationContext: Sendable, Equatable {
             state = .waiting
         } catch {
             guard await isCurrent(revision), !(error is CancellationError) else { return }
+            if let failure = error as? SessionFailure { sessionFailure = failure }
             let failure = error as? DataFailure ?? .server(status: nil)
             if case .throttled(let seconds, _) = failure {
                 tick()
@@ -165,12 +171,19 @@ nonisolated public struct VerificationContext: Sendable, Equatable {
     public func signOut() async {
         guard active, !form.busy, await current() == context, active, form.begin(.signOut) else { return }
         signOutFailure = nil
+        sessionFailure = nil
         revision &+= 1
         defer { form.finish() }
         do {
             try await discard()
             cancel()
-        } catch { if active, !Task.isCancelled { signOutFailure = error as? DataFailure ?? .server(status: nil) } }
+        } catch {
+            guard active, !Task.isCancelled, !(error is CancellationError) else { return }
+            if let failure = error as? SessionFailure { sessionFailure = failure }
+            let failure = error as? DataFailure ?? .server(status: nil)
+            signOutFailure = failure
+            form.receive(failure)
+        }
     }
     public func cancel() {
         active = false

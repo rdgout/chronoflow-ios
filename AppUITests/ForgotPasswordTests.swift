@@ -52,7 +52,7 @@ nonisolated final class ForgotPasswordTests: XCTestCase {
         }
     }
 
-    @MainActor func testOfflineKeepsTheDesignedFormAndSubmitEnabled() throws {
+    @MainActor func testOfflineShowsConnectionBannerAndKeepsSubmitEnabled() throws {
         let app = launchForgotApp(offline: true)
         defer { app.terminate() }
         openForgot(app)
@@ -63,7 +63,9 @@ nonisolated final class ForgotPasswordTests: XCTestCase {
             predicate: NSPredicate { _, _ in field.isEnabled && app.keyboards.firstMatch.exists }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [finished], timeout: 5), .completed)
         XCTAssertEqual(field.value as? String, "offline@example.com")
-        XCTAssertFalse(AuthUIFlow.control("auth.banner", in: app).exists)
+        let banner = AuthUIFlow.control("auth.banner", in: app)
+        XCTAssertTrue(banner.waitForExistence(timeout: 5))
+        XCTAssertTrue(banner.label.contains("Needs a connection"))
         XCTAssertFalse(AuthUIFlow.control("forgot.notice", in: app).exists)
         XCTAssertTrue(AuthUIFlow.control("forgot.submit", in: app).isEnabled)
         AuthUIFlow.reveal(AuthUIFlow.control("auth.back", in: app), in: app)

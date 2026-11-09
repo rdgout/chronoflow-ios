@@ -191,10 +191,90 @@ private final class VerificationClock: @unchecked Sendable {
             await source.failNext(method: .verificationStatus, error: failure)
             await model.check()
             #expect(model.state == .failed)
+            #expect(model.form.banner == (failure == .offline ? .offline : .server))
+            #expect(model.form.takeAnnouncement(locale: Locale(identifier: "nl")) != nil)
         }
         await model.signOut()
         #expect(discarded == 1 && !model.isActive)
         await #expect(throws: DataFailure.unauthorized(status: 401)) { try await source.fetchIdentity() }
+    }
+
+    @Test(arguments: [false, true])
+    func signOutFailureIsAnnouncedOncePerAttemptAndReplacedByTheNextFailure(resend: Bool) async throws {
+        let (source, result, _) = try await registered()
+        let context = VerificationContext(accountID: result.account.id, email: result.account.email, epoch: 6)
+        let model = VerifyEmailModel(
+            context: context, source: source, current: { context }, persist: { _ in true }, route: {},
+            discard: { throw DataFailure.offline })
+        await model.activate()
+        for _ in 0..<2 {
+            await model.signOut()
+            #expect(model.signOutFailure == .offline && model.isActive)
+            #expect(model.form.takeAnnouncement(locale: Locale(identifier: "en")) == "Needs a connection")
+            #expect(model.form.takeAnnouncement(locale: Locale(identifier: "en")) == nil)
+        }
+        await source.failNext(
+            method: resend ? .resendVerificationEmail : .verificationStatus, error: .server(status: 503))
+        if resend { await model.resend() } else { await model.check() }
+        #expect(model.signOutFailure == nil && model.form.banner == .server)
+        #expect(model.form.takeAnnouncement(locale: Locale(identifier: "en")) != nil)
+    }
+
+    @Test(arguments: [
+        SessionFailure.credentialsUnavailable, .databaseUnavailable, .credentialWrite, .invalidResult, .superseded,
+    ])
+    func sessionFailuresAreVisibleOnCheckActivationResendAndSignOut(_ failure: SessionFailure) async throws {
+        for action in ["check", "activate", "resend", "signOut"] {
+            let (source, result, input) = try await registered()
+            let context = VerificationContext(accountID: result.account.id, email: result.account.email, epoch: 8)
+            var routes = 0
+            var shouldFail = true
+            let model = VerifyEmailModel(
+                context: context, source: source, current: { context },
+                persist: { _ in
+                    if shouldFail { throw failure }
+                    return true
+                }, route: { routes += 1 }, discard: { throw failure })
+            await model.activate()
+            _ = try await source.verifyEmail(input)
+            switch action {
+            case "activate": await model.activate()
+            case "resend": await model.resend()
+            case "signOut": await model.signOut()
+            default: await model.check()
+            }
+            #expect(model.sessionFailure == failure && model.form.banner == .server && routes == 0)
+            #expect(model.form.takeAnnouncement(locale: Locale(identifier: "en")) != nil)
+            shouldFail = false
+            await model.check()
+            #expect(model.sessionFailure == nil && model.form.failure == nil && routes == 1)
+        }
+    }
+
+    @Test func offlineResendShowsAndAnnouncesTheConnectionBanner() async throws {
+        let (source, result, _) = try await registered()
+        let context = VerificationContext(accountID: result.account.id, email: result.account.email, epoch: 10)
+        let model = VerifyEmailModel(
+            context: context, source: source, current: { context }, persist: { _ in true }, route: {}, discard: {})
+        await model.activate()
+        await source.setOffline(true)
+        await model.resend()
+        #expect(model.form.banner == .offline && !model.form.busy && model.canResend)
+        #expect(model.form.takeAnnouncement(locale: Locale(identifier: "nl")) == "Verbinding nodig")
+    }
+
+    @Test func repeatedSignOutFailuresEachShowAndAnnounceTheConnectionBanner() async throws {
+        let (source, result, _) = try await registered()
+        let context = VerificationContext(accountID: result.account.id, email: result.account.email, epoch: 11)
+        let model = VerifyEmailModel(
+            context: context, source: source, current: { context }, persist: { _ in true }, route: {},
+            discard: { throw DataFailure.offline })
+        for _ in 0..<2 {
+            await model.signOut()
+            #expect(model.form.banner == .offline && model.signOutFailure == .offline && model.isActive)
+            #expect(model.form.takeAnnouncement(locale: Locale(identifier: "nl")) == "Verbinding nodig")
+            #expect(model.form.takeAnnouncement(locale: Locale(identifier: "nl")) == nil)
+        }
     }
 }
 
