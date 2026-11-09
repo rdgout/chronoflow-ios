@@ -82,6 +82,12 @@ public protocol SessionAccountStore: Sendable {
 public protocol SessionControlling: Sendable {
     func restore() async throws -> SessionPresence
     func accept(_ result: SessionResult) async throws
+    func signOut(discardPending: Bool, unauthorized: Bool) async throws -> SignOutResult
+}
+
+public struct SessionSnapshot: Sendable, Equatable {
+    public let session: StoredSession
+    public let epoch: UInt64
 }
 
 public struct SessionUpdate: Sendable, Equatable {
@@ -92,6 +98,14 @@ public struct SessionUpdate: Sendable, Equatable {
 public actor SessionController: SessionControlling {
     private let credentials: any SessionStore
     private let accounts: any SessionAccountStore
+    private var transitioning = false
+    private let teardown: SessionTeardown
+    private(set) var signOutFlight: Task<SignOutResult, any Error>?
+    private var unconditionalSignOut: (discardPending: Bool, unauthorized: Bool)?
+    private var discardRequested = false
+    private var unauthorizedRequested = false
+    public private(set) var pendingUnauthorizedEpoch: UInt64?
+    private let stopSync: @Sendable () async -> Void
     private let requestSync: @Sendable (UInt64) async -> Void
     private var tail: Task<Void, Never>?
     private(set) var generation: UInt64 = 0
@@ -102,11 +116,22 @@ public actor SessionController: SessionControlling {
 
     public init(
         credentials: any SessionStore, accounts: any SessionAccountStore,
+        teardown: SessionTeardown = SessionTeardown(),
+        stopSync: @escaping @Sendable () async -> Void = {},
         requestSync: @escaping @Sendable (UInt64) async -> Void = { _ in }
     ) {
         self.credentials = credentials
         self.accounts = accounts
         self.requestSync = requestSync
+        self.stopSync = stopSync
+        self.teardown = teardown
+    }
+
+    public func activeSession() -> SessionSnapshot? {
+        guard !transitioning, let storedSession, presence == .signedIn(accountID: storedSession.accountId) else {
+            return nil
+        }
+        return SessionSnapshot(session: storedSession, epoch: epoch)
     }
 
     public func updates() -> AsyncStream<SessionUpdate> {
@@ -154,12 +179,126 @@ public actor SessionController: SessionControlling {
         }
     }
 
+    public func signOut(discardPending: Bool, unauthorized: Bool = false) async throws -> SignOutResult {
+        try await enqueueSignOut(discardPending: discardPending, unauthorized: unauthorized, expectedEpoch: nil)
+    }
+
+    public func unauthorized(epoch: UInt64) async throws -> SignOutResult {
+        guard self.epoch == epoch else { return .signedOut }
+        pendingUnauthorizedEpoch = epoch
+        let result = try await enqueueSignOut(discardPending: true, unauthorized: true, expectedEpoch: epoch)
+        if pendingUnauthorizedEpoch == epoch { pendingUnauthorizedEpoch = nil }
+        return result
+    }
+
+    public func retryUnauthorized() async throws {
+        guard let epoch = pendingUnauthorizedEpoch else { return }
+        if self.epoch != epoch {
+            pendingUnauthorizedEpoch = nil
+            return
+        }
+        _ = try await unauthorized(epoch: epoch)
+    }
+
+    private func enqueueSignOut(
+        discardPending: Bool, unauthorized: Bool, expectedEpoch: UInt64?
+    ) async throws -> SignOutResult {
+        if let expectedEpoch, self.epoch != expectedEpoch { return .signedOut }
+        discardRequested = discardRequested || discardPending
+        unauthorizedRequested = unauthorizedRequested || unauthorized
+        if expectedEpoch == nil {
+            generation &+= 1
+            unconditionalSignOut = (
+                (unconditionalSignOut?.discardPending ?? false) || discardPending,
+                (unconditionalSignOut?.unauthorized ?? false) || unauthorized
+            )
+        }
+        if let signOutFlight { return try await signOutFlight.value }
+        let previous = tail
+        let task = Task { [weak self] () throws -> SignOutResult in
+            await previous?.value
+            guard let self else { throw CancellationError() }
+            return try await self.performSignOut(expectedEpoch: expectedEpoch)
+        }
+        signOutFlight = task
+        tail = Task { _ = await task.result }
+        // Once requested, cleanup must complete even if its UI caller disappears.
+        return try await task.value
+    }
+
+    private func performSignOut(expectedEpoch: UInt64?) async throws -> SignOutResult {
+        defer {
+            signOutFlight = nil
+            unconditionalSignOut = nil
+            discardRequested = false
+            unauthorizedRequested = false
+        }
+        if let expectedEpoch, epoch != expectedEpoch {
+            guard let unconditionalSignOut else { return .signedOut }
+            discardRequested = unconditionalSignOut.discardPending
+            unauthorizedRequested = unconditionalSignOut.unauthorized
+        }
+        var captured = storedSession
+        if captured == nil {
+            await stopSync()
+            try await accounts.close()
+            try await teardown.prepare()
+            captured = try await credentials.readStoredSession()
+        }
+        guard let session = captured else {
+            try await credentials.delete()
+            publish(.signedOut)
+            await teardown.detach()
+            return .signedOut
+        }
+        if !unauthorizedRequested, !discardRequested {
+            var count = try await teardown.pendingCount()
+            if count > 0 {
+                try? await teardown.flush()
+                count = try await teardown.pendingCount()
+            }
+            if count > 0, !discardRequested, !unauthorizedRequested {
+                return .needsConfirmation(pendingCount: count)
+            }
+        }
+        let id = try AccountID(session.accountId)
+        try await teardown.beginWipe(id)
+        // Publication invalidates session consumers before awaiting any old work.
+        storedSession = nil
+        publish(.signedOut)
+        await stopSync()
+        if !unauthorizedRequested { await bestEffortLogout(session) }
+        await teardown.detach()
+        try await accounts.close()
+        var failure: (any Error)?
+        do { try await teardown.erase(id) } catch { failure = error }
+        do { try await credentials.delete() } catch { if failure == nil { failure = error } }
+        if let failure { throw failure }
+        try await teardown.finishWipe()
+        return .signedOut
+    }
+
+    private func bestEffortLogout(_ session: StoredSession) async {
+        let teardown = teardown
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask { try? await teardown.logout(session) }
+            group.addTask { try? await teardown.sleep(3) }
+            _ = await group.next()
+            group.cancelAll()
+        }
+    }
+
     private func check(_ generation: UInt64) throws {
         try Task.checkCancellation()
         guard self.generation == generation else { throw SessionFailure.superseded }
     }
 
     private func performRestore(generation: UInt64) async throws -> SessionPresence {
+        try check(generation)
+        transitioning = true
+        defer { transitioning = false }
+        await stopSync()
+        try await teardown.prepare()
         try check(generation)
         let session: StoredSession?
         do { session = try await credentials.readStoredSession() } catch is CancellationError {
@@ -196,6 +335,7 @@ public actor SessionController: SessionControlling {
         try check(generation)
         storedSession = StoredSession(token: session.token, accountId: id.rawValue)
         publish(.signedIn(accountID: id.rawValue))
+        transitioning = false
         await requestSync(epoch)
         try check(generation)
         return .signedIn(accountID: id.rawValue)
@@ -208,6 +348,11 @@ public actor SessionController: SessionControlling {
         else {
             throw SessionFailure.invalidResult
         }
+        transitioning = true
+        defer { transitioning = false }
+        await stopSync()
+        try await teardown.prepare()
+        try check(generation)
         if case .signedIn(let accountID) = presence, accountID != id.rawValue {
             storedSession = nil
             publish(.signedOut)
@@ -227,6 +372,7 @@ public actor SessionController: SessionControlling {
         // A successful credential write commits the session, even if superseded or canceled during the write.
         storedSession = session
         publish(.signedIn(accountID: id.rawValue))
+        transitioning = false
         await requestSync(epoch)
     }
 

@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+    <key>CHRONOFLOW_READINESS</key>
+    <string>$(CHRONOFLOW_READINESS)</string>
     <key>CHRONOFLOW_DATA_SOURCE</key>
     <string>$(CHRONOFLOW_DATA_SOURCE)</string>
     <key>CHRONOFLOW_API_BASE_URL</key>

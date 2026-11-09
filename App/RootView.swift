@@ -6,6 +6,7 @@ import Welcome
 
 @Observable
 final class RootNavigator: Navigator {
+    private(set) var revision: UInt64 = 0
     private(set) var route: Route?
 
     init(route: Route? = nil) {
@@ -13,6 +14,7 @@ final class RootNavigator: Navigator {
     }
 
     func navigate(to route: Route) {
+        revision &+= 1
         self.route = route
     }
 }

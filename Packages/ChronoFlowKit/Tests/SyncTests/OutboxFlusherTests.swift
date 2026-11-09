@@ -32,13 +32,15 @@ import Testing
         try await store.close()
     }
     @Test(arguments: [
-        DataFailure.server(status: 400),
-        .validation(fields: ["name": FieldMessage(key: "secret response")], status: 422),
-        .server(status: 403), .server(status: 404), .server(status: 408), .server(status: 425),
-        .throttled(retryAfterSeconds: 900, status: 429),
-        .server(status: 500), .offline, .unauthorized(status: 401), .emailUnverified(status: 403),
+        (DataFailure.server(status: 400), true, 0, nil as String?),
+        (.validation(fields: ["name": FieldMessage(key: "secret response")], status: 422), true, 0, nil),
+        (.server(status: 403), true, 0, nil), (.server(status: 404), true, 0, nil),
+        (.server(status: 408), false, 1, "server"), (.server(status: 425), false, 1, "server"),
+        (.throttled(retryAfterSeconds: 900, status: 429), false, 1, "throttled"),
+        (.server(status: 500), false, 1, "server"), (.offline, false, 1, "offline"),
+        (.unauthorized(status: 401), false, 0, nil), (.emailUnverified(status: 403), false, 0, nil),
     ])
-    func failureClassification(_ failure: DataFailure) async throws {
+    func failureClassification(_ failure: DataFailure, final: Bool, attempts: Int, lastError: String?) async throws {
         let store = try await SyncStore()
         _ = try await store.enqueue(.walkthrough)
         let source = ScriptedSource()
@@ -50,15 +52,31 @@ import Testing
             await #expect(throws: failure) { try await flusher.run(epoch: store.epoch) }
         } else {
             let result = try await flusher.run(epoch: store.epoch)
-            #expect(result.refusals.count == (OutboxFailurePolicy.isFinal(failure) ? 1 : 0))
+            #expect(result.refusals.count == (final ? 1 : 0))
             if case .throttled = failure { #expect(result.retryAfter == 900) }
         }
         let pending = try await OutboxRepository(database: store.database).pending()
-        #expect(pending.isEmpty == OutboxFailurePolicy.isFinal(failure))
+        #expect(pending.count == (final ? 0 : 1))
+        if !final {
+            #expect(pending.first?.attempts == attempts)
+            #expect(pending.first?.lastError == lastError)
+        }
         let settings = try await SettingsRepository(database: store.database).settings()
-        #expect(settings.contains { $0.section == "syncFailure" } == OutboxFailurePolicy.isFinal(failure))
+        #expect(settings.contains { $0.section == "syncFailure" } == final)
         #expect(!String(describing: settings).contains("secret response"))
         try await store.close()
+    }
+    @Test(arguments: [
+        (DataFailure.server(status: 400), true),
+        (.validation(fields: ["name": FieldMessage(key: "invalid")], status: 422), true),
+        (.server(status: 403), true), (.server(status: 404), true),
+        (.server(status: 408), false), (.server(status: 425), false),
+        (.throttled(retryAfterSeconds: 900, status: 429), false),
+        (.server(status: 500), false), (.offline, false),
+        (.unauthorized(status: 401), false), (.emailUnverified(status: 403), false),
+    ])
+    func policyClassification(_ failure: DataFailure, final: Bool) {
+        #expect(OutboxFailurePolicy.isFinal(failure) == final)
     }
     @Test func responseRollbackReplaysAbsoluteWrite() async throws {
         let store = try await SyncStore()

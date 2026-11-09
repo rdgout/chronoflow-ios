@@ -2,8 +2,9 @@ import AppCore
 import Foundation
 import GRDB
 import LocalStore
-import Sync
 import Testing
+
+@testable import Sync
 
 @Suite struct SyncEngineTests {
     @Test func concurrentRefreshesCoalesceOneRerun() async throws {
@@ -26,6 +27,30 @@ import Testing
         await engine.cancelAndWait()
         try await store.close()
     }
+    @Test(arguments: [false, true])
+    func cancellingOneWaiterPreservesSharedFlight(_ cancelStarter: Bool) async throws {
+        let store = try await SyncStore()
+        let source = ScriptedSource()
+        let gate = TestGate()
+        await source.configure(hook: { method in if method == "identity" { await gate.block() } })
+        let engine = SyncEngine(database: store.database, source: source, epoch: store.epoch)
+        let starter = Task { try await engine.refreshNow() }
+        await gate.waitUntilBlocked()
+        let joiner = Task { try await engine.refreshNow() }
+        while await engine.waitingRefreshCount != 2 { await Task.yield() }
+        let cancelled = cancelStarter ? starter : joiner
+        let remaining = cancelStarter ? joiner : starter
+        cancelled.cancel()
+        #expect(await engine.waitingRefreshCount == 1)
+        await source.configure()
+        await gate.release()
+        #expect(try await remaining.value.state == .idle)
+        await #expect(throws: CancellationError.self) { try await cancelled.value }
+        #expect(await source.calls.filter { $0 == "identity" }.count == 2)
+        #expect(await source.maximumActiveCalls == 1)
+        await engine.cancelAndWait()
+        try await store.close()
+    }
     @Test func queuedWriteDuringPullRunsAgainAndFlushes() async throws {
         let store = try await SyncStore()
         let source = ScriptedSource()
@@ -41,6 +66,116 @@ import Testing
         #expect(try await run.value.pendingCount == 0)
         #expect(await source.calls.filter { $0 == "send" }.count == 1)
         await engine.cancelAndWait()
+        try await store.close()
+    }
+    @Test func queuedCheckOffAfterDetailFailureRunsAgain() async throws {
+        let store = try await SyncStore()
+        let source = ScriptedSource()
+        let gate = TestGate()
+        await source.configure(hook: { method in
+            if method == "detail" {
+                await gate.block()
+                throw DataFailure.server(status: 500)
+            }
+        })
+        let engine = SyncEngine(database: store.database, source: source, epoch: store.epoch)
+        let run = Task { try await engine.refreshNow() }
+        await gate.waitUntilBlocked()
+        _ = try await store.enqueue(.checkOff(check()))
+        await engine.requestSync()
+        await source.configure()
+        await gate.release()
+        let result = try await run.value
+        #expect(result.state == .idle)
+        #expect(result.pendingCount == 0)
+        #expect(result.retryAfter == 1)
+        #expect(await source.changes == [.checkOff(check())])
+        #expect(
+            await source.calls == [
+                "identity", "account", "trips", "detail", "send", "identity", "account", "trips", "detail",
+            ])
+        await engine.cancelAndWait()
+        try await store.close()
+    }
+    @Test(arguments: [DataFailure.offline, .server(status: 500)])
+    func nonIdleFlightHonorsJoinedRefresh(_ failure: DataFailure) async throws {
+        let store = try await SyncStore()
+        let source = ScriptedSource()
+        let gate = TestGate()
+        await source.configure(hook: { method in
+            if method == "identity" {
+                await gate.block()
+                throw failure
+            }
+        })
+        let engine = SyncEngine(database: store.database, source: source, epoch: store.epoch)
+        let first = Task { try await engine.refreshNow() }
+        await gate.waitUntilBlocked()
+        let second = Task { try await engine.refreshNow() }
+        while await engine.waitingRefreshCount != 2 { await Task.yield() }
+        await source.configure()
+        await gate.release()
+        let result = try await first.value
+        #expect(result.state == .idle)
+        #expect(result.retryAfter == (failure == .offline ? nil : 1))
+        #expect(try await second.value == result)
+        #expect(await source.calls == ["identity", "identity", "account", "trips", "detail"])
+        await engine.cancelAndWait()
+        try await store.close()
+    }
+    @Test(arguments: [DataFailure.unauthorized(status: 401), .emailUnverified(status: 403)])
+    func protectedFailureStopsCoalescedRerun(_ failure: DataFailure) async throws {
+        let store = try await SyncStore()
+        let source = ScriptedSource()
+        let gate = TestGate()
+        await source.configure(hook: { method in
+            if method == "identity" {
+                await gate.block()
+                throw failure
+            }
+        })
+        let engine = SyncEngine(database: store.database, source: source, epoch: store.epoch)
+        let run = Task { try await engine.refreshNow() }
+        await gate.waitUntilBlocked()
+        await engine.requestSync()
+        await gate.release()
+        #expect(try await run.value.state == (failure.status == 401 ? .unauthorized : .verificationRequired))
+        #expect(await source.calls == ["identity"])
+        await engine.cancelAndWait()
+        try await store.close()
+    }
+    @Test(arguments: [(900.0, 1.0), (1.0, 900.0)])
+    func coalescedResultKeepsMaximumRetryAndRefusals(_ firstDelay: Double, _ secondDelay: Double) async throws {
+        let store = try await SyncStore()
+        let source = ScriptedSource()
+        let gate = TestGate()
+        _ = try await store.enqueue(.walkthrough)
+        _ = try await store.enqueue(
+            .settings(section: .preferences, patch: JSONObject(["time_format": .string("12")])), index: 1)
+        await source.configure(
+            failures: [.server(status: 422), .throttled(retryAfterSeconds: firstDelay, status: 429)],
+            hook: { method in if method == "identity" { await gate.block() } })
+        let engine = SyncEngine(database: store.database, source: source, epoch: store.epoch)
+        let stream = await engine.events()
+        let events = Task {
+            var finished: [SyncResult] = []
+            for await event in stream {
+                if case .finished(_, _, let result) = event { finished.append(result) }
+            }
+            return finished
+        }
+        let run = Task { try await engine.refreshNow() }
+        await gate.waitUntilBlocked()
+        await engine.requestSync()
+        await source.configure(failures: [.throttled(retryAfterSeconds: secondDelay, status: 429)])
+        await gate.release()
+        let result = try await run.value
+        #expect(result.retryAfter == 900)
+        #expect(result.pendingCount == 1)
+        #expect(result.refusals.count == 1)
+        #expect(await source.changes.count == 3)
+        await engine.cancelAndWait()
+        #expect(await events.value == [result])
         try await store.close()
     }
     @Test(arguments: ["send", "identity", "account", "trips", "detail"])
@@ -168,6 +303,9 @@ import Testing
     ])
     func sanitizedResultsRetainTransientWork(_ failure: DataFailure) async throws {
         let store = try await SyncStore()
+        try await AccountRepository(database: store.database).upsert(
+            AccountRecord(id: syncAccount, name: "Local", email: "demo@example.com", hasVerifiedEmail: true))
+        #expect(try await AccountRepository(database: store.database).account()?.hasVerifiedEmail == true)
         let source = ScriptedSource()
         _ = try await store.enqueue(.walkthrough)
         await source.configure(failures: [failure])
@@ -181,6 +319,9 @@ import Testing
         default: state = .idle
         }
         #expect(result.state == state)
+        if case .emailUnverified = failure {
+            #expect(try await AccountRepository(database: store.database).account()?.hasVerifiedEmail == false)
+        }
         #expect(result.pendingCount == 1)
         if case .server = failure { #expect(result.retryAfter == 1) }
         await engine.cancelAndWait()

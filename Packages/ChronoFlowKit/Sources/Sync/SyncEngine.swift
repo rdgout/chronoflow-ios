@@ -4,14 +4,17 @@ import LocalStore
 
 public actor SyncEngine {
     private let database: AccountDatabase
-    private let source: any DataSource
+    private var source: (any DataSource)?
     private let epoch: SyncEpoch
     public let retention: PlanRetention
     private let scheduler: SyncScheduler
     private let isOnline: @Sendable () async -> Bool
     private var flight: Task<SyncResult, any Error>?
     private var flightEpoch: SyncEpoch?
+    private var flightWaiters: RefreshWaiters?
+    var waitingRefreshCount: Int { flightWaiters?.count ?? 0 }
     private var timer: Task<Void, Never>?
+    private var canceledTimers: [UInt64: Task<Void, Never>] = [:]
     private var timerID: UInt64 = 0
     private var rerun = false
     private var stopped = false
@@ -68,24 +71,37 @@ public actor SyncEngine {
     @discardableResult
     private func cancelTimer() -> Task<Void, Never>? {
         let pending = timer
+        let canceledID = timerID
         timerID &+= 1
         timer?.cancel()
+        if let pending {
+            canceledTimers[canceledID] = pending
+            Task { [weak self] in
+                await pending.value
+                await self?.timerDrained(canceledID)
+            }
+        }
         timer = nil
         return pending
     }
+
+    private func timerDrained(_ id: UInt64) { canceledTimers.removeValue(forKey: id) }
 
     public func refreshNow() async throws -> SyncResult {
         try Task.checkCancellation()
         try epoch.check()
         guard !stopped else { throw CancellationError() }
         try await database.validate(epoch: epoch)
+        try Task.checkCancellation()
         try epoch.check()
         guard !stopped else { throw CancellationError() }
         cancelTimer()
         let task: Task<SyncResult, any Error>
-        if let flight {
+        let waiters: RefreshWaiters
+        if let flight, let flightWaiters {
             rerun = true
             task = flight
+            waiters = flightWaiters
         } else {
             rerun = false
             let runEpoch = epoch.child()
@@ -93,13 +109,16 @@ public actor SyncEngine {
             let candidate = Task { try await self.runFlights(epoch: runEpoch) }
             flight = candidate
             task = candidate
+            waiters = RefreshWaiters(task: candidate, epoch: runEpoch)
+            flightWaiters = waiters
         }
-        let cancellationEpoch = flightEpoch
+        let id = UUID()
+        waiters.add(id)
+        defer { waiters.remove(id) }
         let result = try await withTaskCancellationHandler {
             try await task.value
         } onCancel: {
-            cancellationEpoch?.invalidate()
-            task.cancel()
+            waiters.cancel(id)
         }
         try Task.checkCancellation()
         try epoch.check()
@@ -110,33 +129,60 @@ public actor SyncEngine {
         defer {
             flight = nil
             flightEpoch = nil
+            flightWaiters = nil
             rerun = false
         }
         var result: SyncResult
+        var retryAfter: TimeInterval?
+        var serverRetryAfter: TimeInterval?
+        var refusals: [SyncRefusal] = []
+        try runEpoch.check()
+        emit(.started(accountID: epoch.accountID, epoch: epoch.generation))
         repeat {
+            rerun = false
             try runEpoch.check()
-            emit(.started(accountID: epoch.accountID, epoch: epoch.generation))
             result = try await runOnce(epoch: runEpoch)
             try runEpoch.check()
-            emit(.finished(accountID: epoch.accountID, epoch: epoch.generation, result: result))
-            guard result.state == .idle, result.retryAfter == nil else { return result }
-            if rerun { rerun = false } else { return result }
-        } while true
+            if let delay = result.retryAfter { retryAfter = max(retryAfter ?? 0, delay) }
+            if let delay = result.serverRetryAfter { serverRetryAfter = max(serverRetryAfter ?? 0, delay) }
+            refusals.append(contentsOf: result.refusals)
+            if result.state == .unauthorized || result.state == .verificationRequired { break }
+        } while rerun
+        let merged = SyncResult(
+            state: result.state, pendingCount: result.pendingCount, retryAfter: retryAfter,
+            serverRetryAfter: serverRetryAfter, refusals: refusals)
+        emit(.finished(accountID: epoch.accountID, epoch: epoch.generation, result: merged))
+        return merged
     }
 
     private func runOnce(epoch: SyncEpoch) async throws -> SyncResult {
+        guard let source else { throw CancellationError() }
         var state: SyncState = .idle
         var retryAfter: TimeInterval?
+        var serverRetryAfter: TimeInterval?
         var refusals: [SyncRefusal] = []
         do {
             let online = await isOnline()
             try epoch.check()
             if online {
+                if try await AccountRepository(database: database).account()?.hasVerifiedEmail == false {
+                    let identity = try await source.fetchIdentity()
+                    try epoch.check()
+                    try await database.write(epoch: epoch) { db in
+                        try StoreApplication.identity(identity, accountID: epoch.accountID, db: db)
+                    }
+                    if !identity.hasVerifiedEmail {
+                        return SyncResult(
+                            state: .verificationRequired,
+                            pendingCount: try await OutboxRepository(database: database).pending().count)
+                    }
+                }
                 let flush = try await OutboxFlusher(database: database, source: source, now: scheduler.now).run(
                     epoch: epoch)
                 try epoch.check()
                 refusals = flush.refusals
                 retryAfter = flush.retryAfter
+                serverRetryAfter = flush.serverRetryAfter
                 if flush.offline {
                     state = .offline
                 } else {
@@ -165,7 +211,8 @@ public actor SyncEngine {
                 try epoch.check()
             case .throttled(let seconds, _):
                 state = .failed
-                retryAfter = seconds
+                retryAfter = max(retryAfter ?? 0, seconds)
+                serverRetryAfter = max(serverRetryAfter ?? 0, seconds)
             default:
                 state = .failed
                 retryAfter = max(retryAfter ?? 0, 1)
@@ -173,7 +220,9 @@ public actor SyncEngine {
         }
         let pending = try await OutboxRepository(database: database).pending().count
         try epoch.check()
-        return SyncResult(state: state, pendingCount: pending, retryAfter: retryAfter, refusals: refusals)
+        return SyncResult(
+            state: state, pendingCount: pending, retryAfter: retryAfter, serverRetryAfter: serverRetryAfter,
+            refusals: refusals)
     }
 
     private func emit(_ event: SyncEvent) {
@@ -189,7 +238,35 @@ public actor SyncEngine {
         let pending = flight
         _ = await pending?.result
         await pendingTimer?.value
+        let timers = canceledTimers
+        canceledTimers.removeAll()
+        for timer in timers.values { await timer.value }
+        source = nil
+        retention.clear()
         for observer in observers.values { observer.finish() }
         observers.removeAll()
+    }
+}
+
+private final class RefreshWaiters: Sendable {
+    private let lock = NSLock()
+    nonisolated(unsafe) private var ids: Set<UUID> = []
+    private let task: Task<SyncResult, any Error>
+    private let epoch: SyncEpoch
+
+    init(task: Task<SyncResult, any Error>, epoch: SyncEpoch) {
+        self.task = task
+        self.epoch = epoch
+    }
+
+    var count: Int { lock.withLock { ids.count } }
+    func add(_ id: UUID) { lock.withLock { _ = ids.insert(id) } }
+    func remove(_ id: UUID) { lock.withLock { _ = ids.remove(id) } }
+    func cancel(_ id: UUID) {
+        lock.withLock {
+            guard ids.remove(id) != nil, ids.isEmpty else { return }
+            epoch.invalidate()
+            task.cancel()
+        }
     }
 }

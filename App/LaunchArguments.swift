@@ -11,6 +11,7 @@ struct LaunchArguments: Equatable {
     let readyAt: Duration
     let mainThreadStall: Duration?
     let reduceMotion: Bool
+    let usesInjectedReadiness: Bool
     let readiness: StubReadiness.Configuration
 
     init(_ arguments: [String] = ProcessInfo.processInfo.arguments) {
@@ -35,6 +36,9 @@ struct LaunchArguments: Equatable {
         mainThreadStall = milliseconds("-cf.mainThreadStall")
         reduceMotion = arguments.contains("-cf.reduceMotion")
         #if DEBUG
+            usesInjectedReadiness = ["-cf.session", "-cf.gate", "-cf.stored", "-cf.readyDelay"].contains {
+                value($0) != nil
+            }
             let presence: StubReadiness.Session
             switch value("-cf.session") {
             case "in", "signedIn": presence = .signedIn
@@ -48,7 +52,8 @@ struct LaunchArguments: Equatable {
                 stored: value("-cf.stored").flatMap(StubReadiness.Stored.init(rawValue:)) ?? .yes,
                 readyDelay: .seconds(delay.flatMap { $0.isFinite && (0...60).contains($0) ? $0 : nil } ?? 0))
         #else
-            readiness = .init(session: .signedOut)
+            usesInjectedReadiness = false
+            readiness = .init()
         #endif
     }
 

@@ -5,7 +5,7 @@ public final class LaunchCoordinator {
     public private(set) var state: LaunchState
     public let clock: any LaunchClock
     private let reduceMotion: Bool
-    private let readiness: any LaunchReadiness
+    public let readiness: any LaunchReadiness
     private let onChange: @MainActor (LaunchState, [LaunchEffect]) -> Void
     private var tasks: [Task<Void, Never>] = []
     private var deadlineTask: Task<Void, Never>?
@@ -34,9 +34,10 @@ public final class LaunchCoordinator {
                 if case .signedIn = session {
                     tasks.append(
                         Task { [weak self, readiness] in
-                            let gate = await readiness.gate()
-                            guard !Task.isCancelled else { return }
-                            self?.send(.gate(gate))
+                            for await gate in await readiness.gateUpdates() {
+                                guard !Task.isCancelled else { return }
+                                self?.send(.gate(gate))
+                            }
                         })
                     tasks.append(
                         Task { [weak self, readiness] in

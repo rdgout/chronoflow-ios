@@ -1,3 +1,4 @@
+CHRONOFLOW_READINESS = native
 CHRONOFLOW_DATA_SOURCE = mock
 CHRONOFLOW_API_BASE_URL = https:/$()/api.chronoflow.net/v1
 #include? "Local.xcconfig"

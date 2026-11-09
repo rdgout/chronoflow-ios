@@ -8,9 +8,14 @@ options:
   useBaseInternationalization: false
   indentWidth: 4
   tabWidth: 4
+configs:
+  Debug: debug
+  Release: release
+  Perf: release
 configFiles:
   Debug: Config/Base.xcconfig
   Release: Config/Base.xcconfig
+  Perf: Config/Base.xcconfig
 settings:
   base:
     SWIFT_VERSION: "6.0"
@@ -44,9 +49,12 @@ targets:
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_EMIT_LOC_STRINGS: YES
+      configs:
+        Perf:
+          CHRONOFLOW_READINESS: signed-out
     dependencies:
       - package: ChronoFlowKit
-        products: [DesignSystem, AppCore, LocalStore, DataAccess, Launch, Welcome]
+        products: [DesignSystem, AppCore, LocalStore, DataAccess, Sync, Launch, Welcome]
   AppTests:
     type: bundle.unit-test
     platform: iOS
@@ -118,9 +126,9 @@ schemes:
       targets:
         ChronoFlow: all
     run:
-      config: Release
+      config: Perf
     test:
-      config: Release
+      config: Perf
       targets: [PerfUITests]
     profile:
-      config: Release
+      config: Perf

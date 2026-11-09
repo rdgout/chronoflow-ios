@@ -18,7 +18,15 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     private var introSignpostTask: Task<Void, Never>?
     private(set) var launchIntro: LaunchIntro?
     private var allowsIntro = false
+    var serviceConfigurationFactory: (@Sendable () async throws -> (AppServices, URL?))?
+    var nativeSessionFactory: (@MainActor (AppServices, URL) -> NativeSessionController)?
     var readinessFactory: (@MainActor (LaunchArguments, any LaunchClock) -> any LaunchReadiness)?
+    private(set) var nativeSession: NativeSessionController?
+    private(set) var serviceFailure: (any Error)?
+    private var servicesTask: Task<Void, Never>?
+    private var activityTask: Task<Void, Never>?
+    private var isActive = true
+    private var unlockObserver: NSObjectProtocol?
     private var rootScheduled = false
     private var connectionGeneration = 0
 
@@ -121,6 +129,14 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         } else {
             startReadiness(on: windowScene, arguments: arguments)
         }
+        if !firstConnection,
+            let native = nativeSession
+                ?? (nativeSessionFactory == nil ? (UIApplication.shared.delegate as? AppDelegate)?.nativeSession : nil)
+        {
+            nativeSession = native
+            native.observe()
+            setActive(isActive)
+        }
     }
 
     private func startReadiness(on windowScene: UIWindowScene, arguments: LaunchArguments) {
@@ -130,9 +146,81 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let fallback = MoonTarget.fallback(
             size: size, safeAreaInsets: .init(top: safe.top, left: safe.left, bottom: safe.bottom, right: safe.right),
             rowHeight: LaunchArguments.fallbackRowHeight(compatibleWith: windowScene.traitCollection))
-        let source =
-            readinessFactory?(arguments, clock)
-            ?? StubReadiness(configuration: arguments.readiness, store: KeychainSessionStore(), clock: clock)
+        if let source = readinessFactory?(arguments, clock) {
+            runReadiness(source, on: windowScene, clock: clock, fallback: fallback)
+        } else if arguments.usesInjectedReadiness {
+            runReadiness(
+                StubReadiness(configuration: arguments.readiness, store: KeychainSessionStore(), clock: clock),
+                on: windowScene, clock: clock, fallback: fallback)
+        } else {
+            let generation = connectionGeneration
+            servicesTask = Task { [weak self, weak windowScene] in
+                do {
+                    let load = self?.serviceConfigurationFactory
+                    let configuration = try await Task.detached {
+                        if let load { return try await load() }
+                        return try AppServices.launchConfiguration()
+                    }.value
+                    guard let self, let windowScene, !Task.isCancelled, connectionGeneration == generation else {
+                        return
+                    }
+                    let source: any LaunchReadiness
+                    if configuration.0.signedOutReadiness {
+                        source = SignedOutReadiness()
+                    } else {
+                        let app = UIApplication.shared.delegate as? AppDelegate
+                        let native: NativeSessionController
+                        if let factory = nativeSessionFactory {
+                            guard let root = configuration.1 else {
+                                throw AppServices.Failure.applicationSupportUnavailable
+                            }
+                            native = factory(configuration.0, root)
+                        } else if let existing = app?.nativeSession {
+                            native = existing
+                        } else {
+                            guard let root = configuration.1 else {
+                                serviceFailure = AppServices.Failure.applicationSupportUnavailable
+                                runReadiness(UnavailableReadiness(), on: windowScene, clock: clock, fallback: fallback)
+                                return
+                            }
+                            let services = configuration.0
+                            native = NativeSessionController(
+                                applicationSupport: root, namespace: services.namespace,
+                                source: { session in services.makeDataSource(applicationSupport: root, session: session)
+                                },
+                                verification: { [weak app] epoch in await app?.verificationRequired(epoch: epoch) },
+                                signedOut: { [navigator] in navigator.navigate(to: .signIn) })
+                            app?.nativeSession = native
+                        }
+                        nativeSession = native
+                        native.observe()
+                        await native.setActive(isActive)
+                        guard !Task.isCancelled, connectionGeneration == generation else { return }
+                        source = native.readiness
+                        unlockObserver = NotificationCenter.default.addObserver(
+                            forName: UIApplication.protectedDataDidBecomeAvailableNotification, object: nil,
+                            queue: .main
+                        ) { [weak native] _ in
+                            Task { @MainActor in await native?.readiness.retry() }
+                        }
+                    }
+                    runReadiness(source, on: windowScene, clock: clock, fallback: fallback)
+                } catch {
+                    guard let self, let windowScene, !Task.isCancelled, connectionGeneration == generation else {
+                        return
+                    }
+                    serviceFailure = error
+                    runReadiness(UnavailableReadiness(), on: windowScene, clock: clock, fallback: fallback)
+                }
+            }
+        }
+    }
+
+    private func runReadiness(
+        _ source: any LaunchReadiness, on windowScene: UIWindowScene,
+        clock: any LaunchClock, fallback: CGRect
+    ) {
+        var navigationRevision = navigator.revision
         let coordinator = LaunchCoordinator(
             readiness: source, clock: clock,
             reduceMotion: overlayController?.launchScene.timeline.reduceMotion ?? true,
@@ -146,7 +234,10 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                     launchIntro = LaunchIntro(start: start + .milliseconds(700), clock: clock)
                     scheduleIntroSignpost(clock: clock, start: start + .milliseconds(700))
                 }
-                navigator.navigate(to: route)
+                if navigator.revision == navigationRevision {
+                    navigator.navigate(to: route)
+                    navigationRevision = navigator.revision
+                }
                 mountRoot(on: windowScene)
             }
             if let controller = overlayController {
@@ -243,8 +334,27 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         UIAccessibility.post(notification: .screenChanged, argument: nil)
     }
 
+    func sceneDidBecomeActive(_ scene: UIScene) { setActive(true) }
+
+    func sceneDidEnterBackground(_ scene: UIScene) { setActive(false) }
+
+    private func setActive(_ active: Bool) {
+        isActive = active
+        let previous = activityTask
+        activityTask = Task { [weak self] in
+            await previous?.value
+            guard let self else { return }
+            await nativeSession?.setActive(active)
+        }
+    }
+
     func sceneDidDisconnect(_ scene: UIScene) {
         connectionGeneration += 1
+        setActive(false)
+        servicesTask?.cancel()
+        servicesTask = nil
+        if let unlockObserver { NotificationCenter.default.removeObserver(unlockObserver) }
+        unlockObserver = nil
         finishLaunch()
         coordinator?.stop()
         coordinator = nil

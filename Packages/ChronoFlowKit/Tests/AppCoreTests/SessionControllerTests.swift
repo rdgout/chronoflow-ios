@@ -127,8 +127,8 @@ struct SessionControllerTests {
         let log = SessionEventLog()
         let credentials = ControllerMemoryStore(log: log)
         let accounts = ControllerAccountStore(log: log)
-        let controller = SessionController(credentials: credentials, accounts: accounts) { _ in await log.record("sync")
-        }
+        let controller = SessionController(
+            credentials: credentials, accounts: accounts, requestSync: { _ in await log.record("sync") })
         #expect(await controller.presence == nil)
         let updates = await controller.updates()
         var iterator = updates.makeAsyncIterator()
@@ -148,8 +148,8 @@ struct SessionControllerTests {
         await credentials.configure(writeFails: stage == "keychain")
         let accounts = ControllerAccountStore(log: log)
         await accounts.configure(openFails: stage == "open", upsertFails: stage == "upsert")
-        let controller = SessionController(credentials: credentials, accounts: accounts) { _ in await log.record("sync")
-        }
+        let controller = SessionController(
+            credentials: credentials, accounts: accounts, requestSync: { _ in await log.record("sync") })
         await #expect(throws: stage == "keychain" ? SessionFailure.credentialWrite : SessionFailure.databaseUnavailable)
         {
             try await controller.accept(sessionResult())
@@ -293,8 +293,8 @@ struct SessionControllerTests {
         let log = SessionEventLog()
         let gate = SessionTestGate()
         let controller = SessionController(
-            credentials: ControllerMemoryStore(log: log), accounts: ControllerAccountStore(log: log)
-        ) { _ in await gate.wait() }
+            credentials: ControllerMemoryStore(log: log), accounts: ControllerAccountStore(log: log),
+            requestSync: { _ in await gate.wait() })
         let first = Task { try await controller.accept(sessionResult()) }
         await gate.waitUntilEntered()
         #expect(await controller.presence == .signedIn(accountID: sessionAccountA))

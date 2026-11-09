@@ -9,11 +9,16 @@ public struct SyncResult: Sendable, Equatable {
     public let state: SyncState
     public let pendingCount: Int
     public let retryAfter: TimeInterval?
+    public let serverRetryAfter: TimeInterval?
     public let refusals: [SyncRefusal]
-    public init(state: SyncState, pendingCount: Int, retryAfter: TimeInterval? = nil, refusals: [SyncRefusal] = []) {
+    public init(
+        state: SyncState, pendingCount: Int, retryAfter: TimeInterval? = nil, serverRetryAfter: TimeInterval? = nil,
+        refusals: [SyncRefusal] = []
+    ) {
         self.state = state
         self.pendingCount = pendingCount
         self.retryAfter = retryAfter
+        self.serverRetryAfter = serverRetryAfter
         self.refusals = refusals
     }
 }

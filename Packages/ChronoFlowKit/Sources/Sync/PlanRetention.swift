@@ -10,6 +10,7 @@ public final class PlanRetention: Sendable {
         lock.withLock { leases[id] = tripID }
         return PlanLease { [weak self] in self?.release(id) }
     }
+    func clear() { lock.withLock { leases.removeAll() } }
     private func release(_ id: UUID) { _ = lock.withLock { leases.removeValue(forKey: id) } }
     func withHeldPlans<T>(_ action: (Set<String>) throws -> T) rethrows -> T {
         try lock.withLock { try action(Set(leases.values)) }
