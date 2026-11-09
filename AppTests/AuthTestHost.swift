@@ -145,6 +145,18 @@ nonisolated struct AuthDeviceFixture {
         }
     }
 
+    static func layoutStressProfiles() throws -> [Self] {
+        let fixtures = try all()
+        let se = try XCTUnwrap(fixtures.first { $0.name == "se" })
+        let duo = try XCTUnwrap(fixtures.first { $0.name == "duo" })
+        return [
+            se,
+            .init(
+                name: "duo-asymmetric", size: duo.size,
+                insets: UIEdgeInsets(top: 20, left: 24, bottom: 20, right: 62), scale: duo.scale),
+        ]
+    }
+
     static func authSnapshotProfiles() throws -> [Self] {
         try all().filter { ["17e", "se", "duo"].contains($0.name) }
     }
