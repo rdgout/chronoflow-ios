@@ -304,6 +304,18 @@ class ClassificationTests(unittest.TestCase):
             self.assertEqual(len(entries), len(set(entries)), target)
             self.assertEqual(set(entries), discovered_suites(directory), target)
 
+    def test_wizard_board_capture_is_explicit_only(self):
+        suite = 'AppUITests/WizardBoardCaptureTests'
+        self.assertEqual(runner.selectors('capture'), [suite])
+        self.assertEqual(runner.expand([suite]), [suite])
+        for mode in ['check', 'test', 'snapshots', 'runtime', 'matrix', 'welcome']:
+            for alias in runner.MATRIX:
+                self.assertNotIn(suite, runner.selection(mode, alias))
+        with patch.dict(os.environ, {'WIZARD_BOARD_CAPTURE': '1'}):
+            self.assertEqual(runner.environment()['TEST_RUNNER_WIZARD_BOARD_CAPTURE'], '1')
+        with patch.dict(os.environ, {'WIZARD_BOARD_CAPTURE': '0', 'TEST_RUNNER_WIZARD_BOARD_CAPTURE': '1'}):
+            self.assertNotIn('TEST_RUNNER_WIZARD_BOARD_CAPTURE', runner.environment())
+
     def test_logic_runs_once_and_matrix_runs_on_every_requested_device(self):
         logic = runner.selectors('logic') + runner.selectors('release')
         matrix = set(runner.selectors('matrix'))

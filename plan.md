@@ -1786,6 +1786,8 @@ Boards come from page "trip", drawn to the `wizTodo1` rules. **WizardSpec is the
 
 - [x] Checking/Questions: failure back and confirmed Close, eyebrow above server titles, 24/30 long titles, 64 pt answer cards and pinned hint, neutral Change my answers action, Close order/type and failure dimensions.
 
+- [x] Add Debug-only WizardBoardCaptureTests for 34 built member board states in light/dark and EN/NL; register only under the explicit capture selector, outside default sets.
+
 **16c: Fine-tune, Ready, Save and create acceptance**
 - [ ] Boards: WizardFineTune*; the sheets WizardSheet, WizardSheetBlue, BlueError, Busy, Checkout, Drinks, DrinksError, FreeSleep, Light, Room and Wake (each with DarkNL); WizardReady* (Return, Unlimited, Free, OneFree, Adjusted, NoCredits); WizardCalculating; SaveOffline; SaveServer; WizardDiscard.
 - [ ] Ready re-checks after 30 minutes or when the input changes. Save follows RN: no automatic retry; a failure returns to Ready with SaveOffline/SaveServer and a "Try again in N s" countdown for 429; `savedTripId` is persisted. Expired or no credits at save clears the identity and returns to Ready for a re-check. On success, dismiss to the new trip's page with `awaitingSync`. No credits shows RN's unavailable state with no hand-off action (OQ 41). Phase 19 supplies the first-trip reminders sheet; 16c wires it after the first successful save (OQ 43). Show "Plan a trip" in My trips.

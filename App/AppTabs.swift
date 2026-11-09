@@ -361,12 +361,21 @@ struct AppTabs: View {
             do {
                 guard let native, let snapshot = await native.controller.activeSession() else { return }
                 let generation = try await native.wizardGenerationService(snapshot: snapshot)
-                let draft = try await wizardStore.start()
+                var draft = try await wizardStore.start()
+                #if DEBUG
+                    let capture =
+                        (UIApplication.shared.delegate as? AppDelegate)?.authServices?.authUITestEnabled == true
+                        ? ProcessInfo.processInfo.environment["CF_WIZARD_BOARD_CAPTURE"] : nil
+                    if let capture { draft = WizardBoardCaptureSeed.draft(draft, board: capture, locale: locale) }
+                #endif
                 guard !Task.isCancelled, self.wizardStore === wizardStore else { return }
                 guard await native.controller.activeSession() == snapshot else { return }
                 wizardGeneration = generation
                 wizard = MemberWizardModel(
                     draft: draft, store: wizardStore, search: airportSearch, generation: generation)
+                #if DEBUG
+                    if let capture, let wizard { WizardBoardCaptureSeed.freeze(wizard, board: capture) }
+                #endif
             } catch is CancellationError { return } catch { assertionFailure("Wizard start failed: \(error)") }
         }
     }
