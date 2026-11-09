@@ -101,6 +101,11 @@ nonisolated final class SessionReadinessTests: XCTestCase {
                 await app.verificationRequired(epoch: epoch)
             }
             XCTAssertEqual(app.navigator.route, expected)
+            if expected == .verify {
+                XCTAssertTrue(auth.verifyModel?.isActive == true)
+                let restoredEpoch = await native.controller.epoch
+                XCTAssertEqual(auth.verifyModel?.context.epoch, restoredEpoch)
+            }
             let staleEpoch = await native.controller.epoch
             _ = try await native.controller.signOut(discardPending: true, unauthorized: true)
             XCTAssertEqual(app.navigator.route, .signIn)
