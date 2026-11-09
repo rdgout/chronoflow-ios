@@ -2,6 +2,11 @@
     import Foundation
 
     public struct UITestSeedCommand: Codable, Sendable, Equatable {
+        public enum Rejection: String, Error, Sendable {
+            case invalidEndpoint, invalidPayload, malformedCommand, missingAuthorization, foreignAuthorization
+            case invalidNonce, invalidTestID, invalidProfile, foreignEnvironment
+        }
+
         public let authorization: String
         public let nonce: String
         public let environment: [String: String]
@@ -42,17 +47,35 @@
         }
 
         public init?(url: URL, authorizedID: String) {
+            guard let command = try? Self(validating: url, authorizedID: authorizedID) else { return nil }
+            self = command
+        }
+
+        public init(validating url: URL, authorizedID: String?) throws {
             guard url.scheme == "chronoflow-uitest", url.host == "reseed", url.path.isEmpty,
+                url.user == nil, url.password == nil, url.port == nil, url.fragment == nil
+            else { throw Rejection.invalidEndpoint }
+            guard
                 let parts = URLComponents(url: url, resolvingAgainstBaseURL: false),
                 let items = parts.queryItems, items.count == 1, items[0].name == "payload",
                 let value = items[0].value, value.utf8.count < 32_768,
-                let data = Data(base64Encoded: value), let command = try? JSONDecoder().decode(Self.self, from: data),
-                UUID(uuidString: authorizedID) != nil, command.authorization == authorizedID,
-                UUID(uuidString: command.nonce) != nil,
-                let rawID = command.environment["CF_AUTH_TEST_ID"], UUID(uuidString: rawID) != nil,
-                command.environment["CF_UI_TEST_PROFILE"] == "screen",
-                command.environment.keys.allSatisfy({ $0.hasPrefix("CF_") })
-            else { return nil }
+                let data = Data(base64Encoded: value)
+            else { throw Rejection.invalidPayload }
+            guard let command = try? JSONDecoder().decode(Self.self, from: data) else {
+                throw Rejection.malformedCommand
+            }
+            guard let authorizedID, let authorized = UUID(uuidString: authorizedID) else {
+                throw Rejection.missingAuthorization
+            }
+            guard UUID(uuidString: command.authorization) == authorized else { throw Rejection.foreignAuthorization }
+            guard UUID(uuidString: command.nonce) != nil else { throw Rejection.invalidNonce }
+            guard let rawID = command.environment["CF_AUTH_TEST_ID"], UUID(uuidString: rawID) != nil else {
+                throw Rejection.invalidTestID
+            }
+            guard command.environment["CF_UI_TEST_PROFILE"] == "screen" else { throw Rejection.invalidProfile }
+            guard command.environment.keys.allSatisfy({ $0.hasPrefix("CF_") }) else {
+                throw Rejection.foreignEnvironment
+            }
             self = command
         }
     }

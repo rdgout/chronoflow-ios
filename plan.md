@@ -2123,6 +2123,17 @@ Main restoration validation: source comparison confirms the two methods and enti
 - [x] Validate strict lint, host tests and actual Release source compilation; deliver ordered atomic patches on `07c6ab8` and exact 17e selectors. Lint, 599 Swift Testing tests + 19 XCTest methods excluding the unchanged loopback EPERM, 17 generator tests and 103 resource/runner fixtures pass. Debug app/hosted/UI sources and actual Release DataAccess/Sync/app plus all AppTests typecheck against iOS 17. All 117 existing UI methods remain; two transport/isolation tests are added.
 - [ ] User-host acceptance: run the focused and full default UI manifests plus the single-worker launch/reset benchmark in Docs/ui-test-tiers.md, build/run ReadinessRelease, and fill the p50/p95/default-tier table. Actual Xcode build-for-testing is blocked here by unavailable CoreSimulator/package products; no simulator run or speed claim is recorded.
 
+## UI reseed acceptance repair (user, 2026-11-09)
+
+- [x] Log every Debug URL delivery (including scene connection), structured parse/authorization rejection, reset start and ready/failure with nonce and PID; attach screen and app hierarchy on runner acknowledgement failure. Compare UUID authorization by value.
+- [x] Replace launch-by-URL (`XCUIApplication.open`) with system URL dispatch (`XCUIDevice.shared.system.open`) so the existing scene receives the command; retain account/sheet replacement and the two benchmark methods as runtime acceptance.
+- [ ] Refresh memory-backed mock request snapshots and serialize mutations against the shared store, retaining independent source credentials; cover cross-factory mail and session invalidation and concurrent writes.
+- [ ] Accept an absent lazy Release store as empty while still rejecting seeded accounts.
+- [ ] Honor the exact gated UI-fixture mock delay (zero by default), bypassing MockDataSource's ordinary 300–800 ms clamp without bypassing sign-in, two-factor, full pull, account storage or readiness. Add configuration-ready timing to separate fixture preparation from session restoration.
+- [ ] Restore XcodeGen generation for PackageLogic with an explicit test-only app build target; keep its three selected package suites and default manifest unchanged.
+- [ ] Run lint/quick and iOS compilation, package atomic commits and document exact runtime reruns and environment limitations.
+- [ ] User-host acceptance: run Docs/ui-test-reseed-rerun-17e.txt, then the unchanged default and single-worker benchmark manifests, preserving both 17e result folders and app/runner timelines. Confirm unchanged PID across every reseed and successful Settings/Sign-in benchmark methods; measure the post-fix app-side intervals.
+
 ## Open questions for the user
 
 | # | Question | Default | Blocks |

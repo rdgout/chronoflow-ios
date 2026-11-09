@@ -65,8 +65,12 @@ def main(paths):
             print(f"| {label} | {len(samples)} | {statistics.median(samples):.3f} | {p95:.3f} |")
         else:
             print(f"| {label} | 0 | pending | pending |")
-    failures = sum(event == "reset-failed" or event == "seed-route-failed" for _, _, _, event, _ in records)
+    failures = sum(event in {"reset-failed", "reset-rejected", "seed-route-failed", "url-rejected"}
+                   for _, _, _, event, _ in records)
     print(f"\nTimeline events: {len(records)}; reset/seed failures: {failures}")
+    received = sum(event == "url-received" for _, _, _, event, _ in records)
+    rejected = sum(event == "url-rejected" for _, _, _, event, _ in records)
+    print(f"URL deliveries: {received}; rejected commands: {rejected}")
 
 
 if __name__ == "__main__":

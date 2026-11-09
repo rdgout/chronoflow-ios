@@ -43,5 +43,40 @@
                 #expect(!command.preservesLaunchSettings(in: changed))
             }
         }
+
+        @Test func rejectionReasonsSeparateDeliveryFromAuthorizationAndSeedValidation() throws {
+            let id = UUID().uuidString
+            let environment = ["CF_AUTH_TEST_ID": UUID().uuidString, "CF_UI_TEST_PROFILE": "screen"]
+            let command = UITestSeedCommand(authorization: id, environment: environment, arguments: [])
+            let url = try command.url()
+            #expect(try UITestSeedCommand(validating: url, authorizedID: id.lowercased()) == command)
+            #expect(throws: UITestSeedCommand.Rejection.missingAuthorization) {
+                try UITestSeedCommand(validating: url, authorizedID: nil)
+            }
+            #expect(throws: UITestSeedCommand.Rejection.foreignAuthorization) {
+                try UITestSeedCommand(validating: url, authorizedID: UUID().uuidString)
+            }
+            for (value, reason) in [
+                ("https://reseed", UITestSeedCommand.Rejection.invalidEndpoint),
+                ("chronoflow-uitest://reseed?payload=bad", .invalidPayload),
+                ("chronoflow-uitest://reseed?payload=e30=", .malformedCommand),
+            ] {
+                let invalid = try #require(URL(string: value))
+                #expect(throws: reason) { try UITestSeedCommand(validating: invalid, authorizedID: id) }
+            }
+            for (nonce, seed, reason) in [
+                ("bad", environment, UITestSeedCommand.Rejection.invalidNonce),
+                (UUID().uuidString, ["CF_UI_TEST_PROFILE": "screen"], .invalidTestID),
+                (UUID().uuidString, ["CF_AUTH_TEST_ID": id, "CF_UI_TEST_PROFILE": "launch"], .invalidProfile),
+                (
+                    UUID().uuidString,
+                    ["CF_AUTH_TEST_ID": id, "CF_UI_TEST_PROFILE": "screen", "AppleLocale": "nl"], .foreignEnvironment
+                ),
+            ] {
+                let invalid = try UITestSeedCommand(authorization: id, nonce: nonce, environment: seed, arguments: [])
+                    .url()
+                #expect(throws: reason) { try UITestSeedCommand(validating: invalid, authorizedID: id) }
+            }
+        }
     }
 #endif
