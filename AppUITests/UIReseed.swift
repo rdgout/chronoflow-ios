@@ -3,8 +3,9 @@ import XCTest
 @MainActor enum UIReseed {
     static func apply(to app: XCUIApplication, authorization: String, timeout: TimeInterval = 12) throws {
         let command = UITestSeedCommand(
-            authorization: authorization, environment: app.launchEnvironment, arguments: app.launchArguments)
-        UITestTiming.record("reset-begin", environment: app.launchEnvironment)
+            authorization: authorization, environment: app.launchEnvironment.filter { $0.key.hasPrefix("CF_") },
+            arguments: app.launchArguments)
+        UITestTiming.record("reset-begin", environment: app.launchEnvironment, details: "nonce=\(command.nonce)")
         UITestTiming.awaitFirstElement(environment: app.launchEnvironment)
         let previous = app.windows.matching(NSPredicate(format: "identifier BEGINSWITH %@", "uitest.ready."))
             .firstMatch
@@ -30,6 +31,6 @@ import XCTest
             )
             throw NSError(domain: "UIReseed", code: 1)
         }
-        UITestTiming.record("reset-return", environment: app.launchEnvironment)
+        UITestTiming.record("reset-return", environment: app.launchEnvironment, details: "nonce=\(command.nonce)")
     }
 }

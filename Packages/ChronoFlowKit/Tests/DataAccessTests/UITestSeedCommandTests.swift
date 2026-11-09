@@ -78,5 +78,34 @@
                 #expect(throws: reason) { try UITestSeedCommand(validating: invalid, authorizedID: id) }
             }
         }
+
+        @Test func launchSettingsIncludeRemovedTraitsDuplicateOverridesAndProcessEnvironment() {
+            let environment = ["CF_UI_TEST_PROFILE": "screen", "CF_AUTH_TEST_ID": UUID().uuidString, "LANG": "en_US"]
+            let arguments = [
+                "-AppleLanguages", "(en)", "-UIKeyboardAutomaticMinimizationEnabled", "NO", "-cf.reduceMotion",
+            ]
+            let command = UITestSeedCommand(authorization: "", environment: environment, arguments: arguments)
+            #expect(command.changedLaunchSettings(arguments: arguments, environment: environment).isEmpty)
+            #expect(
+                command.changedLaunchSettings(arguments: [], environment: environment) == [
+                    "-AppleLanguages", "-UIKeyboardAutomaticMinimizationEnabled", "-cf.reduceMotion",
+                ])
+            #expect(
+                command.changedLaunchSettings(
+                    arguments: arguments + ["-AppleLanguages", "(nl)"], environment: environment) == ["-AppleLanguages"]
+            )
+            var changed = environment
+            changed["LANG"] = "nl_NL"
+            changed["CF_UI_TEST_PROFILE"] = "launch"
+            #expect(
+                command.changedLaunchSettings(arguments: arguments, environment: changed) == [
+                    "CF_UI_TEST_PROFILE", "LANG",
+                ])
+            changed = environment
+            changed["CF_AUTH_TEST_ID"] = UUID().uuidString
+            changed["CF_AUTH_TEST_VERIFY_STATE"] = "throttle"
+            changed["CF_UI_TEST_LAUNCH_ARGUMENTS"] = "[]"
+            #expect(command.changedLaunchSettings(arguments: arguments, environment: changed).isEmpty)
+        }
     }
 #endif

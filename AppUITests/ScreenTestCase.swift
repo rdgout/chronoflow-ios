@@ -18,7 +18,7 @@ nonisolated class ScreenTestCase: XCTestCase {
 @MainActor enum ScreenTestApp {
     private static var owner: String?
     private static var application: XCUIApplication?
-    private static var launchedArguments: [String]?
+    private static var launchedSeed: UITestSeedCommand?
     private static var authorization: String?
     private(set) static var coldLaunches = 0
     private(set) static var reseeds = 0
@@ -27,7 +27,7 @@ nonisolated class ScreenTestCase: XCTestCase {
         guard owner != name else { return }
         application?.terminate()
         application = nil
-        launchedArguments = nil
+        launchedSeed = nil
         authorization = nil
         owner = name
         coldLaunches = 0
@@ -44,12 +44,13 @@ nonisolated class ScreenTestCase: XCTestCase {
 
     private static func finish() {
         if let app = application, app.state == .runningForeground, let authorization {
+            app.launchArguments = launchedSeed?.arguments ?? app.launchArguments
             app.launchEnvironment = ["CF_AUTH_TEST_ID": UUID().uuidString, "CF_UI_TEST_PROFILE": "screen"]
             try? UIReseed.apply(to: app, authorization: authorization)
         }
         application?.terminate()
         application = nil
-        launchedArguments = nil
+        launchedSeed = nil
         authorization = nil
         owner = nil
     }
@@ -65,17 +66,23 @@ nonisolated class ScreenTestCase: XCTestCase {
 
     static func reseedIfPossible(_ app: XCUIApplication) -> Bool {
         guard application === app, app.launchEnvironment["CF_UI_TEST_PROFILE"] == "screen" else { return false }
-        let comparison = UITestSeedCommand(authorization: "", environment: [:], arguments: app.launchArguments)
-        if app.state == .runningForeground, let authorization, let launchedArguments,
-            comparison.preservesLaunchSettings(in: launchedArguments)
-        {
-            do {
-                try UIReseed.apply(to: app, authorization: authorization)
-                reseeds += 1
-            } catch {
-                app.terminate()
+        let comparison = UITestSeedCommand(
+            authorization: "", environment: app.launchEnvironment, arguments: app.launchArguments)
+        if app.state == .runningForeground, let authorization, let launchedSeed {
+            let changed = comparison.changedLaunchSettings(
+                arguments: launchedSeed.arguments, environment: launchedSeed.environment)
+            if changed.isEmpty {
+                do {
+                    try UIReseed.apply(to: app, authorization: authorization)
+                    reseeds += 1
+                } catch {
+                    app.terminate()
+                }
+                return true
             }
-            return true
+            UITestTiming.record(
+                "cold-launch-required", environment: app.launchEnvironment,
+                details: "changed=\(changed.joined(separator: ","))")
         }
         if app.state != .notRunning { app.terminate() }
         return false
@@ -84,7 +91,8 @@ nonisolated class ScreenTestCase: XCTestCase {
     static func didLaunch(_ app: XCUIApplication) {
         guard application === app else { return }
         authorization = app.launchEnvironment["CF_AUTH_TEST_ID"]
-        launchedArguments = app.launchArguments
+        launchedSeed = UITestSeedCommand(
+            authorization: "", environment: app.launchEnvironment, arguments: app.launchArguments)
         coldLaunches += 1
     }
 }

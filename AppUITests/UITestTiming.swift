@@ -3,10 +3,10 @@ import XCTest
 @MainActor enum UITestTiming {
     private static var awaitingFirstElement: [String: String]?
 
-    static func record(_ event: String, environment: [String: String]) {
+    static func record(_ event: String, environment: [String: String], details: String = "") {
         let id = environment["CF_AUTH_TEST_ID"] ?? "ungated"
         print(
-            "CF_UI_TIMELINE id=\(id.lowercased()) side=runner event=\(event) wall=\(Date().timeIntervalSince1970) uptime=\(ProcessInfo.processInfo.systemUptime)"
+            "CF_UI_TIMELINE id=\(id.lowercased()) side=runner event=\(event) wall=\(Date().timeIntervalSince1970) uptime=\(ProcessInfo.processInfo.systemUptime) \(details)"
         )
     }
 
@@ -28,6 +28,10 @@ import XCTest
             app.launchEnvironment["CF_UI_TEST_PROFILE"] = profile.rawValue
         }
         if ScreenTestApp.reseedIfPossible(app) { return }
+        if profile == .screen, let data = try? JSONEncoder().encode(app.launchArguments) {
+            // XCTest adds process arguments; preserve the caller's launch settings for scene-side validation.
+            app.launchEnvironment["CF_UI_TEST_LAUNCH_ARGUMENTS"] = String(decoding: data, as: UTF8.self)
+        }
         record("launch-begin", environment: app.launchEnvironment)
         app.launch()
         ScreenTestApp.didLaunch(app)

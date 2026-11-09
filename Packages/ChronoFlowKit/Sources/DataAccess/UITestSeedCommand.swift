@@ -21,18 +21,30 @@
             self.arguments = arguments
         }
 
+        public func changedLaunchSettings(
+            arguments processArguments: [String], environment processEnvironment: [String: String]
+        ) -> [String] {
+            func values(_ key: String, in arguments: [String]) -> [String] {
+                arguments.indices.filter { arguments[$0] == key }.map { index in
+                    let next = index + 1
+                    return arguments.indices.contains(next) && !arguments[next].hasPrefix("-") ? arguments[next] : ""
+                }
+            }
+            let keys = Set((arguments + processArguments).filter { $0.hasPrefix("-Apple") || $0.hasPrefix("-UI") })
+                .union([
+                    "-cf.settings.language", "-cf.settings.theme", "-cf.reduceMotion", "-cf.mode", "-cf.freezeAt",
+                    "-cf.readyAt", "-cf.mainThreadStall",
+                ])
+            let changedArguments = keys.filter { values($0, in: arguments) != values($0, in: processArguments) }
+            let environmentKeys = Set(environment.keys).union(processEnvironment.keys).filter {
+                !$0.hasPrefix("CF_") || $0 == "CF_UI_TEST_PROFILE"
+            }
+            return (Array(changedArguments) + environmentKeys.filter { environment[$0] != processEnvironment[$0] })
+                .sorted()
+        }
+
         public func preservesLaunchSettings(in processArguments: [String]) -> Bool {
-            func value(_ key: String, in values: [String]) -> String? {
-                guard let index = values.firstIndex(of: key), values.indices.contains(index + 1) else { return nil }
-                return values[index + 1]
-            }
-            return [
-                "-AppleLanguages", "-AppleLocale", "-AppleInterfaceStyle", "-UIPreferredContentSizeCategoryName",
-                "-cf.settings.language", "-cf.settings.theme",
-            ]
-            .allSatisfy {
-                value($0, in: arguments) == value($0, in: processArguments)
-            }
+            changedLaunchSettings(arguments: processArguments, environment: environment).isEmpty
         }
 
         public func url() throws -> URL {

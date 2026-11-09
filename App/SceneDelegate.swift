@@ -42,6 +42,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         private var uiTestAuthorization: String?
         private var uiTestNonce: String?
         private var uiTestResetTask: Task<Void, Never>?
+        private var uiTestLaunchArguments: [String]?
     #endif
 
     func scene(
@@ -77,6 +78,10 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             if let test = AuthUITestConfiguration(environment: UITestRuntime.environment), test.fastLaunch {
                 uiTestAuthorization = UITestRuntime.environment["CF_AUTH_TEST_ID"]
                 uiTestNonce = test.id
+                uiTestLaunchArguments =
+                    UITestRuntime.environment["CF_UI_TEST_LAUNCH_ARGUMENTS"]
+                    .flatMap { try? JSONDecoder().decode([String].self, from: Data($0.utf8)) }
+                    ?? UITestRuntime.arguments
             }
         #endif
         signposts.event(.sceneConnect)
@@ -222,10 +227,14 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
 
         private func reseedUITest(_ command: UITestSeedCommand) async {
-            guard usesFastUITestLaunch, command.preservesLaunchSettings(in: UITestRuntime.arguments) else {
+            let changed = command.changedLaunchSettings(
+                arguments: uiTestLaunchArguments ?? UITestRuntime.arguments, environment: command.environment)
+            guard usesFastUITestLaunch, changed.isEmpty else {
                 UITestTimeline.record(
                     "reset-rejected", environment: command.environment,
-                    details: "nonce=\(command.nonce) reason=launch-settings-or-profile")
+                    details:
+                        "nonce=\(command.nonce) reason=launch-settings-or-profile changed=\(changed.joined(separator: ","))"
+                )
                 return
             }
             guard let app = UIApplication.shared.delegate as? AppDelegate, let windowScene = window?.windowScene else {
@@ -236,6 +245,12 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             }
             UITestTimeline.record("reset-begin", environment: command.environment, details: "nonce=\(command.nonce)")
             do {
+                let endedEditing = window?.endEditing(true) ?? true
+                UIApplication.shared.sendAction(
+                    #selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                UITestTimeline.record(
+                    "reset-editing-ended", environment: command.environment,
+                    details: "nonce=\(command.nonce) ended=\(endedEditing)")
                 connectionGeneration += 1
                 let loading = servicesTask
                 servicesTask?.cancel()
