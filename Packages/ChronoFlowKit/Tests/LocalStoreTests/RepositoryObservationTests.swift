@@ -129,6 +129,23 @@ struct RepositoryObservationTests {
         #expect(try await pending.next() == nil)
     }
 
+    @Test @MainActor func closingAnAttachedDatabaseClearsTheLoadedAccount() async throws {
+        let root = try temporaryStoreRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let database = AccountDatabase(applicationSupport: root)
+        try await database.open(accountID: accountA)
+        let repository = AccountRepository(database: database)
+        let account = AccountRecord(id: accountA, name: "A", email: "a")
+        try await repository.upsert(account)
+        let model = AccountModel()
+        await model.attach(to: repository, epoch: 1)
+        await waitForModel(model) { $0 == .loaded(account) }
+        try await database.close()
+        await waitForModel(model) { $0 == .unknown }
+        #expect(await database.observationCount == 0)
+        await model.detach()
+    }
+
     @Test @MainActor func modelRejectsOlderAccountAfterReplacementAndSurfacesStoreFailure() async throws {
         let root = try temporaryStoreRoot()
         defer { try? FileManager.default.removeItem(at: root) }

@@ -1,0 +1,38 @@
+{
+  "trips": [
+    {
+      "card": {
+        "id": "0199a3c0-0000-7000-8000-000000000010",
+        "departureUtc": "2026-11-10T10:00:00Z",
+        "arrivalUtc": "2026-11-10T18:00:00Z",
+        "departLocal": "2026-11-10T11:00:00",
+        "arriveLocal": "2026-11-10T13:00:00",
+        "connections": [],
+        "flightNumber": null,
+        "offsetDifferenceMinutes": -360,
+        "progress": {},
+        "canComplete": false,
+        "canReopen": false,
+        "canEdit": true,
+        "canDuplicate": true,
+        "canDelete": true,
+        "from": {},
+        "to": {}
+      },
+      "planInputHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "planStartUtc": "2026-11-08T10:00:00Z",
+      "planStartZone": "Europe/Amsterdam",
+      "planEndUtc": "2026-11-13T10:00:00Z",
+      "planEndDate": "2026-11-13",
+      "preparationDays": 2,
+      "adaptation": null,
+      "keepOffline": false,
+      "detailVersion": "v1",
+      "checkState": {
+        "planInputHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "marks": [],
+        "days": []
+      }
+    }
+  ]
+}

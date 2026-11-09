@@ -1,0 +1,13 @@
+{
+  "id": "0199a3c0-0000-7000-8000-000000000000",
+  "name": "Demo Traveller",
+  "email": "demo@example.com",
+  "hasVerifiedEmail": true,
+  "policies": {
+    "termsVersion": "1.0",
+    "privacyVersion": "1.0",
+    "acceptedTermsVersion": null,
+    "acceptedTermsAt": null
+  },
+  "walkthroughSeen": false
+}

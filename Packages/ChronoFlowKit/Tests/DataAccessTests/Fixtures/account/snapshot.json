@@ -1,0 +1,108 @@
+{
+  "id": "0199a3c0-0000-7000-8000-000000000000",
+  "name": "Demo Traveller",
+  "email": "demo@example.com",
+  "hasVerifiedEmail": true,
+  "settings": {
+    "bodyClock": {
+      "habitualBed": "23:00",
+      "habitualWake": "07:00",
+      "freeDayStatus": "unconfirmed",
+      "freeDayBed": null,
+      "freeDayWake": null,
+      "chronotype": null,
+      "ageBand": null,
+      "shiftWork": null,
+      "bipolar": null,
+      "eyeDisease": null,
+      "pregnancy": null,
+      "caffeineRuledOut": null,
+      "vte": null,
+      "sleepPhaseDisorder": null,
+      "caffeineHabit": null,
+      "cupsFilterCoffee": null,
+      "cupsTea": null,
+      "cupsCola": null,
+      "cupsEnergyDrink": null,
+      "caffeineSensitive": false,
+      "caffeineNonUserOptIn": false,
+      "oralContraception": false,
+      "lightDevice": null,
+      "blueBlockers": null,
+      "blueBlockerMdfd": null,
+      "invalidDrafts": []
+    },
+    "sleepAnswered": false,
+    "preferences": {
+      "hiddenCategories": [],
+      "showOptionalItems": false,
+      "timeFormat": "24",
+      "language": "en"
+    },
+    "reminders": {
+      "light": true,
+      "avoid": true,
+      "caffeine": true,
+      "winddown": false,
+      "leadMin": 30
+    },
+    "planCredits": {
+      "credits": 0,
+      "unlimited": false
+    },
+    "policies": {
+      "termsVersion": "1.0",
+      "privacyVersion": "1.0",
+      "acceptedTermsVersion": null,
+      "acceptedTermsAt": null
+    }
+  },
+  "readiness": {
+    "variant": "needs-answers",
+    "missing": [
+      {
+        "question": null
+      },
+      {
+        "question": "shift_work"
+      },
+      {
+        "question": "bipolar"
+      },
+      {
+        "question": "eye_disease"
+      },
+      {
+        "question": "pregnancy"
+      },
+      {
+        "question": "caffeine_ruled_out"
+      },
+      {
+        "question": "vte"
+      }
+    ],
+    "exclusions": [],
+    "exclusionTarget": null,
+    "adjustments": [],
+    "lightDevicesAllowed": false,
+    "invalidSections": []
+  },
+  "billing": {
+    "subscription": {
+      "tier": "free",
+      "status": "free",
+      "endsAt": null,
+      "renewsAt": null,
+      "canResume": false,
+      "canCancel": false,
+      "paymentFailed": false,
+      "unlimited": false
+    }
+  },
+  "security": {
+    "twoFactorEnabled": false,
+    "passwordRules": "minlength: 12; required: lower; required: upper; required: digit; required: special;",
+    "twoFactorConfirmedAt": null
+  }
+}

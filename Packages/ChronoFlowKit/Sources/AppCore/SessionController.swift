@@ -43,6 +43,25 @@ public struct SessionResult: Codable, Sendable, Equatable {
     public let account: SessionAccount
     public let tripId: String?
 
+    enum CodingKeys: String, CodingKey { case kind, token, account, tripId }
+    public init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        guard try c.decode(String.self, forKey: .kind) == "session" else { throw DataFailure.server(status: nil) }
+        token = try c.decode(String.self, forKey: .token)
+        account = try c.decode(SessionAccount.self, forKey: .account)
+        tripId = try c.decodeIfPresent(String.self, forKey: .tripId)
+        guard !token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+            (try? AccountID(account.id)) != nil
+        else { throw DataFailure.server(status: nil) }
+    }
+    public func encode(to encoder: any Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode("session", forKey: .kind)
+        try c.encode(token, forKey: .token)
+        try c.encode(account, forKey: .account)
+        try c.encode(tripId, forKey: .tripId)
+    }
+
     public init(token: String, account: SessionAccount, tripId: String? = nil) {
         self.token = token
         self.account = account
@@ -189,8 +208,10 @@ public actor SessionController: SessionControlling {
         else {
             throw SessionFailure.invalidResult
         }
-        presence = nil
-        storedSession = nil
+        if case .signedIn(let accountID) = presence, accountID != id.rawValue {
+            storedSession = nil
+            publish(.signedOut)
+        }
         do {
             try await accounts.open(accountID: id)
             try check(generation)
@@ -203,11 +224,10 @@ public actor SessionController: SessionControlling {
         do { try await credentials.write(JSONEncoder().encode(session)) } catch is CancellationError {
             throw CancellationError()
         } catch { throw SessionFailure.credentialWrite }
-        try check(generation)
+        // A successful credential write commits the session, even if superseded or canceled during the write.
         storedSession = session
         publish(.signedIn(accountID: id.rawValue))
         await requestSync(epoch)
-        try check(generation)
     }
 
     private func publish(_ value: SessionPresence) {

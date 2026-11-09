@@ -1,0 +1,12 @@
+{
+  "code": "validation_failed",
+  "message": "Artificial envelope message.",
+  "errors": {
+    "password": "Use no more than :max characters."
+  },
+  "args": {
+    "password": {
+      "max": 255
+    }
+  }
+}

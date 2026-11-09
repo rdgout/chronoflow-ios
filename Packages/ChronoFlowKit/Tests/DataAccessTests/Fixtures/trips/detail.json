@@ -1,0 +1,31 @@
+{
+  "trip": {
+    "id": "0199a3c0-0000-7000-8000-000000000010",
+    "departureUtc": "2026-11-10T10:00:00Z"
+  },
+  "plan": {
+    "meta": {
+      "inputHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "arrivalLandingUtc": null,
+      "assumedReturn": null
+    },
+    "blocks": [
+      {
+        "actionable": true,
+        "checkKey": {
+          "type": "sleep",
+          "localDate": "2026-11-10",
+          "ordinal": 1
+        }
+      }
+    ]
+  },
+  "notices": {},
+  "timeline": {},
+  "checkState": {
+    "planInputHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "marks": [],
+    "days": []
+  },
+  "detailVersion": "v1"
+}

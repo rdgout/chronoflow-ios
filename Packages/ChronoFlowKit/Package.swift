@@ -10,6 +10,7 @@ let package = Package(
         .library(name: "DesignSystem", targets: ["DesignSystem"]),
         .library(name: "AppCore", targets: ["AppCore"]),
         .library(name: "LocalStore", targets: ["LocalStore"]),
+        .library(name: "DataAccess", targets: ["DataAccess"]),
         .library(name: "Launch", targets: ["Launch"]),
         .library(name: "Welcome", targets: ["Welcome"]),
     ],
@@ -23,6 +24,13 @@ let package = Package(
             name: "DesignSystem", resources: [.process("Resources")], swiftSettings: [.defaultIsolation(MainActor.self)]
         ),
         .target(name: "AppCore", swiftSettings: [.defaultIsolation(nil)]),
+        .target(name: "DataAccess", dependencies: ["AppCore"], swiftSettings: [.defaultIsolation(nil)]),
+        .testTarget(
+            name: "DataAccessTests", dependencies: ["DataAccess"], exclude: ["Fixtures/README.md"],
+            resources: [
+                .copy("Fixtures/auth"), .copy("Fixtures/account"), .copy("Fixtures/trips"), .copy("Fixtures/errors"),
+            ],
+            swiftSettings: [.defaultIsolation(nil)]),
         .target(
             name: "LocalStore", dependencies: ["AppCore", .product(name: "GRDB", package: "GRDB.swift")],
             swiftSettings: [.defaultIsolation(nil)]),

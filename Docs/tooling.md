@@ -1122,3 +1122,159 @@ xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData \
   -testLanguage en -testRegion US -parallel-testing-enabled NO ENABLE_TESTABILITY=YES \
   -only-testing:AppTests/ReleaseReadinessTests test
 ```
+
+## Phase 9b: data-source contracts, API and mock (6 November 2026)
+
+The `DataAccess` package implements the one `AppCore.DataSource` contract. Auth wire DTOs use explicit
+coding keys, session/two-factor discriminators, optional guest fields and signed verification inputs.
+Account/trip synchronization metadata and check keys are typed; unconsumed presentation objects retain
+unknown members as JSON values. Outbox commands distinguish supported receipts from parked unsupported
+kinds. API error mapping preserves HTTP status and field sentence keys/arguments; Laravel and RN argument
+syntax normalizes to String Catalog format placeholders without displaying arbitrary server English.
+
+`CHRONOFLOW_DATA_SOURCE` defaults to `mock` in Base.xcconfig, including Release. An explicit `api` selects
+the API in either configuration; unknown values fail. Tests always select mock. The default base URL is
+`https://api.chronoflow.net/v1`; Release rejects HTTP and every configuration rejects relative URLs,
+credentials/query/fragment and path traversal. Local.xcconfig is included last so explicit overrides work.
+API account storage/Keychain retain Phase 9a's namespace; mock uses ChronoFlowMock and the mock Keychain
+service. `api.deviceId` remains outside both. `AppServices` exposes construction only; ordinary launch
+still uses the Phase 4 composition until 9d, and no auth UI or sync lifecycle is mounted here.
+
+The API client lazily creates an ephemeral URLSession on its actor. It disables cookies, URL credentials
+and persistent caching, refuses every redirect, excludes bearer on all public auth routes and cancels
+requests at injected 15/90/3-second deadlines. Tests inject a deny-by-default URLProtocol, with one
+macOS-only loopback test for real HTTP cookies and redirects; fixtures
+are synthesized from backend DTOs and assertions, with source/provenance notes alongside them. No live
+API or production credential was used.
+
+Mock state is separate fake-server JSON at `ChronoFlowMock/Server/state.json`, loaded only on the actor's
+first operation, and never the local account DB. The default seed is empty; RN demo credentials and
+accepted fake assertions exist only in named test scenarios. Tests inject memory/repo-local file stores,
+clocks, identifiers and latency. Assumed mock defaults: 300–800 ms latency; five attempts per minute;
+300-second/five-failure two-factor challenges; 60-second verification resend window; one-hour reset and
+signed verification inputs; 90-day sliding device sessions. Passkey challenges use the backend's
+120-second single-use lifetime and 10/min options, 5/min credential, 20/min IP and 20/hour failed-credential
+limits. An injected assertion provider models acceptance; the default rejects all credentials. Mock checks
+the production password shape (12/mixed case/number/symbol) without contacting the uncompromised-password
+service. Mock signatures and credentials have no production meaning. Settings/readiness follow RN fake-server
+behavior; planner presentation objects are fixture values rather than a native planner implementation.
+
+The backend handoff at `841be4bd` takes precedence over the stale RN passkey TODO and token/email verify
+shape. Passkeys return sessions for 2FA and unverified accounts, verification takes authenticated signed
+fields, and reset revokes sessions without issuing a new session. AuthenticationServices, associated-domain
+entitlements, confirmed Apple identifiers and actual device passkey verification belong to Phase 10.
+The backend branch is not deployed; no deployment or AASA verification is claimed.
+
+Verification in this worktree:
+
+- `make host-tests`: **164 passed**, including **49 DataAccess tests** across eight suites. Parameterized
+  cases additionally cover every error code, redirects, retry-after precedence and deadline values.
+- `make lint`, `make generate`, `make generators-check`: passed (7 TokenGen, 6 font/cache, 3 AssetGen
+  tests; generated assets unchanged).
+- `make launch-resources-check`: passed (9 resource checks, 21 simulator-runner fixtures).
+- SwiftPM `swift build --build-tests` for `arm64-apple-ios17.0-simulator` and direct Swift 6/MainActor
+  Debug/Release app and hosted-test module/SIL compilation: passed. Compilation does not execute UIKit.
+- Implementation commits, each with its task tick: `d6b54f0` (`feat(data-source)`),
+  `6ed5c29` (`feat(api)`) and `c730aa3` (`feat(mock)`).
+
+Run these exact targeted checks outside the sandbox on **one iPhone 17e**, without a matrix:
+
+```sh
+make generate
+xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData \
+  -onlyUsePackageVersionsFromResolvedFile -scheme ChronoFlow -configuration Debug \
+  -destination 'platform=iOS Simulator,id=D788B715-AA0A-4B5A-882B-323E1F984769' \
+  -testLanguage en -testRegion US -parallel-testing-enabled NO \
+  -only-testing:AppTests/DataSourceBuildSettingTests \
+  -only-testing:AppTests/DataSourceFactoryHostedTests test
+
+xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData \
+  -onlyUsePackageVersionsFromResolvedFile -scheme ReadinessRelease -configuration Release \
+  -destination 'platform=iOS Simulator,id=D788B715-AA0A-4B5A-882B-323E1F984769' \
+  -testLanguage en -testRegion US -parallel-testing-enabled NO ENABLE_TESTABILITY=YES \
+  -only-testing:AppTests/DataSourceBuildSettingTests \
+  -only-testing:AppTests/DataSourceFactoryHostedTests test
+```
+
+These new hosted classes verify built Info.plist substitutions, mock-only factory selection and lazy
+source construction. Their execution and the integrated `make check` remain **Open: orchestrator**.
+The seven-simulator matrix runs only when requested. Existing physical-device protection/performance,
+Apple team/bundle confirmation, deployed AASA and later UI/copy/shipping questions remain open;
+none blocks this service-only 9b implementation.
+
+## Phase 9b review corrections (6 November 2026)
+
+Redirect stubs now notify URLSession of 301/302/307/308 redirects with Location and Set-Cookie.
+Tests cover same-host and foreign-host targets, record both destinations, and use a delegate-less
+control session that must follow each redirect. APIClient must refuse every redirect without a
+second request or bearer/cookie leakage. Its internal effective-configuration snapshot returns a copy;
+tests check cookie storage/policy, credentials, cache and additional headers after injection and use.
+
+`APICookieTests` runs only on macOS. Its Network listener binds an ephemeral port on 127.0.0.1, closes
+every HTTP connection and stops at test teardown. A control URLSession must follow a 302, store its
+cookie and send it to the next path. APIClient must refuse that response, ignore a pre-seeded cookie,
+store no response cookie and send no cookie on a later request. No external host or real-time sleep
+is involved. `sh Scripts/host-tests.sh --filter 'APICookieTests|APIClientTests'`: **12 tests passed**.
+Removing the installed redirect delegate fails the tests; removing cookie/cache/header protections
+also fails, including the real cookie send/store assertions. The original stub fails the new
+redirect control assertions before its fix.
+
+The Phase 9b implementation record now names its three existing commits instead of saying no
+commits were made. `python3 -I Tests/test_launch_resources.py
+LaunchResourcesTests.test_phase9b_tooling_records_the_committed_implementation` fails against the
+old note and passes after correction, checking the recorded hashes against git history.
+
+Mock sign-in now uses the exact backend wrong-credentials key; register/reset attach mismatch errors
+to `password_confirmation` alongside any independent password error. Exact host regressions fail
+against the old behavior and pass after correction. Settings validation visits keys in sorted order
+and collects all invalid field values before throwing. API/mock parity covers multiple errors in
+reminders, preferences and body-clock patches, reversed insertion order and unchanged state after
+rejection. Each regression fails against its original implementation.
+
+Review verification: `make host-tests` passes **177 tests**, including **54 DataAccess tests**;
+`make lint`, `make launch-resources-check` (10 resource/history checks, 21 runner fixtures), and
+`make generators-check` (7 TokenGen, 6 font/cache, 3 AssetGen tests; generated assets unchanged)
+all pass. Host SwiftPM uses `--disable-sandbox` and repo-local cache, scratch and temp paths.
+These regressions need no new hosted execution; the existing factory/build-setting commands above
+and integrated `make check` remain open for the orchestrator.
+
+## Phase 9a review corrections (6 November 2026)
+
+Accept's successful credential write is its commit point. Supersession and cancellation before the
+write still reject the operation; after a successful write it publishes and returns success, including
+when a newer invalid accept is queued or sync is still suspended. A same-account refresh retains the
+previous published presence/token until commit. Switching accounts publishes signed-out before the
+database transition; failure retains the previous credentials on disk for a later restore.
+
+AccountModel resets to unknown when its observation ends normally. Native observation captures an
+attachment token before its actor hops and checks it on the MainActor before attaching or detaching.
+An intervening detach invalidates that token. SessionAccountDatabase also hides its active database
+throughout close, including while waiting for detach, so a new lookup cannot attach to a closing pool.
+
+Regression proof and host verification:
+
+- The three write/sync race tests failed before fix 1 and passed afterward. They suspend credential
+  writes and sync, preserving the existing test that rejects supersession before the write.
+- The two parameterized post-sign-in failure tests failed before fix 2 and passed afterward, covering
+  open/upsert/credential-write failures for the same and different accounts. Real database integration
+  additionally verifies retained same-account credentials and closure of the replaced database.
+- Closing an attached database left its record loaded before fix 3; the regression passes afterward.
+  A suspended-close test rejects an attachment captured before detach, hides the still-open closing
+  database, and proves that a stale attachment cannot replace a newer account's loaded model.
+- `sh Scripts/host-tests.sh`: **172 passed** (62 AppCore, 18 LocalStore, 49 DataAccess, 34 Launch,
+  8 DesignSystem, 1 Welcome), using `--disable-sandbox` and repo-local caches/temp paths.
+- `make lint`: passed. `python3 -I Tests/test_launch_simulators.py`: **21 passed**.
+  `python3 -I Tests/test_launch_resources.py`: **9 passed**. `git diff --check`: passed.
+
+No xcodebuild, simulator or git commit ran in this sandbox. Three ordered patches and their Conventional
+Commit messages are in `build/commits/`; apply each with `git apply --index` and commit its corresponding
+message. The native observe-loop integration still needs this existing hosted test on iPhone 17e:
+
+```sh
+make generate
+xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData \
+  -onlyUsePackageVersionsFromResolvedFile -scheme ChronoFlow -configuration Debug \
+  -destination 'platform=iOS Simulator,id=D788B715-AA0A-4B5A-882B-323E1F984769' \
+  -testLanguage en -testRegion US -parallel-testing-enabled NO \
+  -only-testing:AppTests/SessionLifecycleTests/testNativeCompositionObservesAndDetachesAccountsUsingOneKeychainStore test
+```
