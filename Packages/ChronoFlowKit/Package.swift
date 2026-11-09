@@ -12,6 +12,8 @@ let package = Package(
         .library(name: "LocalStore", targets: ["LocalStore"]),
         .library(name: "DataAccess", targets: ["DataAccess"]),
         .library(name: "Sync", targets: ["Sync"]),
+        .library(name: "PlanUI", targets: ["PlanUI"]),
+        .library(name: "PlanCore", targets: ["PlanCore"]),
         .library(name: "TripWizard", targets: ["TripWizard"]),
         .library(name: "Launch", targets: ["Launch"]),
         .library(name: "Welcome", targets: ["Welcome"]),
@@ -28,6 +30,18 @@ let package = Package(
         .target(
             name: "DesignSystem", resources: [.process("Resources")], swiftSettings: [.defaultIsolation(MainActor.self)]
         ),
+        .target(
+            name: "PlanCore", dependencies: ["AppCore"], resources: [.process("Resources")],
+            swiftSettings: [.defaultIsolation(nil)]),
+        .testTarget(
+            name: "PlanCoreTests", dependencies: ["PlanCore"], resources: [.copy("Fixtures")],
+            swiftSettings: [.defaultIsolation(nil)]),
+        .target(
+            name: "PlanUI", dependencies: ["PlanCore", "LocalStore"], swiftSettings: [.defaultIsolation(MainActor.self)]
+        ),
+        .testTarget(
+            name: "PlanUITests", dependencies: ["PlanUI", "DataAccess"], resources: [.copy("Fixtures")],
+            swiftSettings: [.defaultIsolation(nil)]),
         .target(name: "AppCore", swiftSettings: [.defaultIsolation(nil)]),
         .target(name: "DataAccess", dependencies: ["AppCore"], swiftSettings: [.defaultIsolation(nil)]),
         .testTarget(

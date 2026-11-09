@@ -1,0 +1,5946 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    ":amount coffee|:amount coffees#case.1": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ coffee"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ koffie"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    ":amount coffee|:amount coffees#case.2": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ coffee"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ koffie"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    ":amount coffee|:amount coffees#case.3": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ coffees"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ koffie"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    ":amount energy drink|:amount energy drinks#case.1": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ energy drink"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ energiedrank"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    ":amount energy drink|:amount energy drinks#case.2": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ energy drink"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ energiedrank"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    ":amount energy drink|:amount energy drinks#case.3": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ energy drinks"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ energiedrank"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    ":amount h": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ h"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ u"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    ":amount hr": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ hr"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ uur"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    ":amount mg": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ mg"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ mg"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    ":amount min": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ min"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ min"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    ":amount soft drink|:amount soft drinks#case.1": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ soft drink"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ frisdrank"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    ":amount soft drink|:amount soft drinks#case.2": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ soft drink"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ frisdrank"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    ":amount soft drink|:amount soft drinks#case.3": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ soft drinks"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ frisdrank"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    ":amount tea|:amount teas#case.1": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ tea"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ thee"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    ":amount tea|:amount teas#case.2": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ tea"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ thee"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    ":amount tea|:amount teas#case.3": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ teas"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ thee"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    ":count booked nights": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld booked night"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld booked nights"
+                }
+              }
+            }
+          }
+        },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld geboekte nacht"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld geboekte nachten"
+                }
+              }
+            }
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    ":count counted nights": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld counted night"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld counted nights"
+                }
+              }
+            }
+          }
+        },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld meegetelde nacht"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld meegetelde nachten"
+                }
+              }
+            }
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    ":count day until :city.|:count days until :city.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld day until %2$@."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld days until %2$@."
+                }
+              }
+            }
+          }
+        },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Nog %1$lld dag tot %2$@."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Nog %1$lld dagen tot %2$@."
+                }
+              }
+            }
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    ":count drink|:count drinks": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld drink"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld drinks"
+                }
+              }
+            }
+          }
+        },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld drankje"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld drankjes"
+                }
+              }
+            }
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    ":count nights counted by the plan": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld night counted by the plan"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld nights counted by the plan"
+                }
+              }
+            }
+          }
+        },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld nacht meegeteld in het plan"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld nachten meegeteld in het plan"
+                }
+              }
+            }
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    ":drinks (:mg)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ (%2$@)"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ (%2$@)"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    ":first or :second": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ or %2$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ of %2$@"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    ":hours h :minutes min": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ h %2$@ min"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ u %2$@ min"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    ":hours hr :minutes min": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ hr %2$@ min"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ uur %2$@ min"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    ":n mg": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ mg"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ mg"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "A demanding day: if you can do only part of the plan, keep it dim from :fromUtc to :untilUtc.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A demanding day: if you can do only part of the plan, keep it dim from %1$@ to %2$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een drukke dag: als je maar een deel van het plan kunt doen, houd het dan gedimd van %1$@ tot %2$@."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "A new plan needs an upcoming arrival. Check your flight dates or add your return flight.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A new plan needs an upcoming arrival. Check your flight dates or add your return flight."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voor een nieuw plan is een aankomst nodig die nog moet plaatsvinden. Controleer je vluchtdata of voeg je terugvlucht toe."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "A new plan needs an upcoming arrival. Check your flight dates.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A new plan needs an upcoming arrival. Check your flight dates."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voor een nieuw plan is een aankomst nodig die nog moet plaatsvinden. Controleer je vluchtdata."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "A planned nap takes the time that bright light would need.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A planned nap takes the time that bright light would need."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een gepland dutje neemt de tijd in die fel licht nodig zou hebben."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "A shift of 7 hours or more earlier is a large change; the light and dim-light blocks matter most on this trip.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A shift of 7 hours or more earlier is a large change; the light and dim-light blocks matter most on this trip."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een verschuiving van 7 uur of meer naar vroeger is een grote verandering; de blokken met licht en met gedimd licht tellen bij deze reis het zwaarst."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "AM": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AM"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a.m."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "About :mgPerDay a day for :days day, below your usual :usualMg.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About %1$@ a day for %2$@ day, below your usual %3$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ongeveer %1$@ per dag gedurende %2$@ dag, minder dan je gebruikelijke %3$@."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "About :mgPerDay a day for :days days, below your usual :usualMg.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About %1$@ a day for %2$@ days, below your usual %3$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ongeveer %1$@ per dag gedurende %2$@ dagen, minder dan je gebruikelijke %3$@."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Adapted; a short dim-light block protects a slower clock.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adapted; a short dim-light block protects a slower clock."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aangepast; een kort blok met gedimd licht beschermt een tragere klok."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Add no more than 16 flights in total.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add no more than 16 flights in total."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voeg in totaal maximaal 16 vluchten toe."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Add no more than :max busy times here.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add no more than %1$@ busy times here."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voeg hier maximaal %1$@ bezette momenten toe."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Add no more than :max flights.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add no more than %1$@ flights."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voeg maximaal %1$@ vluchten toe."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Add no more than :max stays.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add no more than %1$@ stays."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voeg maximaal %1$@ verblijven toe."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Add your return flight to get a plan for the trip home.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add your return flight to get a plan for the trip home."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voeg je terugvlucht toe om een plan voor de reis naar huis te krijgen."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Adjusting": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adjusting"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aan het verschuiven"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "After this plan": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After this plan"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na dit plan"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Airport transfer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Airport transfer"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vervoer van of naar het vliegveld"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Answer the health questions to get your plan.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Answer the health questions to get your plan."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beantwoord de gezondheidsvragen om je plan te krijgen."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Apart from your planned nap, if you cannot stay awake, go to bed early rather than napping late.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apart from your planned nap, if you cannot stay awake, go to bed early rather than napping late."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naast je geplande dutje: als je niet wakker kunt blijven, ga dan vroeg naar bed in plaats van laat te dutten."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Apart from your planned nap, if you cannot stay awake, nap for under 30 minutes and be up by :untilUtc; after that, stay up until bed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apart from your planned nap, if you cannot stay awake, nap for under 30 minutes and be up by %1$@; after that, stay up until bed."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naast je geplande dutje: als je niet wakker kunt blijven, doe dan een dutje van minder dan 30 minuten en sta uiterlijk om %1$@ op; blijf daarna op tot bedtijd."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Are you pregnant or breastfeeding?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Are you pregnant or breastfeeding?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ben je zwanger of geef je borstvoeding?"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Arrival day": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrival day"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aankomstdag"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Avoid bright light": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avoid bright light"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vermijd fel licht"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Avoid caffeine": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avoid caffeine"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vermijd cafeïne"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Before departure": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Before departure"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vóór vertrek"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Before you land": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Before you land"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voor je landt"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Bright light can no longer be timed safely, because the estimate of your body clock is too uncertain.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bright light can no longer be timed safely, because the estimate of your body clock is too uncertain."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fel licht kan niet meer veilig worden ingepland, omdat de schatting van je lichaamsklok te onzeker is."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Bright light is paused while the plan keeps the shift you have made.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bright light is paused while the plan keeps the shift you have made."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fel licht is gepauzeerd terwijl het plan de verschuiving behoudt die je hebt gemaakt."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Bright light: go somewhere open with a clear view of the bright sky, or use a light box. Never look straight at the sun.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bright light: go somewhere open with a clear view of the bright sky, or use a light box. Never look straight at the sun."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fel licht: ga naar een open plek met zicht op de heldere lucht, of gebruik een lichtbox. Kijk nooit recht in de zon."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Bright light: go somewhere open with a clear view of the bright sky. Never look straight at the sun.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bright light: go somewhere open with a clear view of the bright sky. Never look straight at the sun."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fel licht: ga naar een open plek met zicht op de heldere lucht. Kijk nooit recht in de zon."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Bright light: outdoors in daylight, or use your light box. Never look straight at the sun.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bright light: outdoors in daylight, or use your light box. Never look straight at the sun."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fel licht: buiten in daglicht, of gebruik je lichtbox. Kijk nooit recht in de zon."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Bright light: outdoors in daylight. Never look straight at the sun.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bright light: outdoors in daylight. Never look straight at the sun."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fel licht: buiten in daglicht. Kijk nooit recht in de zon."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Bright-light blocks are kept shorter than usual for you.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bright-light blocks are kept shorter than usual for you."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blokken met fel licht zijn voor jou korter dan gebruikelijk."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Caffeine OK: one serving of up to about :maxMg, at least 3 hours after your previous one.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caffeine OK: one serving of up to about %1$@, at least 3 hours after your previous one."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cafeïne mag: één portie van hooguit zo'n %1$@, minstens 3 uur na je vorige."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Caffeine for the afternoon dip: about :mg.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caffeine for the afternoon dip: about %1$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cafeïne voor de middagdip: ongeveer %1$@."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Caffeine is lower than usual for the next :days days, which some people notice as tiredness or a headache.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caffeine is lower than usual for the next %1$@ days, which some people notice as tiredness or a headache."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cafeïne ligt de komende %1$@ dagen lager dan gewoonlijk, wat sommige mensen merken als vermoeidheid of hoofdpijn."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Caffeine routine": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caffeine routine"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cafeïneroutine"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Caffeine serving": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caffeine serving"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portie cafeïne"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Caffeine window": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caffeine window"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cafeïneperiode"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Can you check out late, or book a day room, in :place?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can you check out late, or book a day room, in %1$@?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kun je laat uitchecken, of een dagkamer boeken, in %1$@?"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Check your bedtime and wake-up time.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check your bedtime and wake-up time."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controleer je bedtijd en opstatijd."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Choose a reminder time.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a reminder time."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kies een herinneringstijd."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Choose a valid check-off status.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a valid check-off status."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kies een geldige afvinkstatus."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Choose a valid local date.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a valid local date."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kies een geldige plaatselijke datum."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Choose a valid trip filter.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a valid trip filter."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kies een geldig reisfilter."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Choose an airport from the search results.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose an airport from the search results."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kies een luchthaven uit de zoekresultaten."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Choose an export time zone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose an export time zone."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kies een tijdzone voor de export."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Choose different departure and arrival airports.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose different departure and arrival airports."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kies verschillende luchthavens voor vertrek en aankomst."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Choose one of the available options.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose one of the available options."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kies een van de beschikbare opties."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Choose valid export categories.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose valid export categories."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kies geldige exportcategorieën."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Choose what to include.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose what to include."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kies wat je wilt meenemen."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Choose whether to complete or reopen this trip.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose whether to complete or reopen this trip."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kies of je deze reis wilt afronden of heropenen."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Coffee nap: have about :mg, then nap.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coffee nap: have about %1$@, then nap."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koffiedutje: neem ongeveer %1$@ en doe dan een dutje."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Coffee nap: have the coffee, then nap": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coffee nap: have the coffee, then nap"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koffiedutje: drink de koffie en doe dan een dutje"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Connection": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connection"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overstap"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Daily amount reached; no caffeine until :untilUtc.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You've had today's caffeine; no more until %1$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je hebt je cafeïne voor vandaag gehad; geen meer tot %1$@."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Daily amount reached; no more caffeine for now.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You've had today's caffeine; no more for now."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je hebt je cafeïne voor vandaag gehad; voorlopig geen meer."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Day :count": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Day %1$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dag %1$@"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Daylight is fine; outdoors helps until :untilUtc.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daylight is fine; outdoors helps until %1$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daglicht is prima; buiten zijn helpt tot %1$@."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Do not drive drowsy: you have been awake for more than 16 hours. Let someone else drive, or use a taxi or train.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do not drive drowsy: you have been awake for more than 16 hours. Let someone else drive, or use a taxi or train."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rijd niet als je slaperig bent: je bent al meer dan 16 uur wakker. Laat een ander rijden, of neem een taxi of trein."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Do not drive drowsy: you have been awake for over 20 hours. Let someone else drive, or use a taxi or train.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do not drive drowsy: you have been awake for over 20 hours. Let someone else drive, or use a taxi or train."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rijd niet als je slaperig bent: je bent al meer dan 20 uur wakker. Laat een ander rijden, of neem een taxi of trein."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Do not drive drowsy: you have just taken an overnight flight. Let someone else drive, or use a taxi or train.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do not drive drowsy: you have just taken an overnight flight. Let someone else drive, or use a taxi or train."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rijd niet als je slaperig bent: je hebt net een nachtvlucht gehad. Laat een ander rijden, of neem een taxi of trein."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Do not drive drowsy: you have slept little in the last day. Let someone else drive, or use a taxi or train.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do not drive drowsy: you have slept little in the last day. Let someone else drive, or use a taxi or train."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rijd niet als je slaperig bent: je hebt het afgelopen etmaal weinig geslapen. Laat een ander rijden, of neem een taxi of trein."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Do you have a light box or light glasses? One gives the plan more room on days when daylight is hard to get.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do you have a light box or light glasses? One gives the plan more room on days when daylight is hard to get."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heb je een lichtbox of lichtbril? Die geeft het plan meer ruimte op dagen waarop daglicht lastig te krijgen is."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Do you have a light box or light glasses? With one, the plan could add up to :deviceMin of light before you leave.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do you have a light box or light glasses? With one, the plan could add up to %1$@ of light before you leave."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heb je een lichtbox of lichtbril? Daarmee kan het plan tot %1$@ licht toevoegen voordat je vertrekt."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Do you have a risk factor for blood clots, such as a past clot or a clotting disorder?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do you have a risk factor for blood clots, such as a past clot or a clotting disorder?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heb je een risicofactor voor bloedstolsels, zoals een eerdere trombose of een stollingsstoornis?"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Do you have an eye disease, or take medicine that makes your eyes sensitive to light?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do you have an eye disease, or take medicine that makes your eyes sensitive to light?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heb je een oogziekte, of gebruik je medicijnen die je ogen gevoelig maken voor licht?"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Do you have bipolar disorder?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do you have bipolar disorder?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heb je een bipolaire stoornis?"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Do you have blue-blocking glasses with a rated protection? Tell us the rating if you know it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do you have blue-blocking glasses with a rated protection? Tell us the rating if you know it."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heb je een blauwlichtblokkerende bril met een bekende blauwlichtwaarde? Geef die waarde door als je die weet."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Enter a valid date and time.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a valid date and time."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vul een geldige datum en tijd in."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Enter a whole number.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a whole number."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vul een geheel getal in."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Expect to feel groggy for a while after waking at :atUtc.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expect to feel groggy for a while after waking at %1$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verwacht dat je je een tijd suf voelt na het wakker worden om %1$@."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Expected adapted": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expected adapted"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naar verwachting aangepast"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Expected adapted from about :atUtc": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expected adapted from about %1$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naar verwachting aangepast vanaf ongeveer %1$@"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Expected to be adjusted by about :date, if your clock shifts in the planned direction.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expected to be adjusted by about %1$@, if your clock shifts in the planned direction."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naar verwachting aangepast rond %1$@, als je klok in de geplande richting verschuift."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Fits your travel arrangements": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fits your travel arrangements"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Past bij je reisafspraken"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Flight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flight"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vlucht"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Follow crew instructions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Follow crew instructions"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volg de instructies van de bemanning"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Follow the crew's lighting instructions, and keep your own light low.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Follow the crew's lighting instructions, and keep your own light low."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volg de lichtinstructies van de bemanning en houd je eigen licht laag."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "For a later clock the forecast is less certain; treat the dates as a guide.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For a later clock the forecast is less certain; treat the dates as a guide."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bij een latere klok is de voorspelling minder zeker; zie de data als richtlijn."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "For tonight's sleep, at most one more drink, by :singleByUtc.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For tonight's sleep, at most one more drink, by %1$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neem voor je slaap van vanavond hooguit nog één drankje, uiterlijk om %1$@."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "For tonight's sleep, finish your usual :cups drinks by :lastByUtc (a single drink is fine until :singleByUtc).": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For tonight's sleep, finish your usual %1$@ drinks by %2$@ (a single drink is fine until %3$@)."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rond voor je slaap van vanavond je gebruikelijke %1$@ drankjes af om %2$@ (één drankje kan nog tot %3$@)."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "For tonight's sleep, no more caffeine today.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For tonight's sleep, no more caffeine today."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neem voor je slaap van vanavond vandaag geen cafeïne meer."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "From :stopDate bright light can no longer be timed safely, because the estimate of your body clock has become too uncertain; keep the dim-light blocks.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From %1$@ bright light can no longer be timed safely, because the estimate of your body clock has become too uncertain; keep the dim-light blocks."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vanaf %1$@ kan fel licht niet meer veilig worden ingepland, omdat de schatting van je lichaamsklok te onzeker is geworden; houd de blokken met gedimd licht aan."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "From :stopDate no safe time for bright light remains; keep the dim-light blocks.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From %1$@ no safe time for bright light remains; keep the dim-light blocks."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vanaf %1$@ blijft er geen veilig moment voor fel licht over; houd de blokken met gedimd licht aan."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "From :stopDate there is not enough daylight at a safe time; a light box would allow it; keep the dim-light blocks.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From %1$@ there is not enough daylight at a safe time; a light box would allow it; keep the dim-light blocks."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vanaf %1$@ is er te weinig daglicht op een veilig moment; met een lichtbox kan het wel; houd de blokken met gedimd licht aan."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "From :stopDate there is not enough daylight at a safe time; keep the dim-light blocks.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From %1$@ there is not enough daylight at a safe time; keep the dim-light blocks."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vanaf %1$@ is er te weinig daglicht op een veilig moment; houd de blokken met gedimd licht aan."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Get up to walk and flex your calves from time to time during the flight.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get up to walk and flex your calves from time to time during the flight."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sta tijdens de vlucht af en toe op om te lopen en je kuiten te bewegen."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Good afternoon, :name.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Good afternoon, %1$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goedemiddag, %1$@."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Good afternoon.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Good afternoon."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goedemiddag."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Good evening, :name.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Good evening, %1$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goedenavond, %1$@."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Good evening.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Good evening."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goedenavond."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Good morning, :name.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Good morning, %1$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goedemorgen, %1$@."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Good morning.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Good morning."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goedemorgen."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Have about :mg.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Have about %1$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neem ongeveer %1$@."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Have at most :atMostCups of your usual :cups drinks, the last by :lastByUtc.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Have at most %1$@ of your usual %2$@ drinks, the last by %3$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neem hooguit %1$@ van je gebruikelijke %2$@ drankjes, het laatste uiterlijk om %3$@."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Have you been told to avoid caffeine?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Have you been told to avoid caffeine?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Is je verteld dat je cafeïne moet vermijden?"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Helps break up a long day awake": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Helps break up a long day awake"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Helpt een lange wakkere dag te onderbreken"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "How many caffeinated drinks do you usually have in a day?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How many caffeinated drinks do you usually have in a day?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoeveel drankjes met cafeïne drink je gewoonlijk per dag?"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "How this plan ends": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How this plan ends"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoe dit plan eindigt"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "If you also do the optional pre-trip light: :date": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you also do the optional pre-trip light: %1$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Als je ook het optionele licht voor de reis doet: %1$@"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "If you can": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you can"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Als het kan"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "If you cannot stay awake, go to bed early rather than napping late.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you cannot stay awake, go to bed early rather than napping late."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Als je niet wakker kunt blijven, ga dan vroeg naar bed in plaats van laat te dutten."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "If you cannot stay awake, nap for under 30 minutes and be up by :untilUtc; after that, stay up until bed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you cannot stay awake, nap for under 30 minutes and be up by %1$@; after that, stay up until bed."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Als je niet wakker kunt blijven, doe dan een dutje van minder dan 30 minuten en sta uiterlijk om %1$@ op; blijf daarna op tot bedtijd."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "If you must be outside, look away from bright lights; rated blue-blockers help, sunglasses do not count.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you must be outside, look away from bright lights; rated blue-blockers help, sunglasses do not count."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moet je buiten zijn, kijk dan weg van felle lampen; brillen met een bekende blauwlichtwaarde helpen, een zonnebril telt niet."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "If you must be outside, stay in the shade with your back to the sun; rated blue-blockers help, sunglasses do not count.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you must be outside, stay in the shade with your back to the sun; rated blue-blockers help, sunglasses do not count."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moet je buiten zijn, blijf dan in de schaduw met je rug naar de zon; brillen met een bekende blauwlichtwaarde helpen, een zonnebril telt niet."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "If you notice a marked change in mood, set the plan aside and talk to your doctor.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you notice a marked change in mood, set the plan aside and talk to your doctor."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Merk je een duidelijke verandering in je stemming, leg het plan dan opzij en praat met je arts."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "If you wake before :untilUtc, keep lights off or very dim.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you wake before %1$@, keep lights off or very dim."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Word je wakker vóór %1$@, houd het licht dan uit of heel gedimd."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "In the past 14 days, have you worked night or rotating shifts, or had a very irregular sleep schedule?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In the past 14 days, have you worked night or rotating shifts, or had a very irregular sleep schedule?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heb je de afgelopen 14 dagen in nacht- of wisseldiensten gewerkt, of een heel onregelmatig slaapritme gehad?"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Indoor light": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indoor light"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Binnenlicht"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Indoor light is fine.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indoor light is fine."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Binnenlicht is prima."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Keep cabin and screen light low.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep cabin and screen light low."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Houd het licht in de cabine en op je scherm laag."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Keep caffeine early in the day.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep caffeine early in the day."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Houd cafeïne vroeg op de dag."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Keep lights dim and warm.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep lights dim and warm."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Houd het licht gedimd en warm."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Keep lights dim from :fromUtc until bed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep lights dim from %1$@ until bed."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Houd het licht gedimd vanaf %1$@ tot bedtijd."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Keep lights dim until :untilUtc.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep lights dim until %1$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Houd het licht gedimd tot %1$@."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Keep room lights dim, set screens to minimum, and wear an eye mask when you can (not while eating).": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep room lights dim, set screens to minimum, and wear an eye mask when you can (not while eating)."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Houd de verlichting in de kamer gedimd, zet schermen op minimum en draag een slaapmasker als het kan (niet tijdens het eten)."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Keep the shade down, look away from the window and bright screens, set your screen to minimum, and wear an eye mask when you can (not while eating).": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep the shade down, look away from the window and bright screens, set your screen to minimum, and wear an eye mask when you can (not while eating)."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Houd het rolgordijn omlaag, kijk weg van het raam en van felle schermen, zet je scherm op minimum en draag een slaapmasker als het kan (niet tijdens het eten)."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Keep your usual caffeine routine; for tonight's sleep, have your last drink by :singleByUtc.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep your usual caffeine routine; for tonight's sleep, have your last drink by %1$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Houd je gewone cafeïneroutine aan; neem voor je slaap van vanavond je laatste drankje uiterlijk om %1$@."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Keeps your clock moving the right way, which matters most at this time difference; it protects the expected date rather than bringing it forward.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keeps your clock moving the right way, which matters most at this time difference; it protects the expected date rather than bringing it forward."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Houdt je klok in de goede richting, wat bij dit tijdsverschil het meest telt; het beschermt de verwachte datum in plaats van die te vervroegen."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Keeps your clock moving the right way; it does not change the expected date.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keeps your clock moving the right way; it does not change the expected date."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Houdt je klok in de goede richting; het verandert de verwachte datum niet."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Layover": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Layover"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overstap"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Likely adapted; safety margin not yet reached.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Likely adapted; safety margin not yet reached."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waarschijnlijk aangepast; de veiligheidsmarge is nog niet bereikt."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Little or no caffeine for :days day, below your usual :usualMg a day.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Little or no caffeine for %1$@ day, below your usual %2$@ a day."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weinig of geen cafeïne gedurende %1$@ dag, minder dan je gebruikelijke %2$@ per dag."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Little or no caffeine for :days days, below your usual :usualMg a day.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Little or no caffeine for %1$@ days, below your usual %2$@ a day."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weinig of geen cafeïne gedurende %1$@ dagen, minder dan je gebruikelijke %2$@ per dag."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Longer nap": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Longer nap"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Langer dutje"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Longer nap, kept to 55 minutes so your morning coffee can stay; it may be lighter sleep.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Longer nap, kept to 55 minutes so your morning coffee can stay; it may be lighter sleep."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Langer dutje, beperkt tot 55 minuten zodat je ochtendkoffie kan blijven; het kan lichtere slaap zijn."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Low sun": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Low sun"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lage zon"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Movement break": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Movement break"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beweegpauze"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Movement break: stand up and walk around": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Movement break: stand up and walk around"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beweegpauze: sta op en loop rond"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Nap": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nap"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dutje"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Nap in a seat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nap in a seat"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dutje in een stoel"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Nap on the flight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nap on the flight"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dutje in het vliegtuig"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Next serving from :nextServingUtc.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next serving from %1$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volgende portie vanaf %1$@."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "No bright light is planned: your stay does not call for shifting your body clock.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No bright light is planned: your stay does not call for shifting your body clock."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er is geen fel licht gepland: je verblijf vraagt niet om een verschuiving van je lichaamsklok."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "No bright-light block fits today.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No bright-light block fits today."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er past vandaag geen blok met fel licht."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "No bright-light block fits your arrival day.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No bright-light block fits your arrival day."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er past geen blok met fel licht op je aankomstdag."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "No bright-light session today.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No bright-light session today."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vandaag geen sessie met fel licht."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "No caffeine is planned for your afternoon dip today.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No caffeine is planned for your afternoon dip today."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voor je middagdip is vandaag geen cafeïne gepland."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "No caffeine is planned today.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No caffeine is planned today."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vandaag is geen cafeïne gepland."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "No caffeine now, around your nap.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No caffeine now, around your nap."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu geen cafeïne, vanwege je dutje."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "No caffeine now, to protect tonight's sleep.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No caffeine now, to protect tonight's sleep."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu geen cafeïne, om je slaap van vanavond te beschermen."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "No caffeine now: it would cut into your sleep.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No caffeine: it would cut into your sleep."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geen cafeïne: het zou je slaap verstoren."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "No caffeine until :untilUtc while you travel.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No caffeine until %1$@ while you travel."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geen cafeïne tot %1$@ terwijl je reist."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "No caffeine until :untilUtc, after your nap.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No caffeine until %1$@, after your nap."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geen cafeïne tot %1$@, na je dutje."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "No caffeine until :untilUtc, to protect tonight's sleep.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No caffeine until %1$@, to protect tonight's sleep."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geen cafeïne tot %1$@, om je slaap van vanavond te beschermen."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "No caffeine until :untilUtc: it would cut into your sleep.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No caffeine until %1$@: it would cut into your sleep."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geen cafeïne tot %1$@: het zou je slaap verstoren."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "No caffeine while you travel.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No caffeine while you travel."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geen cafeïne terwijl je reist."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "No more caffeine is planned until the end of this plan.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No more caffeine is planned until the end of this plan."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er is tot het einde van dit plan geen cafeïne meer gepland."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "No room yet": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No room yet"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nog geen kamer"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "No safe time for bright light remains today.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No safe time for bright light remains today."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er is vandaag geen veilig moment voor fel licht meer."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Normal cabin light.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normal cabin light."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normaal cabinelicht."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Normal indoor light.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normal indoor light."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normaal binnenlicht."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Normal light is fine": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normal light is fine"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normaal licht is prima"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Normal light is fine.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normal light is fine."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normaal licht is prima."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Normal light is fine; daylight helps you stay alert.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normal light is fine; daylight helps you stay alert."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normaal licht is prima; daglicht helpt je alert te blijven."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Not enough credits": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not enough credits"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niet genoeg credits"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Note": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notitie"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "On the way, keep your screen dim and your eyes closed when you can.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On the way, keep your screen dim and your eyes closed when you can."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Houd onderweg je scherm gedimd en je ogen dicht als het kan."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "On the way, take the shaded side and look away from bright daylight.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On the way, take the shaded side and look away from bright daylight."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kies onderweg de schaduwkant en kijk weg van fel daglicht."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "On your flight to :place, a seat on the left side may let you see more daylight.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On your flight to %1$@, a seat on the left side may let you see more daylight."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Op je vlucht naar %1$@ kun je in een stoel aan de linkerkant misschien meer daglicht zien."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "On your flight to :place, a seat on the right side may let you see more daylight.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On your flight to %1$@, a seat on the right side may let you see more daylight."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Op je vlucht naar %1$@ kun je in een stoel aan de rechterkant misschien meer daglicht zien."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "One pre-trip day is too few to shift your body clock usefully; choose 2 or more.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One pre-trip day is too few to shift your body clock usefully; choose 2 or more."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eén dag voor de reis is te weinig om je lichaamsklok zinvol te verschuiven; kies er 2 of meer."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Optional bright-light sessions continue until :lastSeekDate.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional bright-light sessions continue until %1$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optionele sessies met fel licht lopen door tot %1$@."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Optional preparation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional preparation"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optionele voorbereiding"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "PM": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PM"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "p.m."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Partial target for your stay: about :shortMin short of local time when you leave.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partial target for your stay: about %1$@ short of local time when you leave."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gedeeltelijk doel voor je verblijf: ongeveer %1$@ achter op de lokale tijd als je vertrekt."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Partly adapted": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partly adapted"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gedeeltelijk aangepast"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Partly adapted from about :atUtc": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partly adapted from about %1$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gedeeltelijk aangepast vanaf ongeveer %1$@"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Pick at least one category.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick at least one category."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kies minstens één categorie."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Plan started on :date": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan started on %1$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan begon op %1$@"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Plan starts on :date": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan starts on %1$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan begint op %1$@"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Plan starts today": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan starts today"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan begint vandaag"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Plan starts tomorrow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan starts tomorrow"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan begint morgen"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Please fill this in.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please fill this in."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vul dit veld in."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Pre-trip light and dim-light sessions are optional on this trip because they do not change your expected date, :date; the planned bedtimes still apply.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pre-trip light and dim-light sessions are optional on this trip because they do not change your expected date, %1$@; the planned bedtimes still apply."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sessies met licht en met gedimd licht voor de reis zijn bij deze reis optioneel, omdat ze je verwachte datum, %1$@, niet veranderen; de geplande bedtijden blijven gelden."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Pre-trip shifting is skipped.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pre-trip shifting is skipped."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verschuiven voor de reis wordt overgeslagen."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Protect a slower clock": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protect a slower clock"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bescherm een tragere klok"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Protect your sleep tonight: keep the evening quiet and dim.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protect your sleep tonight: keep the evening quiet and dim."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bescherm je slaap vanavond: houd de avond rustig en gedimd."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Recovery sleep on the flight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recovery sleep on the flight"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herstelslaap in het vliegtuig"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Required bright-light sessions end around :lastCoreSeekDate.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Required bright-light sessions end around %1$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verplichte sessies met fel licht eindigen rond %1$@."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Required bright-light sessions end around :lastCoreSeekDate; optional ones continue until :lastSeekDate.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Required bright-light sessions end around %1$@; optional ones continue until %2$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verplichte sessies met fel licht eindigen rond %1$@; optionele lopen door tot %2$@."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Rest": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rest"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rust"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Rest with an eye mask; even light sleep helps.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rest with an eye mask; even light sleep helps."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rust met een slaapmasker; ook lichte slaap helpt."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Seek bright light": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seek bright light"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zoek fel licht"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Shifting before you go would not change the expected outcome of this trip.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shifting before you go would not change the expected outcome of this trip."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verschuiven voordat je gaat zou de verwachte uitkomst van deze reis niet veranderen."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Short dim-light blocks continue to protect a slower clock until :slowerClockUntilDate.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Short dim-light blocks continue to protect a slower clock until %1$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Korte blokken met gedimd licht beschermen een tragere klok tot %1$@."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Short dim-light blocks continue to protect a slower clock until this plan ends.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Short dim-light blocks continue to protect a slower clock until this plan ends."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Korte blokken met gedimd licht beschermen een tragere klok tot dit plan eindigt."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Short dim-light blocks continue to protect a slower clock until you leave.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Short dim-light blocks continue to protect a slower clock until you leave."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Korte blokken met gedimd licht beschermen een tragere klok tot je vertrekt."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Short nap": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Short nap"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kort dutje"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Shortened": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shortened"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingekort"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Sit away from bright displays and shop lights, set your screen to minimum and keep your eyes closed when you can; rated blue-blockers help.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sit away from bright displays and shop lights, set your screen to minimum and keep your eyes closed when you can; rated blue-blockers help."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zit uit de buurt van felle schermen en winkelverlichting, zet je scherm op minimum en houd je ogen dicht als het kan; brillen met een bekende blauwlichtwaarde helpen."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Sit away from the brightest lights and screens, set your screen to minimum, and keep your eyes closed when you can.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sit away from the brightest lights and screens, set your screen to minimum, and keep your eyes closed when you can."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ga uit de buurt van de felste lampen en schermen zitten, zet je scherm op minimum en houd je ogen dicht als het kan."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Sit or stand away from windows, take the shaded side, look away from bright daylight, and keep your eyes closed when you can.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sit or stand away from windows, take the shaded side, look away from bright daylight, and keep your eyes closed when you can."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zit of sta uit de buurt van ramen, kies de schaduwkant, kijk weg van fel daglicht en houd je ogen dicht als het kan."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Sleep": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sleep"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slapen"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Sleep on the flight": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sleep on the flight"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slapen in het vliegtuig"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Small shift: daylight helps after :untilUtc.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Small shift: daylight helps after %1$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kleine verschuiving: daglicht helpt na %1$@."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Small shift: if you can, keep lights dim from :fromUtc until bed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Small shift: if you can, keep lights dim from %1$@ until bed."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kleine verschuiving: houd het licht, als het kan, gedimd vanaf %1$@ tot bedtijd."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Small shift; your usual routine is fine from here.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Small shift; your usual routine is fine from here."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kleine verschuiving; je gewone routine is vanaf hier prima."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Still adapting, about :remainingMin remaining.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Still adapting, about %1$@ remaining."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nog aan het aanpassen, ongeveer %1$@ te gaan."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Tell us your age group to get your plan.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tell us your age group to get your plan."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geef je leeftijdsgroep door om je plan te krijgen."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "The :attribute field is invalid.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The %1$@ field is invalid."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Het veld %1$@ is ongeldig."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "The forecast for this trip is uncertain; your adaptation date may differ from the one shown.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The forecast for this trip is uncertain; your adaptation date may differ from the one shown."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De voorspelling voor deze reis is onzeker; je aanpassingsdatum kan afwijken van de getoonde."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "The hours you marked as busy leave no room for bright light today.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The hours you marked as busy leave no room for bright light today."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De uren die je als bezet markeerde laten vandaag geen ruimte voor fel licht."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "The hours you marked as busy leave no time for the morning light a pre-trip shift needs.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The hours you marked as busy leave no time for the morning light a pre-trip shift needs."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De uren die je als bezet markeerde laten geen tijd voor het ochtendlicht dat een verschuiving voor de reis nodig heeft."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "The latest wake-up time you gave leaves no room to shift before you go.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The latest wake-up time you gave leaves no room to shift before you go."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De laatste opstatijd die je opgaf laat geen ruimte om te verschuiven voordat je gaat."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "The plan holds at a partial target: short dim-light blocks keep the shift you have made.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The plan holds at a partial target: short dim-light blocks keep the shift you have made."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Het plan blijft bij een gedeeltelijk doel: korte blokken met gedimd licht behouden de verschuiving die je hebt gemaakt."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "The plan holds at a partial target: short dim-light blocks keep the shift you have made; about :shortMin short of local time when you leave.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The plan holds at a partial target: short dim-light blocks keep the shift you have made; about %1$@ short of local time when you leave."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Het plan blijft bij een gedeeltelijk doel: korte blokken met gedimd licht behouden de verschuiving die je hebt gemaakt; ongeveer %1$@ achter op de lokale tijd als je vertrekt."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "The plan holds at a partial target: short dim-light blocks keep the shift you have made; your clock is expected to catch up by :expectedAdaptedDate.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The plan holds at a partial target: short dim-light blocks keep the shift you have made; your clock is expected to catch up by %1$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Het plan blijft bij een gedeeltelijk doel: korte blokken met gedimd licht behouden de verschuiving die je hebt gemaakt; je klok haalt het naar verwachting in tegen %1$@."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "The plan moves your body clock earlier, towards your destination's time.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The plan moves your body clock earlier, towards your destination's time."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Het plan zet je lichaamsklok vroeger, richting de tijd van je bestemming."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "The plan moves your body clock later, towards your destination's time.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The plan moves your body clock later, towards your destination's time."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Het plan zet je lichaamsklok later, richting de tijd van je bestemming."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "The planner cannot use this value.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The planner cannot use this value."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Het plan kan deze waarde niet gebruiken."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "There is not enough daylight at a safe time today; a light box would allow it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There is not enough daylight at a safe time today; a light box would allow it."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er is vandaag te weinig daglicht op een veilig moment; met een lichtbox kan het wel."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "There is not enough morning daylight before your trip.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There is not enough morning daylight before your trip."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er is voor je reis te weinig ochtenddaglicht."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "There is not enough morning daylight before your trip. A light device could add up to :deviceMin.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There is not enough morning daylight before your trip. A light device could add up to %1$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er is voor je reis te weinig ochtenddaglicht. Een lichtapparaat kan tot %1$@ toevoegen."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "There is too little time left before your trip to shift usefully.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There is too little time left before your trip to shift usefully."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er is te weinig tijd voor je reis over om zinvol te verschuiven."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "This plan has changed. Refresh it before marking this step.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This plan has changed. Refresh it before marking this step."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dit plan is gewijzigd. Vernieuw het voordat je deze stap afvinkt."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "This plan is not available for travellers under 18.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This plan is not available for travellers under 18."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dit plan is niet beschikbaar voor reizigers onder de 18."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "This plan is not available if, in the past 14 days, you have worked night or rotating shifts or had a very irregular sleep schedule.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This plan is not available if, in the past 14 days, you have worked night or rotating shifts or had a very irregular sleep schedule."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dit plan is niet beschikbaar als je de afgelopen 14 dagen in nacht- of wisseldiensten hebt gewerkt of een heel onregelmatig slaapritme had."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "This plan shifts your clock part of the way. When this plan ends, it is expected to be about :shortMin from local time.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This plan shifts your clock part of the way. When this plan ends, it is expected to be about %1$@ from local time."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dit plan verschuift je klok gedeeltelijk. Als dit plan eindigt, wijkt je klok naar verwachting nog ongeveer %1$@ af van de lokale tijd."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "This plan shifts your clock part of the way. When you leave, it is expected to be about :shortMin from local time.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This plan shifts your clock part of the way. When you leave, it is expected to be about %1$@ from local time."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dit plan verschuift je klok gedeeltelijk. Bij vertrek wijkt je klok naar verwachting nog ongeveer %1$@ af van de lokale tijd."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "This setting cannot be changed here.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This setting cannot be changed here."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze instelling kan hier niet worden gewijzigd."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "This step cannot be checked off.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This step cannot be checked off."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze stap kan niet worden afgevinkt."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Time-zone change": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time-zone change"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tijdzonewissel"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Times from here are :arrivalCity time (:offsetMin from :departureCity)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Times from here are %1$@ time (%2$@ from %3$@)"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tijden vanaf hier zijn %1$@-tijd (%2$@ ten opzichte van %3$@)"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Tomorrow your plan for :city begins.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tomorrow your plan for %1$@ begins."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morgen begint je plan voor %1$@."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Travel day": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Travel day"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reisdag"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Travel · arrival night": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Travel · arrival night"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reis · aankomstnacht"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "We could not update this trip. Check your request and try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We could not update this trip. Check your request and try again."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We konden deze reis niet bijwerken. Controleer je verzoek en probeer het opnieuw."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "We shift your clock :shift earlier during your trip.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We shift your clock %1$@ earlier during your trip."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We verschuiven je klok %1$@ vroeger tijdens je reis."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "We shift your clock :shift earlier during your trip. Your trip home is planned too.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We shift your clock %1$@ earlier during your trip. Your trip home is planned too."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We verschuiven je klok %1$@ vroeger tijdens je reis. Je reis naar huis staat ook in je plan."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "We shift your clock :shift earlier, starting :count day before you leave. Your trip home is planned too.|We shift your clock :shift earlier, starting :count days before you leave. Your trip home is planned too.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "We shift your clock %1$@ earlier, starting %2$lld day before you leave. Your trip home is planned too."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "We shift your clock %1$@ earlier, starting %2$lld days before you leave. Your trip home is planned too."
+                }
+              }
+            }
+          }
+        },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "We verschuiven je klok %1$@ vroeger, vanaf %2$lld dag voor je vertrek. Je reis naar huis staat ook in je plan."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "We verschuiven je klok %1$@ vroeger, vanaf %2$lld dagen voor je vertrek. Je reis naar huis staat ook in je plan."
+                }
+              }
+            }
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "We shift your clock :shift earlier, starting :count day before you leave.|We shift your clock :shift earlier, starting :count days before you leave.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "We shift your clock %1$@ earlier, starting %2$lld day before you leave."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "We shift your clock %1$@ earlier, starting %2$lld days before you leave."
+                }
+              }
+            }
+          }
+        },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "We verschuiven je klok %1$@ vroeger, vanaf %2$lld dag voor je vertrek."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "We verschuiven je klok %1$@ vroeger, vanaf %2$lld dagen voor je vertrek."
+                }
+              }
+            }
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "We shift your clock :shift later during your trip.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We shift your clock %1$@ later during your trip."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We verschuiven je klok %1$@ later tijdens je reis."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "We shift your clock :shift later during your trip. Your trip home is planned too.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We shift your clock %1$@ later during your trip. Your trip home is planned too."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We verschuiven je klok %1$@ later tijdens je reis. Je reis naar huis staat ook in je plan."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "We shift your clock :shift later, starting :count day before you leave. Your trip home is planned too.|We shift your clock :shift later, starting :count days before you leave. Your trip home is planned too.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "We shift your clock %1$@ later, starting %2$lld day before you leave. Your trip home is planned too."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "We shift your clock %1$@ later, starting %2$lld days before you leave. Your trip home is planned too."
+                }
+              }
+            }
+          }
+        },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "We verschuiven je klok %1$@ later, vanaf %2$lld dag voor je vertrek. Je reis naar huis staat ook in je plan."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "We verschuiven je klok %1$@ later, vanaf %2$lld dagen voor je vertrek. Je reis naar huis staat ook in je plan."
+                }
+              }
+            }
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "We shift your clock :shift later, starting :count day before you leave.|We shift your clock :shift later, starting :count days before you leave.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "We shift your clock %1$@ later, starting %2$lld day before you leave."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "We shift your clock %1$@ later, starting %2$lld days before you leave."
+                }
+              }
+            }
+          }
+        },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "We verschuiven je klok %1$@ later, vanaf %2$lld dag voor je vertrek."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "We verschuiven je klok %1$@ later, vanaf %2$lld dagen voor je vertrek."
+                }
+              }
+            }
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "What is the latest you can wake up on the days before you leave?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What is the latest you can wake up on the days before you leave?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoe laat kun je op zijn laatst opstaan op de dagen voor je vertrek?"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "What time do you go to bed and wake up on free days?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What time do you go to bed and wake up on free days?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoe laat ga je op vrije dagen naar bed en sta je op?"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Which age group are you in?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Which age group are you in?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In welke leeftijdsgroep zit je?"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Which hours before you leave are you busy, so the plan keeps them free of light and naps?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Which hours before you leave are you busy, so the plan keeps them free of light and naps?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Op welke uren voor je vertrek ben je bezet, zodat het plan die vrijhoudt van licht en dutjes?"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "While you leave the plane and walk through the airport, look away from bright daylight.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "While you leave the plane and walk through the airport, look away from bright daylight."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kijk terwijl je het vliegtuig verlaat en door het vliegveld loopt weg van fel daglicht."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "While you leave the plane and walk through the airport, look away from bright lights.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "While you leave the plane and walk through the airport, look away from bright lights."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kijk terwijl je het vliegtuig verlaat en door het vliegveld loopt weg van felle lampen."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Will you have a room in :place when you land, and from what time?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Will you have a room in %1$@ when you land, and from what time?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heb je bij aankomst een kamer in %1$@, en vanaf hoe laat?"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "With this plan, you're expected to be adapted by :expectedAdaptedDate. If your clock shifts more slowly, it may take longer than this plan.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "With this plan, you're expected to be adapted by %1$@. If your clock shifts more slowly, it may take longer than this plan."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Met dit plan ben je naar verwachting aangepast op %1$@. Als je klok langzamer verschuift, kan het langer duren dan dit plan."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "With this plan, you're expected to be adapted by :expectedAdaptedDate. If your clock shifts more slowly, it may take until :slowDate.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "With this plan, you're expected to be adapted by %1$@. If your clock shifts more slowly, it may take until %2$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Met dit plan ben je naar verwachting aangepast op %1$@. Als je klok langzamer verschuift, kan het tot %2$@ duren."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "You gave no latest wake-up time, so the plan wakes you at most an hour later than usual.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You gave no latest wake-up time, so the plan wakes you at most an hour later than usual."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je hebt geen laatste opstatijd opgegeven, dus het plan laat je hooguit een uur later opstaan dan gebruikelijk."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "You may take a while to fall asleep; this can happen while your body clock adjusts.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You may take a while to fall asleep; this can happen while your body clock adjusts."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Het kan even duren voor je in slaap valt; dat kan gebeuren terwijl je lichaamsklok zich aanpast."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "You may take longer to fall asleep.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You may take longer to fall asleep."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Het kan zijn dat je er langer over doet om in slaap te vallen."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "You may wake for a while in the night; stay in the dark until :untilUtc.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You may wake for a while in the night; stay in the dark until %1$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je kunt 's nachts een tijd wakker liggen; blijf in het donker tot %1$@."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "You slept under 6 hours in two nights in a row. Take it easy and protect tonight's sleep.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You slept under 6 hours in two nights in a row. Take it easy and protect tonight's sleep."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je sliep twee nachten achter elkaar minder dan 6 uur. Doe rustig aan en bescherm je slaap van vanavond."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "You told us about a diagnosed sleep-timing disorder: a shift may take longer, so talk to your doctor about the plan.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You told us about a diagnosed sleep-timing disorder: a shift may take longer, so talk to your doctor about the plan."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je gaf een gediagnosticeerde slaapritmestoornis door: een verschuiving kan langer duren, dus bespreek het plan met je arts."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "You usually sleep late on free days, so an earlier clock may take longer to settle.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You usually sleep late on free days, so an earlier clock may take longer to settle."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je slaapt op vrije dagen meestal laat, dus een vroegere klok kan langer nodig hebben om te wennen."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "You will have been awake for over 20 hours. Rest as soon as you can.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You will have been awake for over 20 hours. Rest as soon as you can."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je bent dan meer dan 20 uur wakker. Rust zodra je kunt."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Your body clock needs only a small shift, so there is no pre-trip shifting.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your body clock needs only a small shift, so there is no pre-trip shifting."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je lichaamsklok hoeft maar een klein stukje te verschuiven, dus er is geen verschuiving voor de reis."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Your body clock runs late, so morning light cannot start shifting you before the trip.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your body clock runs late, so morning light cannot start shifting you before the trip."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je lichaamsklok loopt laat, dus ochtendlicht kan je voor de reis nog niet vroeger zetten."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Your body clock stays close to its usual time, so no shift is planned.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your body clock stays close to its usual time, so no shift is planned."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je lichaamsklok blijft dicht bij de gewone tijd, dus er is geen verschuiving gepland."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Your body clock would not keep up with later bedtimes before the trip.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your body clock would not keep up with later bedtimes before the trip."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je lichaamsklok zou het later naar bed gaan voor de reis niet bijhouden."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Your caffeine is capped at about :capMg today.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your caffeine is capped at about %1$@ today."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je cafeïne is vandaag beperkt tot ongeveer %1$@."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Your draft has expired. Start your trip again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your draft has expired. Start your trip again."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je concept is verlopen. Begin opnieuw met je reis."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Your early flight leaves no room to shift before you go.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your early flight leaves no room to shift before you go."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je vroege vlucht laat geen ruimte om te verschuiven voordat je gaat."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Your plan for :city is underway.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your plan for %1$@ is underway."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je plan voor %1$@ is begonnen."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Your plan for :city starts today.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your plan for %1$@ starts today."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je plan voor %1$@ begint vandaag."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Your plan keeps your clock on your home time.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your plan keeps your clock on your home time."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je plan houdt je klok op je thuistijd."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Your return plan starts now.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your return plan starts now."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je terugplan begint nu."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Your sleep falls at a poor body-clock time; expect lighter sleep.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your sleep falls at a poor body-clock time; expect lighter sleep."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je slaap valt op een ongunstig moment voor je lichaamsklok; verwacht lichtere slaap."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Your travel leaves no room for a bright-light block today.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your travel leaves no room for a bright-light block today."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je reis laat vandaag geen ruimte voor een blok met fel licht."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Your trip needs little or no clock shift. Your plan keeps you on your usual routine.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your trip needs little or no clock shift. Your plan keeps you on your usual routine."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je reis vraagt weinig of geen verschuiving van je biologische klok. Je plan houdt je op je gebruikelijke ritme."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Your trips, at a glance.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your trips, at a glance."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je reizen in één overzicht."
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "airport transfer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "airport transfer"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "transfer naar de luchthaven"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "flight departure": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "flight departure"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vertrekkende vlucht"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "half a can of energy drink|:amount cans of energy drink#case.1": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "half a can of energy drink"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "een half blikje energiedrank"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "half a can of energy drink|:amount cans of energy drink#case.2": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "one can of energy drink"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "één blikje energiedrank"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "half a can of energy drink|:amount cans of energy drink#case.3": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ cans of energy drink"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ blikje energiedrank"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "half a can of energy drink|:amount cans of energy drink#case.4": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "two cans of energy drink"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "twee blikjes energiedrank"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "half a can of energy drink|:amount cans of energy drink#case.5": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ cans of energy drink"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ blikjes energiedrank"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "half a can of soft drink|:amount cans of soft drink#case.1": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "half a can of soft drink"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "een half blikje frisdrank"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "half a can of soft drink|:amount cans of soft drink#case.2": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "one can of soft drink"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "één blikje frisdrank"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "half a can of soft drink|:amount cans of soft drink#case.3": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ cans of soft drink"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ blikje frisdrank"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "half a can of soft drink|:amount cans of soft drink#case.4": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "two cans of soft drink"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "twee blikjes frisdrank"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "half a can of soft drink|:amount cans of soft drink#case.5": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ cans of soft drink"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ blikjes frisdrank"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "half a cup of coffee|:amount cups of coffee#case.1": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "half a cup of coffee"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "een half kopje koffie"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "half a cup of coffee|:amount cups of coffee#case.2": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "one cup of coffee"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "één kopje koffie"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "half a cup of coffee|:amount cups of coffee#case.3": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ cups of coffee"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ kopje koffie"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "half a cup of coffee|:amount cups of coffee#case.4": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "two cups of coffee"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "twee kopjes koffie"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "half a cup of coffee|:amount cups of coffee#case.5": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ cups of coffee"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ kopjes koffie"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "half a cup of tea|:amount cups of tea#case.1": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "half a cup of tea"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "een half kopje thee"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "half a cup of tea|:amount cups of tea#case.2": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "one cup of tea"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "één kopje thee"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "half a cup of tea|:amount cups of tea#case.3": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ cups of tea"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ kopje thee"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "half a cup of tea|:amount cups of tea#case.4": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "two cups of tea"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "twee kopjes thee"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "half a cup of tea|:amount cups of tea#case.5": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ cups of tea"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ kopjes thee"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "late landing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "late landing"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "late aankomst"
+          }
+        }
+      },
+      "generatesSymbol": false
+    }
+  },
+  "version": "1.0"
+}

@@ -1,0 +1,5806 @@
+{
+  "entries": [
+    {
+      "key": ":amount coffee|:amount coffees",
+      "arguments": [
+        "amount"
+      ],
+      "languages": {
+        "en": {
+          "kind": "coded",
+          "cases": [
+            {
+              "bound": 1,
+              "exact": true,
+              "format": "%1$@ coffee"
+            },
+            {
+              "bound": 2,
+              "exact": true,
+              "format": "%1$@ coffee"
+            },
+            {
+              "bound": 3,
+              "exact": false,
+              "format": "%1$@ coffees"
+            }
+          ]
+        },
+        "nl": {
+          "kind": "coded",
+          "cases": [
+            {
+              "bound": 1,
+              "exact": false,
+              "format": "%1$@ koffie"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": ":amount energy drink|:amount energy drinks",
+      "arguments": [
+        "amount"
+      ],
+      "languages": {
+        "en": {
+          "kind": "coded",
+          "cases": [
+            {
+              "bound": 1,
+              "exact": true,
+              "format": "%1$@ energy drink"
+            },
+            {
+              "bound": 2,
+              "exact": true,
+              "format": "%1$@ energy drink"
+            },
+            {
+              "bound": 3,
+              "exact": false,
+              "format": "%1$@ energy drinks"
+            }
+          ]
+        },
+        "nl": {
+          "kind": "coded",
+          "cases": [
+            {
+              "bound": 1,
+              "exact": false,
+              "format": "%1$@ energiedrank"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": ":amount h",
+      "arguments": [
+        "amount"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "%1$@ h"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "%1$@ u"
+          ]
+        }
+      }
+    },
+    {
+      "key": ":amount hr",
+      "arguments": [
+        "amount"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "%1$@ hr"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "%1$@ uur"
+          ]
+        }
+      }
+    },
+    {
+      "key": ":amount mg",
+      "arguments": [
+        "amount"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "%1$@ mg"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "%1$@ mg"
+          ]
+        }
+      }
+    },
+    {
+      "key": ":amount min",
+      "arguments": [
+        "amount"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "%1$@ min"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "%1$@ min"
+          ]
+        }
+      }
+    },
+    {
+      "key": ":amount soft drink|:amount soft drinks",
+      "arguments": [
+        "amount"
+      ],
+      "languages": {
+        "en": {
+          "kind": "coded",
+          "cases": [
+            {
+              "bound": 1,
+              "exact": true,
+              "format": "%1$@ soft drink"
+            },
+            {
+              "bound": 2,
+              "exact": true,
+              "format": "%1$@ soft drink"
+            },
+            {
+              "bound": 3,
+              "exact": false,
+              "format": "%1$@ soft drinks"
+            }
+          ]
+        },
+        "nl": {
+          "kind": "coded",
+          "cases": [
+            {
+              "bound": 1,
+              "exact": false,
+              "format": "%1$@ frisdrank"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": ":amount tea|:amount teas",
+      "arguments": [
+        "amount"
+      ],
+      "languages": {
+        "en": {
+          "kind": "coded",
+          "cases": [
+            {
+              "bound": 1,
+              "exact": true,
+              "format": "%1$@ tea"
+            },
+            {
+              "bound": 2,
+              "exact": true,
+              "format": "%1$@ tea"
+            },
+            {
+              "bound": 3,
+              "exact": false,
+              "format": "%1$@ teas"
+            }
+          ]
+        },
+        "nl": {
+          "kind": "coded",
+          "cases": [
+            {
+              "bound": 1,
+              "exact": false,
+              "format": "%1$@ thee"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": ":count booked nights",
+      "arguments": [
+        "count"
+      ],
+      "languages": {
+        "en": {
+          "kind": "plural",
+          "formats": [
+            "%1$@ booked night",
+            "%1$@ booked nights"
+          ]
+        },
+        "nl": {
+          "kind": "plural",
+          "formats": [
+            "%1$@ geboekte nacht",
+            "%1$@ geboekte nachten"
+          ]
+        }
+      }
+    },
+    {
+      "key": ":count counted nights",
+      "arguments": [
+        "count"
+      ],
+      "languages": {
+        "en": {
+          "kind": "plural",
+          "formats": [
+            "%1$@ counted night",
+            "%1$@ counted nights"
+          ]
+        },
+        "nl": {
+          "kind": "plural",
+          "formats": [
+            "%1$@ meegetelde nacht",
+            "%1$@ meegetelde nachten"
+          ]
+        }
+      }
+    },
+    {
+      "key": ":count day until :city.|:count days until :city.",
+      "arguments": [
+        "count",
+        "city"
+      ],
+      "languages": {
+        "en": {
+          "kind": "plural",
+          "formats": [
+            "%1$@ day until %2$@.",
+            "%1$@ days until %2$@."
+          ]
+        },
+        "nl": {
+          "kind": "plural",
+          "formats": [
+            "Nog %1$@ dag tot %2$@.",
+            "Nog %1$@ dagen tot %2$@."
+          ]
+        }
+      }
+    },
+    {
+      "key": ":count drink|:count drinks",
+      "arguments": [
+        "count"
+      ],
+      "languages": {
+        "en": {
+          "kind": "plural",
+          "formats": [
+            "%1$@ drink",
+            "%1$@ drinks"
+          ]
+        },
+        "nl": {
+          "kind": "plural",
+          "formats": [
+            "%1$@ drankje",
+            "%1$@ drankjes"
+          ]
+        }
+      }
+    },
+    {
+      "key": ":count nights counted by the plan",
+      "arguments": [
+        "count"
+      ],
+      "languages": {
+        "en": {
+          "kind": "plural",
+          "formats": [
+            "%1$@ night counted by the plan",
+            "%1$@ nights counted by the plan"
+          ]
+        },
+        "nl": {
+          "kind": "plural",
+          "formats": [
+            "%1$@ nacht meegeteld in het plan",
+            "%1$@ nachten meegeteld in het plan"
+          ]
+        }
+      }
+    },
+    {
+      "key": ":drinks (:mg)",
+      "arguments": [
+        "drinks",
+        "mg"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "%1$@ (%2$@)"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "%1$@ (%2$@)"
+          ]
+        }
+      }
+    },
+    {
+      "key": ":first or :second",
+      "arguments": [
+        "first",
+        "second"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "%1$@ or %2$@"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "%1$@ of %2$@"
+          ]
+        }
+      }
+    },
+    {
+      "key": ":hours h :minutes min",
+      "arguments": [
+        "hours",
+        "minutes"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "%1$@ h %2$@ min"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "%1$@ u %2$@ min"
+          ]
+        }
+      }
+    },
+    {
+      "key": ":hours hr :minutes min",
+      "arguments": [
+        "hours",
+        "minutes"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "%1$@ hr %2$@ min"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "%1$@ uur %2$@ min"
+          ]
+        }
+      }
+    },
+    {
+      "key": ":n mg",
+      "arguments": [
+        "n"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "%1$@ mg"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "%1$@ mg"
+          ]
+        }
+      }
+    },
+    {
+      "key": "A demanding day: if you can do only part of the plan, keep it dim from :fromUtc to :untilUtc.",
+      "arguments": [
+        "fromUtc",
+        "untilUtc"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "A demanding day: if you can do only part of the plan, keep it dim from %1$@ to %2$@."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Een drukke dag: als je maar een deel van het plan kunt doen, houd het dan gedimd van %1$@ tot %2$@."
+          ]
+        }
+      }
+    },
+    {
+      "key": "A new plan needs an upcoming arrival. Check your flight dates or add your return flight.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "A new plan needs an upcoming arrival. Check your flight dates or add your return flight."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Voor een nieuw plan is een aankomst nodig die nog moet plaatsvinden. Controleer je vluchtdata of voeg je terugvlucht toe."
+          ]
+        }
+      }
+    },
+    {
+      "key": "A new plan needs an upcoming arrival. Check your flight dates.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "A new plan needs an upcoming arrival. Check your flight dates."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Voor een nieuw plan is een aankomst nodig die nog moet plaatsvinden. Controleer je vluchtdata."
+          ]
+        }
+      }
+    },
+    {
+      "key": "A planned nap takes the time that bright light would need.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "A planned nap takes the time that bright light would need."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Een gepland dutje neemt de tijd in die fel licht nodig zou hebben."
+          ]
+        }
+      }
+    },
+    {
+      "key": "A shift of 7 hours or more earlier is a large change; the light and dim-light blocks matter most on this trip.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "A shift of 7 hours or more earlier is a large change; the light and dim-light blocks matter most on this trip."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Een verschuiving van 7 uur of meer naar vroeger is een grote verandering; de blokken met licht en met gedimd licht tellen bij deze reis het zwaarst."
+          ]
+        }
+      }
+    },
+    {
+      "key": "AM",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "AM"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "a.m."
+          ]
+        }
+      }
+    },
+    {
+      "key": "About :mgPerDay a day for :days day, below your usual :usualMg.",
+      "arguments": [
+        "mgPerDay",
+        "days",
+        "usualMg"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "About %1$@ a day for %2$@ day, below your usual %3$@."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Ongeveer %1$@ per dag gedurende %2$@ dag, minder dan je gebruikelijke %3$@."
+          ]
+        }
+      }
+    },
+    {
+      "key": "About :mgPerDay a day for :days days, below your usual :usualMg.",
+      "arguments": [
+        "mgPerDay",
+        "days",
+        "usualMg"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "About %1$@ a day for %2$@ days, below your usual %3$@."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Ongeveer %1$@ per dag gedurende %2$@ dagen, minder dan je gebruikelijke %3$@."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Adapted; a short dim-light block protects a slower clock.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Adapted; a short dim-light block protects a slower clock."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Aangepast; een kort blok met gedimd licht beschermt een tragere klok."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Add no more than 16 flights in total.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Add no more than 16 flights in total."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Voeg in totaal maximaal 16 vluchten toe."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Add no more than :max busy times here.",
+      "arguments": [
+        "max"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Add no more than %1$@ busy times here."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Voeg hier maximaal %1$@ bezette momenten toe."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Add no more than :max flights.",
+      "arguments": [
+        "max"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Add no more than %1$@ flights."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Voeg maximaal %1$@ vluchten toe."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Add no more than :max stays.",
+      "arguments": [
+        "max"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Add no more than %1$@ stays."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Voeg maximaal %1$@ verblijven toe."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Add your return flight to get a plan for the trip home.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Add your return flight to get a plan for the trip home."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Voeg je terugvlucht toe om een plan voor de reis naar huis te krijgen."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Adjusting",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Adjusting"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Aan het verschuiven"
+          ]
+        }
+      }
+    },
+    {
+      "key": "After this plan",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "After this plan"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Na dit plan"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Airport transfer",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Airport transfer"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Vervoer van of naar het vliegveld"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Answer the health questions to get your plan.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Answer the health questions to get your plan."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Beantwoord de gezondheidsvragen om je plan te krijgen."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Apart from your planned nap, if you cannot stay awake, go to bed early rather than napping late.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Apart from your planned nap, if you cannot stay awake, go to bed early rather than napping late."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Naast je geplande dutje: als je niet wakker kunt blijven, ga dan vroeg naar bed in plaats van laat te dutten."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Apart from your planned nap, if you cannot stay awake, nap for under 30 minutes and be up by :untilUtc; after that, stay up until bed.",
+      "arguments": [
+        "untilUtc"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Apart from your planned nap, if you cannot stay awake, nap for under 30 minutes and be up by %1$@; after that, stay up until bed."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Naast je geplande dutje: als je niet wakker kunt blijven, doe dan een dutje van minder dan 30 minuten en sta uiterlijk om %1$@ op; blijf daarna op tot bedtijd."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Are you pregnant or breastfeeding?",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Are you pregnant or breastfeeding?"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Ben je zwanger of geef je borstvoeding?"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Arrival day",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Arrival day"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Aankomstdag"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Avoid bright light",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Avoid bright light"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Vermijd fel licht"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Avoid caffeine",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Avoid caffeine"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Vermijd cafeïne"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Before departure",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Before departure"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Vóór vertrek"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Before you land",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Before you land"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Voor je landt"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Bright light can no longer be timed safely, because the estimate of your body clock is too uncertain.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Bright light can no longer be timed safely, because the estimate of your body clock is too uncertain."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Fel licht kan niet meer veilig worden ingepland, omdat de schatting van je lichaamsklok te onzeker is."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Bright light is paused while the plan keeps the shift you have made.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Bright light is paused while the plan keeps the shift you have made."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Fel licht is gepauzeerd terwijl het plan de verschuiving behoudt die je hebt gemaakt."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Bright light: go somewhere open with a clear view of the bright sky, or use a light box. Never look straight at the sun.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Bright light: go somewhere open with a clear view of the bright sky, or use a light box. Never look straight at the sun."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Fel licht: ga naar een open plek met zicht op de heldere lucht, of gebruik een lichtbox. Kijk nooit recht in de zon."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Bright light: go somewhere open with a clear view of the bright sky. Never look straight at the sun.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Bright light: go somewhere open with a clear view of the bright sky. Never look straight at the sun."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Fel licht: ga naar een open plek met zicht op de heldere lucht. Kijk nooit recht in de zon."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Bright light: outdoors in daylight, or use your light box. Never look straight at the sun.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Bright light: outdoors in daylight, or use your light box. Never look straight at the sun."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Fel licht: buiten in daglicht, of gebruik je lichtbox. Kijk nooit recht in de zon."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Bright light: outdoors in daylight. Never look straight at the sun.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Bright light: outdoors in daylight. Never look straight at the sun."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Fel licht: buiten in daglicht. Kijk nooit recht in de zon."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Bright-light blocks are kept shorter than usual for you.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Bright-light blocks are kept shorter than usual for you."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Blokken met fel licht zijn voor jou korter dan gebruikelijk."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Caffeine OK: one serving of up to about :maxMg, at least 3 hours after your previous one.",
+      "arguments": [
+        "maxMg"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Caffeine OK: one serving of up to about %1$@, at least 3 hours after your previous one."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Cafeïne mag: één portie van hooguit zo'n %1$@, minstens 3 uur na je vorige."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Caffeine for the afternoon dip: about :mg.",
+      "arguments": [
+        "mg"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Caffeine for the afternoon dip: about %1$@."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Cafeïne voor de middagdip: ongeveer %1$@."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Caffeine is lower than usual for the next :days days, which some people notice as tiredness or a headache.",
+      "arguments": [
+        "days"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Caffeine is lower than usual for the next %1$@ days, which some people notice as tiredness or a headache."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Cafeïne ligt de komende %1$@ dagen lager dan gewoonlijk, wat sommige mensen merken als vermoeidheid of hoofdpijn."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Caffeine routine",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Caffeine routine"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Cafeïneroutine"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Caffeine serving",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Caffeine serving"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Portie cafeïne"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Caffeine window",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Caffeine window"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Cafeïneperiode"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Can you check out late, or book a day room, in :place?",
+      "arguments": [
+        "place"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Can you check out late, or book a day room, in %1$@?"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Kun je laat uitchecken, of een dagkamer boeken, in %1$@?"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Check your bedtime and wake-up time.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Check your bedtime and wake-up time."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Controleer je bedtijd en opstatijd."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Choose a reminder time.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Choose a reminder time."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Kies een herinneringstijd."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Choose a valid check-off status.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Choose a valid check-off status."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Kies een geldige afvinkstatus."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Choose a valid local date.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Choose a valid local date."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Kies een geldige plaatselijke datum."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Choose a valid trip filter.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Choose a valid trip filter."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Kies een geldig reisfilter."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Choose an airport from the search results.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Choose an airport from the search results."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Kies een luchthaven uit de zoekresultaten."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Choose an export time zone.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Choose an export time zone."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Kies een tijdzone voor de export."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Choose different departure and arrival airports.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Choose different departure and arrival airports."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Kies verschillende luchthavens voor vertrek en aankomst."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Choose one of the available options.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Choose one of the available options."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Kies een van de beschikbare opties."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Choose valid export categories.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Choose valid export categories."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Kies geldige exportcategorieën."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Choose what to include.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Choose what to include."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Kies wat je wilt meenemen."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Choose whether to complete or reopen this trip.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Choose whether to complete or reopen this trip."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Kies of je deze reis wilt afronden of heropenen."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Coffee nap: have about :mg, then nap.",
+      "arguments": [
+        "mg"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Coffee nap: have about %1$@, then nap."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Koffiedutje: neem ongeveer %1$@ en doe dan een dutje."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Coffee nap: have the coffee, then nap",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Coffee nap: have the coffee, then nap"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Koffiedutje: drink de koffie en doe dan een dutje"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Connection",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Connection"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Overstap"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Daily amount reached; no caffeine until :untilUtc.",
+      "arguments": [
+        "untilUtc"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "You've had today's caffeine; no more until %1$@."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Je hebt je cafeïne voor vandaag gehad; geen meer tot %1$@."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Daily amount reached; no more caffeine for now.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "You've had today's caffeine; no more for now."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Je hebt je cafeïne voor vandaag gehad; voorlopig geen meer."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Day :count",
+      "arguments": [
+        "count"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Day %1$@"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Dag %1$@"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Daylight is fine; outdoors helps until :untilUtc.",
+      "arguments": [
+        "untilUtc"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Daylight is fine; outdoors helps until %1$@."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Daglicht is prima; buiten zijn helpt tot %1$@."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Do not drive drowsy: you have been awake for more than 16 hours. Let someone else drive, or use a taxi or train.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Do not drive drowsy: you have been awake for more than 16 hours. Let someone else drive, or use a taxi or train."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Rijd niet als je slaperig bent: je bent al meer dan 16 uur wakker. Laat een ander rijden, of neem een taxi of trein."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Do not drive drowsy: you have been awake for over 20 hours. Let someone else drive, or use a taxi or train.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Do not drive drowsy: you have been awake for over 20 hours. Let someone else drive, or use a taxi or train."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Rijd niet als je slaperig bent: je bent al meer dan 20 uur wakker. Laat een ander rijden, of neem een taxi of trein."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Do not drive drowsy: you have just taken an overnight flight. Let someone else drive, or use a taxi or train.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Do not drive drowsy: you have just taken an overnight flight. Let someone else drive, or use a taxi or train."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Rijd niet als je slaperig bent: je hebt net een nachtvlucht gehad. Laat een ander rijden, of neem een taxi of trein."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Do not drive drowsy: you have slept little in the last day. Let someone else drive, or use a taxi or train.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Do not drive drowsy: you have slept little in the last day. Let someone else drive, or use a taxi or train."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Rijd niet als je slaperig bent: je hebt het afgelopen etmaal weinig geslapen. Laat een ander rijden, of neem een taxi of trein."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Do you have a light box or light glasses? One gives the plan more room on days when daylight is hard to get.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Do you have a light box or light glasses? One gives the plan more room on days when daylight is hard to get."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Heb je een lichtbox of lichtbril? Die geeft het plan meer ruimte op dagen waarop daglicht lastig te krijgen is."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Do you have a light box or light glasses? With one, the plan could add up to :deviceMin of light before you leave.",
+      "arguments": [
+        "deviceMin"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Do you have a light box or light glasses? With one, the plan could add up to %1$@ of light before you leave."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Heb je een lichtbox of lichtbril? Daarmee kan het plan tot %1$@ licht toevoegen voordat je vertrekt."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Do you have a risk factor for blood clots, such as a past clot or a clotting disorder?",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Do you have a risk factor for blood clots, such as a past clot or a clotting disorder?"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Heb je een risicofactor voor bloedstolsels, zoals een eerdere trombose of een stollingsstoornis?"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Do you have an eye disease, or take medicine that makes your eyes sensitive to light?",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Do you have an eye disease, or take medicine that makes your eyes sensitive to light?"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Heb je een oogziekte, of gebruik je medicijnen die je ogen gevoelig maken voor licht?"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Do you have bipolar disorder?",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Do you have bipolar disorder?"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Heb je een bipolaire stoornis?"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Do you have blue-blocking glasses with a rated protection? Tell us the rating if you know it.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Do you have blue-blocking glasses with a rated protection? Tell us the rating if you know it."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Heb je een blauwlichtblokkerende bril met een bekende blauwlichtwaarde? Geef die waarde door als je die weet."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Enter a valid date and time.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Enter a valid date and time."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Vul een geldige datum en tijd in."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Enter a whole number.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Enter a whole number."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Vul een geheel getal in."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Expect to feel groggy for a while after waking at :atUtc.",
+      "arguments": [
+        "atUtc"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Expect to feel groggy for a while after waking at %1$@."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Verwacht dat je je een tijd suf voelt na het wakker worden om %1$@."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Expected adapted",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Expected adapted"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Naar verwachting aangepast"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Expected adapted from about :atUtc",
+      "arguments": [
+        "atUtc"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Expected adapted from about %1$@"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Naar verwachting aangepast vanaf ongeveer %1$@"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Expected to be adjusted by about :date, if your clock shifts in the planned direction.",
+      "arguments": [
+        "date"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Expected to be adjusted by about %1$@, if your clock shifts in the planned direction."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Naar verwachting aangepast rond %1$@, als je klok in de geplande richting verschuift."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Fits your travel arrangements",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Fits your travel arrangements"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Past bij je reisafspraken"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Flight",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Flight"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Vlucht"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Follow crew instructions",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Follow crew instructions"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Volg de instructies van de bemanning"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Follow the crew's lighting instructions, and keep your own light low.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Follow the crew's lighting instructions, and keep your own light low."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Volg de lichtinstructies van de bemanning en houd je eigen licht laag."
+          ]
+        }
+      }
+    },
+    {
+      "key": "For a later clock the forecast is less certain; treat the dates as a guide.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "For a later clock the forecast is less certain; treat the dates as a guide."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Bij een latere klok is de voorspelling minder zeker; zie de data als richtlijn."
+          ]
+        }
+      }
+    },
+    {
+      "key": "For tonight's sleep, at most one more drink, by :singleByUtc.",
+      "arguments": [
+        "singleByUtc"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "For tonight's sleep, at most one more drink, by %1$@."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Neem voor je slaap van vanavond hooguit nog één drankje, uiterlijk om %1$@."
+          ]
+        }
+      }
+    },
+    {
+      "key": "For tonight's sleep, finish your usual :cups drinks by :lastByUtc (a single drink is fine until :singleByUtc).",
+      "arguments": [
+        "cups",
+        "lastByUtc",
+        "singleByUtc"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "For tonight's sleep, finish your usual %1$@ drinks by %2$@ (a single drink is fine until %3$@)."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Rond voor je slaap van vanavond je gebruikelijke %1$@ drankjes af om %2$@ (één drankje kan nog tot %3$@)."
+          ]
+        }
+      }
+    },
+    {
+      "key": "For tonight's sleep, no more caffeine today.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "For tonight's sleep, no more caffeine today."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Neem voor je slaap van vanavond vandaag geen cafeïne meer."
+          ]
+        }
+      }
+    },
+    {
+      "key": "From :stopDate bright light can no longer be timed safely, because the estimate of your body clock has become too uncertain; keep the dim-light blocks.",
+      "arguments": [
+        "stopDate"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "From %1$@ bright light can no longer be timed safely, because the estimate of your body clock has become too uncertain; keep the dim-light blocks."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Vanaf %1$@ kan fel licht niet meer veilig worden ingepland, omdat de schatting van je lichaamsklok te onzeker is geworden; houd de blokken met gedimd licht aan."
+          ]
+        }
+      }
+    },
+    {
+      "key": "From :stopDate no safe time for bright light remains; keep the dim-light blocks.",
+      "arguments": [
+        "stopDate"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "From %1$@ no safe time for bright light remains; keep the dim-light blocks."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Vanaf %1$@ blijft er geen veilig moment voor fel licht over; houd de blokken met gedimd licht aan."
+          ]
+        }
+      }
+    },
+    {
+      "key": "From :stopDate there is not enough daylight at a safe time; a light box would allow it; keep the dim-light blocks.",
+      "arguments": [
+        "stopDate"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "From %1$@ there is not enough daylight at a safe time; a light box would allow it; keep the dim-light blocks."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Vanaf %1$@ is er te weinig daglicht op een veilig moment; met een lichtbox kan het wel; houd de blokken met gedimd licht aan."
+          ]
+        }
+      }
+    },
+    {
+      "key": "From :stopDate there is not enough daylight at a safe time; keep the dim-light blocks.",
+      "arguments": [
+        "stopDate"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "From %1$@ there is not enough daylight at a safe time; keep the dim-light blocks."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Vanaf %1$@ is er te weinig daglicht op een veilig moment; houd de blokken met gedimd licht aan."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Get up to walk and flex your calves from time to time during the flight.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Get up to walk and flex your calves from time to time during the flight."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Sta tijdens de vlucht af en toe op om te lopen en je kuiten te bewegen."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Good afternoon, :name.",
+      "arguments": [
+        "name"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Good afternoon, %1$@."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Goedemiddag, %1$@."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Good afternoon.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Good afternoon."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Goedemiddag."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Good evening, :name.",
+      "arguments": [
+        "name"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Good evening, %1$@."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Goedenavond, %1$@."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Good evening.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Good evening."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Goedenavond."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Good morning, :name.",
+      "arguments": [
+        "name"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Good morning, %1$@."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Goedemorgen, %1$@."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Good morning.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Good morning."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Goedemorgen."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Have about :mg.",
+      "arguments": [
+        "mg"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Have about %1$@."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Neem ongeveer %1$@."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Have at most :atMostCups of your usual :cups drinks, the last by :lastByUtc.",
+      "arguments": [
+        "atMostCups",
+        "cups",
+        "lastByUtc"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Have at most %1$@ of your usual %2$@ drinks, the last by %3$@."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Neem hooguit %1$@ van je gebruikelijke %2$@ drankjes, het laatste uiterlijk om %3$@."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Have you been told to avoid caffeine?",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Have you been told to avoid caffeine?"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Is je verteld dat je cafeïne moet vermijden?"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Helps break up a long day awake",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Helps break up a long day awake"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Helpt een lange wakkere dag te onderbreken"
+          ]
+        }
+      }
+    },
+    {
+      "key": "How many caffeinated drinks do you usually have in a day?",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "How many caffeinated drinks do you usually have in a day?"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Hoeveel drankjes met cafeïne drink je gewoonlijk per dag?"
+          ]
+        }
+      }
+    },
+    {
+      "key": "How this plan ends",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "How this plan ends"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Hoe dit plan eindigt"
+          ]
+        }
+      }
+    },
+    {
+      "key": "If you also do the optional pre-trip light: :date",
+      "arguments": [
+        "date"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "If you also do the optional pre-trip light: %1$@"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Als je ook het optionele licht voor de reis doet: %1$@"
+          ]
+        }
+      }
+    },
+    {
+      "key": "If you can",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "If you can"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Als het kan"
+          ]
+        }
+      }
+    },
+    {
+      "key": "If you cannot stay awake, go to bed early rather than napping late.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "If you cannot stay awake, go to bed early rather than napping late."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Als je niet wakker kunt blijven, ga dan vroeg naar bed in plaats van laat te dutten."
+          ]
+        }
+      }
+    },
+    {
+      "key": "If you cannot stay awake, nap for under 30 minutes and be up by :untilUtc; after that, stay up until bed.",
+      "arguments": [
+        "untilUtc"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "If you cannot stay awake, nap for under 30 minutes and be up by %1$@; after that, stay up until bed."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Als je niet wakker kunt blijven, doe dan een dutje van minder dan 30 minuten en sta uiterlijk om %1$@ op; blijf daarna op tot bedtijd."
+          ]
+        }
+      }
+    },
+    {
+      "key": "If you must be outside, look away from bright lights; rated blue-blockers help, sunglasses do not count.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "If you must be outside, look away from bright lights; rated blue-blockers help, sunglasses do not count."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Moet je buiten zijn, kijk dan weg van felle lampen; brillen met een bekende blauwlichtwaarde helpen, een zonnebril telt niet."
+          ]
+        }
+      }
+    },
+    {
+      "key": "If you must be outside, stay in the shade with your back to the sun; rated blue-blockers help, sunglasses do not count.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "If you must be outside, stay in the shade with your back to the sun; rated blue-blockers help, sunglasses do not count."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Moet je buiten zijn, blijf dan in de schaduw met je rug naar de zon; brillen met een bekende blauwlichtwaarde helpen, een zonnebril telt niet."
+          ]
+        }
+      }
+    },
+    {
+      "key": "If you notice a marked change in mood, set the plan aside and talk to your doctor.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "If you notice a marked change in mood, set the plan aside and talk to your doctor."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Merk je een duidelijke verandering in je stemming, leg het plan dan opzij en praat met je arts."
+          ]
+        }
+      }
+    },
+    {
+      "key": "If you wake before :untilUtc, keep lights off or very dim.",
+      "arguments": [
+        "untilUtc"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "If you wake before %1$@, keep lights off or very dim."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Word je wakker vóór %1$@, houd het licht dan uit of heel gedimd."
+          ]
+        }
+      }
+    },
+    {
+      "key": "In the past 14 days, have you worked night or rotating shifts, or had a very irregular sleep schedule?",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "In the past 14 days, have you worked night or rotating shifts, or had a very irregular sleep schedule?"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Heb je de afgelopen 14 dagen in nacht- of wisseldiensten gewerkt, of een heel onregelmatig slaapritme gehad?"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Indoor light",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Indoor light"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Binnenlicht"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Indoor light is fine.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Indoor light is fine."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Binnenlicht is prima."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Keep cabin and screen light low.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Keep cabin and screen light low."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Houd het licht in de cabine en op je scherm laag."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Keep caffeine early in the day.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Keep caffeine early in the day."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Houd cafeïne vroeg op de dag."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Keep lights dim and warm.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Keep lights dim and warm."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Houd het licht gedimd en warm."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Keep lights dim from :fromUtc until bed.",
+      "arguments": [
+        "fromUtc"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Keep lights dim from %1$@ until bed."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Houd het licht gedimd vanaf %1$@ tot bedtijd."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Keep lights dim until :untilUtc.",
+      "arguments": [
+        "untilUtc"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Keep lights dim until %1$@."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Houd het licht gedimd tot %1$@."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Keep room lights dim, set screens to minimum, and wear an eye mask when you can (not while eating).",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Keep room lights dim, set screens to minimum, and wear an eye mask when you can (not while eating)."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Houd de verlichting in de kamer gedimd, zet schermen op minimum en draag een slaapmasker als het kan (niet tijdens het eten)."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Keep the shade down, look away from the window and bright screens, set your screen to minimum, and wear an eye mask when you can (not while eating).",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Keep the shade down, look away from the window and bright screens, set your screen to minimum, and wear an eye mask when you can (not while eating)."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Houd het rolgordijn omlaag, kijk weg van het raam en van felle schermen, zet je scherm op minimum en draag een slaapmasker als het kan (niet tijdens het eten)."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Keep your usual caffeine routine; for tonight's sleep, have your last drink by :singleByUtc.",
+      "arguments": [
+        "singleByUtc"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Keep your usual caffeine routine; for tonight's sleep, have your last drink by %1$@."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Houd je gewone cafeïneroutine aan; neem voor je slaap van vanavond je laatste drankje uiterlijk om %1$@."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Keeps your clock moving the right way, which matters most at this time difference; it protects the expected date rather than bringing it forward.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Keeps your clock moving the right way, which matters most at this time difference; it protects the expected date rather than bringing it forward."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Houdt je klok in de goede richting, wat bij dit tijdsverschil het meest telt; het beschermt de verwachte datum in plaats van die te vervroegen."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Keeps your clock moving the right way; it does not change the expected date.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Keeps your clock moving the right way; it does not change the expected date."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Houdt je klok in de goede richting; het verandert de verwachte datum niet."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Layover",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Layover"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Overstap"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Likely adapted; safety margin not yet reached.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Likely adapted; safety margin not yet reached."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Waarschijnlijk aangepast; de veiligheidsmarge is nog niet bereikt."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Little or no caffeine for :days day, below your usual :usualMg a day.",
+      "arguments": [
+        "days",
+        "usualMg"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Little or no caffeine for %1$@ day, below your usual %2$@ a day."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Weinig of geen cafeïne gedurende %1$@ dag, minder dan je gebruikelijke %2$@ per dag."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Little or no caffeine for :days days, below your usual :usualMg a day.",
+      "arguments": [
+        "days",
+        "usualMg"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Little or no caffeine for %1$@ days, below your usual %2$@ a day."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Weinig of geen cafeïne gedurende %1$@ dagen, minder dan je gebruikelijke %2$@ per dag."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Longer nap",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Longer nap"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Langer dutje"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Longer nap, kept to 55 minutes so your morning coffee can stay; it may be lighter sleep.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Longer nap, kept to 55 minutes so your morning coffee can stay; it may be lighter sleep."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Langer dutje, beperkt tot 55 minuten zodat je ochtendkoffie kan blijven; het kan lichtere slaap zijn."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Low sun",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Low sun"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Lage zon"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Movement break",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Movement break"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Beweegpauze"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Movement break: stand up and walk around",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Movement break: stand up and walk around"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Beweegpauze: sta op en loop rond"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Nap",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Nap"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Dutje"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Nap in a seat",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Nap in a seat"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Dutje in een stoel"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Nap on the flight",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Nap on the flight"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Dutje in het vliegtuig"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Next serving from :nextServingUtc.",
+      "arguments": [
+        "nextServingUtc"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Next serving from %1$@."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Volgende portie vanaf %1$@."
+          ]
+        }
+      }
+    },
+    {
+      "key": "No bright light is planned: your stay does not call for shifting your body clock.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "No bright light is planned: your stay does not call for shifting your body clock."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Er is geen fel licht gepland: je verblijf vraagt niet om een verschuiving van je lichaamsklok."
+          ]
+        }
+      }
+    },
+    {
+      "key": "No bright-light block fits today.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "No bright-light block fits today."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Er past vandaag geen blok met fel licht."
+          ]
+        }
+      }
+    },
+    {
+      "key": "No bright-light block fits your arrival day.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "No bright-light block fits your arrival day."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Er past geen blok met fel licht op je aankomstdag."
+          ]
+        }
+      }
+    },
+    {
+      "key": "No bright-light session today.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "No bright-light session today."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Vandaag geen sessie met fel licht."
+          ]
+        }
+      }
+    },
+    {
+      "key": "No caffeine is planned for your afternoon dip today.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "No caffeine is planned for your afternoon dip today."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Voor je middagdip is vandaag geen cafeïne gepland."
+          ]
+        }
+      }
+    },
+    {
+      "key": "No caffeine is planned today.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "No caffeine is planned today."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Vandaag is geen cafeïne gepland."
+          ]
+        }
+      }
+    },
+    {
+      "key": "No caffeine now, around your nap.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "No caffeine now, around your nap."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Nu geen cafeïne, vanwege je dutje."
+          ]
+        }
+      }
+    },
+    {
+      "key": "No caffeine now, to protect tonight's sleep.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "No caffeine now, to protect tonight's sleep."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Nu geen cafeïne, om je slaap van vanavond te beschermen."
+          ]
+        }
+      }
+    },
+    {
+      "key": "No caffeine now: it would cut into your sleep.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "No caffeine: it would cut into your sleep."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Geen cafeïne: het zou je slaap verstoren."
+          ]
+        }
+      }
+    },
+    {
+      "key": "No caffeine until :untilUtc while you travel.",
+      "arguments": [
+        "untilUtc"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "No caffeine until %1$@ while you travel."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Geen cafeïne tot %1$@ terwijl je reist."
+          ]
+        }
+      }
+    },
+    {
+      "key": "No caffeine until :untilUtc, after your nap.",
+      "arguments": [
+        "untilUtc"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "No caffeine until %1$@, after your nap."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Geen cafeïne tot %1$@, na je dutje."
+          ]
+        }
+      }
+    },
+    {
+      "key": "No caffeine until :untilUtc, to protect tonight's sleep.",
+      "arguments": [
+        "untilUtc"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "No caffeine until %1$@, to protect tonight's sleep."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Geen cafeïne tot %1$@, om je slaap van vanavond te beschermen."
+          ]
+        }
+      }
+    },
+    {
+      "key": "No caffeine until :untilUtc: it would cut into your sleep.",
+      "arguments": [
+        "untilUtc"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "No caffeine until %1$@: it would cut into your sleep."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Geen cafeïne tot %1$@: het zou je slaap verstoren."
+          ]
+        }
+      }
+    },
+    {
+      "key": "No caffeine while you travel.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "No caffeine while you travel."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Geen cafeïne terwijl je reist."
+          ]
+        }
+      }
+    },
+    {
+      "key": "No more caffeine is planned until the end of this plan.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "No more caffeine is planned until the end of this plan."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Er is tot het einde van dit plan geen cafeïne meer gepland."
+          ]
+        }
+      }
+    },
+    {
+      "key": "No room yet",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "No room yet"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Nog geen kamer"
+          ]
+        }
+      }
+    },
+    {
+      "key": "No safe time for bright light remains today.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "No safe time for bright light remains today."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Er is vandaag geen veilig moment voor fel licht meer."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Normal cabin light.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Normal cabin light."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Normaal cabinelicht."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Normal indoor light.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Normal indoor light."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Normaal binnenlicht."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Normal light is fine",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Normal light is fine"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Normaal licht is prima"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Normal light is fine.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Normal light is fine."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Normaal licht is prima."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Normal light is fine; daylight helps you stay alert.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Normal light is fine; daylight helps you stay alert."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Normaal licht is prima; daglicht helpt je alert te blijven."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Not enough credits",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Not enough credits"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Niet genoeg credits"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Note",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Note"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Notitie"
+          ]
+        }
+      }
+    },
+    {
+      "key": "On the way, keep your screen dim and your eyes closed when you can.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "On the way, keep your screen dim and your eyes closed when you can."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Houd onderweg je scherm gedimd en je ogen dicht als het kan."
+          ]
+        }
+      }
+    },
+    {
+      "key": "On the way, take the shaded side and look away from bright daylight.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "On the way, take the shaded side and look away from bright daylight."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Kies onderweg de schaduwkant en kijk weg van fel daglicht."
+          ]
+        }
+      }
+    },
+    {
+      "key": "On your flight to :place, a seat on the left side may let you see more daylight.",
+      "arguments": [
+        "place"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "On your flight to %1$@, a seat on the left side may let you see more daylight."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Op je vlucht naar %1$@ kun je in een stoel aan de linkerkant misschien meer daglicht zien."
+          ]
+        }
+      }
+    },
+    {
+      "key": "On your flight to :place, a seat on the right side may let you see more daylight.",
+      "arguments": [
+        "place"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "On your flight to %1$@, a seat on the right side may let you see more daylight."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Op je vlucht naar %1$@ kun je in een stoel aan de rechterkant misschien meer daglicht zien."
+          ]
+        }
+      }
+    },
+    {
+      "key": "One pre-trip day is too few to shift your body clock usefully; choose 2 or more.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "One pre-trip day is too few to shift your body clock usefully; choose 2 or more."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Eén dag voor de reis is te weinig om je lichaamsklok zinvol te verschuiven; kies er 2 of meer."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Optional bright-light sessions continue until :lastSeekDate.",
+      "arguments": [
+        "lastSeekDate"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Optional bright-light sessions continue until %1$@."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Optionele sessies met fel licht lopen door tot %1$@."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Optional preparation",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Optional preparation"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Optionele voorbereiding"
+          ]
+        }
+      }
+    },
+    {
+      "key": "PM",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "PM"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "p.m."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Partial target for your stay: about :shortMin short of local time when you leave.",
+      "arguments": [
+        "shortMin"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Partial target for your stay: about %1$@ short of local time when you leave."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Gedeeltelijk doel voor je verblijf: ongeveer %1$@ achter op de lokale tijd als je vertrekt."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Partly adapted",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Partly adapted"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Gedeeltelijk aangepast"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Partly adapted from about :atUtc",
+      "arguments": [
+        "atUtc"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Partly adapted from about %1$@"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Gedeeltelijk aangepast vanaf ongeveer %1$@"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Pick at least one category.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Pick at least one category."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Kies minstens één categorie."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Plan started on :date",
+      "arguments": [
+        "date"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Plan started on %1$@"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Plan begon op %1$@"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Plan starts on :date",
+      "arguments": [
+        "date"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Plan starts on %1$@"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Plan begint op %1$@"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Plan starts today",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Plan starts today"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Plan begint vandaag"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Plan starts tomorrow",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Plan starts tomorrow"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Plan begint morgen"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Please fill this in.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Please fill this in."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Vul dit veld in."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Pre-trip light and dim-light sessions are optional on this trip because they do not change your expected date, :date; the planned bedtimes still apply.",
+      "arguments": [
+        "date"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Pre-trip light and dim-light sessions are optional on this trip because they do not change your expected date, %1$@; the planned bedtimes still apply."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Sessies met licht en met gedimd licht voor de reis zijn bij deze reis optioneel, omdat ze je verwachte datum, %1$@, niet veranderen; de geplande bedtijden blijven gelden."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Pre-trip shifting is skipped.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Pre-trip shifting is skipped."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Verschuiven voor de reis wordt overgeslagen."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Protect a slower clock",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Protect a slower clock"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Bescherm een tragere klok"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Protect your sleep tonight: keep the evening quiet and dim.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Protect your sleep tonight: keep the evening quiet and dim."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Bescherm je slaap vanavond: houd de avond rustig en gedimd."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Recovery sleep on the flight",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Recovery sleep on the flight"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Herstelslaap in het vliegtuig"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Required bright-light sessions end around :lastCoreSeekDate.",
+      "arguments": [
+        "lastCoreSeekDate"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Required bright-light sessions end around %1$@."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Verplichte sessies met fel licht eindigen rond %1$@."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Required bright-light sessions end around :lastCoreSeekDate; optional ones continue until :lastSeekDate.",
+      "arguments": [
+        "lastCoreSeekDate",
+        "lastSeekDate"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Required bright-light sessions end around %1$@; optional ones continue until %2$@."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Verplichte sessies met fel licht eindigen rond %1$@; optionele lopen door tot %2$@."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Rest",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Rest"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Rust"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Rest with an eye mask; even light sleep helps.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Rest with an eye mask; even light sleep helps."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Rust met een slaapmasker; ook lichte slaap helpt."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Seek bright light",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Seek bright light"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Zoek fel licht"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Shifting before you go would not change the expected outcome of this trip.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Shifting before you go would not change the expected outcome of this trip."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Verschuiven voordat je gaat zou de verwachte uitkomst van deze reis niet veranderen."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Short dim-light blocks continue to protect a slower clock until :slowerClockUntilDate.",
+      "arguments": [
+        "slowerClockUntilDate"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Short dim-light blocks continue to protect a slower clock until %1$@."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Korte blokken met gedimd licht beschermen een tragere klok tot %1$@."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Short dim-light blocks continue to protect a slower clock until this plan ends.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Short dim-light blocks continue to protect a slower clock until this plan ends."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Korte blokken met gedimd licht beschermen een tragere klok tot dit plan eindigt."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Short dim-light blocks continue to protect a slower clock until you leave.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Short dim-light blocks continue to protect a slower clock until you leave."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Korte blokken met gedimd licht beschermen een tragere klok tot je vertrekt."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Short nap",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Short nap"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Kort dutje"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Shortened",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Shortened"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Ingekort"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Sit away from bright displays and shop lights, set your screen to minimum and keep your eyes closed when you can; rated blue-blockers help.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Sit away from bright displays and shop lights, set your screen to minimum and keep your eyes closed when you can; rated blue-blockers help."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Zit uit de buurt van felle schermen en winkelverlichting, zet je scherm op minimum en houd je ogen dicht als het kan; brillen met een bekende blauwlichtwaarde helpen."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Sit away from the brightest lights and screens, set your screen to minimum, and keep your eyes closed when you can.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Sit away from the brightest lights and screens, set your screen to minimum, and keep your eyes closed when you can."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Ga uit de buurt van de felste lampen en schermen zitten, zet je scherm op minimum en houd je ogen dicht als het kan."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Sit or stand away from windows, take the shaded side, look away from bright daylight, and keep your eyes closed when you can.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Sit or stand away from windows, take the shaded side, look away from bright daylight, and keep your eyes closed when you can."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Zit of sta uit de buurt van ramen, kies de schaduwkant, kijk weg van fel daglicht en houd je ogen dicht als het kan."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Sleep",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Sleep"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Slapen"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Sleep on the flight",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Sleep on the flight"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Slapen in het vliegtuig"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Small shift: daylight helps after :untilUtc.",
+      "arguments": [
+        "untilUtc"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Small shift: daylight helps after %1$@."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Kleine verschuiving: daglicht helpt na %1$@."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Small shift: if you can, keep lights dim from :fromUtc until bed.",
+      "arguments": [
+        "fromUtc"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Small shift: if you can, keep lights dim from %1$@ until bed."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Kleine verschuiving: houd het licht, als het kan, gedimd vanaf %1$@ tot bedtijd."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Small shift; your usual routine is fine from here.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Small shift; your usual routine is fine from here."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Kleine verschuiving; je gewone routine is vanaf hier prima."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Still adapting, about :remainingMin remaining.",
+      "arguments": [
+        "remainingMin"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Still adapting, about %1$@ remaining."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Nog aan het aanpassen, ongeveer %1$@ te gaan."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Tell us your age group to get your plan.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Tell us your age group to get your plan."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Geef je leeftijdsgroep door om je plan te krijgen."
+          ]
+        }
+      }
+    },
+    {
+      "key": "The :attribute field is invalid.",
+      "arguments": [
+        "attribute"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "The %1$@ field is invalid."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Het veld %1$@ is ongeldig."
+          ]
+        }
+      }
+    },
+    {
+      "key": "The forecast for this trip is uncertain; your adaptation date may differ from the one shown.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "The forecast for this trip is uncertain; your adaptation date may differ from the one shown."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "De voorspelling voor deze reis is onzeker; je aanpassingsdatum kan afwijken van de getoonde."
+          ]
+        }
+      }
+    },
+    {
+      "key": "The hours you marked as busy leave no room for bright light today.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "The hours you marked as busy leave no room for bright light today."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "De uren die je als bezet markeerde laten vandaag geen ruimte voor fel licht."
+          ]
+        }
+      }
+    },
+    {
+      "key": "The hours you marked as busy leave no time for the morning light a pre-trip shift needs.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "The hours you marked as busy leave no time for the morning light a pre-trip shift needs."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "De uren die je als bezet markeerde laten geen tijd voor het ochtendlicht dat een verschuiving voor de reis nodig heeft."
+          ]
+        }
+      }
+    },
+    {
+      "key": "The latest wake-up time you gave leaves no room to shift before you go.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "The latest wake-up time you gave leaves no room to shift before you go."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "De laatste opstatijd die je opgaf laat geen ruimte om te verschuiven voordat je gaat."
+          ]
+        }
+      }
+    },
+    {
+      "key": "The plan holds at a partial target: short dim-light blocks keep the shift you have made.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "The plan holds at a partial target: short dim-light blocks keep the shift you have made."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Het plan blijft bij een gedeeltelijk doel: korte blokken met gedimd licht behouden de verschuiving die je hebt gemaakt."
+          ]
+        }
+      }
+    },
+    {
+      "key": "The plan holds at a partial target: short dim-light blocks keep the shift you have made; about :shortMin short of local time when you leave.",
+      "arguments": [
+        "shortMin"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "The plan holds at a partial target: short dim-light blocks keep the shift you have made; about %1$@ short of local time when you leave."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Het plan blijft bij een gedeeltelijk doel: korte blokken met gedimd licht behouden de verschuiving die je hebt gemaakt; ongeveer %1$@ achter op de lokale tijd als je vertrekt."
+          ]
+        }
+      }
+    },
+    {
+      "key": "The plan holds at a partial target: short dim-light blocks keep the shift you have made; your clock is expected to catch up by :expectedAdaptedDate.",
+      "arguments": [
+        "expectedAdaptedDate"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "The plan holds at a partial target: short dim-light blocks keep the shift you have made; your clock is expected to catch up by %1$@."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Het plan blijft bij een gedeeltelijk doel: korte blokken met gedimd licht behouden de verschuiving die je hebt gemaakt; je klok haalt het naar verwachting in tegen %1$@."
+          ]
+        }
+      }
+    },
+    {
+      "key": "The plan moves your body clock earlier, towards your destination's time.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "The plan moves your body clock earlier, towards your destination's time."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Het plan zet je lichaamsklok vroeger, richting de tijd van je bestemming."
+          ]
+        }
+      }
+    },
+    {
+      "key": "The plan moves your body clock later, towards your destination's time.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "The plan moves your body clock later, towards your destination's time."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Het plan zet je lichaamsklok later, richting de tijd van je bestemming."
+          ]
+        }
+      }
+    },
+    {
+      "key": "The planner cannot use this value.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "The planner cannot use this value."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Het plan kan deze waarde niet gebruiken."
+          ]
+        }
+      }
+    },
+    {
+      "key": "There is not enough daylight at a safe time today; a light box would allow it.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "There is not enough daylight at a safe time today; a light box would allow it."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Er is vandaag te weinig daglicht op een veilig moment; met een lichtbox kan het wel."
+          ]
+        }
+      }
+    },
+    {
+      "key": "There is not enough morning daylight before your trip.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "There is not enough morning daylight before your trip."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Er is voor je reis te weinig ochtenddaglicht."
+          ]
+        }
+      }
+    },
+    {
+      "key": "There is not enough morning daylight before your trip. A light device could add up to :deviceMin.",
+      "arguments": [
+        "deviceMin"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "There is not enough morning daylight before your trip. A light device could add up to %1$@."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Er is voor je reis te weinig ochtenddaglicht. Een lichtapparaat kan tot %1$@ toevoegen."
+          ]
+        }
+      }
+    },
+    {
+      "key": "There is too little time left before your trip to shift usefully.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "There is too little time left before your trip to shift usefully."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Er is te weinig tijd voor je reis over om zinvol te verschuiven."
+          ]
+        }
+      }
+    },
+    {
+      "key": "This plan has changed. Refresh it before marking this step.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "This plan has changed. Refresh it before marking this step."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Dit plan is gewijzigd. Vernieuw het voordat je deze stap afvinkt."
+          ]
+        }
+      }
+    },
+    {
+      "key": "This plan is not available for travellers under 18.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "This plan is not available for travellers under 18."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Dit plan is niet beschikbaar voor reizigers onder de 18."
+          ]
+        }
+      }
+    },
+    {
+      "key": "This plan is not available if, in the past 14 days, you have worked night or rotating shifts or had a very irregular sleep schedule.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "This plan is not available if, in the past 14 days, you have worked night or rotating shifts or had a very irregular sleep schedule."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Dit plan is niet beschikbaar als je de afgelopen 14 dagen in nacht- of wisseldiensten hebt gewerkt of een heel onregelmatig slaapritme had."
+          ]
+        }
+      }
+    },
+    {
+      "key": "This plan shifts your clock part of the way. When this plan ends, it is expected to be about :shortMin from local time.",
+      "arguments": [
+        "shortMin"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "This plan shifts your clock part of the way. When this plan ends, it is expected to be about %1$@ from local time."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Dit plan verschuift je klok gedeeltelijk. Als dit plan eindigt, wijkt je klok naar verwachting nog ongeveer %1$@ af van de lokale tijd."
+          ]
+        }
+      }
+    },
+    {
+      "key": "This plan shifts your clock part of the way. When you leave, it is expected to be about :shortMin from local time.",
+      "arguments": [
+        "shortMin"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "This plan shifts your clock part of the way. When you leave, it is expected to be about %1$@ from local time."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Dit plan verschuift je klok gedeeltelijk. Bij vertrek wijkt je klok naar verwachting nog ongeveer %1$@ af van de lokale tijd."
+          ]
+        }
+      }
+    },
+    {
+      "key": "This setting cannot be changed here.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "This setting cannot be changed here."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Deze instelling kan hier niet worden gewijzigd."
+          ]
+        }
+      }
+    },
+    {
+      "key": "This step cannot be checked off.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "This step cannot be checked off."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Deze stap kan niet worden afgevinkt."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Time-zone change",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Time-zone change"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Tijdzonewissel"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Times from here are :arrivalCity time (:offsetMin from :departureCity)",
+      "arguments": [
+        "arrivalCity",
+        "offsetMin",
+        "departureCity"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Times from here are %1$@ time (%2$@ from %3$@)"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Tijden vanaf hier zijn %1$@-tijd (%2$@ ten opzichte van %3$@)"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Tomorrow your plan for :city begins.",
+      "arguments": [
+        "city"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Tomorrow your plan for %1$@ begins."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Morgen begint je plan voor %1$@."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Travel day",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Travel day"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Reisdag"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Travel · arrival night",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Travel · arrival night"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Reis · aankomstnacht"
+          ]
+        }
+      }
+    },
+    {
+      "key": "We could not update this trip. Check your request and try again.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "We could not update this trip. Check your request and try again."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "We konden deze reis niet bijwerken. Controleer je verzoek en probeer het opnieuw."
+          ]
+        }
+      }
+    },
+    {
+      "key": "We shift your clock :shift earlier during your trip.",
+      "arguments": [
+        "shift"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "We shift your clock %1$@ earlier during your trip."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "We verschuiven je klok %1$@ vroeger tijdens je reis."
+          ]
+        }
+      }
+    },
+    {
+      "key": "We shift your clock :shift earlier during your trip. Your trip home is planned too.",
+      "arguments": [
+        "shift"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "We shift your clock %1$@ earlier during your trip. Your trip home is planned too."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "We verschuiven je klok %1$@ vroeger tijdens je reis. Je reis naar huis staat ook in je plan."
+          ]
+        }
+      }
+    },
+    {
+      "key": "We shift your clock :shift earlier, starting :count day before you leave. Your trip home is planned too.|We shift your clock :shift earlier, starting :count days before you leave. Your trip home is planned too.",
+      "arguments": [
+        "shift",
+        "count"
+      ],
+      "languages": {
+        "en": {
+          "kind": "plural",
+          "formats": [
+            "We shift your clock %1$@ earlier, starting %2$@ day before you leave. Your trip home is planned too.",
+            "We shift your clock %1$@ earlier, starting %2$@ days before you leave. Your trip home is planned too."
+          ]
+        },
+        "nl": {
+          "kind": "plural",
+          "formats": [
+            "We verschuiven je klok %1$@ vroeger, vanaf %2$@ dag voor je vertrek. Je reis naar huis staat ook in je plan.",
+            "We verschuiven je klok %1$@ vroeger, vanaf %2$@ dagen voor je vertrek. Je reis naar huis staat ook in je plan."
+          ]
+        }
+      }
+    },
+    {
+      "key": "We shift your clock :shift earlier, starting :count day before you leave.|We shift your clock :shift earlier, starting :count days before you leave.",
+      "arguments": [
+        "shift",
+        "count"
+      ],
+      "languages": {
+        "en": {
+          "kind": "plural",
+          "formats": [
+            "We shift your clock %1$@ earlier, starting %2$@ day before you leave.",
+            "We shift your clock %1$@ earlier, starting %2$@ days before you leave."
+          ]
+        },
+        "nl": {
+          "kind": "plural",
+          "formats": [
+            "We verschuiven je klok %1$@ vroeger, vanaf %2$@ dag voor je vertrek.",
+            "We verschuiven je klok %1$@ vroeger, vanaf %2$@ dagen voor je vertrek."
+          ]
+        }
+      }
+    },
+    {
+      "key": "We shift your clock :shift later during your trip.",
+      "arguments": [
+        "shift"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "We shift your clock %1$@ later during your trip."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "We verschuiven je klok %1$@ later tijdens je reis."
+          ]
+        }
+      }
+    },
+    {
+      "key": "We shift your clock :shift later during your trip. Your trip home is planned too.",
+      "arguments": [
+        "shift"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "We shift your clock %1$@ later during your trip. Your trip home is planned too."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "We verschuiven je klok %1$@ later tijdens je reis. Je reis naar huis staat ook in je plan."
+          ]
+        }
+      }
+    },
+    {
+      "key": "We shift your clock :shift later, starting :count day before you leave. Your trip home is planned too.|We shift your clock :shift later, starting :count days before you leave. Your trip home is planned too.",
+      "arguments": [
+        "shift",
+        "count"
+      ],
+      "languages": {
+        "en": {
+          "kind": "plural",
+          "formats": [
+            "We shift your clock %1$@ later, starting %2$@ day before you leave. Your trip home is planned too.",
+            "We shift your clock %1$@ later, starting %2$@ days before you leave. Your trip home is planned too."
+          ]
+        },
+        "nl": {
+          "kind": "plural",
+          "formats": [
+            "We verschuiven je klok %1$@ later, vanaf %2$@ dag voor je vertrek. Je reis naar huis staat ook in je plan.",
+            "We verschuiven je klok %1$@ later, vanaf %2$@ dagen voor je vertrek. Je reis naar huis staat ook in je plan."
+          ]
+        }
+      }
+    },
+    {
+      "key": "We shift your clock :shift later, starting :count day before you leave.|We shift your clock :shift later, starting :count days before you leave.",
+      "arguments": [
+        "shift",
+        "count"
+      ],
+      "languages": {
+        "en": {
+          "kind": "plural",
+          "formats": [
+            "We shift your clock %1$@ later, starting %2$@ day before you leave.",
+            "We shift your clock %1$@ later, starting %2$@ days before you leave."
+          ]
+        },
+        "nl": {
+          "kind": "plural",
+          "formats": [
+            "We verschuiven je klok %1$@ later, vanaf %2$@ dag voor je vertrek.",
+            "We verschuiven je klok %1$@ later, vanaf %2$@ dagen voor je vertrek."
+          ]
+        }
+      }
+    },
+    {
+      "key": "What is the latest you can wake up on the days before you leave?",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "What is the latest you can wake up on the days before you leave?"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Hoe laat kun je op zijn laatst opstaan op de dagen voor je vertrek?"
+          ]
+        }
+      }
+    },
+    {
+      "key": "What time do you go to bed and wake up on free days?",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "What time do you go to bed and wake up on free days?"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Hoe laat ga je op vrije dagen naar bed en sta je op?"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Which age group are you in?",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Which age group are you in?"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "In welke leeftijdsgroep zit je?"
+          ]
+        }
+      }
+    },
+    {
+      "key": "Which hours before you leave are you busy, so the plan keeps them free of light and naps?",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Which hours before you leave are you busy, so the plan keeps them free of light and naps?"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Op welke uren voor je vertrek ben je bezet, zodat het plan die vrijhoudt van licht en dutjes?"
+          ]
+        }
+      }
+    },
+    {
+      "key": "While you leave the plane and walk through the airport, look away from bright daylight.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "While you leave the plane and walk through the airport, look away from bright daylight."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Kijk terwijl je het vliegtuig verlaat en door het vliegveld loopt weg van fel daglicht."
+          ]
+        }
+      }
+    },
+    {
+      "key": "While you leave the plane and walk through the airport, look away from bright lights.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "While you leave the plane and walk through the airport, look away from bright lights."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Kijk terwijl je het vliegtuig verlaat en door het vliegveld loopt weg van felle lampen."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Will you have a room in :place when you land, and from what time?",
+      "arguments": [
+        "place"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Will you have a room in %1$@ when you land, and from what time?"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Heb je bij aankomst een kamer in %1$@, en vanaf hoe laat?"
+          ]
+        }
+      }
+    },
+    {
+      "key": "With this plan, you're expected to be adapted by :expectedAdaptedDate. If your clock shifts more slowly, it may take longer than this plan.",
+      "arguments": [
+        "expectedAdaptedDate"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "With this plan, you're expected to be adapted by %1$@. If your clock shifts more slowly, it may take longer than this plan."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Met dit plan ben je naar verwachting aangepast op %1$@. Als je klok langzamer verschuift, kan het langer duren dan dit plan."
+          ]
+        }
+      }
+    },
+    {
+      "key": "With this plan, you're expected to be adapted by :expectedAdaptedDate. If your clock shifts more slowly, it may take until :slowDate.",
+      "arguments": [
+        "expectedAdaptedDate",
+        "slowDate"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "With this plan, you're expected to be adapted by %1$@. If your clock shifts more slowly, it may take until %2$@."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Met dit plan ben je naar verwachting aangepast op %1$@. Als je klok langzamer verschuift, kan het tot %2$@ duren."
+          ]
+        }
+      }
+    },
+    {
+      "key": "You gave no latest wake-up time, so the plan wakes you at most an hour later than usual.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "You gave no latest wake-up time, so the plan wakes you at most an hour later than usual."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Je hebt geen laatste opstatijd opgegeven, dus het plan laat je hooguit een uur later opstaan dan gebruikelijk."
+          ]
+        }
+      }
+    },
+    {
+      "key": "You may take a while to fall asleep; this can happen while your body clock adjusts.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "You may take a while to fall asleep; this can happen while your body clock adjusts."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Het kan even duren voor je in slaap valt; dat kan gebeuren terwijl je lichaamsklok zich aanpast."
+          ]
+        }
+      }
+    },
+    {
+      "key": "You may take longer to fall asleep.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "You may take longer to fall asleep."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Het kan zijn dat je er langer over doet om in slaap te vallen."
+          ]
+        }
+      }
+    },
+    {
+      "key": "You may wake for a while in the night; stay in the dark until :untilUtc.",
+      "arguments": [
+        "untilUtc"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "You may wake for a while in the night; stay in the dark until %1$@."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Je kunt 's nachts een tijd wakker liggen; blijf in het donker tot %1$@."
+          ]
+        }
+      }
+    },
+    {
+      "key": "You slept under 6 hours in two nights in a row. Take it easy and protect tonight's sleep.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "You slept under 6 hours in two nights in a row. Take it easy and protect tonight's sleep."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Je sliep twee nachten achter elkaar minder dan 6 uur. Doe rustig aan en bescherm je slaap van vanavond."
+          ]
+        }
+      }
+    },
+    {
+      "key": "You told us about a diagnosed sleep-timing disorder: a shift may take longer, so talk to your doctor about the plan.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "You told us about a diagnosed sleep-timing disorder: a shift may take longer, so talk to your doctor about the plan."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Je gaf een gediagnosticeerde slaapritmestoornis door: een verschuiving kan langer duren, dus bespreek het plan met je arts."
+          ]
+        }
+      }
+    },
+    {
+      "key": "You usually sleep late on free days, so an earlier clock may take longer to settle.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "You usually sleep late on free days, so an earlier clock may take longer to settle."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Je slaapt op vrije dagen meestal laat, dus een vroegere klok kan langer nodig hebben om te wennen."
+          ]
+        }
+      }
+    },
+    {
+      "key": "You will have been awake for over 20 hours. Rest as soon as you can.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "You will have been awake for over 20 hours. Rest as soon as you can."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Je bent dan meer dan 20 uur wakker. Rust zodra je kunt."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Your body clock needs only a small shift, so there is no pre-trip shifting.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Your body clock needs only a small shift, so there is no pre-trip shifting."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Je lichaamsklok hoeft maar een klein stukje te verschuiven, dus er is geen verschuiving voor de reis."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Your body clock runs late, so morning light cannot start shifting you before the trip.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Your body clock runs late, so morning light cannot start shifting you before the trip."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Je lichaamsklok loopt laat, dus ochtendlicht kan je voor de reis nog niet vroeger zetten."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Your body clock stays close to its usual time, so no shift is planned.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Your body clock stays close to its usual time, so no shift is planned."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Je lichaamsklok blijft dicht bij de gewone tijd, dus er is geen verschuiving gepland."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Your body clock would not keep up with later bedtimes before the trip.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Your body clock would not keep up with later bedtimes before the trip."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Je lichaamsklok zou het later naar bed gaan voor de reis niet bijhouden."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Your caffeine is capped at about :capMg today.",
+      "arguments": [
+        "capMg"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Your caffeine is capped at about %1$@ today."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Je cafeïne is vandaag beperkt tot ongeveer %1$@."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Your draft has expired. Start your trip again.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Your draft has expired. Start your trip again."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Je concept is verlopen. Begin opnieuw met je reis."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Your early flight leaves no room to shift before you go.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Your early flight leaves no room to shift before you go."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Je vroege vlucht laat geen ruimte om te verschuiven voordat je gaat."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Your plan for :city is underway.",
+      "arguments": [
+        "city"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Your plan for %1$@ is underway."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Je plan voor %1$@ is begonnen."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Your plan for :city starts today.",
+      "arguments": [
+        "city"
+      ],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Your plan for %1$@ starts today."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Je plan voor %1$@ begint vandaag."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Your plan keeps your clock on your home time.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Your plan keeps your clock on your home time."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Je plan houdt je klok op je thuistijd."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Your return plan starts now.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Your return plan starts now."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Je terugplan begint nu."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Your sleep falls at a poor body-clock time; expect lighter sleep.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Your sleep falls at a poor body-clock time; expect lighter sleep."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Je slaap valt op een ongunstig moment voor je lichaamsklok; verwacht lichtere slaap."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Your travel leaves no room for a bright-light block today.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Your travel leaves no room for a bright-light block today."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Je reis laat vandaag geen ruimte voor een blok met fel licht."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Your trip needs little or no clock shift. Your plan keeps you on your usual routine.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Your trip needs little or no clock shift. Your plan keeps you on your usual routine."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Je reis vraagt weinig of geen verschuiving van je biologische klok. Je plan houdt je op je gebruikelijke ritme."
+          ]
+        }
+      }
+    },
+    {
+      "key": "Your trips, at a glance.",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "Your trips, at a glance."
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "Je reizen in één overzicht."
+          ]
+        }
+      }
+    },
+    {
+      "key": "airport transfer",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "airport transfer"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "transfer naar de luchthaven"
+          ]
+        }
+      }
+    },
+    {
+      "key": "flight departure",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "flight departure"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "vertrekkende vlucht"
+          ]
+        }
+      }
+    },
+    {
+      "key": "half a can of energy drink|:amount cans of energy drink",
+      "arguments": [
+        "amount"
+      ],
+      "languages": {
+        "en": {
+          "kind": "coded",
+          "cases": [
+            {
+              "bound": 1,
+              "exact": true,
+              "format": "half a can of energy drink"
+            },
+            {
+              "bound": 2,
+              "exact": true,
+              "format": "one can of energy drink"
+            },
+            {
+              "bound": 3,
+              "exact": true,
+              "format": "%1$@ cans of energy drink"
+            },
+            {
+              "bound": 4,
+              "exact": true,
+              "format": "two cans of energy drink"
+            },
+            {
+              "bound": 5,
+              "exact": false,
+              "format": "%1$@ cans of energy drink"
+            }
+          ]
+        },
+        "nl": {
+          "kind": "coded",
+          "cases": [
+            {
+              "bound": 1,
+              "exact": true,
+              "format": "een half blikje energiedrank"
+            },
+            {
+              "bound": 2,
+              "exact": true,
+              "format": "één blikje energiedrank"
+            },
+            {
+              "bound": 3,
+              "exact": true,
+              "format": "%1$@ blikje energiedrank"
+            },
+            {
+              "bound": 4,
+              "exact": true,
+              "format": "twee blikjes energiedrank"
+            },
+            {
+              "bound": 5,
+              "exact": false,
+              "format": "%1$@ blikjes energiedrank"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "half a can of soft drink|:amount cans of soft drink",
+      "arguments": [
+        "amount"
+      ],
+      "languages": {
+        "en": {
+          "kind": "coded",
+          "cases": [
+            {
+              "bound": 1,
+              "exact": true,
+              "format": "half a can of soft drink"
+            },
+            {
+              "bound": 2,
+              "exact": true,
+              "format": "one can of soft drink"
+            },
+            {
+              "bound": 3,
+              "exact": true,
+              "format": "%1$@ cans of soft drink"
+            },
+            {
+              "bound": 4,
+              "exact": true,
+              "format": "two cans of soft drink"
+            },
+            {
+              "bound": 5,
+              "exact": false,
+              "format": "%1$@ cans of soft drink"
+            }
+          ]
+        },
+        "nl": {
+          "kind": "coded",
+          "cases": [
+            {
+              "bound": 1,
+              "exact": true,
+              "format": "een half blikje frisdrank"
+            },
+            {
+              "bound": 2,
+              "exact": true,
+              "format": "één blikje frisdrank"
+            },
+            {
+              "bound": 3,
+              "exact": true,
+              "format": "%1$@ blikje frisdrank"
+            },
+            {
+              "bound": 4,
+              "exact": true,
+              "format": "twee blikjes frisdrank"
+            },
+            {
+              "bound": 5,
+              "exact": false,
+              "format": "%1$@ blikjes frisdrank"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "half a cup of coffee|:amount cups of coffee",
+      "arguments": [
+        "amount"
+      ],
+      "languages": {
+        "en": {
+          "kind": "coded",
+          "cases": [
+            {
+              "bound": 1,
+              "exact": true,
+              "format": "half a cup of coffee"
+            },
+            {
+              "bound": 2,
+              "exact": true,
+              "format": "one cup of coffee"
+            },
+            {
+              "bound": 3,
+              "exact": true,
+              "format": "%1$@ cups of coffee"
+            },
+            {
+              "bound": 4,
+              "exact": true,
+              "format": "two cups of coffee"
+            },
+            {
+              "bound": 5,
+              "exact": false,
+              "format": "%1$@ cups of coffee"
+            }
+          ]
+        },
+        "nl": {
+          "kind": "coded",
+          "cases": [
+            {
+              "bound": 1,
+              "exact": true,
+              "format": "een half kopje koffie"
+            },
+            {
+              "bound": 2,
+              "exact": true,
+              "format": "één kopje koffie"
+            },
+            {
+              "bound": 3,
+              "exact": true,
+              "format": "%1$@ kopje koffie"
+            },
+            {
+              "bound": 4,
+              "exact": true,
+              "format": "twee kopjes koffie"
+            },
+            {
+              "bound": 5,
+              "exact": false,
+              "format": "%1$@ kopjes koffie"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "half a cup of tea|:amount cups of tea",
+      "arguments": [
+        "amount"
+      ],
+      "languages": {
+        "en": {
+          "kind": "coded",
+          "cases": [
+            {
+              "bound": 1,
+              "exact": true,
+              "format": "half a cup of tea"
+            },
+            {
+              "bound": 2,
+              "exact": true,
+              "format": "one cup of tea"
+            },
+            {
+              "bound": 3,
+              "exact": true,
+              "format": "%1$@ cups of tea"
+            },
+            {
+              "bound": 4,
+              "exact": true,
+              "format": "two cups of tea"
+            },
+            {
+              "bound": 5,
+              "exact": false,
+              "format": "%1$@ cups of tea"
+            }
+          ]
+        },
+        "nl": {
+          "kind": "coded",
+          "cases": [
+            {
+              "bound": 1,
+              "exact": true,
+              "format": "een half kopje thee"
+            },
+            {
+              "bound": 2,
+              "exact": true,
+              "format": "één kopje thee"
+            },
+            {
+              "bound": 3,
+              "exact": true,
+              "format": "%1$@ kopje thee"
+            },
+            {
+              "bound": 4,
+              "exact": true,
+              "format": "twee kopjes thee"
+            },
+            {
+              "bound": 5,
+              "exact": false,
+              "format": "%1$@ kopjes thee"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "late landing",
+      "arguments": [],
+      "languages": {
+        "en": {
+          "kind": "single",
+          "formats": [
+            "late landing"
+          ]
+        },
+        "nl": {
+          "kind": "single",
+          "formats": [
+            "late aankomst"
+          ]
+        }
+      }
+    }
+  ]
+}

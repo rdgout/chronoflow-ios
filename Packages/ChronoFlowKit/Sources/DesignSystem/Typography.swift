@@ -48,6 +48,23 @@ public enum Typography {
         #endif
     }
 
+    public static var planTitle: Style {
+        Style(face: PlanTypeMetrics.planTitleFace, metrics: PlanTypeMetrics.planTitle, relativeTo: .headline)
+    }
+    public static var planSubtitle: Style {
+        Style(face: PlanTypeMetrics.planSubtitleFace, metrics: PlanTypeMetrics.planSubtitle, relativeTo: .caption)
+    }
+    public static var planLane: Style {
+        Style(face: PlanTypeMetrics.planLaneFace, metrics: PlanTypeMetrics.planLane, relativeTo: .caption2)
+    }
+    public static var planCompactDate: Style {
+        Style(
+            face: PlanTypeMetrics.planCompactDateFace, metrics: PlanTypeMetrics.planCompactDate, relativeTo: .caption2)
+    }
+    public static var planListLine: Style {
+        Style(face: PlanTypeMetrics.planListLineFace, metrics: PlanTypeMetrics.planListLine, relativeTo: .subheadline)
+    }
+
     public static var splashWordmark: Style {
         Style(face: .fraunces400Opsz32, metrics: .splashWordmark, relativeTo: nil)
     }

@@ -1,0 +1,26 @@
+{
+  ":amount min": {
+    "en": ":amount min",
+    "nl": ":amount min"
+  },
+  ":amount mg": {
+    "en": ":amount mg",
+    "nl": ":amount mg"
+  },
+  ":amount hr": {
+    "en": ":amount hr",
+    "nl": ":amount uur"
+  },
+  ":hours hr :minutes min": {
+    "en": ":hours hr :minutes min",
+    "nl": ":hours uur :minutes min"
+  },
+  ":amount h": {
+    "en": ":amount h",
+    "nl": ":amount u"
+  },
+  ":hours h :minutes min": {
+    "en": ":hours h :minutes min",
+    "nl": ":hours u :minutes min"
+  }
+}

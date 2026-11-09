@@ -1,0 +1,1 @@
+S1–S6-RETURN-10N are byte-identical to the Phase 12 DataAccessTests plan fixtures; their RN commit and backend pin are in `Tests/DataAccessTests/Fixtures/plans/SOURCE.md`. `intl-cases.json` is a direct expansion of RN `src/plan/intl-cases.ts`, captured without running RN or changing its files.
