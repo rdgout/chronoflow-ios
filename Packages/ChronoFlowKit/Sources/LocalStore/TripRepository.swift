@@ -1,3 +1,4 @@
+import AppCore
 import GRDB
 
 public struct TripRepository: Sendable {
@@ -58,6 +59,82 @@ public struct TripRepository: Sendable {
         try await database.write { db in
             try plan.save(db)
             for check in checks { try check.save(db) }
+        }
+    }
+}
+
+extension TripRepository {
+    public static func applyCards(_ items: [AppCore.TripListItem], at: String, db: Database) throws {
+        let ids = Set(items.compactMap { $0.card["id"]?.string })
+        guard ids.count == items.count else { throw AppCore.DataFailure.server(status: nil) }
+        for var trip in try TripRecord.fetchAll(db) where !ids.contains(trip.id) && trip.deletedAt == nil {
+            trip.deletedAt = at
+            try trip.save(db)
+        }
+        let pending = try StoreApplication.pending(db)
+        for item in items {
+            guard let id = item.card["id"]?.string, let departure = item.card["departureUtc"]?.string else {
+                throw AppCore.DataFailure.server(status: nil)
+            }
+            var trip =
+                try TripRecord.fetchOne(db, key: id)
+                ?? TripRecord(id: id, card: .encoding(item.card), departureUtc: departure)
+            guard !trip.deletedLocally else { continue }
+            var card = item.card
+            if pending.contains(where: { $0.kind == "complete-trip" && $0.referencedTripID == id }) {
+                var progress = card["progress"]?.object ?? [:]
+                progress["status"] = .string("completed")
+                card["progress"] = .object(progress)
+                card["canComplete"] = .bool(false)
+            }
+            trip.card = try .encoding(card)
+            trip.adaptation = try item.adaptation.map { try .encoding($0) }
+            trip.currentInputHash = item.planInputHash
+            trip.keepOffline = item.keepOffline
+            trip.departureUtc = departure
+            trip.planStartUtc = item.planStartUtc
+            trip.planStartZone = item.planStartZone
+            trip.planEndUtc = item.planEndUtc
+            trip.planEndDate = item.planEndDate
+            trip.preparationDays = item.preparationDays
+            trip.deletedAt = nil
+            try trip.save(db)
+            if let checks = item.checkState { try StoreApplication.checks(checks, tripID: id, db: db) }
+        }
+    }
+
+    public static func applyDetail(_ value: AppCore.TripDetail, tripID: String, at: String, db: Database) throws {
+        guard value.trip["id"]?.string == tripID,
+            let hash = value.plan["meta"]?.object?["inputHash"]?.string,
+            !hash.isEmpty, hash == value.checkState.planInputHash
+        else { throw AppCore.DataFailure.server(status: nil) }
+        guard var trip = try TripRecord.fetchOne(db, key: tripID), !trip.deletedLocally, trip.deletedAt == nil else {
+            return
+        }
+        try PlanVersionRecord(
+            tripId: tripID, inputHash: hash, detail: .encoding(value), receivedAt: at,
+            detailVersion: value.detailVersion
+        ).save(db)
+        trip.currentInputHash = hash
+        if let form = value.form { trip.form = try .encoding(form) }
+        if let revision = value.revision { trip.revision = try .encoding(revision) }
+        try trip.save(db)
+        try StoreApplication.checks(value.checkState, tripID: tripID, db: db)
+    }
+
+    public static func evictPlans(held: Set<String>, db: Database) throws {
+        let pending = Set(try StoreApplication.pending(db).compactMap(\.referencedTripID))
+        for var trip in try TripRecord.fetchAll(db) {
+            guard !pending.contains(trip.id), !held.contains(trip.id),
+                trip.deletedAt != nil || trip.deletedLocally || !trip.keepOffline
+            else { continue }
+            try db.execute(sql: "DELETE FROM plan_versions WHERE trip_id=?", arguments: [trip.id])
+            try db.execute(sql: "DELETE FROM check_marks WHERE trip_id=?", arguments: [trip.id])
+            if trip.deletedAt != nil || trip.deletedLocally {
+                trip.currentInputHash = nil
+                trip.keepOffline = false
+                try trip.save(db)
+            }
         }
     }
 }
