@@ -1848,6 +1848,8 @@ Source: canvas version 1794242613-8e6a, WizardSpec "Route first, then times (Ric
 
   Verification note (2026-11-10): strict lint, iOS 17 Debug/Release conditional source compilation and package/hosted/UI test-source type checks pass. No tests or simulators were run. See `Docs/wizard-16c.md` for the exact limits and morning acceptance commands. M2 remains open.
 
+- [x] Review round 3, retry/state: share the model-owned Checking/save countdown, expire deadlines, clear controls on failure reset/navigation, and limit Updated to unchanged-input re-checks. Package regressions are authored; tests remain unrun by instruction.
+
 - [ ] **Create gate (M2).** Against local Valet on trip-wizard after the user runs the four migrations (OQ 37): create a trip, land on its page and see the timeline in en and nl. Record the result. Production acceptance waits for the merge and deploy.
 
 ### Phase 17: Day-to-day (`feat/phase-17-day-to-day`), M3

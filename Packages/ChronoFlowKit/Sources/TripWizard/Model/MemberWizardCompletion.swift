@@ -87,6 +87,7 @@ extension MemberWizardModel {
 
     public func revisit(_ step: MemberWizardStep, sleep: Bool = false) {
         guard !reviewing, draft.state.step == .ready else { return }
+        draft.state.updated = false
         draft.state.revisit = inputFingerprint
         draft.state.returnToReady = true
         if sleep, !draft.form.override.enabled {
@@ -126,7 +127,7 @@ extension MemberWizardModel {
         #if DEBUG
             if boardFrozen { return }
         #endif
-        if let failure = draft.state.saveFailure { retrySeconds = failure.seconds(at: now()) }
+        updateRetrySeconds()
         guard draft.state.step == .ready, !reviewing, draft.state.savedTripId == nil,
             force || needsReadyReview
         else { return }
@@ -194,6 +195,7 @@ extension MemberWizardModel {
         }
         draft.state.saveFailure = nil
         draft.state.step = .calculating
+        restartRetryCountdown()
         draft.state.promptSheetID = nil
         persist()
         let snapshot = draft
@@ -251,7 +253,7 @@ extension MemberWizardModel {
         }
         draft.state.saveFailure = value
         draft.state.step = .ready
-        retrySeconds = value.seconds(at: now())
+        restartRetryCountdown()
         persist()
     }
 }

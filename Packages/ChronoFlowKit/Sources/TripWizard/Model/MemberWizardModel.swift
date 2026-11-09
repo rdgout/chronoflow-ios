@@ -35,6 +35,8 @@ public final class MemberWizardModel {
     public internal(set) var choicePending = false
     public internal(set) var reviewing = false
     public internal(set) var createdTripID: String?
+    @ObservationIgnored var retryTask: Task<Void, Never>?
+    @ObservationIgnored var retryID = UUID()
     @ObservationIgnored var saveTask: Task<Void, Never>?
     @ObservationIgnored var reviewTask: Task<Void, Never>?
     @ObservationIgnored var resumed = false
@@ -63,6 +65,7 @@ public final class MemberWizardModel {
         self.now = now
         self.generation = generation
         self.checkingClock = checkingClock
+        restartRetryCountdown()
     }
 
     public var whereComplete: Bool {
@@ -80,7 +83,10 @@ public final class MemberWizardModel {
     public func go(_ step: MemberWizardStep) {
         guard !closed, !persistenceFailed, draft.state.step != .calculating else { return }
         if reviewing { cancelInlineReview() }
-        if draft.state.step == .checking, step != .checking { cancelCheck() }
+        if draft.state.step == .checking, step != .checking {
+            cancelCheck()
+            checking = WizardCheckingProgress()
+        }
         choiceTask?.cancel()
         choicePending = false
         if [.checking, .question, .excluded, .continuation, .fineTune, .ready, .calculating].contains(step) {
@@ -89,6 +95,7 @@ public final class MemberWizardModel {
             draft.state.progressFloor = nil
         }
         draft.state.step = step
+        restartRetryCountdown()
         persist()
     }
 
@@ -202,6 +209,7 @@ public final class MemberWizardModel {
     public func discard() async throws {
         guard !closed, draft.state.step != .calculating else { return }
         closed = true
+        restartRetryCountdown()
         cancelInlineReview()
         cancelCheck()
         choiceTask?.cancel()
@@ -209,6 +217,7 @@ public final class MemberWizardModel {
         await flush()
         do { try await store.discard(instance: draft.state.instance) } catch {
             closed = false
+            restartRetryCountdown()
             throw error
         }
     }

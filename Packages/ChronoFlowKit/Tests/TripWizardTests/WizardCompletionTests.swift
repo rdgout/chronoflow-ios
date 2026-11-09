@@ -237,7 +237,8 @@ struct CompletionFixture {
 }
 
 @MainActor func completionFixture(
-    optional: Bool = false, effects: TripGenerationEffects? = nil, firstTrip: Bool = true
+    optional: Bool = false, effects: TripGenerationEffects? = nil, firstTrip: Bool = true,
+    checkingClock: WizardCheckingClock = .continuous
 ) async throws
     -> CompletionFixture
 {
@@ -267,12 +268,14 @@ struct CompletionFixture {
         source: source,
         effects: effects ?? TripGenerationEffects(mergeProfile: { _ in }, pullCreatedTrip: { _ in }, requestSync: {}))
     let model = MemberWizardModel(
-        draft: draft, store: store, search: noAirportSearch(), now: { clock.now }, generation: service)
+        draft: draft, store: store, search: noAirportSearch(), now: { clock.now }, generation: service,
+        checkingClock: checkingClock)
     var checked = model.draft
     checked.state.checkedInput = model.inputFingerprint
     try await store.persist(checked)
     let active = MemberWizardModel(
-        draft: checked, store: store, search: noAirportSearch(), now: { clock.now }, generation: service)
+        draft: checked, store: store, search: noAirportSearch(), now: { clock.now }, generation: service,
+        checkingClock: checkingClock)
     return CompletionFixture(
         model: active, source: source, service: service, store: store, database: database, clock: clock, review: review)
 }

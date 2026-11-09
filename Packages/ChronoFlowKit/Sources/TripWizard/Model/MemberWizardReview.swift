@@ -112,6 +112,7 @@ extension MemberWizardModel {
     }
 
     public func beginChecking() {
+        updateRetrySeconds()
         guard !closed, !persistenceFailed, !choicePending, retrySeconds == 0 else { return }
         if draft.state.sleepNeeded, draft.state.sleepCompleted != true {
             go(.sleep)
@@ -148,7 +149,7 @@ extension MemberWizardModel {
     private func runCheck() {
         cancelCheck()
         checking = WizardCheckingProgress()
-        retrySeconds = 0
+        restartRetryCountdown()
         let id = UUID()
         checkID = id
         let input = draft.form.reviewInput(
@@ -174,26 +175,20 @@ extension MemberWizardModel {
                 }
             }
             guard let self, self.checkID == id else { return }
-            if let retryAt = self.checking.retryAt {
-                while !Task.isCancelled, self.checkID == id, self.retrySeconds > 0 {
-                    do { try await checkingClock.sleepUntil(min(retryAt, checkingClock.now() + 1)) } catch { return }
-                    guard !Task.isCancelled, self.checkID == id else { return }
-                    self.retrySeconds = self.checking.retrySeconds(at: checkingClock.now())
-                }
-            }
             if self.checkID == id { self.checkTask = nil }
         }
     }
 
     func applyReview(_ result: TripGenerationReviewResult) {
         do {
+            let unchangedInput = draft.state.checkedInput == inputFingerprint
             draft.form = try WizardForm(reviewInput: result.input, retained: draft.form)
             draft.form.itinerary = result.review.itinerary
             draft.state.profile = result.input.profile ?? JSONObject()
             let previous = draft.state.review
             draft.state.review = result.review
             draft.state.updated =
-                previous != nil
+                unchangedInput && previous != nil
                 && (previous?.summary != result.review.summary || previous?.price.cost != result.review.price.cost
                     || previous?.price.state != result.review.price.state
                     || previous?.price.unlimited != result.review.price.unlimited
@@ -201,6 +196,8 @@ extension MemberWizardModel {
             draft.state.reviewedAt = now()
             draft.state.checkedInput = inputFingerprint
             draft.state.saveFailure = nil
+            checking = WizardCheckingProgress()
+            restartRetryCountdown()
             if draft.state.sleepCompleted == true { draft.state.sleepNeeded = false }
             draft.fieldErrors = [:]
             let errors = WizardFlightRules.errors(
@@ -244,10 +241,11 @@ extension MemberWizardModel {
             }
         default:
             checking.failure = failure
+            checking.retryAt = nil
             if case .throttled(let seconds, _) = failure, seconds.isFinite, seconds > 0 {
                 checking.retryAt = checkingClock.now() + seconds
-                retrySeconds = checking.retrySeconds(at: checkingClock.now())
             }
+            restartRetryCountdown()
             persist()
         }
     }
