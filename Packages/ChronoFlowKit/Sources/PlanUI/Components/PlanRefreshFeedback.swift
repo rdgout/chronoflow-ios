@@ -18,11 +18,13 @@ private struct PlanRefreshFeedback: ViewModifier {
 
     func body(content: Content) -> some View {
         debugContent(content)
-            .safeAreaInset(edge: .top, spacing: 0) {
+            .overlay(alignment: .top) {
                 if !model.feedback.isEmpty {
                     capsule(text: text, presentationID: model.presentationID)
+                        .transition(.move(edge: .top).combined(with: .opacity))
                 }
             }
+            .animation(.default, value: model.feedback.isEmpty)
     }
 
     private func capsule(text: String, presentationID: UUID) -> some View {
@@ -42,14 +44,12 @@ private struct PlanRefreshFeedback: ViewModifier {
             .padding(.horizontal, PlanUITokens.space4).padding(.vertical, PlanUITokens.space2)
             .planPageRail()
             .frame(maxWidth: .infinity)
-            .background(ColorToken.background.color)
             .task(id: presentationID) {
                 AccessibilityNotification.Announcement(text).post()
                 do { try await Task.sleep(for: .seconds(2)) } catch { return }
                 guard !Task.isCancelled else { return }
                 model.dismiss(presentationID: presentationID)
             }
-            .onDisappear { model.dismiss(presentationID: presentationID) }
     }
 
     @ViewBuilder private func debugContent(_ content: Content) -> some View {
