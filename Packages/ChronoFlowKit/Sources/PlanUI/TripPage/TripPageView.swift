@@ -294,6 +294,7 @@ public struct TripPageView: View {
                         showLegend = true
                     }
                     .labelStyle(.iconOnly).frame(minWidth: PlanMetrics.touch, minHeight: PlanMetrics.touch)
+                    .accessibilityIdentifier("trip.legend")
                 }
                 Text(verbatim: prepared.summary).font(Typography.planListLine.font).foregroundStyle(
                     ColorToken.mutedForeground.color)
