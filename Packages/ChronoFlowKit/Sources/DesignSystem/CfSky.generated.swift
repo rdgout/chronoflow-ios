@@ -28,6 +28,22 @@ nonisolated public enum ColorToken: String, CaseIterable, Sendable {
     case input = "input"
     case border = "border"
     case ring = "ring"
+    case surface2 = "surface2"
+    case secondary = "secondary"
+    case secondaryForeground = "secondaryForeground"
+    case muted = "muted"
+    case catSleep = "catSleep"
+    case catSleepFg = "catSleepFg"
+    case catLight = "catLight"
+    case catLightFg = "catLightFg"
+    case catModerate = "catModerate"
+    case catModerateFg = "catModerateFg"
+    case catDark = "catDark"
+    case catDarkFg = "catDarkFg"
+    case catCaffeine = "catCaffeine"
+    case catCaffeineFg = "catCaffeineFg"
+    case catTravel = "catTravel"
+    case catTravelFg = "catTravelFg"
     case mutedForeground = "mutedForeground"
     case primary = "primary"
     case primaryForeground = "primaryForeground"
@@ -93,6 +109,69 @@ nonisolated public enum ColorToken: String, CaseIterable, Sendable {
             TokenRGBA(red: 0.1752787083, green: 0.1939081730, blue: 0.2735978295, alpha: 1.0000000000)
         case (.ring, .light): TokenRGBA(red: 0.3645206452, green: 0.4185556439, blue: 0.6977120782, alpha: 1.0000000000)
         case (.ring, .dark): TokenRGBA(red: 0.9082625891, green: 0.6882337800, blue: 0.4860896207, alpha: 1.0000000000)
+        case (.surface2, .light):
+            TokenRGBA(red: 0.9251244923, green: 0.9431324556, blue: 0.9707691894, alpha: 1.0000000000)
+        case (.surface2, .dark):
+            TokenRGBA(red: 0.0578175276, green: 0.0714425184, blue: 0.1388982826, alpha: 1.0000000000)
+        case (.secondary, .light):
+            TokenRGBA(red: 0.8847974871, green: 0.9115972334, blue: 0.9527738438, alpha: 1.0000000000)
+        case (.secondary, .dark):
+            TokenRGBA(red: 0.1249677715, green: 0.1437252854, blue: 0.2302870695, alpha: 1.0000000000)
+        case (.secondaryForeground, .light):
+            TokenRGBA(red: 0.1041834620, green: 0.1307694195, blue: 0.2458902483, alpha: 1.0000000000)
+        case (.secondaryForeground, .dark):
+            TokenRGBA(red: 0.8781215809, green: 0.8970877486, blue: 0.9329531607, alpha: 1.0000000000)
+        case (.muted, .light):
+            TokenRGBA(red: 0.9056695846, green: 0.9236057415, blue: 0.9511331744, alpha: 1.0000000000)
+        case (.muted, .dark): TokenRGBA(red: 0.1093640046, green: 0.1259110583, blue: 0.2012873893, alpha: 1.0000000000)
+        case (.catSleep, .light):
+            TokenRGBA(red: 0.2399741594, green: 0.2660090250, blue: 0.5353412823, alpha: 1.0000000000)
+        case (.catSleep, .dark):
+            TokenRGBA(red: 0.3311308521, green: 0.3464852132, blue: 0.6511885489, alpha: 1.0000000000)
+        case (.catSleepFg, .light):
+            TokenRGBA(red: 0.9651333503, green: 0.9732626431, blue: 0.9992330468, alpha: 1.0000000000)
+        case (.catSleepFg, .dark):
+            TokenRGBA(red: 0.9651333503, green: 0.9732626431, blue: 0.9992330468, alpha: 1.0000000000)
+        case (.catLight, .light):
+            TokenRGBA(red: 0.9495292455, green: 0.7810956832, blue: 0.3725707019, alpha: 1.0000000000)
+        case (.catLight, .dark):
+            TokenRGBA(red: 0.9417021191, green: 0.8033143752, blue: 0.4220744550, alpha: 1.0000000000)
+        case (.catLightFg, .light):
+            TokenRGBA(red: 0.2370182749, green: 0.1269231046, blue: 0.0127539083, alpha: 1.0000000000)
+        case (.catLightFg, .dark):
+            TokenRGBA(red: 0.1858388496, green: 0.0950390728, blue: 0.0080316157, alpha: 1.0000000000)
+        case (.catModerate, .light):
+            TokenRGBA(red: 0.9590455335, green: 0.9077595269, blue: 0.7516196148, alpha: 1.0000000000)
+        case (.catModerate, .dark):
+            TokenRGBA(red: 0.6999201919, green: 0.6423771649, blue: 0.4689274274, alpha: 1.0000000000)
+        case (.catModerateFg, .light):
+            TokenRGBA(red: 0.2603914613, green: 0.1796921812, blue: 0.0690052384, alpha: 1.0000000000)
+        case (.catModerateFg, .dark):
+            TokenRGBA(red: 0.1223935751, green: 0.0744027880, blue: 0.0143899672, alpha: 1.0000000000)
+        case (.catDark, .light):
+            TokenRGBA(red: 0.2110005298, green: 0.2402943088, blue: 0.2971798186, alpha: 1.0000000000)
+        case (.catDark, .dark):
+            TokenRGBA(red: 0.1600009909, green: 0.1787371116, blue: 0.2257217943, alpha: 1.0000000000)
+        case (.catDarkFg, .light):
+            TokenRGBA(red: 0.9488157602, green: 0.9616559037, blue: 0.9858908314, alpha: 1.0000000000)
+        case (.catDarkFg, .dark):
+            TokenRGBA(red: 0.9227690625, green: 0.9355415050, blue: 0.9596502688, alpha: 1.0000000000)
+        case (.catCaffeine, .light):
+            TokenRGBA(red: 0.5041804486, green: 0.3424795545, blue: 0.2392419372, alpha: 1.0000000000)
+        case (.catCaffeine, .dark):
+            TokenRGBA(red: 0.6198580409, green: 0.4603829614, blue: 0.3381543452, alpha: 1.0000000000)
+        case (.catCaffeineFg, .light):
+            TokenRGBA(red: 0.9906073040, green: 0.9695885580, blue: 0.9507865020, alpha: 1.0000000000)
+        case (.catCaffeineFg, .dark):
+            TokenRGBA(red: 0.0749551372, green: 0.0304854786, blue: 0.0109775900, alpha: 1.0000000000)
+        case (.catTravel, .light):
+            TokenRGBA(red: 0.1527193365, green: 0.4683128899, blue: 0.4941179454, alpha: 1.0000000000)
+        case (.catTravel, .dark):
+            TokenRGBA(red: 0.3325638282, green: 0.6357109416, blue: 0.6612364144, alpha: 1.0000000000)
+        case (.catTravelFg, .light):
+            TokenRGBA(red: 0.9655494387, green: 0.9947679464, blue: 0.9967715515, alpha: 1.0000000000)
+        case (.catTravelFg, .dark):
+            TokenRGBA(red: 0.0049015387, green: 0.0560351202, blue: 0.0617791138, alpha: 1.0000000000)
         case (.mutedForeground, .light):
             TokenRGBA(red: 0.1869636350, green: 0.2171898301, blue: 0.2950788692, alpha: 1.0000000000)
         case (.mutedForeground, .dark):

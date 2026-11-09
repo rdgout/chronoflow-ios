@@ -1,0 +1,164 @@
+#if canImport(UIKit)
+    import AppCore
+    import DesignSystem
+    import PlanCore
+    import SwiftUI
+
+    public struct StepSheet: View {
+        @Environment(\.locale) private var locale
+        @Environment(\.dismiss) private var dismiss
+        public let detail: TripDetail?
+        public let blockID: String
+        public let now: Date
+        public let formatter: CopyLineFormatter
+        public var timeFormat: TimeFormat = .value24
+        public var busy = false
+        public var change: (CheckStatus?) async -> Void
+
+        public init(
+            detail: TripDetail?, blockID: String, now: Date, formatter: CopyLineFormatter,
+            timeFormat: TimeFormat = .value24, busy: Bool = false,
+            change: @escaping (CheckStatus?) async -> Void
+        ) {
+            self.detail = detail
+            self.blockID = blockID
+            self.now = now
+            self.formatter = formatter
+            self.timeFormat = timeFormat
+            self.busy = busy
+            self.change = change
+        }
+
+        private var language: Language { locale.language.languageCode?.identifier == "nl" ? .nl : .en }
+        private func t(_ key: String, _ values: [String: String] = [:]) -> String {
+            PlanStrings.text(key, language: language, values)
+        }
+        public var body: some View {
+            ScrollView {
+                VStack(alignment: .leading, spacing: PlanUITokens.space4) {
+                    if let detail, let block = detail.plan.blocks.first(where: { $0.id == blockID }) {
+                        content(detail, block)
+                    } else {
+                        Text(t("This step is no longer in your plan")).font(Typography.screenCardTitle.font)
+                            .accessibilityAddTraits(.isHeader)
+                        Text(
+                            t(
+                                "Your plan changed after you opened it, for example because you edited the trip. Your other check-offs are kept."
+                            ))
+                        Button(t("See today's steps")) { dismiss() }.buttonStyle(.borderedProminent)
+                    }
+                }.padding(PlanUITokens.space5).padding(.top, PlanUITokens.space4)
+            }
+            .tint(ColorToken.primary.color).controlSize(.large)
+            .font(Typography.screenBodyLg.font).foregroundStyle(ColorToken.cardForeground.color)
+            .background(ColorToken.card.color).accessibilityIdentifier("step.sheet")
+            .presentationDragIndicator(.visible).presentationDetents([.medium, .large])
+        }
+
+        @ViewBuilder private func content(_ detail: TripDetail, _ block: BlockView) -> some View {
+            let key = block.actionable ? block.checkKey : nil
+            let mark = key.flatMap { key in
+                detail.checkState.marks.first { checkIdentity($0.key) == checkIdentity(key) }
+            }
+            let running = planDate(block.startUtc) <= now && now < planDate(block.endUtc)
+            let options = CopyFormat(
+                language: language, timeFormat: timeFormat, displayZone: block.displayTz,
+                annotateInstantZone: true, trip: detail.trip)
+            let interval =
+                block.type == .zoneChange
+                ? formatter.formatInstant(block.startUtc, options: options)
+                : formatter.blockInterval(block, options: options, separator: " → ")
+            let time = t(
+                "{{time}} {{zone}} time", ["time": interval, "zone": zoneLabel(block.displayTz, trip: detail.trip)])
+            HStack(alignment: .top, spacing: PlanUITokens.space3) {
+                CategorySwatch(block.type)
+                VStack(alignment: .leading, spacing: PlanUITokens.space1) {
+                    ViewThatFits(in: .horizontal) {
+                        HStack { badges(block, mark: mark, running: running) }
+                        VStack(alignment: .leading) { badges(block, mark: mark, running: running) }
+                    }
+                    Text(t(stepLabelKey(block.type) ?? "Note")).font(Typography.screenCardTitle.font)
+                        .accessibilityAddTraits(.isHeader)
+                    Text(
+                        running
+                            ? time + " · "
+                                + t(
+                                    "{{duration}} left",
+                                    [
+                                        "duration": formatter.formatMinutes(
+                                            max(0, ceil(planDate(block.endUtc).timeIntervalSince(now) / 60)),
+                                            language: language, duration: true)
+                                    ]) : time
+                    )
+                    .font(Typography.screenBody.font).foregroundStyle(ColorToken.mutedForeground.color)
+                    .monospacedDigit()
+                }
+            }
+            let reasons = detail.timeline.blockReasons.first { $0.blockId == block.id }?.lines ?? []
+            if !reasons.isEmpty {
+                section("Why", lines: reasons, options: options)
+            }
+            let instructions: [CopyLine] = {
+                if case .note(let params) = block.params { return params.note.lines }
+                return [block.text] + (block.secondaryText.map { [$0] } ?? [])
+            }()
+            section("How", lines: instructions, options: options, bullets: true)
+            if key != nil {
+                if mark != nil {
+                    Button(t("Undo")) { Task { await change(nil) } }.buttonStyle(.bordered)
+                        .accessibilityIdentifier("step.undo").disabled(busy)
+                } else {
+                    ViewThatFits(in: .horizontal) {
+                        HStack { actions }
+                        VStack { actions }
+                    }.disabled(busy)
+                }
+            }
+            Text(t("Checking off changes your progress, never your plan."))
+                .font(Typography.screenMeta.font).foregroundStyle(ColorToken.mutedForeground.color)
+                .frame(maxWidth: .infinity).multilineTextAlignment(.center)
+        }
+        @ViewBuilder private var actions: some View {
+            Button(t("Skip")) { Task { await change(.skipped) } }.buttonStyle(.bordered).accessibilityIdentifier(
+                "step.skip")
+            Button(t("Mark as done")) { Task { await change(.done) } }.buttonStyle(.borderedProminent)
+                .accessibilityIdentifier("step.done")
+        }
+        @ViewBuilder private func badges(_ block: BlockView, mark: CheckMark?, running: Bool) -> some View {
+            PlanBadge(text: t(priorityKey(block.priority)))
+            if let mark {
+                PlanBadge(text: t(mark.status == .done ? "Done" : "Skipped"), active: mark.status == .done)
+            } else if running {
+                PlanBadge(text: t("Now"), active: true)
+            }
+        }
+        private func section(_ title: String, lines: [CopyLine], options: CopyFormat, bullets: Bool = false)
+            -> some View
+        {
+            VStack(alignment: .leading, spacing: PlanUITokens.space2) {
+                Text(t(title).uppercased()).font(Typography.screenLabel.font).foregroundStyle(
+                    ColorToken.mutedForeground.color
+                )
+                .accessibilityAddTraits(.isHeader)
+                ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
+                    HStack(alignment: .top, spacing: PlanUITokens.space3) {
+                        if bullets {
+                            Circle().frame(width: PlanUITokens.space1, height: PlanUITokens.space1)
+                                .padding(.top, PlanUITokens.space2).accessibilityHidden(true)
+                        }
+                        Text(formatter.format(line, options: options))
+                    }
+                }
+            }
+        }
+    }
+
+    func priorityKey(_ priority: Priority) -> String {
+        switch priority {
+        case .core: "Important"
+        case .recommended: "Recommended"
+        case .optional: "Optional"
+        default: "Information"
+        }
+    }
+#endif

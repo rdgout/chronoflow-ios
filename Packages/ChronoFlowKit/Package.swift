@@ -37,7 +37,8 @@ let package = Package(
             name: "PlanCoreTests", dependencies: ["PlanCore"], resources: [.copy("Fixtures")],
             swiftSettings: [.defaultIsolation(nil)]),
         .target(
-            name: "PlanUI", dependencies: ["PlanCore", "LocalStore"], swiftSettings: [.defaultIsolation(MainActor.self)]
+            name: "PlanUI", dependencies: ["PlanCore", "LocalStore", "DesignSystem"],
+            resources: [.process("Resources")], swiftSettings: [.defaultIsolation(MainActor.self)]
         ),
         .testTarget(
             name: "PlanUITests", dependencies: ["PlanUI", "DataAccess"], resources: [.copy("Fixtures")],

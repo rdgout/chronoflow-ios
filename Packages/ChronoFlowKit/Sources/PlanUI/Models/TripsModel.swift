@@ -5,6 +5,7 @@ import PlanCore
 
 @Observable public final class TripsModel {
     public private(set) var trips: [TripListValue] = []
+    public private(set) var hasLoaded = false
     public private(set) var now: Date
     public private(set) var error: (any Error)?
     @ObservationIgnored private let repository: TripRepository
@@ -35,6 +36,7 @@ import PlanCore
                         let result = await decoder.trips(records, now: self?.now ?? Date())
                         guard !Task.isCancelled else { break }
                         self?.trips = result.values
+                        self?.hasLoaded = true
                         if let self { self.updateNow(self.now) }
                         self?.error = result.error
                     }

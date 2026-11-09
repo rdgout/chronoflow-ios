@@ -14,6 +14,7 @@ extension ModelTests {
         try await db.open(accountID: "00000000-0000-4000-8000-000000000016")
         let repository = TripRepository(database: db)
         var value = try detail()
+        value.checkState = buildCheckState(value.plan, marks: [])
         let card = recoveryCard(value)
         let date = planDate(value.plan.days[0].startUtc)
         var trip = TripRecord(
@@ -41,6 +42,7 @@ extension ModelTests {
         try await repository.store(plan: plan, checks: [])
         try await eventually { model.error != nil }
         value.plan.meta.inputHash = "recovered-hash"
+        value.checkState = buildCheckState(value.plan, marks: [])
         plan.inputHash = value.plan.meta.inputHash
         plan.detail = try .encoding(value)
         try await repository.store(plan: plan, checks: [])
@@ -107,7 +109,7 @@ extension ModelTests {
         try await db.close()
     }
 
-    private func recoveryCard(_ value: TripDetail) -> TripCardView {
+    func recoveryCard(_ value: TripDetail) -> TripCardView {
         TripCardView(
             id: value.trip.id, from: value.trip.from, to: value.trip.to, departLocal: value.trip.departLocal,
             arriveLocal: "", departureUtc: value.trip.departureUtc, arrivalUtc: value.trip.endUtc, connections: [],

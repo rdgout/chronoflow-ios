@@ -16,6 +16,6 @@ nonisolated final class AppTabsTests: XCTestCase {
         app.tabBars.buttons["Settings"].tap()
         XCTAssertTrue(app.staticTexts["route.settings"].waitForExistence(timeout: 4))
         app.tabBars.buttons["Today"].tap()
-        XCTAssertTrue(app.staticTexts["route.today"].waitForExistence(timeout: 4))
+        XCTAssertTrue(app.scrollViews["today.screen"].waitForExistence(timeout: 4))
     }
 }
