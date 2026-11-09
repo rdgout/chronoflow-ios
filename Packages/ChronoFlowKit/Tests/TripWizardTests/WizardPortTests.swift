@@ -154,7 +154,8 @@ import TripWizard
         form.legs[1].toIata = "SIN"
         form.legs[1].departLocal = form.legs[0].arriveLocal
         form.legs[1].arriveLocal = "2026-11-15T12:00"
-        #expect(WizardValidation.validate(form)["legs.1.departLocal"] != nil)
+        let airport = wizardAirport(form.legs[1].fromIata, city: "Tokyo", zone: "Asia/Tokyo")
+        #expect(WizardValidation.validate(form, airports: [airport.iata: airport])["legs.1.departLocal"] != nil)
         form.legs[1].fromIata = "DXB"
         #expect(
             WizardValidation.validate(form)["legs.1.fromIata"]?.key

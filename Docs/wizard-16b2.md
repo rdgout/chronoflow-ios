@@ -39,6 +39,21 @@ Verification:
 - Token/asset tests, resource/signing/contracts fixtures and all 79 runner fixtures: passed. The runner initially reported the two new unregistered suites; registration and its rerun pass (`build/wizard-review-tooling-tests.log`, `build/wizard-review-runner-tests.log`). TokenGen freshness also passes for all 56 outputs (`build/wizard-review-tokens-check.log`).
 - Package/test compilation for `arm64-apple-ios17.0-simulator`: passed (`build/wizard-review-ios-build.log`). Direct Swift 6 app-module compilation and all AppTests/AppUITests type checks pass (`build/wizard-review-typecheck/`). These are compile checks only; no simulator was started and no runtime tests or captures were executed.
 
+## Chronological picker bounds and starting values (2026-11-09)
+
+`WizardFlightTiming` is a pure model value over the form and airport metadata. `minimumLocal(for:)` converts the immediate predecessor through its airport's IANA zone into an absolute instant, then into the current airport's wall components in the fixed picker calendar. Arrival follows its departure; every later departure follows the previous arrival, including the first home flight. An unset predecessor leaves the picker unbounded. The native picker receives `in: minimum...` and no upper bound.
+
+`initialLocal(for:now:)` retains filled values, even below a new bound. Empty fields search backwards for the nearest earlier set instant and convert it into the current airport's wall components. Without an earlier value they use airport-local now, clamped to the minimum and reduced to minute precision; the native picker's default interval is one minute. Opening/cancelling a sheet does not write to the draft. Connection validation now compares absolute instants through both airports' zones, and existing arrival validation still flags values below a changed bound.
+
+Host regressions cover NRT→HNL, AKL→LAX, NRT→SFO, AMS→JFK and JFK→AMS, outbound/home chains, unset fields, missing airport metadata, fallback now, retained invalid values and persisted validation errors, plus airport DST gaps/folds and offset transitions. The existing `WizardOutboundStopNew` fixture supplies a departure of 12 October 2026 at 14:40 in Amsterdam with an empty Dubai arrival; the cheap seeded UI test opens arrival and accepts the untouched selection, requiring 12 October at 16:40. Hosted coverage also checks the native lower bound, absent upper bound and one-minute interval. The mock journey helper now navigates the calendar from the preceding flight's date.
+
+Verification:
+
+- `make quick`: strict lint passed; the package run hit the existing loopback-listener sandbox denial and one timeline performance sample over budget while the iOS compile was also running (`build/wizard-timing-quick.log`).
+- `sh Scripts/swiftpm.sh test ChronoFlowKit --skip APICookieTests.realRedirectCookieHandlingIsDisabled`: passed, including all wizard regressions and the unchanged timeline performance budgets, in a standalone rerun (`build/wizard-timing-package-tests.log`). The denied test remains unchanged and still needs the unsandboxed host gate.
+- `make token-tests asset-tests launch-resources-check`: passed, including all 79 runner fixtures (`build/wizard-timing-tooling-tests.log`).
+- iOS 17 package/test compilation and direct Swift 6 app/AppTests/AppUITests type checking: passed (`build/wizard-timing-ios-build.log`, `build/wizard-timing-typecheck.log`). No simulator, runtime test, capture or matrix was run.
+
 ## User-run acceptance
 
 First run the native compilation and focused hosted/UI checks:

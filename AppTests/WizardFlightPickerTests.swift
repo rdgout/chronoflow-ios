@@ -52,6 +52,25 @@ nonisolated final class WizardFlightPickerTests: XCTestCase {
         }
     }
 
+    @MainActor func testNativePickerReceivesOnlyTheAirportLocalLowerBound() async throws {
+        try await AuthTestHost.registerFonts()
+        let device = try XCTUnwrap(try AuthDeviceFixture.all().first)
+        let minimum = try XCTUnwrap(WizardDateTime.date("2040-03-25T16:07"))
+        for bound in [nil, minimum] {
+            let host = try AuthTestHost(
+                WizardDateTimeSheet(title: "Arrival", localTime: "Time in Dubai", value: minimum, minimum: bound) { _ in
+                },
+                size: device.size, insets: device.insets)
+            defer { host.close() }
+            try await host.settle()
+            let picker = try XCTUnwrap(pickers(in: host.controller.view).first)
+            XCTAssertEqual(picker.minimumDate, bound)
+            XCTAssertNil(picker.maximumDate)
+            XCTAssertEqual(WizardDateTime.string(picker.date), "2040-03-25T16:07")
+            XCTAssertEqual(picker.minuteInterval, 1)
+        }
+    }
+
     @MainActor private func pickers(in view: UIView) -> [UIDatePicker] {
         (view as? UIDatePicker).map { [$0] } ?? view.subviews.flatMap { pickers(in: $0) }
     }

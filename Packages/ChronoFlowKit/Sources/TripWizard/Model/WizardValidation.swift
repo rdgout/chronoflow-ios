@@ -2,8 +2,11 @@ import AppCore
 import Foundation
 
 public enum WizardValidation {
-    public static func validate(_ form: WizardForm) -> [String: FieldMessage] {
+    public static func validate(_ form: WizardForm, airports: [String: ApiAirportSuggestion] = [:]) -> [String:
+        FieldMessage]
+    {
         var errors: [String: FieldMessage] = [:]
+        let timing = WizardFlightTiming(form: form, airports: airports)
         func error(_ path: String, _ key: String = "The planner cannot use this value.") {
             errors[path] = FieldMessage(key: key)
         }
@@ -53,9 +56,8 @@ public enum WizardValidation {
                 if !previous.toIata.isEmpty, !leg.fromIata.isEmpty, previous.toIata != leg.fromIata {
                     error(path + ".fromIata", "Start this flight where the previous flight lands.")
                 }
-                if previous.toIata == leg.fromIata, !leg.fromIata.isEmpty,
-                    WizardDateTime.date(previous.arriveLocal) != nil,
-                    WizardDateTime.date(leg.departLocal) != nil, leg.departLocal <= previous.arriveLocal
+                if let arrival = timing.instant(for: .arrival(index - 1)),
+                    let departure = timing.instant(for: .departure(index)), departure <= arrival
                 {
                     error(path + ".departLocal", "This flight leaves before the previous one lands.")
                 }

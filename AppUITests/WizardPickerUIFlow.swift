@@ -66,9 +66,12 @@ import XCTest
             .firstMatch.tap()
     }
 
-    static func dateTime(_ side: String, index: Int = 0, date: Date, hour: Int, minute: Int, in app: XCUIApplication) {
+    static func dateTime(
+        _ side: String, index: Int = 0, date: Date, displayed: Date = Date(), hour: Int, minute: Int,
+        in app: XCUIApplication
+    ) {
         let picker = open(side, index: index, in: app)
-        selectDate(date, picker: picker)
+        selectDate(date, from: displayed, picker: picker)
         setTime(hour: hour, minute: minute, picker: picker, in: app)
         app.buttons["wizard.picker.done"].tap()
         XCTAssertTrue(app.buttons["wizard.\(index).\(side).date-time"].waitForExistence(timeout: 5))

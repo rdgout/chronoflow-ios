@@ -36,9 +36,11 @@ nonisolated final class TripWizardTests: XCTestCase {
         let firstDay = WizardPickerUIFlow.date(days: 30, from: dateAnchor)
         let nextDay = WizardPickerUIFlow.date(days: 31, from: dateAnchor)
         WizardPickerUIFlow.dateTime("departure", date: firstDay, hour: 14, minute: 40, in: app)
-        WizardPickerUIFlow.dateTime("arrival", date: firstDay, hour: 23, minute: 25, in: app)
-        WizardPickerUIFlow.dateTime("departure", index: 1, date: nextDay, hour: 2, minute: 5, in: app)
-        WizardPickerUIFlow.dateTime("arrival", index: 1, date: nextDay, hour: 16, minute: 35, in: app)
+        WizardPickerUIFlow.dateTime("arrival", date: firstDay, displayed: firstDay, hour: 23, minute: 25, in: app)
+        WizardPickerUIFlow.dateTime(
+            "departure", index: 1, date: nextDay, displayed: firstDay, hour: 2, minute: 5, in: app)
+        WizardPickerUIFlow.dateTime(
+            "arrival", index: 1, date: nextDay, displayed: nextDay, hour: 16, minute: 35, in: app)
         app.buttons["wizard.outbound.continue"].tap()
         XCTAssertTrue(app.buttons["wizard.choice.one-way"].waitForExistence(timeout: 5))
         app.buttons["wizard.choice.one-way"].tap()

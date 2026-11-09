@@ -132,6 +132,18 @@ nonisolated final class WizardRouteScreenTests: XCTestCase {
         }
     }
 
+    @MainActor func testEmptyArrivalPickerStartsOnTheSetDepartureDate() {
+        let app = WizardScreenUIFlow.launch("WizardOutboundStopNew")
+        defer { app.terminate() }
+        let arrival = app.buttons["wizard.0.arrival.date-time"]
+        XCTAssertEqual(arrival.value as? String, "not set")
+        _ = WizardPickerUIFlow.open("arrival", in: app)
+        app.buttons["wizard.picker.done"].tap()
+        let value = arrival.value as? String ?? ""
+        XCTAssertTrue(value.contains("12 Oct") || value.contains("Oct 12"), value)
+        XCTAssertTrue(value.contains("16:40") || value.contains("4:40"), value)
+    }
+
     @MainActor func testEmptyAndFilledPickerShareTheSheetAndOnlyDoneWrites() {
         let app = WizardScreenUIFlow.launch("WizardOutboundEmpty")
         defer { app.terminate() }

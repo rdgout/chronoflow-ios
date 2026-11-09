@@ -186,7 +186,7 @@ import TripWizard
         form.insertStop(stop, beforeDestinationOf: 0)
         form.legs[0].arriveLocal = "2026-11-11T12:00"
         form.legs[1].departLocal = "2026-11-11T11:00"
-        let errors = WizardValidation.validate(form)
+        let errors = WizardValidation.validate(form, airports: [stop.iata: stop])
         #expect(errors["legs.1.departLocal"]?.key == "This flight leaves before the previous one lands.")
         #expect(errors["legs.0.departLocal"] == nil)
         form.addReturn()

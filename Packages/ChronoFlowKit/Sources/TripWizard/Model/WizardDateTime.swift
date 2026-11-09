@@ -66,6 +66,13 @@ public enum WizardDateTime {
         return instant
     }
 
+    public static func localDate(_ instant: Date, zone: String) -> Date? {
+        guard let timeZone = TimeZone(identifier: zone) else { return nil }
+        var local = calendar
+        local.timeZone = timeZone
+        return calendar.date(from: local.dateComponents([.year, .month, .day, .hour, .minute], from: instant))
+    }
+
     public static func formatLocal(_ value: String?, locale: Locale) -> String? {
         guard let value, let date = date(value) else { return value }
         return format(date, template: "EEE d MMM", locale: locale) + " · "

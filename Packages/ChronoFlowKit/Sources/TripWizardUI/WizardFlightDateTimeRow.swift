@@ -18,6 +18,7 @@
         private var key: String { "legs.\(index)." + (arrival ? "arriveLocal" : "departLocal") }
         private var identifier: String { "wizard.\(index)." + (arrival ? "arrival" : "departure") }
         private var title: String { t(arrival ? "Arrival" : "Departure") }
+        private var field: WizardFlightTiming.Field { arrival ? .arrival(index) : .departure(index) }
         private var displayedValue: String {
             value.isEmpty ? t("Choose") : WizardDateTime.formatLocal(value, locale: locale) ?? t("Choose")
         }
@@ -44,7 +45,10 @@
             .padding(.horizontal, PlanUITokens.space4).padding(.vertical, PlanUITokens.space2)
             .frame(minHeight: PlanUITokens.wizardFlightRowHeight)
             .sheet(isPresented: $showingPicker) {
-                WizardDateTimeSheet(title: title, localTime: localTime, value: WizardDateTime.date(value) ?? Date()) {
+                WizardDateTimeSheet(
+                    title: title, localTime: localTime, value: model.initialLocal(for: field),
+                    minimum: model.minimumLocal(for: field)
+                ) {
                     picked in
                     model.setDateTime(WizardDateTime.string(picked), index: index, arrival: arrival)
                     UISelectionFeedbackGenerator().selectionChanged()
@@ -86,12 +90,14 @@
         @Environment(\.dismiss) private var dismiss
         let title: String
         let localTime: String
+        let minimum: Date?
         let picked: (Date) -> Void
         @State private var value: Date
 
-        init(title: String, localTime: String, value: Date, picked: @escaping (Date) -> Void) {
+        init(title: String, localTime: String, value: Date, minimum: Date? = nil, picked: @escaping (Date) -> Void) {
             self.title = title
             self.localTime = localTime
+            self.minimum = minimum
             self.picked = picked
             _value = State(initialValue: value)
         }
@@ -102,7 +108,7 @@
                     VStack(alignment: .leading, spacing: PlanUITokens.wizardContentGap) {
                         Text(localTime).font(Typography.wizardHint.font).foregroundStyle(
                             ColorToken.mutedForeground.color)
-                        DatePicker(title, selection: $value, displayedComponents: [.date, .hourAndMinute])
+                        nativePicker
                             .datePickerStyle(.graphical).labelsHidden()
                             .tint(ColorToken.dawnText.color)
                             .environment(\.calendar, WizardDateTime.calendar)
@@ -126,6 +132,14 @@
             }
             .presentationDetents([.large]).presentationDragIndicator(.visible)
             .accessibilityIdentifier("wizard.date-time-sheet")
+        }
+
+        @ViewBuilder private var nativePicker: some View {
+            if let minimum {
+                DatePicker(title, selection: $value, in: minimum..., displayedComponents: [.date, .hourAndMinute])
+            } else {
+                DatePicker(title, selection: $value, displayedComponents: [.date, .hourAndMinute])
+            }
         }
     }
 #endif
