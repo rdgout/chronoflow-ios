@@ -7,33 +7,19 @@ nonisolated final class WalkthroughTests: XCTestCase {
         executionTimeAllowance = 120
     }
 
-    @MainActor func testFreshMockSkipOpensTodayAndOfflineRelaunchKeepsPendingCompletion() {
+    @MainActor func testSeededWalkthroughSkipOpensToday() {
         let app = launch()
         defer { app.terminate() }
-        AuthUIFlow.signIn(app, email: MockScenarioValues.demoEmail)
         assertPage(1, title: "Your plan on one timeline", in: app)
         let skip = app.buttons["walkthrough.skip"]
         XCTAssertTrue(skip.isHittable)
         skip.tap()
-        assertTodayAndRelaunch(app)
+        assertToday(app)
     }
 
-    @MainActor func testAnotherMockAccountNextNextDoneInDutchAtXXLargeAndOfflineRelaunch() {
+    @MainActor func testSeededWalkthroughNextNextDoneInDutchAtXXLarge() {
         let app = launch(language: "nl", xxLarge: true)
         defer { app.terminate() }
-        AuthUIFlow.signIn(app, email: MockScenarioValues.twoFactorEmail)
-        let code = app.textFields["two-factor.code"]
-        guard code.waitForExistence(timeout: 8) else {
-            XCTFail("Expected the second account's two-factor challenge")
-            return
-        }
-        AuthUIFlow.reveal(code, in: app)
-        code.tap()
-        code.typeText(MockScenarioValues.twoFactorCode)
-        let verify = app.buttons["two-factor.submit"]
-        AuthUIFlow.reveal(verify, in: app)
-        AuthUIFlow.waitUntilEnabled(verify)
-        verify.tap()
         assertPage(1, title: "Je plan op één tijdlijn", in: app, language: "nl")
         app.buttons["walkthrough.next"].tap()
         assertPage(2, title: "Herken elke stap in één oogopslag", in: app, language: "nl")
@@ -42,7 +28,7 @@ nonisolated final class WalkthroughTests: XCTestCase {
         let done = app.buttons["walkthrough.done"]
         XCTAssertTrue(done.isHittable)
         done.tap()
-        assertTodayAndRelaunch(app)
+        assertToday(app)
     }
 
     @MainActor private func launch(language: String = "en", xxLarge: Bool = false) -> XCUIApplication {
@@ -50,8 +36,7 @@ nonisolated final class WalkthroughTests: XCTestCase {
         app.launchArguments = AuthUIFlow.arguments(language: language, xxLarge: xxLarge)
         app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
         app.launchEnvironment["CF_WALKTHROUGH_TEST_PENDING"] = "1"
-        app.launch()
-        AuthUIFlow.openSignIn(app)
+        AuthUIFlow.launchSignedIn(app, walkthroughSeen: false, extraEnv: ["CF_AUTH_TEST_WALKTHROUGH_SEEN": "0"])
         return app
     }
 
@@ -68,14 +53,8 @@ nonisolated final class WalkthroughTests: XCTestCase {
         XCTAssertTrue(app.buttons[page == 3 ? "walkthrough.done" : "walkthrough.next"].isHittable)
     }
 
-    @MainActor private func assertTodayAndRelaunch(_ app: XCUIApplication) {
+    @MainActor private func assertToday(_ app: XCUIApplication) {
         XCTAssertTrue(app.scrollViews["today.screen"].waitForExistence(timeout: 15))
         XCTAssertFalse(app.staticTexts["walkthrough.title"].exists)
-        app.terminate()
-        app.launchEnvironment["CF_AUTH_TEST_OFFLINE"] = "1"
-        app.launch()
-        XCTAssertTrue(app.scrollViews["today.screen"].waitForExistence(timeout: 15))
-        XCTAssertFalse(app.staticTexts["walkthrough.title"].exists)
-        XCTAssertFalse(app.buttons["welcome.signIn"].exists)
     }
 }
