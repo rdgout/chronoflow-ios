@@ -2,7 +2,7 @@ import XCTest
 
 @MainActor func launchPlanAccount(
     presentLegend: Bool = false, freezePlanClock: Bool = false,
-    updateTripOnRefresh: Bool = false, emptyTrips: Bool = false
+    updateTripOnRefresh: Bool = false, emptyTrips: Bool = false, refreshCounter: Bool = false
 ) throws -> XCUIApplication {
     let app = XCUIApplication()
     app.launchArguments = AuthUIFlow.arguments()
@@ -12,6 +12,7 @@ import XCTest
     if freezePlanClock { app.launchEnvironment["CF_PLAN_TEST_FREEZE_CLOCK"] = "1" }
     if updateTripOnRefresh { app.launchEnvironment["CF_REFRESH_TEST_UPDATE_TRIP"] = "1" }
     if emptyTrips { app.launchEnvironment["CF_REFRESH_TEST_EMPTY_TRIPS"] = "1" }
+    if refreshCounter { app.launchEnvironment["CF_REFRESH_TEST_COUNTER"] = "1" }
     app.launch()
     AuthUIFlow.openSignIn(app)
     AuthUIFlow.signIn(app, email: MockScenarioValues.demoEmail)

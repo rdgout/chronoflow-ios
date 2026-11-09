@@ -17,34 +17,53 @@ private struct PlanRefreshFeedback: ViewModifier {
     }
 
     func body(content: Content) -> some View {
-        content
+        debugContent(content)
             .safeAreaInset(edge: .top, spacing: 0) {
                 if !model.feedback.isEmpty {
-                    Text(verbatim: text)
-                        .font(Typography.screenBody.font)
-                        .foregroundStyle(ColorToken.foreground.color)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.horizontal, PlanUITokens.space4).padding(.vertical, PlanUITokens.space2)
-                        .background(ColorToken.card.color, in: Capsule())
-                        .overlay {
-                            Capsule().strokeBorder(ColorToken.border.color, lineWidth: AuthTokens.borderWidth)
-                        }
-                        .accessibilityElement(children: .ignore)
-                        .accessibilityLabel(Text(verbatim: text))
-                        .accessibilityIdentifier("refresh.feedback")
-                        .padding(.horizontal, PlanUITokens.space4).padding(.vertical, PlanUITokens.space2)
-                        .planPageRail()
-                        .frame(maxWidth: .infinity)
-                        .background(ColorToken.background.color)
+                    capsule(text: text, presentationID: model.presentationID)
                 }
             }
-            .task(id: model.presentationID) {
-                guard !model.feedback.isEmpty else { return }
+    }
+
+    private func capsule(text: String, presentationID: UUID) -> some View {
+        Text(verbatim: text)
+            .font(Typography.screenBody.font)
+            .foregroundStyle(ColorToken.foreground.color)
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, PlanUITokens.space4).padding(.vertical, PlanUITokens.space2)
+            .background(ColorToken.card.color, in: Capsule())
+            .overlay {
+                Capsule().strokeBorder(ColorToken.border.color, lineWidth: AuthTokens.borderWidth)
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text(verbatim: text))
+            .accessibilityIdentifier("refresh.feedback")
+            .padding(.horizontal, PlanUITokens.space4).padding(.vertical, PlanUITokens.space2)
+            .planPageRail()
+            .frame(maxWidth: .infinity)
+            .background(ColorToken.background.color)
+            .task(id: presentationID) {
                 AccessibilityNotification.Announcement(text).post()
                 do { try await Task.sleep(for: .seconds(2)) } catch { return }
-                model.dismiss()
+                guard !Task.isCancelled else { return }
+                model.dismiss(presentationID: presentationID)
             }
-            .onDisappear { model.dismiss() }
+            .onDisappear { model.dismiss(presentationID: presentationID) }
+    }
+
+    @ViewBuilder private func debugContent(_ content: Content) -> some View {
+        #if DEBUG
+            if ProcessInfo.processInfo.environment["CF_REFRESH_TEST_COUNTER"] == "1" {
+                content
+                    .accessibilityElement(children: .contain)
+                    .accessibilityIdentifier("refresh.debug.count")
+                    .accessibilityValue(Text(verbatim: String(model.debugRefreshCount)))
+            } else {
+                content
+            }
+        #else
+            content
+        #endif
     }
 }

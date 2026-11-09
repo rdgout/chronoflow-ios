@@ -78,9 +78,42 @@ import Testing
         await refresh.value
         #expect(!model.refreshing)
         #expect(model.feedback.first?.text(language: .en) == "Up to date")
-        model.dismiss()
+        model.dismiss(presentationID: model.presentationID)
         #expect(model.feedback.isEmpty)
     }
+
+    @Test func anOlderPresentationCannotDismissANewerRefresh() async {
+        let model = RefreshFeedbackModel()
+        await model.refresh { SyncResult(state: .idle, pendingCount: 0) }
+        let previous = model.presentationID
+        await model.refresh {
+            model.dismiss(presentationID: previous)
+            return SyncResult(state: .offline, pendingCount: 0)
+        }
+        model.dismiss(presentationID: previous)
+        #expect(model.feedback.first?.key == "Needs a connection")
+        model.dismiss(presentationID: model.presentationID)
+        #expect(model.feedback.isEmpty)
+    }
+
+    #if DEBUG
+        @Test func debugCounterRecordsOnlyAcceptedUserRefreshes() async {
+            let model = RefreshFeedbackModel()
+            await model.refresh(userInitiated: false) { SyncResult(state: .idle, pendingCount: 0) }
+            #expect(model.debugRefreshCount == 0)
+            await model.refresh {
+                #expect(model.debugRefreshCount == 1)
+                await model.refresh {
+                    Issue.record("Concurrent refresh must not run")
+                    return nil
+                }
+                return SyncResult(state: .idle, pendingCount: 0)
+            }
+            #expect(model.debugRefreshCount == 1)
+            await model.refresh { throw CancellationError() }
+            #expect(model.debugRefreshCount == 2)
+        }
+    #endif
 
     @Test func thrownFailuresAndCancellation() async {
         let model = RefreshFeedbackModel()

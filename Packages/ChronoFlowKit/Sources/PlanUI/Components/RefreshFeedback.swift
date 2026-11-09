@@ -35,6 +35,9 @@ public struct RefreshFeedback: Sendable, Equatable {
     public private(set) var refreshing = false
     public private(set) var feedback: [RefreshFeedback] = []
     public private(set) var presentationID = UUID()
+    #if DEBUG
+        public private(set) var debugRefreshCount = 0
+    #endif
     public init() {}
 
     public func refresh(
@@ -42,11 +45,12 @@ public struct RefreshFeedback: Sendable, Equatable {
     ) async {
         guard !refreshing else { return }
         refreshing = true
+        presentationID = UUID()
         feedback = []
-        defer {
-            refreshing = false
-            presentationID = UUID()
-        }
+        #if DEBUG
+            if userInitiated { debugRefreshCount += 1 }
+        #endif
+        defer { refreshing = false }
         do {
             if let result = try await action() {
                 feedback = RefreshFeedback.outcome(result, userInitiated: userInitiated)
@@ -60,5 +64,8 @@ public struct RefreshFeedback: Sendable, Equatable {
         }
     }
 
-    public func dismiss() { feedback = [] }
+    public func dismiss(presentationID: UUID) {
+        guard self.presentationID == presentationID else { return }
+        feedback = []
+    }
 }

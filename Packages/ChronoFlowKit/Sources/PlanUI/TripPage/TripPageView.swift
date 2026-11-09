@@ -321,7 +321,8 @@ public struct TripPageView: View {
                         }?.tz)
                 }
             }
-        }.accessibilityLabel(copy("Plan summary"))
+        }.accessibilityElement(children: .contain).accessibilityLabel(copy("Plan summary"))
+            .accessibilityIdentifier("trip.summary")
     }
 
     private var remoteSummary: some View {
