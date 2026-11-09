@@ -44,6 +44,7 @@ private struct PlanRefreshFeedback: ViewModifier {
             .padding(.horizontal, PlanUITokens.space4).padding(.vertical, PlanUITokens.space2)
             .planPageRail()
             .frame(maxWidth: .infinity)
+            .planPageSafeArea()
             .onAppear {
                 #if DEBUG
                     model.debugMarkPresented(text)
