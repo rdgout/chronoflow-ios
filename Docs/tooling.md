@@ -2815,3 +2815,8 @@ with `TEST_HOST`/`BUNDLE_LOADER` and only a ChronoFlow dependency. Select it wit
 Regenerate the project before running; Release no longer compiles the Debug AppTests bundle.
 
 Launch hosted pixel comparisons use `memcmp` for equal buffers and a pointer scan for maximum error/first mismatch; the ≤ 2 byte threshold and report are unchanged. Whole-frame opacity/moon checks share one UInt32 pass.
+
+Hosted auth control-state checks use `AuthTestHost.settle(until:)`: cancellable 10 ms yields,
+asserted predicates and two stable view-frame/bounds passes within 5 s. They keep an initial
+raster settle per host; AX5, shadow and other pixel assertions keep raster settling. UI-test waits
+are unchanged. The native-input regression verifies focus/resignation without captures.

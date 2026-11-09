@@ -136,6 +136,14 @@ nonisolated final class AuthControlTests: XCTestCase {
             XCTAssertEqual(field.autocorrectionType, .no)
             XCTAssertEqual(field.autocapitalizationType, .none)
         }
+        host.prepareCapture = { _ in XCTFail("Predicate settling must not capture pixels") }
+        let email = try XCTUnwrap(fields.first { $0.textContentType == .username })
+        XCTAssertTrue(email.becomeFirstResponder())
+        try await host.settle { email.isFirstResponder && email.isEnabled }
+        XCTAssertTrue(email.isFirstResponder)
+        host.window.endEditing(true)
+        try await host.settle { fields.allSatisfy { !$0.isFirstResponder } }
+        XCTAssertTrue(fields.allSatisfy { !$0.isFirstResponder })
     }
 
     @MainActor func testPasskeyGlyphUsesThePrimaryForegroundInBothAppearances() async throws {
@@ -463,10 +471,8 @@ nonisolated final class AuthControlTests: XCTestCase {
         }
         let host = try AuthTestHost(view, size: CGSize(width: 390, height: 844))
         defer { host.close() }
-        for _ in 0..<100 where sizes.count != 2 {
-            host.window.layoutIfNeeded()
-            try await Task.sleep(for: .milliseconds(10))
-        }
+        try await host.settle()
+        try await host.settle { sizes.count == 2 }
         XCTAssertEqual(try XCTUnwrap(sizes["idle"]), try XCTUnwrap(sizes["busy"]))
         XCTAssertGreaterThanOrEqual(try XCTUnwrap(sizes["busy"]).height, AuthTokens.touch)
     }

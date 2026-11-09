@@ -101,6 +101,32 @@ import XCTest
         }
     }
 
+    func settle(until predicate: () -> Bool) async throws {
+        window.makeKeyAndVisible()
+        var previous: [CGRect] = []
+        var matches = 0
+        let deadline = ContinuousClock.now + .seconds(5)
+        while ContinuousClock.now < deadline {
+            try await Task.sleep(for: .milliseconds(10))
+            guard ContinuousClock.now < deadline else { break }
+            layout()
+            func frames(_ view: UIView) -> [CGRect] {
+                [view.frame, view.bounds] + view.subviews.flatMap(frames)
+            }
+            let current = frames(window)
+            matches = predicate() && current == previous ? matches + 1 : 0
+            if matches == 2 {
+                XCTAssertTrue(window.isKeyWindow)
+                XCTAssertEqual(controller.view.bounds.size, window.bounds.size)
+                XCTAssertTrue(controller.safeAreaRegions.isEmpty)
+                XCTAssertEqual(controller.traitCollection.displayScale, scale)
+                return
+            }
+            previous = current
+        }
+        throw CaptureFailure.didNotSettle("Predicate: 5 s deadline, revision \(revision), size \(window.bounds.size)")
+    }
+
     func settle() async throws {
         var previous: SnapshotRaster?
         var matches = 0

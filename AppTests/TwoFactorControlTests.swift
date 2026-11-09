@@ -53,7 +53,10 @@ nonisolated final class TwoFactorControlTests: XCTestCase {
                 XCTAssertEqual(recovery.placeholder, "xxxx-xxxx")
                 XCTAssertEqual(recovery.text, "")
                 model.toggleMode()
-                try await host.settle()
+                try await host.settle {
+                    guard let code = textFields(host.window).first else { return false }
+                    return code !== recovery && code.keyboardType == .numberPad && code.text == ""
+                }
                 let code = try XCTUnwrap(textFields(host.window).first)
                 XCTAssertTrue(code.placeholder?.isEmpty != false)
                 XCTAssertEqual(code.text, "")
@@ -75,12 +78,15 @@ nonisolated final class TwoFactorControlTests: XCTestCase {
                 .validation(fields: [model.field: FieldMessage(key: "Please fill this in.")], status: 422),
             ] {
                 XCTAssertTrue(model.form.begin(.verify))
-                try await host.settle()
+                try await host.settle { !field.isFirstResponder && !field.isEnabled }
                 XCTAssertFalse(field.isFirstResponder)
                 XCTAssertFalse(field.isEnabled)
                 model.form.receive(failure)
                 model.form.finish()
-                try await host.settle()
+                try await host.settle {
+                    field.isEnabled && field.isFirstResponder && textFields(host.window).first === field
+                        && model.form.failure == failure
+                }
                 XCTAssertTrue(field.isEnabled)
                 XCTAssertTrue(field.isFirstResponder)
                 XCTAssertTrue(textFields(host.window).first === field)
@@ -122,7 +128,7 @@ nonisolated final class TwoFactorControlTests: XCTestCase {
         XCTAssertTrue(field.becomeFirstResponder())
         for (input, expected) in [("a٣", ""), ("12b٣345678", "123456"), ("7", "123456"), ("x", "123456")] {
             field.insertText(input)
-            try await host.settle()
+            try await host.settle { model.code == expected && field.text == expected }
             XCTAssertEqual(model.code, expected)
             XCTAssertEqual(field.text, expected)
             XCTAssertTrue(field.isFirstResponder)
@@ -141,14 +147,16 @@ nonisolated final class TwoFactorControlTests: XCTestCase {
             XCTAssertTrue(field.becomeFirstResponder())
             let input = recovery ? "AbCdEf1234-GhIjKl5678" : "123456"
             field.insertText(input)
-            try await host.settle()
+            try await host.settle { field.isFirstResponder && model.code == input && field.text == input }
             XCTAssertEqual(model.code, input)
             XCTAssertEqual(field.text, input)
             model.editCode(recovery ? "OtherCode-123" : "654321")
-            try await host.settle()
+            try await host.settle { field.text == model.code }
             XCTAssertEqual(field.text, model.code)
             await model.submit()
-            try await host.settle()
+            try await host.settle {
+                field.text == "" && model.code == "" && model.form.fields[model.field] != nil
+            }
             XCTAssertEqual(field.text, "")
             XCTAssertEqual(model.code, "")
             XCTAssertNotNil(model.form.fields[model.field])
@@ -168,7 +176,10 @@ nonisolated final class TwoFactorControlTests: XCTestCase {
         XCTAssertEqual(code.autocapitalizationType, .none)
         XCTAssertEqual(code.autocorrectionType, .no)
         model.toggleMode()
-        try await host.settle()
+        try await host.settle {
+            guard let recovery = textFields(host.window).first else { return false }
+            return recovery !== code && recovery.keyboardType == .default && recovery.returnKeyType == .go
+        }
         let recovery = try XCTUnwrap(textFields(host.window).first)
         XCTAssertEqual(recovery.keyboardType, .default)
         XCTAssertTrue(recovery.textContentType == nil || recovery.textContentType.rawValue.isEmpty)
@@ -191,7 +202,7 @@ nonisolated final class TwoFactorControlTests: XCTestCase {
             try await host.settle()
             let idle = try XCTUnwrap(frames[.submit]).size
             XCTAssertTrue(model.form.begin(.verify))
-            try await host.settle()
+            try await host.settle { model.form.busy && frames[.submit]?.size == idle }
             XCTAssertEqual(try XCTUnwrap(frames[.submit]).size, idle)
             model.form.finish()
         }

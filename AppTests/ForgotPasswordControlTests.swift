@@ -77,12 +77,15 @@ nonisolated final class ForgotPasswordControlTests: XCTestCase {
             ]
             for (failure, banner) in failures {
                 XCTAssertTrue(model.form.begin(.sendResetLink))
-                try await host.settle()
+                try await host.settle { !field.isFirstResponder && !field.isEnabled }
                 XCTAssertFalse(field.isFirstResponder)
                 XCTAssertFalse(field.isEnabled)
                 model.form.receive(failure)
                 model.form.finish()
-                try await host.settle()
+                try await host.settle {
+                    field.isEnabled && field.isFirstResponder && forgotTextFields(host.window).first === field
+                        && model.form.failure == failure && model.form.banner == banner
+                }
                 model.editEmail(try XCTUnwrap(field.text))
                 XCTAssertTrue(field.isEnabled)
                 XCTAssertTrue(field.isFirstResponder)

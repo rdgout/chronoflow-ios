@@ -35,7 +35,11 @@ nonisolated final class ResetPasswordControlTests: XCTestCase {
         model.editPassword("short")
         model.editConfirmation("different")
         await model.submit()
-        try await host.settle()
+        try await host.settle {
+            model.password.isEmpty && model.confirmation.isEmpty && !model.form.fields.isEmpty
+                && recoveryTextFields(host.window).count == 2
+                && recoveryTextFields(host.window).allSatisfy { ($0.text ?? "").isEmpty }
+        }
         XCTAssertTrue(model.password.isEmpty && model.confirmation.isEmpty)
         XCTAssertFalse(model.form.fields.isEmpty)
         XCTAssertTrue(recoveryTextFields(host.window).allSatisfy { ($0.text ?? "").isEmpty })
