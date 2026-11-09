@@ -37,8 +37,32 @@ for (const [family,weight,file] of [['Figtree',400,'CFFigtree-400.ttf'],['Figtre
 }
 const css = read('_design/canvas/theme.css') + read('_design/canvas/ds/chronoflow/components/bundle.css') + fonts + 'body{margin:0}';
 const errors={none:null,wrong:["That email and password don't match.",'Check both and try again, or reset your password.'],locked:['Too many attempts.','Wait a few minutes before you try again, or reset your password now.'],server:['Something went wrong on our side.','Try again in a moment.']};
+const twoFactorSource = read('_design/canvas/AuthTwoFactor.dc.html');
+const twoFactorContext = {DCLogic: class { constructor(props) { this.props = props; } }};
+vm.createContext(twoFactorContext);
+vm.runInContext(twoFactorSource.match(/<script type="text\/x-dc"[^>]*>([\s\S]*?)<\/script>/)[1] + '\nthis.Board = Component;', twoFactorContext);
+function twoFactor(theme, recovery, state) {
+    const board = new twoFactorContext.Board({theme, screen:'twofactor', error:state});
+    board.state.recovery = recovery;
+    const values = board.renderVals();
+    const value = key => key.split('.').reduce((v,k)=>v[k], values);
+    let html = twoFactorSource.split('</helmet>')[1].split('</x-dc>')[0];
+    html = html.replace(/<div class="pattern-dots"[^>]*><\/div>/g,'');
+    const condition = /<sc-if\b([^>]*)>((?:(?!<sc-if)[\s\S])*?)<\/sc-if>/g;
+    while (html.includes('<sc-if')) {
+        html = html.replace(condition, (_, attrs, body) => value(attrs.match(/value="\{\{([^}]+)\}\}"/)[1]) ? body : '');
+    }
+    if (state !== 'field') html = html.replace(/ default-value="482913" error="[^"]*"/,'');
+    html = html.replace(/\s+on-[\w-]+="[^"]*"/g, '');
+    return imports(html.replace(/\{\{([^}]+)\}\}/g, (_, key) => escape(value(key))));
+}
 function save(name,html) { fs.writeFileSync(path.join(root,'_design/frames/auth',name+'.html'),`<!doctype html><meta charset="utf-8"><style>${css}</style>${html}`.replace(/[ \t]+$/gm, '')); }
 for (const theme of ['light','dark']) {
+    for (const recovery of [false,true]) {
+        for (const state of recovery ? ['none','attempts','server'] : ['none','field','attempts','server']) {
+            save(`two-factor-${recovery?'recovery':'code'}-${state}-${theme}`,twoFactor(theme,recovery,state));
+        }
+    }
     for (const [state,error] of Object.entries(errors)) {
         let html=read('_design/canvas/AuthSignIn.dc.html').split('</helmet>')[1].split('</x-dc>')[0];
         html=html.replace(/<div class="pattern-dots"[^>]*><\/div>/g,'');

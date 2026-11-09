@@ -53,7 +53,9 @@
                 else { return }
                 var parent = view.superview
                 while parent != nil && !(parent is UIScrollView) { parent = parent?.superview }
-                guard let scroll = parent as? UIScrollView else { return }
+                guard let scroll = parent as? UIScrollView,
+                    !scroll.isTracking, !scroll.isDragging, !scroll.isDecelerating
+                else { return }
                 var viewport = scroll.convert(scroll.bounds, to: window).intersection(window.bounds)
                 if let keyboard {
                     let local = window.convert(keyboard, from: window.screen.coordinateSpace)

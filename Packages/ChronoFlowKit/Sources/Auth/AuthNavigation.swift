@@ -1,4 +1,5 @@
 import AppCore
+import Foundation
 import Observation
 
 nonisolated public enum AuthDestination: Hashable, Sendable {
@@ -11,11 +12,18 @@ nonisolated public enum AuthDestination: Hashable, Sendable {
     public init() {}
     public func push(_ destination: AuthDestination) { path.append(destination) }
     public func twoFactor(challengeID: String) {
-        guard !challengeID.isEmpty else { return }
+        guard !challengeID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            cancelTwoFactor()
+            return
+        }
         self.challengeID = challengeID
         path.append(.twoFactor)
     }
     public func discardChallenge() { challengeID = nil }
+    public func cancelTwoFactor() {
+        challengeID = nil
+        if let index = path.firstIndex(of: .twoFactor) { path.removeSubrange(index...) }
+    }
     public func reset() {
         path = []
         challengeID = nil

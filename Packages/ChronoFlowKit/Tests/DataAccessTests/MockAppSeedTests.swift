@@ -70,6 +70,24 @@ extension DataSourceSelectionTests {
             #expect(snapshot.security["passkeys"] == .array([]))
         }
 
+        @Test(arguments: [false, true])
+        func authAcceptanceScenariosPersistAndStartOfflineBeforeAnyRequest(unverified: Bool) async throws {
+            let seed = try MockAppSeed.make(now: MockClock().now(), unverified: unverified, walkthroughSeen: true)
+            let store = MemoryMockStateStore()
+            let source = MockDataSource(store: store, seed: seed, sleep: { _ in })
+            let session = try await login(source)
+            #expect(session.account.hasVerifiedEmail == !unverified)
+            #expect(session.account.walkthroughSeen)
+            let offline = MockDataSource(store: store, offline: true, sleep: { _ in }, bearer: { session.token })
+            await #expect(throws: DataFailure.offline) { try await offline.fetchIdentity() }
+            await #expect(throws: DataFailure.offline) { try await offline.signOut() }
+            await offline.setOffline(false)
+            #expect(try await offline.fetchIdentity().hasVerifiedEmail == !unverified)
+            try await offline.signOut()
+            await #expect(throws: DataFailure.unauthorized(status: 401)) { try await offline.fetchIdentity() }
+            #expect(store.load()?.accounts.count == 2)
+        }
+
         @Test func defaultAppMockReseedsEmptyAndOldStatesAndPreservesCurrentChanges() async throws {
             for old in [MockServerState(), try oldShape()] {
                 let store = MemoryMockStateStore(old)

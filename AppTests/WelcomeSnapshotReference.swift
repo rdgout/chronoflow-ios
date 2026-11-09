@@ -7,7 +7,7 @@
         of image: UIImage, named name: String, record: Bool, testName: String, file: StaticString = #filePath,
         directory: URL? = nil, content: SnapshotReference.Content = .visible
     ) throws -> String? {
-        guard let png = image.pngData() else { return "Welcome capture could not be encoded as PNG" }
+        guard let png = image.pngData() else { return "Snapshot capture could not be encoded as PNG" }
         return try verifyWelcomeSnapshot(
             of: SnapshotReference.Sample(png: png), named: name, record: record, testName: testName,
             file: file, directory: directory, content: content)

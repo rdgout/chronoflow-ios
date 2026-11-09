@@ -108,7 +108,12 @@ targets:
       - path: AppUITests
       - path: Packages/ChronoFlowKit/Tests/ToolingTests/LaunchImageComparison.swift
       - path: Packages/ChronoFlowKit/Tests/ToolingTests/FrameStability.swift
+      - path: Packages/ChronoFlowKit/Tests/ToolingTests/AuthScrollGesture.swift
+      - path: Packages/ChronoFlowKit/Tests/SnapshotSupport/RenderedTextContrast.swift
+      - path: Packages/ChronoFlowKit/Tests/SnapshotSupport/SnapshotReference.swift
+      - path: Packages/ChronoFlowKit/Tests/SnapshotSupport/WelcomeSnapshotPixels.swift
       - path: AppTests/WelcomeAuditPolicy.swift
+      - path: Packages/ChronoFlowKit/Sources/DataAccess/Mock/MockScenarioValues.swift
     settings:
       TARGETED_DEVICE_FAMILY: "1"
       SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO

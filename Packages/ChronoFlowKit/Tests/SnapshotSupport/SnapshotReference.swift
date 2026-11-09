@@ -71,7 +71,7 @@ public nonisolated enum SnapshotReference {
         switch content {
         case .visible:
             guard WelcomeSnapshotPixels.hasVisibleVariation(actual.bytes) else {
-                return "Welcome capture is uniform or transparent; refusing snapshot"
+                return "Snapshot capture is uniform or transparent; refusing snapshot"
             }
         case .fullyTransparent:
             guard WelcomeSnapshotPixels.isFullyTransparent(actual.bytes) else {
@@ -85,7 +85,7 @@ public nonisolated enum SnapshotReference {
             return "Record mode is on. Recorded \(reference.lastPathComponent)"
         }
         guard FileManager.default.fileExists(atPath: reference.path) else {
-            return "Missing Welcome reference: \(reference.path). Record explicitly with SNAPSHOT_RECORD=1."
+            return "Missing snapshot reference: \(reference.path). Record explicitly with SNAPSHOT_RECORD=1."
         }
         let expected = try SnapshotRaster(png: Data(contentsOf: reference))
         guard actual == expected else {
@@ -93,7 +93,7 @@ public nonisolated enum SnapshotReference {
             let detail =
                 first.map { "byte \($0.offset): actual \($0.element.0), expected \($0.element.1)" }
                 ?? "dimensions differ"
-            return "Welcome pixels differ from \(reference.path) (\(detail))"
+            return "Snapshot pixels differ from \(reference.path) (\(detail))"
         }
         return nil
     }

@@ -54,6 +54,7 @@ Simulators: Xcode 27.2 with iOS 27.2 runtimes (iPhone SE 3rd gen, 17e, 17, Air, 
 ## Traps
 
 - `xcode-select` points at full Xcode (`/Applications/Xcode.app`); keep it that way.
+- Headless simulators can report an off-screen keyboard as existing; after boot, the runner sets each device's `com.apple.keyboard.preferences AutomaticMinimizationEnabled` to false via `simctl spawn`, never host-global Simulator.app preferences.
 - The launch screen is cached by iOS. After changing it: Clean Build Folder, delete the app, restart the Simulator.
 - `*.xcodeproj` is generated; edit `project.yml`, never the project file.
 - Hosted `AppTests` must depend only on `ChronoFlow`, using `TEST_HOST` / `BUNDLE_LOADER`; linking its package products again duplicates resource-bundle accessors and crashes package test processes.

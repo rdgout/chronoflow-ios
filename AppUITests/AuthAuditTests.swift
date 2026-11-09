@@ -1,54 +1,156 @@
+import DesignSystem
+import UIKit
 import XCTest
 
 nonisolated final class AuthAuditTests: XCTestCase {
-    @MainActor func testSignInAuditInBothLanguagesAndAppearances() async throws {
+    @MainActor func testSignInAndBothTwoFactorModesInBothLanguagesAppearancesAndSizes() async throws {
+        try await FontRegistry.register()
         let device = XCUIDevice.shared
         let previous = device.appearance
         defer { device.appearance = previous }
         for language in ["en", "nl"] {
             for appearance in [XCUIDevice.Appearance.light, .dark] {
-                try DeviceAppearance.set(appearance)
-                let app = XCUIApplication()
-                app.launchArguments = [
-                    "-cf.session", "out", "-cf.reduceMotion", "-AppleLanguages", "(\(language))", "-AppleLocale",
-                    language == "nl" ? "nl_NL" : "en_US",
-                ]
-                app.launch()
-                defer { app.terminate() }
-                let signIn = app.buttons["welcome.signIn"]
-                XCTAssertTrue(signIn.waitForExistence(timeout: 6))
-                for _ in 0..<8 where !signIn.isHittable { app.scrollViews.firstMatch.swipeUp() }
-                signIn.tap()
-                XCTAssertTrue(app.staticTexts["auth.heading"].waitForExistence(timeout: 3))
-                try audit(app, language: language, appearance: appearance, stage: "initial")
-                for id in ["sign-in.passkey", "sign-in.submit", "sign-in.forgot", "sign-in.signup", "sign-in.guest"] {
-                    let button = app.buttons[id]
-                    for _ in 0..<8 where !button.isHittable { app.scrollViews.firstMatch.swipeUp() }
-                    XCTAssertTrue(button.isHittable)
-                    try audit(app, language: language, appearance: appearance, stage: id)
+                for xxLarge in [false, true] {
+                    try DeviceAppearance.set(appearance)
+                    let app = XCUIApplication()
+                    app.launchArguments = AuthUIFlow.arguments(language: language, xxLarge: xxLarge)
+                    app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
+                    app.launch()
+                    defer { app.terminate() }
+                    AuthUIFlow.openSignIn(app)
+                    let context = "\(language), \(xxLarge ? "xxLarge" : "default")"
+                    auditControls(
+                        app,
+                        identifiers: [
+                            "auth.back", "sign-in.passkey", "sign-in.email", "sign-in.password",
+                            "sign-in.submit", "sign-in.forgot", "sign-in.signup", "sign-in.guest",
+                        ],
+                        language: context, appearance: appearance, xxLarge: xxLarge)
+                    AuthUIFlow.signIn(app, email: MockScenarioValues.twoFactorEmail)
+                    XCTAssertTrue(app.textFields["two-factor.code"].waitForExistence(timeout: 8))
+                    let keyboardHidden = XCTNSPredicateExpectation(
+                        predicate: NSPredicate { _, _ in !app.keyboards.firstMatch.exists }, object: nil)
+                    XCTAssertEqual(XCTWaiter.wait(for: [keyboardHidden], timeout: 5), .completed)
+                    for recovery in [false, true] {
+                        if recovery {
+                            AuthUIFlow.reveal(app.buttons["two-factor.toggle"], in: app)
+                            app.buttons["two-factor.toggle"].tap()
+                        }
+                        auditControls(
+                            app,
+                            identifiers: [
+                                "auth.back", recovery ? "two-factor.recovery_code" : "two-factor.code",
+                                "two-factor.submit", "two-factor.toggle",
+                            ],
+                            language: context, appearance: appearance, xxLarge: xxLarge)
+                    }
                 }
             }
         }
     }
 
-    @MainActor private func audit(
-        _ app: XCUIApplication, language: String, appearance: XCUIDevice.Appearance, stage: String
-    ) throws {
-        try app.performAccessibilityAudit(for: .all.subtracting(.dynamicType)) { issue in
-            let boardContrast = Self.isBoardContrast(identifier: issue.element?.identifier, auditType: issue.auditType)
-            let message = """
-                Auth accessibility [\(language), \(appearance), \(stage)] \
-                auditType=\(issue.auditType) identifier=\(issue.element?.identifier ?? "<nil>") \
-                label=\(issue.element?.label ?? "<nil>") compactDescription=\(issue.compactDescription) \
-                boardContrast=\(boardContrast) ignored=\(boardContrast)
-                """
-            print(message)
-            let attachment = XCTAttachment(string: message)
-            attachment.lifetime = .keepAlways
-            self.add(attachment)
-            if !boardContrast { XCTFail(message) }
-            return boardContrast
+    @MainActor private func auditControls(
+        _ app: XCUIApplication, identifiers: [String], language: String, appearance: XCUIDevice.Appearance,
+        xxLarge: Bool
+    ) {
+        for identifier in identifiers {
+            let control = AuthUIFlow.control(identifier, in: app)
+            XCTAssertTrue(control.waitForExistence(timeout: 3), identifier)
+            AuthUIFlow.reveal(control, in: app)
+            audit(app, language: language, appearance: appearance, stage: identifier, xxLarge: xxLarge)
         }
+    }
+
+    @MainActor private func audit(
+        _ app: XCUIApplication, language: String, appearance: XCUIDevice.Appearance, stage: String, xxLarge: Bool
+    ) {
+        do {
+            try app.performAccessibilityAudit(for: .all.subtracting(.dynamicType)) { issue in
+                let boardContrast = Self.isBoardContrast(
+                    identifier: issue.element?.identifier, auditType: issue.auditType)
+                var minimum: Double?
+                var measurement = "not eligible"
+                if issue.auditType == .contrast, let element = issue.element, element.identifier == "auth.subtitle" {
+                    (minimum, measurement) = self.subtitleContrast(
+                        element, in: app, appearance: appearance, xxLarge: xxLarge)
+                }
+                let ignored =
+                    boardContrast
+                    || Self.isMeasuredSubtitleContrast(
+                        identifier: issue.element?.identifier, auditType: issue.auditType, minimum: minimum)
+                let message = """
+                    Auth accessibility [\(language), \(appearance), \(stage)] \
+                    auditType=\(issue.auditType) identifier=\(issue.element?.identifier ?? "<nil>") \
+                    label=\(issue.element?.label ?? "<nil>") compactDescription=\(issue.compactDescription) \
+                    boardContrast=\(boardContrast) ignored=\(ignored) subtitleMinimum=\(minimum.map { "\($0):1" } ?? "unmeasurable")
+                    \(measurement)
+                    """
+                print(message)
+                let attachment = XCTAttachment(string: message)
+                attachment.lifetime = .keepAlways
+                self.add(attachment)
+                if !ignored { XCTFail(message) }
+                return ignored
+            }
+        } catch {
+            XCTFail("Auth accessibility audit failed [\(language), \(appearance), \(stage)]: \(error)")
+        }
+    }
+
+    @MainActor private func subtitleContrast(
+        _ element: XCUIElement, in app: XCUIApplication, appearance: XCUIDevice.Appearance, xxLarge: Bool
+    ) -> (Double?, String) {
+        let scroll = AuthUIFlow.scroll(in: app)
+        let subtitles = scroll.staticTexts.matching(identifier: "auth.subtitle")
+        guard subtitles.count == 1, element.elementType == .staticText, subtitles.element.frame == element.frame else {
+            return (nil, "No unique subtitle in the current auth screen")
+        }
+        let appFrame = app.frame
+        let frame = element.frame.offsetBy(dx: -appFrame.minX, dy: -appFrame.minY)
+        let viewport = AuthUIFlow.viewport(in: app, scrollFrame: scroll.frame)
+            .offsetBy(dx: -appFrame.minX, dy: -appFrame.minY)
+        let screenshot = app.screenshot()
+        let attachment = XCTAttachment(screenshot: screenshot)
+        attachment.name = "Auth subtitle contrast source"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        do {
+            let raster = try SnapshotRaster(png: screenshot.pngRepresentation)
+            let scale = CGFloat(raster.width) / appFrame.width
+            guard scale.isFinite, scale > 0, abs(CGFloat(raster.height) / scale - appFrame.height) < 1 else {
+                return (nil, "Screenshot and app bounds disagree: \(raster.width)×\(raster.height), app=\(appFrame)")
+            }
+            let traits = UITraitCollection {
+                $0.userInterfaceStyle = appearance == .dark ? .dark : .light
+                $0.preferredContentSizeCategory = xxLarge ? .extraExtraLarge : .large
+            }
+            guard
+                let rgb = UIColor(ColorToken.skyTitle.color).resolvedColor(with: traits).cgColor.converted(
+                    to: CGColorSpace(name: CGColorSpace.sRGB)!, intent: .relativeColorimetric, options: nil)?.components
+            else { return (nil, "Cannot convert subtitle ink to sRGB") }
+            let font = Typography.authBody.uiFont(compatibleWith: traits)
+            guard let leading = Typography.authBody.lineHeight else { return (nil, "Missing subtitle leading") }
+            let measurement = RenderedTextContrast.measure(
+                raster: raster, frame: frame, scale: scale,
+                lineHeight: leading * font.pointSize / Typography.authBody.size,
+                text: Array(rgb.prefix(3)).map(Double.init), viewport: viewport)
+            let lines = measurement.lines.enumerated().map { index, line in
+                "line=\(index + 1), frame=\(line.frame), ratio=\(line.minimum)...\(line.maximum):1, ink=\(line.ink)"
+            }.joined(separator: "\n")
+            return (
+                measurement.minimum,
+                "subtitle=\(frame), viewport=\(viewport), scale=\(scale), measuredLines=\(measurement.lines.count)/\(measurement.expectedLines)\n\(lines)"
+            )
+        } catch {
+            return (nil, "Subtitle screenshot measurement failed: \(error)")
+        }
+    }
+
+    @MainActor private static func isMeasuredSubtitleContrast(
+        identifier: String?, auditType: XCUIAccessibilityAuditType, minimum: Double?
+    ) -> Bool {
+        guard auditType == .contrast, identifier == "auth.subtitle", let minimum else { return false }
+        return minimum.isFinite && minimum >= 4.5
     }
 
     @MainActor private static func isBoardContrast(identifier: String?, auditType: XCUIAccessibilityAuditType) -> Bool {
@@ -65,9 +167,28 @@ nonisolated final class AuthAuditTests: XCTestCase {
         }
         for identifier in [
             nil, "", "sign-in", "sign-in.submit", "sign-in.passkey", "sign-in.email", "sign-in.password",
-            "sign-in.forgot", "sign-in.signup", "auth.heading", "auth.banner", "welcome.plan", "sign-in.guest.new",
+            "sign-in.forgot", "sign-in.signup", "two-factor.code", "two-factor.recovery_code",
+            "two-factor.submit", "two-factor.toggle", "auth.back", "auth.heading", "auth.banner", "welcome.plan",
+            "sign-in.guest.new", "auth.subtitle",
         ] {
             XCTAssertFalse(Self.isBoardContrast(identifier: identifier, auditType: .contrast))
+        }
+    }
+
+    @MainActor func testSubtitleExceptionRequiresAnExactContrastIssueAndAMeasuredPassingMinimum() {
+        for minimum in [4.5, 10.8] {
+            XCTAssertTrue(
+                Self.isMeasuredSubtitleContrast(identifier: "auth.subtitle", auditType: .contrast, minimum: minimum))
+        }
+        for minimum: Double? in [nil, 4.499, .nan, .infinity, -.infinity] {
+            XCTAssertFalse(
+                Self.isMeasuredSubtitleContrast(identifier: "auth.subtitle", auditType: .contrast, minimum: minimum))
+        }
+        for identifier in [nil, "", "auth.subtitle.new", "auth.heading", "two-factor.toggle", "sign-in.submit"] {
+            XCTAssertFalse(Self.isMeasuredSubtitleContrast(identifier: identifier, auditType: .contrast, minimum: 10.8))
+        }
+        for type: XCUIAccessibilityAuditType in [.textClipped, .hitRegion, .trait, .all, [.contrast, .textClipped]] {
+            XCTAssertFalse(Self.isMeasuredSubtitleContrast(identifier: "auth.subtitle", auditType: type, minimum: 10.8))
         }
     }
 }

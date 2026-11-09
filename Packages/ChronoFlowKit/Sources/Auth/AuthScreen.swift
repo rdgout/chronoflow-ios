@@ -5,10 +5,12 @@
 
     public enum AuthElement: String, CaseIterable {
         case brand, heading, card, footer, email, password, submit, forgot, signup, forgotLabel, signupLabel
+        case code, modeToggle, passkey, subtitle
     }
 
     public struct AuthScreen<Card: View, Footer: View>: View {
         @Environment(\.colorScheme) private var scheme
+        let scrollIdentifier: String
         let title: String
         let description: String
         let back: () -> Void
@@ -16,10 +18,11 @@
         let footer: Footer
         let measure: (AuthElement, CGRect) -> Void
         public init(
-            title: String, description: String, back: @escaping () -> Void,
+            scrollIdentifier: String, title: String, description: String, back: @escaping () -> Void,
             measure: @escaping (AuthElement, CGRect) -> Void = { _, _ in },
             @ViewBuilder card: () -> Card, @ViewBuilder footer: () -> Footer
         ) {
+            self.scrollIdentifier = scrollIdentifier
             self.title = title
             self.description = description
             self.back = back
@@ -38,6 +41,7 @@
                             )
                             .accessibilityIdentifier("auth.heading")
                             WelcomeText(description, style: Typography.authBody, color: .skyTitle)
+                                .accessibilityIdentifier("auth.subtitle").authMeasure(.subtitle, measure)
                         }.padding(.top, AuthTokens.headingMargin).authMeasure(.heading, measure)
                         Spacer(minLength: AuthTokens.spacer)
                         VStack(alignment: .leading, spacing: AuthTokens.cardGap) { card }
@@ -47,15 +51,18 @@
                                 RoundedRectangle(cornerRadius: AuthTokens.cardRadius).fill(ColorToken.card.color)
                             }
                             .authMeasure(.card, measure)
-                        footer.padding(.top, AuthTokens.footerGap).authMeasure(.footer, measure)
+                        if Footer.self != EmptyView.self {
+                            footer.padding(.top, AuthTokens.footerGap).authMeasure(.footer, measure)
+                        }
                     }
                     .padding(.horizontal, AuthTokens.gutter).padding(.top, AuthTokens.gutter).padding(
                         .bottom, AuthTokens.bottom
                     )
                     .frame(minHeight: viewport.size.height, alignment: .top)
                 }
+                .scrollBounceBehavior(.always, axes: .vertical)
                 .scrollDismissesKeyboard(.interactively)
-                .accessibilityIdentifier("auth.scroll")
+                .accessibilityIdentifier(scrollIdentifier)
             }.background { CfSky().ignoresSafeArea() }
         }
     }

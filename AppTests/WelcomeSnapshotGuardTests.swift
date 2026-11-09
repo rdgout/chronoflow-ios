@@ -49,7 +49,7 @@ import Testing
             let original = image(mark: false)
             let missing = try verifyWelcomeSnapshot(
                 of: original, named: "fixture", record: false, testName: "guard", directory: directory)
-            #expect(missing?.hasPrefix("Missing Welcome reference:") == true)
+            #expect(missing?.hasPrefix("Missing snapshot reference:") == true)
             #expect(!FileManager.default.fileExists(atPath: directory.path))
             let recorded = try verifyWelcomeSnapshot(
                 of: original, named: "fixture", record: true, testName: "guard", directory: directory)
@@ -59,7 +59,7 @@ import Testing
                     of: original, named: "fixture", record: false, testName: "guard", directory: directory) == nil)
             let changed = try verifyWelcomeSnapshot(
                 of: image(mark: true), named: "fixture", record: false, testName: "guard", directory: directory)
-            #expect(changed?.hasPrefix("Welcome pixels differ") == true)
+            #expect(changed?.hasPrefix("Snapshot pixels differ") == true)
             let uniform = UIGraphicsImageRenderer(size: CGSize(width: 16, height: 16), format: format).image { _ in }
             let rejected = try verifyWelcomeSnapshot(
                 of: uniform, named: "invalid", record: true, testName: "guard", directory: directory)

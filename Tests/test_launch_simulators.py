@@ -5,13 +5,15 @@ import os
 from pathlib import Path
 import re
 import runpy
+import signal
+import sys
 import subprocess
 import threading
 import tempfile
 import time
 from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 ROOT = Path(__file__).resolve().parents[1]
 (ROOT / 'build').mkdir(exist_ok=True)
@@ -23,6 +25,17 @@ PHASE9_HOSTED = (
     'AppTests/AccountWipeTests', 'AppTests/SessionReadinessTests',
     'AppTests/LaunchConnectionTests', 'AppTests/ReleaseReadinessTests',
 )
+
+AUTH_HOSTED = (
+    'AppTests/AuthControlTests', 'AppTests/AuthLayoutTests', 'AppTests/AuthSnapshotGuardTests',
+    'AppTests/AuthSnapshotTests', 'AppTests/TwoFactorControlTests', 'AppTests/TwoFactorLayoutTests',
+    'AppTests/TwoFactorSnapshotTests',
+)
+AUTH_UI = (
+    'AppUITests/SignInTests', 'AppUITests/SignInKeyboardTests', 'AppUITests/TwoFactorTests',
+    'AppUITests/TwoFactorKeyboardTests', 'AppUITests/AuthSessionTests', 'AppUITests/AuthAuditTests',
+)
+AUTH_SNAPSHOTS = ('AppTests/AuthSnapshotTests', 'AppTests/TwoFactorSnapshotTests')
 
 
 def discovered_suites(directory):
@@ -44,6 +57,212 @@ def discovered_suites(directory):
             if not any(start <= test.start() < end for start, end in spans):
                 raise AssertionError(f'{file}: top-level tests need a named, classified suite')
     return suites
+
+
+class TimeoutTests(unittest.TestCase):
+    @contextlib.contextmanager
+    def output_schedule(self, steps):
+        now = [0]
+        steps = iter(steps)
+        process = Mock(returncode=0)
+        with tempfile.TemporaryDirectory(dir=ROOT / 'build') as directory:
+            log = Path(directory) / 'test.log'
+
+            def communicate(timeout=None):
+                if process.returncode:
+                    return None, None
+                step = next(steps, None)
+                if step is None:
+                    return None, None
+                now[0], content = step
+                if content:
+                    with log.open('ab') as output:
+                        output.write(content)
+                else:
+                    os.utime(log, None)
+                raise subprocess.TimeoutExpired('test', timeout)
+
+            def terminate(process, signum):
+                process.returncode = -signum
+
+            process.communicate.side_effect = communicate
+            with patch.object(runner.subprocess, 'Popen', return_value=contextlib.nullcontext(process)), \
+                 patch.object(runner.time, 'monotonic', side_effect=lambda: now[0]), \
+                 patch.dict(runner.run.__globals__, signal_group=Mock(side_effect=terminate)):
+                yield log, now
+
+    def test_growing_log_can_run_past_old_wall_clock_limit(self):
+        with self.output_schedule([(second, b'progress\n') for second in range(300, 1801, 300)]) as (log, now):
+            completed = runner.run(['test'], log=log, timeout=3600, idle_timeout=600)
+            self.assertEqual(completed.returncode, 0)
+            self.assertEqual(now[0], 1800)
+            self.assertNotIn('timed out', log.read_text())
+
+    def test_inactivity_deadline_restarts_on_growth_but_not_timestamp_changes(self):
+        with self.output_schedule([(500, b'progress\n'), (1000, b''), (1101, b'')]) as (log, _):
+            with self.assertRaises(runner.TestRunTimeout) as raised:
+                runner.run(['test'], log=log, timeout=3600, idle_timeout=600)
+            self.assertEqual(raised.exception.detail, 'Test run timed out after 600s of log inactivity')
+            self.assertIn(raised.exception.detail + '; terminated process group', log.read_text())
+
+    def test_growing_log_still_hits_overall_cap(self):
+        with self.output_schedule([(second, b'progress\n') for second in range(300, 3601, 300)]) as (log, _):
+            with self.assertRaises(runner.TestRunTimeout) as raised:
+                runner.run(['test'], log=log, timeout=3600, idle_timeout=600)
+            self.assertEqual(raised.exception.detail, 'Test run timed out after 3600s overall')
+            self.assertIn(raised.exception.detail + '; terminated process group', log.read_text())
+
+    def test_run_timeout_kills_process_group_and_keeps_log(self):
+        with tempfile.TemporaryDirectory(dir=ROOT / 'build') as directory:
+            log = Path(directory) / 'timeout.log'
+            with self.assertRaises(subprocess.TimeoutExpired):
+                runner.run(['python3', '-c', 'import time; time.sleep(30)'], log=log, timeout=0.1)
+            self.assertIn('Test run timed out after 0.1s overall', log.read_text())
+
+    def test_inactivity_kills_descendants_that_ignore_termination_and_keeps_output(self):
+        with tempfile.TemporaryDirectory(dir=ROOT / 'build') as directory:
+            scratch = Path(directory)
+            log = scratch / 'timeout.log'
+            child = scratch / 'child.py'
+            child.write_text("""import os
+from pathlib import Path
+import signal
+import sys
+import time
+root = Path(sys.argv[1])
+if os.fork() == 0:
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
+    (root / 'child.pid').write_text(str(os.getpid()))
+    while True:
+        (root / 'heartbeat').write_text(str(time.monotonic()))
+        time.sleep(0.02)
+while not (root / 'heartbeat').exists():
+    time.sleep(0.01)
+print('ready', file=sys.stderr, flush=True)
+while True:
+    time.sleep(30)
+""")
+            try:
+                with self.assertRaises(runner.TestRunTimeout) as raised:
+                    runner.run([sys.executable, str(child), str(scratch)], log=log, timeout=10, idle_timeout=0.5)
+                self.assertIn('of log inactivity', raised.exception.detail)
+                self.assertIn('\nready\n', log.read_text())
+                self.assertIn('terminated process group', log.read_text())
+                heartbeat = (scratch / 'heartbeat').read_text()
+                time.sleep(0.15)
+                self.assertEqual(heartbeat, (scratch / 'heartbeat').read_text())
+            finally:
+                pid = scratch / 'child.pid'
+                if pid.exists():
+                    try:
+                        os.kill(int(pid.read_text()), signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+
+    def test_test_pass_uses_default_limits_and_environment_overrides(self):
+        for overrides, expected in [({}, (3600, 600)), ({'TEST_RUN_TIMEOUT': '900'}, (900, 600)),
+                                    ({'TEST_RUN_IDLE_TIMEOUT': '45'}, (3600, 45))]:
+            with self.subTest(overrides=overrides), tempfile.TemporaryDirectory(dir=ROOT / 'build') as directory:
+                execute = Mock(return_value=subprocess.CompletedProcess('test', 0))
+                with patch.dict(os.environ, overrides, clear=True), \
+                     patch.dict(runner.test_pass.__globals__, ROOT=Path(directory), run=execute, read_results=Mock(return_value=[])):
+                    runner.test_pass(runner.Destination('17e', 'test', 'Booted'), 'Debug', ['AppTests/AuthControlTests'], 'Debug-compare')
+                self.assertEqual((execute.call_args.kwargs['timeout'], execute.call_args.kwargs['idle_timeout']), expected)
+
+    def test_test_pass_rejects_invalid_timeout_overrides(self):
+        for key in ('TEST_RUN_TIMEOUT', 'TEST_RUN_IDLE_TIMEOUT'):
+            for value in ('0', '-1', 'nan', 'inf', 'invalid'):
+                with self.subTest(key=key, value=value), tempfile.TemporaryDirectory(dir=ROOT / 'build') as directory, \
+                     patch.dict(os.environ, {key: value}, clear=True), \
+                     patch.dict(runner.test_pass.__globals__, ROOT=Path(directory), run=Mock()) as namespace:
+                    with self.assertRaises(ValueError):
+                        runner.test_pass(runner.Destination('17e', 'test', 'Booted'), 'Debug', ['AppTests/AuthControlTests'], 'Debug-compare')
+                    namespace['run'].assert_not_called()
+
+    def test_make_duo_preserves_its_overall_cap_and_override(self):
+        for value, expected in [('', '600'), ('900', '900')]:
+            with self.subTest(value=value):
+                command = subprocess.check_output(['make', '-n', 'duo', 'TEST_RUN_TIMEOUT=' + value], cwd=ROOT, text=True)
+                self.assertIn('TEST_RUN_TIMEOUT=' + expected + ' ', command)
+
+    def test_interrupts_forward_to_worker_process_groups_and_exit_promptly(self):
+        for signum in (signal.SIGINT, signal.SIGTERM):
+            with self.subTest(signal=signum), tempfile.TemporaryDirectory(dir=ROOT / 'build') as directory:
+                scratch = Path(directory)
+                child = scratch / 'child.py'
+                child.write_text("""import os
+from pathlib import Path
+import signal
+import subprocess
+import sys
+import time
+root, name = Path(sys.argv[1]), sys.argv[2]
+def interrupted(signum, frame):
+    (root / (name + '.signal')).write_text(str(signum))
+for signum in (signal.SIGINT, signal.SIGTERM):
+    signal.signal(signum, interrupted)
+if not name.endswith('-grandchild'):
+    subprocess.Popen([sys.executable, __file__, str(root), name + '-grandchild'])
+(root / (name + '.pid')).write_text(str(os.getpid()))
+while True:
+    (root / (name + '.heartbeat')).write_text(str(time.monotonic()))
+    time.sleep(0.05)
+""")
+                driver = scratch / 'driver.py'
+                driver.write_text("""from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+import runpy
+import sys
+runner = runpy.run_path(sys.argv[1])
+scratch = Path(sys.argv[2])
+with runner['forward_run_signals']():
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = [pool.submit(runner['run'], [sys.executable, str(scratch / 'child.py'), str(scratch), str(i)],
+                               log=scratch / (str(i) + '.log'), timeout=30, idle_timeout=10) for i in range(2)]
+        for future in futures:
+            future.result()
+""")
+                with subprocess.Popen([sys.executable, str(driver), str(ROOT / 'Scripts/launch-simulators.py'), str(scratch)],
+                                      stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) as process:
+                    try:
+                        deadline = time.monotonic() + 5
+                        while len(list(scratch.glob('*.pid'))) < 4 and time.monotonic() < deadline:
+                            time.sleep(0.01)
+                        self.assertEqual(len(list(scratch.glob('*.pid'))), 4)
+                        started = time.monotonic()
+                        process.send_signal(signum)
+                        output, _ = process.communicate(timeout=4)
+                        self.assertEqual(process.returncode, 128 + signum, output)
+                        self.assertLess(time.monotonic() - started, 4)
+                        self.assertEqual(len(list(scratch.glob('*.signal'))), 4)
+                        self.assertTrue(all(p.read_text() == str(signum) for p in scratch.glob('*.signal')))
+                        heartbeats = {p: p.read_text() for p in scratch.glob('*.heartbeat')}
+                        self.assertEqual(len(heartbeats), 4)
+                        time.sleep(0.15)
+                        self.assertEqual(heartbeats, {p: p.read_text() for p in heartbeats})
+                    finally:
+                        if process.poll() is None:
+                            process.kill()
+                        for pid in scratch.glob('*.pid'):
+                            try:
+                                os.kill(int(pid.read_text()), signal.SIGKILL)
+                            except ProcessLookupError:
+                                pass
+
+    def test_timeout_marks_selection_failed_and_skips_later_passes(self):
+        destination = runner.Destination('duo', 'test', 'Booted')
+        selected = ['AppUITests/SignInTests', 'AppUITests/AuthSessionTests', 'AppTests/ReleaseReadinessTests']
+        namespace = runner.test_pass.__globals__
+        for inactive in (False, True):
+            execute = Mock(side_effect=runner.TestRunTimeout('test', 0.1, inactive=inactive))
+            with self.subTest(inactive=inactive), tempfile.TemporaryDirectory(dir=ROOT / 'build') as directory, \
+                 patch.dict(namespace, ROOT=Path(directory), prepare=lambda _: None, run=execute):
+                results = runner.test_device(destination, selected, 'runtime', None, {'Debug': True, 'Release': True}, workers=2)
+            self.assertEqual(len(results), 3)
+            self.assertTrue(all(not r.passed for r in results))
+            self.assertIn('of log inactivity' if inactive else 'overall', results[0].detail)
+            self.assertTrue(all(r.detail == 'Not run after timeout' for r in results[1:]))
+            execute.assert_called_once()
 
 
 class ClassificationTests(unittest.TestCase):
@@ -96,6 +315,42 @@ class ClassificationTests(unittest.TestCase):
         self.assertEqual(runner.recording_selection(['AppTests/AuthSnapshotTests'], 'welcome', '1'),
                          ['AppTests/AuthSnapshotTests'])
 
+    def test_two_factor_suites_run_at_their_registered_tiers_and_record_only_on_17e(self):
+        self.assertIn('AuthTests/TwoFactorModelTests', runner.selectors('host'))
+        for suite in ['AppTests/TwoFactorControlTests', 'AppTests/TwoFactorLayoutTests', 'AppUITests/TwoFactorTests']:
+            self.assertIn(suite, runner.selectors('logic'))
+            self.assertEqual(runner.selection('check', '17e').count(suite), 1)
+        keyboard = 'AppUITests/TwoFactorKeyboardTests'
+        self.assertIn(keyboard, runner.selectors('matrix'))
+        self.assertEqual(runner.selection('check', '17e').count(keyboard), 1)
+        snapshot = 'AppTests/TwoFactorSnapshotTests'
+        self.assertIn(snapshot, runner.selectors('profiles'))
+        self.assertIn(snapshot, runner.SNAPSHOTS)
+        self.assertEqual(runner.selection('check', '17e').count(snapshot), 1)
+        self.assertEqual(runner.recording_selection([snapshot], 'check', '1'), [snapshot])
+        self.assertEqual(runner.recording_selection([snapshot], 'check', 'launch'), [])
+        for alias in ['se', 'duo']:
+            self.assertEqual(runner.selection('check', alias, only=[keyboard]), [keyboard])
+
+    def test_auth_acceptance_tiers_include_all_suites_once_and_project_discovers_ui_sources(self):
+        for suite in AUTH_HOSTED + AUTH_UI:
+            self.assertEqual(runner.selection('check', '17e').count(suite), 1, suite)
+        self.assertEqual(runner.selection('runtime', 'duo'), list(runner.RUNTIME_SMOKE))
+        for suite in AUTH_UI:
+            if suite not in ('AppUITests/AuthSessionTests', 'AppUITests/AuthAuditTests'):
+                self.assertEqual(runner.selection('runtime', 'duo').count(suite), 1, suite)
+        self.assertFalse(set(AUTH_HOSTED) & set(runner.selection('runtime', 'duo')))
+        self.assertIn('AuthTests/AuthSnapshotCaptureTests', runner.selectors('host'))
+        for suite in AUTH_SNAPSHOTS + ('AppTests/AuthSnapshotGuardTests',):
+            self.assertIn(suite, runner.selection('snapshots', '17e'))
+        project = (ROOT / 'project.yml').read_text()
+        ui = project.split('  AppUITests:\n')[1].split('  PerfUITests:\n')[0]
+        self.assertIn('- path: AppUITests\n', ui)
+        self.assertIn('- path: Packages/ChronoFlowKit/Sources/DataAccess/Mock/MockScenarioValues.swift', ui)
+        self.assertNotIn('excludes:', ui)
+        for suite in ['AppUITests/AuthSessionTests', 'AppUITests/AuthAuditTests']:
+            self.assertIn(suite, runner.SERIAL_TESTS)
+
     def test_store_and_core_logic_run_on_host_by_default(self):
         host = set(runner.selectors('host'))
         self.assertTrue(any(s.startswith('LocalStoreTests/') for s in host))
@@ -126,7 +381,7 @@ class ClassificationTests(unittest.TestCase):
         self.assertIn('CHRONOFLOW_READINESS = native', (ROOT / 'Config/Base.xcconfig').read_text())
         perf = project.split('\n  Perf:\n    build:')[1]
         self.assertEqual(perf.count('config: Perf'), 3)
-        self.assertIn('-configuration Perf test', (ROOT / 'Makefile').read_text())
+        self.assertIn('--devices 17e --mode perf', (ROOT / 'Makefile').read_text())
         for suite in ('AppCoreTests/SignOutTests', 'AppCoreTests/StoredDataReadinessTests',
                       'SyncTests/SyncTriggerTests', 'SyncTests/SessionSyncReadinessTests', 'SyncTests/SessionWipeTests', 'LocalStoreTests/AccountWiperTests', 'LocalStoreTests/AccountReadinessTests'):
             self.assertIn(suite, runner.selectors('host'))
@@ -242,8 +497,12 @@ class RunnerTests(unittest.TestCase):
                     for s in self.selected[bundle]]
                 return subprocess.CompletedProcess(command, status, json.dumps({'testNodes': [{'children': nodes}]}))
             return subprocess.CompletedProcess(command, status, '')
+        def fake_popen(command, **options):
+            completed = fake_run(command, **options)
+            process = Mock(returncode=completed.returncode, communicate=Mock(return_value=(None, None)))
+            return contextlib.nullcontext(process)
         output = io.StringIO()
-        with patch.dict(runner.main.__globals__, ROOT=self.scratch, TIMINGS_PATH=self.scratch / 'build/test-results/timings.json', machine_resources=lambda: (14, 36 * 1024**3)), patch.object(runner.subprocess, 'run', side_effect=fake_run), contextlib.redirect_stdout(output):
+        with patch.dict(runner.main.__globals__, ROOT=self.scratch, TIMINGS_PATH=self.scratch / 'build/test-results/timings.json', machine_resources=lambda: (14, 36 * 1024**3)), patch.object(runner.subprocess, 'run', side_effect=fake_run), patch.object(runner.subprocess, 'Popen', side_effect=fake_popen), contextlib.redirect_stdout(output):
             kwargs.setdefault("mode", "matrix")
             result = runner.main(**kwargs)
         return result, output.getvalue()
@@ -310,6 +569,65 @@ class RunnerTests(unittest.TestCase):
         self.assertNotIn('-only-testing:RenderTests/WelcomeRenderingTests', recorded[0])
         self.assertNotIn('-only-testing:AppTests/WelcomeSnapshotGuardTests', recorded[0])
 
+    def test_auth_check_executes_all_suites_once_and_keeps_failures_visible(self):
+        status, output = self.execute(mode='check')
+        self.assertEqual(status, 0, output)
+        for suite in AUTH_HOSTED + AUTH_UI:
+            commands = [c for c in self.commands_for_tests() if '-only-testing:' + suite in c]
+            self.assertEqual(len(commands), 1, suite)
+            self.assertIn('platform=iOS Simulator,id=device-1', commands[0])
+            self.assertIn(' ' + suite, output)
+        for suite in AUTH_HOSTED + AUTH_UI:
+            with self.subTest(suite=suite):
+                self.result_fail = suite
+                status, output = self.execute(mode='check')
+                self.assertEqual(status, 1, output)
+                self.assertRegex(output, r'FAIL 17e Debug-(?:compare|serial) ' + re.escape(suite))
+                self.assertIn('PASS 17e Release-compare AppTests/ReleaseReadinessTests', output)
+        self.result_fail = None
+
+    def test_auth_skipped_expected_failure_or_missing_execution_cannot_pass(self):
+        for suite in AUTH_HOSTED + AUTH_UI:
+            for result in ['Skipped', 'Expected Failure', 'Failed', None]:
+                with self.subTest(suite=suite, result=result):
+                    self.nodes = [] if result is None else [
+                        {'nodeType': 'Test Case', 'nodeIdentifier': suite + '/testExample()', 'result': result}]
+                    status, output = self.execute(aliases=['17e'], only=[suite])
+                    self.assertEqual(status, 1, output)
+                    self.assertIn('FAIL 17e ', output)
+        self.nodes = None
+
+    def test_auth_recording_is_opt_in_17e_only_and_never_reaches_guards_ui_or_release(self):
+        for record in ['0', '1', 'all', 'launch']:
+            self.commands.clear()
+            self.environments.clear()
+            with patch.dict(os.environ, {'SNAPSHOT_RECORD': record, 'TEST_RUNNER_SNAPSHOT_RECORD': '1'}):
+                status, output = self.execute(mode='check', aliases=['17e', 'duo'],
+                    only=list(AUTH_HOSTED + AUTH_UI) + ['AppTests/ReleaseReadinessTests'])
+            self.assertEqual(status, 0, output)
+            recorded = [c for c, e in zip(self.commands, self.environments) if e.get('TEST_RUNNER_SNAPSHOT_RECORD')]
+            self.assertEqual(len(recorded), int(record in ['1', 'all']))
+            for command in recorded:
+                self.assertIn('platform=iOS Simulator,id=device-1', command)
+                self.assertEqual([v for v in command if v.startswith('-only-testing:')],
+                                 ['-only-testing:' + suite for suite in AUTH_SNAPSHOTS])
+                self.assertEqual(command[command.index('-parallel-testing-enabled') + 1], 'NO')
+            for suite in AUTH_UI + ('AppTests/AuthSnapshotGuardTests', 'AppTests/ReleaseReadinessTests'):
+                for c, env in zip(self.commands, self.environments):
+                    if '-only-testing:' + suite in c:
+                        self.assertNotIn('TEST_RUNNER_SNAPSHOT_RECORD', env)
+
+    def test_auth_record_failure_still_runs_compare_audit_and_release(self):
+        self.command_failure = lambda c: c[-1] == 'test-without-building' and any('record.xcresult' in a for a in c)
+        with patch.dict(os.environ, SNAPSHOT_RECORD='1'):
+            status, output = self.execute(mode='check')
+        self.assertEqual(status, 1, output)
+        self.assertIn('xcodebuild exited 65', output)
+        for suite in AUTH_HOSTED + AUTH_UI:
+            self.assertTrue(any('-only-testing:' + suite in c and not any('record.xcresult' in a for a in c)
+                                for c in self.commands_for_tests()), suite)
+        self.assertIn('PASS 17e Release-compare AppTests/ReleaseReadinessTests', output)
+
     def test_resolves_aliases_by_type_and_runtime_never_name(self):
         self.devices[runner.REGULAR_RUNTIME].insert(0, dict(self.devices[runner.DUO_RUNTIME][0], udid='wrong-runtime'))
         status, output = self.execute(aliases=['se', 'duo'])
@@ -327,6 +645,64 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(status, 0, output)
         self.assertEqual(sum(c[:3] == ['xcrun', 'simctl', 'boot'] for c in self.commands), 1)
         self.assertFalse(any('uninstall' in c for c in self.commands))
+
+    def test_software_keyboard_is_enabled_after_boot_before_every_ui_run(self):
+        for mode, aliases, only, reuse in [
+            ('check', ['17e'], (), False),
+            ('runtime', ['duo'], (), False),
+            ('check', ['se', 'duo'], ['AppUITests/TwoFactorKeyboardTests'], True),
+            ('matrix', list(runner.MATRIX), (), False),
+        ]:
+            for state in ('Shutdown', 'Booted'):
+                with self.subTest(mode=mode, aliases=aliases, state=state):
+                    self.commands.clear()
+                    for devices in self.devices.values():
+                        for device in devices:
+                            device['state'] = state
+                    status, output = self.execute(mode=mode, aliases=aliases, only=only, reuse_build=reuse)
+                    self.assertEqual(status, 0, output)
+                    for alias in aliases:
+                        destination = runner.resolve(alias, self.devices)
+                        write = ['xcrun', 'simctl', 'spawn', destination.udid, 'defaults', 'write',
+                                 'com.apple.keyboard.preferences', 'AutomaticMinimizationEnabled', '-bool', 'false']
+                        self.assertEqual(self.commands.count(write), 1)
+                        ready = self.commands.index(['xcrun', 'simctl', 'bootstatus', destination.udid, '-b'])
+                        configured = self.commands.index(write)
+                        self.assertLess(ready, configured)
+                        boot = ['xcrun', 'simctl', 'boot', destination.udid]
+                        if state == 'Shutdown':
+                            self.assertLess(self.commands.index(boot), ready)
+                        else:
+                            self.assertNotIn(boot, self.commands)
+                        tests = [c for c in self.commands_for_tests() if destination.flag in c]
+                        self.assertTrue(tests)
+                        for command in tests:
+                            self.assertLess(configured, self.commands.index(command))
+                    self.assertFalse(any(c[0] == 'defaults' for c in self.commands))
+
+    def test_keyboard_preference_failure_stops_ui_tests_for_that_device(self):
+        self.command_failure = lambda c: 'AutomaticMinimizationEnabled' in c
+        status, output = self.execute(aliases=['se'], only=['AppUITests/TwoFactorKeyboardTests'])
+        self.assertEqual(status, 1, output)
+        self.assertIn('Preparation:', output)
+        self.assertEqual(self.commands_for_tests(), [])
+
+    def test_perf_uses_shared_preparation_and_keeps_its_scheme_and_configuration(self):
+        status, output = self.execute(mode='perf', aliases=['17e'])
+        self.assertEqual(status, 0, output)
+        builds = [c for c in self.commands if c[-1] == 'build-for-testing']
+        self.assertEqual(len(builds), 1)
+        tests = self.commands_for_tests()
+        self.assertEqual(len(tests), 1)
+        for command in builds + tests:
+            self.assertEqual(command[command.index('-scheme') + 1], 'Perf')
+            self.assertEqual(command[command.index('-configuration') + 1], 'Perf')
+            self.assertNotIn('ENABLE_TESTABILITY=YES', command)
+        self.assertIn('-only-testing:PerfUITests/LaunchPerfTests', tests[0])
+        write = next(c for c in self.commands if 'AutomaticMinimizationEnabled' in c)
+        self.assertEqual(write[3], 'device-1')
+        self.assertLess(self.commands.index(write), self.commands.index(tests[0]))
+        self.assertIn('PASS 17e Perf-compare PerfUITests/LaunchPerfTests', output)
 
     def test_per_device_result_paths_and_suite_summaries(self):
         status, output = self.execute()
@@ -406,7 +782,7 @@ class RunnerTests(unittest.TestCase):
         selections, _ = runner.schedule('matrix', list(runner.MATRIX))
         for suite in runner.selectors('profiles') + runner.selectors('reference'):
             self.assertEqual([alias for alias in selections if suite in selections[alias]], ['17e'])
-        self.assertFalse(set(runner.selectors('profiles') + runner.selectors('reference')) & set(runner.selection('runtime', 'duo')))
+        self.assertEqual(set(runner.selectors('profiles') + runner.selectors('reference')) & set(runner.selection('runtime', 'duo')), {'AppUITests/LaunchToWelcomeTests'})
 
     def test_lpt_is_only_used_for_an_explicit_matrix(self):
         selections, order = runner.schedule('check', ['se', '17e', 'duo'])
@@ -724,7 +1100,7 @@ class ProfileTests(unittest.TestCase):
 
     def test_new_baseline_inventory_is_complete_after_recording(self):
         catalog = json.loads((ROOT / 'Packages/ChronoFlowKit/Tests/SnapshotSupport/profiles.json').read_text())
-        for screen in ['Welcome', 'Launch', 'Auth']:
+        for screen in ['Welcome', 'Launch', 'Auth', 'TwoFactor']:
             expected = set()
             if screen == 'Auth':
                 expected.update(f'board-{style}-{language}-{category}-{banner}.png'
@@ -732,6 +1108,12 @@ class ProfileTests(unittest.TestCase):
                                 for category in ['large', 'xxLarge']
                                 for banner in ['none', 'credentials', 'locked', 'server'])
                 self.assertEqual(len(expected), 32)
+            if screen == 'TwoFactor':
+                expected.update(f'board-{style}-{language}-{category}-{mode}-{state}.png'
+                                for style in ['light', 'dark'] for language in ['en', 'nl']
+                                for category in ['large', 'xxLarge'] for mode in ['code', 'recovery']
+                                for state in ['none', 'fieldError', 'attempts', 'server'])
+                self.assertEqual(len(expected), 64)
             for device in catalog['devices'].values():
                 profile = catalog['profiles'][device['profile']]
                 name = f"{device['alias']}-{device['width']}x{device['height']}-{device['scale']}x"
@@ -744,15 +1126,19 @@ class ProfileTests(unittest.TestCase):
                             expected.update(f'{name}-{style}-{language}-{category}-{banner}.png'
                                             for category in profile['dynamicType']
                                             for banner in ['none', 'credentials', 'locked', 'server'])
+                        elif screen == 'TwoFactor':
+                            expected.update(f'{name}-{style}-{language}-{category}-{mode}-{state}.png'
+                                            for category in profile['dynamicType'] for mode in ['code', 'recovery']
+                                            for state in ['none', 'fieldError', 'attempts', 'server'])
                         else:
                             expected.update(f'sampledSplashFrames.{name}-{style}-{language}-{category}-{frame}.png'
                                             for category in ['large', 'xxLarge'] for frame in profile['launchFrames'])
-            directory = ROOT / 'AppTests/__Snapshots__' / ('Auth' if screen == 'Auth' else f'{screen}SnapshotTests')
+            directory = ROOT / 'AppTests/__Snapshots__' / ({'Auth': 'Auth', 'TwoFactor': 'Auth/TwoFactor'}.get(screen, f'{screen}SnapshotTests'))
             actual = {p.name for p in directory.glob('*.png')}
             # A wholly unrecorded suite is pending orchestrator work; partial recordings must fail.
             if actual:
                 self.assertEqual(actual, expected, screen)
-            self.assertEqual(len(expected), {'Welcome': 320, 'Launch': 472, 'Auth': 896}[screen])
+            self.assertEqual(len(expected), {'Welcome': 320, 'Launch': 472, 'Auth': 896, 'TwoFactor': 1792}[screen])
 
 
 if __name__ == '__main__':

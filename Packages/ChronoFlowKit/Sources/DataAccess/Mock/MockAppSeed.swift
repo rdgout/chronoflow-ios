@@ -2,7 +2,7 @@
     import AppCore
     import Foundation
 
-    enum MockAppSeed {
+    public enum MockAppSeed {
         struct Fixtures: Decodable {
             let settings: AccountSettings
             let trips: [TripFixture]
@@ -12,14 +12,16 @@
             let detail: TripDetail
         }
 
-        static func make(now: Date) throws -> MockServerState {
+        public static func make(now: Date, unverified: Bool = false, walkthroughSeen: Bool = false) throws
+            -> MockServerState
+        {
             let fixtures = try JSONDecoder().decode(Fixtures.self, from: fixtureData())
             let trips = fixtures.trips.map { listItem($0, now: now) }
             let details = Dictionary(uniqueKeysWithValues: fixtures.trips.map { ($0.card["id"]!.string!, $0.detail) })
             var snapshot = AccountSnapshot.mockRegistration(
                 id: MockScenarioValues.demoID, name: "Demo Traveller", email: MockScenarioValues.demoEmail,
                 language: .en, now: now)
-            snapshot.hasVerifiedEmail = true
+            snapshot.hasVerifiedEmail = !unverified
             snapshot.settings = fixtures.settings
             snapshot.readiness = MockSettings.readiness(fixtures.settings.bodyClock)
             snapshot.billing["checkout"] = .null
@@ -36,7 +38,8 @@
                 "twoFactorConfirmedAt": .null, "requiresConfirmation": .bool(true), "retryAfterSeconds": .null,
             ])
             let demo = MockServerAccount(
-                snapshot: snapshot, password: MockScenarioValues.password, trips: trips, details: details)
+                snapshot: snapshot, password: MockScenarioValues.password, walkthroughSeen: walkthroughSeen,
+                trips: trips, details: details)
             snapshot.id = MockScenarioValues.twoFactorID
             snapshot.email = MockScenarioValues.twoFactorEmail
             snapshot.security["passkeys"] = .array([])
@@ -45,6 +48,7 @@
             let twoFactor = MockServerAccount(
                 snapshot: snapshot, password: MockScenarioValues.password,
                 twoFactorCode: MockScenarioValues.twoFactorCode, recoveryCodes: [MockScenarioValues.recoveryCode],
+                walkthroughSeen: walkthroughSeen,
                 trips: trips, details: details)
             return MockServerState(accounts: [demo, twoFactor])
         }

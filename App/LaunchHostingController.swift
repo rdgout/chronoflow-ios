@@ -21,6 +21,14 @@ final class LaunchHostingController<Content: View>: UIHostingController<Content>
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+        #if DEBUG
+            if let window = view.window {
+                let frame = window.safeAreaLayoutGuide.layoutFrame
+                if let data = try? JSONEncoder().encode([frame.minX, frame.minY, frame.width, frame.height]) {
+                    window.accessibilityValue = String(decoding: data, as: UTF8.self)
+                }
+            }
+        #endif
         if !recordedLayout {
             recordedLayout = true
             signposts.event(.rootFirstLayout)

@@ -21,11 +21,11 @@ public actor MockDataSource: DataSource {
     private var state: MockServerState?
     private var currentToken: String?
     private var requestToken: String?
-    private var offline = false
+    private var offline: Bool
     private var failures: [MockMethod: DataFailure] = [:]
 
     public init(
-        store: any MockStateStore = MemoryMockStateStore(), seed: MockServerState? = nil,
+        store: any MockStateStore = MemoryMockStateStore(), seed: MockServerState? = nil, offline: Bool = false,
         now: @escaping @Sendable () -> Date = { Date() },
         delay: @escaping @Sendable () -> TimeInterval = { Double.random(in: 0.3...0.8) },
         sleep: @escaping APIClient.Sleep = { try await Task.sleep(for: .seconds($0)) },
@@ -35,6 +35,7 @@ public actor MockDataSource: DataSource {
     ) {
         self.store = store
         self.seed = seed
+        self.offline = offline
         self.now = now
         self.delay = delay
         self.sleep = sleep
@@ -199,11 +200,26 @@ public actor MockDataSource: DataSource {
     public func completeTwoFactor(_ input: TwoFactorInput) async throws -> SessionResult {
         try await begin(.completeTwoFactor)
         try limit("two-factor:" + input.challengeId)
+        let value =
+            switch input.proof {
+            case .code(let value), .recoveryCode(let value): value
+            }
+        guard !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw DataFailure.validation(
+                fields: [
+                    "code": FieldMessage(key: "Enter the 6-digit code from your authenticator app."),
+                    "recovery_code": FieldMessage(
+                        key: "Enter one of the recovery codes you saved when you set up two-factor authentication."),
+                ], status: 422)
+        }
         let field: String
         let key: String
         switch input.proof {
-        case .code:
+        case .code(let value):
             field = "code"
+            guard value.count == 6, value.allSatisfy({ $0.isASCII && $0.isNumber }) else {
+                throw validation(field, "Enter the 6-digit code from your authenticator app.")
+            }
             key = "The authentication code was not accepted. Try again."
         case .recoveryCode:
             field = "recovery_code"

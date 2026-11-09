@@ -4,7 +4,7 @@ cd "$(dirname "$0")/.."
 chrome="${CHROME:-/Applications/Google Chrome.app/Contents/MacOS/Google Chrome}"
 mkdir -p build/board-png
 for appearance in light dark; do
-    for frame in sign-in-none sign-in-wrong sign-in-locked sign-in-server banners controls; do
+    for frame in sign-in-none sign-in-wrong sign-in-locked sign-in-server two-factor-code-none two-factor-code-field two-factor-code-attempts two-factor-code-server two-factor-recovery-none two-factor-recovery-attempts two-factor-recovery-server banners controls; do
         case "$frame" in
             banners) height=1900 ;;
             controls) height=1200 ;;

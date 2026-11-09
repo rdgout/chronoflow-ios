@@ -464,6 +464,248 @@
           }
         }
       }
+    },
+    "Enter your code": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter your code"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voer je code in"
+          }
+        }
+      }
+    },
+    "Open your authenticator app and type the 6-digit code for ChronoFlow.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open your authenticator app and type the 6-digit code for ChronoFlow."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open je authenticator-app en voer de 6-cijferige code voor ChronoFlow in."
+          }
+        }
+      }
+    },
+    "6-digit code": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "6-digit code"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "6-cijferige code"
+          }
+        }
+      }
+    },
+    "Recovery code": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recovery code"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herstelcode"
+          }
+        }
+      }
+    },
+    "Each recovery code works once.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Each recovery code works once."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elke herstelcode kun je één keer gebruiken."
+          }
+        }
+      }
+    },
+    "Verify": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verify"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bevestigen"
+          }
+        }
+      }
+    },
+    "Use a recovery code instead": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use a recovery code instead"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gebruik een herstelcode"
+          }
+        }
+      }
+    },
+    "Use your authenticator app": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use your authenticator app"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gebruik je authenticator-app"
+          }
+        }
+      }
+    },
+    "That code didn't work. Codes change every 30 seconds, so try the newest one.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That code didn't work. Codes change every 30 seconds, so try the newest one."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die code werkte niet. Codes veranderen elke 30 seconden, dus probeer de nieuwste."
+          }
+        }
+      }
+    },
+    "Wait a few minutes before you try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wait a few minutes before you try again."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wacht een paar minuten voordat je het opnieuw probeert."
+          }
+        }
+      }
+    },
+    "Enter the 6-digit code from your authenticator app.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the 6-digit code from your authenticator app."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vul de 6-cijferige code uit je authenticator-app in."
+          }
+        }
+      }
+    },
+    "Enter one of the recovery codes you saved when you set up two-factor authentication.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter one of the recovery codes you saved when you set up two-factor authentication."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vul een van de herstelcodes in die je hebt bewaard bij het instellen van tweefactorauthenticatie."
+          }
+        }
+      }
+    },
+    "The authentication code was not accepted. Try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The authentication code was not accepted. Try again."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De verificatiecode is niet geaccepteerd. Probeer het opnieuw."
+          }
+        }
+      }
+    },
+    "This recovery code was not accepted. Try another saved code.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This recovery code was not accepted. Try another saved code."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze herstelcode is niet geaccepteerd. Probeer een andere bewaarde code."
+          }
+        }
+      }
+    },
+    "xxxx-xxxx": {
+      "comment": "Recovery code format example; identical in every language.",
+      "shouldTranslate": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "xxxx-xxxx"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "xxxx-xxxx"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -17,7 +17,12 @@ nonisolated public enum AuthCopy {
             "The passwords don't match yet.", "Use both uppercase and lowercase letters.",
             "Use at least one letter.", "Use at least one number.", "Use at least one symbol.",
             "This password has appeared in a data leak. Choose a different password.",
-            "This email verification link is invalid or has expired.":
+            "This email verification link is invalid or has expired.",
+            "Enter the 6-digit code from your authenticator app.",
+            "Enter one of the recovery codes you saved when you set up two-factor authentication.",
+            "The authentication code was not accepted. Try again.",
+            "That code didn't work. Codes change every 30 seconds, so try the newest one.",
+            "This recovery code was not accepted. Try another saved code.":
             return string(message.key, locale: locale)
         case "Use no more than :max characters.", "Use at least :min characters.",
             "Use no more than {{max}} characters.", "Use at least {{min}} characters.":

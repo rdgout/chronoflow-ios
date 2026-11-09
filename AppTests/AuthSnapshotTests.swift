@@ -21,7 +21,8 @@ nonisolated final class AuthSnapshotTests: XCTestCase {
                             let model = authSnapshotModel()
                             if let banner { model.form.receive(snapshotFailure(banner)) }
                             XCTAssertEqual(model.form.banner, banner)
-                            let view = SignInView(model: model, back: {}, guest: {})
+                            var frames: [AuthElement: CGRect] = [:]
+                            let view = SignInView(model: model, back: {}, guest: {}, measure: { frames[$0] = $1 })
                             host.configure(view, style: style, language: language, category: category)
                             try await host.settle()
                             let suffix =
@@ -29,8 +30,14 @@ nonisolated final class AuthSnapshotTests: XCTestCase {
                             let directory = URL(filePath: #filePath).deletingLastPathComponent().appending(
                                 path: "__Snapshots__/Auth")
                             let reference = directory.appending(path: "\(suffix).png")
-                            let failure = try SnapshotReference.verify(
-                                png: XCTUnwrap(host.image().pngData()), reference: reference,
+                            let failure = try AuthSnapshotCapture.verify(
+                                png: XCTUnwrap(host.image().pngData()),
+                                size: fixture.size, scale: fixture.scale,
+                                viewport: CGRect(origin: .zero, size: fixture.size).inset(by: fixture.insets),
+                                frames: Dictionary(uniqueKeysWithValues: frames.map { ($0.key.rawValue, $0.value) }),
+                                required: Set(
+                                    (Set(AuthElement.allCases).subtracting([.code, .modeToggle])).map(\.rawValue)),
+                                reference: reference,
                                 record: ProcessInfo.processInfo.environment["SNAPSHOT_RECORD"] == "1")
                             if ProcessInfo.processInfo.environment["SNAPSHOT_RECORD"] == "1" {
                                 XCTAssertTrue(failure?.hasPrefix("Record mode is on.") == true)
@@ -53,11 +60,19 @@ nonisolated final class AuthSnapshotTests: XCTestCase {
                 for language in ["en", "nl"] {
                     var expected: SnapshotRaster?
                     for category in [UIContentSizeCategory.extraExtraLarge, .accessibilityExtraExtraExtraLarge] {
+                        var frames: [AuthElement: CGRect] = [:]
                         host.configure(
-                            SignInView(model: authSnapshotModel(), back: {}, guest: {}), style: style,
+                            SignInView(model: authSnapshotModel(), back: {}, guest: {}, measure: { frames[$0] = $1 }),
+                            style: style,
                             language: language, category: category)
                         try await host.settle()
                         let actual = try SnapshotRaster(png: XCTUnwrap(host.image().pngData()))
+                        XCTAssertNil(
+                            AuthSnapshotCapture.failure(
+                                raster: actual, size: fixture.size, scale: fixture.scale,
+                                viewport: CGRect(origin: .zero, size: fixture.size).inset(by: fixture.insets),
+                                frames: Dictionary(uniqueKeysWithValues: frames.map { ($0.key.rawValue, $0.value) }),
+                                required: Set(["brand", "heading", "card", "submit"])))
                         if let expected { XCTAssertEqual(actual, expected) } else { expected = actual }
                     }
                 }

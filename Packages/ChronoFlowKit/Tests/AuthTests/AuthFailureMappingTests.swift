@@ -4,6 +4,41 @@ import Foundation
 import Testing
 
 struct AuthFailureMappingTests {
+    @Test func rejectedCodeUsesBoardCopyOnlyForTheTwoFactorCodeField() {
+        let message = FieldMessage(key: "The authentication code was not accepted. Try again.")
+        for (context, field) in [
+            (AuthFormContext.twoFactor, "code"), (.twoFactor, "recovery_code"), (.signIn, "code"),
+        ] {
+            let mapped = AuthFailureMapping(
+                .validation(fields: [field: message], status: 422), displayedFields: [field], context: context)
+            #expect(mapped.banner == nil)
+            #expect(
+                mapped.fields[field]?.key
+                    == (context == .twoFactor && field == "code"
+                        ? "That code didn't work. Codes change every 30 seconds, so try the newest one." : message.key))
+        }
+    }
+
+    @Test(arguments: ["code", "recovery_code"])
+    func inactiveProofIsIgnoredOnlyAlongsideAnActiveProofError(field: String) {
+        let inactive = field == "code" ? "recovery_code" : "code"
+        let message = FieldMessage(key: "Please fill this in.")
+        let both = [field: message, inactive: message]
+        let mapped = AuthFailureMapping(
+            .validation(fields: both, status: 422), displayedFields: [field], context: .twoFactor)
+        #expect(mapped.fields == [field: message] && mapped.banner == nil)
+        for (fields, context) in [
+            ([inactive: message], AuthFormContext.twoFactor),
+            (both.merging(["challengeId": message]) { first, _ in first }, .twoFactor),
+            (both, .signIn),
+            ([field: FieldMessage(key: "unknown server English"), inactive: message], .twoFactor),
+        ] {
+            #expect(
+                AuthFailureMapping(.validation(fields: fields, status: 422), displayedFields: [field], context: context)
+                    .banner == .server)
+        }
+    }
+
     @Test func onlyApprovedMessagesReachDisplayedFields() {
         let mapped = AuthFailureMapping(
             .validation(

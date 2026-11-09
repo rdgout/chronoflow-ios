@@ -14,8 +14,8 @@ the same accounts, settings and seven trip/plan fixtures as RN's mock:
 | Verified demo | `demo@example.com` | `password` | — | — |
 | Verified two-factor | `twofactor@example.com` | `password` | `123456` | `AbCdEf1234-GhIjKl5678` |
 
-Enter these values on Sign in; the form starts empty. Two-factor sign-in reaches its route seam
-until Phase 10b's screen is implemented. Both accounts start with walkthrough unseen and the RN
+Enter these values on Sign in; the form starts empty. Two-factor sign-in opens the code/recovery
+form before accepting a session. Both accounts start with walkthrough unseen and the RN
 accepted policy versions. Trip dates stay exactly as RN defines them (October 2026); progress
 and offline eligibility are calculated at initial seeding time.
 
@@ -65,6 +65,29 @@ also check on 17e; only `--matrix` or explicit compatibility matrix flags reques
 Generate the project after manifest/project changes. Debug/ChronoFlow and isolated Release/ReadinessRelease
 build once each into `build/DerivedData`, with pinned resolution, then use `test-without-building`.
 Only the Release verification build gets `ENABLE_TESTABILITY=YES`. Perf stays separate.
+
+Each `test-without-building` pass watches its combined stdout/stderr log for byte growth. A pass
+may run for more than the former 1,200-second limit while it keeps producing output:
+
+| Environment override | Default | Meaning |
+|---|---|---|
+| `TEST_RUN_IDLE_TIMEOUT` | 600 seconds | Terminate after this long without log growth; each increase resets the inactivity deadline |
+| `TEST_RUN_TIMEOUT` | 3,600 seconds; `make duo` keeps 600 | Overall cap per pass, even while output continues |
+
+Both overrides require positive finite seconds. For example,
+`TEST_RUN_IDLE_TIMEOUT=900 TEST_RUN_TIMEOUT=5400 make check` changes both limits. Merely touching
+the log does not reset inactivity. The log and failed-suite details distinguish inactivity from
+the overall cap. Either timeout sends SIGTERM to the process group, allows up to five seconds to
+exit, then sends SIGKILL to the group, including lingering descendants. The log is retained and
+later passes for that destination stop. SIGINT/SIGTERM forwarding and prompt worker cancellation
+remain in effect. Build and simulator-preparation commands do not use these per-test-pass limits.
+
+Timeout fix verification (2026-11-07): `make quick` passes, including all 72 runner fixtures.
+Coverage includes a progressing 1,800-second simulated pass, stalled output, timestamp-only log
+changes, the overall cap, override validation, Duo's cap, descendant cleanup and signal forwarding.
+Log: `build/tooling-timeout-quick.log`. No simulator run was needed for this runner change.
+
+After `bootstatus` completes, every runner destination receives `xcrun simctl spawn <udid> defaults write com.apple.keyboard.preferences AutomaticMinimizationEnabled -bool false` before testing, including already-booted devices and reused builds. This idempotent device preference prevents headless simulators with an attached hardware keyboard from minimizing the software keyboard; host-global Simulator.app preferences are untouched. Check, targeted, Duo, matrix and the separate Perf scheme all share this preparation. Keyboard helpers require a stable keyboard intersection of at least 100 × 100 points inside the app window, rejecting accessory strips and off-screen frames with “software keyboard not visible — check AutomaticMinimizationEnabled”.
 
 Host package execution uses `Scripts/swiftpm.sh test ChronoFlowKit`, macOS 14 or later,
 `--disable-sandbox`, repo-local scratch/cache/config/security/temp directories and `CFFIXED_USER_HOME`.
@@ -2019,3 +2042,289 @@ Inventory probes accept absent/empty/complete Auth sets and reject partial/stale
 sets. Two ordered patches and plain Conventional Commit subjects are in `build/commits`;
 `replay.txt` records application against the starting HEAD. No git commits or reference
 recording were performed in this worktree.
+
+### Phase 10b first task: two-factor code and recovery (2026-11-07)
+
+Only the first 10b task is implemented. TwoFactorView uses the existing AuthScreen, AuthField,
+AuthButton, AuthBanner and measured keyboard reveal. Code entry is a native oneTimeCode number
+pad, limited to six ASCII digits with no auto-submit; recovery uses the regular keyboard and Go.
+Changing mode clears input and feedback. Back/disappearance discards input and the memory-only
+challenge, cancels the view request and rejects late responses. Missing challenges return to Sign in.
+Every attempt clears input, and the shared form lock covers tap and Return.
+
+The API's completion action uses `code` and `recovery_code`; these field messages are localized
+using the resolved English/Dutch values. The board's example 30-second text is retained in the
+catalog and board export, but actual failures display their backend key. Expired and five-failure
+challenges return the existing rejected-code field message, so they use that designed field-error
+pattern. There is no separate expiry screen. OQ 23/30 defaults remain kept (user informed): no
+offline banner, submit stays enabled; hidden/unknown-field failures use the designed server banner.
+Storage failures stay typed service seams. No new state presentation is added.
+
+SignInModel owns the two-factor model and sends its success through the same acceptance method
+as password sign-in, using the scene's NativeSessionController and SQLite gate. The native
+SessionReadinessTests now cover password, passkey and two-factor through all four stored gates,
+with and without cancellation after credential commit. The Debug mock account is
+`twofactor@example.com` / `password`, with `123456` or recovery `AbCdEf1234-GhIjKl5678`.
+Its seeded accepted terms and unseen walkthrough route success to the existing walkthrough seam.
+
+TwoFactorModelTests cover missing/wrong/latest codes, input filtering without submission, recovery
+success/reuse, expiry/exhaustion, throttling/server/offline, hidden-field mapping, localized messages
+and deduplicated announcements, toggles, cancellation/back, double submission and storage boundaries.
+The keyboard suite measures the focused field and Verify against the real keyboard/window/scroll
+frames in both modes and languages at xxLarge, before and after field/server errors. Both auth
+helpers and the interactive-dismiss test now require a visible software keyboard inside the window;
+the off-screen fallback introduced at b56c328 was based on a minimized keyboard, not verified Duo
+geometry. The interactive-dismiss drag from 8d92f8b is retained. Earlier keyboard passes do not
+establish OQ 32 acceptance; the user's reruns on 17e, SE and Duo remain pending. A failure to fit
+remains OQ 32; do not change the layout or shrink the root cap to pass it.
+
+Fix round 3 validation: `make quick` passes, including 57 runner fixtures and four UIWaitTests.
+All AppUITests type-check for the iOS 17 simulator target. No simulator UI execution is claimed
+for this fix; the user will run the three keyboard suites on 17e, SE and Duo.
+
+Debug-only `-cf.isolatedMockServer` gives UI launches a shared in-memory mock server for the auth
+and native sync sources, preventing cross-test throttles and recovery consumption. Debug mock-only
+`-cf.twoFactorServerFailure` injects one completion failure for keyboard coverage. Neither test seam
+changes Release API behavior. The normal Debug mock keeps its file-backed server.
+
+TwoFactorControlTests/TwoFactorLayoutTests are hosted logic, TwoFactorTests is UI logic,
+TwoFactorKeyboardTests is a runtime suite and TwoFactorSnapshotTests uses profiles. All are
+registered in the runner; targeted recording selects only the new suite. Snapshots cover both modes
+and none/field-error/attempts/server states, en/nl, light/dark, the board and all D1c profile sizes:
+1,792 new references under `AppTests/__Snapshots__/Auth/TwoFactor`. Separate AX5/xxLarge checks
+verify the existing root cap. Fourteen board HTML exports are under `_design/frames/auth/two-factor-*`;
+`node Scripts/export-auth-boards.cjs` regenerates them without changing the read-only canvas.
+
+Verification: `make quick` passes, including 54 runner fixtures, 10 resource checks and 3 signing
+checks. SwiftPM package/test compilation for the iOS 17 simulator target, direct Debug/Release app
+module/SIL compilation, and hosted/UI test type checks pass. Compilation does not execute UIKit.
+No xcodebuild, simulator, reference recording or seven-simulator matrix was run. Hosted execution,
+snapshot recording/comparison/visual acceptance and this form's OQ 32 SE/Duo checks remain pending
+the user's runs. Phase 10b's second task, including its complete auth gate/audit report, stays open.
+
+Run these commands from this repository, in order:
+
+```sh
+make generate
+make targeted DEVICES="17e" ONLY="AppTests/AuthControlTests AppTests/AuthLayoutTests AppTests/TwoFactorControlTests AppTests/TwoFactorLayoutTests AppTests/SessionReadinessTests AppUITests/TwoFactorTests AppUITests/TwoFactorKeyboardTests"
+SNAPSHOT_RECORD=1 make targeted DEVICES="17e" ONLY="AppTests/TwoFactorSnapshotTests"
+REUSE_BUILD=1 make targeted DEVICES="17e" ONLY="AppTests/TwoFactorSnapshotTests AppTests/AuthSnapshotTests"
+make targeted DEVICES="se duo" ONLY="AppUITests/TwoFactorKeyboardTests"
+```
+
+Recording runs serially on 17e and compares in a fresh test process. Review the new references
+against the exported boards; the recording itself is not visual acceptance. The SE/Duo suite keeps
+frame logs and screenshots as attachments under `build/test-results/<alias>/`. No full matrix or
+`make duo` is needed for this task; the explicit `se duo` keyboard selection is the OQ 32 check.
+
+
+### Phase 10b task 2: auth acceptance runner and guards (2026-11-07)
+
+This section supersedes the task-1 pending-results notes above. Task 1 is accepted at db09e29:
+1,792 Two-factor references are recorded, Auth/TwoFactor comparison passes, and visible-keyboard
+acceptance on 17e/SE/Duo is settled at 9505993 (OQ 32). Task 2 adds acceptance coverage; its new
+simulator and Two-factor visual results remain open in `Docs/auth-gate.md`. Phases 6–8 stay open.
+No seven-simulator matrix is required or requested.
+
+`make check` selects all Auth/TwoFactor controls/layout/guard suites, both profile-snapshot suites,
+SignInTests, TwoFactorTests, AuthSessionTests, AuthAuditTests and both keyboard suites exactly once
+on 17e, retaining launch/Welcome/service coverage and isolated Release readiness. AuthAuditTests
+(device appearance) and AuthSessionTests (background/foreground) join the serial pass. The opt-in
+`make duo` includes the auth UI/keyboard/guard suites against Duo's separate runtime, without
+repeating profile-reference rendering. `make snapshots` includes the auth capture/scroll guard.
+Every path still runs the per-device AutomaticMinimizationEnabled=false preparation after bootstatus.
+
+Auth selections fail if a test is failed, skipped, expected-failure or missing from results; a
+record/build/test failure does not hide the later comparison, audit or Release pass. Recording is
+explicit, serial and 17e-only. Guard/UI/Release suites never receive the record environment, even
+when inherited TEST_RUNNER_SNAPSHOT_RECORD is set. The host inventory pins all 896 Sign in and
+1,792 Two-factor filenames, not just their counts. Compare mode never writes references.
+
+AuthSnapshotCapture has Mac mutation tests and validates both snapshot and AX5 capture paths
+before recording/comparison. The hosted AuthSnapshotGuardTests scrolls every control into full
+containment across all seven profiles, both languages/appearances, default/xxLarge and an extra
+asymmetric Duo fixture. Initial card overflow is intentional scrolling, not a reason to record a
+clipped control as accepted. Actual keyboard frames remain covered by the two keyboard UI suites.
+
+AuthSessionTests uses UUID-scoped Debug mock server/account storage and Keychain credentials:
+`CF_AUTH_TEST_ID=<UUID>`, optionally `CF_AUTH_TEST_OFFLINE=1`, `CF_AUTH_TEST_UNVERIFIED=1` and
+`CF_AUTH_TEST_WALKTHROUGH_SEEN=1`. Invalid/missing IDs leave the ordinary app unchanged; API
+selection and Release/Perf ignore these test settings. Shared mock values compile directly into
+AppUITests through project.yml; the new UI files use its existing directory glob. The route-name
+text's test-only `cached` accessibility value comes from SQLite synced_at observation. Tapping
+that same diagnostic in these launches invokes the real controller sign-out/discard/wipe path.
+No extra UI, password prefill, real network call or Release seed is introduced. Each test UUID
+survives process relaunch so offline cached restore exercises actual persistence. AccountWipeTests
+supplies the exact file/Keychain deletion assertions alongside UI sign-out/relaunch coverage.
+
+Run from this worktree after applying the implementation commit/patch:
+
+```sh
+make generate
+make check
+make duo
+```
+
+The first command regenerates the ignored project; no xcodeproj is committed. The check gate
+already includes all new suites and all seven D1c profile renders on 17e. The third command is the
+user-requested opt-in Duo spot check, not a seven-runtime gate. No clean, reboot or recording is
+needed for these changes. Send the full failing selector, log and xcresult summary if any fail;
+logs/results remain under `build/test-results/17e/` and `build/test-results/duo/`.
+
+For focused diagnosis after an unchanged successful build-for-testing:
+
+```sh
+REUSE_BUILD=1 make targeted DEVICES="17e" ONLY="AppTests/AuthSnapshotGuardTests AppTests/AuthSnapshotTests AppTests/TwoFactorSnapshotTests AppTests/AccountWipeTests AppUITests/AuthSessionTests AppUITests/AuthAuditTests"
+REUSE_BUILD=1 make targeted DEVICES="17e" ONLY="AppUITests/SignInKeyboardTests AppUITests/TwoFactorKeyboardTests"
+make auth-board-pngs
+```
+
+The board command writes browser exports under ignored `build/board-png/`. Review every
+`two-factor-{code,recovery}-<state>-<light,dark>.png` alongside the corresponding
+`AppTests/__Snapshots__/Auth/TwoFactor/board-<light,dark>-en-large-<code,recovery>-<state>.png`.
+Board `field` maps to native `fieldError`; the recovery error uses the shared designed Field state
+rather than an invented board. No Two-factor browser PNGs are available in this sandbox, so that
+side-by-side acceptance stays open for the user's host. Existing Sign in visual acceptance stands.
+There are no changed reference PNGs in task 2. If a separately reviewed visual change needs recording:
+
+```sh
+SNAPSHOT_RECORD=1 make targeted DEVICES="17e" ONLY="AppTests/AuthSnapshotTests AppTests/TwoFactorSnapshotTests"
+REUSE_BUILD=1 make targeted DEVICES="17e" ONLY="AppTests/AuthSnapshotTests AppTests/TwoFactorSnapshotTests"
+```
+
+Host verification for task 2: `make quick`, `make generate` and `make generators-check` pass.
+SwiftPM runs 316 package tests, 10 TokenGen and 4 AssetGen tests; signing/resource checks run
+3/10 fixtures, and all 6 font/cache checks pass. The 62 runner fixtures cover
+suite selection, failure continuation, skipped/missing auth tests, record isolation and per-device
+keyboard preparation. Capture mutation and shared-mock offline/verification/walkthrough-persistence
+regressions pass in SwiftPM. Direct Swift 6 compilation targets arm64-apple-ios17.0-simulator,
+with Debug/Release DataAccess/app modules, app SIL, all hosted tests and Debug UI tests; it invokes
+swiftc only. These checks do not execute UIKit, audits, reference comparisons, or device passkeys.
+Local logs: `build/phase-10b-{quick,generate,typecheck}.log`.
+
+
+## Phase 10b task 2 — fix round 1 (7 November 2026)
+
+The user's check gate reports 1,919.8 seconds in the simulator runner (`build/rerun/check.log`),
+with every suite passing except recovery AuthSessionTests and strict subtitle AuthAuditTests.
+The separate targeted rerun repeats those two failures. The user's Duo run passed 108 cases,
+last RootNavigationTests, then stalled until their 40-minute timeout. No revised runtime pass is
+claimed here; CoreSimulator connections are denied in this sandbox.
+
+Auth helpers now select `sign-in.scroll` or `two-factor.scroll`, including shared back controls;
+no arbitrary first matching auth scroll remains. UIWindow's Debug safe-area diagnostic gives UI
+helpers the live rectangle from all four insets; keyboard intersection further clips it. Hosted
+scroll guards use each fixture's four insets and test ink in the revealed element's frame. Passkey
+has an AuthElement/measurement, so it participates in horizontal capture and scroll/ink guards.
+The offline relaunch requires cached data plus a real completed sync result of offline; an online
+relaunch cannot pass that assertion. A hosted positive/negative launch-flag test covers both mock
+construction paths. No customer copy, token, layout value or committed PNG changes.
+
+All **80 failing subtitle crops** in the saved serial xcresult were exported and measured without
+running the app. Per-line minima remain above 4.5:1: Two-factor default is 10.8872 / 10.6966 light
+and 15.7349 / 15.5897 dark; xxLarge Two-factor and Dutch Sign in are 10.8559 / 10.4839 light and
+15.6097 / 15.4609 dark. All saved stages/modes agree. The sky remains dark behind the text.
+See [auth-subtitle-contrast.md](auth-subtitle-contrast.md) for method, static board/profile evidence
+and limits. This does not establish a failing board value or justify another contrast exemption.
+AuthSubtitleContrastTests is a hosted board/17e diagnostic for all audited language/appearance/
+size/mode contexts and reveal positions; it also checks full-window gradient placement and fails
+on missing ink or any line below 4.5. The strict system audit remains enabled and unresolved.
+
+The saved runner suite durations explain the long gate (sum of case time, **not additive wall
+stages**, because two workers overlap work):
+
+| Work | Saved test seconds |
+| --- | ---: |
+| TwoFactorSnapshotTests | 580.69 |
+| AuthSnapshotTests | 321.69 |
+| AuthAuditTests (serial) | 515.52 |
+| TwoFactorKeyboardTests | 183.30 |
+| SignInKeyboardTests | 111.10 |
+| AuthSnapshotGuardTests | 179.53 |
+| AuthSessionTests (serial) | 103.46 |
+| WelcomeSnapshotTests | 70.18 |
+
+Auth profile capture alone accounts for **902.38 test seconds**; keyboard suites add **294.40**.
+The latest targeted serial pass takes **646.609 wall seconds**, of which about 619 seconds is
+audit/session cases. The latest targeted guard pass takes **218.911 wall seconds**, including
+179.534 seconds in its test. Isolated Release takes **14.898 wall seconds**. The original full
+Debug-compare log was replaced by the targeted guard run; `timings.json` merges suite samples
+across runs, and its stored 180.994-second device wall is an older successful targeted sample,
+not the failed full gate. Build/preparation/worker-startup contributions cannot be separated exactly
+from these retained data. The runner's 1,919.8 seconds exclude make's preceding host/generator
+steps. No tier restructuring or new speed claim is made.
+
+`make duo` now selects exactly DeviceGeometrySmokeTests, LaunchHandOffTests, WelcomeHandOverTests,
+LaunchToWelcomeTests, SignInKeyboardTests, TwoFactorKeyboardTests, SignInTests and TwoFactorTests.
+It resolves the same separate Duo runtime. It performs no profile, full audit/session, service or
+Release gate. Its per-test-run overall timeout remains **600 seconds**; other test passes now use
+the **600-second inactivity / 3,600-second overall** policy documented in Test tiers above.
+`TEST_RUN_TIMEOUT=<seconds>` overrides the overall cap; `TEST_RUN_IDLE_TIMEOUT=<seconds>` overrides
+inactivity. On timeout the runner terminates the process
+group, escalates to kill after at most five seconds, retains the log, fails selected suites and
+stops subsequent passes for that destination. Timeout/selection fixtures use temporary directories.
+An initial timeout fixture accidentally removed Duo's ignored Debug-compare log/xcresult; it was
+corrected before final verification. The separate `build/rerun/duo.log`, saved timings and all
+committed PNGs remain intact.
+
+Host verification: `make quick` passes (318 package tests, 10 TokenGen, 4 AssetGen, 3 signing,
+10 resource and 64 runner fixtures), including per-element ink and rendered-contrast sampler
+regressions. Direct iOS 17 Debug/Release app module/SIL and hosted/UI test compilation passes;
+these checks do not execute UIKit. Logs are `build/phase-10b-fix-{quick,typecheck}.log`. Git index
+mutation is blocked by `index.lock` permissions; the requested ordered atomic patches and subjects
+are delivered under `build/commits/`.
+
+Run without recording, after applying the patches:
+
+```sh
+make generate
+make targeted DEVICES="17e" ONLY="AppTests/AuthSubtitleContrastTests AppTests/AuthSnapshotGuardTests AppTests/DataSourceFactoryHostedTests AppUITests/AuthSessionTests AppUITests/AuthAuditTests"
+make check
+make duo
+```
+
+The focused diagnostic writes per-line frames, measured ink, ratios and scroll offsets to
+`build/test-results/17e/Debug-compare.log`. Audit/session results stay in Debug-serial. Read the
+ratio report before deciding whether the strict system audit is a false positive. If a board-
+matching rendered line actually fails 4.5:1, add a design Open question with the measurements and
+no proposed default; do not alter tokens or widen OQ 33. The existing Two-factor side-by-side
+visual review and device-only passkey checks remain open; task 2 stays unticked.
+
+
+## Phase 10b task 2 — fix round 2 (7 November 2026)
+
+The user's round-1 `make check` passes every suite except 80 subtitle contrast audit results;
+`make duo` completes in 404 seconds, with only the keyboard-open mode-toggle reveal assertion
+failing. The user's 2026-11-07 measured subtitle decision is recorded in OQ 33, Matrix A and
+[auth-subtitle-contrast.md](auth-subtitle-contrast.md). AuthAuditTests measures the source screenshot
+inside each eligible issue handler and fails on unavailable/incomplete or below-4.5:1 measurements.
+The guest pair remains the only unconditional allow-list entry.
+
+Duo's saved synthesized gestures start at (233, 439), below the visible keyboard's y=414 top edge.
+AuthUIFlow now computes drag endpoints inside its live four-inset/keyboard-safe viewport, using
+stable keyboard frames and target overflow. App padding is unchanged. Hosted TwoFactorLayoutTests
+adds Duo/SE keyboard-height inset fixtures and requires the last control to scroll fully clear.
+Portable tests cover the saved event bounds, both drag directions, asymmetric viewports, missing
+subtitle lines and low contrast. The new ToolingTests suite is classified as host-only.
+
+Verification: `make quick` (strict lint, all host packages, signing/resource and 64 runner fixtures),
+`make generate`, and direct Swift 6 iOS 17 app/hosted/UI compilation pass. Logs:
+`build/phase-10b-round2-{quick,generate,typecheck,focused-typecheck}.log`. CoreSimulator access is denied here;
+compilation does not execute the new hosted fixtures or audit. No snapshot PNG is changed.
+
+Run on the user's host:
+
+```sh
+make generate
+make check
+make duo
+```
+
+For a focused reachability check on both runtimes, if needed:
+
+```sh
+make targeted DEVICES="se duo" ONLY="AppTests/TwoFactorLayoutTests/testLastControlCanScrollAboveKeyboardInsetsOnDuoAndSE AppUITests/TwoFactorTests/testModeToggleClearsCodeAndRecoveryReturnCompletesTheMockSession"
+```
+
+The seven-runtime matrix is not requested. Task 2 remains unticked for revised runtime acceptance
+and the existing Two-factor side-by-side board review; device-only gates retain their original scope.

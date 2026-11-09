@@ -1,9 +1,9 @@
 import AppCore
-import DataAccess
 import Foundation
 import Testing
 
 @testable import ChronoFlow
+@testable import DataAccess
 
 @MainActor @Suite struct DataSourceBuildSettingTests {
     @Test func builtSettingsAndTestSelection() throws {
@@ -28,6 +28,35 @@ import Testing
 
 @MainActor @Suite struct DataSourceFactoryHostedTests {
     #if DEBUG
+        @Test(arguments: [false, true], [false, true])
+        func authOfflineFlagReachesBothMockFactories(offline: Bool, storedSession: Bool) async throws {
+            let root = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+            defer { try? FileManager.default.removeItem(at: root) }
+            let services = try AppServices(
+                info: [:], testing: false,
+                environment: ["CF_AUTH_TEST_ID": UUID().uuidString, "CF_AUTH_TEST_OFFLINE": offline ? "1" : "0"])
+            let source: any DataSource
+            if storedSession {
+                source = await Task.detached {
+                    services.makeDataSource(
+                        applicationSupport: root, session: StoredSession(token: "unused", accountId: UUID().uuidString))
+                }.value
+            } else {
+                source = services.makeDataSource(applicationSupport: root, credentials: FactoryCredentialProbe())
+            }
+            #expect(source is MockDataSource)
+            do {
+                _ = try await source.signIn(
+                    PasswordSignInInput(
+                        email: MockScenarioValues.demoEmail, password: MockScenarioValues.password,
+                        deviceID: UUID().uuidString, deviceName: "test"))
+                #expect(!offline, "Offline launch configuration must reach MockDataSource")
+            } catch {
+                #expect(offline)
+                #expect(error as? DataFailure == .offline)
+            }
+        }
+
         @Test(arguments: [false, true])
         func defaultAppMockUsesRNSeed(storedSession: Bool) async throws {
             let root = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)

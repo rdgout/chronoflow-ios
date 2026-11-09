@@ -30,6 +30,21 @@ import Testing
         _ = try await login(source)
         await #expect(throws: (any Error).self) { try await source.signIn(passwordInput(password: "wrong")) }
     }
+    @Test(arguments: [false, true], ["", " \n"])
+    func emptyTwoFactorProofReturnsBothRequiredWithoutErrors(recovery: Bool, value: String) async throws {
+        let source = try mockSource()
+        let expected = DataFailure.validation(
+            fields: [
+                "code": FieldMessage(key: "Enter the 6-digit code from your authenticator app."),
+                "recovery_code": FieldMessage(
+                    key: "Enter one of the recovery codes you saved when you set up two-factor authentication."),
+            ], status: 422)
+        await #expect(throws: expected) {
+            try await source.completeTwoFactor(
+                TwoFactorInput(challengeId: "unused", proof: recovery ? .recoveryCode(value) : .code(value)))
+        }
+    }
+
     @Test func twoFactorSingleUseAndRecoveryConsumption() async throws {
         let source = try mockSource()
         guard case .twoFactor(let challenge) = try await source.signIn(passwordInput(email: "twofactor@example.com"))

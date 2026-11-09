@@ -7,6 +7,7 @@ import Observation
     public private(set) var password = ""
     public let form: AuthFormModel
     public let navigation: AuthNavigation
+    public private(set) var twoFactor: TwoFactorModel?
     private let source: any DataSource
     private let session: any SessionControlling
     private let deviceIdentity: @Sendable () async throws -> String
@@ -56,7 +57,12 @@ import Observation
             try Task.checkCancellation()
             switch result {
             case .session(let result): try await accept(result)
-            case .twoFactor(let challenge): navigation.twoFactor(challengeID: challenge)
+            case .twoFactor(let challenge):
+                navigation.twoFactor(challengeID: challenge)
+                twoFactor = TwoFactorModel(source: source, navigation: navigation) { [weak self] result in
+                    guard let self else { throw CancellationError() }
+                    try await self.accept(result)
+                }
             }
         } catch { receive(error) }
     }
@@ -90,6 +96,8 @@ import Observation
     public func clearPassword() { password = "" }
     public func clearSecrets() {
         password = ""
+        twoFactor?.cancel()
+        twoFactor = nil
         navigation.reset()
         form.clear()
     }

@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import re
 import shlex
+import signal
 import statistics
 import shutil
 import subprocess
@@ -28,7 +29,7 @@ MATRIX = {
     "duo": ("iPhone Duo", "iPhone-Duo", DUO_RUNTIME),
 }
 # Each suite has one scheduling policy. Fixed geometry fixtures are logic; running-window/scale assertions are matrix.
-SUITES = {'AppTests': {'logic': ('AuthControlTests', 'AuthLayoutTests', 'LaunchArgumentLogicTests',
+SUITES = {'AppTests': {'logic': ('AuthControlTests', 'AuthLayoutTests', 'AuthSnapshotGuardTests', 'AuthSubtitleContrastTests', 'TwoFactorControlTests', 'TwoFactorLayoutTests', 'LaunchArgumentLogicTests',
                         'RasterPixelLogicTests',
                         'ContentSizeCapLogicTests',
                         'AppIconTests',
@@ -55,13 +56,13 @@ SUITES = {'AppTests': {'logic': ('AuthControlTests', 'AuthLayoutTests', 'LaunchA
                          'WelcomeHandOverTests',
                          'LaunchImageMutationTests',
                          'SnapshotContainerTests'),
-              'profiles': ('LaunchSnapshotTests', 'WelcomeSnapshotTests', 'AuthSnapshotTests'),
+              'profiles': ('LaunchSnapshotTests', 'WelcomeSnapshotTests', 'AuthSnapshotTests', 'TwoFactorSnapshotTests'),
               'reference': ('LaunchFrameParityTests', 'LaunchStoryboardTests'),
               'release': ('ReleaseReadinessTests',)},
  'RenderTests': {'profiles': ('WelcomeRenderingTests',)},
- 'AppUITests': {'logic': ('SignInTests', 'AuthAuditTests', 'ReadinessTests', 'WelcomeLogicTests'),
+ 'AppUITests': {'logic': ('SignInTests', 'TwoFactorTests', 'AuthSessionTests', 'AuthAuditTests', 'ReadinessTests', 'WelcomeLogicTests'),
                 'reference': ('LaunchToWelcomeTests', 'LaunchSceneTests', 'LaunchSceneDarkTests'),
-                'matrix': ('SignInKeyboardTests', 'WelcomeTests', 'WelcomeEnglishAccessibilityTests', 'WelcomeDutchAccessibilityTests')},
+                'matrix': ('SignInKeyboardTests', 'TwoFactorKeyboardTests', 'WelcomeTests', 'WelcomeEnglishAccessibilityTests', 'WelcomeDutchAccessibilityTests')},
  'AppCoreTests': {'host': ('CatalogTests',
                            'CubicBezierTests',
                            'LaunchCoordinatorTests',
@@ -92,9 +93,9 @@ SUITES = {'AppTests': {'logic': ('AuthControlTests', 'AuthLayoutTests', 'LaunchA
                            'ReadyTimelineTests',
                            'SmokeTests',
                            'WelcomeTimelineTests')},
- 'AuthTests': {'host': ('AuthFormModelTests', 'AuthFailureMappingTests', 'AuthCatalogTests', 'AuthLayoutTests', 'AuthCardShadowTests', 'SignInModelTests', 'PasskeyEncodingTests', 'PasskeySignInTests')},
+ 'AuthTests': {'host': ('AuthFormModelTests', 'AuthFailureMappingTests', 'AuthSnapshotCaptureTests', 'AuthCatalogTests', 'AuthLayoutTests', 'AuthCardShadowTests', 'SignInModelTests', 'TwoFactorModelTests', 'PasskeyEncodingTests', 'PasskeySignInTests')},
  'WelcomeTests': {'logic': ('SmokeTests', 'WelcomeGeometryTests')},
- 'ToolingTests': {'host': ('LaunchImageComparisonTests', 'UIWaitTests')},
+ 'ToolingTests': {'host': ('LaunchImageComparisonTests', 'UIWaitTests', 'AuthScrollGestureTests')},
  'PerfUITests': {'perf': ('LaunchPerfTests',)},
  'DataAccessTests': {'host': ('ContractsTests',
                               'DataSourceSelectionTests',
@@ -123,13 +124,20 @@ SUITES = {'AppTests': {'logic': ('AuthControlTests', 'AuthLayoutTests', 'LaunchA
                               'SessionAccountDatabaseTests',
                               'AccountWiperTests',
                               'AccountReadinessTests')}}
-SNAPSHOTS = ("AppTests/LaunchSnapshotTests", "AppTests/WelcomeSnapshotTests", "AppTests/WelcomeSnapshotGuardTests", "RenderTests/WelcomeRenderingTests", "AppTests/AuthSnapshotTests")
+SNAPSHOTS = ("AppTests/LaunchSnapshotTests", "AppTests/WelcomeSnapshotTests", "AppTests/WelcomeSnapshotGuardTests", "RenderTests/WelcomeRenderingTests", "AppTests/AuthSnapshotTests", "AppTests/TwoFactorSnapshotTests", "AppTests/AuthSnapshotGuardTests")
 XCODEBUILD_COMMON = ["xcodebuild", "-project", "ChronoFlow.xcodeproj", "-derivedDataPath", "build/DerivedData",
                      "-onlyUsePackageVersionsFromResolvedFile"]
 
 # Device-wide mutations must be registered here; launch/window-scoped traits are clone-safe.
-SERIAL_TESTS = ("AppUITests/AuthAuditTests", "AppUITests/LaunchSceneTests", "AppUITests/LaunchSceneDarkTests", "AppUITests/LaunchToWelcomeTests")
+SERIAL_TESTS = ("AppUITests/AuthSessionTests", "AppUITests/AuthAuditTests", "AppUITests/LaunchSceneTests", "AppUITests/LaunchSceneDarkTests", "AppUITests/LaunchToWelcomeTests")
 PARALLEL_TARGETS = {"AppTests", "AppUITests", "RenderTests"}
+
+
+RUNTIME_SMOKE = (
+    "AppTests/DeviceGeometrySmokeTests", "AppTests/LaunchHandOffTests", "AppTests/WelcomeHandOverTests",
+    "AppUITests/LaunchToWelcomeTests", "AppUITests/SignInKeyboardTests", "AppUITests/TwoFactorKeyboardTests",
+    "AppUITests/SignInTests", "AppUITests/TwoFactorTests",
+)
 
 
 @dataclass(frozen=True)
@@ -380,7 +388,50 @@ def environment(record=False, intro_order=None):
     return result
 
 
-def run(command, *, log=None, capture=False, record=False, check=True, intro_order=None):
+_ACTIVE_RUNS = set()
+_RUN_LOCK = threading.RLock()
+_RUN_SIGNAL = None
+
+
+def signal_group(process, signum):
+    try:
+        os.killpg(process.pid, signum)
+    except ProcessLookupError:
+        pass
+
+
+@contextmanager
+def forward_run_signals():
+    global _RUN_SIGNAL
+    previous = {signum: signal.getsignal(signum) for signum in (signal.SIGINT, signal.SIGTERM)}
+
+    def interrupted(signum, frame):
+        global _RUN_SIGNAL
+        _RUN_SIGNAL = signum
+        with _RUN_LOCK:
+            for process in _ACTIVE_RUNS:
+                signal_group(process, signum)
+        raise SystemExit(128 + signum)
+
+    _RUN_SIGNAL = None
+    for signum in previous:
+        signal.signal(signum, interrupted)
+    try:
+        yield
+    finally:
+        for signum, handler in previous.items():
+            signal.signal(signum, handler)
+        _RUN_SIGNAL = None
+
+
+class TestRunTimeout(subprocess.TimeoutExpired):
+    def __init__(self, command, timeout, *, inactive=False):
+        super().__init__(command, timeout)
+        reason = "of log inactivity" if inactive else "overall"
+        self.detail = f"Test run timed out after {timeout:g}s {reason}"
+
+
+def run(command, *, log=None, capture=False, record=False, check=True, intro_order=None, timeout=None, idle_timeout=None):
     print("+ " + shlex.join(map(str, command)), flush=True)
     kwargs = dict(cwd=ROOT, text=True, env=environment(record, intro_order), check=check)
     if log is None:
@@ -389,7 +440,58 @@ def run(command, *, log=None, capture=False, record=False, check=True, intro_ord
     with log.open("a") as output:
         output.write("+ " + shlex.join(map(str, command)) + "\n")
         output.flush()
-        return subprocess.run(command, stdout=output, stderr=subprocess.STDOUT, **kwargs)
+        if timeout is None and idle_timeout is None:
+            return subprocess.run(command, stdout=output, stderr=subprocess.STDOUT, **kwargs)
+        options = {key: value for key, value in kwargs.items() if key != "check"}
+        if _RUN_SIGNAL is not None:
+            raise SystemExit(128 + _RUN_SIGNAL)
+        log_size = os.fstat(output.fileno()).st_size
+        with subprocess.Popen(command, stdout=output, stderr=subprocess.STDOUT, start_new_session=True, **options) as process:
+            with _RUN_LOCK:
+                _ACTIVE_RUNS.add(process)
+            started = time.monotonic()
+            deadline = started + timeout if timeout is not None else math.inf
+            idle_deadline = started + idle_timeout if idle_timeout is not None else math.inf
+            try:
+                while True:
+                    if _RUN_SIGNAL is not None:
+                        raise SystemExit(128 + _RUN_SIGNAL)
+                    now = time.monotonic()
+                    size = os.fstat(output.fileno()).st_size
+                    if size > log_size and idle_timeout is not None:
+                        idle_deadline = now + idle_timeout
+                    log_size = size
+                    if now >= deadline:
+                        raise TestRunTimeout(command, timeout)
+                    if now >= idle_deadline:
+                        raise TestRunTimeout(command, idle_timeout, inactive=True)
+                    remaining = min(deadline, idle_deadline) - now
+                    try:
+                        process.communicate(timeout=min(0.1, remaining))
+                        break
+                    except subprocess.TimeoutExpired:
+                        continue
+                if _RUN_SIGNAL is not None:
+                    raise SystemExit(128 + _RUN_SIGNAL)
+            except BaseException as error:
+                signal_group(process, _RUN_SIGNAL or signal.SIGTERM)
+                try:
+                    process.communicate(timeout=1 if _RUN_SIGNAL else 5)
+                except subprocess.TimeoutExpired:
+                    pass
+                # Kill descendants even when xcodebuild exits before its test workers.
+                signal_group(process, signal.SIGKILL)
+                process.communicate()
+                if isinstance(error, TestRunTimeout):
+                    output.write(error.detail + "; terminated process group\n")
+                raise
+            finally:
+                with _RUN_LOCK:
+                    _ACTIVE_RUNS.discard(process)
+            completed = subprocess.CompletedProcess(command, process.returncode)
+            if check:
+                completed.check_returncode()
+            return completed
 
 
 def resolve(alias, devices):
@@ -407,6 +509,8 @@ def prepare(destination):
     if destination.state != "Booted":
         run(["xcrun", "simctl", "boot", destination.udid], log=log)
     run(["xcrun", "simctl", "bootstatus", destination.udid, "-b"], log=log)
+    run(["xcrun", "simctl", "spawn", destination.udid, "defaults", "write",
+         "com.apple.keyboard.preferences", "AutomaticMinimizationEnabled", "-bool", "false"], log=log)
     installed = run(["xcrun", "simctl", "get_app_container", destination.udid, "net.chronoflow.app.native", "app"], capture=True, check=False)
     if installed.returncode == 0:
         run(["xcrun", "simctl", "uninstall", destination.udid, "net.chronoflow.app.native"], log=log)
@@ -439,9 +543,13 @@ IOS_METHODS = (
 def selection(mode, alias, only=(), include_logic=True, include_matrix=True):
     if only:
         return expand(only)
+    if mode == "perf":
+        return selectors("perf")
     if mode == "snapshots":
         return list(SNAPSHOTS) + ["AppTests/SnapshotContainerTests"]
-    if mode in ("check", "test", "runtime"):
+    if mode == "runtime":
+        return list(RUNTIME_SMOKE)
+    if mode in ("check", "test"):
         result = [s for policy in ("logic", "matrix") for s in selectors(policy)
                   if s.startswith(("AppTests/", "AppUITests/"))]
         result += list(IOS_METHODS)
@@ -462,14 +570,21 @@ def selection(mode, alias, only=(), include_logic=True, include_matrix=True):
 
 def configurations(selected):
     release = set(selectors("release"))
-    groups = {"Debug": [], "Release": []}
+    perf = set(selectors("perf"))
+    groups = {"Debug": [], "Release": [], "Perf": []}
     for suite in selected:
-        groups["Release" if any(suite == s or suite.startswith(s + "/") for s in release) else "Debug"].append(suite)
+        if any(suite == s or suite.startswith(s + "/") for s in perf):
+            configuration = "Perf"
+        elif any(suite == s or suite.startswith(s + "/") for s in release):
+            configuration = "Release"
+        else:
+            configuration = "Debug"
+        groups[configuration].append(suite)
     return {config: suites for config, suites in groups.items() if suites}
 
 
 def build_command(configuration):
-    scheme = "ChronoFlow" if configuration == "Debug" else "ReadinessRelease"
+    scheme = {"Debug": "ChronoFlow", "Release": "ReadinessRelease", "Perf": "Perf"}[configuration]
     return XCODEBUILD_COMMON + ["-scheme", scheme, "-configuration", configuration]
 
 
@@ -495,7 +610,7 @@ def result_nodes(value, target=None):
             target = name if name in SUITES else target
         if kind == "Test Case":
             identifier = str(value.get("nodeIdentifier", ""))
-            qualified = next((s.split("/")[0] for s in selectors("logic") + selectors("matrix") + selectors("release") + selectors("profiles")
+            qualified = next((s.split("/")[0] for s in selectors("logic") + selectors("matrix") + selectors("release") + selectors("profiles") + selectors("perf")
                               if identifier.startswith(s + "/")), target)
             yield dict(value, target=qualified)
         for child in value.values():
@@ -560,7 +675,10 @@ def read_results(destination, label, selected, bundle, returncode, log, timing=N
                         timing.setdefault("tests", {})[identifier] = duration
         for suite in selected:
             matches = matching_nodes(nodes, suite)
-            failed = [str(n.get("nodeIdentifier", n.get("name"))) for n in matches if n.get("result") not in ("Passed", "Skipped", "Expected Failure")]
+            strict_auth = suite.split("/")[1].startswith(("Auth", "SignIn", "TwoFactor"))
+            allowed = ("Passed",) if strict_auth else ("Passed", "Skipped", "Expected Failure")
+            failed = [str(n.get("nodeIdentifier", n.get("name"))) + ": " + str(n.get("result"))
+                      for n in matches if n.get("result") not in allowed]
             passed = bool(matches) and not failed
             if require_executed and not any(n.get("result") == "Passed" for n in matches):
                 passed = False
@@ -588,14 +706,23 @@ def test_pass(destination, configuration, selected, label, record=False, intro_o
         shutil.rmtree(bundle)
     log.unlink(missing_ok=True)
     try:
-        completed = run(test_command(destination, configuration, selected, bundle, workers, skipped), log=log, record=record, check=False, intro_order=intro_order)
+        timeout = float(os.environ.get("TEST_RUN_TIMEOUT", "3600"))
+        if not math.isfinite(timeout) or timeout <= 0:
+            raise ValueError("TEST_RUN_TIMEOUT must be a positive finite number of seconds")
+        idle_timeout = float(os.environ.get("TEST_RUN_IDLE_TIMEOUT", "600"))
+        if not math.isfinite(idle_timeout) or idle_timeout <= 0:
+            raise ValueError("TEST_RUN_IDLE_TIMEOUT must be a positive finite number of seconds")
+        completed = run(test_command(destination, configuration, selected, bundle, workers, skipped), log=log, record=record, check=False, intro_order=intro_order, timeout=timeout, idle_timeout=idle_timeout)
         return read_results(destination, label, selected, bundle, completed.returncode, log, timing, require_executed=intro_order is not None)
+    except TestRunTimeout as error:
+        return [Result(destination.alias, label + " " + suite, False,
+                       error.detail + f"; see {log.relative_to(ROOT)}") for suite in selected]
     except (subprocess.CalledProcessError, OSError) as error:
         return [Result(destination.alias, label + " " + suite, False, str(error)) for suite in selected]
 
 
 def recording_selection(selected, mode, recording):
-    baseline = (SNAPSHOTS[0], SNAPSHOTS[1], "AppTests/AuthSnapshotTests")
+    baseline = (SNAPSHOTS[0], SNAPSHOTS[1], "AppTests/AuthSnapshotTests", "AppTests/TwoFactorSnapshotTests")
     candidates = baseline if recording == "all" or (recording == "1" and mode == "snapshots") else baseline[:1] if recording == "launch" or mode == "launch-snapshots" else baseline[1:]
     return [s for s in selected if any(s == c or s.startswith(c + "/") for c in candidates)]
 
@@ -620,11 +747,17 @@ def test_device(destination, selected, mode, recording, ready, intro_order_check
     record_suites = recording_selection(selected, mode, recording) if recording and destination.alias == "17e" else []
     if record_suites and ready.get("Debug"):
         results += test_pass(destination, "Debug", record_suites, "record", record=True)
+        if any(r.detail.startswith("Test run timed out") for r in results):
+            return results + [Result(destination.alias, s, False, "Not run after timeout")
+                              for s in selected if s not in record_suites]
     for configuration, suites in configurations(selected).items():
         if ready.get(configuration):
             for part in split_passes(configuration, suites, workers):
                 results += test_pass(destination, configuration, part.selected, configuration + "-" + part.suffix,
                                      timing=timing, workers=part.workers, skipped=part.skipped)
+                if any(r.detail.startswith("Test run timed out") for r in results):
+                    return results + [Result(destination.alias, s, False, "Not run after timeout")
+                                      for s in selected if not any(r.suite.endswith(" " + s) for r in results)]
         else:
             results += [Result(destination.alias, s, False, configuration + " build unavailable") for s in suites]
     if timing is not None and all(r.passed for r in results):
@@ -700,7 +833,7 @@ if __name__ == "__main__":
     parser.add_argument("--reuse-build", action="store_true", help="reuse the last build-for-testing products; rebuild after source/project changes")
     parser.add_argument("--intro-order-check", action="store_true", help="compare the 2700 ms frame in fresh and warmed test processes; never overwrite baselines")
     parser.add_argument("--no-generate", action="store_true")
-    parser.add_argument("--mode", choices=("check", "test", "snapshots", "runtime"), default="check")
+    parser.add_argument("--mode", choices=("check", "test", "snapshots", "runtime", "perf"), default="check")
     parser.add_argument("--matrix", action="store_true", help="explicitly request the seven-device matrix")
     for flag in ("timeline", "scene", "snapshots", "readiness", "welcome"):
         parser.add_argument("--" + flag, action="store_true", help="compatibility matrix entry point; uses the suite classification")
@@ -708,6 +841,7 @@ if __name__ == "__main__":
     matrix_requested = args.matrix or args.timeline or args.scene or args.readiness or args.welcome
     mode = "launch-snapshots" if args.snapshots and not args.scene else "matrix" if matrix_requested else args.mode
     try:
-        raise SystemExit(main(mode, args.devices, args.only or (), reuse_build=args.reuse_build, generate=not args.no_generate, intro_order_check=args.intro_order_check))
+        with forward_run_signals():
+            raise SystemExit(main(mode, args.devices, args.only or (), reuse_build=args.reuse_build, generate=not args.no_generate, intro_order_check=args.intro_order_check))
     except (subprocess.CalledProcessError, OSError, ValueError, KeyError, RuntimeError) as error:
         parser.exit(1, str(error) + "\n")

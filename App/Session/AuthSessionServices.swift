@@ -1,5 +1,6 @@
 import AppCore
 import Auth
+import DataAccess
 import Foundation
 import UIKit
 
@@ -7,6 +8,9 @@ import UIKit
 final class AuthSessionServices {
     let nativeSession: NativeSessionController
     let model: SignInModel
+    #if DEBUG
+        let authUITestEnabled: Bool
+    #endif
 
     init(
         services: AppServices, applicationSupport support: URL, nativeSession native: NativeSessionController,
@@ -15,10 +19,19 @@ final class AuthSessionServices {
         assertionProvider: (any PasskeyAssertionProviding)? = nil,
         verification: @escaping @MainActor (UInt64) async -> Void
     ) {
-        let namespace = services.namespace
-        let credentials = KeychainSessionStore(namespace: namespace)
+        #if DEBUG
+            authUITestEnabled = services.authUITestEnabled
+        #endif
+        let credentials = services.sessionCredentials()
         nativeSession = native
         let source = source ?? services.makeDataSource(applicationSupport: support, credentials: credentials)
+        #if DEBUG
+            if services.factory.source == .mock, let mock = source as? MockDataSource,
+                ProcessInfo.processInfo.arguments.contains("-cf.twoFactorServerFailure")
+            {
+                Task { await mock.failNext(method: .completeTwoFactor, error: .server(status: 503)) }
+            }
+        #endif
         let identity = DeviceIdentityStore(persistence: DevicePreferences())
         let assertion: any PasskeyAssertionProviding =
             assertionProvider
