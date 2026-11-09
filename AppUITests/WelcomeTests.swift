@@ -8,9 +8,9 @@ nonisolated final class WelcomeTests: XCTestCase {
             "-cf.session", "out", "-cf.reduceMotion", "-AppleLanguages", "(nl)", "-AppleLocale", "nl_NL",
             "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL",
         ]
-        app.launch()
+        app.launchMeasured()
         defer { app.terminate() }
-        XCTAssertTrue(app.staticTexts["welcome.wordmark"].waitForExistence(timeout: 6))
+        XCTAssertTrue(app.staticTexts["welcome.wordmark"].waitForMeasuredExistence(timeout: 6))
         XCTAssertEqual(
             app.staticTexts["welcome.headline"].label,
             "Plan de verschuiving van je biologische klok voor je volgende reis")
@@ -50,8 +50,8 @@ nonisolated final class WelcomeTests: XCTestCase {
                 "-AppleLocale", language == "nl" ? "nl_NL" : "en_US",
                 "-AppleInterfaceStyle", appearance,
             ]
-            app.launch()
-            XCTAssertTrue(app.staticTexts["welcome.wordmark"].waitForExistence(timeout: 6))
+            app.launchMeasured()
+            XCTAssertTrue(app.staticTexts["welcome.wordmark"].waitForMeasuredExistence(timeout: 6))
             _ = try UIWait.stableFrames(
                 ["welcome.wordmark", "welcome.eyebrow", "welcome.headline"].map { app.staticTexts[$0] })
             try auditTopAndActions(app, language: language, appearance: appearance, testCase: testCase)
@@ -136,17 +136,17 @@ nonisolated final class WelcomeLogicTests: XCTestCase {
     private func assertRoute(button identifier: String, route: String) {
         let app = XCUIApplication()
         app.launchArguments = ["-cf.session", "out", "-cf.reduceMotion"]
-        app.launch()
+        app.launchMeasured()
         defer { app.terminate() }
-        XCTAssertTrue(app.staticTexts["welcome.wordmark"].waitForExistence(timeout: 6))
+        XCTAssertTrue(app.staticTexts["welcome.wordmark"].waitForMeasuredExistence(timeout: 6))
         let button = app.buttons[identifier]
         for _ in 0..<8 where !button.isHittable { app.scrollViews.firstMatch.swipeUp() }
         XCTAssertTrue(button.isHittable)
         button.tap()
         if route == "signIn" {
-            XCTAssertTrue(app.staticTexts["auth.heading"].waitForExistence(timeout: 3))
+            XCTAssertTrue(app.staticTexts["auth.heading"].waitForMeasuredExistence(timeout: 3))
         } else {
-            XCTAssertTrue(app.staticTexts["route.\(route)"].waitForExistence(timeout: 3))
+            XCTAssertTrue(app.staticTexts["route.\(route)"].waitForMeasuredExistence(timeout: 3))
         }
     }
 

@@ -11,7 +11,7 @@ nonisolated final class ForgotPasswordTests: XCTestCase {
         field.tap()
         field.typeText(email + "\n")
         let notice = AuthUIFlow.control("forgot.notice", in: app)
-        XCTAssertTrue(notice.waitForExistence(timeout: 6))
+        XCTAssertTrue(notice.waitForMeasuredExistence(timeout: 6))
         AuthUIFlow.reveal(notice, in: app)
         XCTAssertTrue(notice.label.contains("Check your inbox."))
         XCTAssertTrue(notice.label.contains("If \(email) has an account"))
@@ -22,7 +22,7 @@ nonisolated final class ForgotPasswordTests: XCTestCase {
         let back = AuthUIFlow.control("forgot.back", in: app)
         AuthUIFlow.reveal(back, in: app)
         back.tap()
-        XCTAssertTrue(app.textFields["sign-in.email"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.textFields["sign-in.email"].waitForMeasuredExistence(timeout: 3))
         XCTAssertFalse(app.images["launch.opening"].exists)
     }
 
@@ -34,7 +34,7 @@ nonisolated final class ForgotPasswordTests: XCTestCase {
         field.tap()
         field.typeText("retained@example.com\n")
         let banner = AuthUIFlow.control("auth.banner", in: app)
-        XCTAssertTrue(banner.waitForExistence(timeout: 6))
+        XCTAssertTrue(banner.waitForMeasuredExistence(timeout: 6))
         XCTAssertTrue(
             banner.label.contains("Something went wrong on our side."))
         XCTAssertEqual(field.value as? String, "retained@example.com")
@@ -57,13 +57,13 @@ nonisolated final class ForgotPasswordTests: XCTestCase {
         AuthUIFlow.assertBannerVisible(in: app)
         XCTAssertEqual(field.value as? String, "offline@example.com")
         let banner = AuthUIFlow.control("auth.banner", in: app)
-        XCTAssertTrue(banner.waitForExistence(timeout: 5))
+        XCTAssertTrue(banner.waitForMeasuredExistence(timeout: 5))
         XCTAssertTrue(banner.label.contains("Needs a connection"))
         XCTAssertFalse(AuthUIFlow.control("forgot.notice", in: app).exists)
         XCTAssertTrue(AuthUIFlow.control("forgot.submit", in: app).isEnabled)
         AuthUIFlow.reveal(AuthUIFlow.control("auth.back", in: app), in: app)
         AuthUIFlow.control("auth.back", in: app).tap()
-        XCTAssertTrue(app.textFields["sign-in.email"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.textFields["sign-in.email"].waitForMeasuredExistence(timeout: 3))
     }
 }
 
@@ -76,7 +76,7 @@ nonisolated final class ForgotPasswordTests: XCTestCase {
     if offline { app.launchEnvironment["CF_AUTH_TEST_OFFLINE"] = "1" }
     if failure == "server" { app.launchArguments += ["-cf.forgotServerFailure"] }
     if failure == "throttle" { app.launchArguments += ["-cf.forgotThrottleFailure"] }
-    app.launch()
+    app.launchMeasured()
     return app
 }
 
@@ -84,6 +84,6 @@ nonisolated final class ForgotPasswordTests: XCTestCase {
     AuthUIFlow.openSignIn(app)
     AuthUIFlow.reveal(app.buttons["sign-in.forgot"], in: app)
     app.buttons["sign-in.forgot"].tap()
-    XCTAssertTrue(app.textFields["forgot.email"].waitForExistence(timeout: 4))
+    XCTAssertTrue(app.textFields["forgot.email"].waitForMeasuredExistence(timeout: 4))
     AuthUIFlow.reveal(app.textFields["forgot.email"], in: app)
 }

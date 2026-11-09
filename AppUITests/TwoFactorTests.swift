@@ -14,7 +14,7 @@ nonisolated final class TwoFactorTests: XCTestCase {
         try assertTwoFactorKeyboardPair(code, app: app)
         XCTAssertFalse(app.keyboards.buttons["Go"].exists)
         submit.tap()
-        XCTAssertTrue(app.staticTexts["walkthrough.title"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["walkthrough.title"].waitForMeasuredExistence(timeout: 10))
         XCTAssertFalse(app.textFields["two-factor.code"].exists)
         XCTAssertFalse(app.images["launch.opening"].exists)
     }
@@ -29,7 +29,7 @@ nonisolated final class TwoFactorTests: XCTestCase {
         revealTwoFactor(app.buttons["two-factor.toggle"], in: AuthUIFlow.scroll(in: app))
         app.buttons["two-factor.toggle"].tap()
         let recovery = app.textFields["two-factor.recovery_code"]
-        XCTAssertTrue(recovery.waitForExistence(timeout: 3))
+        XCTAssertTrue(recovery.waitForMeasuredExistence(timeout: 3))
         XCTAssertEqual(recovery.value as? String, "")
         XCTAssertEqual(recovery.placeholderValue, "xxxx-xxxx")
         XCTAssertEqual(recovery.label, "Recovery code")
@@ -38,7 +38,7 @@ nonisolated final class TwoFactorTests: XCTestCase {
         XCTAssertEqual(recovery.value as? String, "AbCdEf1234-GhIjKl5678")
         try assertTwoFactorKeyboardPair(recovery, app: app)
         recovery.typeText("\n")
-        XCTAssertTrue(app.staticTexts["walkthrough.title"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["walkthrough.title"].waitForMeasuredExistence(timeout: 10))
         XCTAssertFalse(app.images["launch.opening"].exists)
     }
 
@@ -74,7 +74,7 @@ nonisolated final class TwoFactorTests: XCTestCase {
         XCTAssertEqual(code.value as? String, "123")
         revealTwoFactor(AuthUIFlow.control("auth.back", in: app), in: scroll)
         AuthUIFlow.control("auth.back", in: app).tap()
-        XCTAssertTrue(app.textFields["sign-in.email"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.textFields["sign-in.email"].waitForMeasuredExistence(timeout: 3))
         XCTAssertEqual(app.secureTextFields["sign-in.password"].value as? String, "")
         try openMockTwoFactor(app, fromSignIn: true)
         XCTAssertEqual(app.textFields["two-factor.code"].value as? String, "")
@@ -93,25 +93,25 @@ nonisolated final class TwoFactorTests: XCTestCase {
     ]
     if xxLarge { app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryXXL"] }
     if server { app.launchArguments += ["-cf.twoFactorServerFailure"] }
-    app.launch()
+    app.launchMeasured()
     return app
 }
 
 @MainActor func openMockTwoFactor(_ app: XCUIApplication, fromSignIn: Bool = false) throws {
     if !fromSignIn {
         let signIn = app.buttons["welcome.signIn"]
-        XCTAssertTrue(signIn.waitForExistence(timeout: 6))
+        XCTAssertTrue(signIn.waitForMeasuredExistence(timeout: 6))
         revealTwoFactor(signIn, in: app.scrollViews.containing(.button, identifier: "welcome.signIn").element)
         signIn.tap()
     }
     let email = app.textFields["sign-in.email"]
-    XCTAssertTrue(email.waitForExistence(timeout: 3))
+    XCTAssertTrue(email.waitForMeasuredExistence(timeout: 3))
     revealTwoFactor(email, in: AuthUIFlow.scroll(in: app))
     email.tap()
     if !fromSignIn { email.typeText("twofactor@example.com") }
     email.typeText("\n")
     app.secureTextFields["sign-in.password"].typeText("password\n")
-    XCTAssertTrue(app.textFields["two-factor.code"].waitForExistence(timeout: 8))
+    XCTAssertTrue(app.textFields["two-factor.code"].waitForMeasuredExistence(timeout: 8))
     XCTAssertFalse(app.staticTexts["walkthrough.title"].exists)
     revealTwoFactor(app.textFields["two-factor.code"], in: AuthUIFlow.scroll(in: app))
 }

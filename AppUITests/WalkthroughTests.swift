@@ -54,7 +54,7 @@ nonisolated final class WalkthroughTests: XCTestCase {
     }
 
     @MainActor private func assertToday(_ app: XCUIApplication) {
-        XCTAssertTrue(app.scrollViews["today.screen"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.scrollViews["today.screen"].waitForMeasuredExistence(timeout: 15))
         XCTAssertFalse(app.staticTexts["walkthrough.title"].exists)
     }
 }

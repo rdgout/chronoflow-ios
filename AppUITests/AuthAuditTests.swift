@@ -84,16 +84,16 @@ nonisolated final class AuthAuditTests: XCTestCase {
             if ["server", "throttle", "offline"].contains(state) {
                 app.launchEnvironment["CF_AUTH_TEST_RESET_FAILURE"] = state
             }
-            app.launch()
+            app.launchMeasured()
             defer { app.terminate() }
             if state == "expired" {
-                XCTAssertTrue(app.textFields["forgot.email"].waitForExistence(timeout: 12))
+                XCTAssertTrue(app.textFields["forgot.email"].waitForMeasuredExistence(timeout: 12))
             } else {
                 openResetFromMockMail(app)
                 if state != "form" {
                     submitPrefilled(app, screen: "reset", state: state)
                     if state == "done" {
-                        XCTAssertTrue(app.buttons["reset.continue"].waitForExistence(timeout: 6))
+                        XCTAssertTrue(app.buttons["reset.continue"].waitForMeasuredExistence(timeout: 6))
                     } else {
                         let finished = XCTNSPredicateExpectation(
                             predicate: NSPredicate { _, _ in app.secureTextFields["reset.password"].isEnabled },
@@ -159,7 +159,7 @@ nonisolated final class AuthAuditTests: XCTestCase {
             if ["server", "throttle", "offline"].contains(state) {
                 app.launchEnvironment["CF_AUTH_TEST_SIGNUP_FAILURE"] = state
             }
-            app.launch()
+            app.launchMeasured()
             defer { app.terminate() }
             openSignUp(app)
             if state == "visible" {
@@ -227,7 +227,7 @@ nonisolated final class AuthAuditTests: XCTestCase {
             AuthUIFlow.launchSignedIn(app, walkthroughSeen: true)
             defer { app.terminate() }
             let first = app.buttons[state.hasPrefix("failed") ? "verify.retry" : "verify.open-email"]
-            XCTAssertTrue(first.waitForExistence(timeout: 12))
+            XCTAssertTrue(first.waitForMeasuredExistence(timeout: 12))
             AuthUIFlow.waitUntilEnabled(first)
             if ["countdown", "throttle", "server", "offline", "failedServer", "failedThrottle", "failedOffline"]
                 .contains(state)
@@ -239,7 +239,7 @@ nonisolated final class AuthAuditTests: XCTestCase {
                 AuthUIFlow.reveal(resend, in: app)
                 resend.tap()
                 if state != "offline" && state != "failedOffline" {
-                    XCTAssertTrue(AuthUIFlow.control("auth.banner", in: app).waitForExistence(timeout: 6))
+                    XCTAssertTrue(AuthUIFlow.control("auth.banner", in: app).waitForMeasuredExistence(timeout: 6))
                 }
                 if state == "countdown" {
                     XCUIDevice.shared.press(.home)
@@ -249,7 +249,7 @@ nonisolated final class AuthAuditTests: XCTestCase {
                 let back = app.buttons["verify.different-email"]
                 AuthUIFlow.reveal(back, in: app)
                 back.tap()
-                XCTAssertTrue(AuthUIFlow.control("verify.sign-out-error", in: app).waitForExistence(timeout: 6))
+                XCTAssertTrue(AuthUIFlow.control("verify.sign-out-error", in: app).waitForMeasuredExistence(timeout: 6))
             }
             let identifiers =
                 (state.hasPrefix("failed")
@@ -275,11 +275,11 @@ nonisolated final class AuthAuditTests: XCTestCase {
             app.launchArguments = AuthUIFlow.arguments(language: language, xxLarge: xxLarge)
             app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
             if mode > 0 { configureAudit(app, screen: "two-factor", state: "form") }
-            app.launch()
+            app.launchMeasured()
             defer { app.terminate() }
             if mode == 0 { AuthUIFlow.openSignIn(app) }
             if mode > 0 {
-                XCTAssertTrue(app.textFields["two-factor.code"].waitForExistence(timeout: 12))
+                XCTAssertTrue(app.textFields["two-factor.code"].waitForMeasuredExistence(timeout: 12))
                 let keyboardHidden = XCTNSPredicateExpectation(
                     predicate: NSPredicate { _, _ in !app.keyboards.firstMatch.exists }, object: nil)
                 XCTAssertEqual(XCTWaiter.wait(for: [keyboardHidden], timeout: 5), .completed)
@@ -319,10 +319,10 @@ nonisolated final class AuthAuditTests: XCTestCase {
                 field.tap()
                 field.typeText(state == "field" ? "invalid\n" : "unknown@example.com\n")
                 if state == "sent" {
-                    XCTAssertTrue(AuthUIFlow.control("forgot.notice", in: app).waitForExistence(timeout: 6))
+                    XCTAssertTrue(AuthUIFlow.control("forgot.notice", in: app).waitForMeasuredExistence(timeout: 6))
                 } else if state == "server" || state == "throttle" {
                     XCTAssertTrue(
-                        AuthUIFlow.control("auth.banner", in: app).waitForExistence(timeout: 6),
+                        AuthUIFlow.control("auth.banner", in: app).waitForMeasuredExistence(timeout: 6),
                         "Missing Forgot \(state) banner: \(language), \(appearance), xxLarge=\(xxLarge)")
                 } else {
                     let received = XCTNSPredicateExpectation(
@@ -354,7 +354,7 @@ nonisolated final class AuthAuditTests: XCTestCase {
         button.tap()
         if ["taken", "server", "throttle"].contains(state) {
             XCTAssertTrue(
-                AuthUIFlow.control("auth.banner", in: app).waitForExistence(timeout: 6),
+                AuthUIFlow.control("auth.banner", in: app).waitForMeasuredExistence(timeout: 6),
                 "Expected \(screen) \(state) banner after submitting the prefilled form")
         } else if !["empty", "verify", "done"].contains(state) {
             let password = app.secureTextFields["\(screen).password"]
@@ -381,7 +381,7 @@ nonisolated final class AuthAuditTests: XCTestCase {
         var controls: [String: XCUIElement] = [:]
         for identifier in identifiers {
             let matches = scroll.descendants(matching: .any).matching(identifier: identifier)
-            guard matches.firstMatch.waitForExistence(timeout: 3), matches.count == 1 else {
+            guard matches.firstMatch.waitForMeasuredExistence(timeout: 3), matches.count == 1 else {
                 XCTFail("Expected one accessibility element for \(identifier); found \(matches.count)")
                 return
             }

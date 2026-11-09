@@ -2106,6 +2106,15 @@ User decision 2026-11-06: implement these when the named states exist; this roun
 - [x] Replace unreliable tab minimization UI observations with a hosted assertion of the actual UIKit configuration, exact-label native tab navigation and a stable Trips screen check after scrolling.
 - [x] Correct the tier map, validate lint/host and Debug/Release compilation, and deliver atomic follow-up patches on `53ea64e` with an exact 17e rerun list. Lint, 591 Swift Testing tests + 19 XCTest methods (excluding the sandbox-blocked loopback test), generators/runner fixtures and SDK checks pass; full host execution fails only at the unchanged APICookieTests socket bind (`EPERM`). Simulator acceptance remains external.
 
+## UI runner acceleration (user, 2026-11-09)
+
+- [x] Instrument gated Debug process entry, overlay commit, session readiness and exposed root plus runner launch return/first element; leave the measurement table in Docs/ui-test-tiers.md for user timings.
+- [ ] Replace all UI expectation polling with bounded backoff, preserving timeout ceilings.
+- [ ] Add a gated Debug fast launch profile, explicit slow mock opt-in and host parsing coverage.
+- [ ] Share cold-launch and in-process seed setup with teardown and readiness acknowledgement; test equivalence.
+- [ ] Reuse each eligible class process, reseed tests, balance classes and use typed queries.
+- [ ] Validate strict lint, host tests and actual Release compilation; deliver ordered atomic commits/patches and exact 17e acceptance selectors.
+
 ## Open questions for the user
 
 | # | Question | Default | Blocks |

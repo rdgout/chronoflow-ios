@@ -12,7 +12,7 @@ nonisolated final class PlanAuditTests: XCTestCase {
     @MainActor func testTodayPrimaryState() async throws {
         try await audit { app in
             let progress = app.staticTexts["today.progress"]
-            XCTAssertTrue(progress.waitForExistence(timeout: 8))
+            XCTAssertTrue(progress.waitForMeasuredExistence(timeout: 8))
             _ = try UIWait.stableFrames(
                 [app.scrollViews["today.screen"], progress, app.tabBars.firstMatch], timeout: 8
             )
@@ -23,7 +23,7 @@ nonisolated final class PlanAuditTests: XCTestCase {
     @MainActor func testTripsPrimaryState() async throws {
         try await audit { app in
             app.tabBars.buttons["My trips"].tap()
-            XCTAssertTrue(app.scrollViews["trips.screen"].waitForExistence(timeout: 6))
+            XCTAssertTrue(app.scrollViews["trips.screen"].waitForMeasuredExistence(timeout: 6))
         }
     }
     @MainActor func testTripsEmptyState() async throws {
@@ -39,11 +39,11 @@ nonisolated final class PlanAuditTests: XCTestCase {
         try await audit { app in
             let row = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "today.step.actionable."))
                 .firstMatch
-            XCTAssertTrue(row.waitForExistence(timeout: 12))
+            XCTAssertTrue(row.waitForMeasuredExistence(timeout: 12))
             AuthUIFlow.reveal(row, in: app, scroll: app.scrollViews["today.screen"])
             row.tap()
             let sheet = app.scrollViews["step.sheet"]
-            XCTAssertTrue(sheet.waitForExistence(timeout: 4), app.debugDescription)
+            XCTAssertTrue(sheet.waitForMeasuredExistence(timeout: 4), app.debugDescription)
             let title = app.staticTexts.matching(NSPredicate(format: "identifier ENDSWITH %@", "|step.title"))
                 .firstMatch
             let time = app.staticTexts.matching(NSPredicate(format: "identifier ENDSWITH %@", "|step.time")).firstMatch
@@ -67,7 +67,7 @@ nonisolated final class PlanAuditTests: XCTestCase {
     }
     @MainActor func testLegendPrimaryState() async throws {
         try await audit(legend: true) { app in
-            XCTAssertTrue(app.scrollViews["legend.sheet"].waitForExistence(timeout: 4))
+            XCTAssertTrue(app.scrollViews["legend.sheet"].waitForMeasuredExistence(timeout: 4))
         }
     }
     @MainActor private func audit(

@@ -12,7 +12,7 @@ nonisolated final class SettingsTests: XCTestCase {
         defer { app.terminate() }
         openSettings(app)
         signOut(app)
-        XCTAssertTrue(app.textFields["sign-in.email"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.textFields["sign-in.email"].waitForMeasuredExistence(timeout: 10))
         XCTAssertFalse(app.scrollViews["settings.pending"].exists)
         XCTAssertFalse(app.images["launch.opening"].exists)
     }
@@ -27,7 +27,7 @@ nonisolated final class SettingsTests: XCTestCase {
         XCTAssertEqual(XCTWaiter.wait(for: [pending], timeout: 12), .completed)
         signOut(app)
         let sheet = app.scrollViews["settings.pending"]
-        guard sheet.waitForExistence(timeout: 8) else {
+        guard sheet.waitForMeasuredExistence(timeout: 8) else {
             XCTFail("Pending changes confirmation did not appear")
             return
         }
@@ -37,14 +37,14 @@ nonisolated final class SettingsTests: XCTestCase {
         stay.tap()
         let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in !sheet.exists }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 4), .completed)
-        XCTAssertTrue(app.tabBars.buttons["Settings"].waitForExistence(timeout: 4))
+        XCTAssertTrue(app.tabBars.buttons["Settings"].waitForMeasuredExistence(timeout: 4))
         XCTAssertFalse(app.textFields["sign-in.email"].exists)
         signOut(app)
-        XCTAssertTrue(sheet.waitForExistence(timeout: 8))
+        XCTAssertTrue(sheet.waitForMeasuredExistence(timeout: 8))
         let discard = app.buttons["settings.pending.discard"]
         AuthUIFlow.reveal(discard, in: app, scroll: sheet)
         discard.tap()
-        XCTAssertTrue(app.textFields["sign-in.email"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.textFields["sign-in.email"].waitForMeasuredExistence(timeout: 10))
         XCTAssertFalse(app.images["launch.opening"].exists)
     }
 
@@ -59,16 +59,16 @@ nonisolated final class SettingsTests: XCTestCase {
     }
 
     @MainActor private func openSettings(_ app: XCUIApplication, email: String = MockScenarioValues.demoEmail) {
-        XCTAssertTrue(app.tabBars.buttons["Settings"].waitForExistence(timeout: 12))
+        XCTAssertTrue(app.tabBars.buttons["Settings"].waitForMeasuredExistence(timeout: 12))
         app.tabBars.buttons["Settings"].tap()
         let profile = app.descendants(matching: .any)["settings.profile"].firstMatch
-        XCTAssertTrue(profile.waitForExistence(timeout: 10))
+        XCTAssertTrue(profile.waitForMeasuredExistence(timeout: 10))
         XCTAssertTrue(profile.label.contains(email))
     }
 
     @MainActor private func signOut(_ app: XCUIApplication) {
         let screen = app.descendants(matching: .any)["settings.screen"].firstMatch
-        XCTAssertTrue(screen.waitForExistence(timeout: 6))
+        XCTAssertTrue(screen.waitForMeasuredExistence(timeout: 6))
         let button = app.buttons["settings.signOut"]
         AuthUIFlow.reveal(button, in: app, scroll: screen)
         AuthUIFlow.waitUntilEnabled(button)

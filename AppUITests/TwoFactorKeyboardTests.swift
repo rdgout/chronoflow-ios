@@ -37,6 +37,7 @@ nonisolated final class TwoFactorKeyboardTests: XCTestCase {
         try assertTwoFactorKeyboardPair(field, app: app, context: "\(language), xxLarge, initial", attach: add)
         app.buttons["two-factor.submit"].tap()
         if server {
+            XCTAssertTrue(app.descendants(matching: .any)["auth.banner"].waitForMeasuredExistence(timeout: 5))
             AuthUIFlow.assertBannerVisible(in: app)
             AuthUIFlow.reveal(field, in: app)
             field.tap()

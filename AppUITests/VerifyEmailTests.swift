@@ -6,12 +6,13 @@ nonisolated final class VerifyEmailTests: XCTestCase {
         defer { app.terminate() }
         submitSignUp(app)
         let mail = app.buttons["verify.open-email"]
-        XCTAssertTrue(mail.waitForExistence(timeout: 8), "Expected verify.open-email after registering new@example.com")
+        XCTAssertTrue(
+            mail.waitForMeasuredExistence(timeout: 8), "Expected verify.open-email after registering new@example.com")
         AuthUIFlow.waitUntilEnabled(mail)
         AuthUIFlow.reveal(mail, in: app)
         mail.tap()
         XCTAssertTrue(
-            app.staticTexts["walkthrough.title"].waitForExistence(timeout: 8),
+            app.staticTexts["walkthrough.title"].waitForMeasuredExistence(timeout: 8),
             "Expected Walkthrough after mock-mail verification; registration already accepted the current terms")
     }
 }
@@ -26,7 +27,7 @@ nonisolated final class VerifyEmailTests: XCTestCase {
     app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
     app.launchEnvironment["CF_AUTH_TEST_AUDIT_SCREEN"] = "sign-up"
     app.launchEnvironment["CF_AUTH_TEST_AUDIT_STATE"] = "verify"
-    app.launch()
+    app.launchMeasured()
     openSignUp(app)
     return app
 }

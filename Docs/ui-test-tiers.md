@@ -96,3 +96,22 @@ make targeted DEVICES="17e" ONLY="$(cat build/commits/rerun-17e.txt)"
 ```
 
 The manifest includes the failing suites, restored guards and every layout suite affected by the shared host change. The runner builds Debug and isolated ReadinessRelease once each. It selects no reference-comparing suite and no matrix. ReadinessTests and SignInTests need no focused rerun because the user already reports both passing and this repair does not change them.
+
+### UI launch timing (2026-11-09)
+
+Debug launches with a valid `CF_AUTH_TEST_ID` emit unified-log `CF_UI_TIMELINE` events in subsystem `net.chronoflow.app.native`, category `UITestTimeline`. `process-entry` is the AppDelegate initializer, the earliest instrumented app entry, not dyld or the kernel process creation time. Each line includes wall-clock seconds, monotonic uptime, test ID and app PID. Runner logs use the same clock fields and ID around `launch()` and the first successful element wait. Correlate by ID and PID; use uptime differences on the same simulator host. `seeded-screen-visible` means the root has laid out and its accessibility is exposed after overlay removal; the runner's first-element marker independently confirms accessibility availability.
+
+Pending user measurements on 17e (same selectors before and after the fast profile):
+
+| Interval | Baseline | Fast profile | Source |
+| --- | --- | --- | --- |
+| launch begin → app process entry | pending | pending | runner + app |
+| process entry → overlay committed | pending | pending | app |
+| overlay committed → session ready | pending | pending | app |
+| session ready → seeded screen visible | pending | pending | app |
+| launch begin → launch return | pending | pending | runner |
+| launch return → first element found | pending | pending | runner |
+| per-test reset begin → first element found (p50/p95) | n/a | pending | runner |
+| default UI tier wall time / test count / worker count | pending | pending | xcresult + runner |
+
+Capture app events while the test runs with `xcrun simctl spawn <17e-udid> log stream --level info --style compact --predicate 'subsystem == "net.chronoflow.app.native" AND category == "UITestTimeline"' > build/ui-timeline.log`. Preserve the test runner log and xcresult as well. No timing improvement is claimed until these cells are filled from a successful run.

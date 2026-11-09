@@ -4,7 +4,7 @@ nonisolated final class ReadinessTests: XCTestCase {
     @MainActor
     func testSignedInReadyHandsOffToToday() {
         let app = launch(["-cf.session", "in", "-cf.stored", "yes"])
-        XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 12))
+        XCTAssertTrue(app.tabBars.firstMatch.waitForMeasuredExistence(timeout: 12))
         XCTAssertFalse(app.images["launch.opening"].exists)
     }
 
@@ -17,7 +17,7 @@ nonisolated final class ReadinessTests: XCTestCase {
             XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: status, object: opening)], timeout: 5), .completed
         )
         XCTAssertFalse(app.tabBars.firstMatch.exists)
-        XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.tabBars.firstMatch.waitForMeasuredExistence(timeout: 5))
         XCTAssertFalse(opening.exists)
     }
 
@@ -26,7 +26,7 @@ nonisolated final class ReadinessTests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = arguments
         app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
-        app.launch()
+        app.launchMeasured()
         addTeardownBlock { @MainActor in app.terminate() }
         return app
     }

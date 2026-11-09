@@ -15,7 +15,7 @@ import XCTest
         }
         app.launchEnvironment["CF_AUTH_TEST_SIGNED_IN"] = account.rawValue
         app.launchEnvironment.merge(extraEnv) { _, value in value }
-        app.launch()
+        app.launchMeasured()
     }
 
     static func arguments(language: String = "en", xxLarge: Bool = false) -> [String] {
@@ -46,7 +46,8 @@ import XCTest
         reveal(button, in: app, scroll: app.scrollViews.containing(.button, identifier: "welcome.signIn").element)
         button.tap()
         XCTAssertTrue(
-            app.textFields["sign-in.email"].waitForExistence(timeout: 4), "Expected sign-in.email after Welcome Sign in"
+            app.textFields["sign-in.email"].waitForMeasuredExistence(timeout: 4),
+            "Expected sign-in.email after Welcome Sign in"
         )
         XCTAssertFalse(app.images["launch.opening"].exists)
     }
@@ -75,7 +76,7 @@ import XCTest
             return false
         }
         let close = owner.buttons["xmark"]
-        guard close.waitForExistence(timeout: 2), close.isHittable else {
+        guard close.waitForMeasuredExistence(timeout: 2), close.isHittable else {
             XCTFail("Strong-password sheet has no reachable close control")
             return false
         }

@@ -5,6 +5,13 @@ import UserNotifications
 
 @main
 final class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+    override init() {
+        super.init()
+        #if DEBUG
+            UITestTimeline.record("process-entry")
+        #endif
+    }
+
     var launchProcess = LaunchProcessState()
     var nativeSession: NativeSessionController?
     var authServices: AuthSessionServices?

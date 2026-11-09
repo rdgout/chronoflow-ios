@@ -29,13 +29,13 @@ nonisolated final class SignInKeyboardTests: XCTestCase {
             language == "nl" ? "nl_NL" : "en_US",
             "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryXXL",
         ]
-        app.launch()
+        app.launchMeasured()
         defer { app.terminate() }
         let signIn = app.buttons["welcome.signIn"]
-        XCTAssertTrue(signIn.waitForExistence(timeout: 6))
+        XCTAssertTrue(signIn.waitForMeasuredExistence(timeout: 6))
         reveal(signIn, in: app.scrollViews.containing(.button, identifier: "welcome.signIn").element)
         signIn.tap()
-        XCTAssertTrue(app.staticTexts["auth.heading"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["auth.heading"].waitForMeasuredExistence(timeout: 3))
 
         let scroll = AuthUIFlow.scroll(in: app)
         let email = app.textFields["sign-in.email"]
@@ -55,7 +55,7 @@ nonisolated final class SignInKeyboardTests: XCTestCase {
             let passkey = app.buttons["sign-in.passkey"]
             reveal(passkey, in: scroll)
             passkey.tap()
-            XCTAssertTrue(app.descendants(matching: .any)["auth.banner"].waitForExistence(timeout: 5))
+            XCTAssertTrue(app.descendants(matching: .any)["auth.banner"].waitForMeasuredExistence(timeout: 5))
             reveal(email, in: scroll)
             email.tap()
         }

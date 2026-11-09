@@ -4,13 +4,13 @@ nonisolated final class TripPageStepTests: XCTestCase {
     @MainActor func testSeededTimelineAndListOpenTheSameStepSheet() {
         let app = XCUIApplication()
         app.launchArguments = AuthUIFlow.arguments() + ["-cf.trip-page", "S1", "-cf.session", "out"]
-        app.launch()
+        app.launchMeasured()
         defer { app.terminate() }
         let blockID = "sleep-sleep-29865450"
         let scroll = app.scrollViews["trip.scroll"]
-        XCTAssertTrue(scroll.waitForExistence(timeout: 12))
+        XCTAssertTrue(scroll.waitForMeasuredExistence(timeout: 12))
         XCTAssertTrue(
-            app.descendants(matching: .any)["trip.timeline.ready"].firstMatch.waitForExistence(timeout: 12))
+            app.descendants(matching: .any)["trip.timeline.ready"].firstMatch.waitForMeasuredExistence(timeout: 12))
         tapBlock(blockID, app: app, scroll: scroll)
         assertStepContent(app)
         let title = stepText("step.title", in: app).label
@@ -28,13 +28,14 @@ nonisolated final class TripPageStepTests: XCTestCase {
         defer { app.terminate() }
         let row = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "today.step.actionable."))
             .firstMatch
-        XCTAssertTrue(row.waitForExistence(timeout: 12))
+        XCTAssertTrue(row.waitForMeasuredExistence(timeout: 12))
         let blockID = String(row.identifier.dropFirst("today.step.actionable.".count))
         XCTAssertFalse(blockID.isEmpty)
         app.buttons["today.trip"].tap()
         let scroll = app.scrollViews["trip.scroll"]
-        XCTAssertTrue(scroll.waitForExistence(timeout: 12))
-        XCTAssertTrue(app.descendants(matching: .any)["trip.timeline.ready"].firstMatch.waitForExistence(timeout: 12))
+        XCTAssertTrue(scroll.waitForMeasuredExistence(timeout: 12))
+        XCTAssertTrue(
+            app.descendants(matching: .any)["trip.timeline.ready"].firstMatch.waitForMeasuredExistence(timeout: 12))
         tapBlock(blockID, app: app, scroll: scroll)
         assertStepContent(app)
         let done = app.buttons["step.done"]
@@ -44,7 +45,7 @@ nonisolated final class TripPageStepTests: XCTestCase {
         tapAction(done, app: app)
         tapAction(undo, app: app)
         tapAction(skip, app: app)
-        XCTAssertTrue(undo.waitForExistence(timeout: 6))
+        XCTAssertTrue(undo.waitForMeasuredExistence(timeout: 6))
         dismissSheet(app)
         app.buttons["trip.viewToggle"].tap()
         tapBlock(blockID, app: app, scroll: scroll)
@@ -55,20 +56,20 @@ nonisolated final class TripPageStepTests: XCTestCase {
     }
 
     @MainActor private func tapAction(_ action: XCUIElement, app: XCUIApplication, tapping: Bool = true) {
-        XCTAssertTrue(action.waitForExistence(timeout: 6))
+        XCTAssertTrue(action.waitForMeasuredExistence(timeout: 6))
         AuthUIFlow.reveal(action, in: app, scroll: app.scrollViews["step.sheet"])
         XCTAssertTrue(action.isHittable)
         if tapping { action.tap() }
     }
 
     @MainActor private func assertStepContent(_ app: XCUIApplication) {
-        XCTAssertTrue(app.scrollViews["step.sheet"].waitForExistence(timeout: 4), app.debugDescription)
+        XCTAssertTrue(app.scrollViews["step.sheet"].waitForMeasuredExistence(timeout: 4), app.debugDescription)
         let title = stepText("step.title", in: app)
         let time = stepText("step.time", in: app)
-        XCTAssertTrue(title.waitForExistence(timeout: 4))
+        XCTAssertTrue(title.waitForMeasuredExistence(timeout: 4))
         XCTAssertTrue(title.isHittable)
         XCTAssertFalse(title.label.isEmpty)
-        XCTAssertTrue(time.waitForExistence(timeout: 4))
+        XCTAssertTrue(time.waitForMeasuredExistence(timeout: 4))
         XCTAssertTrue(time.isHittable)
         XCTAssertNotNil(time.label.range(of: #"\d{1,2}:\d{2}"#, options: .regularExpression))
         XCTAssertTrue(time.label.contains("time"))

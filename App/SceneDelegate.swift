@@ -102,6 +102,9 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             scene.play(timeline, at: CACurrentMediaTime())
             CATransaction.commit()
             CATransaction.flush()
+            #if DEBUG
+                UITestTimeline.record("overlay-committed")
+            #endif
             signposts.event(.overlayFirstCommit)
             signposts.end(.firstCommit)
             controller.prepareAccessibilityLabel()
@@ -189,6 +192,9 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                             Task { @MainActor in await native?.readiness.retry() }
                         }
                     }
+                    #if DEBUG
+                        UITestTimeline.record("session-ready")
+                    #endif
                     runReadiness(source, on: windowScene, clock: clock, fallback: fallback)
                 } catch {
                     guard let self, let windowScene, !Task.isCancelled, connectionGeneration == generation else {
@@ -387,6 +393,12 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             await (UIApplication.shared.delegate as? AppDelegate)?.verificationRequired(epoch: epoch)
         }
         consumePendingReminderIntent()
+        #if DEBUG
+            if let window, window.rootViewController?.viewIfLoaded != nil {
+                window.layoutIfNeeded()
+                UITestTimeline.record("seeded-screen-visible")
+            }
+        #endif
         signposts.event(.overlayRemoved)
         signposts.end(.exit)
         signposts.end(.launch)
