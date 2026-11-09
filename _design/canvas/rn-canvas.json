@@ -4387,6 +4387,21 @@
     "PasswordPromptNL.dc.html": "412a840f9e7468724cf0cac59b070d479043db3bb9fe3f8155969eb5ed262591",
     "PasswordPromptForgot.dc.html": "d53c244f7b556a674dab9e7f096d33e8dcef51a68fd37d4f4bbaa21ef27e6f60"
    }
+  },
+  {
+   "phase": "19",
+   "source": "/Users/rickgout/Sites/chronoflow-mobile/_design/canvas",
+   "commit": "e24872afd47ff671fbbab315665920f2805054df",
+   "importedAt": "2026-11-09",
+   "files": {
+    "SetReminders.dc.html": "37262738746229962fe5585ecca9f9a00daf7c3c68cd82daa52547206ad7888c",
+    "DarkSetReminders.dc.html": "5a2ccfc0cd3fd4d7fe35dffca7391ffa1f070193c01ceb5eace2436abdf4e63e",
+    "SetRemindersAsk.dc.html": "d29cfef85e8f67018d62ceb55b71b1ce46431cbcbc038d1e563c59a488cc0174",
+    "SetRemindersBlocked.dc.html": "89bb087af7851db7d91164b17a9dc8b41574d5030a0f9b221fc762cf49113fc7",
+    "WizardReminders.dc.html": "3c47abf1e8fbe68d1381b489afe87d29c8bfdc85a276c106b450f85206862026",
+    "WizardRemindersDarkNL.dc.html": "f6e044181eb4fdb73ecf7a9041ac16083e10a8a74c0e0ab57a6fe7a173b600b4",
+    "WizardSheet.dc.html": "2959b6aacf694c35454580b99251b88fe49e53c14cdf29b2c7af3e9baf090beb"
+   }
   }
  ]
 }
