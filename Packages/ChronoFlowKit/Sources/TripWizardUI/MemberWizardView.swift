@@ -2,26 +2,32 @@
     import AppCore
     import DesignSystem
     import SwiftUI
+    import PlanCore
     import TripWizard
     import UIKit
 
     public struct MemberWizardView: View {
-        @Environment(\.locale) private var locale
-        @Bindable private var model: MemberWizardModel
-        private let dismiss: () -> Void
-        @State private var path: [Destination]
-        @State private var confirmingDiscard = false
-        @State private var continuing = false
-        @State private var closing = false
-        private enum Destination: Hashable { case outbound, continuation }
+        @Environment(\.locale) var locale
+        @Bindable var model: MemberWizardModel
+        let dismiss: () -> Void
+        @State var path: [Destination]
+        @State var confirmingDiscard = false
+        @State var continuing = false
+        @State var closing = false
+        enum Destination: Hashable {
+            case outbound, returnChoice, returnFlight, sleep, checking
+            case question(Int)
+            case excluded, continuation
+        }
+        @State var copyFormatter: CopyLineFormatter?
 
         public init(model: MemberWizardModel, dismiss: @escaping () -> Void) {
             self.model = model
             self.dismiss = dismiss
-            _path = State(initialValue: model.draft.state.step == .outbound ? [.outbound] : [])
+            _path = State(initialValue: Self.destinations(model))
         }
 
-        private func t(_ key: String, _ arguments: [String: String] = [:]) -> String {
+        func t(_ key: String, _ arguments: [String: String] = [:]) -> String {
             WizardStrings.text(key, locale: locale, arguments: arguments)
         }
 
@@ -30,6 +36,12 @@
                 whereScreen.navigationDestination(for: Destination.self) { destination in
                     switch destination {
                     case .outbound: outboundScreen
+                    case .returnChoice: returnScreen
+                    case .returnFlight: returnFlightScreen
+                    case .sleep: sleepScreen
+                    case .checking: checkingScreen
+                    case .question(let index): questionScreen(index)
+                    case .excluded: excludedScreen
                     case .continuation:
                         #if DEBUG
                             continuation
@@ -41,9 +53,20 @@
             }
             .tint(ColorToken.primary.color)
             .interactiveDismissDisabled()
-            .onChange(of: path) { _, next in
-                model.go(next.isEmpty ? .whereTo : .outbound)
+            .task {
+                if copyFormatter == nil { copyFormatter = try? await CopyLineFormatter(catalog: CopyCatalog.load()) }
+                model.resumeChecking()
+            }
+            .onChange(of: model.draft.state.step) { _, _ in path = Self.destinations(model) }
+            .onChange(of: model.draft.state.questionIndex) { _, _ in path = Self.destinations(model) }
+            .onChange(of: path) { previous, next in
                 continuing = false
+                guard next.count < previous.count else { return }
+                if case .question(let index) = next.last {
+                    model.navigateToQuestion(index)
+                } else if next != Self.destinations(model) {
+                    model.go(Self.step(next.last))
+                }
             }
             .sheet(item: Binding(get: { model.draft.state.sheet }, set: { model.openAirport($0) })) { sheet in
                 WizardAirportSearchView(sheet: sheet, model: model)
@@ -94,7 +117,7 @@
             }
         }
 
-        private func airportRow(
+        func airportRow(
             _ label: String, iata: String, city: String?, hint: Bool = false, invalid: Bool = false,
             action: @escaping () -> Void
         ) -> some View {
@@ -128,7 +151,7 @@
                 if let banner = model.draft.fieldErrors["review"] {
                     HStack(alignment: .top, spacing: PlanUITokens.space2) {
                         Image(systemName: "info.circle").accessibilityHidden(true)
-                        Text(t(banner.key)).font(Typography.screenBody.font)
+                        Text(fieldCopy(banner)).font(Typography.screenBody.font)
                     }
                     .padding(PlanUITokens.space3)
                     .background(
@@ -176,7 +199,7 @@
             }
         }
 
-        private func connection(_ index: Int) -> some View {
+        func connection(_ index: Int) -> some View {
             HStack(spacing: PlanUITokens.space2) {
                 Divider().overlay(ColorToken.border.color)
                 if let message = WizardOutboundRules.connection(
@@ -215,7 +238,7 @@
                 .accessibilityIdentifier("wizard.connection.\(index)")
         }
 
-        private func duration(_ minutes: Int) -> String {
+        func duration(_ minutes: Int) -> String {
             t(
                 "{{hours}} h {{minutes}}",
                 ["hours": String(minutes / 60), "minutes": String(format: "%02d", minutes % 60)])
@@ -224,88 +247,34 @@
         private func shell<Content: View>(
             title: String, subtitle: String, outbound: Bool, @ViewBuilder content: () -> Content
         ) -> some View {
-            VStack(spacing: 0) {
-                ProgressView(value: outbound ? 0.30 : 0.15)
-                    .tint(ColorToken.dawn.color).padding(.horizontal, PlanUITokens.space5)
-                    .accessibilityLabel(t("Progress, {{pct}} percent", ["pct": outbound ? "30" : "15"]))
-                ScrollView {
-                    VStack(alignment: .leading, spacing: PlanUITokens.wizardContentGap) {
-                        VStack(alignment: .leading, spacing: PlanUITokens.wizardControlGap) {
-                            Text(t(title)).font(Typography.screenPageTitle.font).accessibilityAddTraits(.isHeader)
-                            Text(t(subtitle)).font(Typography.wizardSubtitle.font).foregroundStyle(
-                                ColorToken.mutedForeground.color)
-                        }
-                        content()
-                    }.frame(maxWidth: .infinity, alignment: .leading).padding(PlanUITokens.space5)
-                }
-            }
-            .background(ColorToken.background.color).foregroundStyle(ColorToken.foreground.color)
-            .safeAreaInset(edge: .bottom) {
-                Button {
-                    guard !continuing, outbound ? path == [.outbound] : path.isEmpty else { return }
-                    continuing = true
+            wizardShell(
+                title: t(title), subtitle: t(subtitle), id: outbound ? "outbound" : "where",
+                button: t("Continue"), enabled: outbound ? model.outboundComplete : model.whereComplete,
+                action: {
                     if outbound {
                         if model.finishOutbound() {
-                            #if DEBUG
-                                path.append(.continuation)
-                            #endif
+                            model.go(.returnChoice)
                         } else {
                             UINotificationFeedbackGenerator().notificationOccurred(.warning)
                         }
                     } else {
-                        path.append(.outbound)
+                        model.go(.outbound)
                     }
-                    continuing = false
-                } label: {
-                    Text(t("Continue")).font(Typography.wizardButton.font)
-                        .frame(maxWidth: .infinity, minHeight: PlanUITokens.wizardButtonHeight)
-                }
-                .buttonStyle(.plain).foregroundStyle(ColorToken.primaryForeground.color)
-                .background(ColorToken.primary.color, in: Capsule())
-                .disabled(
-                    closing || continuing || model.persistenceFailed
-                        || (outbound ? !model.outboundComplete : !model.whereComplete)
-                )
-                .opacity(
-                    (outbound ? model.outboundComplete : model.whereComplete) ? 1 : PlanUITokens.wizardDisabledOpacity
-                )
-                .accessibilityIdentifier(outbound ? "wizard.outbound.continue" : "wizard.where.continue")
-                .padding(.horizontal, PlanUITokens.space5).padding(.vertical, PlanUITokens.space3)
-                .background(ColorToken.background.color)
-            }
-            .navigationTitle(t("New trip")).navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        if model.draft.state.entered { confirmingDiscard = true } else { close() }
-                    } label: {
-                        Image(systemName: "xmark")
-                    }
-                    .accessibilityLabel(t("Close")).accessibilityIdentifier("wizard.close")
-                    .disabled(closing)
-                }
-            }
-            .accessibilityElement(children: .contain).accessibilityIdentifier(
-                outbound ? "wizard.outbound" : "wizard.where")
+                }, content: content)
         }
 
         #if DEBUG
             private var continuation: some View {
                 VStack(spacing: PlanUITokens.space4) {
-                    Text(t("The next wizard steps are being built in Phase 16b."))
-                    Button(t("Continue · Phase 16b (temporary)")) {
-                        if !model.previewCheck() {
-                            UINotificationFeedbackGenerator().notificationOccurred(.warning)
-                            path = [.outbound]
-                        }
-                    }.accessibilityIdentifier("wizard.debug.check")
+                    Text(t("The next wizard steps are being built in Phase 16c."))
+                    Text(t("Continue · Phase 16c (temporary)"))
                 }.frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(ColorToken.background.color)
                     .accessibilityElement(children: .contain).accessibilityIdentifier("wizard.debug.continue")
             }
         #endif
 
-        private func close() {
+        func close() {
             guard !closing else { return }
             closing = true
             Task {

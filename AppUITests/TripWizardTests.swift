@@ -36,9 +36,14 @@ nonisolated final class TripWizardTests: XCTestCase {
         pickEmptyDate("arrival", month: "November", day: "11", year: "2001", in: app)
         pickTime("arrival", hour: "9", minute: "15", in: app)
         app.buttons["wizard.outbound.continue"].tap()
-        let check = app.buttons["wizard.debug.check"]
-        XCTAssertTrue(check.waitForExistence(timeout: 5))
-        check.tap()
+        XCTAssertTrue(app.buttons["wizard.choice.one-way"].waitForExistence(timeout: 5))
+        app.buttons["wizard.choice.one-way"].tap()
+        let sleep = app.buttons["wizard.sleep.continue"]
+        if sleep.waitForExistence(timeout: 2) {
+            app.buttons["wizard.choice.sleep.unsure"].tap()
+            AuthUIFlow.waitUntilEnabled(sleep)
+            sleep.tap()
+        }
         let past = app.descendants(matching: .any)["wizard.outbound.past"]
         XCTAssertTrue(past.waitForExistence(timeout: 5))
         XCTAssertEqual(

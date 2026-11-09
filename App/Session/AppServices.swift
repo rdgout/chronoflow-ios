@@ -114,7 +114,7 @@ nonisolated struct AppServices: Sendable {
                         seed.accounts[id]?.details = [:]
                     }
                 }
-                return SettingsBoardCaptureFixture.seed(seed)
+                return try wizardUITestSeed(SettingsBoardCaptureFixture.seed(seed))
             }
         #endif
     }

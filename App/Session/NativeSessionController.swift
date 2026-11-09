@@ -3,6 +3,7 @@ import Foundation
 import LocalStore
 import Reminders
 import Sync
+import TripWizard
 import UIKit
 
 @MainActor
@@ -154,6 +155,20 @@ final class NativeSessionController {
     }
 
     func wizardDataSource(session: StoredSession) async -> (any DataSource)? { await sourceFactory?(session) }
+
+    func wizardGenerationService(snapshot: SessionSnapshot) async throws -> TripGenerationService {
+        guard let database = await accounts.activeDatabase(),
+            let permit = await controller.mutationPermit(for: snapshot),
+            let source = await sourceFactory?(snapshot.session),
+            await controller.activeSession() == snapshot
+        else { throw CancellationError() }
+        let epoch = SyncEpoch(accountID: try AccountID(snapshot.session.accountId), generation: snapshot.epoch)
+        return TripGenerationService(
+            source: source,
+            effects: .storing(
+                database: database, source: source, epoch: epoch, permit: permit,
+                requestSync: { [sync] in await sync?.requestSync() }))
+    }
 
     func observe() {
         guard subscription == nil else { return }

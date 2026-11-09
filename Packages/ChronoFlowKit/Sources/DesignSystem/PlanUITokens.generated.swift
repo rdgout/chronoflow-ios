@@ -54,6 +54,8 @@ nonisolated public enum PlanUITokens {
     public static var wizardAirportLineHeight: CGFloat { 26 }
     public static var wizardButtonHeight: CGFloat { 52 }
     public static var wizardCardRadius: CGFloat { 16 }
+    public static var wizardChoiceFontSize: CGFloat { 18 }
+    public static var wizardChoiceLineHeight: CGFloat { 24 }
     public static var wizardContentGap: CGFloat { 14 }
     public static var wizardControlGap: CGFloat { 6 }
     public static var wizardDisabledOpacity: Double { 0.4 }
@@ -61,6 +63,7 @@ nonisolated public enum PlanUITokens {
     public static var wizardHintFontSize: CGFloat { 13 }
     public static var wizardHintLineHeight: CGFloat { 18 }
     public static var wizardProgressHeight: CGFloat { 4 }
+    public static var wizardQuestionRadius: CGFloat { 20 }
     public static var wizardRouteFontSize: CGFloat { 15 }
     public static var wizardRouteLineHeight: CGFloat { 20 }
     public static var wizardRowFontSize: CGFloat { 17 }
@@ -142,6 +145,11 @@ extension Typography {
         Style(
             face: .figtree400, size: PlanUITokens.wizardHintFontSize, lineHeight: PlanUITokens.wizardHintLineHeight,
             tracking: screenBody.tracking, relativeTo: .caption)
+    }
+    public static var wizardChoice: Style {
+        Style(
+            face: .figtree600, size: PlanUITokens.wizardChoiceFontSize, lineHeight: PlanUITokens.wizardChoiceLineHeight,
+            tracking: screenBody.tracking, relativeTo: .headline)
     }
     public static var wizardRoute: Style {
         Style(

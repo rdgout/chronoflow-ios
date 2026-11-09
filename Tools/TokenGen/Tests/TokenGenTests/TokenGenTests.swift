@@ -288,3 +288,15 @@ private var root: URL {
         }
     }
 }
+
+@Test func wizardExclusionSurfacesUseTheBoardsOKLabMixInBothAppearances() throws {
+    let source = try DesignSource(root: root)
+    for appearance in ["light", "dark"] {
+        let dawn = try source.color("dawn", appearance)
+        let expected = try source.color("card", appearance).mixed(with: dawn, fraction: 0.1)
+        let background = try source.color("wizard-notice-background", appearance)
+        let border = try source.color("wizard-notice-border", appearance)
+        #expect(background.rgb(p3: true) == expected.rgb(p3: true))
+        #expect(border.rgb(p3: true) == dawn.rgb(p3: true) && border.alpha == 0.4)
+    }
+}

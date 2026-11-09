@@ -24,11 +24,11 @@ public func tokenOutputs(root: URL) throws -> [String: Data] {
         """
     var report =
         "# TokenGen report\n\nSource: `_design/canvas/ds/chronoflow/tokens.json`. OKLCH → OKLab → linear Display P3 → clip → sRGB transfer curve. Conversion matrices follow [CSS Color 4](https://www.w3.org/TR/css-color-4/#color-conversion-code). Hex values are clipped sRGB.\n\n| Token | Light sRGB | Light P3 | Dark sRGB | Dark P3 |\n|---|---|---|---|---|\n"
-    for name in DesignSource.names + DesignSource.authDerivedNames {
+    for name in DesignSource.names + DesignSource.authDerivedNames + DesignSource.wizardDerivedNames {
         code += "\ncase \(camelCase(name)) = \"\(camelCase(name))\""
     }
     code += "\npublic func components(for appearance: TokenAppearance) -> TokenRGBA {\nswitch (self, appearance) {\n"
-    for name in DesignSource.names + DesignSource.authDerivedNames {
+    for name in DesignSource.names + DesignSource.authDerivedNames + DesignSource.wizardDerivedNames {
         var colors: [[String: Any]] = []
         var row = "| \(camelCase(name)) |"
         for appearance in ["light", "dark"] {

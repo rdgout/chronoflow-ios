@@ -5,6 +5,11 @@ public struct TripGenerationReviewResult: Sendable, Equatable {
     public let input: ApiTripReviewInput
     public let review: ApiTripReview
     public let edit: TripEditContext?
+    public init(input: ApiTripReviewInput, review: ApiTripReview, edit: TripEditContext? = nil) {
+        self.input = input
+        self.review = review
+        self.edit = edit
+    }
 }
 
 extension TripGenerationService {

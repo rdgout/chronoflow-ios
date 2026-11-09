@@ -353,22 +353,6 @@
         }
       }
     },
-    "Continue · Phase 16b (temporary)": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Continue · Phase 16b (temporary)"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Doorgaan · Fase 16b (tijdelijk)"
-          }
-        }
-      }
-    },
     "Date": {
       "localizations": {
         "en": {
@@ -1005,22 +989,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Luchthavens omwisselen"
-          }
-        }
-      }
-    },
-    "The next wizard steps are being built in Phase 16b.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The next wizard steps are being built in Phase 16b."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "De volgende stappen worden in fase 16b gebouwd."
           }
         }
       }
@@ -1821,6 +1789,934 @@
           "stringUnit": {
             "state": "translated",
             "value": "{{count}} tijdvak"
+          }
+        }
+      }
+    },
+    "Coming back?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coming back?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kom je terug?"
+          }
+        }
+      }
+    },
+    "Just this flight": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Just this flight"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alleen deze vlucht"
+          }
+        }
+      }
+    },
+    "Add my return flight": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add my return flight"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terugvlucht toevoegen"
+          }
+        }
+      }
+    },
+    "We plan the shift back home too": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We plan the shift back home too"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We plannen ook de verschuiving terug naar huis"
+          }
+        }
+      }
+    },
+    "Ends after {{count}} nights": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ends after {{count}} nights"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eindigt na {{count}} nachten"
+          }
+        }
+      }
+    },
+    "Set on the website. Keep it, or add your flight home.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set on the website. Keep it, or add your flight home."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingesteld op de website. Laat het zo, of voeg je vlucht naar huis toe."
+          }
+        }
+      }
+    },
+    "Tap an answer to continue.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap an answer to continue."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tik op een antwoord om door te gaan."
+          }
+        }
+      }
+    },
+    "Your flight home": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your flight home"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je vlucht naar huis"
+          }
+        }
+      }
+    },
+    "It leaves from where you landed. Add your date and times.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It leaves from where you landed. Add your date and times."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hij vertrekt van de luchthaven waar je landde. Vul je datum en tijden in."
+          }
+        }
+      }
+    },
+    "Where you landed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where you landed"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waar je landde"
+          }
+        }
+      }
+    },
+    "Leaves from {{city}}, where you landed. You can't change this.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leaves from {{city}}, where you landed. You can't change this."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vertrekt vanuit {{city}}, waar je landde. Dit kun je niet wijzigen."
+          }
+        }
+      }
+    },
+    "How do you usually sleep?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How do you usually sleep?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoe slaap je meestal?"
+          }
+        }
+      }
+    },
+    "On a work day. We save it for next time.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On a work day. We save it for next time."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Op een werkdag. We bewaren het voor de volgende keer."
+          }
+        }
+      }
+    },
+    "Usual bedtime": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usual bedtime"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gewone bedtijd"
+          }
+        }
+      }
+    },
+    "Usual wake-up": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usual wake-up"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meestal wakker"
+          }
+        }
+      }
+    },
+    "When do you naturally feel most awake?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When do you naturally feel most awake?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wanneer voel je je van nature het meest wakker?"
+          }
+        }
+      }
+    },
+    "Early bird": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Early bird"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vroege vogel"
+          }
+        }
+      }
+    },
+    "Up early, tired in the evening": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Up early, tired in the evening"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vroeg op, moe in de avond"
+          }
+        }
+      }
+    },
+    "In between": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In between"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ertussenin"
+          }
+        }
+      }
+    },
+    "A normal working day": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A normal working day"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een gewone werkdag"
+          }
+        }
+      }
+    },
+    "Night owl": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Night owl"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nachtuil"
+          }
+        }
+      }
+    },
+    "Late nights, slow mornings": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Late nights, slow mornings"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laat naar bed, trage ochtenden"
+          }
+        }
+      }
+    },
+    "Not sure": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not sure"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weet ik niet"
+          }
+        }
+      }
+    },
+    "We use your sleep times": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We use your sleep times"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We gebruiken je slaaptijden"
+          }
+        }
+      }
+    },
+    "Checking your trip": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking your trip"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We bekijken je reis"
+          }
+        }
+      }
+    },
+    "Checking your answers": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking your answers"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We bekijken je antwoorden"
+          }
+        }
+      }
+    },
+    "This takes a few seconds.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This takes a few seconds."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dit duurt een paar seconden."
+          }
+        }
+      }
+    },
+    "Flights and time zones": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flights and time zones"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vluchten en tijdzones"
+          }
+        }
+      }
+    },
+    "Your saved answers": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your saved answers"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je opgeslagen antwoorden"
+          }
+        }
+      }
+    },
+    "Your answers": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your answers"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je antwoorden"
+          }
+        }
+      }
+    },
+    "What we can tailor": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What we can tailor"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wat we kunnen afstemmen"
+          }
+        }
+      }
+    },
+    "This is taking longer than usual. You can keep this screen open.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is taking longer than usual. You can keep this screen open."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dit duurt langer dan normaal. Je kunt dit scherm open laten."
+          }
+        }
+      }
+    },
+    "Checking needs a connection": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking needs a connection"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voor controleren is een verbinding nodig"
+          }
+        }
+      }
+    },
+    "We couldn't check your trip": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We couldn't check your trip"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We konden je reis niet bekijken"
+          }
+        }
+      }
+    },
+    "Something went wrong on our side. Try again in a moment.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Something went wrong on our side. Try again in a moment."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er ging iets mis bij ons. Probeer het zo opnieuw."
+          }
+        }
+      }
+    },
+    "Wait a moment": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wait a moment"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Even geduld"
+          }
+        }
+      }
+    },
+    "Too many attempts. Try again in {{count}} seconds.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too many attempts. Try again in {{count}} seconds."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te veel pogingen. Probeer het over {{count}} seconden opnieuw."
+          }
+        }
+      }
+    },
+    "Try again in {{count}} s": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try again in {{count}} s"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opnieuw proberen over {{count}} s"
+          }
+        }
+      }
+    },
+    "{{line}}, done": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{line}}, done"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{line}}, klaar"
+          }
+        }
+      }
+    },
+    "{{line}}, in progress": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{line}}, in progress"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{line}}, bezig"
+          }
+        }
+      }
+    },
+    "{{line}}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{line}}"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{line}}"
+          }
+        }
+      }
+    },
+    "A few quick questions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A few quick questions"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een paar korte vragen"
+          }
+        }
+      }
+    },
+    "Under 18": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Under 18"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jonger dan 18"
+          }
+        }
+      }
+    },
+    "18–64": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "18–64"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "18–64"
+          }
+        }
+      }
+    },
+    "65 or older": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "65 or older"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "65 of ouder"
+          }
+        }
+      }
+    },
+    "Light and sleep advice differs by age.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light and sleep advice differs by age."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Advies over licht en slaap verschilt per leeftijd."
+          }
+        }
+      }
+    },
+    "Shift work changes how we can plan your clock.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shift work changes how we can plan your clock."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ploegendiensten veranderen hoe we je klok kunnen plannen."
+          }
+        }
+      }
+    },
+    "If so, we leave coffee and tea out of your plan.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If so, we leave coffee and tea out of your plan."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dan laten we koffie en thee uit je plan."
+          }
+        }
+      }
+    },
+    "Some light advice isn't safe for sensitive eyes.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some light advice isn't safe for sensitive eyes."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sommig lichtadvies is niet veilig voor gevoelige ogen."
+          }
+        }
+      }
+    },
+    "Then we add more movement on long flights.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Then we add more movement on long flights."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dan voegen we meer beweging toe op lange vluchten."
+          }
+        }
+      }
+    },
+    "Shifting sleep and light can affect mood, so we check first.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shifting sleep and light can affect mood, so we check first."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slaap en licht verschuiven kan je stemming beïnvloeden, dus we checken dit eerst."
+          }
+        }
+      }
+    },
+    "Some advice, like caffeine timing, changes when you're pregnant or breastfeeding.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some advice, like caffeine timing, changes when you're pregnant or breastfeeding."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sommig advies, zoals wanneer je cafeïne neemt, verandert als je zwanger bent of borstvoeding geeft."
+          }
+        }
+      }
+    },
+    "No plan available": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No plan available"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geen plan beschikbaar"
+          }
+        }
+      }
+    },
+    "Change my answers": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change my answers"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mijn antwoorden wijzigen"
+          }
+        }
+      }
+    },
+    "If you answered by mistake, you can change your answers.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you answered by mistake, you can change your answers."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heb je je vergist? Dan kun je je antwoorden wijzigen."
+          }
+        }
+      }
+    },
+    "The next wizard steps are being built in Phase 16c.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The next wizard steps are being built in Phase 16c."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De volgende stappen worden gebouwd in fase 16c."
+          }
+        }
+      }
+    },
+    "Continue · Phase 16c (temporary)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue · Phase 16c (temporary)"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doorgaan · Fase 16c (tijdelijk)"
+          }
+        }
+      }
+    },
+    "You gave this answer on an earlier trip. Change it to plan this trip.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You gave this answer on an earlier trip. Change it to plan this trip."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je gaf dit antwoord bij een eerdere reis. Wijzig het om deze reis te plannen."
           }
         }
       }

@@ -1,4 +1,6 @@
+import AppCore
 import Foundation
+import PlanCore
 import Testing
 import TripWizardUI
 
@@ -21,6 +23,27 @@ import TripWizardUI
             "Stop in {{airport}} · {{count}} complete night", "What you entered is not saved.",
         ] {
             #expect(strings[key] != nil)
+        }
+    }
+
+    @Test func blockingPromptAndExclusionWordingUsesTheServerCatalogInBothLanguages() async throws {
+        let catalog = try await CopyCatalog.load()
+        let formatter = CopyLineFormatter(catalog: catalog)
+        for key in [
+            "Which age group are you in?",
+            "In the past 14 days, have you worked night or rotating shifts, or had a very irregular sleep schedule?",
+            "Do you have bipolar disorder?",
+            "Do you have an eye disease, or take medicine that makes your eyes sensitive to light?",
+            "Are you pregnant or breastfeeding?",
+            "Have you been told to avoid caffeine?",
+            "Do you have a risk factor for blood clots, such as a past clot or a clotting disorder?",
+            "This plan is not available for travellers under 18.",
+            "This plan is not available if, in the past 14 days, you have worked night or rotating shifts or had a very irregular sleep schedule.",
+        ] {
+            #expect(catalog.contains(key))
+            let line = CopyLine(key: key, args: [])
+            #expect(formatter.format(line, options: CopyFormat(language: .en)) == key)
+            #expect(formatter.format(line, options: CopyFormat(language: .nl)) != key)
         }
     }
 

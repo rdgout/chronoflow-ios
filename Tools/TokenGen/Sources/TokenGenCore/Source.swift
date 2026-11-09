@@ -61,6 +61,8 @@ public struct DesignSource {
         ]
     }
 
+    public static var wizardDerivedNames: [String] { ["wizard-notice-background", "wizard-notice-border"] }
+
     public func color(_ name: String, _ appearance: String) throws -> OKLab {
         if name == "settings-warning-background" {
             return try color("card", appearance).mixed(with: color("dawn", appearance), fraction: 0.1)
@@ -73,6 +75,19 @@ public struct DesignSource {
             let board = try String(
                 contentsOf: root.appending(path: "_design/canvas/Set2FASetup.dc.html"), encoding: .utf8)
             return try OKLab(css: captures(#"background: (oklch\(1 0 0\))"#, in: board)[0])
+        }
+        if name.hasPrefix("wizard-notice-") {
+            let board = try String(contentsOf: root.appending(path: "_design/canvas/Wizard.dc.html"), encoding: .utf8)
+            let pattern =
+                name == "wizard-notice-background"
+                ? #"background: color-mix\(in oklab, var\(--dawn\) ([\d.]+)%, var\(--card\)\)"#
+                : #"border: 1px solid color-mix\(in oklab, var\(--dawn\) ([\d.]+)%, transparent\)"#
+            let fraction = Double(try captures(pattern, in: board)[0])! / 100
+            let dawn = try color("dawn", appearance)
+            if name == "wizard-notice-background" {
+                return try color("card", appearance).mixed(with: dawn, fraction: fraction)
+            }
+            return OKLab(lightness: dawn.lightness, a: dawn.a, b: dawn.b, alpha: fraction)
         }
         if name == "auth-error-background" {
             return try color("card", appearance).mixed(with: color("destructive", appearance), fraction: 0.1)

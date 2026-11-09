@@ -80,10 +80,11 @@ let package = Package(
             name: "TripWizard", dependencies: ["AppCore", "DataAccess", "LocalStore"],
             swiftSettings: [.defaultIsolation(nil)]),
         .target(
-            name: "TripWizardUI", dependencies: ["TripWizard", "DesignSystem"],
+            name: "TripWizardUI", dependencies: ["TripWizard", "DesignSystem", "PlanCore"],
             resources: [.process("Resources")], swiftSettings: [.defaultIsolation(MainActor.self)]),
         .testTarget(
-            name: "TripWizardTests", dependencies: ["TripWizard", "TripWizardUI", "Sync", "DataAccess", "LocalStore"],
+            name: "TripWizardTests",
+            dependencies: ["TripWizard", "TripWizardUI", "Sync", "DataAccess", "LocalStore", "PlanCore"],
             resources: [.copy("Fixtures")],
             swiftSettings: [.defaultIsolation(nil)]),
         .target(

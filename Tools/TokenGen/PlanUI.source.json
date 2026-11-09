@@ -45,5 +45,8 @@
   "wizardHintFontSize": 13,
   "wizardHintLineHeight": 18,
   "wizardRouteFontSize": 15,
-  "wizardRouteLineHeight": 20
+  "wizardRouteLineHeight": 20,
+  "wizardChoiceFontSize": 18,
+  "wizardChoiceLineHeight": 24,
+  "wizardQuestionRadius": 20
 }

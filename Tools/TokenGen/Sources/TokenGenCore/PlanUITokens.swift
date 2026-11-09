@@ -69,6 +69,10 @@ func planUITokens(root: URL) throws -> Data {
             Style(face: .figtree400, size: PlanUITokens.wizardHintFontSize, lineHeight: PlanUITokens.wizardHintLineHeight,
                   tracking: screenBody.tracking, relativeTo: .caption)
         }
+        public static var wizardChoice: Style {
+            Style(face: .figtree600, size: PlanUITokens.wizardChoiceFontSize, lineHeight: PlanUITokens.wizardChoiceLineHeight,
+                  tracking: screenBody.tracking, relativeTo: .headline)
+        }
         public static var wizardRoute: Style {
             Style(face: .figtree600, size: PlanUITokens.wizardRouteFontSize, lineHeight: PlanUITokens.wizardRouteLineHeight,
                   tracking: screenBody.tracking, relativeTo: .subheadline)

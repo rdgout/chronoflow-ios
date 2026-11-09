@@ -5,7 +5,9 @@ public enum WizardOutboundRules {
     public static func errors(form: WizardForm, airports: [String: ApiAirportSuggestion], now: Date, checkPast: Bool)
         -> [String: FieldMessage]
     {
-        var errors = WizardValidation.validate(form).filter { $0.key.hasPrefix("legs.") }
+        var errors = WizardValidation.validate(form).filter { entry in
+            (0..<form.returnBoundary).contains { entry.key.hasPrefix("legs.\($0).") }
+        }
         for (index, leg) in form.legs.prefix(form.returnBoundary).enumerated() {
             if let from = airports[leg.fromIata], let to = airports[leg.toIata],
                 let departure = WizardDateTime.instant(leg.departLocal, zone: from.timezone),
@@ -58,5 +60,28 @@ public enum WizardOutboundRules {
                 "airport": .string(airport),
                 "duration": .string(duration(minutes)),
             ])
+    }
+}
+
+public enum WizardFlightRules {
+    public static func errors(form: WizardForm, airports: [String: ApiAirportSuggestion], now: Date, checkPast: Bool)
+        -> [String: FieldMessage]
+    {
+        var errors = WizardValidation.validate(form).filter { $0.key.hasPrefix("legs.") }
+        for (index, leg) in form.legs.enumerated() {
+            if let from = airports[leg.fromIata], let to = airports[leg.toIata],
+                let departure = WizardDateTime.instant(leg.departLocal, zone: from.timezone),
+                let arrival = WizardDateTime.instant(leg.arriveLocal, zone: to.timezone), arrival <= departure
+            {
+                errors["legs.\(index).arriveLocal"] = FieldMessage(key: "Check the departure and arrival times.")
+            }
+        }
+        if checkPast, errors.isEmpty, let last = form.legs.last, let airport = airports[last.toIata],
+            let arrival = WizardDateTime.instant(last.arriveLocal, zone: airport.timezone), arrival <= now
+        {
+            errors["review"] = FieldMessage(
+                key: "A new plan needs an upcoming arrival. Check your flight dates or add your return flight.")
+        }
+        return errors
     }
 }

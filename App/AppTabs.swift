@@ -30,6 +30,7 @@ struct AppTabs: View {
     @State private var openingWizard = false
     @State private var todayFeedback = RefreshFeedbackModel()
     @State private var tripsFeedback = RefreshFeedbackModel()
+    @State private var wizardGeneration: TripGenerationService?
     private struct StepSelection: Identifiable {
         let tripID: String
         let blockID: String
@@ -205,7 +206,11 @@ struct AppTabs: View {
                     if wizard == nil, let recovered = try await recovery.recover(),
                         await native.controller.activeSession() == snapshot, !Task.isCancelled
                     {
-                        wizard = MemberWizardModel(draft: recovered, store: recovery, search: search)
+                        let generation = try await native.wizardGenerationService(snapshot: snapshot)
+                        guard await native.controller.activeSession() == snapshot, !Task.isCancelled else { return }
+                        wizardGeneration = generation
+                        wizard = MemberWizardModel(
+                            draft: recovered, store: recovery, search: search, generation: generation)
                     }
                 } catch { assertionFailure("Wizard recovery failed: \(error)") }
             }
@@ -218,6 +223,8 @@ struct AppTabs: View {
                     pages.stop()
                     home = nil
                     step = nil
+                    await wizardGeneration?.cancel()
+                    wizardGeneration = nil
                     wizard = nil
                     wizardStore = nil
                     airportSearch = nil
@@ -352,9 +359,14 @@ struct AppTabs: View {
         Task {
             defer { openingWizard = false }
             do {
+                guard let native, let snapshot = await native.controller.activeSession() else { return }
+                let generation = try await native.wizardGenerationService(snapshot: snapshot)
                 let draft = try await wizardStore.start()
                 guard !Task.isCancelled, self.wizardStore === wizardStore else { return }
-                wizard = MemberWizardModel(draft: draft, store: wizardStore, search: airportSearch)
+                guard await native.controller.activeSession() == snapshot else { return }
+                wizardGeneration = generation
+                wizard = MemberWizardModel(
+                    draft: draft, store: wizardStore, search: airportSearch, generation: generation)
             } catch is CancellationError { return } catch { assertionFailure("Wizard start failed: \(error)") }
         }
     }
