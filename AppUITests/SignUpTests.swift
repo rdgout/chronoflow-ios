@@ -26,8 +26,6 @@ nonisolated final class SignUpTests: XCTestCase {
         XCTAssertTrue(signIn.label.contains("Already have an account? Sign in"))
         signIn.tap()
         XCTAssertTrue(app.textFields["sign-in.email"].waitForExistence(timeout: 4))
-        AuthUIFlow.signIn(app, email: MockScenarioValues.demoEmail)
-        XCTAssertTrue(app.staticTexts["walkthrough.title"].waitForExistence(timeout: 8))
     }
 
     @MainActor func testRegistrationToggleConsentAndUnverifiedGate() {

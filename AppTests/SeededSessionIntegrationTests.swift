@@ -78,6 +78,46 @@ import XCTest
         }
 
         @MainActor
+        func testSignedOutTamperedLinkWaitsForSignInThenFailsVerification() async throws {
+            try await withSession(environment: ["CF_AUTH_TEST_UNVERIFIED": "1"]) { root, services, native, _ in
+                _ = try await native.controller.signOut(discardPending: true)
+                let app = AppDelegate()
+                app.nativeSession = native
+                let navigator = app.navigator
+                let auth = AuthSessionServices(
+                    services: services, applicationSupport: root, nativeSession: native, navigator: navigator,
+                    verification: { await app.verificationRequired(epoch: $0) })
+                app.authServices = auth
+                let input = SignedVerificationInput(
+                    id: MockScenarioValues.demoID, hash: String(repeating: "a", count: 40),
+                    expires: Int(Date().timeIntervalSince1970) + 3600, signature: String(repeating: "b", count: 64))
+                navigator.navigate(to: .welcome)
+                auth.model.editPassword("discard me")
+                await auth.receiveVerificationLink(input)
+                XCTAssertEqual(navigator.route, .signIn)
+                XCTAssertTrue(auth.model.password.isEmpty)
+                XCTAssertNil(auth.verifyModel)
+                auth.model.editEmail(MockScenarioValues.demoEmail)
+                auth.model.editPassword(MockScenarioValues.password)
+                await auth.model.submitPassword()
+                XCTAssertEqual(navigator.route, .verify)
+                let verify = try XCTUnwrap(auth.verifyModel)
+                XCTAssertEqual(verify.context.accountID, input.id)
+                await verify.activate()
+                if case .failed = verify.state {
+                } else {
+                    XCTFail("Pending tampered link was not consumed after sign-in")
+                }
+                let awaitedDatabase = await native.accounts.activeDatabase()
+                let database = try XCTUnwrap(awaitedDatabase)
+                let account = try await AccountRepository(database: database).account()
+                XCTAssertEqual(account?.hasVerifiedEmail, false)
+                verify.cancel()
+                app.authServices = nil
+            }
+        }
+
+        @MainActor
         private func withSession(
             environment: [String: String] = [:],
             body: @MainActor (URL, AppServices, NativeSessionController, RootNavigator) async throws -> Void
