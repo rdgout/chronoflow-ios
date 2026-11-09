@@ -3,7 +3,7 @@ import XCTest
 
 nonisolated final class AppTabsTests: XCTestCase {
     @MainActor func testSignedInAccountCanSwitchAllThreeTabs() throws {
-        let app = try launchPlanAccount()
+        let app = try launchPlanAccount(freezePlanClock: true)
         defer { app.terminate() }
         _ = try expandedTabs(in: app, selected: "Today")
         capture(app, name: "today-tabs")
@@ -11,8 +11,8 @@ nonisolated final class AppTabsTests: XCTestCase {
         XCTAssertTrue(progress.waitForExistence(timeout: 4), app.debugDescription)
         _ = try UIWait.stableFrames([progress], timeout: 4)
         XCTAssertEqual(app.descendants(matching: .any).matching(identifier: "today.progress").count, 1)
-        XCTAssertEqual(progress.label, "0 of 3 done")
         XCTAssertFalse(app.buttons["today.progress"].exists)
+        XCTAssertEqual(progress.label, "0 of 3 done")
         app.tabBars.buttons["My trips"].tap()
         XCTAssertTrue(app.scrollViews["trips.screen"].waitForExistence(timeout: 4))
         _ = try expandedTabs(in: app, selected: "My trips")

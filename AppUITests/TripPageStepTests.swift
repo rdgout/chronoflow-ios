@@ -1,53 +1,18 @@
 import XCTest
 
 nonisolated final class TripPageStepTests: XCTestCase {
-    @MainActor func testTodayTripTimelineAndListOpenTheSameStepSheet() throws {
-        try checkStepSheet(fromTrips: false)
-    }
-
-    @MainActor func testMyTripsTimelineAndListOpenTheSameStepSheet() throws {
-        try checkStepSheet(fromTrips: true)
-    }
-
-    @MainActor private func checkStepSheet(fromTrips: Bool) throws {
-        let app = try launchPlanAccount()
+    @MainActor func testSeededTimelineAndListOpenTheSameStepSheet() {
+        let app = XCUIApplication()
+        app.launchArguments = AuthUIFlow.arguments() + ["-cf.trip-page", "S1", "-cf.session", "out"]
+        app.launch()
         defer { app.terminate() }
-        let row = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "today.step.actionable."))
-            .firstMatch
-        XCTAssertTrue(row.waitForExistence(timeout: 12))
-        let blockID = String(row.identifier.dropFirst("today.step.actionable.".count))
-        XCTAssertFalse(blockID.isEmpty)
-        if fromTrips {
-            app.tabBars.buttons["My trips"].tap()
-            let card = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "trip.")).firstMatch
-            XCTAssertTrue(card.waitForExistence(timeout: 12))
-            card.tap()
-        } else {
-            app.buttons["today.trip"].tap()
-        }
+        let blockID = "sleep-sleep-29865450"
         let scroll = app.scrollViews["trip.scroll"]
         XCTAssertTrue(scroll.waitForExistence(timeout: 12))
         XCTAssertTrue(
             app.descendants(matching: .any)["trip.timeline.ready"].firstMatch.waitForExistence(timeout: 12))
         tapBlock(blockID, app: app, scroll: scroll)
         assertStepContent(app)
-        let done = app.buttons["step.done"]
-        let skip = app.buttons["step.skip"]
-        let undo = app.buttons["step.undo"]
-        XCTAssertTrue(done.waitForExistence(timeout: 4))
-        XCTAssertTrue(skip.exists)
-        AuthUIFlow.reveal(skip, in: app, scroll: app.scrollViews["step.sheet"])
-        XCTAssertTrue(skip.isHittable)
-        AuthUIFlow.reveal(done, in: app, scroll: app.scrollViews["step.sheet"])
-        XCTAssertTrue(done.isHittable)
-        done.tap()
-        XCTAssertTrue(undo.waitForExistence(timeout: 6))
-        AuthUIFlow.reveal(undo, in: app, scroll: app.scrollViews["step.sheet"])
-        undo.tap()
-        XCTAssertTrue(skip.waitForExistence(timeout: 6))
-        AuthUIFlow.reveal(skip, in: app, scroll: app.scrollViews["step.sheet"])
-        skip.tap()
-        XCTAssertTrue(undo.waitForExistence(timeout: 6))
         let title = stepText("step.title", in: app).label
         let time = stepText("step.time", in: app).label.components(separatedBy: " · ").first
         dismissSheet(app)
@@ -56,11 +21,44 @@ nonisolated final class TripPageStepTests: XCTestCase {
         assertStepContent(app)
         XCTAssertEqual(stepText("step.title", in: app).label, title)
         XCTAssertEqual(stepText("step.time", in: app).label.components(separatedBy: " · ").first, time)
+    }
+
+    @MainActor func testSeededTodayTripStepActionsUpdateAndSurviveListReopen() throws {
+        let app = try launchPlanAccount(freezePlanClock: true)
+        defer { app.terminate() }
+        let row = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "today.step.actionable."))
+            .firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 12))
+        let blockID = String(row.identifier.dropFirst("today.step.actionable.".count))
+        XCTAssertFalse(blockID.isEmpty)
+        app.buttons["today.trip"].tap()
+        let scroll = app.scrollViews["trip.scroll"]
+        XCTAssertTrue(scroll.waitForExistence(timeout: 12))
+        XCTAssertTrue(app.descendants(matching: .any)["trip.timeline.ready"].firstMatch.waitForExistence(timeout: 12))
+        tapBlock(blockID, app: app, scroll: scroll)
+        assertStepContent(app)
+        let done = app.buttons["step.done"]
+        let skip = app.buttons["step.skip"]
+        let undo = app.buttons["step.undo"]
+        tapAction(skip, app: app, tapping: false)
+        tapAction(done, app: app)
+        tapAction(undo, app: app)
+        tapAction(skip, app: app)
         XCTAssertTrue(undo.waitForExistence(timeout: 6))
-        AuthUIFlow.reveal(undo, in: app, scroll: app.scrollViews["step.sheet"])
-        undo.tap()
-        XCTAssertTrue(done.waitForExistence(timeout: 6))
-        XCTAssertTrue(skip.exists)
+        dismissSheet(app)
+        app.buttons["trip.viewToggle"].tap()
+        tapBlock(blockID, app: app, scroll: scroll)
+        assertStepContent(app)
+        tapAction(undo, app: app)
+        tapAction(done, app: app, tapping: false)
+        tapAction(skip, app: app, tapping: false)
+    }
+
+    @MainActor private func tapAction(_ action: XCUIElement, app: XCUIApplication, tapping: Bool = true) {
+        XCTAssertTrue(action.waitForExistence(timeout: 6))
+        AuthUIFlow.reveal(action, in: app, scroll: app.scrollViews["step.sheet"])
+        XCTAssertTrue(action.isHittable)
+        if tapping { action.tap() }
     }
 
     @MainActor private func assertStepContent(_ app: XCUIApplication) {

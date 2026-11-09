@@ -17,7 +17,6 @@ nonisolated final class PlanAuditTests: XCTestCase {
                 [app.scrollViews["today.screen"], progress, app.tabBars.firstMatch], timeout: 8
             )
             XCTAssertEqual(app.descendants(matching: .any).matching(identifier: "today.progress").count, 1)
-            XCTAssertEqual(progress.label, "0 of 3 done")
             XCTAssertFalse(app.buttons["today.progress"].exists)
         }
     }
