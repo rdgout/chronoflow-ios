@@ -62,22 +62,35 @@ xcodebuild -project ChronoFlow.xcodeproj -scheme ChronoFlow -configuration Relea
 
 Install `build/DeviceRelease/Build/Products/Release-iphoneos/ChronoFlow.app` on the phone.
 Release (including TestFlight/App Store archives) and Debug-based DeviceSigned share
-`Config/DeviceSigning.xcconfig`: when a team is set, only the iphoneos app target gets
-`Config/Device.entitlements`, with `webcredentials:app.chronoflow.net` and
-`applinks:app.chronoflow.net`. The xcconfig lookup maps an empty team to NO and any team ID to YES;
-it leaves teamless builds without an entitlement file. Base/Local settings are inherited from the project,
+`Config/DeviceSigning.xcconfig`. Associated domains default to off
+(`CHRONOFLOW_ASSOCIATED_DOMAINS = NO`); Release and DeviceSigned phone builds carry no entitlements
+and can sign with a free Personal Team. Apple refuses the Associated Domains capability for Personal Teams.
+For passkeys and universal links, use a paid Apple Developer Program team whose ID matches the
+server's AASA, then add `CHRONOFLOW_ASSOCIATED_DOMAINS = YES` to ignored `Config/Local.xcconfig`
+(the example has a commented opt-in). Only with both a team and this explicit YES does the iphoneos
+app target get `Config/Device.entitlements`, with `webcredentials:app.chronoflow.net` and
+`applinks:app.chronoflow.net`. An empty team or a NO/empty opt-in leaves the entitlement file unset.
+Base/Local settings are inherited from the project,
 so the target does not re-include a local team over the project's simulator clearing.
 DeviceSigned also selects Apple Development; Release keeps automatic signing's certificate selection
 for development or distribution.
 The signing guard permits associated domains only for Release/DeviceSigned on iphoneos with
-a team and real signing identity; it rejects simulator, ad-hoc and disabled-signing overrides.
+a team, real signing identity and `CHRONOFLOW_ASSOCIATED_DOMAINS=YES`; it rejects simulator,
+ad-hoc, disabled-signing and non-opted-in entitlement overrides.
 Simulators keep ad-hoc signing, no team and no entitlement file in every configuration, including
 Perf and `make check`'s isolated Release readiness build. Debug and Perf never select the device file.
 The user verified the production AASA live at
 `https://app.chronoflow.net/.well-known/apple-app-site-association` on 2026-11-09;
-passkey sign-in with the rebuilt app still needs physical-device verification.
+passkey sign-in with an opted-in paid-team build still needs physical-device verification.
 
-Host verification for this fix: `make generate`, `make lint`, 16 resolved Xcode signing-setting cases
+Opt-in follow-up verification: `make lint`, 64 resolved Xcode signing-setting cases
+(all configurations × device/simulator SDK × team/no-team × default/empty/NO/YES local opt-in),
+103 signing/resource/runner fixtures and 17 token/asset tests pass. `make quick` fails only at the
+existing `APICookieTests.realRedirectCookieHandlingIsDisabled` loopback-listener `EPERM`;
+the remaining quick targets pass separately. Logs: `build/associated-domains-opt-in-{lint,quick,settings,fixtures,generators}.log`
+and `build/signing-probe/opt-in-summary.txt`. No device provisioning or runtime acceptance was run.
+
+Initial team-gated fix verification: `make generate`, `make lint`, 16 resolved Xcode signing-setting cases
 (all configurations × device/simulator SDK × team/no-team), 93 signing/resource/runner fixtures,
 10 TokenGen tests and 7 AssetGen tests pass. After populating the pinned local caches (network
 access is unavailable), `make quick` runs all host tests and fails only at the existing

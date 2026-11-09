@@ -9,6 +9,10 @@ case "${CONFIGURATION:-}" in
     DeviceSigned|Release) ;;
     *) echo 'Associated domains require DeviceSigned or Release.' >&2; exit 1 ;;
 esac
+if [ "${CHRONOFLOW_ASSOCIATED_DOMAINS:-}" != YES ]; then
+    echo 'Associated domains require CHRONOFLOW_ASSOCIATED_DOMAINS=YES.' >&2
+    exit 1
+fi
 if [ -z "${DEVELOPMENT_TEAM:-}" ] || [ -z "${CODE_SIGN_IDENTITY:-}" ] ||
    [ "${CODE_SIGN_IDENTITY:-}" = - ] || [ "${CODE_SIGNING_ALLOWED:-YES}" = NO ]; then
     echo 'Associated domains require an Apple team and a signing certificate.' >&2

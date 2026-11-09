@@ -127,6 +127,7 @@ class LaunchResourcesTests(unittest.TestCase):
             "CHRONOFLOW_READINESS = native",
             "CHRONOFLOW_DATA_SOURCE = mock",
             "CHRONOFLOW_API_BASE_URL = https:/$()/api.chronoflow.net/v1",
+            "CHRONOFLOW_ASSOCIATED_DOMAINS = NO",
             '#include? "Local.xcconfig"',
         ])
 
