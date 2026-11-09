@@ -40,3 +40,6 @@ See `Docs/tooling.md` for exact commands, coverage mapping, budgets and environm
 Simulators use ad-hoc signing without a team so hosted Keychain tests can run. Device signing comes from ignored `Config/Local.xcconfig`, included
 by `Config/Base.xcconfig`; copy `Config/Local.xcconfig.example` to get started. All working rules and traps,
 including the no-trailer commit rule, are inherited from `AGENTS.md`.
+
+Simulator `build-for-testing` uses `ARCHS=arm64 ONLY_ACTIVE_ARCH=YES` in Debug, Release and Perf.
+These runner command-line settings leave device builds and archives unchanged.

@@ -783,7 +783,7 @@ def build_command(configuration):
 
 
 def build(configuration):
-    return run(build_command(configuration) + ["-destination", "generic/platform=iOS Simulator"]
+    return run(build_command(configuration) + ["-destination", "generic/platform=iOS Simulator", "ARCHS=arm64", "ONLY_ACTIVE_ARCH=YES"]
                + (["ENABLE_TESTABILITY=YES"] if configuration == "Release" else []) + ["build-for-testing"],
                log=ROOT / "build/test-results/build" / (configuration + ".log"))
 

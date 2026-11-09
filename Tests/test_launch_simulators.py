@@ -628,6 +628,17 @@ class RunnerTests(unittest.TestCase):
     def commands_for_tests(self):
         return [c for c in self.commands if c[-1] == 'test-without-building' and '-enumerate-tests' not in c]
 
+    def test_simulator_builds_only_arm64_for_debug_release_and_perf(self):
+        with patch.dict(runner.build.__globals__, run=Mock()) as environment:
+            for configuration in ('Debug', 'Release', 'Perf'):
+                runner.build(configuration)
+                command = environment['run'].call_args.args[0]
+                self.assertIn('ARCHS=arm64', command)
+                self.assertIn('ONLY_ACTIVE_ARCH=YES', command)
+                self.assertEqual(command[command.index('-destination') + 1], 'generic/platform=iOS Simulator')
+                self.assertEqual(command[-1], 'build-for-testing')
+        self.assertNotIn('ARCHS', (ROOT / 'project.yml').read_text())
+
     def test_builds_debug_and_release_once_without_clean_or_reboot(self):
         status, output = self.execute()
         self.assertEqual(status, 0, output)

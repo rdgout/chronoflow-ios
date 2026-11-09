@@ -65,3 +65,6 @@ Simulators: Xcode 27.2 with iOS 27.2 runtimes (iPhone SE 3rd gen, 17e, 17, Air, 
 - The launch storyboard is not localised.
 - `make snapshots` renders hosted splash/Welcome profile suites on 17e. `SNAPSHOT_RECORD=1 make snapshots` records both screens once; new profile references require review. Never name references after the executing simulator. Phase 1's four dot-bearing primitive baselines were removed with the user's 2026-11-06 no-pattern decision; the old per-simulator launch/Welcome references were removed in tooling round 3; replacement recording remains open.
 - `Config/Base.xcconfig` optionally includes ignored `Config/Local.xcconfig`; copy `Local.xcconfig.example` there for a device team. Simulator builds use ad-hoc signing (`CODE_SIGN_IDENTITY = -`) with no team; disabling signing breaks hosted Keychain access (`errSecMissingEntitlement`).
+
+Simulator `build-for-testing` uses `ARCHS=arm64 ONLY_ACTIVE_ARCH=YES` in Debug, Release and Perf.
+These runner command-line settings leave device builds and archives unchanged.

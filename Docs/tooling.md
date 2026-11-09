@@ -2793,3 +2793,6 @@ snapshots on 17e; `SNAPSHOT_RECORD=1 make snapshots` records them. Explicit `--o
 selectors also remain available. This supersedes earlier historical statements that check or the matrix
 runs all D1c profile snapshots. D1c Mac device-table tests and default hosted worst-case layout tests
 still check fit. Coverage transfers and render reductions are listed in `Docs/ui-test-tiers.md`.
+
+Simulator `build-for-testing` uses `ARCHS=arm64 ONLY_ACTIVE_ARCH=YES` in Debug, Release and Perf.
+These runner command-line settings leave device builds and archives unchanged.

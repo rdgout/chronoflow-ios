@@ -2173,3 +2173,9 @@ Main restoration validation: source comparison confirms the two methods and enti
 | 44 | **Guest wizard and claim.** Schedule Phase 18 now or later? | Later, after M2, as its own decision. | 18 |
 | 45 | **Screening questions and privacy.** The wizard asks blocking health-type screening questions (bipolar, pregnancy, VTE, eye disease) and stores the answers. There is no `PrivacyInfo.xcprivacy`, and the App Store privacy label is undecided. | Build the screening prompts with the server's wording, give the exclusion copy its own review against the clock-shift rule, and add the privacy manifest and label decision before TestFlight. | 16b copy sign-off; TestFlight |
 | 46 | **Date and time picking on Times.** The Wizard boards draw separate date and time pills per row. SwiftUI's `DatePicker` cannot show an empty value, so an empty pill currently opens a custom wheel popover, and once filled the system compact picker takes over. | One control per Departs/Arrives row: a single pill ("Choose" / "Mon 12 Oct · 14:40") that opens the same sheet every time, holding the system graphical `DatePicker` with date and time, the airport's local-time line and Done, as on the PickerDateTime board. PickerDateTime supplies the combined sheet; implemented in 16b.2. | Settled by the user, 2026-11-09: build the recommendation now, using the PickerDateTime board. 16b.2 Times |
+
+## Build and runner speed audit (user, 2026-11-09)
+
+Continue on `test/fast-ui-tests`; UI-test launch-speed acceptance runs separately. No UI-test behavior changes, release stamps, persistent shards or default matrix in this round.
+
+- [x] 1. Build simulator Debug/Release/Perf for arm64 only; assert runner flags for every configuration. Device/archive settings stay unchanged.
