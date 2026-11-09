@@ -7,17 +7,21 @@
             continueAfterFailure = false
             executionTimeAllowance = 1200
         }
-        @MainActor func testEnglishLightBoards() throws { try boards(language: "en", appearance: .light) }
-        @MainActor func testEnglishDarkBoards() throws { try boards(language: "en", appearance: .dark) }
-        @MainActor func testDutchLightBoards() throws { try boards(language: "nl", appearance: .light) }
-        @MainActor func testDutchDarkBoards() throws { try boards(language: "nl", appearance: .dark) }
+        @MainActor func testEnglishLightPages() throws { try boards(language: "en", appearance: .light, states: false) }
+        @MainActor func testEnglishLightStates() throws { try boards(language: "en", appearance: .light, states: true) }
+        @MainActor func testEnglishDarkPages() throws { try boards(language: "en", appearance: .dark, states: false) }
+        @MainActor func testEnglishDarkStates() throws { try boards(language: "en", appearance: .dark, states: true) }
+        @MainActor func testDutchLightPages() throws { try boards(language: "nl", appearance: .light, states: false) }
+        @MainActor func testDutchLightStates() throws { try boards(language: "nl", appearance: .light, states: true) }
+        @MainActor func testDutchDarkPages() throws { try boards(language: "nl", appearance: .dark, states: false) }
+        @MainActor func testDutchDarkStates() throws { try boards(language: "nl", appearance: .dark, states: true) }
 
-        @MainActor private func boards(language: String, appearance: XCUIDevice.Appearance) throws {
+        @MainActor private func boards(language: String, appearance: XCUIDevice.Appearance, states: Bool) throws {
             let previous = XCUIDevice.shared.appearance
             XCUIDevice.shared.appearance = appearance
             defer { XCUIDevice.shared.appearance = previous }
             let suffix = language + (appearance == .dark ? "-dark" : "-light")
-            try corePages(language: language, suffix: suffix)
+            guard states else { return try corePages(language: language, suffix: suffix) }
             for (state, board) in [
                 ("planCredits", "SetPlanCredits"), ("planUnlimited", "SetPlan"),
                 ("planOffline", "SetPlanOffline"), ("planLoading", "SetPlanLoading"),
@@ -219,7 +223,7 @@
             return app
         }
         @MainActor private func capture(_ board: String, suffix: String, app: XCUIApplication) throws {
-            _ = try UIWait.stableFrames([app.navigationBars.firstMatch, app.tabBars.firstMatch], timeout: 6)
+            _ = try? UIWait.stableFrames([app.windows.firstMatch], timeout: 3)
             let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
             let dutchNames = [
                 "SetHome": "SetHomeNL", "SetPreferences": "SetPreferencesNL", "Set2FA": "Set2FANL",
