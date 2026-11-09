@@ -655,6 +655,17 @@ class RunnerTests(unittest.TestCase):
                 self.assertEqual(command[-1], 'build-for-testing')
         self.assertNotIn('ARCHS', (ROOT / 'project.yml').read_text())
 
+    def test_diagnostics_are_disabled_by_default_with_explicit_opt_in(self):
+        destination = runner.Destination('17e', 'device', 'Booted')
+        for value in ('', '0', '1', 'true'):
+            with patch.dict(os.environ, TEST_DIAGNOSTICS=value):
+                for configuration, policy in [('Debug', 'logic'), ('Release', 'release'), ('Perf', 'perf')]:
+                    command = runner.test_command(destination, configuration, runner.selectors(policy), Path('result'))
+                    if value == '1':
+                        self.assertNotIn('-collect-test-diagnostics', command)
+                    else:
+                        self.assertEqual(command[command.index('-collect-test-diagnostics') + 1], 'never')
+
     def test_background_builds_have_isolated_products_and_lower_priority(self):
         calls = []
         with patch.dict(runner.build.__globals__, run=lambda command, **kw: calls.append(command)):

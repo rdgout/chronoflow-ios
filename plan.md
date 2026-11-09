@@ -2184,3 +2184,4 @@ Continue on `test/fast-ui-tests`; UI-test launch-speed acceptance runs separatel
 - [x] 4. Isolate the three unchanged Release readiness tests in an iPhone-only hosted target depending only on ChronoFlow; update scheme, selectors, discovery/result mapping fixtures and commands.
 - [x] 5. Add memcmp equality fast path and pointer mismatch scan with unchanged error threshold/message; scan parity opacity/moon in one UInt32 pass. Extend existing pixel logic regression for equal/empty buffers and negative channel differences.
 - [x] 6. Add predicate/layout settling for hosted Forgot, Two-factor, Auth and Reset control checks; require two stable frame passes within 5 s, keep per-host raster/pixel coverage and assert the predicate path never captures.
+- [x] 7. Disable automatic simulator diagnostics by default with TEST_DIAGNOSTICS=1 opt-in; assert Debug/Release/Perf commands retain the switch semantics.

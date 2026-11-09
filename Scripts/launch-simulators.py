@@ -849,7 +849,8 @@ def build_available(ready, configuration):
 
 
 def test_command(destination, configuration, selected, bundle, workers=1, skipped=(), stream=None):
-    return build_command(configuration) + ["-destination", destination.flag, "-testLanguage", "en", "-testRegion", "US",
+    diagnostics = [] if os.environ.get("TEST_DIAGNOSTICS") == "1" else ["-collect-test-diagnostics", "never"]
+    return build_command(configuration) + diagnostics + ["-destination", destination.flag, "-testLanguage", "en", "-testRegion", "US",
         "-parallel-testing-enabled", "YES" if workers > 1 else "NO",
         "-parallel-testing-worker-count", str(workers),
         "-test-timeouts-enabled", "YES", "-default-test-execution-time-allowance", "120" if all(s.startswith("AppUITests/") for s in selected) else "600",

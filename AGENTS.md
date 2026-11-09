@@ -85,3 +85,7 @@ destination; recording and intro-order diagnostics retain their existing single-
 with `TEST_HOST`/`BUNDLE_LOADER` and only a ChronoFlow dependency. Select it with
 `make targeted DEVICES="17e" ONLY="ReleaseReadinessTests/ReleaseReadinessTests"`.
 Regenerate the project before running; Release no longer compiles the Debug AppTests bundle.
+
+Simulator passes use `-collect-test-diagnostics never` by default. Failure results, attachments
+and session/stdout logs remain. `TEST_DIAGNOSTICS=1 make targeted DEVICES="17e" ONLY="AppUITests/SignInTests"`
+restores Xcode's on-failure logarchive/sysdiagnose collection.

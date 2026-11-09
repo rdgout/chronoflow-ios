@@ -2820,3 +2820,7 @@ Hosted auth control-state checks use `AuthTestHost.settle(until:)`: cancellable 
 asserted predicates and two stable view-frame/bounds passes within 5 s. They keep an initial
 raster settle per host; AX5, shadow and other pixel assertions keep raster settling. UI-test waits
 are unchanged. The native-input regression verifies focus/resignation without captures.
+
+Simulator passes use `-collect-test-diagnostics never` by default. Failure results, attachments
+and session/stdout logs remain. `TEST_DIAGNOSTICS=1 make targeted DEVICES="17e" ONLY="AppUITests/SignInTests"`
+restores Xcode's on-failure logarchive/sysdiagnose collection.
