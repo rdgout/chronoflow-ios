@@ -13,9 +13,7 @@ import XCTest
     if updateTripOnRefresh { app.launchEnvironment["CF_REFRESH_TEST_UPDATE_TRIP"] = "1" }
     if emptyTrips { app.launchEnvironment["CF_REFRESH_TEST_EMPTY_TRIPS"] = "1" }
     if refreshCounter { app.launchEnvironment["CF_REFRESH_TEST_COUNTER"] = "1" }
-    app.launch()
-    AuthUIFlow.openSignIn(app)
-    AuthUIFlow.signIn(app, email: MockScenarioValues.demoEmail)
+    AuthUIFlow.launchSignedIn(app, walkthroughSeen: true)
     do {
         let screen = app.scrollViews[presentLegend ? "legend.sheet" : "today.screen"]
         _ = try XCTUnwrap(

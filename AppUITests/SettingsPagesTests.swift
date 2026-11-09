@@ -182,9 +182,7 @@ nonisolated final class SettingsPagesTests: XCTestCase {
             AuthUIFlow.arguments() + ["-cf.settings.language", "system", "-cf.settings.theme", "system"]
         app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
         app.launchEnvironment["CF_AUTH_TEST_WALKTHROUGH_SEEN"] = "1"
-        app.launch()
-        AuthUIFlow.openSignIn(app)
-        AuthUIFlow.signIn(app, email: MockScenarioValues.demoEmail)
+        AuthUIFlow.launchSignedIn(app, walkthroughSeen: true)
         XCTAssertTrue(app.tabBars.buttons["Settings"].waitForExistence(timeout: 12))
         app.tabBars.buttons["Settings"].tap()
         return app

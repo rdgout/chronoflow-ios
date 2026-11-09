@@ -1,6 +1,23 @@
 import XCTest
 
 @MainActor enum AuthUIFlow {
+    enum Account: String { case demo, twofactor }
+
+    static func launchSignedIn(
+        _ app: XCUIApplication, walkthroughSeen: Bool, account: Account = .demo, extraEnv: [String: String] = [:]
+    ) {
+        if app.launchArguments.isEmpty { app.launchArguments = arguments() }
+        if app.launchEnvironment["CF_AUTH_TEST_ID"] == nil {
+            app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
+        }
+        if app.launchEnvironment["CF_AUTH_TEST_WALKTHROUGH_SEEN"] == nil {
+            app.launchEnvironment["CF_AUTH_TEST_WALKTHROUGH_SEEN"] = walkthroughSeen ? "1" : "0"
+        }
+        app.launchEnvironment["CF_AUTH_TEST_SIGNED_IN"] = account.rawValue
+        app.launchEnvironment.merge(extraEnv) { _, value in value }
+        app.launch()
+    }
+
     static func arguments(language: String = "en", xxLarge: Bool = false) -> [String] {
         var result = [
             "-cf.reduceMotion", "-AppleLanguages", "(\(language))", "-AppleLocale",

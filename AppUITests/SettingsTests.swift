@@ -75,9 +75,7 @@ nonisolated final class SettingsTests: XCTestCase {
         app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
         app.launchEnvironment["CF_AUTH_TEST_WALKTHROUGH_SEEN"] = "1"
         if pending { app.launchEnvironment["CF_SETTINGS_TEST_PENDING"] = "1" }
-        app.launch()
-        AuthUIFlow.openSignIn(app)
-        AuthUIFlow.signIn(app, email: MockScenarioValues.demoEmail)
+        AuthUIFlow.launchSignedIn(app, walkthroughSeen: true)
         return app
     }
 

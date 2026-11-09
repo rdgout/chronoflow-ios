@@ -73,9 +73,7 @@ nonisolated final class TermsTests: XCTestCase {
         app.launchEnvironment["CF_AUTH_TEST_TERMS_PENDING"] = "1"
         if seen { app.launchEnvironment["CF_AUTH_TEST_WALKTHROUGH_SEEN"] = "1" }
         if pendingChanges { app.launchEnvironment["CF_AUTH_TEST_TERMS_CHANGES_PENDING"] = "1" }
-        app.launch()
-        AuthUIFlow.openSignIn(app)
-        AuthUIFlow.signIn(app, email: MockScenarioValues.demoEmail)
+        AuthUIFlow.launchSignedIn(app, walkthroughSeen: seen)
         XCTAssertTrue(app.staticTexts["terms.title"].waitForExistence(timeout: 12))
         return app
     }
