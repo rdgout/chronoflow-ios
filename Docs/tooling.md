@@ -47,6 +47,45 @@ and seed symbols. New Debug/Release hosted tests type-check for iOS 17 against t
 modules. On 6 November 2026 the hosted DataSourceFactoryHostedTests, DataSourceBuildSettingTests
 and Release ReadinessTests passed on 17e.
 
+## Production phone builds — 9 November 2026
+
+For a production phone build, set `DEVELOPMENT_TEAM` in ignored `Config/Local.xcconfig`
+(copy `Config/Local.xcconfig.example` first), then run:
+
+```sh
+make generate
+xcodebuild -project ChronoFlow.xcodeproj -scheme ChronoFlow -configuration Release \
+  -destination 'generic/platform=iOS' -derivedDataPath build/DeviceRelease \
+  -allowProvisioningUpdates CHRONOFLOW_DATA_SOURCE=api \
+  CHRONOFLOW_API_BASE_URL=https://api.chronoflow.net/v1 build
+```
+
+Install `build/DeviceRelease/Build/Products/Release-iphoneos/ChronoFlow.app` on the phone.
+Release (including TestFlight/App Store archives) and Debug-based DeviceSigned share
+`Config/DeviceSigning.xcconfig`: when a team is set, only the iphoneos app target gets
+`Config/Device.entitlements`, with `webcredentials:app.chronoflow.net` and
+`applinks:app.chronoflow.net`. The xcconfig lookup maps an empty team to NO and any team ID to YES;
+it leaves teamless builds without an entitlement file. Base/Local settings are inherited from the project,
+so the target does not re-include a local team over the project's simulator clearing.
+DeviceSigned also selects Apple Development; Release keeps automatic signing's certificate selection
+for development or distribution.
+The signing guard permits associated domains only for Release/DeviceSigned on iphoneos with
+a team and real signing identity; it rejects simulator, ad-hoc and disabled-signing overrides.
+Simulators keep ad-hoc signing, no team and no entitlement file in every configuration, including
+Perf and `make check`'s isolated Release readiness build. Debug and Perf never select the device file.
+The user verified the production AASA live at
+`https://app.chronoflow.net/.well-known/apple-app-site-association` on 2026-11-09;
+passkey sign-in with the rebuilt app still needs physical-device verification.
+
+Host verification for this fix: `make generate`, `make lint`, 16 resolved Xcode signing-setting cases
+(all configurations × device/simulator SDK × team/no-team), 93 signing/resource/runner fixtures,
+10 TokenGen tests and 7 AssetGen tests pass. After populating the pinned local caches (network
+access is unavailable), `make quick` runs all host tests and fails only at the existing
+`APICookieTests.realRedirectCookieHandlingIsDisabled` loopback-listener `EPERM`. `make -k quick`
+confirms the remaining generator/resource fixtures pass.
+Logs: `build/release-entitlements-{lint,quick,quick-all,host-offline}.log`
+and `build/signing-probe/summary.txt`. No simulator runtime or physical-device acceptance was run.
+
 ## Member trip generation — Phase 13
 
 The `TripWizard` package product is nonisolated and depends only on AppCore and DataAccess.
@@ -1952,11 +1991,8 @@ For explicit xcodebuild recording, set TEST_RUNNER_SNAPSHOT_RECORD=1 and select 
 AppTests/AuthSnapshotTests. Normal comparisons never record implicitly. make host-tests runs all Auth
 models/mapping/catalog/encoding and mock-provider logic on macOS.
 
-For later physical passkey verification, supply a confirmed team in ignored Local.xcconfig and build
-the app with -scheme ChronoFlow -configuration DeviceSigned -destination 'generic/platform=iOS'.
-This config adds webcredentials:app.chronoflow.net only on iphoneos for the app target; the signing
-guard requires an actual certificate/team. Debug/Release/simulator/ad-hoc builds have no association.
-AASA deployment/CDN/team/real-device checks remain open.
+Physical passkey verification uses the [production phone build](#production-phone-builds--9-november-2026)
+configuration described above.
 
 ## Phase 10a review fixes after the Phase 9b rebase — 6 November 2026
 

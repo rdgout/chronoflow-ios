@@ -117,6 +117,7 @@ class LaunchResourcesTests(unittest.TestCase):
         self.assertIn('"CODE_SIGNING_ALLOWED[sdk=iphonesimulator*]": YES', base)
         self.assertIn('"CODE_SIGN_IDENTITY[sdk=iphonesimulator*]": "-"', base)
         self.assertIn('"DEVELOPMENT_TEAM[sdk=iphonesimulator*]": ""', base)
+        self.assertIn('"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]": ""', base)
         app = project.split("\n  ChronoFlow:\n", 1)[1].split("\n  AppTests:\n", 1)[0]
         self.assertIn('"CODE_SIGN_IDENTITY[sdk=iphonesimulator*]": "-"', app)
         self.assertNotRegex(project, r'(?m)^\s+CODE_SIGNING_ALLOWED:')

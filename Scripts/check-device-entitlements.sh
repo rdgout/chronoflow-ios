@@ -5,9 +5,13 @@ case "${PLATFORM_NAME:-}" in
     iphoneos) ;;
     *) echo 'Associated domains require a device-signed build.' >&2; exit 1 ;;
 esac
-if [ "${CONFIGURATION:-}" != DeviceSigned ] || [ -z "${DEVELOPMENT_TEAM:-}" ] ||
+case "${CONFIGURATION:-}" in
+    DeviceSigned|Release) ;;
+    *) echo 'Associated domains require DeviceSigned or Release.' >&2; exit 1 ;;
+esac
+if [ -z "${DEVELOPMENT_TEAM:-}" ] || [ -z "${CODE_SIGN_IDENTITY:-}" ] ||
    [ "${CODE_SIGN_IDENTITY:-}" = - ] || [ "${CODE_SIGNING_ALLOWED:-YES}" = NO ]; then
-    echo 'Use DeviceSigned with an Apple development team and a signing certificate for associated domains.' >&2
+    echo 'Associated domains require an Apple team and a signing certificate.' >&2
     exit 1
 fi
 case "${EXPANDED_CODE_SIGN_IDENTITY:--}" in

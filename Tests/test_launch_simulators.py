@@ -482,6 +482,23 @@ class ClassificationTests(unittest.TestCase):
         self.assertIn('targets: [AppTests]', scheme)
         self.assertNotIn('ENABLE_TESTABILITY', project)
 
+    def test_release_readiness_and_perf_build_for_the_simulator_without_signing_overrides(self):
+        project = (ROOT / 'project.yml').read_text()
+        self.assertIn('"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]": ""', project)
+        self.assertIn('"DEVELOPMENT_TEAM[sdk=iphonesimulator*]": ""', project)
+        self.assertIn('"CODE_SIGN_IDENTITY[sdk=iphonesimulator*]": "-"', project)
+        for configuration, scheme in [('Release', 'ReadinessRelease'), ('Perf', 'Perf')]:
+            with self.subTest(configuration=configuration), patch.dict(runner.build.__globals__, run=Mock(return_value=True)):
+                run = runner.build.__globals__['run']
+                self.assertTrue(runner.build(configuration))
+                command = run.call_args.args[0]
+                self.assertEqual(command[command.index('-scheme') + 1], scheme)
+                self.assertEqual(command[command.index('-configuration') + 1], configuration)
+                self.assertEqual(command[command.index('-destination') + 1], 'generic/platform=iOS Simulator')
+                self.assertEqual(command[-1], 'build-for-testing')
+                self.assertEqual('ENABLE_TESTABILITY=YES' in command, configuration == 'Release')
+                self.assertFalse(any(c.startswith(('CODE_SIGN', 'DEVELOPMENT_TEAM=')) for c in command))
+
     def test_tiers_never_select_the_matrix_in_any_default_flow(self):
         for target in ['quick', 'check']:
             command = subprocess.check_output(['make', '-n', target], cwd=ROOT, text=True)
