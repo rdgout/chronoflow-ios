@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>App icon · appearances</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="ds/chronoflow/components/bundle.css">
+<script src="ds/chronoflow/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Figtree';src:url("/_blob/74876cc764ebb15bf4ae98bcdbf3140c") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/741b1ce40b46479a73d934d0d5be9774") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/079d83fda74d66d1f31e35072f71201d") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/991830890debdac04981f1a27656ed5c") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Fraunces';src:url("/_blob/fc815083784d00806d267d81858d2414") format("woff2");font-weight:400 500;font-style:normal;font-display:swap}
+body{margin:0}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 1400px; min-height: 2040px; box-sizing: border-box; padding: 32px 32px 48px; display: flex; flex-direction: column; gap: 36px; background: var(--background); color: var(--foreground); font-family: var(--font-sans);">
+  <header style="display: flex; flex-direction: column; gap: 6px;">
+    <h1 style="margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 32px; line-height: 38px; letter-spacing: -0.01em;">App icon · appearances</h1>
+    <p style="margin: 0; max-width: 900px; font-size: 15px; line-height: 22px; color: var(--muted-foreground);">The ChronoFlow mark rebuilt as vectors from the supplied 512 px PNG (same gradient, same moon; checked pixel by pixel), so every appearance comes from the same two layers. Files are in icon/ next to this board.</p>
+  </header>
+<section style="display: flex; flex-direction: column; gap: 14px;">
+  <div style="display: flex; flex-direction: column; gap: 4px;"><h3 style="margin: 0; font-size: 13px; line-height: 18px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted-foreground);">iOS 16–18 · flat images</h3><p style="margin: 0; max-width: 900px; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">Every file is a full-bleed 1024 × 1024 square; iOS applies the corner mask. iOS 16 and 17 only use Default. Dark keeps the night sky but drops the orange horizon to an ember and gives the moon a soft glow, so it sits with other dark icons. Tinted is grayscale: the system colours it with the tint the person picked.</p></div>
+  <div style="display: flex; flex-wrap: wrap; gap: 20px;"><figure style="margin: 0; display: flex; flex-direction: column; gap: 10px; width: 200px;">
+  <div style="display: grid; place-items: center; height: 200px; border-radius: 24px; background: linear-gradient(160deg, #cfdff3 0%, #e9e2f0 55%, #f4d8c4 100%);">
+    <img src="icon/ios/AppIcon-default.png" alt="" width="132" height="132" style="display: block; width: 132px; height: 132px; border-radius: 30px; box-shadow: 0 6px 18px rgba(0,0,0,0.18);">
+  </div>
+  <figcaption style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 15px; line-height: 20px; font-weight: 600;">Default</span><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground);">AppIcon-default.png</span></figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 10px; width: 200px;">
+  <div style="display: grid; place-items: center; height: 200px; border-radius: 24px; background: linear-gradient(160deg, #141a33 0%, #241c3a 55%, #3a2232 100%);">
+    <img src="icon/ios/AppIcon-dark.png" alt="" width="132" height="132" style="display: block; width: 132px; height: 132px; border-radius: 30px; box-shadow: 0 6px 18px rgba(0,0,0,0.18);">
+  </div>
+  <figcaption style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 15px; line-height: 20px; font-weight: 600;">Dark</span><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground);">AppIcon-dark.png</span></figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 10px; width: 200px;">
+  <div style="display: grid; place-items: center; height: 200px; border-radius: 24px; background: linear-gradient(160deg, #141a33 0%, #241c3a 55%, #3a2232 100%);">
+    <img src="icon/ios/AppIcon-dark-transparent.png" alt="" width="132" height="132" style="display: block; width: 132px; height: 132px; border-radius: 30px; box-shadow: 0 6px 18px rgba(0,0,0,0.18); background: #1c1c1e;">
+  </div>
+  <figcaption style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 15px; line-height: 20px; font-weight: 600;">Dark, system background</span><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground);">AppIcon-dark-transparent.png (alternative)</span></figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 10px; width: 200px;">
+  <div style="display: grid; place-items: center; height: 200px; border-radius: 24px; background: linear-gradient(160deg, #141a33 0%, #241c3a 55%, #3a2232 100%);">
+    <img src="icon/ios/AppIcon-tinted.png" alt="" width="132" height="132" style="display: block; width: 132px; height: 132px; border-radius: 30px; box-shadow: 0 6px 18px rgba(0,0,0,0.18);">
+  </div>
+  <figcaption style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 15px; line-height: 20px; font-weight: 600;">Tinted (asset)</span><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground);">AppIcon-tinted.png, grayscale</span></figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 10px; width: 200px;">
+  <div style="display: grid; place-items: center; height: 200px; border-radius: 24px; background: linear-gradient(160deg, #141a33 0%, #241c3a 55%, #3a2232 100%);">
+    <div style="position: relative; width: 132px; height: 132px; border-radius: 30px; overflow: hidden; background: linear-gradient(#16263b, #0c1828); box-shadow: 0 6px 18px rgba(0,0,0,0.18);">
+      <div style="position: absolute; inset: 0; background: #9ec5f0; -webkit-mask: url(icon/layers/moon-white.png) center / contain no-repeat; mask: url(icon/layers/moon-white.png) center / contain no-repeat;"></div>
+    </div>
+  </div>
+  <figcaption style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 15px; line-height: 20px; font-weight: 600;">Tinted (as shown)</span><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground);">With a blue tint, for reference</span></figcaption>
+</figure></div>
+</section><section style="display: flex; flex-direction: column; gap: 14px;">
+  <div style="display: flex; flex-direction: column; gap: 4px;"><h3 style="margin: 0; font-size: 13px; line-height: 18px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted-foreground);">iOS 26 · Liquid Glass (Icon Composer)</h3><p style="margin: 0; max-width: 900px; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">One .icon file gives every appearance. Two layers: the sky gradient (no glass) and a slightly bolder moon outline (2.6 instead of 2 on the 24 grid) that gets the glass. The tiles below approximate the look; Icon Composer renders the real refraction and highlights.</p></div>
+  <div style="display: flex; flex-wrap: wrap; gap: 20px;"><figure style="margin: 0; display: flex; flex-direction: column; gap: 10px; width: 200px;">
+  <div style="display: grid; place-items: center; height: 200px; border-radius: 24px; background: linear-gradient(160deg, #cfdff3 0%, #e9e2f0 55%, #f4d8c4 100%);">
+    <img src="icon/preview/glass-default.png" alt="" width="132" height="132" style="display: block; width: 132px; height: 132px; border-radius: 30px; box-shadow: 0 6px 18px rgba(0,0,0,0.18);">
+  </div>
+  <figcaption style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 15px; line-height: 20px; font-weight: 600;">Default</span><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground);">Sky + glass moon</span></figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 10px; width: 200px;">
+  <div style="display: grid; place-items: center; height: 200px; border-radius: 24px; background: linear-gradient(160deg, #141a33 0%, #241c3a 55%, #3a2232 100%);">
+    <img src="icon/preview/glass-dark.png" alt="" width="132" height="132" style="display: block; width: 132px; height: 132px; border-radius: 30px; box-shadow: 0 6px 18px rgba(0,0,0,0.18);">
+  </div>
+  <figcaption style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 15px; line-height: 20px; font-weight: 600;">Dark</span><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground);">Sky uses background-dark.svg</span></figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 10px; width: 200px;">
+  <div style="display: grid; place-items: center; height: 200px; border-radius: 24px; background: linear-gradient(160deg, #cfdff3 0%, #e9e2f0 55%, #f4d8c4 100%);">
+    <img src="icon/preview/glass-clear-light.png" alt="" width="132" height="132" style="display: block; width: 132px; height: 132px; border-radius: 30px; box-shadow: 0 6px 18px rgba(0,0,0,0.18);">
+  </div>
+  <figcaption style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 15px; line-height: 20px; font-weight: 600;">Clear, light</span><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground);">Generated by the system</span></figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 10px; width: 200px;">
+  <div style="display: grid; place-items: center; height: 200px; border-radius: 24px; background: linear-gradient(160deg, #141a33 0%, #241c3a 55%, #3a2232 100%);">
+    <img src="icon/preview/glass-clear-dark.png" alt="" width="132" height="132" style="display: block; width: 132px; height: 132px; border-radius: 30px; box-shadow: 0 6px 18px rgba(0,0,0,0.18);">
+  </div>
+  <figcaption style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 15px; line-height: 20px; font-weight: 600;">Clear, dark</span><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground);">Generated by the system</span></figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 10px; width: 200px;">
+  <div style="display: grid; place-items: center; height: 200px; border-radius: 24px; background: linear-gradient(160deg, #cfdff3 0%, #e9e2f0 55%, #f4d8c4 100%);">
+    <img src="icon/preview/glass-tinted-light.png" alt="" width="132" height="132" style="display: block; width: 132px; height: 132px; border-radius: 30px; box-shadow: 0 6px 18px rgba(0,0,0,0.18);">
+  </div>
+  <figcaption style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 15px; line-height: 20px; font-weight: 600;">Tinted, light</span><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground);">Generated by the system</span></figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 10px; width: 200px;">
+  <div style="display: grid; place-items: center; height: 200px; border-radius: 24px; background: linear-gradient(160deg, #141a33 0%, #241c3a 55%, #3a2232 100%);">
+    <img src="icon/preview/glass-tinted-dark.png" alt="" width="132" height="132" style="display: block; width: 132px; height: 132px; border-radius: 30px; box-shadow: 0 6px 18px rgba(0,0,0,0.18);">
+  </div>
+  <figcaption style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 15px; line-height: 20px; font-weight: 600;">Tinted, dark</span><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground);">Generated by the system</span></figcaption>
+</figure></div>
+</section><section style="display: flex; flex-direction: column; gap: 14px;">
+  <div style="display: flex; flex-direction: column; gap: 4px;"><h3 style="margin: 0; font-size: 13px; line-height: 18px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted-foreground);">Layers</h3><p style="margin: 0; max-width: 900px; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">Vectors in icon/layers/. The moon is the current lucide Moon path (the one the app uses for sleep), stroke 2, round caps, centred, 24-unit box at 50% of the canvas.</p></div>
+  <div style="display: flex; flex-wrap: wrap; gap: 20px;"><figure style="margin: 0; display: flex; flex-direction: column; gap: 10px; width: 200px;">
+  <div style="height: 200px; border-radius: 16px; border: 1px solid var(--border); background: repeating-conic-gradient(#c9c9cf 0% 25%, #ececf0 0% 50%) 0 0 / 20px 20px; overflow: hidden;"><img src="icon/layers/background.png" alt="" style="display: block; width: 100%; height: 100%;"></div>
+  <figcaption style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 14px; line-height: 20px; font-weight: 600; font-family: ui-monospace, Menlo, monospace;">background.svg</span><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground);">Sky: #06091c → #221a40 (60%) → #aa5830</span></figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 10px; width: 200px;">
+  <div style="height: 200px; border-radius: 16px; border: 1px solid var(--border); background: repeating-conic-gradient(#c9c9cf 0% 25%, #ececf0 0% 50%) 0 0 / 20px 20px; overflow: hidden;"><img src="icon/layers/background-dark.png" alt="" style="display: block; width: 100%; height: 100%;"></div>
+  <figcaption style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 14px; line-height: 20px; font-weight: 600; font-family: ui-monospace, Menlo, monospace;">background-dark.svg</span><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground);">Night: #02040f → #0c0921 (60%) → #411904</span></figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 10px; width: 200px;">
+  <div style="height: 200px; border-radius: 16px; border: 1px solid var(--border); background: repeating-conic-gradient(#c9c9cf 0% 25%, #ececf0 0% 50%) 0 0 / 20px 20px; overflow: hidden;"><img src="icon/layers/moon.png" alt="" style="display: block; width: 100%; height: 100%;"></div>
+  <figcaption style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 14px; line-height: 20px; font-weight: 600; font-family: ui-monospace, Menlo, monospace;">moon.svg</span><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground);">Dawn #f2ad73, stroke 2</span></figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 10px; width: 200px;">
+  <div style="height: 200px; border-radius: 16px; border: 1px solid var(--border); background: repeating-conic-gradient(#c9c9cf 0% 25%, #ececf0 0% 50%) 0 0 / 20px 20px; overflow: hidden;"><img src="icon/layers/moon-glass.png" alt="" style="display: block; width: 100%; height: 100%;"></div>
+  <figcaption style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 14px; line-height: 20px; font-weight: 600; font-family: ui-monospace, Menlo, monospace;">moon-glass.svg</span><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground);">Dawn #f2ad73, stroke 2.6, for glass</span></figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 10px; width: 200px;">
+  <div style="height: 200px; border-radius: 16px; border: 1px solid var(--border); background: repeating-conic-gradient(#c9c9cf 0% 25%, #ececf0 0% 50%) 0 0 / 20px 20px; overflow: hidden;"><img src="icon/layers/moon-white.png" alt="" style="display: block; width: 100%; height: 100%;"></div>
+  <figcaption style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 14px; line-height: 20px; font-weight: 600; font-family: ui-monospace, Menlo, monospace;">moon-white.svg</span><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground);">White, for mono uses</span></figcaption>
+</figure></div>
+</section><section style="display: flex; flex-direction: column; gap: 14px;">
+  <div style="display: flex; flex-direction: column; gap: 4px;"><h3 style="margin: 0; font-size: 13px; line-height: 18px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted-foreground);">Android · adaptive icon</h3><p style="margin: 0; max-width: 900px; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">Foreground and background are separate 1024 layers on a 108 dp canvas; launchers show the middle 72 dp in their own shape. The moon is drawn smaller here so it looks the same size as on iOS. The monochrome layer is used for themed icons (Android 13+).</p></div>
+  <div style="display: flex; flex-wrap: wrap; gap: 20px;"><figure style="margin: 0; display: flex; flex-direction: column; gap: 10px; width: 200px;">
+  <div style="display: grid; place-items: center; height: 200px; border-radius: 24px; background: linear-gradient(160deg, #cfdff3 0%, #e9e2f0 55%, #f4d8c4 100%);">
+    <div style="position: relative; width: 132px; height: 132px; border-radius: 50%; overflow: hidden; background: linear-gradient(#06091c 0%, #221a40 60%, #aa5830 100%); box-shadow: 0 6px 18px rgba(0,0,0,0.18);">
+      <div style="position: absolute; inset: -33px; background: #f2ad73; -webkit-mask: url(icon/android/adaptive-foreground.png) center / contain no-repeat; mask: url(icon/android/adaptive-foreground.png) center / contain no-repeat;"></div>
+    </div>
+  </div>
+  <figcaption style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 15px; line-height: 20px; font-weight: 600;">Circle launcher</span><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground);">foreground + background</span></figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 10px; width: 200px;">
+  <div style="display: grid; place-items: center; height: 200px; border-radius: 24px; background: linear-gradient(160deg, #cfdff3 0%, #e9e2f0 55%, #f4d8c4 100%);">
+    <div style="position: relative; width: 132px; height: 132px; border-radius: 34%; overflow: hidden; background: linear-gradient(#06091c 0%, #221a40 60%, #aa5830 100%); box-shadow: 0 6px 18px rgba(0,0,0,0.18);">
+      <div style="position: absolute; inset: -33px; background: #f2ad73; -webkit-mask: url(icon/android/adaptive-foreground.png) center / contain no-repeat; mask: url(icon/android/adaptive-foreground.png) center / contain no-repeat;"></div>
+    </div>
+  </div>
+  <figcaption style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 15px; line-height: 20px; font-weight: 600;">Squircle launcher</span><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground);">Same layers</span></figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 10px; width: 200px;">
+  <div style="display: grid; place-items: center; height: 200px; border-radius: 24px; background: linear-gradient(160deg, #cfdff3 0%, #e9e2f0 55%, #f4d8c4 100%);">
+    <div style="position: relative; width: 132px; height: 132px; border-radius: 50%; overflow: hidden; background: #d6e3f7; box-shadow: 0 6px 18px rgba(0,0,0,0.18);">
+      <div style="position: absolute; inset: -33px; background: #20304a; -webkit-mask: url(icon/android/adaptive-monochrome.png) center / contain no-repeat; mask: url(icon/android/adaptive-monochrome.png) center / contain no-repeat;"></div>
+    </div>
+  </div>
+  <figcaption style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 15px; line-height: 20px; font-weight: 600;">Themed, light</span><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground);">adaptive-monochrome.png</span></figcaption>
+</figure><figure style="margin: 0; display: flex; flex-direction: column; gap: 10px; width: 200px;">
+  <div style="display: grid; place-items: center; height: 200px; border-radius: 24px; background: linear-gradient(160deg, #141a33 0%, #241c3a 55%, #3a2232 100%);">
+    <div style="position: relative; width: 132px; height: 132px; border-radius: 50%; overflow: hidden; background: #24324a; box-shadow: 0 6px 18px rgba(0,0,0,0.18);">
+      <div style="position: absolute; inset: -33px; background: #c6d8f2; -webkit-mask: url(icon/android/adaptive-monochrome.png) center / contain no-repeat; mask: url(icon/android/adaptive-monochrome.png) center / contain no-repeat;"></div>
+    </div>
+  </div>
+  <figcaption style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 15px; line-height: 20px; font-weight: 600;">Themed, dark</span><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground);">adaptive-monochrome.png</span></figcaption>
+</figure></div>
+</section>
+<section style="display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start;">
+  <div style="display: flex; flex-direction: column; gap: 10px;"><h3 style="margin: 0; font-size: 13px; line-height: 18px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted-foreground);">Expo config</h3>
+<pre style="margin: 0; padding: 16px; border-radius: 16px; background: var(--surface-2); font-size: 12px; line-height: 18px; white-space: pre-wrap;">"ios": {
+  "icon": "./assets/icon/ChronoFlow.icon"
+},
+// or, without Icon Composer (iOS 18 appearances only):
+// "icon": { "light": "./assets/icon/AppIcon-default.png",
+//            "dark": "./assets/icon/AppIcon-dark.png",
+//            "tinted": "./assets/icon/AppIcon-tinted.png" }
+"android": {
+  "adaptiveIcon": {
+    "foregroundImage": "./assets/icon/adaptive-foreground.png",
+    "backgroundImage": "./assets/icon/adaptive-background.png",
+    "monochromeImage": "./assets/icon/adaptive-monochrome.png"
+  }
+}</pre></div>
+  <div style="display: flex; flex-direction: column; gap: 10px;"><h3 style="margin: 0; font-size: 13px; line-height: 18px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted-foreground);">Icon Composer</h3><ul style="margin: 0; padding: 0 0 0 18px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 20px;"><li>ChronoFlow.icon is a hand-written starter (moon-glass.svg as a glass group, background.svg as a group without glass). Open it in Icon Composer and check it before shipping; if it doesn’t open, rebuild it from the two layers in a few minutes.</li><li>Dark: set the sky layer’s Dark appearance to background-dark.svg. The moon stays dawn.</li><li>Moon group: Liquid Glass on, translucency about 40%, neutral shadow. Sky group: Liquid Glass off, no shadow.</li><li>Clear and Tinted come from the moon’s shape; nothing extra to draw.</li><li>Keep it simple: no text, no extra stars. The glass reads the outline best at this weight.</li></ul></div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1400,"height":2040}}'>
+class Component extends DCLogic {
+  renderVals() { return { theme: this.props.theme ?? 'light' }; }
+}
+</script>
+</body>
+</html>

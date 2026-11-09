@@ -6,8 +6,15 @@ XCODEGEN ?= /opt/homebrew/bin/xcodegen
 SWIFT_PATHS := App AppTests AppUITests RenderTests PerfUITests Packages/ChronoFlowKit/Package.swift Packages/ChronoFlowKit/Sources Packages/ChronoFlowKit/Tests $(wildcard Tools/*/Package.swift Tools/*/Sources Tools/*/Tests)
 SIM_CONCURRENCY ?=
 SIM_RUNNER := SIM_CONCURRENCY=$(SIM_CONCURRENCY) python3 -I Scripts/launch-simulators.py
+ICON_EXISTING ?=
 
-.PHONY: generate format lint test snapshots audits duo perf tokens fonts assets auth-board-pngs generators-check launch-resources-check check simulator-check matrix targeted quick host-tests package-tests token-tests asset-tests contracts contracts-check plan-copy
+.PHONY: generate format lint test snapshots audits duo perf tokens fonts assets auth-board-pngs generators-check launch-resources-check check simulator-check matrix targeted quick host-tests package-tests token-tests asset-tests contracts contracts-check plan-copy icon-probe icon-audit
+
+icon-probe:
+	python3 -I Scripts/probe-app-icon.py $(if $(ICON_EXISTING),--existing "$(ICON_EXISTING)",)
+
+icon-audit:
+	python3 -I Scripts/check-app-icon.py build/DerivedData/Build/Products/Debug-iphonesimulator/ChronoFlow.app
 
 generate:
 	$(XCODEGEN) generate
@@ -77,6 +84,7 @@ generators-check: token-tests asset-tests
 	build/fonttools-venv/bin/python3 -I Tools/test_fonts.py
 
 launch-resources-check:
+	python3 -I Tests/test_app_icon.py
 	python3 -I Tests/test_auth_signing.py
 	python3 -I Tests/test_contracts_generator.py
 	python3 -I Tests/test_launch_resources.py
