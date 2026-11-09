@@ -86,6 +86,19 @@ Verification:
 - Direct Swift 6/iOS 17 UI/app compilation and AppTests/AppUITests type checking: passed (`build/wizard-scroll-ready-typecheck.log`). No simulator or snapshot was run; the corrected 17e UI check remains pending.
 - `git add` is denied at the worktree's external Git index. The atomic patch is `build/wizard-scroll-ready-fix.patch`, with subject `fix(wizard): await bottom seed before polling error frames`; the real branch remains at `5e851e3`.
 
+### Footer space at maximum scroll (2026-11-09)
+
+The next 17e xcresult isolates an app layout bug: only the initial `atBottom` wait fails. The last error exists but sits beneath the pinned Continue footer at maximum scroll; the subsequent first-error precondition and Continue return both pass. The UI screen check stays unchanged.
+
+The existing bottom safe-area inset now belongs directly to the `ScrollView`, so SwiftUI reserves its actual footer height in the scrollable area. No footer-height constant or manual device adjustment is added. The last flight card uses the existing optional content-measurement hook. `WizardErrorScrollTests` now explicitly requires that card's bottom to finish at or above the footer's top at maximum scroll, with its error contained in the card and fully visible. The footer is identified by its full width rather than its vertical order, so an overlapping last error cannot be mistaken for the footer. Coverage retains every profile, including Duo's four insets, outbound/home, English/Dutch and Large/xxLarge.
+
+Verification:
+
+- `make lint`: passed (`build/wizard-footer-lint.log`).
+- Full `make -k host-tests`: failed only at the unchanged `APICookieTests.realRedirectCookieHandlingIsDisabled` loopback-listener sandbox denial (`Operation not permitted`). Token/asset tests and all resource/runner fixtures passed (`build/wizard-footer-host-tests.log`).
+- Standalone package tests excluding only that denied listener: passed, including all wizard tests and the unchanged timeline performance budgets (`build/wizard-footer-package-tests.log`). The listener still requires the normal host gate outside this sandbox.
+- Direct Swift 6/iOS 17 UI/app module compilation and AppTests/AppUITests type checking: passed (`build/wizard-footer-typecheck.log`). No simulator, runtime suite, snapshot or matrix was run; hosted geometry acceptance remains the 17e rerun.
+
 Rerun the focused hosted/UI suites on 17e:
 
 ```sh

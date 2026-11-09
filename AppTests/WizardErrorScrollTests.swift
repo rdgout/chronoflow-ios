@@ -71,11 +71,12 @@ nonisolated final class WizardErrorScrollTests: XCTestCase {
                                     -adjusted.top, scroll.contentSize.height - scroll.bounds.height + adjusted.bottom)),
                             animated: false)
                         try await host.settle()
-                        let frames = content.frames.sorted { $0.minY < $1.minY }
-                        XCTAssertEqual(frames.count, 3)
+                        XCTAssertEqual(content.frames.count, 4)
+                        let footer = try XCTUnwrap(content.frames.max { $0.width < $1.width })
+                        let frames = content.frames.filter { $0 != footer }.sorted { $0.minY < $1.minY }
                         let first = try XCTUnwrap(frames.first)
-                        let later = try XCTUnwrap(frames.dropFirst().first)
-                        let footer = try XCTUnwrap(frames.last)
+                        let lastCard = try XCTUnwrap(frames.dropFirst().first)
+                        let later = try XCTUnwrap(frames.last)
                         let outer = scroll.convert(scroll.bounds, to: host.window)
                         let viewport = CGRect(
                             x: outer.minX + adjusted.left, y: outer.minY + adjusted.top,
@@ -83,6 +84,9 @@ nonisolated final class WizardErrorScrollTests: XCTestCase {
                             height: min(outer.maxY - adjusted.bottom, footer.minY) - outer.minY - adjusted.top)
                         let context =
                             "\(device.name) \(language) \(category.rawValue) home=\(home) viewport=\(viewport)"
+                        XCTAssertTrue(lastCard.contains(later), "\(context) lastCard=\(lastCard) error=\(later)")
+                        XCTAssertLessThanOrEqual(
+                            lastCard.maxY, footer.minY, "\(context) lastCard=\(lastCard) footer=\(footer)")
                         XCTAssertLessThan(first.maxY, viewport.minY, context)
                         XCTAssertTrue(viewport.contains(later), context)
                         request.value += 1

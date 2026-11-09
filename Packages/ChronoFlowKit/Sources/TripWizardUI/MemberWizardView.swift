@@ -123,7 +123,13 @@
                         id: \.element.id
                     ) { index, leg in
                         if index > start { connection(index) }
-                        flightCard(index: index, leg: leg).id("wizard.flight.\(index)")
+                        Group {
+                            if index == end - 1 {
+                                flightCard(index: index, leg: leg).planContentBounds()
+                            } else {
+                                flightCard(index: index, leg: leg)
+                            }
+                        }.id("wizard.flight.\(index)")
                             .accessibilityElement(children: .contain).accessibilityIdentifier("wizard.flight.\(index)")
                     }
                     if end - start == 1 { flightDuration(index: start) }
