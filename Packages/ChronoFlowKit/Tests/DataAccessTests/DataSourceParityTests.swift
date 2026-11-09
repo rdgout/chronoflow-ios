@@ -74,9 +74,9 @@ import Testing
             #expect(session.account == expectedSession.account && session.tripId == expectedSession.tripId)
             #expect(try await source.fetchIdentity() == expectedSession.account)
             #expect(try await source.fetchAccount() == expectedSnapshot)
-            #expect(try await source.fetchTrips().first?.card["id"]?.string == demoTripID)
+            #expect(try await source.fetchTrips().first?.card.id == demoTripID)
             #expect(
-                try await source.fetchTripDetail(id: demoTripID)
+                try await source.fetchTripDetail(id: demoTripID).detail
                     == JSONDecoder().decode(TripDetail.self, from: fixture("trips/detail.json")))
             let options = try await source.passkeyOptions()
             #expect(options.options.rpId == "app.chronoflow.net" && options.options.timeout == 60_000)

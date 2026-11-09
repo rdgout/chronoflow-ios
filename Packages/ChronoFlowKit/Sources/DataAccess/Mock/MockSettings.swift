@@ -23,7 +23,12 @@ enum MockSettings {
                 case "show_optional_items": if case .bool = value { valid = true } else { valid = false }
                 default:
                     if case .array(let list) = value {
-                        let types = list.compactMap { $0.string.flatMap(BlockType.init(rawValue:)) }
+                        let types = list.compactMap { value -> BlockType? in
+                            guard let raw = value.string else { return nil }
+                            let type = BlockType(rawValue: raw)
+                            if case .unknown = type { return nil }
+                            return type
+                        }
                         valid = types.count == list.count && Set(types).count == list.count
                     } else {
                         valid = false

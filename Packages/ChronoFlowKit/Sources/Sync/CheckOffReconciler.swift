@@ -26,15 +26,9 @@ public struct CheckOffReconciler: Sendable {
                 let plan = try PlanVersionRecord.fetchOne(
                     db, sql: "SELECT * FROM plan_versions WHERE trip_id=? AND input_hash=?", arguments: [trip.id, hash])
             else { throw DataFailure.server(status: nil) }
-            let detail = try plan.detail.decode(TripDetail.self)
-            guard case .array(let blocks) = detail.plan["blocks"] else { throw DataFailure.server(status: nil) }
-            let exists = blocks.contains { block in
-                guard let object = block.object, object["actionable"] == .bool(true),
-                    let key = object["checkKey"]?.object
-                else { return false }
-                return key["type"] == .string(change.type.rawValue) && key["localDate"] == .string(change.localDate)
-                    && key["ordinal"] == .number(Decimal(change.ordinal))
-            }
+            let detail = try plan.decodedDetail()
+            let key = CheckKeyView(type: change.type, localDate: change.localDate, ordinal: change.ordinal)
+            let exists = detail.plan.blocks.contains { $0.actionable && $0.checkKey == key }
             guard exists else {
                 try db.execute(sql: "DELETE FROM outbox WHERE id=?", arguments: [row.id])
                 try db.execute(

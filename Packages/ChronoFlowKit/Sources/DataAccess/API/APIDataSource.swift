@@ -68,14 +68,16 @@ public struct APIDataSource: DataSource {
     public func fetchTrips() async throws -> [TripListItem] {
         struct List: Decodable, Sendable { let trips: [TripListItem] }
         let result: List = try await client.request(APIEndpoint(path: ["trips"]))
-        guard result.trips.allSatisfy({ $0.card["id"]?.string != nil && $0.card["departureUtc"]?.string != nil }) else {
+        guard result.trips.allSatisfy({ !$0.card.id.isEmpty && !$0.card.departureUtc.isEmpty }) else {
             throw DataFailure.server(status: 200)
         }
         return result.trips
     }
-    public func fetchTripDetail(id: String) async throws -> TripDetail {
-        let result: TripDetail = try await client.request(APIEndpoint(path: ["trips", id]))
-        guard result.trip["id"]?.string == id else { throw DataFailure.server(status: 200) }
+    public func fetchTripDetail(id: String) async throws -> TripDetailResponse {
+        let data = try await client.requestData(APIEndpoint(path: ["trips", id]))
+        let result: TripDetailResponse
+        do { result = try TripDetailResponse(data: data) } catch { throw DataFailure.server(status: 200) }
+        guard result.trip.id == id else { throw DataFailure.server(status: 200) }
         return result
     }
     public func send(_ change: OutboxChange) async throws -> MutationReceipt {

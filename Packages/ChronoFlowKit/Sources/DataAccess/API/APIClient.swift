@@ -45,6 +45,12 @@ public actor APIClient {
         }
     }
 
+    public func requestData(_ endpoint: APIEndpoint) async throws -> Data {
+        let (data, response) = try await perform(endpoint)
+        guard response.statusCode == 200 else { throw DataFailure.server(status: response.statusCode) }
+        return data
+    }
+
     public func requestNoContent(_ endpoint: APIEndpoint) async throws {
         let (data, response) = try await perform(endpoint)
         guard response.statusCode == 204, data.isEmpty else { throw DataFailure.server(status: response.statusCode) }

@@ -13,6 +13,6 @@ public protocol DataSource: Sendable {
     func fetchIdentity() async throws -> AccountIdentity
     func fetchAccount() async throws -> AccountSnapshot
     func fetchTrips() async throws -> [TripListItem]
-    func fetchTripDetail(id: String) async throws -> TripDetail
+    func fetchTripDetail(id: String) async throws -> TripDetailResponse
     func send(_ change: OutboxChange) async throws -> MutationReceipt
 }

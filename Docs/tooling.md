@@ -16,8 +16,10 @@ the same accounts, settings and seven trip/plan fixtures as RN's mock:
 
 Enter these values on Sign in; the form starts empty. Two-factor sign-in opens the code/recovery
 form before accepting a session. Both accounts start with walkthrough unseen and the RN
-accepted policy versions. Trip dates stay exactly as RN defines them (October 2026); progress
-and offline eligibility are calculated at initial seeding time.
+accepted policy versions. Trip dates rebase at initial seeding time to include an active, an upcoming and a completed
+trip relative to the injected clock. Instants, local dates and copy arguments move together;
+airport zones stay intact, and local times and tick offsets use the rebased dates’ DST rules.
+Progress and offline eligibility use those rebased dates.
 
 The seed and its fixture payload compile only in Debug; Release/Perf contain neither. API selection
 never constructs the mock. The seed loads lazily on the mock actor after the splash commit and is
@@ -32,7 +34,7 @@ host tests can use the scenarios without compiling credentials into the Release 
 `MockAppSeed+Fixtures.swift` embeds RN's `fixture-data.ts` default settings (including
 `createMockAccount`'s optional-items override), `fixtures/trips.ts` and all seven `fixtures/plans`
 payloads, read on 6 November 2026. They are mock data, separate from the sanitized API contract
-fixtures. Seed trip details retain the native optional form seam; no wizard is implemented here.
+fixtures. Trip detail contracts exclude mock-only form/revision; no wizard is implemented here.
 
 Verify on the host with `sh Scripts/host-tests.sh --filter DataSourceSelectionTests`.
 Hosted composition: `make targeted DEVICES="17e" ONLY="AppTests/DataSourceFactoryHostedTests"`.
@@ -43,6 +45,50 @@ recovery-code consumption across restart. Four Release host selection tests pass
 DataAccess object files were checked for absent demo identities, recovery code, trip fixture data
 and seed symbols. New Debug/Release hosted tests type-check for iOS 17 against the existing app
 modules; hosted execution remains open. No xcodebuild or simulator was run for this fix.
+
+## Trip contracts — Phase 12
+
+`make contracts` regenerates committed `AppCore/Contracts/Generated/TripPlan.swift`.
+`make contracts-check` (also `Tools/contracts-check`) fails on any generated-output drift,
+including enum literals. Both read the sibling web repository with `git show` at
+`afd80dc0cd127e9ad864d8ac32699383826366c8`; neither writes to a sibling. Override its
+location with `python3 -I Tools/contracts-gen/generate.py --web-repo /path/to/web`
+or `Tools/contracts-check --web-repo /path/to/web`.
+These manual commands are excluded from `make quick` and `make check` because they need
+that sibling and pinned commit. Generation also requires Python 3 and the toolchain’s
+`xcrun swift format`, with no added dependencies or network access.
+
+The generator follows the trip list/detail DTO dependency graph through Data/Api,
+Data/Trips, Data/Plan, Planner/Input, Planner/Output, Enums and Planning/Copy.
+It also includes all Planner/Output and Enums literals for the manual contracts gate.
+The backend literal `unknown` becomes `.unknownValue`, reserving `.unknown(String)` for future literals.
+It emits Codable/Sendable/Equatable structs, public initializers, optional nullable or
+optional properties and string enums that round-trip `.unknown(String)` values.
+Web DTO numbers here are integral (PHP `int`); mixed copy values retain decimal JSON numbers.
+Unsupported syntax and changed hand-written union signatures stop generation.
+Only block parameter dispatch and copy argument unions are hand-written. Block parameters
+are decoded by the enclosing block’s `type`; the three caffeine families distinguish
+legacy string amounts from structured drinks, while `caffeine_routine` uses its string shape.
+The indistinguishable null-exception `no_caffeine` shapes decode to the legacy variant.
+
+`TripDetailResponse` carries original response bytes beside its decoded immutable value.
+`applyDetail` writes those UTF-8 bytes unchanged into the existing SQLite TEXT column,
+including unknown fields and whitespace. `PlanVersionRecord.decodedDetail()` reads the typed
+contract from storage. Rendering selects `renderableBlocks`; reconciliation deliberately
+uses the complete stored block list so unknown check keys survive plan refreshes.
+No schema migration is required. All seven pinned RN plans and full constructed trip
+response fixtures have provenance in `Fixtures/plans/SOURCE.md` and `Fixtures/trips/SOURCE.md`.
+Host verification is `make quick`; Phase 12 does not require simulator execution.
+
+Phase 12 host verification (2026-11-07): generated-output freshness and the enum-literal
+mutation check pass. All Phase 12 tests pass, including database reopen, unknown-block
+reconciliation, all parameter variants and DST/leap-day rebasing. `make quick` passes lint
+and all package tests except existing `APICookieTests.realRedirectCookieHandlingIsDisabled`:
+the restricted worktree cannot bind its loopback socket (`EPERM`). The test remains intact;
+full quick must be rerun where loopback binding is allowed. The remaining quick targets
+(`make token-tests asset-tests launch-resources-check`) pass: 14 generator tests and 85
+Python fixtures. Logs: `build/phase12-quick.log`, `build/phase12-host-tools.log` and
+`build/phase12-contracts-mutation.log`. No simulator commands were run.
 
 ## Test tiers — user decision 2026-11-06
 

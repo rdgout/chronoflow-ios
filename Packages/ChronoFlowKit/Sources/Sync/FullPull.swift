@@ -53,7 +53,7 @@ public struct FullPull: Sendable {
         }
         try epoch.check()
         for item in cards {
-            guard let id = item.card["id"]?.string else { continue }
+            let id = item.card.id
             let needed = try await database.read { db in
                 guard let trip = try TripRecord.fetchOne(db, key: id), !trip.deletedLocally, trip.deletedAt == nil
                 else { return false }

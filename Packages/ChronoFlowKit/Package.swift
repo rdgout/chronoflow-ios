@@ -30,9 +30,11 @@ let package = Package(
         .target(name: "AppCore", swiftSettings: [.defaultIsolation(nil)]),
         .target(name: "DataAccess", dependencies: ["AppCore"], swiftSettings: [.defaultIsolation(nil)]),
         .testTarget(
-            name: "DataAccessTests", dependencies: ["DataAccess"], exclude: ["Fixtures/README.md"],
+            name: "DataAccessTests", dependencies: ["DataAccess", "LocalStore", "Sync"],
+            exclude: ["Fixtures/README.md"],
             resources: [
                 .copy("Fixtures/auth"), .copy("Fixtures/account"), .copy("Fixtures/trips"), .copy("Fixtures/errors"),
+                .copy("Fixtures/plans"),
             ],
             swiftSettings: [.defaultIsolation(nil), .define("CHRONOFLOW_MOCK_SCENARIOS")]),
         .target(

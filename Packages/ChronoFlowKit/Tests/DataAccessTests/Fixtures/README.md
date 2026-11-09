@@ -4,15 +4,15 @@ Derived from read-only chronoflow-new PHP DTOs, request rules, controller respon
 
 Sources: app/Data/Api/Api{Session,Account,AccountSnapshot,AccountSettings,TripListItem,TripDetail,TripCheckResult,Passkey*}.php; app/Http/Requests/Api/V1; tests/Feature/Api; docs/ui-plan/phase-18-mobile-api-passkeys.md (iOS handoff).
 
-Nested, currently unconsumed account/plan presentation objects remain extensible JSON objects. Sync metadata, identity, settings sections and check-state keys are typed; missing required envelope members fail decoding.
+Account presentation objects remain extensible JSON objects. Trip/plan presentation, sync metadata and check-state keys are typed; missing required envelope members fail decoding.
 
 Exact assertion references:
 - `AccountSnapshotTest::test_absent_rows_return_the_exact_snapshot_defaults_without_creating_rows` supplies account defaults (including empty PHP arrays inside JSON).
 - `LoginTest`, `TwoFactorTest`, `RegistrationTest`, `PasswordRecoveryTest` and `EmailVerificationTest` supply result discriminators, no-content responses, reset revocation and signed verification rules.
-- `TripIndexTest`, `TripShowTest` and `TripCheckOffTest` supply list/detail/check envelopes and replay behavior. Trip presentation objects here are intentionally structural subsets: no full planner result is recorded or asserted.
+- `TripIndexTest`, `TripShowTest` and `TripCheckOffTest` supply list/detail/check envelopes and replay behavior. Trip fixtures contain the full S1 planner result and typed envelopes; `trips/SOURCE.md` records their construction and pins, and `plans/` includes all seven complete RN planner fixtures.
 - `ErrorEnvelopeTest` and the passkey handoff supply error codes, fields and arguments. Error fixture messages are artificial except where a sentence key itself is under test; no real response body or secret has been captured.
 - `errors/wrong_credentials.json` combines `Actions/Api/VerifyLoginCredentials.php`'s exact email-field key with `ApiExceptionResponse.php`'s 422 envelope. The wrong-password parity regression requires API and mock to produce the same `DataFailure`.
 - `DataSourceParityTests.invalidSettingsReturnEveryField` synthesizes multi-field 422 envelopes from `PatchRemindersRequest`, `PatchPreferencesRequest` and `BodyClockRules::messageKeys`, using the invalid values lead_min=45/light="x", time_format="13"/show_optional_items="x" and malformed bedtime/wake times. Both API and mock must retain all failing fields.
-- `Sources/DataAccess/Mock/MockScenarioValues.swift` owns RN's sign-in scenario values, shared with tests through the fixture symlink. The Debug app mock seeds RN's verified demo/two-factor accounts and seven trips; Release excludes the seed. `Fixtures/MockScenarios.swift` deliberately overlays these credentials on the sanitized API snapshots/trip subsets for contract parity tests. The default mock assertion provider still accepts no passkeys.
+- `Sources/DataAccess/Mock/MockScenarioValues.swift` owns RN's sign-in scenario values, shared with tests through the fixture symlink. The Debug app mock seeds RN's verified demo/two-factor accounts and seven trips; Release excludes the seed. `Fixtures/MockScenarios.swift` deliberately overlays these credentials on the sanitized API snapshots/full trip envelopes for contract parity tests. The default mock assertion provider still accepts no passkeys.
 
 Mock verification uses an independent fake-server HMAC key, persisted across restart; these inputs are never valid production links. Mock passkey assertions are accepted only by the injected scenario provider and do not exercise WebAuthn cryptography. Production policy's uncompromised-password service is deliberately not called by mock tests.
