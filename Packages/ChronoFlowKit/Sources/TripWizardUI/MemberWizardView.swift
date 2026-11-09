@@ -125,7 +125,8 @@
                         if index > start { connection(index) }
                         Group {
                             if index == end - 1 {
-                                flightCard(index: index, leg: leg).planContentBounds()
+                                flightCard(index: index, leg: leg).planContentBounds(
+                                    identifier: "wizard.flight.\(index)")
                             } else {
                                 flightCard(index: index, leg: leg)
                             }
@@ -220,7 +221,7 @@
                         }
                     }
                     .id("wizard.flight.errors.\(index)")
-                    .planContentBounds()
+                    .planContentBounds(identifier: "wizard.flight.errors.\(index)")
                 }
             }
         }

@@ -104,7 +104,7 @@ nonisolated final class WizardRouteScreenTests: XCTestCase {
         }
     }
 
-    @MainActor func testContinueScrollsBackToTheOffscreenFirstError() {
+    @MainActor func testContinueScrollsBackToTheOffscreenFirstError() throws {
         let app = WizardScreenUIFlow.launch("WizardOutboundScrollErrors")
         defer { app.terminate() }
         let scroll = app.scrollViews.firstMatch
@@ -113,21 +113,30 @@ nonisolated final class WizardRouteScreenTests: XCTestCase {
         let next = app.buttons["wizard.outbound.continue"]
         let footer = app.otherElements["wizard.outbound.footer"]
         XCTAssertTrue(footer.waitForExistence(timeout: 5))
+        var measuredViewport: CGRect?
+        let viewportReady = XCTNSPredicateExpectation(
+            predicate: NSPredicate { _, _ in
+                measuredViewport = AuthUIFlow.viewportIfAvailable(in: app, scrollFrame: scroll.frame)
+                return measuredViewport.map { !$0.isEmpty } ?? false
+            }, object: nil)
+        XCTAssertEqual(
+            XCTWaiter.wait(for: [viewportReady], timeout: 5), .completed,
+            "Expected window safe-area diagnostic after the footer appears")
+        let viewport = try XCTUnwrap(measuredViewport)
         func visible(_ error: XCUIElement) -> Bool {
             guard error.exists else { return false }
             let frame = error.frame
             let footerFrame = footer.frame
-            let viewport = AuthUIFlow.viewport(in: app, scrollFrame: scroll.frame)
             return !frame.isEmpty && !footerFrame.isEmpty && viewport.contains(frame)
                 && frame.maxY <= footerFrame.minY
         }
         let atBottom = XCTNSPredicateExpectation(
             predicate: NSPredicate { _, _ in
-                visible(later) && first.exists && first.frame.maxY < scroll.frame.minY
+                visible(later) && first.exists && first.frame.maxY < viewport.minY
             }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [atBottom], timeout: 5), .completed)
         XCTAssertEqual(later.label, "This flight leaves before the previous one lands.")
-        XCTAssertLessThan(first.frame.maxY, scroll.frame.minY)
+        XCTAssertLessThan(first.frame.maxY, viewport.minY)
         XCTAssertTrue(next.isHittable && next.isEnabled)
         next.tap()
         let returned = XCTNSPredicateExpectation(

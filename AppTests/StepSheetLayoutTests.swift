@@ -101,12 +101,17 @@ nonisolated final class StepSheetLayoutTests: XCTestCase {
 }
 
 @MainActor final class PlanMeasuredContent {
-    private var measurements: [UUID: CGRect] = [:]
-    var frames: [CGRect] { Array(measurements.values) }
+    private var measurements: [UUID: (identifier: String?, frame: CGRect)] = [:]
+    var frames: [CGRect] { measurements.values.map(\.frame) }
 
-    func record(_ identity: UUID, _ frame: CGRect?) {
+    func frame(for identifier: String) -> CGRect? {
+        let matches = measurements.values.filter { $0.identifier == identifier }
+        return matches.count == 1 ? matches.first?.frame : nil
+    }
+
+    func record(_ identity: UUID, _ identifier: String?, _ frame: CGRect?) {
         if let frame, !frame.isEmpty, !frame.isNull, !frame.isInfinite {
-            measurements[identity] = frame
+            measurements[identity] = (identifier, frame)
         } else {
             measurements[identity] = nil
         }

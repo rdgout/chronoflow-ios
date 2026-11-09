@@ -80,7 +80,7 @@
                                 .accessibilityElement(children: .contain).accessibilityIdentifier(
                                     footerIdentifier(for: id)
                                 )
-                                .planContentBounds()
+                                .planContentBounds(identifier: "wizard.\(id).footer")
                         } else if answerHint {
                             tapHint.frame(maxWidth: .infinity).multilineTextAlignment(.center)
                                 .padding(.horizontal, PlanUITokens.space5).padding(

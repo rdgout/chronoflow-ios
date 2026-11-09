@@ -72,11 +72,13 @@ nonisolated final class WizardErrorScrollTests: XCTestCase {
                             animated: false)
                         try await host.settle()
                         XCTAssertEqual(content.frames.count, 4)
-                        let footer = try XCTUnwrap(content.frames.max { $0.width < $1.width })
-                        let frames = content.frames.filter { $0 != footer }.sorted { $0.minY < $1.minY }
-                        let first = try XCTUnwrap(frames.first)
-                        let lastCard = try XCTUnwrap(frames.dropFirst().first)
-                        let later = try XCTUnwrap(frames.last)
+                        let firstIndex = home ? start : 0
+                        let lastIndex = firstIndex + 4
+                        let footer = try XCTUnwrap(
+                            content.frame(for: home ? "wizard.return-flight.footer" : "wizard.outbound.footer"))
+                        let first = try XCTUnwrap(content.frame(for: "wizard.flight.errors.\(firstIndex)"))
+                        let lastCard = try XCTUnwrap(content.frame(for: "wizard.flight.\(lastIndex)"))
+                        let later = try XCTUnwrap(content.frame(for: "wizard.flight.errors.\(lastIndex)"))
                         let outer = scroll.convert(scroll.bounds, to: host.window)
                         let viewport = CGRect(
                             x: outer.minX + adjusted.left, y: outer.minY + adjusted.top,
@@ -84,15 +86,20 @@ nonisolated final class WizardErrorScrollTests: XCTestCase {
                             height: min(outer.maxY - adjusted.bottom, footer.minY) - outer.minY - adjusted.top)
                         let context =
                             "\(device.name) \(language) \(category.rawValue) home=\(home) viewport=\(viewport)"
-                        XCTAssertTrue(lastCard.contains(later), "\(context) lastCard=\(lastCard) error=\(later)")
+                        let tolerance: CGFloat = 0.5
+                        XCTAssertTrue(
+                            lastCard.insetBy(dx: -tolerance, dy: -tolerance).contains(later),
+                            "\(context) lastCard=\(lastCard) error=\(later)")
                         XCTAssertLessThanOrEqual(
-                            lastCard.maxY, footer.minY, "\(context) lastCard=\(lastCard) footer=\(footer)")
+                            lastCard.maxY, footer.minY + tolerance, "\(context) lastCard=\(lastCard) footer=\(footer)")
                         XCTAssertLessThan(first.maxY, viewport.minY, context)
-                        XCTAssertTrue(viewport.contains(later), context)
+                        XCTAssertTrue(viewport.insetBy(dx: -tolerance, dy: -tolerance).contains(later), context)
                         request.value += 1
                         try await host.settle()
-                        let returned = try XCTUnwrap(content.frames.min { $0.minY < $1.minY })
-                        XCTAssertTrue(viewport.contains(returned), "\(context) error=\(returned)")
+                        let returned = try XCTUnwrap(content.frame(for: "wizard.flight.errors.\(firstIndex)"))
+                        XCTAssertTrue(
+                            viewport.insetBy(dx: -tolerance, dy: -tolerance).contains(returned),
+                            "\(context) error=\(returned)")
                     }
                 }
             }

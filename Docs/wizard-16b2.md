@@ -99,11 +99,25 @@ Verification:
 - Standalone package tests excluding only that denied listener: passed, including all wizard tests and the unchanged timeline performance budgets (`build/wizard-footer-package-tests.log`). The listener still requires the normal host gate outside this sandbox.
 - Direct Swift 6/iOS 17 UI/app module compilation and AppTests/AppUITests type checking: passed (`build/wizard-footer-typecheck.log`). No simulator, runtime suite, snapshot or matrix was run; hosted geometry acceptance remains the 17e rerun.
 
-Rerun the focused hosted/UI suites on 17e:
+### Named frames and stable viewport polling (2026-11-09)
+
+The user's rerun at `0e7c617` passes `WizardFlightPickerTests`, `TripWizardTests` and `TripWizardReviewTests`. The remaining hosted failures compare coincident card/error edges differing by floating-point noise; the UI failure reads a transiently unavailable window safe-area diagnostic inside a visibility predicate.
+
+The optional content-measurement hook now carries explicit identifiers alongside its existing per-view UUID. The collector resolves each error group, last card and footer by identifier and rejects missing or duplicate matches. `WizardErrorScrollTests` uses a half-point tolerance for frame containment and the card/footer boundary, including the first error after Continue. It no longer infers frame roles from width or vertical order. App layout is unchanged.
+
+`AuthUIFlow.viewportIfAvailable` returns nil while the window diagnostic is absent or undecodable. After the identified footer exists, the UI check waits up to five seconds for a non-empty viewport, then captures it once for both visibility predicates and the offscreen precondition. Assertions run after the bounded wait; no polling predicate calls the failing viewport helper.
+
+Verification:
+
+- `make -k quick`: strict lint passes. All host suites, including the 94 wizard tests, token/asset tests and resource/runner fixtures pass except the unchanged `APICookieTests.realRedirectCookieHandlingIsDisabled`, whose loopback listener is denied by the sandbox (`Operation not permitted`, `build/wizard-measurements-quick.log`). The full host gate therefore remains blocked on that listener.
+- Final `make lint`: passed (`build/wizard-measurements-lint.log`). Direct Swift 6/iOS 17 compilation of DesignSystem, TripWizardUI and the app, plus AppTests/AppUITests type checking: passed (`build/wizard-measurements-typecheck.log`).
+- No simulator, runtime suite, snapshot or matrix was run. The two corrected suites need the focused 17e rerun below.
+
+Rerun the two corrected hosted/UI suites on 17e:
 
 ```sh
 make generate
-make targeted DEVICES="17e" ONLY="AppTests/WizardErrorScrollTests AppTests/WizardFlightPickerTests AppUITests/WizardRouteScreenTests AppUITests/TripWizardTests AppUITests/TripWizardReviewTests"
+make targeted DEVICES="17e" ONLY="AppTests/WizardErrorScrollTests AppUITests/WizardRouteScreenTests"
 ```
 
 For the visual review, capture the member boards in English/Dutch and light/dark:

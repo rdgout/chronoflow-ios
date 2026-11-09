@@ -141,12 +141,24 @@ import XCTest
     static func viewport(
         in app: XCUIApplication, scrollFrame: CGRect, includingNavigationBar: Bool = false
     ) -> CGRect {
-        let window = app.windows.firstMatch
-        guard let value = window.value as? String, let data = value.data(using: .utf8),
-            let values = try? JSONDecoder().decode([CGFloat].self, from: data), values.count == 4
+        guard
+            let viewport = viewportIfAvailable(
+                in: app, scrollFrame: scrollFrame, includingNavigationBar: includingNavigationBar)
         else {
             XCTFail("Missing window safe-area diagnostic")
             return .zero
+        }
+        return viewport
+    }
+
+    static func viewportIfAvailable(
+        in app: XCUIApplication, scrollFrame: CGRect, includingNavigationBar: Bool = false
+    ) -> CGRect? {
+        let window = app.windows.firstMatch
+        guard window.exists, let value = window.value as? String, let data = value.data(using: .utf8),
+            let values = try? JSONDecoder().decode([CGFloat].self, from: data), values.count == 4
+        else {
+            return nil
         }
         let safeArea = CGRect(x: values[0], y: values[1], width: values[2], height: values[3])
             .offsetBy(dx: window.frame.minX, dy: window.frame.minY)
