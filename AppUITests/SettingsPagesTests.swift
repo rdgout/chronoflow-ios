@@ -29,18 +29,18 @@ nonisolated final class SettingsPagesTests: XCTestCase {
         let app = launchSettingsPages()
         defer { app.terminate() }
         open("settings.bodyClock", app: app)
-        let chronotype = app.buttons["settings.bodyClock.chronotype"]
+        let chronotype = app.buttons["settings.bodyClock.chronotype.late"]
         XCTAssertTrue(chronotype.waitForExistence(timeout: 8))
+        AuthUIFlow.reveal(chronotype, in: app)
         chronotype.tap()
-        app.buttons["Night owl"].tap()
         let saved = app.descendants(matching: .any)["settings.bodyClock.saved.about"]
         XCTAssertTrue(saved.waitForExistence(timeout: 8))
         XCTAssertTrue(saved.isHittable)
-        XCTAssertTrue(chronotype.label.contains("Night owl"))
+        XCTAssertTrue(chronotype.isSelected)
         app.navigationBars.buttons.element(boundBy: 0).tap()
         open("settings.bodyClock", app: app)
-        XCTAssertTrue(app.buttons["settings.bodyClock.chronotype"].waitForExistence(timeout: 8))
-        XCTAssertTrue(app.buttons["settings.bodyClock.chronotype"].label.contains("Night owl"))
+        XCTAssertTrue(app.buttons["settings.bodyClock.chronotype.late"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["settings.bodyClock.chronotype.late"].isSelected)
     }
 
     @MainActor func testPreferencesSavesAndReplaySkipAndDoneReturnHere() {

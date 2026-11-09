@@ -13,7 +13,9 @@
                 }
             } else {
                 SettingsPage("Body clock", identifier: "settings.bodyClock.screen") {
-                    SettingsStoredState(loaded: store.settingsLoaded, failed: store.failure)
+                    SettingsStoredState(loaded: store.settingsLoaded, failed: store.failure) {
+                        Task { await store.retry() }
+                    }
                 }
             }
         }
@@ -23,6 +25,7 @@
         @Environment(\.locale) private var locale
         @State private var model: SettingsBodyClockModel
         @State private var selectedTime: ClockSelection?
+        @FocusState private var focus: String?
         private struct ClockSelection: Identifiable {
             let id: String
             let title: String
@@ -36,27 +39,22 @@
             self.readiness = readiness
             _model = State(initialValue: SettingsBodyClockModel(answers: answers, save: save))
         }
-        private func t(_ key: String) -> String {
-            SettingsStrings.text(key, language: locale.language.languageCode?.identifier == "nl" ? .nl : .en)
-        }
+        private var language: Language { locale.language.languageCode?.identifier == "nl" ? .nl : .en }
+        private func t(_ key: String) -> String { SettingsStrings.text(key, language: language) }
         var body: some View {
             ScrollViewReader { reader in
                 SettingsPage("Body clock", identifier: "settings.bodyClock.screen") {
                     Text(t("Every plan is built from these answers. Changes save automatically."))
+                        .settingsFont(Typography.screenBodyLg).foregroundStyle(ColorToken.mutedForeground.color)
                     if let readiness {
-                        SettingsReadinessView(value: readiness) {
-                            reader.scrollTo(firstMissing(readiness), anchor: .top)
-                        }
+                        SettingsReadinessView(value: readiness) { reader.scrollTo(firstMissing, anchor: .top) }
                     }
                     about
                     sleep
                     caffeine
                     light
                     health
-                    if model.failure {
-                        Text(t("We couldn't save your change. Please try again.")).foregroundStyle(
-                            ColorToken.destructive.color)
-                    }
+                    if model.failure { SettingsError(title: t("We couldn't save your change. Please try again.")) }
                 }
             }.onChange(of: answers) { _, value in model.receive(value) }
                 .sheet(item: $selectedTime) { selection in
@@ -66,71 +64,116 @@
                 }
         }
         private var about: some View {
-            Section {
-                choice(
-                    .about, "chronotype", "When do you naturally feel most awake?",
-                    [
-                        ("early", "Early bird"), ("intermediate", "In between"), ("late", "Night owl"),
-                        ("", "Not sure"),
-                    ])
+            SettingsCard {
+                groupHeader(.about)
+                SettingsRadioGroup(
+                    title: t("When do you naturally feel most awake?"),
+                    options: [
+                        SettingsOption(
+                            id: "early", title: t("Early bird"),
+                            hint: t("You wake early without an alarm and fade in the evening.")),
+                        SettingsOption(
+                            id: "intermediate", title: t("In between"),
+                            hint: t("Your energy follows a normal working day.")),
+                        SettingsOption(
+                            id: "late", title: t("Night owl"),
+                            hint: t("You come alive late and find early starts hard.")),
+                        SettingsOption(id: "", title: t("Not sure"), hint: t("We use your sleep times instead.")),
+                    ], selection: stringBinding(.about, "chronotype"), cards: true,
+                    identifier: "settings.bodyClock.chronotype")
                 choice(
                     .about, "ageBand", "Your age",
                     [("under_18", "Under 18"), ("18_64", "18–64"), ("65_plus", "65 or older")])
-            } header: {
-                groupHeader(.about)
             }
         }
         private var sleep: some View {
-            Section {
-                Text(t("On a normal work or school day.")).foregroundStyle(ColorToken.mutedForeground.color)
-                time("habitualBed", "Usual bedtime")
-                time("habitualWake", "Usual wake time")
+            SettingsCard {
+                groupHeader(.sleep)
+                caption("On a normal work or school day.")
+                timePair([("habitualBed", "Usual bedtime"), ("habitualWake", "Usual wake time")])
                 choice(
                     .sleep, "freeDayStatus", "Do your free days follow the same schedule?",
                     [("same_as_workdays", "Yes"), ("declared", "No")])
                 if model.answers["freeDayStatus"]?.string == "declared" {
-                    time("freeDayBed", "Free-day bedtime")
-                    time("freeDayWake", "Free-day wake time")
+                    VStack(alignment: .leading, spacing: PlanUITokens.space2) {
+                        caption("On free days")
+                        timePair([("freeDayBed", "Bedtime"), ("freeDayWake", "Wake time")])
+                    }
                 }
-            } header: {
-                groupHeader(.sleep)
             }
         }
         private var caffeine: some View {
-            Section {
-                choice(
-                    .caffeine, "caffeineHabit", "Do you usually drink caffeine?",
-                    [("cups", "Yes"), ("non_user", "No")])
-                if model.answers["caffeineHabit"]?.string == "cups" {
-                    Text(t("What do you drink on a normal day?"))
-                    ForEach(
-                        [
-                            ("cupsFilterCoffee", "Coffee"), ("cupsTea", "Tea"), ("cupsCola", "Soft drinks"),
-                            ("cupsEnergyDrink", "Energy drinks"),
-                        ], id: \.0
-                    ) { key, title in
-                        Stepper(
-                            value: Binding(
-                                get: { count(key) },
-                                set: { value in
-                                    Task { await model.change(.caffeine, [key: .number(Decimal(value))]) }
-                                }), in: 0...20
-                        ) {
-                            LabeledContent(t(title), value: String(count(key)))
-                        }.accessibilityIdentifier("settings.bodyClock.\(key)")
-                    }
-                    error("cupsFilterCoffee")
-                }
-                yesNo(.caffeine, "caffeineSensitive", "Does caffeine affect you strongly?")
-                yesNo(.health, "caffeineRuledOut", "Have you been told to avoid caffeine?")
-                yesNo(.caffeine, "oralContraception", "Do you use oral contraception?")
-            } header: {
+            SettingsCard {
                 groupHeader(.caffeine)
+                choice(
+                    .caffeine, "caffeineHabit", "Do you usually drink caffeine?", [("cups", "Yes"), ("non_user", "No")])
+                if model.answers["caffeineHabit"]?.string == "cups" { drinks }
+                yesNo(
+                    .caffeine, "caffeineSensitive", "Does caffeine affect you strongly?",
+                    hint: "For example, one cup keeps you awake or makes you jittery.")
+                yesNo(
+                    .health, "caffeineRuledOut", "Have you been told to avoid caffeine?",
+                    hint: "By a doctor, midwife or pharmacist.")
+                yesNo(
+                    .caffeine, "oralContraception", "Do you take oral contraception?",
+                    hint: "It slows how fast your body clears caffeine.")
             }
         }
+        private var drinks: some View {
+            VStack(alignment: .leading, spacing: PlanUITokens.space2) {
+                Text(t("What do you drink on a normal day?")).settingsFont(Typography.settingsRow)
+                VStack(spacing: 0) {
+                    ForEach(Array(drinkOptions.enumerated()), id: \.element.0) { index, drink in
+                        if index > 0 { SettingsDivider() }
+                        HStack(spacing: PlanUITokens.space1) {
+                            Text(t(drink.1)).frame(maxWidth: .infinity, alignment: .leading)
+                            counterButton(drink.0, drink.1, increase: false)
+                            Text(
+                                SettingsStrings.text(
+                                    "{{count}} a day", language: language, ["count": String(count(drink.0))])
+                            )
+                            .settingsFont(Typography.screenBody).monospacedDigit().frame(minWidth: PlanUITokens.space16)
+                            counterButton(drink.0, drink.1, increase: true)
+                        }.padding(.leading, PlanUITokens.space4).padding(.trailing, PlanUITokens.space2)
+                            .padding(.vertical, PlanUITokens.space2).frame(minHeight: SettingsTokens.counterHeight)
+                            .accessibilityElement(children: .contain).accessibilityIdentifier(
+                                "settings.bodyClock." + drink.0)
+                    }
+                }.overlay {
+                    RoundedRectangle(cornerRadius: PlanUITokens.radius2Xl).strokeBorder(
+                        ColorToken.border.color, lineWidth: AuthTokens.borderWidth)
+                }
+                error("cupsFilterCoffee")
+            }
+        }
+        private var drinkOptions: [(String, String)] {
+            [
+                ("cupsFilterCoffee", "Coffee"), ("cupsTea", "Tea"), ("cupsCola", "Soft drinks"),
+                ("cupsEnergyDrink", "Energy drinks"),
+            ]
+        }
+        private func counterButton(_ key: String, _ title: String, increase: Bool) -> some View {
+            Button {
+                Task { await model.change(.caffeine, [key: .number(Decimal(count(key) + (increase ? 1 : -1)))]) }
+            } label: {
+                Image(systemName: increase ? "plus" : "minus").settingsFont(Typography.screenBodyLg)
+                    .frame(width: AuthTokens.touch, height: AuthTokens.touch)
+                    .overlay { Capsule().strokeBorder(ColorToken.border.color, lineWidth: AuthTokens.borderWidth) }
+                    .contentShape(Capsule())
+            }.buttonStyle(.plain).disabled(increase ? count(key) >= 20 : count(key) == 0)
+                .accessibilityLabel(
+                    SettingsStrings.text(
+                        increase ? "More {{drink}}" : "Fewer {{drink}}", language: language,
+                        ["drink": t(title).lowercased()])
+                )
+                .accessibilityIdentifier("settings.bodyClock." + key + (increase ? ".more" : ".fewer"))
+        }
         private var light: some View {
-            Section {
-                Text(t("Optional. If you have any of these, your plan can use them."))
+            SettingsCard {
+                VStack(alignment: .leading, spacing: PlanUITokens.space1) {
+                    groupHeader(.light)
+                    caption("Optional. If you have any of these, your plan can use them.")
+                }
                 choice(
                     .light, "lightDevice", "Do you have a light box, light visor or light glasses?",
                     [("none", "None"), ("box", "Light box or visor"), ("glasses", "Light glasses")])
@@ -138,143 +181,254 @@
                     .light, "blueBlockers", "Blue-blocking glasses",
                     [("no", "No"), ("unrated", "Yes, rating unknown"), ("rated", "Yes, I know the rating")])
                 if model.answers["blueBlockers"]?.string == "rated" {
-                    TextField(
+                    AuthField(
                         t("Rating (mDFD)"),
                         text: Binding(
                             get: { model.answers["blueBlockerMdfd"]?.string ?? "" },
-                            set: { value in
-                                Task { await model.change(.light, ["blueBlockerMdfd": .string(value)]) }
-                            })
-                    ).keyboardType(.decimalPad).accessibilityIdentifier("settings.bodyClock.blueBlockerMdfd")
-                    error("blueBlockerMdfd")
+                            set: { value in Task { await model.change(.light, ["blueBlockerMdfd": .string(value)]) } }),
+                        error: model.errors["blueBlockerMdfd"].map(t),
+                        hint: t("Melanopic daylight filtering density. It's on the box or the maker's website."),
+                        identifier: "settings.bodyClock.blueBlockerMdfd", contentType: nil, keyboard: .decimalPad,
+                        submitLabel: .done, focus: $focus
+                    ) { focus = nil }
                 }
-            } header: {
-                groupHeader(.light)
             }
         }
         private var health: some View {
-            Section {
-                Text(t("Your answers help tailor the timing advice. They are stored in your account."))
+            SettingsCard {
+                VStack(alignment: .leading, spacing: PlanUITokens.space1) {
+                    groupHeader(.health)
+                    caption("Required. Bright light and caffeine timing aren't safe for everyone, so we check first.")
+                }
                 yesNo(.health, "pregnancy", "Are you pregnant or breastfeeding?")
-                yesNo(.health, "bipolar", "Do you have bipolar disorder?")
+                yesNo(.health, "bipolar", "Have you been diagnosed with bipolar disorder?")
                 yesNo(
                     .health, "eyeDisease",
-                    "Do you have an eye disease, or take medicine that makes your eyes sensitive to light?")
+                    "Do you have an eye condition, or take medicine that makes you sensitive to light?")
                 yesNo(
-                    .health, "vte",
-                    "Do you have a risk factor for blood clots, such as a past clot or a clotting disorder?")
-                yesNo(
-                    .health, "shiftWork",
-                    "In the past 14 days, have you worked night or rotating shifts, or had a very irregular sleep schedule?"
-                )
-            } header: {
-                groupHeader(.health)
+                    .health, "vte", "Are you at higher risk of blood clots?",
+                    hint: "For example after recent surgery, or if you have had a clot before.")
+                yesNo(.health, "shiftWork", "Do you work shifts or have an irregular sleep pattern?")
             }
         }
         private func groupHeader(_ group: BodyClockGroup) -> some View {
-            HStack {
-                Text(t(group.title))
-                Spacer()
+            HStack(alignment: .firstTextBaseline) {
+                Text(t(group.title)).settingsFont(Typography.screenSectionTitle).accessibilityAddTraits(.isHeader)
+                Spacer(minLength: PlanUITokens.space2)
                 if model.saved.contains(group) {
                     Label {
                         Text(t("Saved"))
                     } icon: {
-                        Image(systemName: "checkmark").foregroundStyle(ColorToken.dawnText.color)
-                            .accessibilityHidden(true)
-                    }.accessibilityElement(children: .combine)
-                        .accessibilityIdentifier("settings.bodyClock.saved.\(group.rawValue)")
+                        Image(systemName: "checkmark").foregroundStyle(ColorToken.dawnText.color).accessibilityHidden(
+                            true)
+                    }
+                    .settingsFont(Typography.screenMeta).foregroundStyle(ColorToken.mutedForeground.color)
+                    .accessibilityElement(children: .combine).accessibilityIdentifier(
+                        "settings.bodyClock.saved." + group.rawValue)
                 }
             }.accessibilityElement(children: .contain)
+        }
+        private func caption(_ key: String) -> some View {
+            Text(t(key)).settingsFont(Typography.screenBody).foregroundStyle(ColorToken.mutedForeground.color)
         }
         private func count(_ key: String) -> Int {
             if case .number(let value) = model.answers[key] { NSDecimalNumber(decimal: value).intValue } else { 0 }
         }
         @ViewBuilder private func error(_ key: String) -> some View {
-            if let error = model.errors[key] { Text(t(error)).foregroundStyle(ColorToken.destructive.color) }
+            if let error = model.errors[key] { SettingsError(title: t(error)) }
+        }
+        private func stringBinding(_ group: BodyClockGroup, _ key: String) -> Binding<String> {
+            Binding(
+                get: { model.answers[key]?.string ?? "" },
+                set: { value in
+                    var patch: [String: JSONValue] = [key: value.isEmpty ? .null : .string(value)]
+                    if key == "freeDayStatus", value == "declared" {
+                        patch["freeDayBed"] = model.answers["freeDayBed"] ?? model.answers["habitualBed"] ?? .null
+                        patch["freeDayWake"] = model.answers["freeDayWake"] ?? model.answers["habitualWake"] ?? .null
+                        if patch["freeDayBed"] == .null { patch["freeDayBed"] = model.answers["habitualBed"] ?? .null }
+                        if patch["freeDayWake"] == .null {
+                            patch["freeDayWake"] = model.answers["habitualWake"] ?? .null
+                        }
+                    }
+                    Task { await model.change(group, patch) }
+                })
         }
         private func choice(_ group: BodyClockGroup, _ key: String, _ title: String, _ options: [(String, String)])
             -> some View
         {
-            Picker(
-                t(title),
-                selection: Binding(
-                    get: { model.answers[key]?.string ?? "" },
-                    set: { value in
-                        var patch: [String: JSONValue] = [key: value.isEmpty ? .null : .string(value)]
-                        if key == "freeDayStatus", value == "declared" {
-                            patch["freeDayBed"] =
-                                model.answers["freeDayBed"]?.string.map(JSONValue.string) ?? model.answers[
-                                    "habitualBed"] ?? .null
-                            patch["freeDayWake"] =
-                                model.answers["freeDayWake"]?.string.map(JSONValue.string) ?? model.answers[
-                                    "habitualWake"] ?? .null
-                        }
-                        Task { await model.change(group, patch) }
-                    })
-            ) {
-                if !options.contains(where: { $0.0.isEmpty }) { Text(t("Not set")).tag("") }
-                ForEach(options, id: \.0) { value, label in Text(t(label)).tag(value) }
-            }.pickerStyle(.menu).id(key).accessibilityIdentifier("settings.bodyClock.\(key)")
-                .overlay(alignment: .bottomLeading) { error(key) }
-        }
-        private func yesNo(_ group: BodyClockGroup, _ key: String, _ title: String) -> some View {
-            Picker(
-                t(title),
-                selection: Binding(
-                    get: {
-                        if case .bool(let value) = model.answers[key] { return value ? "yes" : "no" }
-                        return ""
-                    },
-                    set: { value in
-                        Task { await model.change(group, [key: value.isEmpty ? .null : .bool(value == "yes")]) }
-                    })
-            ) {
-                Text(t("Not set")).tag("")
-                Text(t("Yes")).tag("yes")
-                Text(t("No")).tag("no")
-            }.pickerStyle(.menu).id(key).accessibilityIdentifier("settings.bodyClock.\(key)")
-        }
-        private func time(_ key: String, _ label: String) -> some View {
-            Button {
-                selectedTime = ClockSelection(id: key, title: label, value: model.answers[key]?.string)
-            } label: {
-                LabeledContent(t(label), value: model.answers[key]?.string ?? t("Not set"))
-            }.pickerStyle(.menu).id(key).accessibilityIdentifier("settings.bodyClock.\(key)")
-                .overlay(alignment: .bottomLeading) { error(key) }
-        }
-        private func firstMissing(_ readiness: JSONObject) -> String {
-            guard case .array(let missing) = readiness["missing"], let first = missing.first?.object else {
-                return "ageBand"
+            question(key, title) {
+                SettingsRadioGroup(
+                    options: options.map { SettingsOption(id: $0.0, title: t($0.1)) },
+                    selection: stringBinding(group, key), identifier: "settings.bodyClock." + key)
             }
-            let raw = first["question"]?.string ?? "age_band"
-            let parts = raw.split(separator: "_")
-            return String(parts[0]) + parts.dropFirst().map { $0.prefix(1).uppercased() + $0.dropFirst() }.joined()
+        }
+        private func yesNo(_ group: BodyClockGroup, _ key: String, _ title: String, hint: String? = nil) -> some View {
+            question(key, title, hint: hint) {
+                SettingsRadioGroup(
+                    options: [SettingsOption(id: "yes", title: t("Yes")), SettingsOption(id: "no", title: t("No"))],
+                    selection: Binding(
+                        get: {
+                            if case .bool(let value) = model.answers[key] { return value ? "yes" : "no" }
+                            return ""
+                        }, set: { value in Task { await model.change(group, [key: .bool(value == "yes")]) } }),
+                    identifier: "settings.bodyClock." + key)
+            }
+        }
+        private func question<Content: View>(
+            _ key: String, _ title: String, hint: String? = nil, @ViewBuilder content: () -> Content
+        ) -> some View {
+            let missing = missingFields.contains(key)
+            return VStack(alignment: .leading, spacing: PlanUITokens.space2) {
+                Text(t(title)).settingsFont(Typography.settingsRow)
+                if missing { SettingsBadge(title: t("Needs an answer"), dawn: true) }
+                if let hint { caption(hint) }
+                content()
+                error(key)
+            }.padding(missing ? PlanUITokens.space3 : 0)
+                .background {
+                    if missing {
+                        RoundedRectangle(cornerRadius: PlanUITokens.radius2Xl).fill(
+                            ColorToken.settingsWarningBackground.color
+                        )
+                        .overlay {
+                            RoundedRectangle(cornerRadius: PlanUITokens.radius2Xl).strokeBorder(
+                                ColorToken.settingsWarningBorder.color, lineWidth: AuthTokens.borderWidth)
+                        }
+                    }
+                }.padding(.horizontal, missing ? -PlanUITokens.space3 : 0).id(key)
+        }
+        private func timePair(_ items: [(String, String)]) -> some View {
+            LazyVGrid(
+                columns: [GridItem(.adaptive(minimum: PlanUITokens.space16 * 2), spacing: PlanUITokens.space3)],
+                spacing: PlanUITokens.space3
+            ) {
+                ForEach(items, id: \.0) { key, label in
+                    VStack(alignment: .leading, spacing: PlanUITokens.space1) {
+                        Button {
+                            selectedTime = ClockSelection(
+                                id: key,
+                                title: key == "freeDayBed"
+                                    ? "Free-day bedtime" : key == "freeDayWake" ? "Free-day wake time" : label,
+                                value: model.answers[key]?.string)
+                        } label: {
+                            VStack(alignment: .leading, spacing: PlanUITokens.space1) {
+                                caption(label)
+                                Text(model.answers[key]?.string ?? t("Not set")).settingsFont(Typography.settingsTime)
+                                    .monospacedDigit()
+                            }.frame(
+                                maxWidth: .infinity,
+                                minHeight: SettingsTokens.timeHeight - SettingsTokens.timeVertical * 2,
+                                alignment: .leading
+                            )
+                            .padding(.horizontal, PlanUITokens.space4).padding(.vertical, SettingsTokens.timeVertical)
+                            .background(
+                                ColorToken.surface2.color, in: RoundedRectangle(cornerRadius: PlanUITokens.radius2Xl)
+                            )
+                            .overlay {
+                                RoundedRectangle(cornerRadius: PlanUITokens.radius2Xl).strokeBorder(
+                                    ColorToken.border.color, lineWidth: AuthTokens.borderWidth)
+                            }
+                        }.buttonStyle(.plain).accessibilityIdentifier("settings.bodyClock." + key)
+                        error(key)
+                    }.id(key)
+                }
+            }
+        }
+        private var missingFields: [String] {
+            guard case .array(let missing) = readiness?["missing"] else { return [] }
+            return missing.map { item in
+                let raw = item.object?["question"]?.string ?? "age_band"
+                return raw.split(separator: "_").enumerated().map {
+                    $0.offset == 0 ? String($0.element) : $0.element.capitalized
+                }.joined()
+            }
+        }
+        private var firstMissing: String {
+            if let first = missingFields.first { return first }
+            if case .array(let invalid) = readiness?["invalidSections"], let raw = invalid.first?.string,
+                let group = BodyClockGroup(rawValue: raw)
+            {
+                return group.fields.first ?? "ageBand"
+            }
+            return "ageBand"
         }
     }
 
-    @MainActor private struct SettingsReadinessView: View {
+    private struct SettingsReadinessView: View {
         @Environment(\.locale) private var locale
         let value: JSONObject
         let firstMissing: () -> Void
-        private func t(_ key: String) -> String {
-            SettingsStrings.text(key, language: locale.language.languageCode?.identifier == "nl" ? .nl : .en)
-        }
+        private var language: Language { locale.language.languageCode?.identifier == "nl" ? .nl : .en }
+        private func t(_ key: String) -> String { SettingsStrings.text(key, language: language) }
+        private func count(_ key: String) -> Int { if case .array(let list) = value[key] { list.count } else { 0 } }
         var body: some View {
-            Section {
-                switch value["variant"]?.string {
-                case "excluded":
-                    Text(t("No plan available"))
+            if value["variant"]?.string == "excluded" {
+                VStack(alignment: .leading, spacing: PlanUITokens.space2) {
+                    Label(t("No plan available"), systemImage: "exclamationmark.triangle").settingsFont(
+                        Typography.settingsStrong)
                     Text(
                         t(
                             "Based on your health answers, light and caffeine timing may not be right for you, so we can't build a plan. Your doctor can tell you what's safe when you travel."
-                        ))
-                case "needs-answers":
-                    Text(t("Almost ready"))
-                    Button(t("Go to the first one"), action: firstMissing)
-                case "ready":
-                    Text(t("Required answers complete"))
-                    Text(t("You can build a plan for any trip."))
-                default: EmptyView()
+                        )
+                    ).settingsFont(Typography.screenBody)
+                }.padding(PlanUITokens.space5).frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        ColorToken.settingsWarningBackground.color,
+                        in: RoundedRectangle(cornerRadius: PlanUITokens.radius3Xl)
+                    )
+                    .overlay {
+                        RoundedRectangle(cornerRadius: PlanUITokens.radius3Xl).strokeBorder(
+                            ColorToken.settingsWarningBorder.color, lineWidth: AuthTokens.borderWidth)
+                    }
+            } else if value["variant"]?.string == "needs-answers" {
+                SettingsCard(spacing: PlanUITokens.space3) {
+                    SettingsEyebrow(title: t("Almost ready"), dawn: true)
+                    let missing = count("missing") + count("invalidSections")
+                    let total = 7 + count("invalidSections")
+                    Text(
+                        SettingsStrings.text(
+                            missing == 1
+                                ? "We need 1 more answer before we can build a plan"
+                                : "We need {{count}} more answers before we can build a plan", language: language,
+                            ["count": String(missing)])
+                    ).settingsFont(Typography.screenSectionTitle)
+                    HStack(spacing: PlanUITokens.space2) {
+                        Capsule().fill(ColorToken.muted.color)
+                            .overlay(alignment: .leading) {
+                                Capsule().fill(ColorToken.dawn.color)
+                                    .frame(
+                                        width: PlanUITokens.progressTrackWidth * CGFloat(max(0, total - missing))
+                                            / CGFloat(total))
+                            }.frame(width: PlanUITokens.progressTrackWidth, height: SettingsTokens.pillGap)
+                            .accessibilityHidden(true)
+                        Label(
+                            SettingsStrings.text(
+                                "{{done}}/{{total}} done", language: language,
+                                ["done": String(max(0, total - missing)), "total": String(total)]),
+                            systemImage: "checkmark"
+                        )
+                        .settingsFont(Typography.screenMeta).foregroundStyle(ColorToken.mutedForeground.color)
+                        .monospacedDigit()
+                    }
+                    AuthButton(
+                        t("Go to the first one"), kind: .secondary, minimumHeight: PlanUITokens.walkthroughDoneHeight,
+                        action: firstMissing)
+                }
+            } else if ["ready", "health-adjusted"].contains(value["variant"]?.string ?? "") {
+                SettingsCard {
+                    HStack(spacing: PlanUITokens.space3) {
+                        Image(systemName: "checkmark").frame(
+                            width: SettingsTokens.rowDisc, height: SettingsTokens.rowDisc
+                        )
+                        .background(ColorToken.dawn.color, in: Circle()).foregroundStyle(
+                            ColorToken.dawnForeground.color
+                        ).accessibilityHidden(true)
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text(t("Required answers complete")).settingsFont(Typography.settingsStrong)
+                            Text(t("You can build a plan for any trip.")).settingsFont(Typography.screenBody)
+                                .foregroundStyle(ColorToken.mutedForeground.color)
+                        }
+                    }
                 }
             }
         }

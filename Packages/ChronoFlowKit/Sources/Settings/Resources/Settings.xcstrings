@@ -4036,6 +4036,414 @@
           }
         }
       }
+    },
+    "{{count}} a day": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{count}} a day"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{count}} per dag"
+          }
+        }
+      }
+    },
+    "More {{drink}}": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More {{drink}}"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meer {{drink}}"
+          }
+        }
+      }
+    },
+    "We use your sleep times instead.": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We use your sleep times instead."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We gebruiken dan je slaaptijden."
+          }
+        }
+      }
+    },
+    "You wake early without an alarm and fade in the evening.": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You wake early without an alarm and fade in the evening."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je wordt vroeg wakker zonder wekker en bent in de avond moe."
+          }
+        }
+      }
+    },
+    "We need {{count}} more answers before we can build a plan": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We need {{count}} more answers before we can build a plan"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We hebben nog {{count}} antwoorden nodig voordat we een plan kunnen maken"
+          }
+        }
+      }
+    },
+    "Your energy follows a normal working day.": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your energy follows a normal working day."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je energie volgt een gewone werkdag."
+          }
+        }
+      }
+    },
+    "We need 1 more answer before we can build a plan": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We need 1 more answer before we can build a plan"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We hebben nog 1 antwoord nodig voordat we een plan kunnen maken"
+          }
+        }
+      }
+    },
+    "On free days": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On free days"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Op vrije dagen"
+          }
+        }
+      }
+    },
+    "Required. Bright light and caffeine timing aren't safe for everyone, so we check first.": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Required. Bright light and caffeine timing aren't safe for everyone, so we check first."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verplicht. De timing van fel licht en cafeïne is niet voor iedereen veilig, dus dat controleren we eerst."
+          }
+        }
+      }
+    },
+    "Required answers": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Required answers"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verplichte antwoorden"
+          }
+        }
+      }
+    },
+    "You come alive late and find early starts hard.": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You come alive late and find early starts hard."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je komt laat op gang en vindt vroeg opstaan lastig."
+          }
+        }
+      }
+    },
+    "Melanopic daylight filtering density. It's on the box or the maker's website.": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Melanopic daylight filtering density. It's on the box or the maker's website."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Melanopische daglichtfilterdichtheid. Je vindt dit op de verpakking of de website van de fabrikant."
+          }
+        }
+      }
+    },
+    "Needs an answer": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs an answer"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nog te beantwoorden"
+          }
+        }
+      }
+    },
+    "{{done}}/{{total}} done": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{done}}/{{total}} done"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{done}}/{{total}} gedaan"
+          }
+        }
+      }
+    },
+    "Fewer {{drink}}": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fewer {{drink}}"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minder {{drink}}"
+          }
+        }
+      }
+    },
+    "Bedtime": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bedtime"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bedtijd"
+          }
+        }
+      }
+    },
+    "Wake time": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wake time"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tijd van opstaan"
+          }
+        }
+      }
+    },
+    "For example, one cup keeps you awake or makes you jittery.": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For example, one cup keeps you awake or makes you jittery."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bijvoorbeeld als één kop je wakker houdt of onrustig maakt."
+          }
+        }
+      }
+    },
+    "By a doctor, midwife or pharmacist.": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By a doctor, midwife or pharmacist."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Door een arts, verloskundige of apotheker."
+          }
+        }
+      }
+    },
+    "Do you take oral contraception?": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do you take oral contraception?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gebruik je orale anticonceptie?"
+          }
+        }
+      }
+    },
+    "Have you been diagnosed with bipolar disorder?": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Have you been diagnosed with bipolar disorder?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Is er bij jou een bipolaire stoornis vastgesteld?"
+          }
+        }
+      }
+    },
+    "Do you have an eye condition, or take medicine that makes you sensitive to light?": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do you have an eye condition, or take medicine that makes you sensitive to light?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heb je een oogaandoening, of gebruik je medicijnen die je gevoelig maken voor licht?"
+          }
+        }
+      }
+    },
+    "Are you at higher risk of blood clots?": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Are you at higher risk of blood clots?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heb je een verhoogd risico op bloedstolsels?"
+          }
+        }
+      }
+    },
+    "Do you work shifts or have an irregular sleep pattern?": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do you work shifts or have an irregular sleep pattern?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Werk je in ploegendienst of heb je een onregelmatig slaappatroon?"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
