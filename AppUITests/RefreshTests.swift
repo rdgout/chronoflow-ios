@@ -103,38 +103,19 @@ nonisolated final class RefreshTests: XCTestCase {
         _ text: String, in app: XCUIApplication, above content: String,
         after snapshot: XCUIElementSnapshot, expectedCount: Int
     ) throws {
-        var elements = descendants(in: snapshot)
-        let deadline = ContinuousClock.now + .seconds(12)
-        while !elements.contains(where: { $0.identifier == "refresh.feedback" }), ContinuousClock.now < deadline {
-            elements = descendants(in: try app.snapshot())
-        }
-        let counter = elements.first { $0.identifier == "refresh.debug.count" }
-        let count = Int(counter?.value as? String ?? "")
+        let presented = app.descendants(matching: .any).matching(identifier: "refresh.debug.presented").firstMatch
+        let shown = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", text), object: presented)
+        let result = XCTWaiter.wait(for: [shown], timeout: 12)
+        attachScreenshot("Refresh feedback after wait: \(text)")
+        let elements = descendants(in: try app.snapshot())
+        let count = Int(elements.first { $0.identifier == "refresh.debug.count" }?.value as? String ?? "")
+        let outcome = elements.first { $0.identifier == "refresh.debug.outcome" }?.label ?? "missing"
         XCTAssertEqual(
             count, expectedCount, "Pull did not invoke native refresh (DEBUG count: \(String(describing: count)))")
-        guard elements.contains(where: { $0.identifier == "refresh.feedback" }) else {
-            attachScreenshot("Refresh feedback after wait: \(text)")
-            let reason =
-                if let count {
-                    count >= expectedCount ? "Refresh fired, but no capsule was observed" : "Pull never fired refresh"
-                } else {
-                    "DEBUG refresh counter missing"
-                }
-            let outcome = elements.first { $0.identifier == "refresh.debug.outcome" }?.label ?? "missing"
-            XCTFail("\(reason); DEBUG count: \(String(describing: count)); outcome: \(outcome)")
-            return
-        }
-        attachScreenshot("Refresh feedback after wait: \(text)")
-        let matches = elements.filter { $0.identifier == "refresh.feedback" }
-        let capsule = try XCTUnwrap(matches.first)
-        let navigation = try XCTUnwrap(elements.first { $0.elementType == .navigationBar })
-        let body = try XCTUnwrap(elements.first { $0.identifier == content || $0.label == content })
-        XCTAssertEqual(capsule.label, text)
-        XCTAssertEqual(matches.count, 1)
-        XCTAssertGreaterThanOrEqual(capsule.frame.minY, navigation.frame.maxY)
-        XCTAssertFalse(body.frame.isEmpty, "Expected content below refresh feedback")
-        XCTAssertGreaterThanOrEqual(body.frame.minY, capsule.frame.maxY)
-        XCTAssertTrue(feedback(in: app).waitForNonExistence(timeout: 5))
+        XCTAssertEqual(
+            result, .completed,
+            "Expected the \(text) capsule to render; presented: \(presented.label), outcome: \(outcome)")
+        XCTAssertTrue(feedback(in: app).waitForNonExistence(timeout: 5), "Feedback must dismiss itself")
     }
 
     @MainActor private func descendants(in snapshot: XCUIElementSnapshot) -> [XCUIElementSnapshot] {

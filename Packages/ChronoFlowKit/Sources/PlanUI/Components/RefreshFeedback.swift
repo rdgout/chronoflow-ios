@@ -38,6 +38,8 @@ public struct RefreshFeedback: Sendable, Equatable {
     #if DEBUG
         public private(set) var debugRefreshCount = 0
         public private(set) var debugOutcome = "none"
+        public private(set) var debugPresented = "none"
+        public func debugMarkPresented(_ text: String) { debugPresented = text }
     #endif
     public init() {}
 

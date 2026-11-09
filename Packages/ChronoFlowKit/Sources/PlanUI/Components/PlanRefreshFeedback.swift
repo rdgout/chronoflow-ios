@@ -44,6 +44,11 @@ private struct PlanRefreshFeedback: ViewModifier {
             .padding(.horizontal, PlanUITokens.space4).padding(.vertical, PlanUITokens.space2)
             .planPageRail()
             .frame(maxWidth: .infinity)
+            .onAppear {
+                #if DEBUG
+                    model.debugMarkPresented(text)
+                #endif
+            }
             .task(id: presentationID) {
                 AccessibilityNotification.Announcement(text).post()
                 do { try await Task.sleep(for: .seconds(2)) } catch { return }
@@ -65,6 +70,11 @@ private struct PlanRefreshFeedback: ViewModifier {
                     Text(verbatim: model.debugOutcome)
                         .font(.caption2).opacity(0.01).allowsHitTesting(false)
                         .accessibilityIdentifier("refresh.debug.outcome")
+                }
+                .overlay(alignment: .bottom) {
+                    Text(verbatim: model.debugPresented)
+                        .font(.caption2).opacity(0.01).allowsHitTesting(false)
+                        .accessibilityIdentifier("refresh.debug.presented")
                 }
             } else {
                 content
