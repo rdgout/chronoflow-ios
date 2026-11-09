@@ -43,12 +43,19 @@ nonisolated final class AuthSubtitleContrastTests: XCTestCase {
             let maximum = max(
                 -scroll.adjustedContentInset.top,
                 scroll.contentSize.height - scroll.bounds.height + scroll.adjustedContentInset.bottom)
-            let offset = min(maximum, scroll.contentOffset.y + initialSubtitle.minY - viewport.minY + lineHeight / 2)
+            let minimum = -scroll.adjustedContentInset.top
+            let requested = scroll.contentOffset.y + initialSubtitle.minY - viewport.minY + lineHeight / 2
+            let offset = min(maximum, max(minimum, requested))
             XCTAssertGreaterThan(offset, scroll.contentOffset.y, "Fixture must exercise scroll reveal")
             scroll.setContentOffset(CGPoint(x: scroll.contentOffset.x, y: offset), animated: false)
             try await host.settle()
+            let image = try await host.renderedImage()
+            let attachment = XCTAttachment(image: image)
+            attachment.name = "forgot-contrast-\(mode)-\(style.rawValue)"
+            attachment.lifetime = .keepAlways
+            add(attachment)
             let subtitle = try XCTUnwrap(frames[.subtitle])
-            let raster = try SnapshotRaster(png: XCTUnwrap(host.image().pngData()))
+            let raster = try SnapshotRaster(image: XCTUnwrap(image.cgImage))
             let color = UIColor(ColorToken.skyTitle.color).resolvedColor(
                 with: host.controller.traitCollection)
             let rgb = try XCTUnwrap(

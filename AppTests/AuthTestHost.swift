@@ -11,6 +11,7 @@ import XCTest
     let scale: CGFloat
     var prepareCapture: (UIWindow) -> Void = { _ in }
     private var revision = 0
+    private var checkedRenderRevision: Int?
     var window: UIWindow { container.window }
 
     init<V: View>(
@@ -60,6 +61,7 @@ import XCTest
     }
 
     func settleLayout(measuring frames: () -> [CGRect]) async throws {
+        window.makeKeyAndVisible()
         var previous: [CGRect] = []
         var matches = 0
         let deadline = ContinuousClock.now + .seconds(5)
@@ -73,6 +75,12 @@ import XCTest
             }
             matches = !current.isEmpty && current == previous ? matches + 1 : 0
             if matches == 2 {
+                if checkedRenderRevision != revision {
+                    let raster = try SnapshotRaster(image: XCTUnwrap(image().cgImage))
+                    XCTAssertTrue(WelcomeSnapshotPixels.hasVisibleVariation(raster.bytes))
+                    checkedRenderRevision = revision
+                }
+                XCTAssertTrue(window.isKeyWindow)
                 XCTAssertEqual(controller.view.bounds.size, window.bounds.size)
                 XCTAssertTrue(controller.safeAreaRegions.isEmpty)
                 XCTAssertEqual(controller.traitCollection.displayScale, scale)
@@ -133,6 +141,7 @@ import XCTest
     private enum CaptureFailure: Error {
         case didNotSettle(String)
         case fontRegistrationTimedOut
+        case hierarchyNotDrawn
     }
 
     func image() throws -> UIImage {
@@ -155,6 +164,25 @@ import XCTest
         return UIGraphicsImageRenderer(size: window.bounds.size, format: format).image { context in
             window.layer.render(in: context.cgContext)
         }
+    }
+
+    func renderedImage() async throws -> UIImage {
+        window.makeKeyAndVisible()
+        await withCheckedContinuation { continuation in
+            DispatchQueue.main.async { continuation.resume() }
+        }
+        layout()
+        CATransaction.flush()
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = scale
+        format.opaque = false
+        format.preferredRange = .standard
+        var drawn = false
+        let image = UIGraphicsImageRenderer(size: window.bounds.size, format: format).image { _ in
+            drawn = window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
+        }
+        guard drawn else { throw CaptureFailure.hierarchyNotDrawn }
+        return image
     }
 
     func close() { container.close() }

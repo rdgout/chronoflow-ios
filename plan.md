@@ -2098,7 +2098,7 @@ User decision 2026-11-06: implement these when the named states exist; this roun
 ## Hosted test repair follow-up (user, 2026-11-09)
 
 - [x] Keep Debug plan fixtures out of the Release readiness test build without exposing app seeds.
-- [ ] Restore key-window and visible-content guards at layout settlement; measure contrast from committed rendered content.
+- [x] Restore key-window and visible-content guards at layout settlement; measure contrast from committed rendered content.
 - [ ] Keep Step/Legend content within asymmetric horizontal safe areas.
 - [ ] Route committed unverified sessions after request cancellation and restore.
 - [ ] Restore cheap default Welcome self-comparisons and auth capture guards, without references.
