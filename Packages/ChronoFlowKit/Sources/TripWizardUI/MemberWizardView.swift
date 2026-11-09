@@ -234,8 +234,13 @@
     }
 
     func errorLine(_ text: String, identifier: String) -> some View {
-        Label(text, systemImage: "exclamationmark.circle").font(Typography.screenBody.font)
-            .foregroundStyle(ColorToken.destructive.color).accessibilityIdentifier(identifier)
+        Label {
+            Text(text)
+        } icon: {
+            Image(systemName: "exclamationmark.circle").accessibilityHidden(true)
+        }
+        .font(Typography.screenBody.font).foregroundStyle(ColorToken.destructive.color)
+        .accessibilityElement(children: .combine).accessibilityIdentifier(identifier)
     }
 
     extension View {
