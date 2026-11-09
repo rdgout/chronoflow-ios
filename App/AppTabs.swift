@@ -10,6 +10,10 @@ import TripWizard
 import TripWizardUI
 import UIKit
 
+#if DEBUG
+    import DataAccess
+#endif
+
 struct AppTabs: View {
     enum Tab: Hashable { case today, trips, settings }
     @Environment(\.locale) private var locale
@@ -146,10 +150,37 @@ struct AppTabs: View {
                 database: database, permit: permit,
                 isCurrent: { await native.controller.activeSession() == snapshot },
                 requestSync: { await native.sync?.requestSync() },
-                delete: { try await native.deleteAccount(password: $0, session: snapshot) },
-                security: { try await native.accountSecurity($0, session: snapshot) })
+                delete: { password in
+                    #if DEBUG
+                        if (UIApplication.shared.delegate as? AppDelegate)?.authServices?.authUITestEnabled == true,
+                            SettingsBoardCaptureFixture.state == "promptLocked"
+                        {
+                            throw DataFailure.throttled(retryAfterSeconds: 60, status: 429)
+                        }
+                    #endif
+                    try await native.deleteAccount(password: password, session: snapshot)
+                },
+                security: { change in
+                    #if DEBUG
+                        if (UIApplication.shared.delegate as? AppDelegate)?.authServices?.authUITestEnabled == true {
+                            try await SettingsBoardCaptureFixture.beforeSecurity()
+                        }
+                    #endif
+                    return try await native.accountSecurity(change, session: snapshot)
+                })
             settingsPages = pages
             pages.start()
+            #if DEBUG
+                let captureEnabled =
+                    (UIApplication.shared.delegate as? AppDelegate)?.authServices?.authUITestEnabled == true
+                SettingsBoardCaptureFixture.prepare(pages, enabled: captureEnabled)
+                if captureEnabled, SettingsBoardCaptureFixture.state == "planOffline",
+                    let source = await native.wizardDataSource(session: snapshot.session) as? DataAccess.MockDataSource
+                {
+                    await source.setOffline(true)
+                    try? await native.refreshNow()
+                }
+            #endif
             var clock: any PlanClock = SystemPlanClock()
             #if DEBUG
                 if ProcessInfo.processInfo.environment["CF_PLAN_TEST_FREEZE_CLOCK"] == "1",

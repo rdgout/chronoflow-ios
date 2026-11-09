@@ -606,11 +606,26 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(sum('uninstall' in c for c in self.commands), 1)
         self.assertEqual(len(commands), 3)
         serial = next(c for c in commands if c[c.index('-resultBundlePath') + 1].endswith('Debug-serial.xcresult'))
+        defaults = set(runner.selection('check', '17e'))
         for selector in runner.SERIAL_TESTS:
-            self.assertIn('-only-testing:' + selector, serial)
+            if selector in defaults:
+                self.assertIn('-only-testing:' + selector, serial)
         self.assertEqual(serial[serial.index('-parallel-testing-enabled') + 1], 'NO')
         self.assertTrue(any('-only-testing:AppTests/LaunchSnapshotTests' in c for c in commands))
         self.assertFalse(any('-only-testing:AppCoreTests/LaunchCoordinatorTests' in c for c in commands))
+
+    def test_settings_board_captures_are_opt_in_and_serialize_device_appearance(self):
+        selector = 'AppUITests/SettingsBoardCaptureTests'
+        self.assertEqual(runner.expand([selector]), [selector])
+        self.assertIn(selector, runner.SERIAL_TESTS)
+        for mode in ('check', 'test', 'runtime', 'snapshots', 'welcome', 'perf'):
+            self.assertNotIn(selector, runner.selection(mode, '17e'))
+        status, output = self.execute(mode='test', only=[selector])
+        self.assertEqual(status, 0, output)
+        commands = self.commands_for_tests()
+        self.assertEqual(len(commands), 1)
+        self.assertIn('-only-testing:' + selector, commands[0])
+        self.assertEqual(commands[0][commands[0].index('-parallel-testing-enabled') + 1], 'NO')
 
     def test_check_executes_all_phase9_hosted_suites_once_on_17e(self):
         status, output = self.execute(mode='check')
