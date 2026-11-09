@@ -1,6 +1,10 @@
 import CoreGraphics
 import SwiftUI
 
+#if canImport(UIKit)
+    import UIKit
+#endif
+
 extension TokenRGBA {
     nonisolated public var cgColor: CGColor {
         CGColor(
@@ -14,3 +18,12 @@ extension TokenRGBA {
 extension ColorToken {
     public var color: Color { Color(rawValue, bundle: .module) }
 }
+
+#if canImport(UIKit)
+    extension ColorToken {
+        public var uiColor: UIColor {
+            let name = rawValue
+            return UIColor { traits in UIColor(named: name, in: .module, compatibleWith: traits) ?? .tintColor }
+        }
+    }
+#endif
