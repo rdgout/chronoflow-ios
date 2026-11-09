@@ -163,6 +163,24 @@ import TripWizard
         try await database.close()
     }
 
+    @Test func mixedServerErrorsReturnToTheEarliestScreenInPathOrder() throws {
+        var form = try WizardForm(input: generationInput())
+        form.insertStop(stop, beforeDestinationOf: 0)
+        form.addReturn()
+        form.insertStop(second, beforeDestinationOf: 2)
+        for (paths, step) in [
+            (["legs.0.arriveLocal", "legs.2.toIata"], MemberWizardStep.outbound),
+            (["legs.1.departLocal", "legs.2.fromIata"], .outbound),
+            (["legs.1.toIata", "legs.2.departLocal"], .whereTo),
+            (["legs.0.toIata", "legs.2.toIata", "legs.1.departLocal"], .whereTo),
+            (["legs.2.toIata", "legs.3.arriveLocal"], .returnRoute),
+            (["legs.2.departLocal", "legs.3.arriveLocal"], .returnFlight),
+        ] {
+            let errors = Dictionary(uniqueKeysWithValues: paths.map { ($0, FieldMessage(key: "error")) })
+            #expect(WizardJourney.errorStep(errors, form: form) == step)
+        }
+    }
+
     @Test func laterCardOwnsChronologyErrorAndServerFieldsReturnToTheirEditors() throws {
         var form = try WizardForm(input: generationInput())
         form.insertStop(stop, beforeDestinationOf: 0)

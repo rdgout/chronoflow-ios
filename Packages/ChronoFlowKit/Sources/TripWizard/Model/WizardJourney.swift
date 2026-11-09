@@ -110,16 +110,16 @@ extension WizardForm {
 
 public enum WizardJourney {
     public static func errorStep(_ errors: [String: FieldMessage], form: WizardForm) -> MemberWizardStep {
-        for index in form.legs.indices {
-            let home = index >= form.returnBoundary
-            if errors.keys.contains(where: { $0 == "legs.\(index).fromIata" || $0 == "legs.\(index).toIata" }) {
-                return home ? .returnRoute : .whereTo
-            }
+        let routeErrors = form.legs.indices.filter { index in
+            errors.keys.contains { $0 == "legs.\(index).fromIata" || $0 == "legs.\(index).toIata" }
         }
+        if routeErrors.contains(where: { $0 < form.returnBoundary }) { return .whereTo }
         let outbound = errors.keys.contains { key in
             (0..<form.returnBoundary).contains { key.hasPrefix("legs.\($0).") }
         }
-        return form.end.kind == "return_legs" && !outbound ? .returnFlight : .outbound
+        if outbound { return .outbound }
+        if !routeErrors.isEmpty { return .returnRoute }
+        return form.end.kind == "return_legs" ? .returnFlight : .outbound
     }
 
     static var topFields: [String: String] {
