@@ -55,10 +55,12 @@ private struct PlanRefreshFeedback: ViewModifier {
     @ViewBuilder private func debugContent(_ content: Content) -> some View {
         #if DEBUG
             if ProcessInfo.processInfo.environment["CF_REFRESH_TEST_COUNTER"] == "1" {
-                content
-                    .accessibilityElement(children: .contain)
-                    .accessibilityIdentifier("refresh.debug.count")
-                    .accessibilityValue(Text(verbatim: String(model.debugRefreshCount)))
+                content.overlay(alignment: .bottomLeading) {
+                    Text(verbatim: String(model.debugRefreshCount))
+                        .font(.caption2).opacity(0.01).allowsHitTesting(false)
+                        .accessibilityIdentifier("refresh.debug.count")
+                        .accessibilityValue(Text(verbatim: String(model.debugRefreshCount)))
+                }
             } else {
                 content
             }
