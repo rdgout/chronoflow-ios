@@ -43,3 +43,8 @@ including the no-trailer commit rule, are inherited from `AGENTS.md`.
 
 Simulator `build-for-testing` uses `ARCHS=arm64 ONLY_ACTIVE_ARCH=YES` in Debug, Release and Perf.
 These runner command-line settings leave device builds and archives unchanged.
+
+After the foreground Debug build, Release/Perf build in a background queue under `nice -n 10`
+while Debug tests run. Each uses `build/DerivedData-Release` / `build/DerivedData-Perf`; Debug
+keeps `build/DerivedData`. All share `build/SourcePackages`. Each pass waits for its build;
+build failures still fail the run. `REUSE_BUILD=1` requires current products in these paths.

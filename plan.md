@@ -2179,3 +2179,4 @@ Main restoration validation: source comparison confirms the two methods and enti
 Continue on `test/fast-ui-tests`; UI-test launch-speed acceptance runs separately. No UI-test behavior changes, release stamps, persistent shards or default matrix in this round.
 
 - [x] 1. Build simulator Debug/Release/Perf for arm64 only; assert runner flags for every configuration. Device/archive settings stay unchanged.
+- [x] 2. Overlap low-priority Release/Perf builds with Debug tests using separate DerivedData and build futures; cover waiting, reuse and failure propagation in runner fixtures.

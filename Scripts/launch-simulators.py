@@ -1,5 +1,5 @@
 import argparse
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import Future, ThreadPoolExecutor
 from contextlib import contextmanager
 from dataclasses import dataclass
 import json
@@ -307,7 +307,8 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
                              'WizardCopyTests')},
  'WelcomeTests': {'logic': ('SmokeTests', 'WelcomeGeometryTests')}}
 SNAPSHOTS = ("AppTests/LaunchSnapshotTests", "AppTests/WelcomeSnapshotTests", "AppTests/WelcomeSnapshotGuardTests", "RenderTests/WelcomeRenderingTests", "AppTests/AuthSnapshotTests", "AppTests/TwoFactorSnapshotTests", "AppTests/ForgotPasswordSnapshotTests", "AppTests/ResetPasswordSnapshotTests", "AppTests/SignUpSnapshotTests", "AppTests/VerifyEmailSnapshotTests", "AppTests/AuthSnapshotGuardTests", "AppTests/TwoFactorCodeSnapshotGuardTests", "AppTests/TwoFactorRecoverySnapshotGuardTests", "AppTests/ForgotFormSnapshotGuardTests", "AppTests/ForgotFieldSnapshotGuardTests", "AppTests/ForgotThrottleSnapshotGuardTests", "AppTests/ForgotServerSnapshotGuardTests", "AppTests/ForgotOfflineSnapshotGuardTests", "AppTests/ForgotSentSnapshotGuardTests", "AppTests/StepSheetSnapshotTests", "AppTests/TodaySnapshotTests", "AppTests/TodayRowSnapshotTests", "AppTests/TripsSnapshotTests", "AppTests/TripPageSnapshotTests")
-XCODEBUILD_COMMON = ["xcodebuild", "-project", "ChronoFlow.xcodeproj", "-derivedDataPath", "build/DerivedData",
+XCODEBUILD_COMMON = ["xcodebuild", "-project", "ChronoFlow.xcodeproj",
+                     "-clonedSourcePackagesDirPath", "build/SourcePackages",
                      "-onlyUsePackageVersionsFromResolvedFile"]
 
 # Device-wide mutations must be registered here; launch/window-scoped traits are clone-safe.
@@ -779,13 +780,28 @@ def configurations(selected):
 
 def build_command(configuration):
     scheme = {"Debug": "ChronoFlow", "Release": "ReadinessRelease", "Perf": "Perf"}[configuration]
-    return XCODEBUILD_COMMON + ["-scheme", scheme, "-configuration", configuration]
+    derived_data = "build/DerivedData" + ("-" + configuration if configuration != "Debug" else "")
+    return XCODEBUILD_COMMON + ["-derivedDataPath", derived_data, "-scheme", scheme, "-configuration", configuration]
 
 
-def build(configuration):
-    return run(build_command(configuration) + ["-destination", "generic/platform=iOS Simulator", "ARCHS=arm64", "ONLY_ACTIVE_ARCH=YES"]
+def build(configuration, background=False):
+    return run((["nice", "-n", "10"] if background else []) + build_command(configuration) + ["-destination", "generic/platform=iOS Simulator", "ARCHS=arm64", "ONLY_ACTIVE_ARCH=YES"]
                + (["ENABLE_TESTABILITY=YES"] if configuration == "Release" else []) + ["build-for-testing"],
                log=ROOT / "build/test-results/build" / (configuration + ".log"))
+
+
+def build_configuration(configuration, results, background=False):
+    try:
+        build(configuration, background=background)
+        return True
+    except (subprocess.CalledProcessError, OSError) as error:
+        results.append(Result("build", configuration, False, str(error)))
+        return False
+
+
+def build_available(ready, configuration):
+    value = ready.get(configuration, False)
+    return value.result() if isinstance(value, Future) else value
 
 
 def test_command(destination, configuration, selected, bundle, workers=1, skipped=(), stream=None):
@@ -935,7 +951,7 @@ def test_device(destination, selected, mode, recording, ready, intro_order_check
     except (subprocess.CalledProcessError, OSError) as error:
         return [Result(destination.alias, suite, False, "Preparation: " + str(error)) for suite in selected]
     if intro_order_check:
-        if not ready.get("Debug"):
+        if not build_available(ready, "Debug"):
             return [Result(destination.alias, s, False, "Debug build unavailable") for s in selected]
         try:
             enumerate_intro_test(destination)
@@ -945,13 +961,13 @@ def test_device(destination, selected, mode, recording, ready, intro_order_check
             results += test_pass(destination, "Debug", selected, "order-" + order, intro_order=order)
         return results
     record_suites = recording_selection(selected, mode, recording) if recording and destination.alias == "17e" else []
-    if record_suites and ready.get("Debug"):
+    if record_suites and build_available(ready, "Debug"):
         results += test_pass(destination, "Debug", record_suites, "record", record=True)
         if any(r.detail.startswith("Test run timed out") for r in results):
             return results + [Result(destination.alias, s, False, "Not run after timeout")
                               for s in selected if s not in record_suites]
     for configuration, suites in configurations(selected).items():
-        if ready.get(configuration):
+        if build_available(ready, configuration):
             for part in split_passes(configuration, suites, workers):
                 results += test_pass(destination, configuration, part.selected, configuration + "-" + part.suffix,
                                      timing=timing, workers=part.workers, skipped=part.skipped)
@@ -994,24 +1010,24 @@ def main(mode="check", aliases=None, only=(), concurrency=None, reuse_build=Fals
             destinations.append(resolve(alias, devices))
         except (RuntimeError, KeyError) as error:
             results.append(Result(alias, "destination", False, str(error)))
-    ready = {}
-    for configuration in dict.fromkeys(c for alias in aliases for c in configurations(selections[alias])):
-        try:
-            if not reuse_build:
-                build(configuration)
-            ready[configuration] = True
-        except (subprocess.CalledProcessError, OSError) as error:
-            ready[configuration] = False
-            results.append(Result("build", configuration, False, str(error)))
+    required = list(dict.fromkeys(c for alias in aliases for c in configurations(selections[alias])))
+    ready = {c: True for c in required} if reuse_build else {}
+    if not reuse_build and "Debug" in required:
+        ready["Debug"] = build_configuration("Debug", results)
     recording = os.environ.get("SNAPSHOT_RECORD", "0")
     if recording not in ("0", "1", "launch", "all"):
         raise ValueError("SNAPSHOT_RECORD must be 0, 1, launch or all")
     budget = WorkerBudget(max(concurrency, max(workers.values())))
     observations = {d.alias: {} for d in destinations}
-    with ThreadPoolExecutor(max_workers=min(concurrency, len(destinations) or 1)) as pool:
-        futures = [pool.submit(budgeted_device, budget, workers[d.alias], d, selections[d.alias], mode, recording if recording != "0" else None, ready, intro_order_check, observations[d.alias]) for d in destinations]
-        for future in futures:
-            results.extend(future.result())
+    with ThreadPoolExecutor(max_workers=1) as builds:
+        if not reuse_build:
+            for configuration in required:
+                if configuration != "Debug":
+                    ready[configuration] = builds.submit(build_configuration, configuration, results, True)
+        with ThreadPoolExecutor(max_workers=min(concurrency, len(destinations) or 1)) as pool:
+            futures = [pool.submit(budgeted_device, budget, workers[d.alias], d, selections[d.alias], mode, recording if recording != "0" else None, ready, intro_order_check, observations[d.alias]) for d in destinations]
+            for future in futures:
+                results.extend(future.result())
     for alias, observation in observations.items():
         if observation:
             previous = timings["devices"].setdefault(alias, {})

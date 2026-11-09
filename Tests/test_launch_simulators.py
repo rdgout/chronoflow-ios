@@ -639,6 +639,48 @@ class RunnerTests(unittest.TestCase):
                 self.assertEqual(command[-1], 'build-for-testing')
         self.assertNotIn('ARCHS', (ROOT / 'project.yml').read_text())
 
+    def test_background_builds_have_isolated_products_and_lower_priority(self):
+        calls = []
+        with patch.dict(runner.build.__globals__, run=lambda command, **kw: calls.append(command)):
+            for configuration in ('Release', 'Perf'):
+                runner.build(configuration, background=True)
+                command = calls[-1]
+                self.assertEqual(command[:3], ['nice', '-n', '10'])
+                self.assertEqual(command[command.index('-derivedDataPath') + 1], 'build/DerivedData-' + configuration)
+                test = runner.test_command(runner.Destination('17e', 'device', 'Booted'), configuration,
+                                           runner.selectors('release' if configuration == 'Release' else 'perf'), Path('result'))
+                self.assertEqual(test[test.index('-derivedDataPath') + 1], 'build/DerivedData-' + configuration)
+                self.assertEqual(command[command.index('-clonedSourcePackagesDirPath') + 1], 'build/SourcePackages')
+        self.assertEqual(runner.build_command('Debug')[runner.build_command('Debug').index('-derivedDataPath') + 1], 'build/DerivedData')
+
+    def test_debug_tests_proceed_while_release_builds_and_release_waits(self):
+        building, debug_tested = threading.Event(), threading.Event()
+        original_build, original_pass = runner.build, runner.test_pass
+        def build(configuration, background=False):
+            if configuration == 'Release':
+                self.assertTrue(background)
+                building.set()
+                self.assertTrue(debug_tested.wait(2), 'Debug tests waited for Release build')
+            return original_build(configuration, background)
+        def test_pass(destination, configuration, *args, **kwargs):
+            if configuration == 'Debug':
+                self.assertTrue(building.wait(2))
+                debug_tested.set()
+            else:
+                self.assertTrue(debug_tested.is_set())
+            return original_pass(destination, configuration, *args, **kwargs)
+        with patch.dict(runner.main.__globals__, build=build, test_pass=test_pass):
+            status, output = self.execute(mode='check')
+        self.assertEqual(status, 0, output)
+
+    def test_background_build_failure_still_reports_failure_and_debug_results(self):
+        self.command_failure = lambda c: c[-1] == 'build-for-testing' and 'Release' in c
+        status, output = self.execute(mode='check')
+        self.assertEqual(status, 1)
+        self.assertIn('FAIL build Release', output)
+        self.assertIn('Release build unavailable', output)
+        self.assertIn('PASS 17e Debug-compare', output)
+
     def test_builds_debug_and_release_once_without_clean_or_reboot(self):
         status, output = self.execute()
         self.assertEqual(status, 0, output)
