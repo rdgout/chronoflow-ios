@@ -144,15 +144,35 @@ import XCTest
     }
 
     private static func scroll(containing element: XCUIElement, in app: XCUIApplication) -> XCUIElement {
+        let type = element.elementType
+        let identifier = element.identifier
         for containers in [app.scrollViews, app.collectionViews, app.tables] {
-            let container = containers.containing(.any, identifier: element.identifier).firstMatch
+            let container = containers.containing(type, identifier: identifier).firstMatch
             if container.exists { return container }
         }
         return scroll(in: app)
     }
 
     static func control(_ identifier: String, in app: XCUIApplication) -> XCUIElement {
-        scroll(in: app).descendants(matching: .any).matching(identifier: identifier).element
+        query(identifier, in: app).firstMatch
+    }
+
+    static func query(_ identifier: String, in scope: XCUIElement) -> XCUIElementQuery {
+        if [
+            "auth.brand", "auth.heading", "auth.subtitle", "auth.banner", "forgot.notice", "sign-up.consent",
+            "verify.countdown", "verify.sign-out-error",
+        ].contains(identifier) {
+            return scope.staticTexts.matching(identifier: identifier)
+        }
+        if identifier.hasSuffix(".visibility") { return scope.switches.matching(identifier: identifier) }
+        if identifier.hasSuffix(".password") || identifier.hasSuffix(".confirmation") {
+            let secure = scope.secureTextFields.matching(identifier: identifier)
+            return secure.firstMatch.exists ? secure : scope.textFields.matching(identifier: identifier)
+        }
+        if [".name", ".email", ".code", ".recovery_code"].contains(where: identifier.hasSuffix) {
+            return scope.textFields.matching(identifier: identifier)
+        }
+        return scope.buttons.matching(identifier: identifier)
     }
 
     static func viewport(

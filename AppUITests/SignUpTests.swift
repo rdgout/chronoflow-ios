@@ -1,9 +1,8 @@
 import XCTest
 
-nonisolated final class SignUpTests: XCTestCase {
+nonisolated final class SignUpTests: ScreenTestCase {
     @MainActor func testOfflineRegistrationShowsConnectionBanner() {
         let app = submitPrefilledSignUp(state: "offline", offline: true)
-        defer { app.terminate() }
         let banner = AuthUIFlow.control("auth.banner", in: app)
         XCTAssertTrue(banner.waitUntil(.exists, timeout: 6))
         AuthUIFlow.reveal(banner, in: app)
@@ -17,7 +16,6 @@ nonisolated final class SignUpTests: XCTestCase {
 
     @MainActor func testTakenEmailOffersTheDesignedSignInPath() {
         let app = submitPrefilledSignUp(state: "taken")
-        defer { app.terminate() }
         let banner = AuthUIFlow.control("auth.banner", in: app)
         XCTAssertTrue(banner.waitUntil(.exists, timeout: 6))
         XCTAssertTrue(banner.label.contains("There's already an account with this email."))
@@ -30,7 +28,6 @@ nonisolated final class SignUpTests: XCTestCase {
 
     @MainActor func testRegistrationToggleConsentAndUnverifiedGate() {
         let app = launchForgotApp()
-        defer { app.terminate() }
         openSignUp(app)
         fillSignUp(app, email: "new@example.com", submit: false)
         let toggle = app.switches["sign-up.visibility"]
@@ -48,7 +45,7 @@ nonisolated final class SignUpTests: XCTestCase {
     }
 
     @MainActor private func submitPrefilledSignUp(state: String, offline: Bool = false) -> XCUIApplication {
-        let app = XCUIApplication()
+        let app = ScreenTestApp.makeApplication()
         app.launchArguments = AuthUIFlow.arguments()
         app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
         app.launchEnvironment["CF_AUTH_TEST_AUDIT_SCREEN"] = "sign-up"
@@ -64,6 +61,16 @@ nonisolated final class SignUpTests: XCTestCase {
 }
 
 @MainActor func openSignUp(_ app: XCUIApplication) {
+    if app.launchEnvironment["CF_UI_TEST_PROFILE"] == "screen",
+        app.launchEnvironment["CF_AUTH_TEST_AUDIT_SCREEN"] == "sign-up"
+    {
+        XCTAssertTrue(
+            UIWait.until(timeout: 12) {
+                app.textFields["sign-up.name"].exists || app.textFields["sign-in.email"].exists
+                    || app.buttons["welcome.signIn"].exists
+            })
+        if app.textFields["sign-up.name"].exists { return }
+    }
     AuthUIFlow.openSignIn(app)
     AuthUIFlow.reveal(app.buttons["sign-in.signup"], in: app)
     app.buttons["sign-in.signup"].tap()

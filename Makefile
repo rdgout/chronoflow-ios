@@ -34,7 +34,7 @@ snapshots:
 	$(SIM_RUNNER) --no-generate --devices 17e --mode snapshots
 
 audits:
-	AUTH_AUDIT_FULL=$(or $(AUTH_AUDIT_FULL),1) TEST_RUN_TIMEOUT=$(or $(TEST_RUN_TIMEOUT),5400) $(SIM_RUNNER) --no-generate --devices 17e --only AppUITests/AuthAuditTests $(if $(filter 1,$(REUSE_BUILD)),--reuse-build,)
+	AUTH_AUDIT_FULL=$(or $(AUTH_AUDIT_FULL),1) TEST_RUN_TIMEOUT=$(or $(TEST_RUN_TIMEOUT),5400) $(SIM_RUNNER) --no-generate --devices 17e --only AppUITests/AuthAuditTests AppUITests/ForgotAuditTests AppUITests/ResetAuditTests AppUITests/SignUpAuditTests AppUITests/VerifyAuditTests $(if $(filter 1,$(REUSE_BUILD)),--reuse-build,)
 
 simulator-check:
 	$(SIM_RUNNER) --no-generate --devices 17e

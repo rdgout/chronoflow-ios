@@ -1,15 +1,14 @@
 import XCTest
 
-nonisolated final class TripsTests: XCTestCase {
+nonisolated final class TripsTests: ScreenTestCase {
     @MainActor func testTripsSectionsRefreshAndOpenOneTripRoute() throws {
         let app = try launchPlanAccount()
-        defer { app.terminate() }
         app.tabBars.buttons["My trips"].tap()
         let screen = app.scrollViews["trips.screen"]
         XCTAssertTrue(screen.waitUntil(.exists, timeout: 12))
         XCTAssertTrue(app.staticTexts["trips.section.active"].waitUntil(.exists, timeout: 6))
         screen.swipeDown()
-        let card = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "trip.")).firstMatch
+        let card = screen.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "trip.")).firstMatch
         XCTAssertTrue(card.waitUntil(.exists, timeout: 6))
         card.tap()
         XCTAssertTrue(app.scrollViews["trip.scroll"].waitUntil(.exists, timeout: 12))

@@ -3,7 +3,7 @@ import DesignSystem
 import UIKit
 import XCTest
 
-nonisolated final class AuthAuditTests: XCTestCase {
+nonisolated class AuthAuditCase: ScreenTestCase {
     @MainActor private func variants() -> [(String, XCUIDevice.Appearance, Bool)] {
         guard ProcessInfo.processInfo.environment["AUTH_AUDIT_FULL"] == "1" else {
             return [("en", .light, false)]
@@ -15,67 +15,14 @@ nonisolated final class AuthAuditTests: XCTestCase {
         ]
     }
 
-    @MainActor func testSignInAudit() async throws {
-        try await auditSignInOrTwoFactor(mode: 0)
-    }
-    @MainActor func testTwoFactorCodeAudit() async throws {
-        try await auditSignInOrTwoFactor(mode: 1)
-    }
-    @MainActor func testTwoFactorRecoveryAudit() async throws {
-        try await auditSignInOrTwoFactor(mode: 2)
-    }
-    @MainActor func testForgotFormAudit() async throws {
-        try await auditForgot(state: "form")
-    }
-    @MainActor func testForgotSentAudit() async throws {
-        try await auditForgot(state: "sent")
-    }
-    @MainActor func testForgotFieldAudit() async throws {
-        try await auditForgot(state: "field")
-    }
-    @MainActor func testForgotServerAudit() async throws {
-        try await auditForgot(state: "server")
-    }
-    @MainActor func testForgotThrottleAudit() async throws {
-        try await auditForgot(state: "throttle")
-    }
-    @MainActor func testForgotOfflineAudit() async throws {
-        try await auditForgot(state: "offline")
-    }
-
-    @MainActor func testResetFormAudit() async throws {
-        try await auditReset(state: "form")
-    }
-    @MainActor func testResetPasswordAudit() async throws {
-        try await auditReset(state: "password")
-    }
-    @MainActor func testResetConfirmationAudit() async throws {
-        try await auditReset(state: "confirmation")
-    }
-    @MainActor func testResetExpiredAudit() async throws {
-        try await auditReset(state: "expired")
-    }
-    @MainActor func testResetDoneAudit() async throws {
-        try await auditReset(state: "done")
-    }
-    @MainActor func testResetServerAudit() async throws {
-        try await auditReset(state: "server")
-    }
-    @MainActor func testResetThrottleAudit() async throws {
-        try await auditReset(state: "throttle")
-    }
-    @MainActor func testResetOfflineAudit() async throws {
-        try await auditReset(state: "offline")
-    }
-
-    @MainActor private func auditReset(state: String) async throws {
+    @MainActor fileprivate func auditReset(state: String) async throws {
         try await FontRegistry.register()
-        let previous = XCUIDevice.shared.appearance
-        defer { XCUIDevice.shared.appearance = previous }
         for (language, appearance, xxLarge) in variants() {
-            try DeviceAppearance.set(appearance)
-            let app = XCUIApplication()
-            app.launchArguments = AuthUIFlow.arguments(language: language, xxLarge: xxLarge)
+            let app = ScreenTestApp.makeApplication()
+            app.launchArguments =
+                AuthUIFlow.arguments(language: language, xxLarge: xxLarge) + [
+                    "-AppleInterfaceStyle", appearance == .dark ? "Dark" : "Light",
+                ]
             app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
             configureAudit(app, screen: "reset", state: state)
             if state == "expired" {
@@ -85,7 +32,6 @@ nonisolated final class AuthAuditTests: XCTestCase {
                 app.launchEnvironment["CF_AUTH_TEST_RESET_FAILURE"] = state
             }
             app.launchMeasured()
-            defer { app.terminate() }
             if state == "expired" {
                 XCTAssertTrue(app.textFields["forgot.email"].waitUntil(.exists, timeout: 12))
             } else {
@@ -115,52 +61,20 @@ nonisolated final class AuthAuditTests: XCTestCase {
         }
     }
 
-    @MainActor func testSignUpFormAudit() async throws {
-        try await auditSignUp(state: "form")
-    }
-    @MainActor func testSignUpEmptyAudit() async throws {
-        try await auditSignUp(state: "empty")
-    }
-    @MainActor func testSignUpEmailAudit() async throws {
-        try await auditSignUp(state: "email")
-    }
-    @MainActor func testSignUpTakenAudit() async throws {
-        try await auditSignUp(state: "taken")
-    }
-    @MainActor func testSignUpPasswordAudit() async throws {
-        try await auditSignUp(state: "password")
-    }
-    @MainActor func testSignUpConfirmationAudit() async throws {
-        try await auditSignUp(state: "confirmation")
-    }
-    @MainActor func testSignUpVisibleAudit() async throws {
-        try await auditSignUp(state: "visible")
-    }
-    @MainActor func testSignUpServerAudit() async throws {
-        try await auditSignUp(state: "server")
-    }
-    @MainActor func testSignUpThrottleAudit() async throws {
-        try await auditSignUp(state: "throttle")
-    }
-    @MainActor func testSignUpOfflineAudit() async throws {
-        try await auditSignUp(state: "offline")
-    }
-
-    @MainActor private func auditSignUp(state: String) async throws {
+    @MainActor fileprivate func auditSignUp(state: String) async throws {
         try await FontRegistry.register()
-        let previous = XCUIDevice.shared.appearance
-        defer { XCUIDevice.shared.appearance = previous }
         for (language, appearance, xxLarge) in variants() {
-            try DeviceAppearance.set(appearance)
-            let app = XCUIApplication()
-            app.launchArguments = AuthUIFlow.arguments(language: language, xxLarge: xxLarge)
+            let app = ScreenTestApp.makeApplication()
+            app.launchArguments =
+                AuthUIFlow.arguments(language: language, xxLarge: xxLarge) + [
+                    "-AppleInterfaceStyle", appearance == .dark ? "Dark" : "Light",
+                ]
             app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
             configureAudit(app, screen: "sign-up", state: state)
             if ["server", "throttle", "offline"].contains(state) {
                 app.launchEnvironment["CF_AUTH_TEST_SIGNUP_FAILURE"] = state
             }
             app.launchMeasured()
-            defer { app.terminate() }
             openSignUp(app)
             if state == "visible" {
                 AuthUIFlow.reveal(app.switches["sign-up.visibility"], in: app)
@@ -178,46 +92,14 @@ nonisolated final class AuthAuditTests: XCTestCase {
         }
     }
 
-    @MainActor func testVerifyWaitingAudit() async throws {
-        try await auditVerify(state: "waiting")
-    }
-    @MainActor func testVerifyCountdownAudit() async throws {
-        try await auditVerify(state: "countdown")
-    }
-    @MainActor func testVerifyFailedAudit() async throws {
-        try await auditVerify(state: "failed")
-    }
-    @MainActor func testVerifyServerAudit() async throws {
-        try await auditVerify(state: "server")
-    }
-    @MainActor func testVerifyThrottleAudit() async throws {
-        try await auditVerify(state: "throttle")
-    }
-    @MainActor func testVerifyOfflineAudit() async throws {
-        try await auditVerify(state: "offline")
-    }
-    @MainActor func testVerifySignOutErrorAudit() async throws {
-        try await auditVerify(state: "signOutError")
-    }
-
-    @MainActor func testVerifyFailedServerAudit() async throws {
-        try await auditVerify(state: "failedServer")
-    }
-    @MainActor func testVerifyFailedThrottleAudit() async throws {
-        try await auditVerify(state: "failedThrottle")
-    }
-    @MainActor func testVerifyFailedOfflineAudit() async throws {
-        try await auditVerify(state: "failedOffline")
-    }
-
-    @MainActor private func auditVerify(state: String) async throws {
+    @MainActor fileprivate func auditVerify(state: String) async throws {
         try await FontRegistry.register()
-        let previous = XCUIDevice.shared.appearance
-        defer { XCUIDevice.shared.appearance = previous }
         for (language, appearance, xxLarge) in variants() {
-            try DeviceAppearance.set(appearance)
-            let app = XCUIApplication()
-            app.launchArguments = AuthUIFlow.arguments(language: language, xxLarge: xxLarge)
+            let app = ScreenTestApp.makeApplication()
+            app.launchArguments =
+                AuthUIFlow.arguments(language: language, xxLarge: xxLarge) + [
+                    "-AppleInterfaceStyle", appearance == .dark ? "Dark" : "Light",
+                ]
             app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
             app.launchEnvironment["CF_AUTH_TEST_VERIFY_STATE"] = state
             app.launchEnvironment["CF_AUTH_TEST_UNVERIFIED"] = "1"
@@ -225,7 +107,6 @@ nonisolated final class AuthAuditTests: XCTestCase {
                 app.launchEnvironment["CF_AUTH_TEST_LINK"] = tamperedVerificationURL()
             }
             AuthUIFlow.launchSignedIn(app, walkthroughSeen: true)
-            defer { app.terminate() }
             let first = app.buttons[state.hasPrefix("failed") ? "verify.retry" : "verify.open-email"]
             XCTAssertTrue(first.waitUntil(.exists, timeout: 12))
             AuthUIFlow.waitUntilEnabled(first)
@@ -265,19 +146,17 @@ nonisolated final class AuthAuditTests: XCTestCase {
         }
     }
 
-    @MainActor private func auditSignInOrTwoFactor(mode: Int) async throws {
+    @MainActor fileprivate func auditSignInOrTwoFactor(mode: Int) async throws {
         try await FontRegistry.register()
-        let device = XCUIDevice.shared
-        let previous = device.appearance
-        defer { device.appearance = previous }
         for (language, appearance, xxLarge) in variants() {
-            try DeviceAppearance.set(appearance)
-            let app = XCUIApplication()
-            app.launchArguments = AuthUIFlow.arguments(language: language, xxLarge: xxLarge)
+            let app = ScreenTestApp.makeApplication()
+            app.launchArguments =
+                AuthUIFlow.arguments(language: language, xxLarge: xxLarge) + [
+                    "-AppleInterfaceStyle", appearance == .dark ? "Dark" : "Light",
+                ]
             app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
-            if mode > 0 { configureAudit(app, screen: "two-factor", state: "form") }
+            configureAudit(app, screen: mode > 0 ? "two-factor" : "sign-in", state: "form")
             app.launchMeasured()
-            defer { app.terminate() }
             if mode == 0 { AuthUIFlow.openSignIn(app) }
             if mode > 0 {
                 XCTAssertTrue(app.textFields["two-factor.code"].waitUntil(.exists, timeout: 12))
@@ -305,16 +184,12 @@ nonisolated final class AuthAuditTests: XCTestCase {
         }
     }
 
-    @MainActor private func auditForgot(state: String) async throws {
+    @MainActor fileprivate func auditForgot(state: String) async throws {
         try await FontRegistry.register()
-        let device = XCUIDevice.shared
-        let previous = device.appearance
-        defer { device.appearance = previous }
         for (language, appearance, xxLarge) in variants() {
-            try DeviceAppearance.set(appearance)
             let app = launchForgotApp(
-                language: language, xxLarge: xxLarge, failure: state, offline: state == "offline")
-            defer { app.terminate() }
+                language: language, xxLarge: xxLarge, failure: state, offline: state == "offline",
+                appearance: appearance, seedScreen: true)
             openForgot(app)
             if state != "form" {
                 let field = app.textFields["forgot.email"]
@@ -380,12 +255,18 @@ nonisolated final class AuthAuditTests: XCTestCase {
         let scroll = AuthUIFlow.scroll(in: app)
         var controls: [String: XCUIElement] = [:]
         for identifier in identifiers {
-            let matches = scroll.descendants(matching: .any).matching(identifier: identifier)
-            guard matches.firstMatch.waitUntil(.exists, timeout: 3), matches.count == 1 else {
-                XCTFail("Expected one accessibility element for \(identifier); found \(matches.count)")
+            let matches = AuthUIFlow.query(identifier, in: scroll)
+            let element = matches.firstMatch
+            guard element.waitUntil(.exists, timeout: 3) else {
+                XCTFail("Missing accessibility element for \(identifier)")
                 return
             }
-            controls[identifier] = matches.element
+            let count = matches.count
+            guard count == 1 else {
+                XCTFail("Expected one accessibility element for \(identifier); found \(count)")
+                return
+            }
+            controls[identifier] = element
         }
         let initialFrames = controls.mapValues(\.frame)
         let ordered = identifiers.sorted { initialFrames[$0]!.minY < initialFrames[$1]!.minY }
@@ -694,4 +575,130 @@ nonisolated final class AuthAuditTests: XCTestCase {
         )
     }
 
+}
+
+nonisolated final class AuthAuditTests: AuthAuditCase {
+    @MainActor func testSignInAudit() async throws {
+        try await auditSignInOrTwoFactor(mode: 0)
+    }
+    @MainActor func testTwoFactorCodeAudit() async throws {
+        try await auditSignInOrTwoFactor(mode: 1)
+    }
+    @MainActor func testTwoFactorRecoveryAudit() async throws {
+        try await auditSignInOrTwoFactor(mode: 2)
+    }
+}
+
+nonisolated final class ForgotAuditTests: AuthAuditCase {
+    @MainActor func testForgotFormAudit() async throws {
+        try await auditForgot(state: "form")
+    }
+    @MainActor func testForgotSentAudit() async throws {
+        try await auditForgot(state: "sent")
+    }
+    @MainActor func testForgotFieldAudit() async throws {
+        try await auditForgot(state: "field")
+    }
+    @MainActor func testForgotServerAudit() async throws {
+        try await auditForgot(state: "server")
+    }
+    @MainActor func testForgotThrottleAudit() async throws {
+        try await auditForgot(state: "throttle")
+    }
+    @MainActor func testForgotOfflineAudit() async throws {
+        try await auditForgot(state: "offline")
+    }
+}
+
+nonisolated final class ResetAuditTests: AuthAuditCase {
+    @MainActor func testResetFormAudit() async throws {
+        try await auditReset(state: "form")
+    }
+    @MainActor func testResetPasswordAudit() async throws {
+        try await auditReset(state: "password")
+    }
+    @MainActor func testResetConfirmationAudit() async throws {
+        try await auditReset(state: "confirmation")
+    }
+    @MainActor func testResetExpiredAudit() async throws {
+        try await auditReset(state: "expired")
+    }
+    @MainActor func testResetDoneAudit() async throws {
+        try await auditReset(state: "done")
+    }
+    @MainActor func testResetServerAudit() async throws {
+        try await auditReset(state: "server")
+    }
+    @MainActor func testResetThrottleAudit() async throws {
+        try await auditReset(state: "throttle")
+    }
+    @MainActor func testResetOfflineAudit() async throws {
+        try await auditReset(state: "offline")
+    }
+}
+
+nonisolated final class SignUpAuditTests: AuthAuditCase {
+    @MainActor func testSignUpFormAudit() async throws {
+        try await auditSignUp(state: "form")
+    }
+    @MainActor func testSignUpEmptyAudit() async throws {
+        try await auditSignUp(state: "empty")
+    }
+    @MainActor func testSignUpEmailAudit() async throws {
+        try await auditSignUp(state: "email")
+    }
+    @MainActor func testSignUpTakenAudit() async throws {
+        try await auditSignUp(state: "taken")
+    }
+    @MainActor func testSignUpPasswordAudit() async throws {
+        try await auditSignUp(state: "password")
+    }
+    @MainActor func testSignUpConfirmationAudit() async throws {
+        try await auditSignUp(state: "confirmation")
+    }
+    @MainActor func testSignUpVisibleAudit() async throws {
+        try await auditSignUp(state: "visible")
+    }
+    @MainActor func testSignUpServerAudit() async throws {
+        try await auditSignUp(state: "server")
+    }
+    @MainActor func testSignUpThrottleAudit() async throws {
+        try await auditSignUp(state: "throttle")
+    }
+    @MainActor func testSignUpOfflineAudit() async throws {
+        try await auditSignUp(state: "offline")
+    }
+}
+
+nonisolated final class VerifyAuditTests: AuthAuditCase {
+    @MainActor func testVerifyWaitingAudit() async throws {
+        try await auditVerify(state: "waiting")
+    }
+    @MainActor func testVerifyCountdownAudit() async throws {
+        try await auditVerify(state: "countdown")
+    }
+    @MainActor func testVerifyFailedAudit() async throws {
+        try await auditVerify(state: "failed")
+    }
+    @MainActor func testVerifyServerAudit() async throws {
+        try await auditVerify(state: "server")
+    }
+    @MainActor func testVerifyThrottleAudit() async throws {
+        try await auditVerify(state: "throttle")
+    }
+    @MainActor func testVerifyOfflineAudit() async throws {
+        try await auditVerify(state: "offline")
+    }
+    @MainActor func testVerifySignOutErrorAudit() async throws {
+        try await auditVerify(state: "signOutError")
+    }
+    @MainActor func testVerifyFailedServerAudit() async throws {
+        try await auditVerify(state: "failedServer")
+    }
+    @MainActor func testVerifyFailedThrottleAudit() async throws {
+        try await auditVerify(state: "failedThrottle")
+    }
+    @MainActor func testVerifyFailedOfflineAudit() async throws {
+        try await auditVerify(state: "failedOffline")
+    }
 }

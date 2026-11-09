@@ -1,9 +1,8 @@
 import XCTest
 
-nonisolated final class AccountRecoveryTests: XCTestCase {
+nonisolated final class AccountRecoveryTests: ScreenTestCase {
     @MainActor func testSecondAccountConsumesItsOwnMailAfterTheFirstAccountIsWiped() {
         let app = launchPrefilledSignUpApp()
-        defer { app.terminate() }
         submitSignUp(app)
         let different = app.buttons["verify.different-email"]
         XCTAssertTrue(
@@ -37,7 +36,6 @@ nonisolated final class AccountRecoveryTests: XCTestCase {
 
     @MainActor func testUnverifiedDifferentEmailReturnsToSignIn() {
         let app = launchPrefilledSignUpApp()
-        defer { app.terminate() }
         submitSignUp(app)
         let different = app.buttons["verify.different-email"]
         XCTAssertTrue(
@@ -52,13 +50,12 @@ nonisolated final class AccountRecoveryTests: XCTestCase {
         XCTAssertFalse(app.scrollViews["verify.scroll"].exists)
     }
     @MainActor func testTamperedLinkOpensFailedScreen() {
-        let app = XCUIApplication()
+        let app = ScreenTestApp.makeApplication()
         app.launchArguments = AuthUIFlow.arguments()
         app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
         app.launchEnvironment["CF_AUTH_TEST_UNVERIFIED"] = "1"
         app.launchEnvironment["CF_AUTH_TEST_LINK"] = tamperedVerificationURL()
         AuthUIFlow.launchSignedIn(app, walkthroughSeen: true)
-        defer { app.terminate() }
         XCTAssertTrue(
             app.buttons["verify.retry"].waitUntil(.exists, timeout: 12),
             "Expected verify.retry after authenticating the account bound to the tampered link")

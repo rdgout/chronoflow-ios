@@ -2,7 +2,7 @@ import DesignSystem
 import UIKit
 import XCTest
 
-nonisolated final class PlanAuditTests: XCTestCase {
+nonisolated final class PlanAuditTests: ScreenTestCase {
     override func setUp() {
         super.setUp()
         executionTimeAllowance = 120
@@ -16,7 +16,7 @@ nonisolated final class PlanAuditTests: XCTestCase {
             _ = try UIWait.stableFrames(
                 [app.scrollViews["today.screen"], progress, app.tabBars.firstMatch], timeout: 8
             )
-            XCTAssertEqual(app.descendants(matching: .any).matching(identifier: "today.progress").count, 1)
+            XCTAssertEqual(app.staticTexts.matching(identifier: "today.progress").count, 1)
             XCTAssertFalse(app.buttons["today.progress"].exists)
         }
     }
@@ -37,18 +37,24 @@ nonisolated final class PlanAuditTests: XCTestCase {
     }
     @MainActor func testStepSheetPrimaryState() async throws {
         try await audit { app in
-            let row = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "today.step.actionable."))
-                .firstMatch
+            let row = app.scrollViews["today.screen"].buttons.matching(
+                NSPredicate(format: "identifier BEGINSWITH %@", "today.step.actionable.")
+            )
+            .firstMatch
             XCTAssertTrue(row.waitUntil(.exists, timeout: 12))
             AuthUIFlow.reveal(row, in: app, scroll: app.scrollViews["today.screen"])
             row.tap()
             let sheet = app.scrollViews["step.sheet"]
             XCTAssertTrue(sheet.waitUntil(.exists, timeout: 4), app.debugDescription)
-            let title = app.staticTexts.matching(NSPredicate(format: "identifier ENDSWITH %@", "|step.title"))
-                .firstMatch
-            let time = app.staticTexts.matching(NSPredicate(format: "identifier ENDSWITH %@", "|step.time")).firstMatch
-            let footer = app.staticTexts.matching(NSPredicate(format: "identifier ENDSWITH %@", "|step.footer"))
-                .firstMatch
+            let title = app.staticTexts[
+                Typography.screenCardTitle.planTextIdentifier(color: .foreground, context: "step.title")
+            ].firstMatch
+            let time = app.staticTexts[
+                Typography.screenBody.planTextIdentifier(color: .mutedForeground, context: "step.time")
+            ].firstMatch
+            let footer = app.staticTexts[
+                Typography.screenMeta.planTextIdentifier(color: .mutedForeground, context: "step.footer")
+            ].firstMatch
             // The inset medium sheet scales its content; audit the native, unscaled large reading position.
             _ = try UIWait.stableFrames([sheet, title], timeout: 8)
             let origin = app.coordinate(withNormalizedOffset: .zero)
@@ -74,11 +80,9 @@ nonisolated final class PlanAuditTests: XCTestCase {
         legend: Bool = false, emptyTrips: Bool = false, _ navigate: (XCUIApplication) throws -> Void
     ) async throws {
         try await FontRegistry.register()
-        let appearance = XCUIDevice.shared.appearance
-        defer { XCUIDevice.shared.appearance = appearance }
-        try DeviceAppearance.set(.light)
-        let app = try launchPlanAccount(presentLegend: legend, freezePlanClock: true, emptyTrips: emptyTrips)
-        defer { app.terminate() }
+        let app = try launchPlanAccount(
+            presentLegend: legend, freezePlanClock: true, emptyTrips: emptyTrips, appearance: .light
+        )
         try navigate(app)
         let scene = AuditScene(app: app)
         _ = try UIWait.stableFrames([scene.content], timeout: 8)
@@ -133,8 +137,8 @@ nonisolated final class PlanAuditTests: XCTestCase {
         let tabBar: XCUIElement?
 
         init(app: XCUIApplication) {
-            let legend = app.descendants(matching: .any).matching(identifier: "legend.sheet").firstMatch
-            let step = app.descendants(matching: .any).matching(identifier: "step.sheet").firstMatch
+            let legend = app.scrollViews.matching(identifier: "legend.sheet").firstMatch
+            let step = app.scrollViews.matching(identifier: "step.sheet").firstMatch
             if legend.exists {
                 content = legend
                 navigation = app.navigationBars["What the steps mean"]

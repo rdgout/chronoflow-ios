@@ -169,13 +169,11 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
     }
 
-    private var usesFastUITestLaunch: Bool {
-        #if DEBUG
+    #if DEBUG
+        private var usesFastUITestLaunch: Bool {
             AuthUITestConfiguration(environment: UITestRuntime.environment)?.fastLaunch == true
-        #else
-            false
-        #endif
-    }
+        }
+    #endif
 
     private func configurationLoader() -> @Sendable () async throws -> (AppServices, URL?) {
         if let serviceConfigurationFactory { return serviceConfigurationFactory }
@@ -260,7 +258,9 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 }
                 uiTestNonce = command.nonce
                 moonAnchorStore = MoonAnchorStore()
-                await UITestSessionFixture.route(native: nativeSession, navigator: navigator)
+                await UITestSessionFixture.route(native: nativeSession, navigator: navigator) { epoch in
+                    await (UIApplication.shared.delegate as? AppDelegate)?.verificationRequired(epoch: epoch)
+                }
                 UITestTimeline.record("session-ready")
                 mountRoot(on: windowScene)
             } catch {
@@ -276,6 +276,11 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     #endif
 
     private func startReadiness(on windowScene: UIWindowScene, arguments: LaunchArguments) {
+        #if DEBUG
+            let injectedReadiness = arguments.usesInjectedReadiness && !usesFastUITestLaunch
+        #else
+            let injectedReadiness = arguments.usesInjectedReadiness
+        #endif
         let clock = MediaLaunchClock(t0: overlayController?.launchScene.t0 ?? CACurrentMediaTime())
         let safe = overlayController?.view.safeAreaInsets ?? windowScene.keyWindow?.safeAreaInsets ?? .zero
         let size = overlayController?.launchScene.size ?? windowScene.coordinateSpace.bounds.size
@@ -284,7 +289,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             rowHeight: LaunchArguments.fallbackRowHeight(compatibleWith: windowScene.traitCollection))
         if let source = readinessFactory?(arguments, clock) {
             runReadiness(source, on: windowScene, clock: clock, fallback: fallback)
-        } else if arguments.usesInjectedReadiness && !usesFastUITestLaunch {
+        } else if injectedReadiness {
             runReadiness(
                 StubReadiness(configuration: arguments.readiness, store: KeychainSessionStore(), clock: clock),
                 on: windowScene, clock: clock, fallback: fallback)
@@ -322,7 +327,10 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                     }
                     #if DEBUG
                         if configuration.0.fastUITestLaunch {
-                            await UITestSessionFixture.route(native: nativeSession, navigator: navigator)
+                            await UITestSessionFixture.route(native: nativeSession, navigator: navigator) { epoch in
+                                await (UIApplication.shared.delegate as? AppDelegate)?.verificationRequired(
+                                    epoch: epoch)
+                            }
                             UITestTimeline.record("session-ready")
                             finishLaunch()
                             mountRoot(on: windowScene)
@@ -450,11 +458,17 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 }
                 #if DEBUG
                     if let test = AuthUITestConfiguration(environment: UITestRuntime.environment),
-                        test.auditScreen == "two-factor",
-                        let model = app?.authServices?.model
+                        let auth = app?.authServices
                     {
-                        navigator.navigate(to: .signIn)
-                        await test.prepareChallenge(model)
+                        if test.auditScreen == "two-factor" {
+                            navigator.navigate(to: .signIn)
+                            await test.prepareChallenge(auth.model)
+                        } else {
+                            do { try await auth.prepareUITestRoute(test, navigator: navigator) } catch {
+                                serviceFailure = error
+                                UITestTimeline.record("seed-route-failed")
+                            }
+                        }
                     }
                     if app?.authServices?.authUITestEnabled == true,
                         let value = UITestRuntime.environment["CF_AUTH_TEST_LINK"],

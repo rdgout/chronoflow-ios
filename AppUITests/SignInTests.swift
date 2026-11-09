@@ -1,11 +1,10 @@
 import XCTest
 
-nonisolated final class SignInTests: XCTestCase {
+nonisolated final class SignInTests: ScreenTestCase {
     @MainActor func testWelcomeBackGuestAndAuthLinkSeams() throws {
-        let app = XCUIApplication()
+        let app = ScreenTestApp.makeApplication()
         app.launchArguments = ["-cf.session", "out", "-cf.reduceMotion"]
         app.launchMeasured()
-        defer { app.terminate() }
         openSignIn(app)
         reveal(app.buttons["auth.back"], app)
         app.buttons["auth.back"].tap()
@@ -28,10 +27,9 @@ nonisolated final class SignInTests: XCTestCase {
         XCTAssertFalse(app.images["launch.opening"].exists)
     }
     @MainActor func testReturnChainKeyboardSubmitAndPasswordClearing() throws {
-        let app = XCUIApplication()
+        let app = ScreenTestApp.makeApplication()
         app.launchArguments = ["-cf.session", "out", "-cf.reduceMotion"]
         app.launchMeasured()
-        defer { app.terminate() }
         openSignIn(app)
         let email = app.textFields["sign-in.email"]
         reveal(email, app)
@@ -45,20 +43,19 @@ nonisolated final class SignInTests: XCTestCase {
         let frames = try UIWait.keyboardFrames(in: app, including: [submit])
         XCTAssertLessThanOrEqual(frames[2].maxY, frames[1].minY)
         password.typeText("\n")
-        XCTAssertTrue(app.descendants(matching: .any)["auth.banner"].waitUntil(.exists, timeout: 5))
+        XCTAssertTrue(app.staticTexts["auth.banner"].waitUntil(.exists, timeout: 5))
         XCTAssertFalse((password.value as? String ?? "").contains("•"))
         XCTAssertEqual(email.value as? String, "test@example.com")
     }
     @MainActor func testMockPasskeyFailureUsesDesignedBannerWithoutSystemPrompt() {
-        let app = XCUIApplication()
+        let app = ScreenTestApp.makeApplication()
         app.launchArguments = ["-cf.session", "out", "-cf.reduceMotion"]
         app.launchMeasured()
-        defer { app.terminate() }
         openSignIn(app)
         let passkey = app.buttons["sign-in.passkey"]
         reveal(passkey, app)
         passkey.tap()
-        XCTAssertTrue(app.descendants(matching: .any)["auth.banner"].waitUntil(.exists, timeout: 5))
+        XCTAssertTrue(app.staticTexts["auth.banner"].waitUntil(.exists, timeout: 5))
         XCTAssertEqual(app.sheets.count, 0)
         XCTAssertTrue(app.textFields["sign-in.email"].isEnabled)
     }

@@ -21,10 +21,13 @@
                 guard let index = values.firstIndex(of: key), values.indices.contains(index + 1) else { return nil }
                 return values[index + 1]
             }
-            return ["-AppleLanguages", "-AppleLocale", "-AppleInterfaceStyle", "-UIPreferredContentSizeCategoryName"]
-                .allSatisfy {
-                    value($0, in: arguments) == value($0, in: processArguments)
-                }
+            return [
+                "-AppleLanguages", "-AppleLocale", "-AppleInterfaceStyle", "-UIPreferredContentSizeCategoryName",
+                "-cf.settings.language", "-cf.settings.theme",
+            ]
+            .allSatisfy {
+                value($0, in: arguments) == value($0, in: processArguments)
+            }
         }
 
         public func url() throws -> URL {

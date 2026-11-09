@@ -1,6 +1,6 @@
 import XCTest
 
-nonisolated final class WalkthroughTests: XCTestCase {
+nonisolated final class WalkthroughTests: ScreenTestCase {
     override func setUp() {
         super.setUp()
         continueAfterFailure = false
@@ -9,7 +9,6 @@ nonisolated final class WalkthroughTests: XCTestCase {
 
     @MainActor func testSeededWalkthroughSkipOpensToday() {
         let app = launch()
-        defer { app.terminate() }
         assertPage(1, title: "Your plan on one timeline", in: app)
         let skip = app.buttons["walkthrough.skip"]
         XCTAssertTrue(skip.isHittable)
@@ -19,7 +18,6 @@ nonisolated final class WalkthroughTests: XCTestCase {
 
     @MainActor func testSeededWalkthroughNextNextDoneInDutchAtXXLarge() {
         let app = launch(language: "nl", xxLarge: true)
-        defer { app.terminate() }
         assertPage(1, title: "Je plan op één tijdlijn", in: app, language: "nl")
         app.buttons["walkthrough.next"].tap()
         assertPage(2, title: "Herken elke stap in één oogopslag", in: app, language: "nl")
@@ -32,7 +30,7 @@ nonisolated final class WalkthroughTests: XCTestCase {
     }
 
     @MainActor private func launch(language: String = "en", xxLarge: Bool = false) -> XCUIApplication {
-        let app = XCUIApplication()
+        let app = ScreenTestApp.makeApplication()
         app.launchArguments = AuthUIFlow.arguments(language: language, xxLarge: xxLarge)
         app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
         app.launchEnvironment["CF_WALKTHROUGH_TEST_PENDING"] = "1"

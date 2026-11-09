@@ -2,12 +2,14 @@ import XCTest
 
 @MainActor func launchPlanAccount(
     presentLegend: Bool = false, freezePlanClock: Bool = false,
-    updateTripOnRefresh: Bool = false, emptyTrips: Bool = false, refreshCounter: Bool = false
+    updateTripOnRefresh: Bool = false, emptyTrips: Bool = false, refreshCounter: Bool = false,
+    appearance: XCUIDevice.Appearance? = nil
 ) throws -> XCUIApplication {
-    let app = XCUIApplication()
+    let app = ScreenTestApp.makeApplication()
     app.launchArguments = AuthUIFlow.arguments()
     app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
     app.launchEnvironment["CF_AUTH_TEST_WALKTHROUGH_SEEN"] = "1"
+    if let appearance { app.launchArguments += ["-AppleInterfaceStyle", appearance == .dark ? "Dark" : "Light"] }
     if presentLegend { app.launchEnvironment["CF_PLAN_TEST_SHEET"] = "legend" }
     if freezePlanClock { app.launchEnvironment["CF_PLAN_TEST_FREEZE_CLOCK"] = "1" }
     if updateTripOnRefresh { app.launchEnvironment["CF_REFRESH_TEST_UPDATE_TRIP"] = "1" }
@@ -30,10 +32,9 @@ import XCTest
     return app
 }
 
-nonisolated final class TodayTests: XCTestCase {
+nonisolated final class TodayTests: ScreenTestCase {
     @MainActor func testTodayOpensTheTripRouteAndReturnsToItsRows() throws {
         let app = try launchPlanAccount()
-        defer { app.terminate() }
         let card = app.buttons["today.trip"]
         XCTAssertTrue(card.waitUntil(.exists, timeout: 12))
         card.tap()
@@ -44,12 +45,13 @@ nonisolated final class TodayTests: XCTestCase {
     }
 }
 
-nonisolated final class StepSheetTests: XCTestCase {
+nonisolated final class StepSheetTests: ScreenTestCase {
     @MainActor func testTodayStepButtonsShowDoneUndoAndSkipStates() throws {
         let app = try launchPlanAccount()
-        defer { app.terminate() }
-        let row = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "today.step.actionable."))
-            .firstMatch
+        let row = app.scrollViews["today.screen"].buttons.matching(
+            NSPredicate(format: "identifier BEGINSWITH %@", "today.step.actionable.")
+        )
+        .firstMatch
         XCTAssertTrue(row.waitUntil(.exists, timeout: 12))
         AuthUIFlow.reveal(row, in: app, scroll: app.scrollViews["today.screen"])
         row.tap()
@@ -68,10 +70,9 @@ nonisolated final class StepSheetTests: XCTestCase {
     }
 }
 
-nonisolated final class LegendTests: XCTestCase {
+nonisolated final class LegendTests: ScreenTestCase {
     @MainActor func testLegendCanScrollAndCloseToToday() throws {
         let app = try launchPlanAccount(presentLegend: true)
-        defer { app.terminate() }
         app.scrollViews["legend.sheet"].swipeUp()
         app.buttons["Close"].tap()
         XCTAssertTrue(app.scrollViews["today.screen"].waitUntil(.exists, timeout: 4))

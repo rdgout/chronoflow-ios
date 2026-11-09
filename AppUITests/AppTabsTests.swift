@@ -1,16 +1,15 @@
 import DesignSystem
 import XCTest
 
-nonisolated final class AppTabsTests: XCTestCase {
+nonisolated final class AppTabsTests: ScreenTestCase {
     @MainActor func testSignedInAccountCanSwitchAllThreeTabs() throws {
         let app = try launchPlanAccount(freezePlanClock: true)
-        defer { app.terminate() }
         try assertTabs(in: app, selected: "Today")
         capture(app, name: "today-tabs")
         let progress = app.staticTexts["today.progress"]
         XCTAssertTrue(progress.waitUntil(.exists, timeout: 4), app.debugDescription)
         _ = try UIWait.stableFrames([progress], timeout: 4)
-        XCTAssertEqual(app.descendants(matching: .any).matching(identifier: "today.progress").count, 1)
+        XCTAssertEqual(app.staticTexts.matching(identifier: "today.progress").count, 1)
         XCTAssertFalse(app.buttons["today.progress"].exists)
         XCTAssertEqual(progress.label, "0 of 3 done")
         try tapTab("My trips", in: app)
@@ -19,7 +18,7 @@ nonisolated final class AppTabsTests: XCTestCase {
         capture(app, name: "trips-tabs")
         try tapTab("Settings", in: app)
         XCTAssertTrue(
-            app.descendants(matching: .any)["settings.screen"].firstMatch.waitUntil(.exists, timeout: 4))
+            app.collectionViews["settings.screen"].firstMatch.waitUntil(.exists, timeout: 4))
         try assertTabs(in: app, selected: "Settings")
         capture(app, name: "settings-tabs")
         try tapTab("Today", in: app)
@@ -28,7 +27,6 @@ nonisolated final class AppTabsTests: XCTestCase {
 
     @MainActor func testTripsScrollKeepsTheSelectedScreen() throws {
         let app = try launchPlanAccount(freezePlanClock: true)
-        defer { app.terminate() }
         try tapTab("My trips", in: app)
         let scroll = app.scrollViews["trips.screen"]
         XCTAssertTrue(scroll.waitUntil(.exists, timeout: 8))

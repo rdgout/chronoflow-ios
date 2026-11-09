@@ -1,9 +1,8 @@
 import XCTest
 
-nonisolated final class TwoFactorTests: XCTestCase {
+nonisolated final class TwoFactorTests: ScreenTestCase {
     @MainActor func testNumberPadDoesNotAutoSubmitAndVerifyCompletesTheMockSession() throws {
         let app = launchTwoFactorApp()
-        defer { app.terminate() }
         try openMockTwoFactor(app)
         let code = app.textFields["two-factor.code"]
         code.tap()
@@ -21,7 +20,6 @@ nonisolated final class TwoFactorTests: XCTestCase {
 
     @MainActor func testModeToggleClearsCodeAndRecoveryReturnCompletesTheMockSession() throws {
         let app = launchTwoFactorApp()
-        defer { app.terminate() }
         try openMockTwoFactor(app)
         let code = app.textFields["two-factor.code"]
         code.tap()
@@ -44,7 +42,6 @@ nonisolated final class TwoFactorTests: XCTestCase {
 
     @MainActor func testInteractiveKeyboardDismissAndBackDiscardTheChallengeAndCode() throws {
         let app = launchTwoFactorApp()
-        defer { app.terminate() }
         try openMockTwoFactor(app)
         let code = app.textFields["two-factor.code"]
         code.tap()
@@ -86,7 +83,7 @@ nonisolated final class TwoFactorTests: XCTestCase {
 @MainActor func launchTwoFactorApp(language: String = "en", xxLarge: Bool = false, server: Bool = false)
     -> XCUIApplication
 {
-    let app = XCUIApplication()
+    let app = ScreenTestApp.makeApplication()
     app.launchArguments = [
         "-cf.session", "out", "-cf.reduceMotion", "-cf.isolatedMockServer", "-AppleLanguages", "(\(language))",
         "-AppleLocale",

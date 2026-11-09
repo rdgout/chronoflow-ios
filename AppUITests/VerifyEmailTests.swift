@@ -1,9 +1,8 @@
 import XCTest
 
-nonisolated final class VerifyEmailTests: XCTestCase {
+nonisolated final class VerifyEmailTests: ScreenTestCase {
     @MainActor func testPrefilledSignUpMailOpensWalkthrough() {
         let app = launchPrefilledSignUpApp()
-        defer { app.terminate() }
         submitSignUp(app)
         let mail = app.buttons["verify.open-email"]
         XCTAssertTrue(
@@ -22,7 +21,7 @@ nonisolated final class VerifyEmailTests: XCTestCase {
 }
 
 @MainActor func launchPrefilledSignUpApp() -> XCUIApplication {
-    let app = XCUIApplication()
+    let app = ScreenTestApp.makeApplication()
     app.launchArguments = AuthUIFlow.arguments()
     app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
     app.launchEnvironment["CF_AUTH_TEST_AUDIT_SCREEN"] = "sign-up"

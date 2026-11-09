@@ -3,8 +3,10 @@ import XCTest
 #if os(iOS)
     @MainActor
     enum UIWait {
-        static func until(timeout: TimeInterval, condition: () -> Bool) -> Bool {
-            BackoffPoll.until(timeout: timeout, condition: condition)
+        static func until(timeout: TimeInterval, recordsFirstElement: Bool = true, condition: () -> Bool) -> Bool {
+            let found = BackoffPoll.until(timeout: timeout, condition: condition)
+            if found, recordsFirstElement { UITestTiming.firstElementFound() }
+            return found
         }
 
         static func accessibilityAudit(
@@ -88,7 +90,7 @@ import XCTest
     enum WaitState { case exists, hittable, enabled, gone }
 
     func waitUntil(_ state: WaitState, timeout: TimeInterval) -> Bool {
-        let found = UIWait.until(timeout: timeout) {
+        let found = UIWait.until(timeout: timeout, recordsFirstElement: state != .gone) {
             switch state {
             case .exists: self.exists
             case .hittable: self.exists && self.isHittable

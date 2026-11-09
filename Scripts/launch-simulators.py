@@ -152,12 +152,14 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
                           'VerifyEmailTests',
                           'AccountRecoveryTests',
                           'AuthSessionTests',
-                          'AuthAuditTests',
+                          'AuthAuditTests', 'ForgotAuditTests', 'ResetAuditTests', 'SignUpAuditTests', 'VerifyAuditTests',
                           'ReadinessTests',
                           'WelcomeLogicTests',
                           'TripPageStepTests',
                           'TripWizardTests',
                           'SettingsPagesTests',
+                          'SettingsSecurityPagesTests',
+                          'UIReseedTests',
                           'RemindersTests',
                           'TripWizardReviewTests',
                           'WizardRouteScreenTests'),
@@ -309,7 +311,7 @@ XCODEBUILD_COMMON = ["xcodebuild", "-project", "ChronoFlow.xcodeproj", "-derived
                      "-onlyUsePackageVersionsFromResolvedFile"]
 
 # Device-wide mutations must be registered here; launch/window-scoped traits are clone-safe.
-SERIAL_TESTS = ("AppUITests/SettingsBoardCaptureTests", "AppUITests/PlanAuditTests", "AppUITests/AuthSessionTests", "AppUITests/AuthAuditTests", "AppUITests/LaunchSceneTests", "AppUITests/LaunchSceneDarkTests", "AppUITests/LaunchToWelcomeTests")
+SERIAL_TESTS = ("AppUITests/SettingsBoardCaptureTests", "AppUITests/AuthSessionTests", "AppUITests/LaunchSceneTests", "AppUITests/LaunchSceneDarkTests", "AppUITests/LaunchToWelcomeTests")
 PARALLEL_TARGETS = {"AppTests", "AppUITests", "RenderTests"}
 
 
@@ -790,7 +792,7 @@ def test_command(destination, configuration, selected, bundle, workers=1, skippe
     return build_command(configuration) + ["-destination", destination.flag, "-testLanguage", "en", "-testRegion", "US",
         "-parallel-testing-enabled", "YES" if workers > 1 else "NO",
         "-parallel-testing-worker-count", str(workers),
-        "-test-timeouts-enabled", "YES", "-default-test-execution-time-allowance", "600",
+        "-test-timeouts-enabled", "YES", "-default-test-execution-time-allowance", "120" if all(s.startswith("AppUITests/") for s in selected) else "600",
         "-maximum-test-execution-time-allowance", "600",
         "-maximum-concurrent-test-simulator-destinations", "1", "-resultBundlePath", str(bundle)] + (["-resultStreamPath", str(stream)] if stream else []) + [
         "-only-testing:" + suite for suite in selected] + ["-skip-testing:" + suite for suite in skipped] + ["test-without-building"]

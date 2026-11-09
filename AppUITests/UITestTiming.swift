@@ -27,8 +27,10 @@ import XCTest
         if app.launchEnvironment["CF_UI_TEST_PROFILE"] == nil {
             app.launchEnvironment["CF_UI_TEST_PROFILE"] = profile.rawValue
         }
+        if ScreenTestApp.reseedIfPossible(app) { return }
         record("launch-begin", environment: app.launchEnvironment)
         app.launch()
+        ScreenTestApp.didLaunch(app)
         record("launch-return", environment: app.launchEnvironment)
         awaitingFirstElement = app.launchEnvironment
     }

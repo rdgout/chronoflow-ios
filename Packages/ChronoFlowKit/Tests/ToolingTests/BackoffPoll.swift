@@ -11,7 +11,9 @@ nonisolated enum BackoffPoll {
         var interval = 0.05
         if condition() { return true }
         while now() < deadline {
-            pause(min(interval, deadline - now()))
+            let remaining = deadline - now()
+            guard remaining > 0 else { return false }
+            pause(min(interval, remaining))
             guard now() < deadline else { return false }
             if condition() { return true }
             interval = min(1, interval * 1.5)

@@ -1,6 +1,6 @@
 import XCTest
 
-nonisolated final class ForgotPasswordKeyboardTests: XCTestCase {
+nonisolated final class ForgotPasswordKeyboardTests: ScreenTestCase {
     @MainActor func testEnglishFieldErrorAtXXLarge() throws { try check(language: "en") }
     @MainActor func testDutchFieldErrorAtXXLarge() throws { try check(language: "nl") }
     @MainActor func testEnglishServerAtXXLarge() throws { try check(language: "en", failure: "server") }
@@ -10,7 +10,6 @@ nonisolated final class ForgotPasswordKeyboardTests: XCTestCase {
 
     @MainActor private func check(language: String, failure: String? = nil) throws {
         let app = launchForgotApp(language: language, xxLarge: true, failure: failure)
-        defer { app.terminate() }
         openForgot(app)
         let field = app.textFields["forgot.email"]
         field.tap()

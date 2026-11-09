@@ -3,8 +3,16 @@
     import Foundation
 
     @MainActor enum UITestSessionFixture {
-        static func route(native: NativeSessionController?, navigator: RootNavigator) async {
-            guard let native, case .signedIn = await native.readiness.session() else {
+        static func route(
+            native: NativeSessionController?, navigator: RootNavigator,
+            verification: @escaping @MainActor (UInt64) async -> Void = { _ in }
+        ) async {
+            guard let native else {
+                navigator.navigate(to: .welcome)
+                return
+            }
+            defer { native.observeGates(navigator: navigator, verification: verification) }
+            guard case .signedIn = await native.readiness.session() else {
                 navigator.navigate(to: .welcome)
                 return
             }

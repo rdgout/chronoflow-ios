@@ -238,6 +238,28 @@ final class AuthSessionServices {
     }
 
     #if DEBUG
+        func prepareUITestRoute(_ test: AuthUITestConfiguration, navigator: RootNavigator) async throws {
+            guard test.fastLaunch else { return }
+            switch test.auditScreen {
+            case "sign-in":
+                navigator.navigate(to: .signIn)
+            case "sign-up":
+                navigator.navigate(to: .signIn)
+                model.navigation.push(.signUp)
+            case "forgot":
+                navigator.navigate(to: .signIn)
+                model.navigation.forgot()
+            case "reset" where test.auditState != "expired":
+                try await source.requestPasswordReset(email: MockScenarioValues.demoEmail)
+                guard case .reset(let link)? = await model.mockMail?(MockScenarioValues.demoEmail) else {
+                    throw AppServices.Failure.invalidReadiness
+                }
+                navigator.navigate(to: .signIn)
+                model.openReset(link)
+            default: break
+            }
+        }
+
         func stopUITestSession() async {
             model.clearSecrets()
             verifyModel?.cancel()

@@ -40,7 +40,15 @@ AUTH_SNAPSHOTS = ('AppTests/AuthSnapshotTests', 'AppTests/TwoFactorSnapshotTests
 
 def discovered_suites(directory):
     suites = set()
-    for file in directory.glob('*.swift'):
+    sources = list(directory.glob('*.swift'))
+    test_bases = {'XCTestCase'}
+    declarations = [match.groups() for file in sources for match in re.finditer(r'\bclass\s+(\w+)\s*:\s*(\w+)', file.read_text())]
+    while True:
+        inherited = {name for name, base in declarations if base in test_bases}
+        if inherited <= test_bases:
+            break
+        test_bases |= inherited
+    for file in sources:
         source = file.read_text()
         spans = []
         for match in re.finditer(r'\b(?:struct|class|extension)\s+(\w+)[^{\n]*\{', source):
@@ -50,7 +58,7 @@ def discovered_suites(directory):
                 depth += (source[end] == '{') - (source[end] == '}')
                 end += 1
             body = source[start:end]
-            if ('XCTestCase' in match.group() and re.search(r'func test\w+\(', body)) or '@Test' in body:
+            if (any(re.search(r':\s*' + base + r'\b', match.group()) for base in test_bases) and re.search(r'func test\w+\(', body)) or '@Test' in body:
                 suites.add(match[1])
                 spans.append((start, end))
         for test in re.finditer(r'@Test\b', source):
@@ -290,6 +298,8 @@ class ClassificationTests(unittest.TestCase):
             self.assertEqual(discovered_suites(path), {'NewTests'})
             self.assertNotEqual(discovered_suites(path), {'OldTests', 'NewTests'})
             self.assertNotEqual(discovered_suites(path), set())
+            (path / 'Inherited.swift').write_text('class ScreenTestCase: XCTestCase { }\nclass AuthAuditCase: ScreenTestCase { }\nclass InheritedTests: AuthAuditCase { func testExample() {} }')
+            self.assertEqual(discovered_suites(path), {'NewTests', 'InheritedTests'})
 
     def test_every_target_and_suite_is_classified_exactly_once(self):
         self.assertNotRegex(Path(__file__).read_text(), r"self\.fail\s*=")
@@ -341,7 +351,7 @@ class ClassificationTests(unittest.TestCase):
         for suite in logic:
             self.assertEqual(selected.count(suite), 1, suite)
         self.assertFalse(set(selected) & host)
-        self.assertIn('AppUITests/AuthAuditTests', runner.SERIAL_TESTS)
+        self.assertNotIn('AppUITests/AuthAuditTests', runner.SERIAL_TESTS)
         self.assertEqual(runner.recording_selection(['AppTests/AuthSnapshotTests'], 'welcome', '1'),
                          ['AppTests/AuthSnapshotTests'])
 
@@ -358,7 +368,7 @@ class ClassificationTests(unittest.TestCase):
             self.assertIn(f'AppUITests/{screen}Tests', runner.selectors('logic'))
         self.assertIn('AppUITests/AccountRecoveryTests', runner.selectors('logic'))
         self.assertIn('AppTests/AuthUniversalLinkTests', runner.selectors('logic'))
-        self.assertIn('AppUITests/AuthAuditTests', runner.SERIAL_TESTS)
+        self.assertNotIn('AppUITests/AuthAuditTests', runner.SERIAL_TESTS)
         source = (ROOT / 'App/Session/AppServices.swift').read_text()
         self.assertIn('testing: testing || authTestRequested', source)
         self.assertIn('AuthUITestConfiguration(environment: environment)', source)
@@ -413,8 +423,9 @@ class ClassificationTests(unittest.TestCase):
         self.assertIn('- path: AppUITests\n', ui)
         self.assertIn('- path: Packages/ChronoFlowKit/Sources/DataAccess/Mock/MockScenarioValues.swift', ui)
         self.assertNotIn('excludes:', ui)
-        for suite in ['AppUITests/AuthSessionTests', 'AppUITests/AuthAuditTests']:
-            self.assertIn(suite, runner.SERIAL_TESTS)
+        self.assertIn('AppUITests/AuthSessionTests', runner.SERIAL_TESTS)
+        for suite in ['AuthAuditTests', 'ForgotAuditTests', 'ResetAuditTests', 'SignUpAuditTests', 'VerifyAuditTests', 'PlanAuditTests']:
+            self.assertNotIn('AppUITests/' + suite, runner.SERIAL_TESTS)
 
     def test_unapproved_snapshot_comparison_is_opt_in_and_recording_is_preserved(self):
         snapshots = set(runner.selectors('snapshots'))
@@ -942,7 +953,7 @@ class RunnerTests(unittest.TestCase):
             self.assertIn('-configuration', matches[0])
             self.assertEqual(matches[0][matches[0].index('-configuration') + 1], 'Debug')
             if suite == 'AppUITests/AuthAuditTests':
-                self.assertEqual(matches[0][matches[0].index('-parallel-testing-enabled') + 1], 'NO')
+                self.assertEqual(matches[0][matches[0].index('-parallel-testing-enabled') + 1], 'YES')
 
     def test_record_modes_are_isolated_and_paths_cannot_collide(self):
         for mode, expected in [('1', set(runner.SNAPSHOTS)), ('launch', set(runner.SNAPSHOTS[:1])), ('all', set(runner.SNAPSHOTS))]:
@@ -1212,7 +1223,8 @@ class ParallelTests(unittest.TestCase):
         for target in ['AppTests', 'AppUITests']:
             for file in (ROOT / target).glob('*.swift'):
                 source = file.read_text()
-                if re.search(r'XCUIDevice\.shared|UIPasteboard\.general|setContentSizeCategory', source):
+                # Home/activate affects only its clone; persisted simulator settings require serialization.
+                if re.search(r'XCUIDevice\.shared(?!\.press\(\.home\))|DeviceAppearance\.set|UIPasteboard\.general|setContentSizeCategory', source):
                     for suite in discovered_suites(file.parent):
                         if re.search(r'(?:class|struct)\s+' + suite + r'\b', source):
                             self.assertIn(target + '/' + suite, runner.SERIAL_TESTS, file)

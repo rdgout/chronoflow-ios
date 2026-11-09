@@ -1,6 +1,6 @@
 import XCTest
 
-nonisolated final class SignInKeyboardTests: XCTestCase {
+nonisolated final class SignInKeyboardTests: ScreenTestCase {
     private enum Failure { case email, password, server }
 
     @MainActor func testEnglishEmailErrorAtXXLarge() throws {
@@ -23,14 +23,13 @@ nonisolated final class SignInKeyboardTests: XCTestCase {
     }
 
     @MainActor private func assertKeyboardLayout(language: String, failure: Failure) throws {
-        let app = XCUIApplication()
+        let app = ScreenTestApp.makeApplication()
         app.launchArguments = [
             "-cf.session", "out", "-cf.reduceMotion", "-AppleLanguages", "(\(language))", "-AppleLocale",
             language == "nl" ? "nl_NL" : "en_US",
             "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryXXL",
         ]
         app.launchMeasured()
-        defer { app.terminate() }
         let signIn = app.buttons["welcome.signIn"]
         XCTAssertTrue(signIn.waitUntil(.exists, timeout: 6))
         reveal(signIn, in: app.scrollViews.containing(.button, identifier: "welcome.signIn").element)
@@ -55,7 +54,7 @@ nonisolated final class SignInKeyboardTests: XCTestCase {
             let passkey = app.buttons["sign-in.passkey"]
             reveal(passkey, in: scroll)
             passkey.tap()
-            XCTAssertTrue(app.descendants(matching: .any)["auth.banner"].waitUntil(.exists, timeout: 5))
+            XCTAssertTrue(app.staticTexts["auth.banner"].waitUntil(.exists, timeout: 5))
             reveal(email, in: scroll)
             email.tap()
         }

@@ -1,6 +1,6 @@
 import XCTest
 
-nonisolated final class TermsTests: XCTestCase {
+nonisolated final class TermsTests: ScreenTestCase {
     override func setUp() {
         super.setUp()
         continueAfterFailure = false
@@ -9,14 +9,12 @@ nonisolated final class TermsTests: XCTestCase {
 
     @MainActor func testAcceptanceOpensWalkthrough() {
         let app = launch()
-        defer { app.terminate() }
         accept(app)
         XCTAssertTrue(app.staticTexts["walkthrough.title"].waitUntil(.exists, timeout: 12))
     }
 
     @MainActor func testDutchXXLargeAcceptedAccountGoesStraightToToday() {
         let app = launch(language: "nl", seen: true, xxLarge: true)
-        defer { app.terminate() }
         XCTAssertEqual(app.staticTexts["terms.title"].label, "We hebben onze voorwaarden bijgewerkt")
         XCTAssertTrue(app.links["terms.policy"].exists)
         accept(app)
@@ -26,7 +24,6 @@ nonisolated final class TermsTests: XCTestCase {
 
     @MainActor func testSignOutFromTermsWithNoChanges() {
         let app = launch()
-        defer { app.terminate() }
         signOut(app)
         XCTAssertTrue(app.textFields["sign-in.email"].waitUntil(.exists, timeout: 12))
         XCTAssertFalse(app.staticTexts["terms.title"].exists)
@@ -35,7 +32,6 @@ nonisolated final class TermsTests: XCTestCase {
 
     @MainActor func testSignOutWithPendingChangesShowsConfirmation() {
         let app = launch(pendingChanges: true)
-        defer { app.terminate() }
         signOut(app)
         let sheet = app.scrollViews["settings.pending"]
         XCTAssertTrue(sheet.waitUntil(.exists, timeout: 8))
@@ -44,7 +40,7 @@ nonisolated final class TermsTests: XCTestCase {
     @MainActor private func launch(
         language: String = "en", seen: Bool = false, xxLarge: Bool = false, pendingChanges: Bool = false
     ) -> XCUIApplication {
-        let app = XCUIApplication()
+        let app = ScreenTestApp.makeApplication()
         app.launchArguments = AuthUIFlow.arguments(language: language, xxLarge: xxLarge)
         app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
         app.launchEnvironment["CF_AUTH_TEST_TERMS_PENDING"] = "1"

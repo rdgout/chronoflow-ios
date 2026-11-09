@@ -1,6 +1,6 @@
 import XCTest
 
-nonisolated final class SettingsTests: XCTestCase {
+nonisolated final class SettingsTests: ScreenTestCase {
     override func setUp() {
         super.setUp()
         continueAfterFailure = false
@@ -9,7 +9,6 @@ nonisolated final class SettingsTests: XCTestCase {
 
     @MainActor func testSignOutWithNoPendingOpensSignInWithoutReplayingLaunch() {
         let app = launch(pending: false)
-        defer { app.terminate() }
         openSettings(app)
         signOut(app)
         XCTAssertTrue(app.textFields["sign-in.email"].waitUntil(.exists, timeout: 10))
@@ -19,7 +18,6 @@ nonisolated final class SettingsTests: XCTestCase {
 
     @MainActor func testPendingSignOutStayAndDiscard() {
         let app = launch(pending: true)
-        defer { app.terminate() }
         openSettings(app)
         let pending = { app.staticTexts["settings.sync"].label == "1 change waiting to sync" }
         XCTAssertTrue(UIWait.until(timeout: 12, condition: pending))
@@ -49,7 +47,7 @@ nonisolated final class SettingsTests: XCTestCase {
     }
 
     @MainActor private func launch(pending: Bool) -> XCUIApplication {
-        let app = XCUIApplication()
+        let app = ScreenTestApp.makeApplication()
         app.launchArguments = AuthUIFlow.arguments()
         app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
         app.launchEnvironment["CF_AUTH_TEST_WALKTHROUGH_SEEN"] = "1"
@@ -61,13 +59,13 @@ nonisolated final class SettingsTests: XCTestCase {
     @MainActor private func openSettings(_ app: XCUIApplication, email: String = MockScenarioValues.demoEmail) {
         XCTAssertTrue(app.tabBars.buttons["Settings"].waitUntil(.exists, timeout: 12))
         app.tabBars.buttons["Settings"].tap()
-        let profile = app.descendants(matching: .any)["settings.profile"].firstMatch
+        let profile = app.buttons["settings.profile"].firstMatch
         XCTAssertTrue(profile.waitUntil(.exists, timeout: 10))
         XCTAssertTrue(profile.label.contains(email))
     }
 
     @MainActor private func signOut(_ app: XCUIApplication) {
-        let screen = app.descendants(matching: .any)["settings.screen"].firstMatch
+        let screen = app.collectionViews["settings.screen"].firstMatch
         XCTAssertTrue(screen.waitUntil(.exists, timeout: 6))
         let button = app.buttons["settings.signOut"]
         AuthUIFlow.reveal(button, in: app, scroll: screen)

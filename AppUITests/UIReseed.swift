@@ -9,7 +9,7 @@ import XCTest
         app.open(try command.url())
         let ready = app.windows["uitest.ready.\(command.nonce)"].firstMatch
         let failed = app.windows["uitest.failed.\(command.nonce)"].firstMatch
-        let acknowledged = UIWait.until(timeout: timeout) { ready.exists || failed.exists }
+        let acknowledged = UIWait.until(timeout: timeout, recordsFirstElement: false) { ready.exists || failed.exists }
         guard acknowledged, ready.exists else {
             XCTFail("In-app reseed did not mount a fresh root (nonce=\(command.nonce), failed=\(failed.exists))")
             throw NSError(domain: "UIReseed", code: 1)
