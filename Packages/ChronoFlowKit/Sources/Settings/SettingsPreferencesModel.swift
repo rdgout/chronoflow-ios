@@ -1,5 +1,6 @@
 import AppCore
 import Observation
+import PlanUI
 
 public struct SettingsTimelineGroup: Sendable {
     public let title: String
@@ -18,6 +19,7 @@ public struct SettingsTimelineGroup: Sendable {
     public private(set) var value: JSONObject
     public private(set) var saved = false
     public private(set) var failure = false
+    public private(set) var walkthrough: WalkthroughModel?
     @ObservationIgnored private var edits: [String: JSONValue] = [:]
     @ObservationIgnored private let save: @MainActor (JSONObject) async throws -> Void
     @ObservationIgnored private var tail: Task<Void, Never>?
@@ -25,6 +27,11 @@ public struct SettingsTimelineGroup: Sendable {
         self.value = value
         self.save = save
     }
+    public func startWalkthroughReplay() {
+        walkthrough = WalkthroughModel(
+            mode: .replay, complete: {}, onFinish: { [weak self] in self?.dismissWalkthroughReplay() })
+    }
+    public func dismissWalkthroughReplay() { walkthrough = nil }
     public func receive(_ value: JSONObject) {
         for (key, entry) in edits where value[key] == entry { edits[key] = nil }
         self.value = value

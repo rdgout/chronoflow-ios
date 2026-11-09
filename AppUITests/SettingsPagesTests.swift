@@ -56,17 +56,15 @@ nonisolated final class SettingsPagesTests: XCTestCase {
         AuthUIFlow.reveal(sleep, in: app)
         sleep.tap()
         open("settings.preferences.replay", app: app)
+        assertReplayPage(1, app: app)
         XCTAssertTrue(app.buttons["walkthrough.skip"].waitForExistence(timeout: 8))
         app.buttons["walkthrough.skip"].tap()
         XCTAssertTrue(app.buttons["settings.preferences.replay"].waitForExistence(timeout: 8))
         open("settings.preferences.replay", app: app)
         for index in 0..<3 {
+            assertReplayPage(index + 1, app: app)
             let counter = app.staticTexts["walkthrough.counter"]
-            let page = XCTNSPredicateExpectation(
-                predicate: NSPredicate(format: "label == %@", "\(index + 1) OF 3"), object: counter)
-            XCTAssertEqual(XCTWaiter.wait(for: [page], timeout: 6), .completed)
             let next = app.buttons[index == 2 ? "walkthrough.done" : "walkthrough.next"]
-            XCTAssertTrue(next.waitForExistence(timeout: 6))
             do { _ = try UIWait.stableFrames([counter, next], timeout: 6) } catch { XCTFail("\(error)") }
             XCTAssertTrue(next.isHittable)
             next.tap()
@@ -75,6 +73,17 @@ nonisolated final class SettingsPagesTests: XCTestCase {
         format.tap()
         app.buttons["24-hour (14:30)"].tap()
         XCTAssertTrue(app.staticTexts["settings.preferences.saved"].waitForExistence(timeout: 8))
+    }
+
+    @MainActor private func assertReplayPage(_ number: Int, app: XCUIApplication) {
+        let counter = app.staticTexts["walkthrough.counter"]
+        let page = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == true AND label == %@", "\(number) OF 3"), object: counter)
+        XCTAssertEqual(
+            XCTWaiter.wait(for: [page], timeout: 6), .completed,
+            "Expected replay page \(number); counter: \(counter.exists ? counter.label : "missing")")
+        let action = app.buttons[number == 3 ? "walkthrough.done" : "walkthrough.next"]
+        AuthUIFlow.waitUntilEnabled(action)
     }
 
     @MainActor func testLanguageChoiceUpdatesAppAndReturnsToAccount() {

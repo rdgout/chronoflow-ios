@@ -23,7 +23,6 @@
         @Environment(\.locale) private var locale
         @Environment(SettingsDevicePreferences.self) private var device
         @State private var model: SettingsPreferencesModel
-        @State private var replaying = false
         let value: JSONObject
         init(value: JSONObject, save: @escaping @MainActor (JSONObject) async throws -> Void) {
             self.value = value
@@ -71,7 +70,7 @@
                 }
                 Section {
                     Button {
-                        replaying = true
+                        model.startWalkthroughReplay()
                     } label: {
                         VStack(alignment: .leading, spacing: PlanUITokens.space1) {
                             Label(t("Replay walkthrough"), systemImage: "arrow.counterclockwise")
@@ -89,19 +88,18 @@
                         "settings.preferences.saved")
                 }
             }.onChange(of: value) { _, value in model.receive(value) }
-                .navigationDestination(isPresented: $replaying) {
-                    SettingsWalkthroughReplay { replaying = false }
-                        .toolbar(.hidden, for: .navigationBar, .tabBar)
+                .navigationDestination(
+                    isPresented: Binding(
+                        get: { model.walkthrough != nil },
+                        set: { if !$0 { model.dismissWalkthroughReplay() } })
+                ) {
+                    if let walkthrough = model.walkthrough {
+                        WalkthroughView(model: walkthrough)
+                            .id(ObjectIdentifier(walkthrough))
+                            .toolbar(.hidden, for: .navigationBar, .tabBar)
+                    }
                 }
         }
-    }
-
-    @MainActor private struct SettingsWalkthroughReplay: View {
-        @State private var model: WalkthroughModel
-        init(finish: @escaping @MainActor () -> Void) {
-            _model = State(initialValue: WalkthroughModel(mode: .replay, complete: {}, onFinish: finish))
-        }
-        var body: some View { WalkthroughView(model: model) }
     }
 
     @MainActor public struct SettingsLanguageView: View {

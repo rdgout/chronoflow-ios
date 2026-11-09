@@ -1,9 +1,9 @@
 # Phase 17h: Settings destination pages
 
 Branch `feat/phase-17h-settings-pages`, based on `fix/auth-error-banners` at `d92ff91c`.
-The original 11 patches are applied at `e06dab5b`. The follow-up series is under
-`build/commits/`: apply `1.patch` through `3.patch` in numeric order; `messages.txt`
-has the corresponding Conventional Commit subjects.
+The original series and first runtime follow-up are applied at `990ae04`.
+The repeated-replay fix is `build/commits/1.patch`, based on that commit;
+`messages.txt` contains its Conventional Commit subject.
 
 ## Built
 
@@ -140,3 +140,25 @@ budgets. The remaining quick targets pass all 17 generator tests and 100 fixture
 Direct iOS 17 compiler checks pass for Settings, the app, AppTests and AppUITests;
 final Settings and UI-test edits were rechecked. Logs are
 `build/settings-regressions-{lint,quick,host,remaining-quick,ios,ui-ios,final-ios}.log`.
+
+## Repeated replay follow-up (2026-11-09)
+
+The second 17e replay showed page one but its first Next did not advance. Replay's
+navigation destination owned an `@State` model initialized with the view. Navigation
+reuse could retain that model after Skip, including `completed == true`, which
+disabled Next. The counter was already the real uppercase label, `1 OF 3`.
+
+Preferences now creates a new model when Replay is tapped and owns the optional
+presentation model. Skip, Done and navigation dismissal clear it. The destination
+uses that model directly and its identity resets the walkthrough's view state.
+Host regressions exercise the same Preferences actions twice after both Skip and
+Done, assert fresh state and every page advance, and check that the saved preference
+survives without another write. The UI journey checks the uppercase page counter
+and waits for an enabled action before each tap.
+
+Validation: `make lint` passes. `make quick` passes both repeat-replay cases and all
+other package checks except the existing cookie-listener sandbox EPERM (543/544
+Swift Testing tests and all XCTest checks pass). The remaining quick tiers pass
+separately: 17 generator tests and 100 runner/resource fixtures. Direct iOS 17
+compilation passes for Settings and AppUITests. No simulator or snapshots were run.
+Logs: `build/settings-replay-{lint,quick,remaining-quick,ios}.log`.

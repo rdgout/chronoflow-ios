@@ -95,4 +95,36 @@ import Testing
             #expect(!presented && model.completed && writes == 0)
         }
     }
+
+    @Test(arguments: [true, false])
+    func replayTwiceStartsFreshAfterSkipOrDone(skip: Bool) async throws {
+        var writes: [JSONObject] = []
+        let preferences = SettingsPreferencesModel(value: JSONObject(["timeFormat": .string("24")])) {
+            writes.append($0)
+        }
+        await preferences.setTimeFormat("12")
+        preferences.startWalkthroughReplay()
+        let first = try #require(preferences.walkthrough)
+        if skip {
+            await first.skip()
+        } else {
+            await first.advance()
+            await first.advance()
+            await first.advance()
+        }
+        #expect(first.completed && preferences.walkthrough == nil)
+
+        preferences.startWalkthroughReplay()
+        let second = try #require(preferences.walkthrough)
+        #expect(second !== first && second.mode == .replay)
+        #expect(second.page == .timeline && !second.completed && !second.busy && second.failure == nil)
+        await second.advance()
+        #expect(second.page == .categories && !second.completed)
+        await second.advance()
+        #expect(second.page == .progress && !second.completed)
+        await second.advance()
+        #expect(second.completed && preferences.walkthrough == nil)
+        #expect(preferences.value["timeFormat"] == .string("12") && preferences.saved)
+        #expect(writes == [JSONObject(["time_format": .string("12")])])
+    }
 }
