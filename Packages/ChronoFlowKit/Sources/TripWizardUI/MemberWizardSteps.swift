@@ -48,14 +48,19 @@
             enabled: Bool = true, action: @escaping () -> Void = {}, @ViewBuilder content: () -> Content
         ) -> some View {
             VStack(spacing: 0) {
-                ProgressView(value: model.progress).tint(ColorToken.dawn.color)
+                GeometryReader { geometry in
+                    Capsule().fill(ColorToken.muted.color)
+                        .overlay(alignment: .leading) {
+                            Capsule().fill(ColorToken.dawn.color).frame(width: geometry.size.width * model.progress)
+                        }
+                }.frame(height: PlanUITokens.wizardProgressHeight)
                     .padding(.horizontal, PlanUITokens.space5)
                     .accessibilityLabel(t("Progress, {{pct}} percent", ["pct": String(Int(model.progress * 100))]))
                 ScrollView {
                     VStack(alignment: .leading, spacing: PlanUITokens.wizardContentGap) {
                         VStack(alignment: .leading, spacing: PlanUITokens.wizardControlGap) {
                             Text(title).font(
-                                (title.count > 80 ? Typography.screenSectionTitle : Typography.screenPageTitle).font
+                                (title.count > 80 ? Typography.wizardLongTitle : Typography.screenPageTitle).font
                             )
                             .accessibilityAddTraits(.isHeader)
                             if let subtitle {
@@ -93,9 +98,14 @@
                 }
             }
             .navigationTitle(t("New trip")).navigationBarTitleDisplayMode(.inline)
+            .toolbarRole(.editor)
             .navigationBarBackButtonHidden(id == "checking")
             .background { if id == "checking" { WizardSwipeBack() } }
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text(t("New trip")).font(Typography.wizardNavTitle.font)
+                        .foregroundStyle(ColorToken.mutedForeground.color)
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         if model.draft.state.entered { confirmingDiscard = true } else { close() }

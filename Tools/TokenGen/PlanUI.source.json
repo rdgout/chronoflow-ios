@@ -48,5 +48,17 @@
   "wizardRouteLineHeight": 20,
   "wizardChoiceFontSize": 18,
   "wizardChoiceLineHeight": 24,
-  "wizardQuestionRadius": 20
+  "wizardQuestionRadius": 20,
+  "wizardSwapSize": 40,
+  "wizardSwapInset": 14,
+  "wizardEmptyOpacity": 0.35,
+  "wizardLabelGap": 2,
+  "wizardSearchCodeWidth": 44,
+  "wizardSearchRowHeight": 60,
+  "wizardSearchCodeFontSize": 15,
+  "wizardSearchCodeTracking": 0.6,
+  "wizardSearchNameLineHeight": 21,
+  "wizardLongTitleFontSize": 24,
+  "wizardLongTitleLineHeight": 30,
+  "wizardSheetRadius": 38
 }

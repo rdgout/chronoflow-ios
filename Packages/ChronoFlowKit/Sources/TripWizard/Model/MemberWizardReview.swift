@@ -27,7 +27,7 @@ extension MemberWizardModel {
     public var progress: Double { max(draft.state.progressFloor ?? 0, stepProgress) }
     private var stepProgress: Double {
         switch draft.state.step {
-        case .whereTo: 0.15
+        case .whereTo: whereComplete ? 0.15 : 0.08
         case .outbound: 0.30
         case .returnChoice, .returnFlight: 0.45
         case .sleep: 0.50

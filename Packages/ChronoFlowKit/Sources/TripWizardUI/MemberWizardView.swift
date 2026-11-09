@@ -84,7 +84,7 @@
                 let first = model.draft.form.legs[0]
                 let last = model.draft.form.legs[model.draft.form.returnBoundary - 1]
                 let same = !first.fromIata.isEmpty && first.fromIata == last.toIata
-                VStack(alignment: .leading, spacing: PlanUITokens.space2) {
+                VStack(alignment: .leading, spacing: PlanUITokens.wizardContentGap) {
                     VStack(spacing: 0) {
                         airportRow(
                             "From", iata: first.fromIata, city: first.fromCity, hint: model.draft.state.fromLastTrip
@@ -100,13 +100,13 @@
                             UIImpactFeedbackGenerator(style: .light).impactOccurred()
                             model.swapAirports()
                         } label: {
-                            Image(systemName: "arrow.up.arrow.down").frame(
-                                minWidth: AuthTokens.touch, minHeight: AuthTokens.touch)
+                            swapGlyph
                         }
-                        .buttonStyle(.borderless).tint(ColorToken.foreground.color)
+                        .buttonStyle(.plain).tint(ColorToken.foreground.color)
                         .disabled(first.fromIata.isEmpty || last.toIata.isEmpty)
+                        .opacity(first.fromIata.isEmpty || last.toIata.isEmpty ? PlanUITokens.wizardEmptyOpacity : 1)
                         .accessibilityLabel(t("Swap airports")).accessibilityIdentifier("wizard.swap")
-                        .padding(.trailing, PlanUITokens.space3)
+                        .padding(.trailing, PlanUITokens.wizardSwapInset)
                     }
                     if same {
                         errorLine(
@@ -117,12 +117,22 @@
             }
         }
 
+        @ViewBuilder private var swapGlyph: some View {
+            let glyph = Image(systemName: "arrow.up.arrow.down")
+                .frame(width: PlanUITokens.wizardSwapSize, height: PlanUITokens.wizardSwapSize)
+            if #available(iOS 26, *) {
+                glyph.glassEffect(.regular.interactive(), in: Circle())
+            } else {
+                glyph
+            }
+        }
+
         func airportRow(
             _ label: String, iata: String, city: String?, hint: Bool = false, invalid: Bool = false,
             action: @escaping () -> Void
         ) -> some View {
             Button(action: action) {
-                VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading, spacing: PlanUITokens.wizardLabelGap) {
                     Text(t(label)).font(Typography.wizardHint.font).foregroundStyle(ColorToken.mutedForeground.color)
                     Text(
                         iata.isEmpty ? t("Choose an airport") : [iata, city].compactMap { $0 }.joined(separator: " · ")
@@ -139,8 +149,10 @@
                 .padding(.leading, PlanUITokens.space4).padding(.trailing, PlanUITokens.space16)
                 .overlay {
                     if invalid {
-                        RoundedRectangle(cornerRadius: PlanUITokens.wizardCardRadius).strokeBorder(
-                            ColorToken.destructive.color, lineWidth: AuthTokens.focusWidth)
+                        UnevenRoundedRectangle(
+                            bottomLeadingRadius: PlanUITokens.wizardCardRadius,
+                            bottomTrailingRadius: PlanUITokens.wizardCardRadius
+                        ).strokeBorder(ColorToken.destructive.color, lineWidth: AuthTokens.focusWidth)
                     }
                 }
             }.buttonStyle(.plain).accessibilityIdentifier(label == "From" ? "wizard.from" : "wizard.to")

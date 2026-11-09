@@ -59,15 +59,27 @@ nonisolated public enum PlanUITokens {
     public static var wizardContentGap: CGFloat { 14 }
     public static var wizardControlGap: CGFloat { 6 }
     public static var wizardDisabledOpacity: Double { 0.4 }
+    public static var wizardEmptyOpacity: Double { 0.35 }
     public static var wizardFlightRowHeight: CGFloat { 64 }
     public static var wizardHintFontSize: CGFloat { 13 }
     public static var wizardHintLineHeight: CGFloat { 18 }
+    public static var wizardLabelGap: CGFloat { 2 }
+    public static var wizardLongTitleFontSize: CGFloat { 24 }
+    public static var wizardLongTitleLineHeight: CGFloat { 30 }
     public static var wizardProgressHeight: CGFloat { 4 }
     public static var wizardQuestionRadius: CGFloat { 20 }
     public static var wizardRouteFontSize: CGFloat { 15 }
     public static var wizardRouteLineHeight: CGFloat { 20 }
     public static var wizardRowFontSize: CGFloat { 17 }
     public static var wizardRowLineHeight: CGFloat { 22 }
+    public static var wizardSearchCodeFontSize: CGFloat { 15 }
+    public static var wizardSearchCodeTracking: CGFloat { 0.6 }
+    public static var wizardSearchCodeWidth: CGFloat { 44 }
+    public static var wizardSearchNameLineHeight: CGFloat { 21 }
+    public static var wizardSearchRowHeight: CGFloat { 60 }
+    public static var wizardSheetRadius: CGFloat { 38 }
+    public static var wizardSwapInset: CGFloat { 14 }
+    public static var wizardSwapSize: CGFloat { 40 }
 }
 extension Typography {
     public static var screenHero: Style {
@@ -113,6 +125,28 @@ extension Typography {
         Style(
             face: .figtree500, size: screenBodyLg.size, lineHeight: screenBodyLg.lineHeight,
             tracking: screenBodyLg.tracking, relativeTo: screenBodyLg.relativeTo)
+    }
+    public static var wizardNavTitle: Style {
+        Style(
+            face: .figtree500, size: PlanUITokens.wizardRouteFontSize, lineHeight: PlanUITokens.wizardRouteLineHeight,
+            tracking: screenBody.tracking, relativeTo: .subheadline)
+    }
+    public static var wizardSearchCode: Style {
+        Style(
+            face: .figtree700, size: PlanUITokens.wizardSearchCodeFontSize,
+            lineHeight: PlanUITokens.wizardRouteLineHeight,
+            tracking: PlanUITokens.wizardSearchCodeTracking, relativeTo: .subheadline)
+    }
+    public static var wizardSearchName: Style {
+        Style(
+            face: .figtree400, size: screenBodyLg.size, lineHeight: PlanUITokens.wizardSearchNameLineHeight,
+            tracking: screenBody.tracking, relativeTo: .body)
+    }
+    public static var wizardLongTitle: Style {
+        Style(
+            face: .fraunces400Opsz20, size: PlanUITokens.wizardLongTitleFontSize,
+            lineHeight: PlanUITokens.wizardLongTitleLineHeight,
+            tracking: -PlanUITokens.wizardLongTitleFontSize / 100, relativeTo: .title2)
     }
     public static var wizardAirport: Style {
         Style(

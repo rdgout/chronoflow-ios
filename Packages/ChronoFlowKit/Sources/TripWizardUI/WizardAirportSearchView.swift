@@ -28,7 +28,7 @@
 
         var body: some View {
             NavigationStack {
-                VStack(alignment: .leading, spacing: PlanUITokens.space3) {
+                VStack(alignment: .leading, spacing: PlanUITokens.wizardContentGap) {
                     if sheet.side == .stop {
                         let leg = model.draft.form.legs[sheet.index]
                         Text(
@@ -36,45 +36,35 @@
                                 "Between {{from}} and {{to}}",
                                 arguments: ["from": leg.fromCity ?? leg.fromIata, "to": leg.toCity ?? leg.toIata])
                         )
-                        .font(Typography.wizardHint.font).foregroundStyle(ColorToken.mutedForeground.color).padding(
-                            .horizontal, PlanUITokens.space5)
+                        .font(Typography.wizardHint.font).foregroundStyle(ColorToken.mutedForeground.color)
                     }
-                    List(results, id: \.iata) { airport in
-                        Button {
-                            guard !selected else { return }
-                            selected = true
-                            if sheet.side == .stop {
-                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                            } else {
-                                UISelectionFeedbackGenerator().selectionChanged()
+                    WizardSearchField(text: $query, prompt: t("Search airports"))
+                        .frame(height: PlanUITokens.wizardSwapSize)
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            ForEach(Array(results.enumerated()), id: \.element.iata) { index, airport in
+                                if index > 0 { Divider().overlay(ColorToken.border.color) }
+                                result(airport)
                             }
-                            model.chooseAirport(airport, sheet: sheet)
-                        } label: {
-                            HStack(spacing: PlanUITokens.space3) {
-                                Text(airport.iata).font(Typography.screenLabel.font)
-                                VStack(alignment: .leading, spacing: 0) {
-                                    Text(airport.name).font(Typography.screenBodyLg.font)
-                                    Text(
-                                        [
-                                            airport.city,
-                                            Locale(identifier: locale.identifier).localizedString(
-                                                forRegionCode: airport.country),
-                                        ].compactMap { $0 }.joined(separator: ", ")
-                                    )
-                                    .font(Typography.wizardHint.font).foregroundStyle(ColorToken.mutedForeground.color)
-                                }
-                            }.foregroundStyle(ColorToken.foreground.color)
-                        }.accessibilityIdentifier("wizard.airport.\(airport.iata)")
-                            .listRowBackground(ColorToken.card.color)
-                    }.scrollContentBackground(.hidden)
+                        }
+                        .background(
+                            ColorToken.background.color,
+                            in: RoundedRectangle(cornerRadius: PlanUITokens.wizardCardRadius)
+                        )
+                        .overlay {
+                            RoundedRectangle(cornerRadius: PlanUITokens.wizardCardRadius).strokeBorder(
+                                ColorToken.border.color, lineWidth: AuthTokens.borderWidth)
+                        }
+                        .clipShape(RoundedRectangle(cornerRadius: PlanUITokens.wizardCardRadius))
+                    }
                 }
-                .background(ColorToken.background.color)
-                .searchable(
-                    text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: t("Search airports")
-                )
+                .padding(.horizontal, PlanUITokens.space5).padding(.top, PlanUITokens.wizardContentGap)
+                .background(ColorToken.card.color)
                 .navigationTitle(title).navigationBarTitleDisplayMode(.inline)
                 .toolbar {
-                    ToolbarItem(placement: .cancellationAction) { Button(t("Cancel")) { model.openAirport(nil) } }
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button(t("Cancel")) { model.openAirport(nil) }.tint(ColorToken.dawnText.color)
+                    }
                 }
                 .task(id: query) {
                     results = []
@@ -86,6 +76,66 @@
                 }
                 .accessibilityElement(children: .contain).accessibilityIdentifier("wizard.airport-search")
             }.presentationDetents([.large]).presentationDragIndicator(.visible)
+                .presentationBackground(ColorToken.card.color).presentationCornerRadius(PlanUITokens.wizardSheetRadius)
+        }
+
+        private func result(_ airport: ApiAirportSuggestion) -> some View {
+            Button {
+                guard !selected else { return }
+                selected = true
+                if sheet.side == .stop {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                } else {
+                    UISelectionFeedbackGenerator().selectionChanged()
+                }
+                model.chooseAirport(airport, sheet: sheet)
+            } label: {
+                HStack(spacing: PlanUITokens.space3) {
+                    WelcomeText(airport.iata, style: Typography.wizardSearchCode, color: .foreground)
+                        .frame(width: PlanUITokens.wizardSearchCodeWidth, alignment: .leading)
+                    VStack(alignment: .leading, spacing: 0) {
+                        WelcomeText(airport.name, style: Typography.wizardSearchName, color: .foreground)
+                        Text(
+                            [airport.city, locale.localizedString(forRegionCode: airport.country)]
+                                .compactMap { $0 }.joined(separator: ", ")
+                        )
+                        .font(Typography.wizardHint.font).foregroundStyle(ColorToken.mutedForeground.color)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, PlanUITokens.space4).padding(.vertical, PlanUITokens.space2)
+                .frame(maxWidth: .infinity, minHeight: PlanUITokens.wizardSearchRowHeight, alignment: .leading)
+                .contentShape(Rectangle()).foregroundStyle(ColorToken.foreground.color)
+            }.buttonStyle(.plain).accessibilityIdentifier("wizard.airport.\(airport.iata)")
+        }
+    }
+
+    private struct WizardSearchField: UIViewRepresentable {
+        @Binding var text: String
+        let prompt: String
+
+        func makeUIView(context: Context) -> UISearchTextField {
+            let search = UISearchTextField()
+            search.autocapitalizationType = .none
+            search.autocorrectionType = .no
+            search.addTarget(context.coordinator, action: #selector(Coordinator.changed(_:)), for: .editingChanged)
+            search.setContentHuggingPriority(.defaultLow, for: .horizontal)
+            return search
+        }
+
+        func updateUIView(_ search: UISearchTextField, context: Context) {
+            context.coordinator.parent = self
+            if search.text != text { search.text = text }
+            search.placeholder = prompt
+            search.font = Typography.wizardRow.uiFont(compatibleWith: search.traitCollection)
+        }
+
+        func makeCoordinator() -> Coordinator { Coordinator(self) }
+
+        final class Coordinator: NSObject {
+            var parent: WizardSearchField
+            init(_ parent: WizardSearchField) { self.parent = parent }
+            @objc func changed(_ field: UISearchTextField) { parent.text = field.text ?? "" }
         }
     }
 #endif
