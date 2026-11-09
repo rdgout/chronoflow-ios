@@ -191,7 +191,8 @@ schemes:
         - package: ChronoFlowKit/DesignSystemTests
   PackageLogic:
     build:
-      targets: {}
+      targets:
+        ChronoFlow: [test]
     test:
       config: Debug
       targets:

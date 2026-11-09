@@ -671,7 +671,7 @@ class RunnerTests(unittest.TestCase):
         schemes = project.split('schemes:\n', 1)[1]
         sections = {m[1]: m[2] for m in re.finditer(r'^  (\w+):\n(.*?)(?=^  \w+:\n|\Z)', schemes, re.M | re.S)}
         self.assertEqual(re.findall(r'- package: ChronoFlowKit/(\w+)', sections['ChronoFlow']), ['DesignSystemTests'])
-        self.assertIn('targets: {}', sections['PackageLogic'])
+        self.assertIn('ChronoFlow: [test]', sections['PackageLogic'])
         self.assertEqual(set(re.findall(r'- package: ChronoFlowKit/(\w+)', sections['PackageLogic'])),
                          {'DesignSystemTests', 'LaunchTests', 'WelcomeTests'})
         for target in ('AppCoreTests', 'LocalStoreTests', 'DataAccessTests', 'AuthTests'):
