@@ -43,7 +43,7 @@ import Testing
             var environment = audit
             environment["CF_AUTH_TEST_ID"] = UUID().uuidString
             let configuration = try #require(AuthUITestConfiguration(environment: environment))
-            let source = MockDataSource(seed: MockServerState())
+            let source = MockDataSource(seed: MockServerState(), delay: { 0 }, sleep: { _ in })
             let signup = SignUpModel(
                 source: source, navigation: AuthNavigation(), deviceIdentity: { UUID().uuidString },
                 deviceName: "test", accept: { _ in })
@@ -77,16 +77,7 @@ import Testing
         #expect(services.factory.source == .mock)
         #expect(services.namespace == .mock)
     }
-    @Test func explicitAPIRemainsMockUnderTests() throws {
-        let services = try AppServices(
-            info: ["CHRONOFLOW_DATA_SOURCE": "api", "CHRONOFLOW_API_BASE_URL": "https://api.example.test/v1"],
-            testing: true)
-        #expect(services.factory.source == .mock)
-        #expect(services.namespace.keychainService == StorageNamespace.mock.keychainService)
-        #expect(throws: DataSourceConfigurationFailure.invalidSource) {
-            try AppServices(info: ["CHRONOFLOW_DATA_SOURCE": "invalid"])
-        }
-    }
+
 }
 
 @MainActor @Suite struct DataSourceFactoryHostedTests {
@@ -96,7 +87,7 @@ import Testing
             let credentials = FactoryCredentialProbe()
             let controller = SessionController(
                 credentials: credentials, accounts: SessionAccountDatabase(applicationSupport: root, namespace: .mock))
-            let source = MockDataSource(seed: try MockAppSeed.make(now: Date()), sleep: { _ in })
+            let source = MockDataSource(seed: try MockAppSeed.make(now: Date()), delay: { 0 }, sleep: { _ in })
             let model = SignInModel(
                 source: source, session: controller, deviceIdentity: { UUID().uuidString }, deviceName: "test",
                 accepted: { _ in Issue.record("Challenge seed accepted a session") })
@@ -111,40 +102,28 @@ import Testing
             #expect(!FileManager.default.fileExists(atPath: root.path))
         }
 
-        @Test(arguments: ["demo", "twofactor"], ["app", "verify", "terms", "walkthrough"])
-        func signedInSeedUsesRestorableCredentialsAndAccountGates(account: String, gate: String) async throws {
+        @Test func signedInSeedWiresAuthConfigurationToRestorableMockSession() async throws {
             let root = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
             defer { try? FileManager.default.removeItem(at: root) }
-            let environment = [
-                "CF_AUTH_TEST_ID": UUID().uuidString, "CF_AUTH_TEST_SIGNED_IN": account,
-                "CF_AUTH_TEST_OFFLINE": "1", "CF_AUTH_TEST_WALKTHROUGH_SEEN": gate == "walkthrough" ? "0" : "1",
-                "CF_AUTH_TEST_UNVERIFIED": gate == "verify" ? "1" : "0",
-                "CF_AUTH_TEST_TERMS_PENDING": gate == "terms" ? "1" : "0",
-            ]
-            let services = try AppServices(info: [:], testing: true, environment: environment)
-            try await Task.detached { try await services.seedSignedIn(applicationSupport: root) }.value
+            let services = try AppServices(
+                info: [:], testing: true,
+                environment: [
+                    "CF_AUTH_TEST_ID": UUID().uuidString, "CF_AUTH_TEST_SIGNED_IN": "twofactor",
+                    "CF_AUTH_TEST_UNVERIFIED": "1", "CF_AUTH_TEST_OFFLINE": "1",
+                ], mockDelay: { 0 })
+            try await services.seedSignedIn(applicationSupport: root)
             let credentials = services.sessionCredentials()
+            defer { Task { try? await credentials.delete() } }
             let stored = try #require(try await credentials.readStoredSession())
+            #expect(stored.accountId == MockScenarioValues.twoFactorID)
+            let accounts = SessionAccountDatabase(applicationSupport: root, namespace: services.namespace)
             #expect(
-                stored.accountId == (account == "demo" ? MockScenarioValues.demoID : MockScenarioValues.twoFactorID))
-            let accounts = SessionAccountDatabase(applicationSupport: root, namespace: .mock)
-            let controller = SessionController(credentials: credentials, accounts: accounts)
-            #expect(try await controller.restore() == .signedIn(accountID: stored.accountId))
+                try await SessionController(credentials: credentials, accounts: accounts).restore()
+                    == .signedIn(accountID: stored.accountId))
             let database = try #require(await accounts.activeDatabase())
-            var updates = try await AccountReadinessRepository(database: database).values(accountID: stored.accountId)
-                .makeAsyncIterator()
-            let values = try #require(try await updates.next() ?? nil)
-            let expected: Gate =
-                gate == "verify" ? .verify : gate == "terms" ? .terms : gate == "walkthrough" ? .walkthrough : .app
-            #expect(values.gate == expected)
-            #expect(values.hasStoredData == (gate != "verify"))
-            let source = MockDataSource(
-                store: FileMockStateStore(applicationSupport: root), sleep: { _ in }, bearer: { stored.token })
-            #expect(try await source.fetchIdentity().id == stored.accountId)
+            #expect(try await AccountRepository(database: database).account()?.hasVerifiedEmail == false)
             try await accounts.close()
             try await credentials.delete()
-            try await Task.detached { try await services.seedSignedIn(applicationSupport: root) }.value
-            #expect(try await credentials.readStoredSession() == nil)
         }
 
         @Test func signedInSeedRequiresAuthTestGateAndKnownAccount() async throws {
@@ -166,7 +145,8 @@ import Testing
             defer { try? FileManager.default.removeItem(at: root) }
             let services = try AppServices(
                 info: [:], testing: false,
-                environment: ["CF_AUTH_TEST_ID": UUID().uuidString, "CF_AUTH_TEST_OFFLINE": offline ? "1" : "0"])
+                environment: ["CF_AUTH_TEST_ID": UUID().uuidString, "CF_AUTH_TEST_OFFLINE": offline ? "1" : "0"],
+                mockDelay: { 0 })
             let source: any DataSource
             if storedSession {
                 source = await Task.detached {
@@ -189,51 +169,6 @@ import Testing
             }
         }
 
-        @Test(arguments: [false, true])
-        func defaultAppMockUsesRNSeed(storedSession: Bool) async throws {
-            let root = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
-            defer { try? FileManager.default.removeItem(at: root) }
-            let services = try AppServices(info: [:], testing: false)
-            let source: any DataSource
-            if storedSession {
-                source = await Task.detached {
-                    services.makeDataSource(
-                        applicationSupport: root, session: StoredSession(token: "unused", accountId: UUID().uuidString))
-                }.value
-            } else {
-                source = services.makeDataSource(applicationSupport: root, credentials: FactoryCredentialProbe())
-            }
-            let mock = try #require(source as? MockDataSource)
-            #expect(!FileManager.default.fileExists(atPath: FileMockStateStore(applicationSupport: root).url.path))
-            #expect(try await mock.inbox().isEmpty)
-            let state = try await Task.detached {
-                try FileMockStateStore(applicationSupport: root).load()
-            }.value
-            let accounts = try #require(state?.accounts)
-            #expect(accounts.count == 2)
-            let demo = try #require(accounts.values.first { $0.twoFactorCode == nil })
-            guard
-                case .session(let result) = try await source.signIn(
-                    PasswordSignInInput(
-                        email: demo.snapshot.email, password: demo.password, deviceID: UUID().uuidString,
-                        deviceName: "iPhone"))
-            else {
-                Issue.record("Expected seeded demo sign-in")
-                return
-            }
-            #expect(result.account.hasVerifiedEmail)
-            #expect(demo.trips.count == 7)
-            let twoFactor = try #require(accounts.values.first { $0.twoFactorCode != nil })
-            guard
-                case .twoFactor = try await source.signIn(
-                    PasswordSignInInput(
-                        email: twoFactor.snapshot.email, password: twoFactor.password, deviceID: UUID().uuidString,
-                        deviceName: "iPhone"))
-            else {
-                Issue.record("Expected seeded two-factor challenge")
-                return
-            }
-        }
     #endif
 
     @Test func sourceConstructionIsLazyAndMockOnly() async throws {

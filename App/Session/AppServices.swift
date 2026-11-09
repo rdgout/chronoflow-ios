@@ -12,6 +12,7 @@ nonisolated struct AppServices: Sendable {
     enum Failure: Error { case invalidReadiness, applicationSupportUnavailable }
     let signedOutReadiness: Bool
     let factory: DataSourceFactory
+    private let mockDelay: @Sendable () -> TimeInterval
     private let isolatedMockStore: (any MockStateStore)?
     var namespace: StorageNamespace { factory.namespace }
     #if DEBUG
@@ -53,7 +54,8 @@ nonisolated struct AppServices: Sendable {
         #if DEBUG
             if let timelineSeed {
                 return MockDataSource(
-                    store: isolatedMockStore ?? MemoryMockStateStore(), seed: timelineSeed, bearer: bearer)
+                    store: isolatedMockStore ?? MemoryMockStateStore(), seed: timelineSeed, delay: mockDelay,
+                    bearer: bearer)
             }
             if let authTest {
                 return MockDataSource(
@@ -62,19 +64,22 @@ nonisolated struct AppServices: Sendable {
                     offline: authTest.offline,
                     mutationsOffline: authTest.settingsPending || authTest.walkthroughPending || authTest.termsPending,
                     remoteTripUpdate: { await refreshScenario?.consume() ?? false },
-                    bearer: bearer)
+                    delay: mockDelay, bearer: bearer)
             }
         #endif
         return MockDataSource(
-            store: isolatedMockStore ?? FileMockStateStore(applicationSupport: applicationSupport), bearer: bearer)
+            store: isolatedMockStore ?? FileMockStateStore(applicationSupport: applicationSupport),
+            delay: mockDelay, bearer: bearer)
     }
 
     init(
         info: [String: Any] = Bundle.main.infoDictionary ?? [:],
         testing: Bool = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
             || NSClassFromString("XCTestCase") != nil,
-        environment: [String: String] = ProcessInfo.processInfo.environment
+        environment: [String: String] = ProcessInfo.processInfo.environment,
+        mockDelay: @escaping @Sendable () -> TimeInterval = { Double.random(in: 0.3...0.8) }
     ) throws {
+        self.mockDelay = mockDelay
         #if DEBUG
             isolatedMockStore =
                 (ProcessInfo.processInfo.arguments.contains("-cf.isolatedMockServer")
@@ -146,38 +151,17 @@ nonisolated struct AppServices: Sendable {
     #if DEBUG
         func seedSignedIn(applicationSupport root: URL) async throws {
             guard let test = authTest, let account = test.signedInAccount else { return }
-            let marker = root.appending(path: "signed-in-seed.done")
-            // Seed once so relaunch still exercises restoration and cannot undo sign-out.
-            guard !FileManager.default.fileExists(atPath: marker.path) else { return }
             let credentials = test.credentials
             let source = MockDataSource(
                 store: FileMockStateStore(applicationSupport: root), seed: authTestSeed,
-                sleep: { _ in }, bearer: { try await credentials.readStoredSession()?.token })
-            let result: SessionResult
-            switch try await source.signIn(
-                PasswordSignInInput(
+                delay: { 0 }, sleep: { _ in }, bearer: { try await credentials.readStoredSession()?.token })
+            try await MockSessionSeed.run(
+                applicationSupport: root, namespace: namespace, credentials: credentials, source: source,
+                input: PasswordSignInInput(
                     email: account == "demo" ? MockScenarioValues.demoEmail : MockScenarioValues.twoFactorEmail,
-                    password: MockScenarioValues.password, deviceID: test.id, deviceName: "UI test"))
-            {
-            case .session(let session): result = session
-            case .twoFactor(let challenge):
-                result = try await source.completeTwoFactor(
-                    TwoFactorInput(challengeId: challenge, proof: .code(MockScenarioValues.twoFactorCode)))
-            }
-            let accounts = SessionAccountDatabase(applicationSupport: root, namespace: namespace)
-            let controller = SessionController(credentials: credentials, accounts: accounts)
-            do {
-                try await controller.accept(result)
-                guard let database = await accounts.activeDatabase(), let session = await controller.activeSession()
-                else { throw SessionFailure.databaseUnavailable }
-                let epoch = SyncEpoch(accountID: try AccountID(result.account.id), generation: session.epoch)
-                _ = try await FullPull(database: database, source: source).run(epoch: epoch)
-                try await accounts.close()
-                try Data().write(to: marker, options: .atomic)
-            } catch {
-                try? await accounts.close()
-                throw error
-            }
+                    password: MockScenarioValues.password, deviceID: test.id, deviceName: "UI test"),
+                twoFactorCode: MockScenarioValues.twoFactorCode)
+
         }
     #endif
 

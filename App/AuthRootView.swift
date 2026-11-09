@@ -2,6 +2,10 @@ import AppCore
 import Auth
 import SwiftUI
 
+#if DEBUG
+    import DataAccess
+#endif
+
 struct AuthRootView: View {
     let model: SignInModel
     let back: () -> Void
