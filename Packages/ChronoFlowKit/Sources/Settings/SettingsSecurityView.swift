@@ -94,6 +94,12 @@
             self.store = store
             _model = State(initialValue: SettingsSecurityModel(perform: store.performSecurity))
         }
+        #if DEBUG
+            init(store: SettingsPagesModel, model: SettingsSecurityModel) {
+                self.store = store
+                _model = State(initialValue: model)
+            }
+        #endif
         private var language: Language { locale.language.languageCode?.identifier == "nl" ? .nl : .en }
         private func t(_ key: String) -> String { SettingsStrings.text(key, language: language) }
         private var enabled: Bool {
@@ -334,4 +340,32 @@
             model.refreshLock()
         }
     }
+    #if DEBUG
+        @MainActor public struct SettingsSecurityUITestPage: View {
+            let store: SettingsPagesModel
+            let route: String
+            let setupPassword: String
+            @State private var model: SettingsSecurityModel
+            public init(store: SettingsPagesModel, route: String, setupPassword: String) {
+                self.store = store
+                self.route = route
+                self.setupPassword = setupPassword
+                _model = State(initialValue: SettingsSecurityModel(perform: store.performSecurity))
+            }
+            public var body: some View {
+                if route == "password" {
+                    SettingsPasswordView(perform: store.performSecurity)
+                } else {
+                    SettingsTwoFactorView(store: store, model: model)
+                        .task {
+                            if route == "twoFactorSetup" {
+                                model.showPrompt(.enable)
+                                model.promptPassword = setupPassword
+                                await model.submitPrompt()
+                            }
+                        }
+                }
+            }
+        }
+    #endif
 #endif

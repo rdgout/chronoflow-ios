@@ -63,4 +63,14 @@
         }
         private var retryAt: Date? { [model.retryAt, resetModel.retryAt].compactMap { $0 }.max() }
     }
+    #if DEBUG
+        @MainActor public struct SettingsDeleteUITestSheet: View {
+            let store: SettingsPagesModel
+            public init(store: SettingsPagesModel) { self.store = store }
+            public var body: some View {
+                SettingsDeleteAccountView(
+                    delete: store.deleteAccount, email: store.account?.email ?? "", security: store.performSecurity)
+            }
+        }
+    #endif
 #endif

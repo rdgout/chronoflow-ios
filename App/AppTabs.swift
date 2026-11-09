@@ -22,6 +22,7 @@ struct AppTabs: View {
     @State private var home: PlanHomeModel?
     @State private var settingsHome = SettingsHomeModel()
     @State private var settingsPages: SettingsPagesModel?
+    @State private var settingsPath = NavigationPath()
     @State private var tripsPath: [TripPageRoute] = []
     @State private var path: [TripPageRoute] = []
     @State private var wizard: MemberWizardModel?
@@ -40,6 +41,7 @@ struct AppTabs: View {
     #if DEBUG
         @State private var showingLegend = false
         @State private var showingReminders = false
+        @State private var showingSettingsDelete = false
     #endif
 
     private var language: Language { locale.language.languageCode?.identifier == "nl" ? .nl : .en }
@@ -63,6 +65,9 @@ struct AppTabs: View {
                 }
                 .sheet(isPresented: $showingReminders) { RemindersDestination(native: native, firstTrip: true) }
                 .sheet(isPresented: $showingLegend) { LegendSheet() }
+                .sheet(isPresented: $showingSettingsDelete) {
+                    if let settingsPages { SettingsDeleteUITestSheet(store: settingsPages) }
+                }
         #else
             tabs.planPageSafeArea()
         #endif
@@ -116,11 +121,21 @@ struct AppTabs: View {
                 trips.navigationDestination(for: TripPageRoute.self) { tripDestination($0) }
             }
             .tabItem { Label(t("My trips"), systemImage: "airplane") }.tag(Tab.trips)
-            NavigationStack {
+            NavigationStack(path: $settingsPath) {
                 SettingsHomeView(model: settingsHome)
                     .navigationDestination(for: SettingsDestination.self) { destination in
                         settingsDestination(destination)
                     }
+                    #if DEBUG
+                        .navigationDestination(for: String.self) { route in
+                            if route == "language" {
+                                SettingsLanguageView()
+                            } else if let settingsPages {
+                                SettingsSecurityUITestPage(
+                                    store: settingsPages, route: route, setupPassword: MockScenarioValues.password)
+                            }
+                        }
+                    #endif
             }
             .tabItem { Label(t("Settings"), systemImage: "gearshape") }.tag(Tab.settings)
         }
@@ -182,6 +197,24 @@ struct AppTabs: View {
                 {
                     await source.setOffline(true)
                     try? await native.refreshNow()
+                }
+                if (UIApplication.shared.delegate as? AppDelegate)?.authServices?.authUITestEnabled == true,
+                    let route = ProcessInfo.processInfo.environment["CF_SETTINGS_ROUTE"]
+                {
+                    selection = .settings
+                    switch route {
+                    case "profile":
+                        settingsPath.append(SettingsDestination.account)
+                        settingsPath.append(SettingsDestination.profile)
+                    case "language", "delete":
+                        settingsPath.append(SettingsDestination.account)
+                        if route == "delete" { showingSettingsDelete = true } else { settingsPath.append(route) }
+                    case "password", "twoFactor", "twoFactorSetup":
+                        settingsPath.append(SettingsDestination.security)
+                        settingsPath.append(route)
+                    default:
+                        if let destination = SettingsDestination(rawValue: route) { settingsPath.append(destination) }
+                    }
                 }
             #endif
             var clock: any PlanClock = SystemPlanClock()

@@ -34,6 +34,50 @@ import XCTest
         }
 
         @MainActor
+        func testSuccessfulDeletionSignsOutWipesCacheAndRoutesToSignInAfterPasswordRetry() async throws {
+            try await withSession { _, services, native, navigator in
+                let activeSession = await native.controller.activeSession()
+                let session = try XCTUnwrap(activeSession)
+                let awaitedDatabase = await native.accounts.activeDatabase()
+                let database = try XCTUnwrap(awaitedDatabase)
+                let mutationPermit = await native.controller.mutationPermit(for: session)
+                let permit = try XCTUnwrap(mutationPermit)
+                navigator.navigate(to: .settings)
+                let pages = SettingsPagesModel(
+                    database: database, permit: permit,
+                    isCurrent: { await native.controller.activeSession() == session },
+                    delete: { try await native.deleteAccount(password: $0, session: session) })
+                let editor = SettingsDeleteModel { try await pages.deleteAccount(password: $0) }
+                editor.confirmDeletion()
+                editor.password = "wrong"
+                await editor.submit()
+                XCTAssertEqual(editor.errorKey, "The provided password was incorrect.")
+                XCTAssertEqual(editor.stage, .password)
+                let stillSignedIn = await native.controller.activeSession()
+                XCTAssertEqual(stillSignedIn, session)
+                editor.password = MockScenarioValues.password
+                await editor.submit()
+                XCTAssertEqual(editor.stage, .deleted)
+                XCTAssertEqual(navigator.route, .signIn)
+                let presence = await native.controller.presence
+                let activeDatabase = await native.accounts.activeDatabase()
+                XCTAssertEqual(presence, .signedOut)
+                XCTAssertNil(activeDatabase)
+                let stored = try await services.sessionCredentials().readStoredSession()
+                XCTAssertNil(stored)
+                do {
+                    _ = try await AccountRepository(database: database).account()
+                    XCTFail("Deleted account's database remained open")
+                } catch { XCTAssertEqual(error as? StoreFailure, .closed) }
+                try await native.accounts.open(accountID: AccountID(session.session.accountId))
+                let awaitedDatabaseAfterReopen = await native.accounts.activeDatabase()
+                let reopened = try XCTUnwrap(awaitedDatabaseAfterReopen)
+                let account = try await AccountRepository(database: reopened).account()
+                XCTAssertNil(account, "Successful deletion must erase local account data")
+            }
+        }
+
+        @MainActor
         private func withSession(
             environment: [String: String] = [:],
             body: @MainActor (URL, AppServices, NativeSessionController, RootNavigator) async throws -> Void
