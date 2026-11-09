@@ -93,7 +93,7 @@ import XCTest
         let create = app.buttons["trips.create"]
         XCTAssertTrue(create.waitForExistence(timeout: 10))
         create.tap()
-        XCTAssertTrue(app.descendants(matching: .any)["wizard.title"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.staticTexts["wizard.title"].waitForExistence(timeout: 8))
         return app
     }
 }

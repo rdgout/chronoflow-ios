@@ -9,18 +9,36 @@
     public struct MemberWizardView: View {
         @Environment(\.locale) var locale
         @Environment(\.colorScheme) var scheme
+        @Environment(\.accessibilityReduceMotion) var reduceMotion
         @Bindable var model: MemberWizardModel
         let dismiss: () -> Void
         @State var confirmingDiscard = false
         @State var continuing = false
         @State var closing = false
         @State var errorScrollRequest = 0
+        #if DEBUG
+            var errorScrollOverride: Int?
+        #endif
         typealias Destination = MemberWizardDestination
         @State var copyFormatter: CopyLineFormatter?
 
         public init(model: MemberWizardModel, dismiss: @escaping () -> Void) {
             self.model = model
             self.dismiss = dismiss
+        }
+
+        var requestedErrorScroll: Int {
+            #if DEBUG
+                if let errorScrollOverride { return errorScrollOverride }
+            #endif
+            return errorScrollRequest
+        }
+
+        var errorScrollAnimation: Animation? {
+            #if DEBUG
+                if errorScrollOverride != nil { return nil }
+            #endif
+            return reduceMotion ? nil : .default
         }
 
         func t(_ key: String, _ arguments: [String: String] = [:]) -> String {
@@ -180,13 +198,21 @@
                     Divider().overlay(ColorToken.border.color)
                     WizardFlightDateTimeRow(model: model, index: index, arrival: true)
                 }.wizardCard()
-                ForEach(["departLocal", "arriveLocal"], id: \.self) { field in
-                    if let error = model.draft.fieldErrors["legs.\(index).\(field)"] {
-                        errorLine(
-                            fieldCopy(error),
-                            identifier: "wizard.\(index)." + (field == "arriveLocal" ? "arrival" : "departure")
-                                + ".error")
+                if ["departLocal", "arriveLocal"].contains(where: {
+                    model.draft.fieldErrors["legs.\(index).\($0)"] != nil
+                }) {
+                    VStack(alignment: .leading, spacing: PlanUITokens.space2) {
+                        ForEach(["departLocal", "arriveLocal"], id: \.self) { field in
+                            if let error = model.draft.fieldErrors["legs.\(index).\(field)"] {
+                                errorLine(
+                                    fieldCopy(error),
+                                    identifier: "wizard.\(index)." + (field == "arriveLocal" ? "arrival" : "departure")
+                                        + ".error")
+                            }
+                        }
                     }
+                    .id("wizard.flight.errors.\(index)")
+                    .planContentBounds()
                 }
             }
         }

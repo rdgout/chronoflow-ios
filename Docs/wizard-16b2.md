@@ -56,11 +56,26 @@ Verification:
 
 ## User-run acceptance
 
+### Deterministic error-scroll follow-up (2026-11-09)
+
+The reported 17e rerun passed `WizardFlightPickerTests`, `TripWizardTests`, `TripWizardReviewTests` and the second-flight-only error check. The remaining offscreen-first-error check no longer calls the auth reveal helper or waits for offscreen accessibility frames to settle. Only `WizardOutboundScrollErrors`, with a valid `CF_AUTH_TEST_ID` in DEBUG, starts at the bottom through the native initial scroll anchor. Typed `staticTexts` queries verify the later error is hittable and wholly inside the scroll viewport above the identified pinned footer, then Continue must bring the first error into that same visible area.
+
+Continue now centres the invalid flight's error-message group rather than aligning the whole card's top. The scroll runs on the next main-loop turn so newly inserted error anchors exist, and respects Reduce Motion. The error group and footer use the existing optional layout measurement hook. `WizardErrorScrollTests` renders the real outbound and home Times screens for the board and all seven device profiles, including Duo's side inset, in English/Dutch at default/xxLarge. It seeds errors, starts at the bottom without gestures and triggers the same scroll-request observer used by Continue without animation through its DEBUG request override; the UI screen check separately covers the actual button. It requires the first error to start above the viewport and end wholly inside it, clear of the full footer. This suite records no references and runs on one 17e simulator.
+
+Verification:
+
+- `make lint`: passed (`build/wizard-scroll-lint.log`).
+- Full `make host-tests`: attempted and failed only at the unchanged `APICookieTests.realRedirectCookieHandlingIsDisabled` loopback listener (`Operation not permitted`, `build/wizard-scroll-host-tests.log`).
+- Package tests excluding only that sandbox-denied listener, plus token/asset tests and resource/runner fixtures: passed (`build/wizard-scroll-package-tests.log`, `build/wizard-scroll-tooling-tests.log`).
+- Direct Swift 6/iOS 17 compilation of the changed UI module and app, and AppTests/AppUITests type checks: passed (`build/wizard-scroll-typecheck.log`). Native SwiftPM build planning cannot resolve iOS destinations in this sandbox; the direct compiler checks use the installed simulator SDK and existing dependency modules.
+- CoreSimulator's service connection is denied (`build/wizard-scroll-simulators.log`), so the new all-size hosted regression and corrected UI check still need the 17e run below. No runtime result, snapshot comparison or matrix run is claimed.
+- The worktree's Git index is outside the writable sandbox, so `git add` is denied. A single Conventional Commit patch is prepared at `build/wizard-scroll-fix.patch`; the branch cannot be advanced here.
+
 First run the native compilation and focused hosted/UI checks:
 
 ```sh
 make generate
-make targeted DEVICES="17e" ONLY="AppTests/WizardFlightPickerTests AppUITests/WizardRouteScreenTests AppUITests/TripWizardTests AppUITests/TripWizardReviewTests"
+make targeted DEVICES="17e" ONLY="AppTests/WizardErrorScrollTests AppTests/WizardFlightPickerTests AppUITests/WizardRouteScreenTests AppUITests/TripWizardTests AppUITests/TripWizardReviewTests"
 ```
 
 For the visual review, capture the member boards in English/Dutch and light/dark:

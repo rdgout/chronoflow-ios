@@ -35,7 +35,7 @@ nonisolated final class WizardRouteScreenTests: XCTestCase {
             let next = app.buttons["wizard.where.continue"]
             if board == "WizardWhereSame" {
                 XCTAssertFalse(next.isEnabled)
-                XCTAssertTrue(app.descendants(matching: .any)["wizard.where.same"].exists)
+                XCTAssertTrue(app.staticTexts["wizard.where.same"].exists)
                 XCTAssertFalse(app.segmentedControls["wizard.route.stops"].exists)
                 XCTAssertFalse(app.staticTexts["From your last trip"].exists)
             } else if board == "WizardWhereLimit" {
@@ -96,32 +96,42 @@ nonisolated final class WizardRouteScreenTests: XCTestCase {
     @MainActor func testBoardErrorAppearsOnlyUnderTheSecondFlight() {
         let app = WizardScreenUIFlow.launch("WizardOutboundTwoErrors")
         defer { app.terminate() }
-        let error = app.descendants(matching: .any)["wizard.1.arrival.error"]
+        let error = app.staticTexts["wizard.1.arrival.error"]
         AuthUIFlow.reveal(error, in: app, scroll: app.scrollViews.firstMatch)
         XCTAssertEqual(error.label, "Check the departure and arrival times.")
         for identifier in ["wizard.0.departure.error", "wizard.0.arrival.error", "wizard.1.departure.error"] {
-            XCTAssertFalse(app.descendants(matching: .any)[identifier].exists)
+            XCTAssertFalse(app.staticTexts[identifier].exists)
         }
     }
 
-    @MainActor func testContinueScrollsBackToTheOffscreenFirstError() throws {
+    @MainActor func testContinueScrollsBackToTheOffscreenFirstError() {
         let app = WizardScreenUIFlow.launch("WizardOutboundScrollErrors")
         defer { app.terminate() }
         let scroll = app.scrollViews.firstMatch
-        let first = app.descendants(matching: .any)["wizard.0.arrival.error"]
-        let later = app.descendants(matching: .any)["wizard.4.departure.error"]
-        AuthUIFlow.reveal(later, in: app, scroll: scroll)
-        _ = try UIWait.stableFrames([first, later], timeout: 5)
+        let first = app.staticTexts["wizard.0.arrival.error"]
+        let later = app.staticTexts["wizard.4.departure.error"]
+        let next = app.buttons["wizard.outbound.continue"]
+        let footer = app.otherElements["wizard.outbound.footer"]
+        XCTAssertTrue(footer.waitForExistence(timeout: 5))
+        let viewport = AuthUIFlow.viewport(in: app, scrollFrame: scroll.frame)
+        let footerTop = footer.frame.minY
+        func visible(_ error: XCUIElement) -> Bool {
+            guard error.isHittable else { return false }
+            let frame = error.frame
+            return viewport.contains(frame) && frame.maxY <= footerTop
+        }
+        let atBottom = XCTNSPredicateExpectation(
+            predicate: NSPredicate { _, _ in visible(later) && first.frame.maxY < scroll.frame.minY }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [atBottom], timeout: 5), .completed)
         XCTAssertEqual(later.label, "This flight leaves before the previous one lands.")
         XCTAssertFalse(first.isHittable)
         XCTAssertLessThan(first.frame.maxY, scroll.frame.minY)
-        let next = app.buttons["wizard.outbound.continue"]
         XCTAssertTrue(next.isHittable && next.isEnabled)
         next.tap()
         let returned = XCTNSPredicateExpectation(
-            predicate: NSPredicate { _, _ in first.isHittable && scroll.frame.contains(first.frame) }, object: nil)
+            predicate: NSPredicate { _, _ in visible(first) }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [returned], timeout: 5), .completed)
-        XCTAssertTrue(first.isHittable)
+        XCTAssertTrue(visible(first))
     }
 
     @MainActor func testEmptyPillsAnnounceNotSetInDutch() {

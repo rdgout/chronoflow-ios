@@ -44,13 +44,19 @@
                             content()
                         }.frame(maxWidth: .infinity, alignment: .leading).padding(PlanUITokens.space5)
                     }
-                    .onChange(of: errorScrollRequest) { _, _ in
+                    .defaultScrollAnchor(initialScrollAnchor(for: id))
+                    .onChange(of: requestedErrorScroll) { _, _ in
                         let start = id == "return-flight" ? model.draft.form.returnBoundary : 0
                         let end = id == "return-flight" ? model.draft.form.legs.count : model.draft.form.returnBoundary
                         if let index = (start..<end).first(where: { index in
                             model.draft.fieldErrors.keys.contains { $0.hasPrefix("legs.\(index).") }
                         }) {
-                            withAnimation { proxy.scrollTo("wizard.flight.\(index)", anchor: .top) }
+                            // Newly inserted errors need their scroll anchors committed first.
+                            DispatchQueue.main.async {
+                                withAnimation(errorScrollAnimation) {
+                                    proxy.scrollTo("wizard.flight.errors.\(index)", anchor: .center)
+                                }
+                            }
                         }
                     }
                 }
@@ -86,6 +92,8 @@
                         .accessibilityIdentifier("wizard.\(id).continue")
                     }.padding(.horizontal, PlanUITokens.space5).padding(.vertical, PlanUITokens.space3)
                         .background(ColorToken.background.color)
+                        .accessibilityElement(children: .contain).accessibilityIdentifier("wizard.\(id).footer")
+                        .planContentBounds()
                 } else if answerHint {
                     tapHint.frame(maxWidth: .infinity).multilineTextAlignment(.center)
                         .padding(.horizontal, PlanUITokens.space5).padding(.bottom, PlanUITokens.wizardHintBottom)
@@ -111,6 +119,18 @@
                 }
             }
             .accessibilityElement(children: .contain).accessibilityIdentifier("wizard.\(id)")
+        }
+
+        private func initialScrollAnchor(for id: String) -> UnitPoint? {
+            #if DEBUG
+                let environment = ProcessInfo.processInfo.environment
+                if id == "outbound", environment["CF_WIZARD_BOARD_CAPTURE"] == "WizardOutboundScrollErrors",
+                    UUID(uuidString: environment["CF_AUTH_TEST_ID"] ?? "") != nil
+                {
+                    return .bottom
+                }
+            #endif
+            return nil
         }
 
         var returnScreen: some View {
