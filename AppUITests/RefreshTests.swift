@@ -6,11 +6,11 @@ nonisolated final class RefreshTests: XCTestCase {
         defer { app.terminate() }
         XCTAssertFalse(feedback(in: app).exists)
         pull(app.scrollViews["today.screen"], in: app)
-        assertFeedback("Up to date", in: app)
+        try assertFeedback("Up to date", in: app, above: "today.trip")
         app.tabBars.buttons["My trips"].tap()
         XCTAssertFalse(feedback(in: app).exists)
         pull(app.scrollViews["trips.screen"], in: app)
-        assertFeedback("Up to date", in: app)
+        try assertFeedback("Up to date", in: app, above: "trips.section.active")
     }
 
     @MainActor func testEmptyTodayAndMyTripsCanRefresh() throws {
@@ -19,11 +19,11 @@ nonisolated final class RefreshTests: XCTestCase {
         XCTAssertTrue(app.otherElements["today.empty"].waitForExistence(timeout: 10))
         XCTAssertFalse(feedback(in: app).exists)
         pull(app.scrollViews["today.screen"], in: app)
-        assertFeedback("Up to date", in: app)
+        try assertFeedback("Up to date", in: app, above: "today.empty")
         app.tabBars.buttons["My trips"].tap()
         XCTAssertFalse(feedback(in: app).exists)
         pull(app.scrollViews["trips.screen"], in: app)
-        assertFeedback("Up to date", in: app)
+        try assertFeedback("Up to date", in: app, above: "trips.empty")
     }
 
     @MainActor func testServerTripChangeIsReportedOnTodayAndMyTrips() throws {
@@ -31,11 +31,11 @@ nonisolated final class RefreshTests: XCTestCase {
         defer { app.terminate() }
         XCTAssertFalse(feedback(in: app).exists)
         pull(app.scrollViews["today.screen"], in: app)
-        assertFeedback("1 trip updated", in: app)
+        try assertFeedback("1 trip updated", in: app, above: "today.trip")
         app.tabBars.buttons["My trips"].tap()
         XCTAssertFalse(feedback(in: app).exists)
         pull(app.scrollViews["trips.screen"], in: app)
-        assertFeedback("1 trip updated", in: app)
+        try assertFeedback("1 trip updated", in: app, above: "trips.section.active")
     }
 
     @MainActor func testTripPageCanRefresh() throws {
@@ -56,7 +56,7 @@ nonisolated final class RefreshTests: XCTestCase {
         }
         AuthUIFlow.reveal(legend, in: app, scroll: scroll)
         pull(scroll, in: app)
-        assertFeedback("Up to date", in: app)
+        try assertFeedback("Up to date", in: app, above: "Your plan")
     }
 
     @MainActor private func pull(_ scroll: XCUIElement, in app: XCUIApplication) {
@@ -85,16 +85,29 @@ nonisolated final class RefreshTests: XCTestCase {
         add(attachment)
     }
 
-    @MainActor private func assertFeedback(_ text: String, in app: XCUIApplication) {
+    @MainActor private func assertFeedback(_ text: String, in app: XCUIApplication, above content: String) throws {
         let feedback = feedback(in: app)
         let appeared = feedback.waitForExistence(timeout: 12)
-        let label = appeared ? feedback.label : nil
-        attachScreenshot("Refresh feedback after wait: \(text)")
         guard appeared else {
+            attachScreenshot("Refresh feedback after wait: \(text)")
             XCTFail("Expected refresh.feedback after pulling: \(app.debugDescription)")
             return
         }
-        XCTAssertEqual(label, text)
+        let elements = descendants(in: try app.snapshot())
+        attachScreenshot("Refresh feedback after wait: \(text)")
+        let matches = elements.filter { $0.identifier == "refresh.feedback" }
+        let capsule = try XCTUnwrap(matches.first)
+        let navigation = try XCTUnwrap(elements.first { $0.elementType == .navigationBar })
+        let body = try XCTUnwrap(elements.first { $0.identifier == content || $0.label == content })
+        XCTAssertEqual(capsule.label, text)
+        XCTAssertEqual(matches.count, 1)
+        XCTAssertGreaterThanOrEqual(capsule.frame.minY, navigation.frame.maxY)
+        XCTAssertFalse(body.frame.isEmpty, "Expected content below refresh feedback")
+        XCTAssertGreaterThanOrEqual(body.frame.minY, capsule.frame.maxY)
         XCTAssertTrue(feedback.waitForNonExistence(timeout: 5))
+    }
+
+    @MainActor private func descendants(in snapshot: XCUIElementSnapshot) -> [XCUIElementSnapshot] {
+        [snapshot] + snapshot.children.flatMap { descendants(in: $0) }
     }
 }

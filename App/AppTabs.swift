@@ -302,6 +302,7 @@ struct AppTabs: View {
                 PlanLoadingView(label: t("Loading today")).padding(PlanUITokens.space4).planPageRail()
                     .planRefreshContent()
             }
+            .planRefreshScroll()
             .navigationTitle(t("Today")).background(ColorToken.background.color)
             .accessibilityElement(children: .contain).accessibilityIdentifier("today.screen")
         } else {
@@ -324,6 +325,7 @@ struct AppTabs: View {
             ScrollView {
                 TripsLoadingView().padding(PlanUITokens.space4).planPageRail().planRefreshContent()
             }
+            .planRefreshScroll()
             .navigationTitle(t("My trips")).background(ColorToken.background.color)
             .accessibilityElement(children: .contain).accessibilityIdentifier("trips.screen")
         } else {

@@ -67,6 +67,7 @@
                     }
                 }.planContentBounds().padding(PlanUITokens.space4).planPageRail().planRefreshContent()
             }
+            .planRefreshScroll()
             .background(ColorToken.background.color).foregroundStyle(ColorToken.foreground.color)
             .navigationTitle(t("Today")).accessibilityElement(children: .contain)
             .accessibilityIdentifier("today.screen")

@@ -85,6 +85,7 @@
                     }
                 }.planContentBounds().padding(PlanUITokens.space4).planPageRail().planRefreshContent()
             }
+            .planRefreshScroll()
             .navigationTitle(t("My trips")).accessibilityElement(children: .contain)
             .accessibilityIdentifier("trips.screen")
             .toolbar {

@@ -51,7 +51,8 @@ public struct TripPageView: View {
                 GeometryReader { geometry in
                     ScrollView {
                         errorPage.frame(minHeight: geometry.size.height).planRefreshContent()
-                    }.accessibilityElement(children: .contain).accessibilityIdentifier("trip.scroll")
+                    }.planRefreshScroll().accessibilityElement(children: .contain).accessibilityIdentifier(
+                        "trip.scroll")
                 }
             } else {
                 page
@@ -125,6 +126,7 @@ public struct TripPageView: View {
                     }.padding(.horizontal, PlanMetrics.gutter).padding(.bottom, PlanMetrics.gutter)
                         .planRefreshContent()
                 }
+                .planRefreshScroll()
                 .coordinateSpace(name: "trip.scroll").accessibilityElement(children: .contain)
                 .accessibilityIdentifier("trip.scroll")
                 .onAppear {
