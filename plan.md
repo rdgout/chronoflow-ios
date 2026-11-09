@@ -2099,7 +2099,7 @@ User decision 2026-11-06: implement these when the named states exist; this roun
 
 - [x] Keep Debug plan fixtures out of the Release readiness test build without exposing app seeds.
 - [x] Restore key-window and visible-content guards at layout settlement; measure contrast from committed rendered content.
-- [ ] Keep Step/Legend content within asymmetric horizontal safe areas.
+- [x] Keep Step/Legend content within asymmetric horizontal safe areas using the shared measured rail modifier; retain both SE and asymmetric Duo hosted fixtures.
 - [ ] Route committed unverified sessions after request cancellation and restore.
 - [ ] Restore cheap default Welcome self-comparisons and auth capture guards, without references.
 - [ ] Cover AppServices default file-store wiring through both factories.
