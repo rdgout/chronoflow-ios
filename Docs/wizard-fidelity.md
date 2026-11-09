@@ -31,3 +31,26 @@ Attachments use board names with `Dark`, `NL` or `DarkNL` suffixes. The shared b
 - `git diff --check` passes. No simulator, screenshot execution, snapshot recording, matrix or Duo run was performed here; runtime capture and visual acceptance remain pending.
 
 Five ordered atomic group/capture patches and their Conventional Commit subjects are in `build/commits/`. Branch refs are unchanged; temporary commit objects/indexes live under ignored `build/` because the worktree's Git metadata is read-only in this environment.
+
+## Fidelity round 2: compact picker continuity
+
+Based on `2786b73` on `feat/phase-16b-wizard`. The date picker now has constant foreground/tint configuration. A permanent surrounding container owns the noninteractive error ring; validation changes only the ring's opacity. Both nested `ViewThatFits` branch pairs are replaced with a `Layout` that repositions the same caption/date/time children, including when a selected value changes the compact control's intrinsic width. No value-dependent `.id` or conditional picker modifiers remain. The existing `if let date` switches only between empty placeholders and populated compact pickers: `setDateTime` rejects unparseable values, so validation and hour/minute/date edits cannot switch a populated picker back to the placeholder branch. Empty selection still commits on Done.
+
+The shared UI helper explicitly selects **empty** Date buttons and checks for `wizard.native-picker`, the app's existing wheel popover, before addressing its three wheels. All current outbound/return date-helper calls start empty. Populated compact dates are system calendar editors per [Apple's compact picker documentation](https://developer.apple.com/documentation/uikit/uidatepickerstyle/compact); no test assumes that those editors have three wheels. Their exact iOS 27 accessibility hierarchy has not been observed here. Compact time helpers capture the 12/24-hour wheel arrangement before editing, wait for the minute/meridiem wheels after each update, and fail explicitly if the popover closes. They never reopen it to hide a dismissal. The outbound error journey also edits a time while its field error clears.
+
+Four package tests cover trailing alignment, constrained stacking, the exact wrap boundary and unspecified width. The registered hosted `WizardFlightPickerIdentityTests` checks underlying `UIDatePicker` identity, tint and compact style through error clearing, hour/minute/date changes and reflow at the device-table widths at xxLarge. The hosted test and existing four UI journeys require the user's later 17e execution; no simulator, snapshots, matrix or Duo run was performed here.
+
+Round 2 verification:
+
+- `make lint` passes (`build/wizard-round2-lint.log`).
+- The final isolated `make quick` runs all package suites; only `APICookieTests.realRedirectCookieHandlingIsDisabled` fails because sandbox loopback listening returns `EPERM` (`build/wizard-round2-quick-final.log`). The first run also hit the existing trip-page async wait timeout; it passes on the isolated rerun. The quick gate therefore cannot be reported as passing in this environment.
+- The full package run with only that cookie-listener test excluded passes all 600 Swift Testing cases and 12 XCTest cases, including all 64 wizard cases and unchanged performance budgets (`build/wizard-round2-package-final.log`). The remaining quick tiers pass separately: 11 TokenGen, seven AssetGen and 101 resource/runner fixtures (`build/wizard-round2-support.log`).
+- iOS 17 package/test compilation passes (`build/wizard-round2-ios.log`). Direct Swift 6 app compilation and all AppTests/AppUITests type checks pass (`build/wizard-round2-typecheck.log`). These compile checks do not execute a simulator.
+- One atomic patch, `build/commits/1.patch`, and `messages.txt` deliver the change. The patch is checked against `2786b73` using an isolated index; branch refs and the real index are unchanged.
+
+Later 17e runtime check:
+
+```sh
+make generate
+make targeted DEVICES="17e" ONLY="AppTests/WizardFlightPickerIdentityTests AppUITests/TripWizardTests AppUITests/TripWizardReviewTests"
+```

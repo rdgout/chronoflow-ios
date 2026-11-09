@@ -24,18 +24,9 @@
         private func t(_ key: String) -> String { WizardStrings.text(key, locale: locale) }
 
         var body: some View {
-            VStack(alignment: .leading, spacing: PlanUITokens.space2) {
-                ViewThatFits(in: .horizontal) {
-                    HStack(spacing: PlanUITokens.space2) {
-                        caption
-                        Spacer(minLength: 0)
-                        controls
-                    }
-                    VStack(alignment: .leading, spacing: PlanUITokens.space2) {
-                        caption
-                        controls
-                    }
-                }
+            WizardFlightRowLayout(spacing: PlanUITokens.space2, fillsWidth: true) {
+                caption
+                controls
             }
             .padding(.horizontal, PlanUITokens.space4).padding(.vertical, PlanUITokens.space2)
             .frame(minHeight: PlanUITokens.wizardFlightRowHeight)
@@ -72,32 +63,28 @@
         }
 
         private var controls: some View {
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: PlanUITokens.space2) {
-                    dateControl
-                    timeControl
-                }
-                VStack(alignment: .leading, spacing: PlanUITokens.space2) {
-                    dateControl
-                    timeControl
-                }
+            WizardFlightRowLayout(spacing: PlanUITokens.space2) {
+                dateControl
+                timeControl
             }.buttonStyle(.plain)
                 .environment(\.calendar, WizardDateTime.calendar).environment(
                     \.timeZone, WizardDateTime.calendar.timeZone
                 )
-
         }
 
         private var dateControl: some View {
-            datePicker.foregroundStyle(
-                (model.draft.fieldErrors[key] == nil ? ColorToken.foreground : .destructive).color
-            )
-            .tint((model.draft.fieldErrors[key] == nil ? ColorToken.foreground : .destructive).color)
+            ZStack {
+                datePicker
+                    .foregroundStyle(ColorToken.foreground.color)
+                    .tint(ColorToken.foreground.color)
+            }
             .overlay {
-                if model.draft.fieldErrors[key] != nil {
-                    RoundedRectangle(cornerRadius: PlanUITokens.radiusSm).strokeBorder(
-                        ColorToken.destructive.color, lineWidth: AuthTokens.focusWidth)
-                }
+                RoundedRectangle(cornerRadius: PlanUITokens.radiusSm).strokeBorder(
+                    ColorToken.destructive.color, lineWidth: AuthTokens.focusWidth
+                )
+                .opacity(model.draft.fieldErrors[key] == nil ? 0 : 1)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
             }
         }
 

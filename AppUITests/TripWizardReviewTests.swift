@@ -51,10 +51,10 @@ nonisolated final class TripWizardReviewTests: XCTestCase {
         if returnFlight {
             XCTAssertTrue(app.otherElements["wizard.return-flight"].waitForExistence(timeout: 5))
             XCTAssertTrue(app.descendants(matching: .any)["wizard.return-flight.from"].exists)
-            date("departure", index: 1, day: "22", in: app)
-            date("arrival", index: 1, day: "22", in: app)
-            time("departure", index: 1, hour: "10", minute: "25", in: app)
-            time("arrival", index: 1, hour: "15", minute: "30", in: app)
+            WizardPickerUIFlow.emptyDate("departure", index: 1, day: "22", in: app)
+            WizardPickerUIFlow.emptyDate("arrival", index: 1, day: "22", in: app)
+            WizardPickerUIFlow.time("departure", index: 1, hour: "10", minute: "25", in: app)
+            WizardPickerUIFlow.time("arrival", index: 1, hour: "15", minute: "30", in: app)
             app.buttons["wizard.return-flight.continue"].tap()
         }
         answerSleep(app)
@@ -87,10 +87,10 @@ nonisolated final class TripWizardReviewTests: XCTestCase {
         chooseAirport("AMS", side: "from", in: app)
         chooseAirport("HND", side: "to", in: app)
         app.buttons["wizard.where.continue"].tap()
-        date("departure", index: 0, day: "10", in: app)
-        date("arrival", index: 0, day: "11", in: app)
-        time("departure", index: 0, hour: "14", minute: "40", in: app)
-        time("arrival", index: 0, hour: "9", minute: "15", in: app)
+        WizardPickerUIFlow.emptyDate("departure", index: 0, day: "10", in: app)
+        WizardPickerUIFlow.emptyDate("arrival", index: 0, day: "11", in: app)
+        WizardPickerUIFlow.time("departure", index: 0, hour: "14", minute: "40", in: app)
+        WizardPickerUIFlow.time("arrival", index: 0, hour: "9", minute: "15", in: app)
         app.buttons["wizard.outbound.continue"].tap()
         XCTAssertTrue(app.otherElements["wizard.return"].waitForExistence(timeout: 5))
     }
@@ -114,31 +114,5 @@ nonisolated final class TripWizardReviewTests: XCTestCase {
         let result = app.buttons["wizard.airport.\(code)"]
         XCTAssertTrue(result.waitForExistence(timeout: 8))
         result.tap()
-    }
-
-    @MainActor private func date(_ side: String, index: Int, day: String, in app: XCUIApplication) {
-        let button = app.buttons["wizard.\(index).\(side).date"]
-        AuthUIFlow.reveal(button, in: app, scroll: app.scrollViews.firstMatch)
-        button.tap()
-        let wheels = app.pickerWheels
-        XCTAssertTrue(wheels.element(boundBy: 2).waitForExistence(timeout: 5))
-        wheels.element(boundBy: 0).adjust(toPickerWheelValue: "November")
-        wheels.element(boundBy: 1).adjust(toPickerWheelValue: day)
-        wheels.element(boundBy: 2).adjust(toPickerWheelValue: "2040")
-        app.buttons["wizard.picker.done"].tap()
-    }
-
-    @MainActor private func time(_ side: String, index: Int, hour: String, minute: String, in app: XCUIApplication) {
-        let picker = app.datePickers["wizard.\(index).\(side).time"]
-        AuthUIFlow.reveal(picker, in: app, scroll: app.scrollViews.firstMatch)
-        picker.tap()
-        let wheels = app.pickerWheels
-        XCTAssertTrue(wheels.firstMatch.waitForExistence(timeout: 5))
-        let numeric = Int(hour)!
-        wheels.element(boundBy: 0).adjust(
-            toPickerWheelValue: wheels.count == 3 ? String(numeric % 12 == 0 ? 12 : numeric % 12) : hour)
-        wheels.element(boundBy: 1).adjust(toPickerWheelValue: minute)
-        if wheels.count == 3 { wheels.element(boundBy: 2).adjust(toPickerWheelValue: numeric < 12 ? "AM" : "PM") }
-        app.staticTexts[index == 0 ? "When is your flight?" : "Your flight home"].tap()
     }
 }
