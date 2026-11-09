@@ -5,6 +5,11 @@ ReleaseReadinessTests/ReleaseReadinessTests
 AppUITests/UIReseedTests
 AppUITests/SettingsTests
 AppUITests/SignInTests
+AppUITests/SignInKeyboardTests
+AppUITests/TwoFactorKeyboardTests
+AppUITests/ForgotPasswordKeyboardTests
 AppUITests/VerifyAuditTests
 AppUITests/AuthSessionTests
 AppUITests/ReadinessTests
+AppUITests/LaunchSceneTests
+AppUITests/LaunchSceneDarkTests

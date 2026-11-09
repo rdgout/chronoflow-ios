@@ -2139,7 +2139,7 @@ Main restoration validation: source comparison confirms the two methods and enti
 - [x] Compare requested launch-only arguments and environment against the cold process seed, including removed keys and duplicate overrides; cold-launch when they differ. Preserve caller-authored arguments for scene validation because XCTest adds argv defaults. End editing and resign first responder before reset teardown; keep the 12 s acknowledgement ceiling. Cover language/content-size cold launches and a Dutch/XXLarge in-edit reset with process/count assertions.
 - [x] Separate successful Verify resend countdown from throttle failure, wait for actual countdown/error state before auditing, and add contextual assertion messages plus host fixture coverage.
 - [x] Scope unreadable xcresult errors to their pass, retain reader diagnostics, and attribute log failures only to their own suite. Cover serial/clone logs and keep incomplete result extraction failing the gate.
-- [ ] Run lint/quick and iOS source checks, deliver atomic patches on `caa72aa` if worktree metadata remains read-only, and record exact 17e reruns and acceptance limits.
+- [x] Run lint/quick and iOS source checks, deliver atomic patches on `caa72aa` if worktree metadata remains read-only, and record exact 17e reruns and acceptance limits. Strict lint, 605 Swift Testing methods + 19 XCTest methods excluding only the existing cookie-listener sandbox EPERM, 17 generator tests, 119 Python fixtures and direct iOS 17 Debug/Release compilation pass. Final quick fails only at that unchanged loopback test; simulator acceptance remains pending. Four atomic patches and messages are in `build/commits/`; the focused manifest adds the keyboard and frozen-launch suites.
 
 ## Open questions for the user
 

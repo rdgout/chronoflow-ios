@@ -255,3 +255,73 @@ Logs are `build/reseed-final-{lint,quick}.log`, `build/reseed-supported-final.lo
 benchmark speedup, snapshots or device-matrix results are claimed. Git worktree metadata is outside
 the writable roots, so `build/commits/1.patch` through `6.patch` plus `messages.txt` deliver atomic
 Conventional Commits on `1e2cf4c`, without trailers.
+
+### Remaining reseed acceptance fixes (2026-11-09)
+
+User-host results on `caa72aa`: focused manifest 336 s; default UI tier with two workers and reused
+build 840 s wall (previously 1,244 s), with 43 suites passing; single-worker benchmark 114 s.
+Failures remain in Verify countdown/throttle, SignIn return-chain, and Dutch/XXLarge keyboard cases.
+These are measured failing runs, not acceptance of the fixes below.
+
+| Interval on caa72aa | Samples | p50 seconds | p95 seconds |
+| --- | ---: | ---: | ---: |
+| launch begin → process entry | 5 | 2.070 | 3.438 |
+| process entry → overlay committed | 5 | 0.212 | 0.250 |
+| overlay committed → session ready | 5 | 0.717 | 1.161 |
+| session ready → exposed root | 9 | 0.077 | 0.212 |
+| launch begin → launch return | 5 | 3.330 | 4.752 |
+| launch return → first element | 5 | 0.112 | 0.505 |
+| reset begin → reset return | 4 | 0.816 | 1.293 |
+| reset begin → first screen element | 1 | 0.828 | 0.828 |
+
+The supplied timeline summary has 87 events, four reset/seed failures, six URL deliveries and zero
+rejected commands. Its counts describe captured events filtered to runner IDs, rather than all
+failures in every xcresult.
+
+ScreenTestApp now compares the requested seed with the immutable cold-launch seed. Changing or
+removing an Apple/UI launch argument, settings language/theme, splash/motion argument, profile,
+or explicit non-CF environment key forces a cold launch. The diagnostic lists changed key names.
+Changes to ordinary CF fixture keys still reseed. The runner also passes its original launch arguments
+through a gated Debug environment value: scene validation uses that snapshot rather than argv
+augmented by XCTest. Repeated argument overrides are compared, too. Cleanup uses the same launch
+settings rather than sending an empty argument list to a process with language/size overrides.
+
+Reset ends window editing and resigns the first responder before awaiting service teardown, then
+ends editing again before removing the root. `reset-editing-ended` records the nonce and endEditing
+result. Runner reset begin/return records now include the nonce. The existing 12 s ceiling and PID
+acknowledgement remain. New UIReseedTests cover editing a Dutch/XXLarge email during reset and
+language/content-size transitions requiring cold launches.
+
+The two Verify failures have concrete fixture causes: successful resend has no error banner, while
+the throttle scenario previously never injected a throttle response. Countdown now waits for the
+countdown element and disabled resend, checks the banner is absent, and verifies the countdown
+survives foreground refresh. Throttle injects the real mock request failure and waits for both banner
+and countdown. Verify setup assertions now identify language, appearance, size, state and missing
+condition; the host fixture regression distinguishes all successful/error resend scenarios.
+
+The runner's unreadable-xcresult fallback previously attached every log failure to every selected
+suite. It now reports one pass-level extraction failure, retaining the reader error/stderr and the
+bundle/log paths. Only qualified XCTest or clone log failures are attributed to a suite; unqualified
+Swift Testing failures stay in pass diagnostics. Missing results still fail the gate. Separate isolated
+device bundles and timing merges were already covered and remain unchanged. The local historical
+Debug-compare bundle lacks Info.plist and the serial log contains only invocation text, so the user's
+Dark test result cannot be adjudicated from these local artifacts. Valid xcresult failures remain
+authoritative; a passing log alone never converts missing result evidence into a pass.
+
+The focused manifest now includes all three keyboard suites and both frozen launch suites. Run it
+with a fresh build, preserve both result directories, then run the unchanged default and benchmark
+manifests using the commands in the previous section. Preserve focused results before the default
+run as well. The exact focused suites are in [ui-test-reseed-rerun-17e.txt](ui-test-reseed-rerun-17e.txt).
+
+Validation: `make lint` passes. Final `make -k quick` runs every target and fails only at the unchanged
+`APICookieTests.realRedirectCookieHandlingIsDisabled` loopback bind (`EPERM`). All 17 generator tests
+and 119 Python fixtures, including 96 runner fixtures, pass. The separate host run excluding only
+APICookieTests passes 605 Swift Testing methods and 19 XCTest methods with unchanged timing limits.
+Direct iOS 17 SDK checks pass for Debug DataAccess/app/all hosted/UI tests and fresh Release
+AppCore/DataAccess/Sync/app/ReleaseReadinessTests. Final UI edits were rechecked separately.
+
+Logs: `build/reseed-round2-{lint-final,quick-final,supported,runner,ios,ui-final,release}.log`.
+CoreSimulator remains unavailable in this sandbox; runtime acknowledgement/keyboard behavior and
+post-fix audit results are pending. Git index writes are denied because worktree metadata is outside
+the writable roots. Four atomic patches based on `caa72aa` are in `build/commits/1.patch`–`4.patch`,
+with Conventional Commit messages separated by `---` in `messages.txt`; no trailers are added.
