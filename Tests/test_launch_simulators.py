@@ -22,7 +22,7 @@ PHASE9_HOSTED = (
     'AppTests/AccountStorageLifecycleTests', 'AppTests/SessionLifecycleTests',
     'AppTests/KeychainSessionStoreTests', 'AppTests/DataSourceBuildSettingTests',
     'AppTests/DataSourceFactoryHostedTests', 'AppTests/SyncLifecycleTests',
-    'AppTests/AccountWipeTests', 'AppTests/SessionReadinessTests',
+    'AppTests/SeededSessionIntegrationTests', 'AppTests/AccountWipeTests', 'AppTests/SessionReadinessTests',
     'AppTests/LaunchConnectionTests', 'AppTests/ReleaseReadinessTests',
 )
 
