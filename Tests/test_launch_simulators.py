@@ -280,14 +280,16 @@ with runner['forward_run_signals']():
         namespace = runner.test_pass.__globals__
         for inactive in (False, True):
             execute = Mock(side_effect=runner.TestRunTimeout('test', 0.1, inactive=inactive))
+            reset = Mock()
             with self.subTest(inactive=inactive), tempfile.TemporaryDirectory(dir=ROOT / 'build') as directory, \
-                 patch.dict(namespace, ROOT=Path(directory), prepare=lambda _: None, run=execute):
+                 patch.dict(namespace, ROOT=Path(directory), prepare=lambda _: None, reset_appearance=reset, run=execute):
                 results = runner.test_device(destination, selected, 'runtime', None, {'Debug': True, 'Release': True}, workers=2)
             self.assertEqual(len(results), 3)
             self.assertTrue(all(not r.passed for r in results))
             self.assertIn('of log inactivity' if inactive else 'overall', results[0].detail)
             self.assertTrue(all(r.detail == 'Not run after timeout' for r in results[1:]))
             execute.assert_called_once()
+            reset.assert_called_once_with(destination)
 
 
 class ClassificationTests(unittest.TestCase):
@@ -798,7 +800,7 @@ class RunnerTests(unittest.TestCase):
         self.assertIn('ENABLE_TESTABILITY=YES', builds[2])
         self.assertEqual(len(self.commands_for_tests()), 13)
         self.assertFalse(any('clean' in c or 'shutdown' in c or 'erase' in c or 'boot' in c for c in self.commands))
-        self.assertEqual(sum('uninstall' in c for c in self.commands), 8)
+        self.assertEqual(sum('uninstall' in c for c in self.commands), 13)
         self.assertNotIn(['make', 'check'], self.commands)
         self.assertNotIn(['make', 'duo'], self.commands)
         for c in self.commands_for_tests():
@@ -813,7 +815,7 @@ class RunnerTests(unittest.TestCase):
         commands = self.commands_for_tests()
         self.assertEqual({c[c.index('-destination') + 1] for c in commands},
                          {'platform=iOS Simulator,id=device-1', 'platform=iOS Simulator,id=isolated-device'})
-        self.assertEqual(sum('uninstall' in c for c in self.commands), 2)
+        self.assertEqual(sum('uninstall' in c for c in self.commands), 3)
         self.assertEqual(len(commands), 3)
         serial = next(c for c in commands if c[c.index('-resultBundlePath') + 1].endswith('Debug-serial.xcresult'))
         defaults = set(runner.selection('check', '17e'))
@@ -1012,6 +1014,86 @@ class RunnerTests(unittest.TestCase):
                          {'platform=iOS Simulator,id=device-1'})
         self.assertFalse(any('isolated-device' in c for c in self.commands))
 
+    def test_primary_and_isolated_receive_identical_preparation_for_every_pass(self):
+        only = ['AppTests/AuthControlTests', 'AppUITests/LaunchSceneTests', 'AppUITests/LaunchSceneDarkTests',
+                'AppUITests/LaunchToWelcomeTests', 'ReleaseReadinessTests/ReleaseReadinessTests',
+                'PerfUITests/LaunchPerfTests']
+        for state in ('Booted', 'Shutdown'):
+            for concurrency in (1, 3):
+                with self.subTest(state=state, concurrency=concurrency):
+                    self.commands.clear()
+                    for devices in self.devices.values():
+                        for device in devices:
+                            device['state'] = state
+                    for directory in ('17e', '17e-isolated'):
+                        (self.scratch / 'build/test-results' / directory / 'prepare.log').unlink(missing_ok=True)
+                    status, output = self.execute(mode='check', only=only, concurrency=concurrency)
+                    self.assertEqual(status, 0, output)
+                    for udid, directory, labels in (
+                        ('device-1', '17e', ['Debug-compare'] if concurrency == 3 else
+                         ['Debug-compare', 'Debug-serial', 'Release-compare', 'Perf-compare']),
+                        ('isolated-device', '17e-isolated', ['Debug-serial', 'Release-compare', 'Perf-compare']
+                         if concurrency == 3 else []),
+                    ):
+                        reset = ['xcrun', 'simctl', 'ui', udid, 'appearance', 'light']
+                        steps = [
+                            ['xcrun', 'simctl', 'bootstatus', udid, '-b'],
+                            ['xcrun', 'simctl', 'spawn', udid, 'defaults', 'write',
+                             'com.apple.keyboard.preferences', 'AutomaticMinimizationEnabled', '-bool', 'false'],
+                            reset,
+                            ['xcrun', 'simctl', 'get_app_container', udid, 'net.chronoflow.app.native', 'app'],
+                            ['xcrun', 'simctl', 'uninstall', udid, 'net.chronoflow.app.native'],
+                        ]
+                        actual = [c for c in self.commands if c[:2] == ['xcrun', 'simctl'] and c[3:4] == [udid]
+                                  or c[-1] == 'test-without-building' and 'platform=iOS Simulator,id=' + udid in c]
+                        expected = [['xcrun', 'simctl', 'boot', udid]] if state == 'Shutdown' and labels else []
+                        logged = list(expected)
+                        for label in labels:
+                            command = next(c for c in self.commands_for_tests() if
+                                           c[c.index('-resultBundlePath') + 1].endswith('/' + directory + '/' + label + '.xcresult'))
+                            expected += steps + [command, reset]
+                            logged += steps + [reset]
+                        self.assertEqual(actual, expected)
+                        log = self.scratch / 'build/test-results' / directory / 'prepare.log'
+                        if labels:
+                            self.assertEqual(log.read_text().splitlines(), ['+ ' + runner.shlex.join(c) for c in logged])
+                        else:
+                            self.assertFalse(log.exists())
+
+    def test_failed_serial_pass_resets_appearance_before_release_preparation(self):
+        self.result_fail = 'AppUITests/LaunchSceneDarkTests'
+        status, output = self.execute(mode='check')
+        self.assertEqual(status, 1, output)
+        self.assertIn('FAIL 17e Debug-serial AppUITests/LaunchSceneDarkTests', output)
+        self.assertIn('PASS 17e Release-compare', output)
+        serial = next(c for c in self.commands_for_tests() if
+                      c[c.index('-resultBundlePath') + 1].endswith('Debug-serial.xcresult'))
+        release = next(c for c in self.commands_for_tests() if
+                       c[c.index('-resultBundlePath') + 1].endswith('Release-compare.xcresult'))
+        between = self.commands[self.commands.index(serial) + 1:self.commands.index(release)]
+        reset = ['xcrun', 'simctl', 'ui', 'isolated-device', 'appearance', 'light']
+        simctl = [c for c in between if c[:2] == ['xcrun', 'simctl'] and c[3:4] == ['isolated-device']]
+        self.assertEqual(simctl[0], reset)
+        self.assertEqual(simctl.count(reset), 2)
+        self.assertEqual(simctl[-1], ['xcrun', 'simctl', 'uninstall', 'isolated-device', 'net.chronoflow.app.native'])
+
+    def test_appearance_cleanup_failure_is_reported_and_other_passes_continue(self):
+        failed = False
+        def failure(command):
+            nonlocal failed
+            if (not failed and command == ['xcrun', 'simctl', 'ui', 'isolated-device', 'appearance', 'light']
+                    and any(c[-1] == 'test-without-building' and any(v.endswith('Debug-serial.xcresult') for v in c)
+                            for c in self.commands)):
+                failed = True
+                return True
+            return False
+        self.command_failure = failure
+        status, output = self.execute(mode='check')
+        self.assertEqual(status, 1, output)
+        self.assertIn('FAIL 17e Debug-serial appearance reset', output)
+        self.assertIn('PASS 17e Debug-compare', output)
+        self.assertIn('PASS 17e Release-compare', output)
+
     def test_resolves_aliases_by_type_and_runtime_never_name(self):
         self.devices[runner.REGULAR_RUNTIME].insert(0, dict(self.devices[runner.DUO_RUNTIME][0], udid='wrong-runtime'))
         status, output = self.execute(aliases=['se', 'duo'])
@@ -1050,7 +1132,8 @@ class RunnerTests(unittest.TestCase):
                         destination = runner.resolve(alias, self.devices)
                         write = ['xcrun', 'simctl', 'spawn', destination.udid, 'defaults', 'write',
                                  'com.apple.keyboard.preferences', 'AutomaticMinimizationEnabled', '-bool', 'false']
-                        self.assertEqual(self.commands.count(write), 1)
+                        tests = [c for c in self.commands_for_tests() if destination.flag in c]
+                        self.assertEqual(self.commands.count(write), len(tests))
                         ready = self.commands.index(['xcrun', 'simctl', 'bootstatus', destination.udid, '-b'])
                         configured = self.commands.index(write)
                         self.assertLess(ready, configured)
@@ -1059,18 +1142,21 @@ class RunnerTests(unittest.TestCase):
                             self.assertLess(self.commands.index(boot), ready)
                         else:
                             self.assertNotIn(boot, self.commands)
-                        tests = [c for c in self.commands_for_tests() if destination.flag in c]
                         self.assertTrue(tests)
-                        for command in tests:
-                            self.assertLess(configured, self.commands.index(command))
+                        for previous, command in zip([None] + tests, tests):
+                            start = self.commands.index(previous) + 1 if previous else 0
+                            self.assertIn(write, self.commands[start:self.commands.index(command)])
                     self.assertFalse(any(c[0] == 'defaults' for c in self.commands))
 
-    def test_keyboard_preference_failure_stops_ui_tests_for_that_device(self):
-        self.command_failure = lambda c: 'AutomaticMinimizationEnabled' in c
-        status, output = self.execute(aliases=['se'], only=['AppUITests/TwoFactorKeyboardTests'])
-        self.assertEqual(status, 1, output)
-        self.assertIn('Preparation:', output)
-        self.assertEqual(self.commands_for_tests(), [])
+    def test_preparation_failure_stops_ui_tests_for_that_device(self):
+        for step in ('AutomaticMinimizationEnabled', 'appearance', 'uninstall'):
+            with self.subTest(step=step):
+                self.commands.clear()
+                self.command_failure = lambda c: step in c
+                status, output = self.execute(aliases=['se'], only=['AppUITests/TwoFactorKeyboardTests'])
+                self.assertEqual(status, 1, output)
+                self.assertIn('Preparation:', output)
+                self.assertEqual(self.commands_for_tests(), [])
 
     def test_perf_uses_shared_preparation_and_keeps_its_scheme_and_configuration(self):
         status, output = self.execute(mode='perf', aliases=['17e'])

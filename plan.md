@@ -2211,3 +2211,10 @@ and 7 AssetGen tests pass; XcodeGen spec validation and direct Swift 6/iOS 17 ap
 compiler checks pass. Final quick fails only at the known cookie-listener sandbox EPERM; all other
 package checks, including the new cache regression and timeline budgets, pass. See Docs/tooling.md
 for logs and the exact host acceptance/timing commands. UI/Perf test source files are unchanged.
+
+## Isolated simulator preparation repair (user, 2026-11-09)
+
+- [x] Repeat the shared boot-readiness, keyboard preference, appearance reset and installed-app removal before every pass on the primary and persistent isolated device. Reset appearance after every pass, including failures and timeouts; log preparation and cleanup in each destination's `prepare.log`.
+- [x] Add runner fixtures comparing the exact per-pass preparation and cleanup on both 17e destinations, with booted/shutdown devices, single/concurrent destinations and Debug/Release/Perf passes; cover preparation and cleanup failures and timeout cleanup.
+- [x] Validate `make lint` and all 99 runner fixtures on the host. Simulator acceptance remains pending.
+- [ ] User-host acceptance: rerun the 15-suite manifest in `Docs/ui-test-reseed-rerun-17e.txt` with default workers and preserve both result directories. Confirm dark launch parity on the isolated device and compare its preparation steps with the primary.

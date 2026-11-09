@@ -1,7 +1,7 @@
 import argparse
 from concurrent.futures import Future, ThreadPoolExecutor
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import json
 import math
 import os
@@ -757,6 +757,11 @@ def device_jobs(destination, selected, workers, devices, isolate):
             (secondary, secondary_selection, 1, isolated)]
 
 
+def reset_appearance(destination):
+    run(["xcrun", "simctl", "ui", destination.udid, "appearance", "light"],
+        log=destination.directory / "prepare.log")
+
+
 def prepare(destination):
     log = destination.directory / "prepare.log"
     if destination.state != "Booted":
@@ -764,7 +769,8 @@ def prepare(destination):
     run(["xcrun", "simctl", "bootstatus", destination.udid, "-b"], log=log)
     run(["xcrun", "simctl", "spawn", destination.udid, "defaults", "write",
          "com.apple.keyboard.preferences", "AutomaticMinimizationEnabled", "-bool", "false"], log=log)
-    installed = run(["xcrun", "simctl", "get_app_container", destination.udid, "net.chronoflow.app.native", "app"], capture=True, check=False)
+    reset_appearance(destination)
+    installed = run(["xcrun", "simctl", "get_app_container", destination.udid, "net.chronoflow.app.native", "app"], log=log, check=False)
     if installed.returncode == 0:
         run(["xcrun", "simctl", "uninstall", destination.udid, "net.chronoflow.app.native"], log=log)
 
@@ -1029,6 +1035,27 @@ def test_device(destination, selected, mode, recording, ready, intro_order_check
             preparation.result()
     except (subprocess.CalledProcessError, OSError) as error:
         return [Result(destination.alias, suite, False, "Preparation: " + str(error)) for suite in selected]
+    destination = replace(destination, state="Booted")
+    prepared = True
+
+    def run_pass(configuration, suites, label, **kwargs):
+        nonlocal prepared
+        try:
+            if not prepared:
+                prepare(destination)
+        except (subprocess.CalledProcessError, OSError) as error:
+            return [Result(destination.alias, label + " " + s, False, "Preparation: " + str(error)) for s in suites]
+        prepared = False
+        cleanup = []
+        try:
+            outcome = test_pass(destination, configuration, suites, label, **kwargs)
+        finally:
+            try:
+                reset_appearance(destination)
+            except (subprocess.CalledProcessError, OSError) as error:
+                cleanup.append(Result(destination.alias, label + " appearance reset", False, str(error)))
+        return outcome + cleanup
+
     if intro_order_check:
         if not build_available(ready, "Debug"):
             return [Result(destination.alias, s, False, "Debug build unavailable") for s in selected]
@@ -1037,19 +1064,19 @@ def test_device(destination, selected, mode, recording, ready, intro_order_check
         except (subprocess.CalledProcessError, OSError, RuntimeError) as error:
             return [Result(destination.alias, "intro enumeration", False, str(error))]
         for order in ("fresh", "warm"):
-            results += test_pass(destination, "Debug", selected, "order-" + order, intro_order=order)
+            results += run_pass("Debug", selected, "order-" + order, intro_order=order)
         return results
     record_suites = recording_selection(selected, mode, recording) if recording and destination.alias == "17e" else []
     if record_suites and build_available(ready, "Debug"):
-        results += test_pass(destination, "Debug", record_suites, "record", record=True)
+        results += run_pass("Debug", record_suites, "record", record=True)
         if any(r.detail.startswith("Test run timed out") for r in results):
             return results + [Result(destination.alias, s, False, "Not run after timeout")
                               for s in selected if s not in record_suites]
     for configuration, suites in configurations(selected).items():
         if build_available(ready, configuration):
             for part in (passes[configuration] if passes is not None else split_passes(configuration, suites, workers)):
-                results += test_pass(destination, configuration, part.selected, configuration + "-" + part.suffix,
-                                     timing=timing, workers=part.workers, skipped=part.skipped)
+                results += run_pass(configuration, part.selected, configuration + "-" + part.suffix,
+                                    timing=timing, workers=part.workers, skipped=part.skipped)
                 if any(r.detail.startswith("Test run timed out") for r in results):
                     return results + [Result(destination.alias, s, False, "Not run after timeout")
                                       for s in selected if not any(r.suite.endswith(" " + s) for r in results)]

@@ -2812,6 +2812,14 @@ prepares destinations in background threads during builds. Results stay under `1
 `17e-isolated/`; summaries and `timings.json` merge under 17e. `SIM_CONCURRENCY=1` keeps one
 destination; recording and intro-order diagnostics retain their existing single-device sequence.
 
+Every pass on either destination uses the same preparation: wait for boot, write the simulator's
+keyboard preference, reset system appearance to light, and uninstall an existing app so installation
+refreshes its launch-screen cache and defaults. The first preparation overlaps the build; subsequent
+passes repeat it without rebooting. Each pass resets appearance to light afterward, including failed
+and timed-out runs. Preparation commands and cleanup resets are recorded in each device's
+`prepare.log`; runner fixtures check identical steps and ordering on the primary and isolated 17e.
+UI appearance tests continue to switch and restore `XCUIDevice.shared.appearance` themselves.
+
 `ReadinessRelease` builds only the hosted `ReleaseReadinessTests` target from its own directory,
 with `TEST_HOST`/`BUNDLE_LOADER` and only a ChronoFlow dependency. Select it with
 `make targeted DEVICES="17e" ONLY="ReleaseReadinessTests/ReleaseReadinessTests"`.
