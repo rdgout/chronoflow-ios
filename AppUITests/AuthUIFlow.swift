@@ -161,6 +161,32 @@ import XCTest
             tabBar: tabs.exists ? tabs.frame : nil, clearance: 0)
     }
 
+    static func assertBannerVisible(in app: XCUIApplication, file: StaticString = #filePath, line: UInt = #line) {
+        let banner = control("auth.banner", in: app)
+        XCTAssertTrue(banner.waitForExistence(timeout: 6), file: file, line: line)
+        var stability = FrameStability()
+        let visible = XCTNSPredicateExpectation(
+            predicate: NSPredicate { _, _ in
+                let viewport = viewport(in: app, scrollFrame: scroll(in: app).frame)
+                let visible =
+                    banner.isHittable && AuthScrollGesture.fullyVisible(banner.frame, in: viewport)
+                    && !SoftwareKeyboardVisibility.isVisible(
+                        app.keyboards.firstMatch.exists ? app.keyboards.firstMatch.frame : .zero,
+                        in: app.windows.firstMatch.frame)
+                return stability.observe(visible ? [banner.frame, viewport] : nil)
+            }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [visible], timeout: 6), .completed, file: file, line: line)
+        let viewport = viewport(in: app, scrollFrame: scroll(in: app).frame)
+        let message =
+            "Banner frame=\(banner.frame), viewport=\(viewport), keyboard=\(app.keyboards.firstMatch.exists ? app.keyboards.firstMatch.frame : .zero)"
+        XCTAssertFalse(
+            SoftwareKeyboardVisibility.isVisible(
+                app.keyboards.firstMatch.exists ? app.keyboards.firstMatch.frame : .zero,
+                in: app.windows.firstMatch.frame), message, file: file, line: line)
+        XCTAssertTrue(banner.isHittable, message, file: file, line: line)
+        XCTAssertTrue(AuthScrollGesture.fullyVisible(banner.frame, in: viewport), message, file: file, line: line)
+    }
+
     static func reveal(_ element: XCUIElement, in app: XCUIApplication, scroll: XCUIElement? = nil) {
         let scroll = scroll ?? self.scroll(containing: element, in: app)
         for _ in 0..<12 {

@@ -32,7 +32,7 @@ AUTH_HOSTED = (
     'AppTests/TwoFactorSnapshotTests', 'AppTests/ForgotPasswordControlTests', 'AppTests/ForgotPasswordLayoutTests', 'AppTests/ForgotPasswordSnapshotTests',
 )
 AUTH_UI = (
-    'AppUITests/SignInTests', 'AppUITests/SignInKeyboardTests', 'AppUITests/TwoFactorTests',
+    'AppUITests/AuthBannerVisibilityTests', 'AppUITests/SignInTests', 'AppUITests/SignInKeyboardTests', 'AppUITests/TwoFactorTests',
     'AppUITests/TwoFactorKeyboardTests', 'AppUITests/ForgotPasswordTests', 'AppUITests/ForgotPasswordKeyboardTests', 'AppUITests/AuthSessionTests', 'AppUITests/AuthAuditTests',
 )
 AUTH_SNAPSHOTS = ('AppTests/AuthSnapshotTests', 'AppTests/TwoFactorSnapshotTests', 'AppTests/ForgotPasswordSnapshotTests')

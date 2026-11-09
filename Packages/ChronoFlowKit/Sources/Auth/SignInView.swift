@@ -5,6 +5,7 @@
 
     public struct SignInView: View {
         @Environment(\.locale) private var locale
+        @AccessibilityFocusState private var bannerFocused: Bool
         @FocusState private var focus: String?
         @State private var request: Task<Void, Never>?
         @State private var frames: [AuthElement: CGRect] = [:]
@@ -29,7 +30,10 @@
                 description: copy("Sign in to see your trips and plans."), back: back,
                 measure: report
             ) {
-                if let banner = model.form.banner { AuthBanner(title: copy(banner.title), message: copy(banner.body)) }
+                if let banner = model.form.banner {
+                    AuthBanner(title: copy(banner.title), message: copy(banner.body))
+                        .id(AuthFeedbackTarget.banner).accessibilityFocused($bannerFocused)
+                }
                 AuthButton(copy("Sign in with a passkey"), busy: model.form.pending == .passkey, glyph: .key) {
                     submit(.passkey)
                 }
@@ -85,13 +89,11 @@
                             string: message, attributes: [.accessibilitySpeechQueueAnnouncement: true]))
                 }
             }
-            .onChange(of: model.form.fields) {
-                if model.form.fields["email"] != nil {
-                    focus = "sign-in.email"
-                } else if model.form.fields["password"] != nil {
-                    focus = "sign-in.password"
-                }
-            }
+            .authFailureFeedback(
+                form: model.form, focus: $focus,
+                firstInvalidField: ["email", "password"].first { model.form.fields[$0] != nil }.map { "sign-in." + $0 },
+                bannerFocus: $bannerFocused
+            )
             .onDisappear {
                 request?.cancel()
                 request = nil
@@ -123,15 +125,8 @@
         }
         private func submit(_ action: AuthFormModel.Action) {
             guard request == nil, !model.form.busy else { return }
-            let previousFocus = focus
             request = Task {
                 if action == .passkey { await model.submitPasskey() } else { await model.submitPassword() }
-                if !Task.isCancelled && (model.form.failure != nil || model.sessionFailure != nil) {
-                    focus =
-                        model.form.fields["email"] != nil
-                        ? "sign-in.email"
-                        : model.form.fields["password"] != nil ? "sign-in.password" : previousFocus
-                }
                 request = nil
             }
         }

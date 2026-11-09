@@ -472,3 +472,55 @@ simulator target passes for the app, hosted tests and all UI tests without execu
 simulator. Logs: `build/round4-quick.log`, `build/round4-quick-rest.log`,
 `build/round4-final-fixtures.log` and `build/round4-typecheck.log` (the final fixture
 run includes classification of the new host policy suite).
+
+
+### Banner visibility follow-up — 9 November 2026
+
+The reported taken-email failure maps correctly to a banner with no email field
+message. Sign up then selected email as its fallback error focus; Forgot, Reset
+and Two-factor had unconditional field fallbacks, while Sign in restored its
+previous focus. Those paths could reopen the keyboard and scroll feedback away.
+This is confirmed in the source; this sandbox cannot reproduce the phone's
+scroll position because CoreSimulator connections are denied.
+
+Shared feedback handling now focuses only fields with displayed messages. For a
+banner-only failure it clears keyboard focus, scrolls to the banner after layout,
+repeats that reveal after keyboard dismissal settles, and assigns VoiceOver focus
+to the feedback. Verify (including its existing sign-out error text) also reveals
+new feedback. Queued localized announcements and the email-taken sign-in footer
+remain. Sign up and Reset now host their existing keyboard reveal inside the
+scroll content, allowing it to reveal the measured field including its error.
+
+`AuthBannerVisibilityTests` covers all six screens at default and xxLarge,
+including both seeded taken-email and offline registration. It uses real field
+entry with production error focusing enabled; audit-prefilled registration turns
+that behavior off and cannot regress this bug. The assertion never scrolls the
+banner for the app: it requires a hittable banner whose complete frame remains
+inside the safe window/scroll viewport above any visible keyboard, stable across
+three samples, and requires keyboard dismissal. Existing Forgot/Two-factor
+keyboard tests now verify banner visibility before explicitly tapping to edit.
+`SignUpControlTests` adds a mixed email-taken/confirmation-error case at both sizes
+and requires the focused confirmation's full measured message region above the
+keyboard.
+
+Validation: strict lint passes. `make quick` stops only at
+`APICookieTests.realRedirectCookieHandlingIsDisabled` (loopback listener EPERM);
+all 94 auth tests pass. The remaining quick targets pass separately. Auth compiles
+in Swift 6 for iOS 17 Debug and Release; hosted and UI test sources compile against
+the same minimum. These compiler checks execute no UIKit tests. Logs are
+`build/auth-banner-visibility-{lint,quick,quick-remainder,typecheck,typecheck-release,typecheck-tests,typecheck-ui-final,ui}.log`.
+
+The regression was written before the production fix, but a runtime red/green
+result is unavailable: the targeted run stops at `simctl list devices` with the
+CoreSimulator connection denied. On a simulator-enabled host, run:
+
+```sh
+make generate
+make targeted DEVICES=17e ONLY="AppUITests/AuthBannerVisibilityTests AppUITests/ForgotPasswordTests AppUITests/ForgotPasswordKeyboardTests AppUITests/TwoFactorKeyboardTests AppTests/SignUpControlTests AppTests/ResetPasswordControlTests"
+make snapshots
+```
+
+Review VoiceOver focus/announcement behavior on the phone as well. Existing
+references are unchanged; all-size snapshots and runtime acceptance remain open.
+Delivery is `build/commits/1.patch` on `dd9cac6`, with its Conventional Commit
+subject in `build/commits/messages.txt`.

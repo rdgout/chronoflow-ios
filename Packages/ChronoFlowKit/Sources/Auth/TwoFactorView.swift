@@ -5,6 +5,7 @@
 
     public struct TwoFactorView: View {
         @Environment(\.locale) private var locale
+        @AccessibilityFocusState private var bannerFocused: Bool
         @FocusState private var focus: String?
         @State private var text: String
         @State private var request: Task<Void, Never>?
@@ -30,6 +31,7 @@
                 Group {
                     if let banner = model.form.banner {
                         AuthBanner(title: copy(banner.title), message: copy(banner.body(for: .twoFactor)))
+                            .id(AuthFeedbackTarget.banner).accessibilityFocused($bannerFocused)
                     }
                     AuthField(
                         copy(model.mode == .code ? "6-digit code" : "Recovery code"),
@@ -68,13 +70,6 @@
                 text = model.code
             }
             .onChange(of: model.code) { text = model.code }
-            .onChange(of: model.form.busy) {
-                if model.form.busy {
-                    focus = nil
-                } else if model.form.failure != nil || model.sessionFailure != nil {
-                    focus = identifier
-                }
-            }
             .onChange(of: model.form.announcementRevision) {
                 if let message = model.form.takeAnnouncement(locale: locale) {
                     UIAccessibility.post(
@@ -83,6 +78,11 @@
                             string: message, attributes: [.accessibilitySpeechQueueAnnouncement: true]))
                 }
             }
+            .authFailureFeedback(
+                form: model.form, focus: $focus,
+                firstInvalidField: model.form.fields[model.field] != nil ? identifier : nil,
+                bannerFocus: $bannerFocused
+            )
             .onDisappear(perform: cancel)
         }
 

@@ -5,6 +5,7 @@
 
     public struct ForgotPasswordView: View {
         @Environment(\.locale) private var locale
+        @AccessibilityFocusState private var bannerFocused: Bool
         @Environment(\.openURL) private var openURL
         @FocusState private var focus: String?
         @State private var model: ForgotPasswordModel
@@ -54,6 +55,7 @@
                 } else {
                     if let banner = model.form.banner {
                         AuthBanner(title: copy(banner.title(for: .forgot)), message: copy(banner.body(for: .forgot)))
+                            .id(AuthFeedbackTarget.banner).accessibilityFocused($bannerFocused)
                     }
                     AuthField(
                         copy("Email"), text: Binding(get: { model.email }, set: model.editEmail),
@@ -80,9 +82,6 @@
             }
             .disabled(model.form.busy)
             .onAppear { UIAccessibility.post(notification: .screenChanged, argument: nil) }
-            .onChange(of: model.form.busy) {
-                if model.form.busy { focus = nil } else if model.form.failure != nil { focus = "forgot.email" }
-            }
             .onChange(of: model.form.announcementRevision) {
                 if let message = model.form.takeAnnouncement(locale: locale) { announce(message) }
             }
@@ -92,6 +91,11 @@
                 UIAccessibility.post(notification: .screenChanged, argument: nil)
                 announce(copy("Check your inbox.") + " " + AuthCopy.resetSent(email: email, locale: locale))
             }
+            .authFailureFeedback(
+                form: model.form, focus: $focus,
+                firstInvalidField: model.form.fields["email"] != nil ? "forgot.email" : nil,
+                bannerFocus: $bannerFocused
+            )
             .onDisappear {
                 request?.cancel()
                 request = nil
