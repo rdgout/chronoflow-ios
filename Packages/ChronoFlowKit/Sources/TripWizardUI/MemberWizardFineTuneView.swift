@@ -141,7 +141,7 @@
             let leg = model.draft.form.legs[index]
             if prompt.kind == .seatSide { return label + " · " + leg.fromIata + " → " + leg.toIata }
             if prompt.kind == .room || prompt.kind == .lateCheckOut {
-                return label + " · " + (leg.toCity ?? leg.toIata)
+                return (prompt.kind == .room ? t("Dark room") : label) + " · " + (leg.toCity ?? leg.toIata)
             }
             return label
         }

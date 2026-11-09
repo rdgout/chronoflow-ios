@@ -153,7 +153,7 @@
             case .room:
                 if values["stay.bed_available_mode"] == .string("declared") {
                     WizardTimeControl(
-                        label: t("From"),
+                        label: t("wizard.room.from"),
                         value: Binding(
                             get: { values["stay.bed_available_from_local"]?.string ?? "" },
                             set: { time in

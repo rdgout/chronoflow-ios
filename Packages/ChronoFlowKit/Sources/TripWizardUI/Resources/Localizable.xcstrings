@@ -3841,18 +3841,18 @@
         }
       }
     },
-    "You have {{count}} credits.": {
+    "You have {{count}} credits": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "You have {{count}} credits."
+            "value": "You have {{count}} credits"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Je hebt {{count}} tegoeden."
+            "value": "Je hebt {{count}} credits"
           }
         }
       }
@@ -3933,6 +3933,103 @@
           "stringUnit": {
             "state": "translated",
             "value": "{{count}} dag met stappen"
+          }
+        }
+      }
+    },
+    "Add at least one drink to save this answer.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add at least one drink to save this answer."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voeg minstens één drankje toe om dit antwoord te bewaren."
+          }
+        }
+      }
+    },
+    "Dark room": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dark room"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Donkere kamer"
+          }
+        }
+      }
+    },
+    "Enter a rating between 0.1 and 9.9.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a rating between 0.1 and 9.9."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vul een waarde tussen 0,1 en 9,9 in."
+          }
+        }
+      }
+    },
+    "You have {{count}} credits_one": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You have {{count}} credit"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je hebt {{count}} credit"
+          }
+        }
+      }
+    },
+    "wizard.room.from": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vanaf"
+          }
+        }
+      },
+      "comment": "Room availability start time; distinct from the route and busy-hours From labels."
+    },
+    "{{time}} · assumed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{time}} · assumed"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{time}} · aangenomen"
           }
         }
       }

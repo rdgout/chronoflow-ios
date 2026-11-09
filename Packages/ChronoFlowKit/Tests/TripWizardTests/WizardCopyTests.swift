@@ -14,7 +14,9 @@ import TripWizardUI
         let strings = try #require(object["strings"] as? [String: [String: Any]])
         for (key, value) in strings {
             let localizations = try #require(value["localizations"] as? [String: [String: [String: String]]])
-            if !key.hasSuffix("_one") { #expect(localizations["en"]?["stringUnit"]?["value"] == key) }
+            if !key.hasSuffix("_one"), key != "wizard.room.from" {
+                #expect(localizations["en"]?["stringUnit"]?["value"] == key)
+            }
             #expect(localizations["en"]?["stringUnit"]?["value"]?.isEmpty == false)
             #expect(localizations["nl"]?["stringUnit"]?["value"]?.isEmpty == false)
         }
@@ -71,6 +73,38 @@ import TripWizardUI
         #expect(
             WizardStrings.text("{{count}} credits", locale: Locale(identifier: "nl_NL"), arguments: ["count": "2"])
                 == "2 credits")
+    }
+
+    @Test func reviewedSheetAndReadyCopyMatchesWizardBoards() {
+        let dutch = Locale(identifier: "nl_NL")
+        let english = Locale(identifier: "en_GB")
+        for (key, nl) in [
+            (
+                "Add at least one drink to save this answer.",
+                "Voeg minstens één drankje toe om dit antwoord te bewaren."
+            ),
+            ("Enter a rating between 0.1 and 9.9.", "Vul een waarde tussen 0,1 en 9,9 in."),
+            ("Dark room", "Donkere kamer"), ("From", "Van"), ("wizard.room.from", "Vanaf"),
+        ] {
+            #expect(WizardStrings.text(key, locale: dutch) == nl)
+        }
+        #expect(WizardStrings.text("wizard.room.from", locale: english) == "From")
+        for count in [0, 1, 3] {
+            let arguments = ["count": String(count)]
+            let unit = count == 1 ? "credit" : "credits"
+            #expect(
+                WizardStrings.text("You have {{count}} credits", locale: english, arguments: arguments)
+                    == "You have \(count) \(unit)")
+            #expect(
+                WizardStrings.text("You have {{count}} credits", locale: dutch, arguments: arguments)
+                    == "Je hebt \(count) \(unit)")
+        }
+        #expect(
+            WizardStrings.text("{{time}} · assumed", locale: dutch, arguments: ["time": "08:00"])
+                == "08:00 · aangenomen")
+        #expect(
+            WizardStrings.text("{{time}} · assumed", locale: english, arguments: ["time": "08:00"])
+                == "08:00 · assumed")
     }
 
     @Test func runtimeUsesTheSelectedLanguageAndInterpolation() {

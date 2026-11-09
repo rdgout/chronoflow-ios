@@ -73,8 +73,13 @@
                         } label: {
                             readyRowContent(
                                 "Latest wake-up",
-                                value: (try? WizardPresentation.promptAnswerText(
-                                    prompt, input: model.reviewInput, locale: locale, t: t)) ?? "")
+                                value: t(
+                                    "{{time}} · assumed",
+                                    [
+                                        "time":
+                                            (try? WizardPresentation.promptAnswerText(
+                                                prompt, input: model.reviewInput, locale: locale, t: t)) ?? ""
+                                    ]))
                         }.buttonStyle(.plain)
                     }
                 }.wizardCard().disabled(model.reviewing)
@@ -144,7 +149,7 @@
                     Text(t("Your flight home is free: only a small shift is needed that way."))
                 }
                 if let review = model.draft.state.review, !review.price.unlimited, review.price.cost > 0 {
-                    Text(t("You have {{count}} credits.", ["count": String(review.price.balance)]))
+                    Text(t("You have {{count}} credits", ["count": String(review.price.balance)]))
                         .foregroundStyle(
                             (model.credits == .unavailable ? ColorToken.destructive : .mutedForeground).color)
                 }
