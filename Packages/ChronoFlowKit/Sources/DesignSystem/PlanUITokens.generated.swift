@@ -68,6 +68,7 @@ nonisolated public enum PlanUITokens {
     public static var wizardChronotypeFontSize: CGFloat { 16 }
     public static var wizardChronotypeLineHeight: CGFloat { 22 }
     public static var wizardChronotypePadding: CGFloat { 10 }
+    public static var wizardColumnWidth: CGFloat { 520 }
     public static var wizardContentGap: CGFloat { 14 }
     public static var wizardControlGap: CGFloat { 6 }
     public static var wizardDisabledOpacity: Double { 0.4 }
@@ -91,6 +92,10 @@ nonisolated public enum PlanUITokens {
     public static var wizardNoticeIconSize: CGFloat { 18 }
     public static var wizardProgressHeight: CGFloat { 4 }
     public static var wizardQuestionRadius: CGFloat { 20 }
+    public static var wizardReadyLabelWidth: CGFloat { 92 }
+    public static var wizardReadySummaryFontSize: CGFloat { 20 }
+    public static var wizardReadySummaryLineHeight: CGFloat { 27 }
+    public static var wizardReadySummaryPadding: CGFloat { 18 }
     public static var wizardReturnLabelWidth: CGFloat { 52 }
     public static var wizardReturnRowHeight: CGFloat { 56 }
     public static var wizardRouteFontSize: CGFloat { 15 }
@@ -157,6 +162,12 @@ extension Typography {
         Style(
             face: .figtree500, size: screenBodyLg.size, lineHeight: screenBodyLg.lineHeight,
             tracking: screenBodyLg.tracking, relativeTo: screenBodyLg.relativeTo)
+    }
+    public static var wizardReadySummary: Style {
+        Style(
+            face: .fraunces400Opsz20, size: PlanUITokens.wizardReadySummaryFontSize,
+            lineHeight: PlanUITokens.wizardReadySummaryLineHeight,
+            tracking: screenBody.tracking, relativeTo: .title3)
     }
     public static var wizardFailureTitle: Style {
         Style(

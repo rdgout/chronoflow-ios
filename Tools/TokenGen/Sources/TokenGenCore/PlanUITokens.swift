@@ -45,6 +45,10 @@ func planUITokens(root: URL) throws -> Data {
             Style(face: .figtree500, size: screenBodyLg.size, lineHeight: screenBodyLg.lineHeight,
                   tracking: screenBodyLg.tracking, relativeTo: screenBodyLg.relativeTo)
         }
+        public static var wizardReadySummary: Style {
+            Style(face: .fraunces400Opsz20, size: PlanUITokens.wizardReadySummaryFontSize, lineHeight: PlanUITokens.wizardReadySummaryLineHeight,
+                  tracking: screenBody.tracking, relativeTo: .title3)
+        }
         public static var wizardFailureTitle: Style {
             Style(face: .fraunces400Opsz20, size: PlanUITokens.wizardFailureTitleFontSize, lineHeight: PlanUITokens.wizardFailureTitleLineHeight,
                   tracking: screenBody.tracking, relativeTo: .title3)
