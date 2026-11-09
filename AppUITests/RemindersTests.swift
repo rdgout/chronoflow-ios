@@ -23,6 +23,10 @@ nonisolated final class RemindersTests: XCTestCase {
         XCTAssertEqual(XCTWaiter.wait(for: [changed], timeout: 6), .completed)
         assertNoSystemPermissionAlert()
         let expected = toggle.value as? String
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        XCTAssertTrue(
+            app.descendants(matching: .any)["settings.preferences.screen"].firstMatch.waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["settings.preferences.reminders"].label.contains(expected == "1" ? "On," : "Off"))
         app.terminate()
         app.launch()
         openReminders(app)
@@ -96,7 +100,12 @@ nonisolated final class RemindersTests: XCTestCase {
         let settings = app.tabBars.buttons["Settings"]
         XCTAssertTrue(settings.waitForExistence(timeout: 12))
         settings.tap()
-        let row = app.buttons["settings.reminders"]
+        let preferences = app.buttons["settings.preferences"]
+        XCTAssertTrue(preferences.waitForExistence(timeout: 8))
+        XCTAssertFalse(app.buttons["settings.reminders"].exists)
+        AuthUIFlow.reveal(preferences, in: app)
+        preferences.tap()
+        let row = app.buttons["settings.preferences.reminders"]
         XCTAssertTrue(row.waitForExistence(timeout: 8))
         AuthUIFlow.reveal(row, in: app)
         row.tap()

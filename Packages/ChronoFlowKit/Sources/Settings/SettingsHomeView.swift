@@ -1,6 +1,5 @@
 #if canImport(UIKit)
     import DesignSystem
-    import Reminders
     import SwiftUI
     import UIKit
 
@@ -111,16 +110,6 @@
                 }.listRowBackground(ColorToken.card.color)
                     .listRowInsets(
                         EdgeInsets(top: 0, leading: PlanUITokens.space4, bottom: 0, trailing: PlanUITokens.space4))
-                Section {
-                    if navigationEnabled {
-                        NavigationLink(value: SettingsDestination.reminders) {
-                            Label(
-                                ReminderStrings.text(
-                                    "Reminders", language: locale.language.languageCode?.identifier == "nl" ? .nl : .en),
-                                systemImage: "bell")
-                        }.accessibilityIdentifier("settings.reminders")
-                    }
-                }.listRowBackground(ColorToken.card.color)
                 Section {
                     SettingsSignOutButton(model: model)
                 }.listRowBackground(Color.clear).listRowSeparator(.hidden)

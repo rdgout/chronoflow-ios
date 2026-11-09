@@ -26,5 +26,9 @@ import Testing
         }
         #expect(SettingsStrings.text("Sign out", language: .nl) == "Uitloggen")
         #expect(SettingsStrings.text("Stay signed in", language: .nl) == "Ingelogd blijven")
+        #expect(
+            SettingsStrings.text("On, {{minutes}} min ahead · works offline", language: .nl, ["minutes": "30"])
+                == "Aan, 30 minuten van tevoren · werkt ook offline")
+        #expect(SettingsStrings.text("Off · works offline", language: .nl) == "Uit · werkt ook offline")
     }
 }

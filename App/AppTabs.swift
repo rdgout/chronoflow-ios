@@ -77,7 +77,10 @@ struct AppTabs: View {
                 case .account: SettingsAccountView(store: settingsPages)
                 case .profile: SettingsProfileView(store: settingsPages)
                 case .bodyClock: SettingsBodyClockView(store: settingsPages)
-                case .preferences: SettingsPreferencesView(store: settingsPages)
+                case .preferences:
+                    SettingsPreferencesView(store: settingsPages) {
+                        await native?.reminders.center.permission() ?? .undetermined
+                    }
                 case .security: SettingsSecurityView(store: settingsPages)
                 case .reminders: RemindersDestination(native: native)
                 case .plan:
