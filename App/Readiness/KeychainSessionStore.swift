@@ -12,6 +12,11 @@ actor KeychainSessionStore: SessionStore {
         self.account = account
     }
 
+    init(namespace: StorageNamespace) {
+        service = namespace.keychainService
+        account = "session"
+    }
+
     private var query: [String: Any] {
         [
             kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service,
@@ -20,6 +25,7 @@ actor KeychainSessionStore: SessionStore {
     }
 
     func read() throws -> Data? {
+        assert(!Thread.isMainThread)
         var lookup = query
         lookup[kSecReturnData as String] = true
         lookup[kSecMatchLimit as String] = kSecMatchLimitOne
@@ -31,7 +37,11 @@ actor KeychainSessionStore: SessionStore {
     }
 
     func write(_ data: Data) throws {
-        let attributes = [kSecValueData as String: data]
+        assert(!Thread.isMainThread)
+        let attributes: [String: Any] = [
+            kSecValueData as String: data,
+            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+        ]
         let status = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
         if status == errSecItemNotFound {
             var item = query
@@ -45,6 +55,7 @@ actor KeychainSessionStore: SessionStore {
     }
 
     func delete() throws {
+        assert(!Thread.isMainThread)
         let status = SecItemDelete(query as CFDictionary)
         guard status == errSecSuccess || status == errSecItemNotFound else { throw Failure(status: status) }
     }

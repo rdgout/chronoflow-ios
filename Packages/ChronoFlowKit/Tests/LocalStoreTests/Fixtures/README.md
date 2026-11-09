@@ -1,0 +1,19 @@
+RN final-schema metadata, generated on 2026-11-06 by applying the read-only chronoflow-mobile/src/db/migrations/0000–0014 SQL to an in-memory SQLite database and exporting PRAGMA table_info/foreign_key_list. Tests compare by name, normalizing true/false defaults. These migrations are not run by the native app.
+
+Source SHA-256:
+
+- 0000_pretty_ozymandias.sql: 718002d51bbf9c34a636bfa7212ec9743ea0c02b677f1a8b2c9077af00ed9bd5
+- 0001_adorable_kinsey_walden.sql: 7c05e7112b8ae0c26f2eb10423e0498d311756227207e4686f45569e2af2a3db
+- 0002_blushing_silverclaw.sql: b0173bcf65df38b80c81418a5d0ad4f32bf764cd88f52211636a894995607f74
+- 0003_orange_wasp.sql: 8effee156f30cc912568baa857a5153af97a76d2240900bf198d74805ed75df2
+- 0004_jittery_living_tribunal.sql: e5e27471942baedeaf8d675b113d5fcb1ebe074a1505787269b98b004976b62f
+- 0005_fine_doctor_faustus.sql: d3b8e71208f6845eea420e4a6b37579ca2a166fd67e80f742a6742724d7c98a8
+- 0006_brief_the_executioner.sql: 56a73bc6ab1a3343bf725006aa06545237a9198e0f26a059442023c3f6233966
+- 0007_lame_kate_bishop.sql: 6b2549de3652dc2c651c7980e430b0be133717df3ccffe1ec6961a2e6df77f0c
+- 0008_smart_dorian_gray.sql: bf28a1c664e3b9360f2a9c76788f28b05c6f9507d3514a7fc417826df2ddcd96
+- 0009_reflective_hawkeye.sql: d2ee1d2740f542dad577f20b925945518b9536b19f45f992bdb4738237532e92
+- 0010_white_psylocke.sql: 4a8cbd1552c1e877e967d8f53fa95e0e46ae1eb4b56847ecd83b7d29f8efad01
+- 0011_easy_eternals.sql: 6ffb1919973965ac9f9e9566c8bd542896eb8be2fbeca23fea210ab8835f5f69
+- 0012_polite_red_shift.sql: b29478b997f835e642aafe7258348e20854fb42cbf5024609b2e663f26796ab0
+- 0013_military_hulk.sql: 1a11e9a7a3c49caec75e4b1a80ca3486099c0de2ccdf24f712918be1ee141ff2
+- 0014_sharp_baron_strucker.sql: 9944fc8b34a54d0cd5330a842298847e0e5cbf0db3664e08ef2d597d3205526f

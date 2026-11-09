@@ -1,0 +1,223 @@
+import Foundation
+
+public struct AccountPolicies: Codable, Sendable, Equatable {
+    public let termsVersion: String
+    public let privacyVersion: String
+    public let acceptedTermsVersion: String?
+    public let acceptedTermsAt: String?
+
+    public init(
+        termsVersion: String, privacyVersion: String, acceptedTermsVersion: String? = nil,
+        acceptedTermsAt: String? = nil
+    ) {
+        self.termsVersion = termsVersion
+        self.privacyVersion = privacyVersion
+        self.acceptedTermsVersion = acceptedTermsVersion
+        self.acceptedTermsAt = acceptedTermsAt
+    }
+}
+
+public struct SessionAccount: Codable, Sendable, Equatable {
+    public let id: String
+    public let name: String
+    public let email: String
+    public let hasVerifiedEmail: Bool
+    public let policies: AccountPolicies
+    public let walkthroughSeen: Bool
+
+    public init(
+        id: String, name: String, email: String, hasVerifiedEmail: Bool, policies: AccountPolicies,
+        walkthroughSeen: Bool
+    ) {
+        self.id = id
+        self.name = name
+        self.email = email
+        self.hasVerifiedEmail = hasVerifiedEmail
+        self.policies = policies
+        self.walkthroughSeen = walkthroughSeen
+    }
+}
+
+public struct SessionResult: Codable, Sendable, Equatable {
+    public let token: String
+    public let account: SessionAccount
+    public let tripId: String?
+
+    public init(token: String, account: SessionAccount, tripId: String? = nil) {
+        self.token = token
+        self.account = account
+        self.tripId = tripId
+    }
+}
+
+public enum SessionFailure: Error, Sendable, Equatable {
+    case credentialsUnavailable, databaseUnavailable, credentialWrite, invalidResult, superseded
+}
+
+public protocol SessionAccountStore: Sendable {
+    func open(accountID: AccountID) async throws
+    func upsert(_ account: SessionAccount) async throws
+    func close() async throws
+}
+
+public protocol SessionControlling: Sendable {
+    func restore() async throws -> SessionPresence
+    func accept(_ result: SessionResult) async throws
+}
+
+public struct SessionUpdate: Sendable, Equatable {
+    public let presence: SessionPresence
+    public let epoch: UInt64
+}
+
+public actor SessionController: SessionControlling {
+    private let credentials: any SessionStore
+    private let accounts: any SessionAccountStore
+    private let requestSync: @Sendable (UInt64) async -> Void
+    private var tail: Task<Void, Never>?
+    private(set) var generation: UInt64 = 0
+    private var observers: [UUID: AsyncStream<SessionUpdate>.Continuation] = [:]
+    public private(set) var presence: SessionPresence?
+    public private(set) var epoch: UInt64 = 0
+    public private(set) var storedSession: StoredSession?
+
+    public init(
+        credentials: any SessionStore, accounts: any SessionAccountStore,
+        requestSync: @escaping @Sendable (UInt64) async -> Void = { _ in }
+    ) {
+        self.credentials = credentials
+        self.accounts = accounts
+        self.requestSync = requestSync
+    }
+
+    public func updates() -> AsyncStream<SessionUpdate> {
+        let id = UUID()
+        let (stream, continuation) = AsyncStream<SessionUpdate>.makeStream(bufferingPolicy: .bufferingNewest(1))
+        observers[id] = continuation
+        if let presence { continuation.yield(SessionUpdate(presence: presence, epoch: epoch)) }
+        continuation.onTermination = { [weak self] _ in Task { await self?.removeObserver(id) } }
+        return stream
+    }
+
+    private func removeObserver(_ id: UUID) { observers.removeValue(forKey: id) }
+
+    public func restore() async throws -> SessionPresence {
+        generation &+= 1
+        let generation = generation
+        let previous = tail
+        let task = Task { [weak self] () throws -> SessionPresence in
+            await previous?.value
+            guard let self else { throw CancellationError() }
+            return try await self.performRestore(generation: generation)
+        }
+        tail = Task { _ = await task.result }
+        return try await withTaskCancellationHandler {
+            try await task.value
+        } onCancel: {
+            task.cancel()
+        }
+    }
+
+    public func accept(_ result: SessionResult) async throws {
+        generation &+= 1
+        let generation = generation
+        let previous = tail
+        let task = Task { [weak self] in
+            await previous?.value
+            guard let self else { throw CancellationError() }
+            try await self.performAccept(result, generation: generation)
+        }
+        tail = Task { _ = await task.result }
+        try await withTaskCancellationHandler {
+            try await task.value
+        } onCancel: {
+            task.cancel()
+        }
+    }
+
+    private func check(_ generation: UInt64) throws {
+        try Task.checkCancellation()
+        guard self.generation == generation else { throw SessionFailure.superseded }
+    }
+
+    private func performRestore(generation: UInt64) async throws -> SessionPresence {
+        try check(generation)
+        let session: StoredSession?
+        do { session = try await credentials.readStoredSession() } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            throw SessionFailure.credentialsUnavailable
+        }
+        try check(generation)
+        guard let session else {
+            do { try await accounts.close() } catch is CancellationError { throw CancellationError() } catch {
+                throw SessionFailure.databaseUnavailable
+            }
+            try check(generation)
+            storedSession = nil
+            publish(.signedOut)
+            return .signedOut
+        }
+        guard let id = try? AccountID(session.accountId) else {
+            do { try await credentials.delete() } catch is CancellationError { throw CancellationError() } catch {
+                throw SessionFailure.credentialsUnavailable
+            }
+            try check(generation)
+            do { try await accounts.close() } catch is CancellationError { throw CancellationError() } catch {
+                throw SessionFailure.databaseUnavailable
+            }
+            try check(generation)
+            storedSession = nil
+            publish(.signedOut)
+            return .signedOut
+        }
+        do { try await accounts.open(accountID: id) } catch is CancellationError { throw CancellationError() } catch {
+            throw SessionFailure.databaseUnavailable
+        }
+        try check(generation)
+        storedSession = StoredSession(token: session.token, accountId: id.rawValue)
+        publish(.signedIn(accountID: id.rawValue))
+        await requestSync(epoch)
+        try check(generation)
+        return .signedIn(accountID: id.rawValue)
+    }
+
+    private func performAccept(_ result: SessionResult, generation: UInt64) async throws {
+        try check(generation)
+        guard let id = try? AccountID(result.account.id),
+            !result.token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        else {
+            throw SessionFailure.invalidResult
+        }
+        presence = nil
+        storedSession = nil
+        do {
+            try await accounts.open(accountID: id)
+            try check(generation)
+            try await accounts.upsert(result.account)
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch let error as SessionFailure { throw error } catch { throw SessionFailure.databaseUnavailable }
+        try check(generation)
+        let session = StoredSession(token: result.token, accountId: id.rawValue)
+        do { try await credentials.write(JSONEncoder().encode(session)) } catch is CancellationError {
+            throw CancellationError()
+        } catch { throw SessionFailure.credentialWrite }
+        try check(generation)
+        storedSession = session
+        publish(.signedIn(accountID: id.rawValue))
+        await requestSync(epoch)
+        try check(generation)
+    }
+
+    private func publish(_ value: SessionPresence) {
+        epoch &+= 1
+        presence = value
+        for observer in observers.values { observer.yield(SessionUpdate(presence: value, epoch: epoch)) }
+    }
+
+    deinit {
+        tail?.cancel()
+        for observer in observers.values { observer.finish() }
+    }
+}

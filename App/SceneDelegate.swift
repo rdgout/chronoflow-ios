@@ -18,6 +18,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     private var introSignpostTask: Task<Void, Never>?
     private(set) var launchIntro: LaunchIntro?
     private var allowsIntro = false
+    var readinessFactory: (@MainActor (LaunchArguments, any LaunchClock) -> any LaunchReadiness)?
     private var rootScheduled = false
     private var connectionGeneration = 0
 
@@ -129,7 +130,9 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let fallback = MoonTarget.fallback(
             size: size, safeAreaInsets: .init(top: safe.top, left: safe.left, bottom: safe.bottom, right: safe.right),
             rowHeight: LaunchArguments.fallbackRowHeight(compatibleWith: windowScene.traitCollection))
-        let source = StubReadiness(configuration: arguments.readiness, store: KeychainSessionStore(), clock: clock)
+        let source =
+            readinessFactory?(arguments, clock)
+            ?? StubReadiness(configuration: arguments.readiness, store: KeychainSessionStore(), clock: clock)
         let coordinator = LaunchCoordinator(
             readiness: source, clock: clock,
             reduceMotion: overlayController?.launchScene.timeline.reduceMotion ?? true,
