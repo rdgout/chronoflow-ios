@@ -65,7 +65,11 @@ nonisolated struct AppServices: Sendable {
                     offline: authTest.offline,
                     mutationsOffline: authTest.settingsPending || authTest.walkthroughPending || authTest.termsPending,
                     remoteTripUpdate: { await refreshScenario?.consume() ?? false },
-                    delay: mockDelay, bearer: bearer)
+                    delay: mockDelay,
+                    // MockDataSource clamps ordinary latency to 300–800 ms; UI fixtures use their exact opt-in delay.
+                    sleep: { _ in
+                        if authTest.mockDelay > 0 { try await Task.sleep(for: .seconds(authTest.mockDelay)) }
+                    }, bearer: bearer)
             }
         #endif
         return MockDataSource(
