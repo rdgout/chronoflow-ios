@@ -14,11 +14,14 @@ nonisolated final class RemindersTests: XCTestCase {
         let toggle = app.switches["reminders.enabled"]
         XCTAssertTrue(toggle.waitForExistence(timeout: 8))
         AuthUIFlow.waitUntilEnabled(toggle)
+        AuthUIFlow.reveal(toggle, in: app)
         let original = toggle.value as? String
-        toggle.tap()
+        XCTAssertTrue(["0", "1"].contains(original ?? ""))
+        toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap()
         let changed = XCTNSPredicateExpectation(
             predicate: NSPredicate { _, _ in toggle.value as? String != original }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [changed], timeout: 6), .completed)
+        assertNoSystemPermissionAlert()
         let expected = toggle.value as? String
         app.terminate()
         app.launch()
@@ -39,6 +42,7 @@ nonisolated final class RemindersTests: XCTestCase {
         let open = app.buttons["reminders.openSettings"]
         AuthUIFlow.reveal(open, in: app)
         XCTAssertTrue(open.isEnabled)
+        assertNoSystemPermissionAlert()
     }
 
     @MainActor func testAskPermissionAndFirstTripSeam() {
@@ -48,10 +52,32 @@ nonisolated final class RemindersTests: XCTestCase {
         XCTAssertTrue(enable.waitForExistence(timeout: 12))
         AuthUIFlow.waitUntilEnabled(enable)
         enable.tap()
+        assertNoSystemPermissionAlert()
         openReminders(app)
         let toggle = app.switches["reminders.enabled"]
         XCTAssertTrue(toggle.waitForExistence(timeout: 8))
         XCTAssertEqual(toggle.value as? String, "1")
+    }
+
+    @MainActor func testPermissionIsNotRequestedUntilAsk() {
+        let app = launch(permission: "undetermined")
+        defer { app.terminate() }
+        openReminders(app)
+        let ask = app.buttons["reminders.ask"]
+        XCTAssertTrue(ask.waitForExistence(timeout: 8))
+        XCTAssertFalse(app.switches["reminders.enabled"].exists)
+        assertNoSystemPermissionAlert()
+        AuthUIFlow.reveal(ask, in: app)
+        AuthUIFlow.waitUntilEnabled(ask)
+        ask.tap()
+        let toggle = app.switches["reminders.enabled"]
+        XCTAssertTrue(toggle.waitForExistence(timeout: 8))
+        XCTAssertEqual(toggle.value as? String, "1")
+        assertNoSystemPermissionAlert()
+    }
+
+    @MainActor private func assertNoSystemPermissionAlert() {
+        XCTAssertFalse(XCUIApplication(bundleIdentifier: "com.apple.springboard").alerts.firstMatch.exists)
     }
 
     @MainActor private func launch(permission: String, firstTrip: Bool = false) -> XCUIApplication {

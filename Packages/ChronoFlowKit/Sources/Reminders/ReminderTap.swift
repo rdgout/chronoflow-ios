@@ -33,12 +33,14 @@ public struct ReminderTap: Sendable, Equatable {
 #if DEBUG
     public actor MockReminderCenter: ReminderNotificationCenter {
         public var status: ReminderPermission
+        public private(set) var permissionRequestCount = 0
         private var requests: [String: ReminderRequest] = [:]
         public init(permission: ReminderPermission) { status = permission }
         public func setStatus(_ status: ReminderPermission) { self.status = status }
         public func permission() -> ReminderPermission { status }
         public func requestPermission() -> ReminderPermission {
-            status = .granted
+            permissionRequestCount += 1
+            if status == .undetermined { status = .granted }
             return status
         }
         public func pending() -> [ReminderRequest] { Array(requests.values) }

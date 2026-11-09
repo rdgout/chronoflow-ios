@@ -15,6 +15,20 @@ func eventually(_ condition: @Sendable () async throws -> Bool) async throws {
 }
 
 @Suite struct ReminderServiceTests {
+    @Test(arguments: ReminderPermission.allCases)
+    func schedulingNeverRequestsAuthorization(permission: ReminderPermission) async throws {
+        let store = try await ReminderTestStore()
+        let center = MockReminderCenter(permission: permission)
+        let service = ReminderService(center: center, now: { reminderNow })
+        await service.attach(database: store.database)
+        await service.reschedule()
+        await service.setLanguage(.nl)
+        #expect(await center.permission() == permission)
+        #expect(await center.permissionRequestCount == 0)
+        await service.detach()
+        try await store.close()
+    }
+
     @Test func fakeCenterCapsAt60AndKeepsUnchangedRequests() async throws {
         let store = try await ReminderTestStore()
         for index in 0..<11 {

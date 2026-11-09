@@ -26,6 +26,7 @@ final class NativeSessionController {
 
     init(
         applicationSupport: URL, namespace: StorageNamespace, credentials: (any SessionStore)? = nil,
+        reminderCenter: any ReminderNotificationCenter = SystemReminderCenter(),
         accountStore: (@MainActor (SessionAccountDatabase) -> any SessionAccountStore)? = nil,
         syncScheduler: SyncScheduler = SyncScheduler(),
         syncPath: @escaping @Sendable () -> (any SyncPathMonitoring)? = { NetworkPathMonitor() },
@@ -36,25 +37,9 @@ final class NativeSessionController {
         signedOut: @escaping @MainActor @Sendable () -> Void = {}
     ) {
         sourceFactory = source
-        let notificationCenter: any ReminderNotificationCenter
-        #if DEBUG
-            let arguments = ProcessInfo.processInfo.arguments
-            if namespace == .mock,
-                UUID(uuidString: ProcessInfo.processInfo.environment["CF_AUTH_TEST_ID"] ?? "") != nil,
-                let index = arguments.firstIndex(of: "-cf.notificationAuthorization"),
-                arguments.indices.contains(index + 1),
-                let permission = ReminderPermission(rawValue: arguments[index + 1])
-            {
-                notificationCenter = MockReminderCenter(permission: permission)
-            } else {
-                notificationCenter = SystemReminderCenter()
-            }
-        #else
-            notificationCenter = SystemReminderCenter()
-        #endif
         let taps = ReminderTapRouter()
         reminderTaps = taps
-        let reminders = ReminderService(center: notificationCenter)
+        let reminders = ReminderService(center: reminderCenter)
         self.reminders = reminders
         let model = AccountModel()
         self.model = model

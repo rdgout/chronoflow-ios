@@ -32,6 +32,14 @@ UI suites are registered without snapshots:
 make targeted DEVICES="17e" ONLY="AppUITests/RemindersTests"
 ```
 
-The tests use the mock account and `-cf.notificationAuthorization granted|blocked|undetermined|unsupported`. This override requires Debug, the mock namespace and a valid isolated `CF_AUTH_TEST_ID`; it never drives the system alert. `-cf.firstTripReminders` exposes only the first-trip test seam. The UI suite covers toggle/relaunch persistence, blocked instructions and the reusable sheet's allow action.
+The tests use the mock account and `-cf.notificationAuthorization granted|blocked|undetermined|unsupported`. A valid isolated `CF_AUTH_TEST_ID` in Debug always injects a fake center, even without the authorization argument or with an invalid value (both default to undetermined). Normal launches keep the system center. The fake grants an undetermined request and retains blocked permission; it never drives the system alert. `-cf.firstTripReminders` exposes only the first-trip test seam. The UI suite covers toggle/relaunch persistence, blocked instructions and the reusable sheet's allow action.
 
 No simulator, snapshot recording, matrix or Duo run was performed. UI execution and visual acceptance remain with the user. Build validation is recorded in the Phase 19 checklist in `plan.md`.
+
+## 17e regression investigation (2026-11-09)
+
+The saved `build/test-results/17e/Debug-compare.xcresult` reports seven failures. Its recording shows the reminders switch remains on after XCTest taps the center of its full-width accessibility row (the synthesized event is x=195, y=279). The switch is at the trailing edge. The persistence test now reveals the row and taps inside that switch, checking the changed value before relaunch.
+
+The saved Settings sign-out test recording shows the initial moon screen, with no notification alert. SettingsPages also fails on a separate simulator clone before the reminders toggle fails, so a leftover permission alert is not established as the shared cause. The granted/blocked/undetermined reminder fixtures already select the existing fake, and the native Toggle calls only `setEnabled`, which cannot request authorization. Other Settings tests previously fell through to the real notification service; session activation/restore queries and cleans up that service before resolving launch readiness. Every isolated UI fixture now uses the fake, removing that system dependency from the test launch path. No alert-dismissal handler or larger timeout hides these failures.
+
+The only production request call remains in `SystemReminderCenter.requestPermission`, reached from the Settings Ask action or the first-trip Enable action. Launch, scheduling, foreground refresh and notification delegate assignment do not request authorization. Host tests count requests across scheduling and permission states. Hosted regressions cover the factory defaults/explicit states and signed-out native launch/foreground with no reminder intent: Welcome, released splash, accessible root, unchanged navigation and zero requests. The existing delegate assignment, splash completion and intent consumption are unchanged.

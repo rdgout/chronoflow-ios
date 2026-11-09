@@ -6,6 +6,15 @@ import UserNotifications
 @testable import Reminders
 
 @Suite struct ReminderPermissionTests {
+    @Test(arguments: ReminderPermission.allCases)
+    func mockAuthorizationChangesOnlyAfterAnExplicitRequest(permission: ReminderPermission) async throws {
+        let center = MockReminderCenter(permission: permission)
+        #expect(await center.permission() == permission)
+        #expect(await center.permissionRequestCount == 0)
+        #expect(await center.requestPermission() == (permission == .undetermined ? .granted : permission))
+        #expect(await center.permissionRequestCount == 1)
+    }
+
     @Test func permissionMatrix() {
         for permission in ReminderPermission.allCases {
             #expect(permission.remindersActive(ReminderSettings()) == (permission == .granted))

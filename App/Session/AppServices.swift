@@ -1,6 +1,7 @@
 import AppCore
 import DataAccess
 import Foundation
+import Reminders
 
 nonisolated struct AppServices: Sendable {
     enum Failure: Error { case invalidReadiness, applicationSupportUnavailable }
@@ -23,6 +24,19 @@ nonisolated struct AppServices: Sendable {
             if let authTest { return authTest.credentials }
         #endif
         return KeychainSessionStore(namespace: namespace)
+    }
+
+    func reminderCenter(arguments: [String] = ProcessInfo.processInfo.arguments) -> any ReminderNotificationCenter {
+        #if DEBUG
+            if authUITestEnabled {
+                let index = arguments.firstIndex(of: "-cf.notificationAuthorization")
+                let permission = index.flatMap { index in
+                    arguments.indices.contains(index + 1) ? ReminderPermission(rawValue: arguments[index + 1]) : nil
+                }
+                return MockReminderCenter(permission: permission ?? .undetermined)
+            }
+        #endif
+        return SystemReminderCenter()
     }
 
     private func makeMock(applicationSupport: URL, bearer: @escaping @Sendable () async throws -> String?)

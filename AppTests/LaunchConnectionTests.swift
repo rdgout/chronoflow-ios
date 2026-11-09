@@ -1,5 +1,6 @@
 import AppCore
 import Launch
+import Reminders
 import UIKit
 import XCTest
 
@@ -118,6 +119,53 @@ nonisolated final class LaunchConnectionTests: XCTestCase {
     }
 
     @MainActor
+    func testNativeSignedOutLaunchAndForegroundWithoutAnIntentDoNotRequestPermissionOrChangeNavigation() async throws {
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let previousKey = scene.windows.first(where: \.isKeyWindow)
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let center = MockReminderCenter(permission: .undetermined)
+        let delegate = SceneDelegate()
+        delegate.serviceConfigurationFactory = {
+            (try AppServices(info: [:], testing: true), root)
+        }
+        delegate.nativeSessionFactory = { services, root in
+            NativeSessionController(
+                applicationSupport: root, namespace: services.namespace,
+                credentials: ReminderLaunchCredentials(), reminderCenter: center)
+        }
+        delegate.connect(to: scene, firstConnection: true, arguments: LaunchArguments(["-cf.reduceMotion"]))
+        defer {
+            delegate.sceneDidDisconnect(scene)
+            previousKey?.makeKey()
+            try? FileManager.default.removeItem(at: root)
+        }
+        let deadline = ContinuousClock.now + .seconds(8)
+        while delegate.overlayWindow != nil, ContinuousClock.now < deadline {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        XCTAssertNil(delegate.overlayWindow)
+        XCTAssertEqual(delegate.navigator.route, .welcome)
+        XCTAssertFalse(try XCTUnwrap(delegate.window?.rootViewController?.view).accessibilityElementsHidden)
+        let native = try XCTUnwrap(delegate.nativeSession)
+        XCTAssertNil(native.reminderTaps.pending)
+        XCTAssertNil(delegate.pendingIntent.notification)
+        let launchRequests = await center.permissionRequestCount
+        XCTAssertEqual(launchRequests, 0)
+        let revision = delegate.navigator.revision
+        await native.setActive(true)
+        delegate.receiveReminderIntent(PendingLaunchIntent())
+        XCTAssertEqual(delegate.navigator.route, .welcome)
+        XCTAssertEqual(delegate.navigator.revision, revision)
+        XCTAssertNil(native.reminderTaps.pending)
+        let foregroundRequests = await center.permissionRequestCount
+        let permission = await center.permission()
+        XCTAssertEqual(foregroundRequests, 0)
+        XCTAssertEqual(permission, .undetermined)
+        await native.stopObserving()
+        try await native.accounts.close()
+    }
+
+    @MainActor
     private func waitForRoot(of delegate: SceneDelegate) async throws -> UIWindow {
         let deadline = ContinuousClock.now + .seconds(5)
         while delegate.window == nil, ContinuousClock.now < deadline {
@@ -125,4 +173,10 @@ nonisolated final class LaunchConnectionTests: XCTestCase {
         }
         return try XCTUnwrap(delegate.window, "Root window did not mount after font registration")
     }
+}
+
+private actor ReminderLaunchCredentials: SessionStore {
+    func read() -> Data? { nil }
+    func write(_ data: Data) {}
+    func delete() {}
 }
