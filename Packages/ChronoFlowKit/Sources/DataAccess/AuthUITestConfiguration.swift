@@ -2,6 +2,8 @@
     import Foundation
 
     public struct AuthUITestConfiguration: Sendable {
+        public let fastLaunch: Bool
+        public let mockDelay: TimeInterval
         public let id: String
         public let offline: Bool
         public let settingsPending: Bool
@@ -16,6 +18,9 @@
 
         public init?(environment: [String: String] = ProcessInfo.processInfo.environment) {
             guard let value = environment["CF_AUTH_TEST_ID"], let uuid = UUID(uuidString: value) else { return nil }
+            fastLaunch = environment["CF_UI_TEST_PROFILE"] == "screen"
+            let delay = environment["CF_MOCK_DELAY"].flatMap(Double.init)
+            mockDelay = delay.flatMap { $0.isFinite && (0...60).contains($0) ? $0 : nil } ?? 0
             id = uuid.uuidString.lowercased()
             offline = environment["CF_AUTH_TEST_OFFLINE"] == "1"
             settingsPending = environment["CF_SETTINGS_TEST_PENDING"] == "1"

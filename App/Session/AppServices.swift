@@ -21,6 +21,7 @@ nonisolated struct AppServices: Sendable {
         private let timelineSeed: MockServerState?
         private let refreshScenario: RefreshUITestScenario?
         var authUITestEnabled: Bool { authTest != nil }
+        var fastUITestLaunch: Bool { authTest?.fastLaunch == true }
 
         func prepareRefreshUITest() async { await refreshScenario?.arm() }
     #endif
@@ -59,7 +60,7 @@ nonisolated struct AppServices: Sendable {
             }
             if let authTest {
                 return MockDataSource(
-                    store: FileMockStateStore(applicationSupport: applicationSupport),
+                    store: isolatedMockStore ?? FileMockStateStore(applicationSupport: applicationSupport),
                     seed: authTestSeed,
                     offline: authTest.offline,
                     mutationsOffline: authTest.settingsPending || authTest.walkthroughPending || authTest.termsPending,
@@ -77,15 +78,18 @@ nonisolated struct AppServices: Sendable {
         testing: Bool = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
             || NSClassFromString("XCTestCase") != nil,
         environment: [String: String] = ProcessInfo.processInfo.environment,
-        mockDelay: @escaping @Sendable () -> TimeInterval = { Double.random(in: 0.3...0.8) }
+        mockDelay: (@Sendable () -> TimeInterval)? = nil
     ) throws {
-        self.mockDelay = mockDelay
         #if DEBUG
+            let requestedAuthTest = AuthUITestConfiguration(environment: environment)
+            self.mockDelay = mockDelay ?? { requestedAuthTest?.mockDelay ?? Double.random(in: 0.3...0.8) }
             isolatedMockStore =
-                (ProcessInfo.processInfo.arguments.contains("-cf.isolatedMockServer")
+                (requestedAuthTest?.fastLaunch == true
+                    || ProcessInfo.processInfo.arguments.contains("-cf.isolatedMockServer")
                     || ProcessInfo.processInfo.arguments.contains("-cf.timeline-fixtures"))
                 ? MemoryMockStateStore() : nil
         #else
+            self.mockDelay = mockDelay ?? { Double.random(in: 0.3...0.8) }
             isolatedMockStore = nil
         #endif
         switch info["CHRONOFLOW_READINESS"] as? String ?? "native" {
@@ -99,7 +103,6 @@ nonisolated struct AppServices: Sendable {
             let release = true
         #endif
         #if DEBUG
-            let requestedAuthTest = AuthUITestConfiguration(environment: environment)
             let authTestRequested = requestedAuthTest != nil
         #else
             let authTestRequested = false
@@ -153,7 +156,7 @@ nonisolated struct AppServices: Sendable {
             guard let test = authTest, let account = test.signedInAccount else { return }
             let credentials = test.credentials
             let source = MockDataSource(
-                store: FileMockStateStore(applicationSupport: root), seed: authTestSeed,
+                store: isolatedMockStore ?? FileMockStateStore(applicationSupport: root), seed: authTestSeed,
                 delay: { 0 }, sleep: { _ in }, bearer: { try await credentials.readStoredSession()?.token })
             try await MockSessionSeed.run(
                 applicationSupport: root, namespace: namespace, credentials: credentials, source: source,

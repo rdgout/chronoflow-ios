@@ -43,5 +43,30 @@
             }
             #expect(configuration.auditScreen == "reset" && configuration.auditState == "server")
         }
+
+        @Test func screenProfileAndMockDelayRequireTheUUIDGate() throws {
+            #expect(
+                AuthUITestConfiguration(environment: ["CF_UI_TEST_PROFILE": "screen", "CF_MOCK_DELAY": "0"]) == nil)
+            let id = UUID().uuidString
+            let ordinary = try #require(AuthUITestConfiguration(environment: ["CF_AUTH_TEST_ID": id]))
+            #expect(!ordinary.fastLaunch)
+            #expect(ordinary.mockDelay == 0)
+            let screen = try #require(
+                AuthUITestConfiguration(environment: [
+                    "CF_AUTH_TEST_ID": id, "CF_UI_TEST_PROFILE": "screen", "CF_MOCK_DELAY": "0.8",
+                ]))
+            #expect(screen.fastLaunch)
+            #expect(screen.mockDelay == 0.8)
+            for value in ["nan", "inf", "-1", "61", "bad", ""] {
+                let parsed = try #require(
+                    AuthUITestConfiguration(environment: ["CF_AUTH_TEST_ID": id, "CF_MOCK_DELAY": value]))
+                #expect(parsed.mockDelay == 0)
+            }
+            for profile in ["launch", "unknown", ""] {
+                #expect(
+                    AuthUITestConfiguration(environment: ["CF_AUTH_TEST_ID": id, "CF_UI_TEST_PROFILE": profile])?
+                        .fastLaunch == false)
+            }
+        }
     }
 #endif

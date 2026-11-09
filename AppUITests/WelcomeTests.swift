@@ -8,7 +8,7 @@ nonisolated final class WelcomeTests: XCTestCase {
             "-cf.session", "out", "-cf.reduceMotion", "-AppleLanguages", "(nl)", "-AppleLocale", "nl_NL",
             "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL",
         ]
-        app.launchMeasured()
+        app.launchMeasured(profile: .launch)
         defer { app.terminate() }
         XCTAssertTrue(app.staticTexts["welcome.wordmark"].waitUntil(.exists, timeout: 6))
         XCTAssertEqual(
@@ -50,7 +50,7 @@ nonisolated final class WelcomeTests: XCTestCase {
                 "-AppleLocale", language == "nl" ? "nl_NL" : "en_US",
                 "-AppleInterfaceStyle", appearance,
             ]
-            app.launchMeasured()
+            app.launchMeasured(profile: .launch)
             XCTAssertTrue(app.staticTexts["welcome.wordmark"].waitUntil(.exists, timeout: 6))
             _ = try UIWait.stableFrames(
                 ["welcome.wordmark", "welcome.eyebrow", "welcome.headline"].map { app.staticTexts[$0] })
@@ -136,7 +136,7 @@ nonisolated final class WelcomeLogicTests: XCTestCase {
     private func assertRoute(button identifier: String, route: String) {
         let app = XCUIApplication()
         app.launchArguments = ["-cf.session", "out", "-cf.reduceMotion"]
-        app.launchMeasured()
+        app.launchMeasured(profile: .launch)
         defer { app.terminate() }
         XCTAssertTrue(app.staticTexts["welcome.wordmark"].waitUntil(.exists, timeout: 6))
         let button = app.buttons[identifier]

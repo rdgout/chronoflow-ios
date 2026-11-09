@@ -23,7 +23,7 @@ nonisolated final class ReadinessTests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = arguments
         app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
-        app.launchMeasured()
+        app.launchMeasured(profile: .launch)
         addTeardownBlock { @MainActor in app.terminate() }
         return app
     }

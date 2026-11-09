@@ -16,7 +16,15 @@ import XCTest
         record("first-element-found", environment: environment)
     }
 
-    static func launch(_ app: XCUIApplication) {
+    enum Profile: String { case screen, launch }
+
+    static func launch(_ app: XCUIApplication, profile: Profile) {
+        if app.launchEnvironment["CF_AUTH_TEST_ID"] == nil {
+            app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
+        }
+        if app.launchEnvironment["CF_UI_TEST_PROFILE"] == nil {
+            app.launchEnvironment["CF_UI_TEST_PROFILE"] = profile.rawValue
+        }
         record("launch-begin", environment: app.launchEnvironment)
         app.launch()
         record("launch-return", environment: app.launchEnvironment)
@@ -25,5 +33,5 @@ import XCTest
 }
 
 extension XCUIApplication {
-    func launchMeasured() { UITestTiming.launch(self) }
+    func launchMeasured(profile: UITestTiming.Profile = .screen) { UITestTiming.launch(self, profile: profile) }
 }

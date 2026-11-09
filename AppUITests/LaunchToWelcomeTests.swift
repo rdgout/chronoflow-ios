@@ -12,7 +12,7 @@ nonisolated final class LaunchToWelcomeTests: XCTestCase {
             app.terminate()
             try DeviceAppearance.set(appearance)
             app.launchArguments = ["-cf.session", "out"]
-            app.launchMeasured()
+            app.launchMeasured(profile: .launch)
             XCTAssertEqual(app.windows.firstMatch.frame, app.frame)
             XCTAssertEqual(app.windows.firstMatch.screenshot().image.size, XCUIScreen.main.screenshot().image.size)
             XCTAssertTrue(app.staticTexts["welcome.wordmark"].waitUntil(.exists, timeout: 30))

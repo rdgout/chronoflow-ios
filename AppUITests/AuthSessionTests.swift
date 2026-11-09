@@ -13,7 +13,7 @@ nonisolated final class AuthSessionTests: XCTestCase {
         assertRoute("today", in: app)
         waitForCache(in: app)
         app.terminate()
-        app.launchMeasured()
+        app.launchMeasured(profile: .launch)
         assertRoute("today", in: app)
         XCTAssertFalse(app.buttons["welcome.signIn"].exists)
         XCUIDevice.shared.press(.home)
@@ -24,7 +24,8 @@ nonisolated final class AuthSessionTests: XCTestCase {
 
     @MainActor func testSeededUnverifiedAccountShowsVerify() {
         let app = XCUIApplication()
-        AuthUIFlow.launchSignedIn(app, walkthroughSeen: true, extraEnv: ["CF_AUTH_TEST_UNVERIFIED": "1"])
+        AuthUIFlow.launchSignedIn(
+            app, walkthroughSeen: true, extraEnv: ["CF_UI_TEST_PROFILE": "launch", "CF_AUTH_TEST_UNVERIFIED": "1"])
         defer { app.terminate() }
         assertRoute("verify", in: app)
         XCTAssertFalse(app.staticTexts["walkthrough.title"].exists)
@@ -33,13 +34,14 @@ nonisolated final class AuthSessionTests: XCTestCase {
 
     @MainActor func testSeededOfflineAccountShowsTodayAndSignOutReturnsToWelcomeOnRelaunch() {
         let app = XCUIApplication()
-        AuthUIFlow.launchSignedIn(app, walkthroughSeen: true, extraEnv: ["CF_AUTH_TEST_OFFLINE": "1"])
+        AuthUIFlow.launchSignedIn(
+            app, walkthroughSeen: true, extraEnv: ["CF_UI_TEST_PROFILE": "launch", "CF_AUTH_TEST_OFFLINE": "1"])
         defer { app.terminate() }
         assertRoute("today", in: app)
         XCTAssertTrue(app.buttons["today.trip"].waitUntil(.exists, timeout: 10))
         signOut(app, route: "today")
         app.terminate()
-        app.launchMeasured()
+        app.launchMeasured(profile: .launch)
         XCTAssertTrue(app.buttons["welcome.signIn"].waitUntil(.exists, timeout: 12))
         XCTAssertFalse(app.scrollViews["today.screen"].exists)
     }
@@ -50,7 +52,7 @@ nonisolated final class AuthSessionTests: XCTestCase {
         app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
         app.launchEnvironment["CF_AUTH_TEST_WALKTHROUGH_SEEN"] = "1"
         app.launchEnvironment["CF_AUTH_TEST_UNVERIFIED"] = unverified ? "1" : "0"
-        app.launchMeasured()
+        app.launchMeasured(profile: .launch)
         addTeardownBlock { @MainActor in app.terminate() }
         return app
     }

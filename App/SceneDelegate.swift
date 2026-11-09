@@ -33,6 +33,9 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     private var unlockObserver: NSObjectProtocol?
     private var rootScheduled = false
     private var connectionGeneration = 0
+    #if DEBUG
+        private var recordedSessionReady = false
+    #endif
 
     func scene(
         _ scene: UIScene,
@@ -123,6 +126,12 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 } catch { self?.signposts.event(.fontRegistrationFailed) }
             }
         }
+        #if DEBUG
+            if AuthUITestConfiguration()?.fastLaunch == true {
+                allowsIntro = false
+                UIView.setAnimationsEnabled(false)
+            }
+        #endif
         if diagnostic || (!firstConnection && navigator.route != nil) {
             if arguments.mode == .welcome {
                 navigator.navigate(to: .welcome)
@@ -147,6 +156,14 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
     }
 
+    private var usesFastUITestLaunch: Bool {
+        #if DEBUG
+            AuthUITestConfiguration()?.fastLaunch == true
+        #else
+            false
+        #endif
+    }
+
     private func startReadiness(on windowScene: UIWindowScene, arguments: LaunchArguments) {
         let clock = MediaLaunchClock(t0: overlayController?.launchScene.t0 ?? CACurrentMediaTime())
         let safe = overlayController?.view.safeAreaInsets ?? windowScene.keyWindow?.safeAreaInsets ?? .zero
@@ -156,7 +173,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             rowHeight: LaunchArguments.fallbackRowHeight(compatibleWith: windowScene.traitCollection))
         if let source = readinessFactory?(arguments, clock) {
             runReadiness(source, on: windowScene, clock: clock, fallback: fallback)
-        } else if arguments.usesInjectedReadiness {
+        } else if arguments.usesInjectedReadiness && !usesFastUITestLaunch {
             runReadiness(
                 StubReadiness(configuration: arguments.readiness, store: KeychainSessionStore(), clock: clock),
                 on: windowScene, clock: clock, fallback: fallback)
@@ -193,7 +210,24 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                         }
                     }
                     #if DEBUG
-                        UITestTimeline.record("session-ready")
+                        if configuration.0.fastUITestLaunch {
+                            if let nativeSession {
+                                let presence = await nativeSession.readiness.session()
+                                if case .signedIn = presence {
+                                    await nativeSession.readiness.allowFirstLoad()
+                                    let gate = await nativeSession.readiness.gate()
+                                    navigator.navigate(to: gate.route)
+                                } else {
+                                    navigator.navigate(to: .welcome)
+                                }
+                            } else {
+                                navigator.navigate(to: .welcome)
+                            }
+                            UITestTimeline.record("session-ready")
+                            finishLaunch()
+                            mountRoot(on: windowScene)
+                            return
+                        }
                     #endif
                     runReadiness(source, on: windowScene, clock: clock, fallback: fallback)
                 } catch {
@@ -243,7 +277,15 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             state: .init(fallbackTarget: fallback, pendingIntent: pendingIntent)
         ) { [weak self, weak windowScene] state, effects in
             guard let self, let windowScene else { return }
-            if state.session != nil { signposts.end(.session) }
+            if state.session != nil {
+                signposts.end(.session)
+                #if DEBUG
+                    if !recordedSessionReady {
+                        recordedSessionReady = true
+                        UITestTimeline.record("session-ready")
+                    }
+                #endif
+            }
             if state.isReady { signposts.end(.ready) }
             if let route = state.route {
                 if route == .welcome, allowsIntro, launchIntro == nil, let start = state.exitStart {
@@ -282,6 +324,9 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 guard let self, self.connectionGeneration == generation else { return }
                 let window = UIWindow(windowScene: windowScene)
                 window.maximumContentSizeCategory = ContentSizeCap.maximumCategory
+                #if DEBUG
+                    if usesFastUITestLaunch { window.layer.speed = 20 }
+                #endif
                 let app = UIApplication.shared.delegate as? AppDelegate
                 if serviceConfiguration == nil {
                     let load = serviceConfigurationFactory
@@ -396,7 +441,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         #if DEBUG
             if let window, window.rootViewController?.viewIfLoaded != nil {
                 window.layoutIfNeeded()
-                UITestTimeline.record("seeded-screen-visible")
+                (window.rootViewController as? LaunchHostingController<RootView>)?.recordVisibleScreen()
             }
         #endif
         signposts.event(.overlayRemoved)

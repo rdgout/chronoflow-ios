@@ -1,5 +1,6 @@
 import AppCore
 import Auth
+import DataAccess
 import DesignSystem
 import Observation
 import Settings
@@ -38,7 +39,16 @@ struct RootView: View {
 
     var body: some View {
         let _ = Self.refreshTint
-        content.environment(devicePreferences)
+        content
+            .transaction {
+                #if DEBUG
+                    if AuthUITestConfiguration()?.fastLaunch == true {
+                        $0.disablesAnimations = true
+                        $0.animation = nil
+                    }
+                #endif
+            }
+            .environment(devicePreferences)
             .environment(\.locale, devicePreferences.resolvedLocale(phone: phoneLocale))
             .preferredColorScheme(
                 devicePreferences.theme == .system ? nil : devicePreferences.theme == .dark ? .dark : .light
