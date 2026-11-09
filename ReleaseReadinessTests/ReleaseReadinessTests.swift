@@ -41,7 +41,7 @@
             }.value
             let mock = try XCTUnwrap(source as? MockDataSource)
             _ = try await mock.inbox()
-            XCTAssertTrue(try FileMockStateStore(applicationSupport: root).load()?.accounts.isEmpty == true)
+            XCTAssertTrue(try FileMockStateStore(applicationSupport: root).load()?.accounts.isEmpty ?? true)
         }
 
         func testReleaseDefaultMockDoesNotSeedAccounts() async throws {
