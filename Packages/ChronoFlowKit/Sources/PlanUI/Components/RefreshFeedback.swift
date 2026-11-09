@@ -44,7 +44,7 @@ public struct RefreshFeedback: Sendable, Equatable {
     public init() {}
 
     public func refresh(
-        userInitiated: Bool = true, action: () async throws -> SyncResult?
+        userInitiated: Bool = true, action: @escaping () async throws -> SyncResult?
     ) async {
         guard !refreshing else { return }
         refreshing = true
@@ -55,7 +55,9 @@ public struct RefreshFeedback: Sendable, Equatable {
         #endif
         defer { refreshing = false }
         do {
-            if let result = try await action() {
+            // SwiftUI cancels a refreshable task when the refreshed data redraws the screen.
+            nonisolated(unsafe) let work = action
+            if let result = try await Task { @MainActor in try await work() }.value {
                 feedback = RefreshFeedback.outcome(result, userInitiated: userInitiated)
                 #if DEBUG
                     debugOutcome = "result:\(result.state):\(feedback.count)"

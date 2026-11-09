@@ -138,4 +138,17 @@ import Testing
         await task.value
         #expect(model.feedback.first?.key == "Up to date")
     }
+
+    @Test func syncKeepsRunningWhenTheGestureTaskIsCancelledMidFlight() async {
+        let model = RefreshFeedbackModel()
+        let task = Task { @MainActor in
+            await model.refresh {
+                try await Task.sleep(for: .milliseconds(50))
+                return SyncResult(state: .idle, pendingCount: 0)
+            }
+        }
+        task.cancel()
+        await task.value
+        #expect(model.feedback.first?.key == "Up to date")
+    }
 }
