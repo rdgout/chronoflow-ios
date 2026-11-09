@@ -22,7 +22,7 @@ import XCTest
         self.scale = container.scale
         controller = UIHostingController(rootView: AnyView(EmptyView()))
         controller.safeAreaRegions = []
-        window.maximumContentSizeCategory = ContentSizeCap.maximumCategory
+        ContentSizeCap.apply(to: container.root, in: window)
         container.host(controller)
         configure(view, style: style, language: language, category: category)
     }
@@ -35,12 +35,13 @@ import XCTest
         let insets = container.insets ?? .init(top: 0, left: 0, bottom: 0, right: 0)
         window.overrideUserInterfaceStyle = style
         controller.overrideUserInterfaceStyle = style
-        controller.traitOverrides.preferredContentSizeCategory = category
+        // Inject the system preference above the window cap, as in the app.
+        window.traitOverrides.preferredContentSizeCategory = category
         controller.traitOverrides.displayScale = scale
         controller.rootView = AnyView(
             view.dynamicTypeSize(...ContentSizeCap.maximum)
                 .environment(\.locale, Locale(identifier: language))
-                .environment(\.dynamicTypeSize, DynamicTypeSize(category) ?? .large)
+                .environment(\.dynamicTypeSize, ContentSizeCap.clamp(DynamicTypeSize(category) ?? .large))
                 .environment(\.displayScale, scale)
                 .environment(\.colorScheme, style == .dark ? .dark : .light)
                 .safeAreaInset(edge: .top, spacing: 0) { Color.clear.frame(height: insets.top) }
@@ -53,9 +54,11 @@ import XCTest
     func settle() async throws {
         var previous: SnapshotRaster?
         var matches = 0
-        for _ in 0..<12 {
-            await withCheckedContinuation { continuation in
-                DispatchQueue.main.async { continuation.resume() }
+        let deadline = ContinuousClock.now + .seconds(5)
+        for attempt in 1...12 {
+            try await Task.sleep(for: .milliseconds(10))
+            guard ContinuousClock.now < deadline else {
+                throw CaptureFailure.didNotSettle("5 s deadline, attempt \(attempt), revision \(revision)")
             }
             let current = try SnapshotRaster(image: XCTUnwrap(image().cgImage))
             matches = current == previous ? matches + 1 : 0
@@ -69,10 +72,26 @@ import XCTest
             }
             previous = current
         }
-        throw CaptureFailure.didNotSettle
+        throw CaptureFailure.didNotSettle("12 captures, revision \(revision), size \(window.bounds.size)")
     }
 
-    private enum CaptureFailure: Error { case didNotSettle }
+    nonisolated static func registerFonts() async throws {
+        let completed = XCTestExpectation(description: "Auth fonts registered off the main thread")
+        let registration = Task {
+            defer { completed.fulfill() }
+            try await FontRegistry.register()
+        }
+        guard await XCTWaiter.fulfillment(of: [completed], timeout: 10) == .completed else {
+            registration.cancel()
+            throw CaptureFailure.fontRegistrationTimedOut
+        }
+        try await registration.value
+    }
+
+    private enum CaptureFailure: Error {
+        case didNotSettle(String)
+        case fontRegistrationTimedOut
+    }
 
     func image() throws -> UIImage {
         window.makeKeyAndVisible()
@@ -115,6 +134,16 @@ nonisolated struct AuthDeviceFixture {
             guard let device else { return [.large, .extraExtraLarge] }
             return try profileSizes(device.coverage).map(UIContentSizeCategory.init)
         }
+    }
+
+    static func authSnapshotProfiles() throws -> [Self] {
+        try all().filter { ["17e", "se", "duo"].contains($0.name) }
+    }
+
+    @MainActor var authSnapshotVariants: [(UIUserInterfaceStyle, String, UIContentSizeCategory)] {
+        [UIUserInterfaceStyle.light, .dark].flatMap { style in
+            ["en", "nl"].map { (style, $0, UIContentSizeCategory.large) }
+        } + (name == "17e" ? [(.light, "en", .extraExtraLarge)] : [])
     }
 
     static func all() throws -> [Self] {

@@ -12,7 +12,9 @@ struct AuthRootView: View {
             SignInView(model: model, back: back, guest: guest)
                 .toolbar(.hidden, for: .navigationBar)
                 .navigationDestination(for: AuthDestination.self) { destination in
-                    if destination == .twoFactor {
+                    if destination == .forgot {
+                        ForgotPasswordView(model: model.makeForgotPasswordModel()).toolbar(.hidden, for: .navigationBar)
+                    } else if destination == .twoFactor {
                         if let twoFactor = model.twoFactor, navigation.challengeID != nil {
                             TwoFactorView(model: twoFactor).toolbar(.hidden, for: .navigationBar)
                         } else {

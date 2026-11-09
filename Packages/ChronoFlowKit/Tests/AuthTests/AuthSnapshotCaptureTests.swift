@@ -16,6 +16,67 @@ struct AuthSnapshotCaptureTests {
         ]
     }
 
+    @Test func nativeInputToleranceAllowsOnlyOneDevicePixelInEachComponent() {
+        for scale: CGFloat in [2, 3] {
+            let reference = CGRect(x: 48, y: 474, width: 279, height: 25)
+            #expect(AuthSnapshotCapture.nativeInputRectsMatch(reference, reference, scale: scale))
+            for component in 0..<4 {
+                for delta in [-1, 1, -1.5, 1.5] {
+                    var values: [CGFloat] = [48, 474, 279, 25]
+                    values[component] += delta / scale
+                    let actual = CGRect(x: values[0], y: values[1], width: values[2], height: values[3])
+                    #expect(
+                        AuthSnapshotCapture.nativeInputRectsMatch(actual, reference, scale: scale) == (abs(delta) == 1))
+                }
+            }
+            for invalid in [CGRect.null, .infinite, .zero] {
+                #expect(!AuthSnapshotCapture.nativeInputRectsMatch(invalid, reference, scale: scale))
+                #expect(!AuthSnapshotCapture.nativeInputRectsMatch(reference, invalid, scale: scale))
+            }
+        }
+        for scale: CGFloat in [0, -1, .infinity, .nan] {
+            #expect(!AuthSnapshotCapture.nativeInputRectsMatch(viewport, viewport, scale: scale))
+        }
+    }
+
+    @Test func nativeInputPixelMaskKeepsEveryOutsidePixelAndChannelExact() throws {
+        let reference = try SnapshotRaster(png: png())
+        for scale: CGFloat in [2, 3] {
+            let referenceInput = CGRect(x: 8 / scale, y: 8 / scale, width: 8 / scale, height: 8 / scale)
+            let input = CGRect(x: 9 / scale, y: 9 / scale, width: 9 / scale, height: 7 / scale)
+            func matches(_ actual: SnapshotRaster, input: CGRect = input) -> Bool {
+                AuthSnapshotCapture.pixelsMatchOutsideNativeInput(
+                    actual, reference, input: input, referenceInput: referenceInput, scale: scale)
+            }
+            let masked = try SnapshotRaster(
+                png: png { bytes in
+                    for y in 7..<17 {
+                        for x in 7..<19 {
+                            for channel in 0..<3 { bytes[(y * 40 + x) * 4 + channel] = 100 }
+                        }
+                    }
+                })
+            #expect(masked != reference)
+            #expect(matches(masked))
+            for (x, y) in [(6, 8), (19, 8), (8, 6), (8, 17), (0, 0), (39, 59)] {
+                for channel in 0..<4 {
+                    let changed = try SnapshotRaster(
+                        png: png { bytes in bytes[(y * 40 + x) * 4 + channel] ^= 1 })
+                    #expect(changed != reference)
+                    #expect(!matches(changed))
+                }
+            }
+            var oversized = input
+            oversized.size.width += 1 / scale
+            #expect(!matches(reference, input: oversized))
+            #expect(!matches(reference, input: .null))
+            #expect(
+                !AuthSnapshotCapture.pixelsMatchOutsideNativeInput(
+                    reference, reference, input: referenceInput.offsetBy(dx: -20, dy: 0),
+                    referenceInput: referenceInput.offsetBy(dx: -20, dy: 0), scale: scale))
+        }
+    }
+
     @Test func rejectsBlankGradientTransparentWrongScaleAndClippedContent() throws {
         let raster = try SnapshotRaster(png: png())
         #expect(failure(raster) == nil)

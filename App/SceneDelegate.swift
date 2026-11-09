@@ -297,6 +297,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                     signposts: signposts)
                 controller.launchIsVisible = overlayWindow != nil
                 window.rootViewController = controller
+                ContentSizeCap.apply(to: controller, in: window)
                 controller.view.accessibilityElementsHidden = overlayWindow != nil
                 self.window = window
                 app?.authWindow = window

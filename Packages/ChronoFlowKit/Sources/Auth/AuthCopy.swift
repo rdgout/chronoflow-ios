@@ -40,4 +40,10 @@ nonisolated public enum AuthCopy {
     public static func supports(_ message: FieldMessage) -> Bool {
         field(message, locale: Locale(identifier: "en")) != nil
     }
+
+    public static func resetSent(email: String, locale: Locale) -> String {
+        String(
+            format: string("If %@ has an account, a link to choose a new password is on its way.", locale: locale),
+            locale: locale, email)
+    }
 }

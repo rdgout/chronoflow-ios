@@ -6,7 +6,7 @@ import XCTest
 
 nonisolated final class AuthLayoutTests: XCTestCase {
     @MainActor func testSafeAreaFixturesAreAppliedAndAllContentStaysInsideHorizontalBounds() async throws {
-        try await FontRegistry.register()
+        try await AuthTestHost.registerFonts()
         for fixture in try AuthDeviceFixture.all() {
             for language in ["en", "nl"] {
                 for category in [UIContentSizeCategory.large, .extraExtraLarge] {
@@ -18,7 +18,9 @@ nonisolated final class AuthLayoutTests: XCTestCase {
                         insets: fixture.insets, language: language, category: category, scale: fixture.scale)
                     defer { host.close() }
                     try await host.settle()
-                    XCTAssertEqual(Set(frames.keys), Set(AuthElement.allCases).subtracting([.code, .modeToggle]))
+                    XCTAssertEqual(
+                        Set(frames.keys),
+                        Set(AuthElement.allCases).subtracting([.code, .modeToggle, .notice, .openEmail, .backToSignIn]))
                     let brand = try XCTUnwrap(frames[.brand])
                     XCTAssertEqual(brand.minY, fixture.insets.top + AuthTokens.gutter, accuracy: 0.5)
                     XCTAssertEqual(brand.minX, fixture.insets.left + AuthTokens.gutter, accuracy: 0.5)
@@ -39,7 +41,7 @@ nonisolated final class AuthLayoutTests: XCTestCase {
     }
 
     @MainActor func testEnglishLinksReachBothCardEdgesAtWideDeviceSizes() async throws {
-        try await FontRegistry.register()
+        try await AuthTestHost.registerFonts()
         for fixture in try AuthDeviceFixture.all() where ["18promax", "duo"].contains(fixture.name) {
             var frames: [AuthElement: CGRect] = [:]
             let host = try AuthTestHost(
@@ -58,7 +60,7 @@ nonisolated final class AuthLayoutTests: XCTestCase {
     }
 
     @MainActor func testWrappedDutchLinkKeepsTheGeneratedLineHeight() async throws {
-        try await FontRegistry.register()
+        try await AuthTestHost.registerFonts()
         let fixture = try XCTUnwrap(AuthDeviceFixture.all().first { $0.name == "se" })
         var frames: [AuthElement: CGRect] = [:]
         let host = try AuthTestHost(

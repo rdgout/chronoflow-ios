@@ -37,6 +37,9 @@ import Observation
         email = value
         form.edit("email")
     }
+    public func makeForgotPasswordModel() -> ForgotPasswordModel {
+        ForgotPasswordModel(source: source, navigation: navigation, email: navigation.forgotEmail)
+    }
     public func editPassword(_ value: String) {
         guard !form.busy else { return }
         password = value

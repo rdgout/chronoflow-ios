@@ -2014,14 +2014,13 @@ make targeted DEVICES="17e" ONLY="AppTests/SessionReadinessTests"
 These commands remain pending outside this sandbox. No simulator or xcodebuild execution is
 claimed for this round.
 
-The host baseline inventory now includes `AppTests/__Snapshots__/Auth`. Expected names are
-`board-{light,dark}-{en,nl}-{large,xxLarge}-{none,credentials,locked,server}.png` and
-`{device.name}-{style}-{language}-{dynamicType}-{banner}.png` for every catalog device's profile
-Dynamic Type entries. The total is 32 board + 4 full × 192 + 3 compact × 32 = **896**.
-An absent or empty Auth directory remains pending recording; once any PNG is present, the exact
-inventory is required. Partial sets, stale extras and changed suffixes at the same count fail
-the host guard. No Auth references are included, and shared Auth shell acceptance remains open.
-
+The auth inventory now follows the **lean snapshot set, user 2026-11-07** (superseding the
+original board/full-profile set): every implemented state on 17e/SE/Duo in en/nl × light/dark at
+`large`, plus one `xxLarge` reference per state on 17e/en/light. Sign in has **52**, Two-factor **104**,
+and Forgot **78** references. Each state has 13 references. All other device sizes retain Mac
+geometry and hosted layout/guard coverage. AX5/xxLarge pixel equality runs once per screen.
+Splash/Welcome profile coverage is unchanged. Exact filename guards reject stale extras and partial
+sets; an entirely unrecorded suite remains pending. Compare mode never writes references.
 After reviewing and recording the references, compare and run the commit gate:
 
 ```sh
@@ -2090,9 +2089,9 @@ changes Release API behavior. The normal Debug mock keeps its file-backed server
 TwoFactorControlTests/TwoFactorLayoutTests are hosted logic, TwoFactorTests is UI logic,
 TwoFactorKeyboardTests is a runtime suite and TwoFactorSnapshotTests uses profiles. All are
 registered in the runner; targeted recording selects only the new suite. Snapshots cover both modes
-and none/field-error/attempts/server states, en/nl, light/dark, the board and all D1c profile sizes:
-1,792 new references under `AppTests/__Snapshots__/Auth/TwoFactor`. Separate AX5/xxLarge checks
-verify the existing root cap. Fourteen board HTML exports are under `_design/frames/auth/two-factor-*`;
+and none/field-error/attempts/server states in the lean auth set:
+104 references under `AppTests/__Snapshots__/Auth/TwoFactor`. One AX5/xxLarge comparison
+verifies the root cap; all D1c sizes remain covered by geometry/layout guards. Fourteen board HTML exports are under `_design/frames/auth/two-factor-*`;
 `node Scripts/export-auth-boards.cjs` regenerates them without changing the read-only canvas.
 
 Verification: `make quick` passes, including 54 runner fixtures, 10 resource checks and 3 signing
@@ -2137,8 +2136,8 @@ Every path still runs the per-device AutomaticMinimizationEnabled=false preparat
 Auth selections fail if a test is failed, skipped, expected-failure or missing from results; a
 record/build/test failure does not hide the later comparison, audit or Release pass. Recording is
 explicit, serial and 17e-only. Guard/UI/Release suites never receive the record environment, even
-when inherited TEST_RUNNER_SNAPSHOT_RECORD is set. The host inventory pins all 896 Sign in and
-1,792 Two-factor filenames, not just their counts. Compare mode never writes references.
+when inherited TEST_RUNNER_SNAPSHOT_RECORD is set. The host inventory pins all 52 Sign in,
+104 Two-factor and 78 Forgot filenames, not just their counts (lean set, user 2026-11-07). Compare mode never writes references.
 
 AuthSnapshotCapture has Mac mutation tests and validates both snapshot and AX5 capture paths
 before recording/comparison. The hosted AuthSnapshotGuardTests scrolls every control into full
@@ -2328,3 +2327,199 @@ make targeted DEVICES="se duo" ONLY="AppTests/TwoFactorLayoutTests/testLastContr
 
 The seven-runtime matrix is not requested. Task 2 remains unticked for revised runtime acceptance
 and the existing Two-factor side-by-side board review; device-only gates retain their original scope.
+
+### Phase 11a Forgot acceptance
+
+Run in this worktree. No seven-simulator matrix or simulator clean/reboot is needed.
+The runner disables automatic software-keyboard minimization on each UI destination after boot.
+Recording is restricted to 17e; the targeted recording invocation records the Forgot suite once,
+then compares it. It cannot record guards, UI or Release tests.
+
+```sh
+make generate
+make auth-board-pngs
+make targeted DEVICES="17e" ONLY="AppTests/ForgotPasswordControlTests"
+make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppTests/ForgotPasswordLayoutTests"
+make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppTests/AuthSnapshotGuardTests"
+make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppTests/AuthLayoutTests"
+make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppTests/AuthSubtitleContrastTests"
+make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppTests/ForgotPasswordSnapshotTests/testRootCapMakesAX5EqualXXLarge"
+SNAPSHOT_RECORD=1 make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppTests/ForgotPasswordSnapshotTests"
+make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppTests/AuthSnapshotTests"
+make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppUITests/ForgotPasswordTests"
+make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppUITests/ForgotPasswordKeyboardTests"
+make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppUITests/SignInTests"
+make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppUITests/AuthAuditTests"
+make targeted DEVICES="se duo" REUSE_BUILD=1 ONLY="AppUITests/ForgotPasswordKeyboardTests"
+```
+
+Compare the default-size 17e/en Forgot references in `AppTests/__Snapshots__/Auth/Forgot/` with
+`build/board-png/forgot-{none,sent,field,attempts,server}-{light,dark}.png`. Review all device/language/
+size adaptations too. Board-to-device geometry is an adaptation; there are no board-size auth references
+in the lean set. The offline reference matches the unchanged form. There should be 78
+Forgot PNGs after a complete recording; partial sets fail the host inventory fixture. Send the
+exact runner output and screenshots for any failures. Logs and xcresults are in
+`build/test-results/<alias>/`. After resolving failures and accepting the references, run `make check`.
+SE/Duo keyboard tests require visible stable keyboard/window intersection, focus, full field/submit
+visibility and interactive dismissal; an off-screen or minimized keyboard cannot pass.
+
+Phase 11a fix round 1 (2026-11-07): the supplied board export succeeds with all ten Forgot PNGs.
+Forgot layout, AuthSnapshotGuard and AuthLayout pass individually. Forgot control feedback/focus,
+server/throttle UI and visible-keyboard variants fail; the audit’s bare assertion is the same
+missing server-banner wait at `AuthAuditTests.testForgotStatesInBothLanguagesAppearancesAndSizes`.
+Unchanged native email writes during refocus now preserve feedback; a real edit still clears it.
+Blank/whitespace email returns the backend required message; malformed email keeps its email message.
+Failure injection, failure-to-banner mapping and the shared `auth.banner` identifier are present.
+
+The saved root-cap failure differs only in the prefilled email text’s one-pixel vertical position,
+not its font size. Hosted system categories now enter above the window cap, rather than overriding
+the hosting controller below it. SwiftUI still receives the requested category before its root cap;
+no per-view caps are added. Native field trait/font checks and exact AX5 comparisons remain required.
+Both snapshot suites have bounded 12-turn settling and use immediate mock requests; there is no
+unbounded model wait in either suite. Profile progress is now logged, and cap failures report their
+fixture/context without expanding whole raster byte arrays. Run suites individually above to isolate
+runtime stalls and retain each result before the next run replaces its logs/xcresult.
+
+The measured subtitle exception now covers every auth screen, including Forgot. It locates the
+unique scroll containing the exact issue subtitle, then measures that screenshot’s visible lines;
+unmeasurable, incomplete, non-finite or < 4.5:1 still fails. See
+[auth-subtitle-contrast.md](auth-subtitle-contrast.md). Forgot’s six states join the hosted contrast
+and sky-position guard. Existing untracked Forgot references remain untouched and require a complete
+successful recording/comparison and visual review before acceptance.
+
+Fix-round validation: `make quick` passes strict lint, 333 package tests, 10 TokenGen tests,
+4 AssetGen tests and 86 signing/resource/runner fixtures. Direct iOS 17 compilation passes
+Debug/Release DataAccess/app modules and app SIL, all hosted tests, and Debug UI tests.
+The final hosted/UI edits also pass a focused type-check. These checks do not execute UIKit;
+the individual simulator reruns and visual review above remain open. Logs are
+`build/phase-11a-fix-round1-{quick,typecheck,final-typecheck}.log`.
+
+### Phase 11a fix round 2 — rerun without recording
+
+The user’s lean auth decision (2026-11-07) reduces reference captures from 4,032 to **234**:
+52 Sign in, 104 Two-factor and 78 Forgot. Surviving PNGs stay byte-for-byte unchanged; obsolete
+references are deleted. Existing Forgot survivors remain untracked/unaccepted. Record only missing
+or intentionally changed states after review; this round runs no recording command.
+
+Forgot’s prefilled native email differs from the empty Sign in/Two-factor snapshot fields. The
+UIKit root now receives the clamped category and observes changes from the window. The SwiftUI root
+normalizes its environment to the same concrete capped value. The SE hosted frame regression checks
+both Forgot states, including native input
+bounds, text rect and font. The one pixel comparison per screen uses SE/en/light, with Forgot’s
+field-error form exercising the prefilled input. No per-view cap is added.
+
+The harness has instance-owned windows and no shared auth raster cache. Auth font registration has
+a 10 s deadline; settling has cancellable yields, at most 12 captures and a 5 s deadline. The runner
+also enables XCTest timeouts with a 600 s per-test maximum to catch synchronous main-actor or
+CoreText stalls that cannot yield to an in-process timer. The saved timing inventory has capture
+guards at 452 s and subtitle checks at 506 s, so a 300 s allowance would reject valid existing work.
+The runner now requests `-resultStreamPath` and counts actual JSONL byte growth as activity when
+parallel xcodebuild stdout is buffered. It prints stream progress at most every 30 s when new events
+arrive; timestamp changes alone do not reset inactivity. The existing 600 s inactivity / 3,600 s
+process limits remain. Streams are beside the logs as `Debug-compare.jsonl`. All-profile layout/guard
+loops are retained. CoreSimulator is inaccessible
+in this sandbox, so hosted execution and confirmation of the reported failures remain the host run.
+
+Build and run Forgot first, including element-level diagnostics:
+
+```sh
+make targeted DEVICES="17e" ONLY="AppTests/ForgotPasswordSnapshotTests AppTests/ForgotPasswordLayoutTests AppTests/ForgotPasswordControlTests"
+```
+
+Then run one combined comparison against the same build:
+
+```sh
+REUSE_BUILD=1 make targeted DEVICES="17e" ONLY="AppTests/ForgotPasswordSnapshotTests AppTests/AuthSnapshotTests AppTests/TwoFactorSnapshotTests AppTests/AuthSnapshotGuardTests AppTests/AuthSubtitleContrastTests AppTests/AuthLayoutTests"
+```
+
+These commands do not record. Preserve `build/test-results/17e/Debug-compare.{log,xcresult}` after
+the Forgot run if needed: the combined run replaces them. `TEST_WORKERS` retains its normal default
+of two; no serialization workaround or seven-simulator run is required by this change.
+
+Round-2 validation: `make quick` passes, including strict formatting and the exact lean inventories;
+75 runner fixtures include buffered-stdout progress and genuine-stall regressions. Direct iOS 17
+Debug/Release app/hosted compilation and Debug UI type-checking pass. Logs:
+`build/phase-11a-round2-{quick,typecheck,runner}.log`. These checks do not execute UIKit.
+
+
+### Phase 11a fix round 3 — lean audit and contrast reruns
+
+The native auth field now uses explicit capped UIKit font metrics with a fixed-size SwiftUI font;
+the SE regression keeps exact input/text-rect/AX5 comparisons and verifies native font metrics.
+Audit and subtitle tests use five variants per state (en/nl × light/dark default, plus en/light
+xxLarge), split into nine screen/state methods in each suite. Control reveals remain; repeated
+scroll/keyboard positions are measured/audited once. No execution allowance is raised.
+Back-button viewport checks include the navigation-bar region above the content safe area; content,
+subtitle, horizontal safe-area and keyboard bounds keep their existing rules.
+
+Forgot banner contrast uses rendered text/background pixels and generated banner/typography tokens.
+Saved 17e default-size en/nl server/throttle PNGs measure **14.8840:1 light / 12.4197:1 dark**, with
+complete line measurements (`build/phase-11a-round3-banner-contrast.log`). UI exceptions use fresh
+screenshots, never these saved ratios. Only unattributed contrast issues in Forgot server/throttle
+states may qualify, and only with a complete finite minimum ≥ 4.5:1. Named issues stay strict.
+All 78 user-recorded Forgot references are preserved; no recording is performed here.
+
+`make quick` runs strict lint and package checks but the existing
+`APICookieTests.realRedirectCookieHandlingIsDisabled` fails because its loopback listener is denied
+by this sandbox (`POSIXErrorCode(1): Operation not permitted`). `make -k quick` confirms strict lint, 333/334 package tests, all 10 TokenGen and 4 AssetGen tests,
+and all 88 signing/resource/runner fixtures pass. Only that listener test fails. Logs: `build/phase-11a-round3-quick{,-all}.log`. No simulator, matrix or Duo
+runtime command is run here. New timing, AX5 equality, reference comparison and audit acceptance
+remain the user's host run.
+
+Build once and verify the changed field against the kept references:
+
+```sh
+make targeted DEVICES="17e" ONLY="AppTests/ForgotPasswordLayoutTests AppTests/ForgotPasswordSnapshotTests AppTests/ForgotPasswordControlTests"
+make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppTests/AuthSubtitleContrastTests AppUITests/AuthAuditTests"
+make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppTests/AuthSnapshotTests AppTests/TwoFactorSnapshotTests AppTests/AuthSnapshotGuardTests AppTests/AuthLayoutTests AppUITests/ForgotPasswordTests AppUITests/ForgotPasswordKeyboardTests"
+```
+
+The first command builds the current sources; reuse only that unchanged build. These commands do
+not record. Each command replaces `build/test-results/17e/Debug-compare.{log,xcresult,jsonl}`;
+preserve earlier results before continuing when investigating a failure. The shared font change
+may expose reference differences: inspect them before any intentional re-recording. The user's
+previous passes are evidence for round 2, not a new runtime pass for this round.
+
+### Phase 11a fix round 4a — native input height
+
+AuthField now pins the input height before padding to the capped UIKit font line height, rounded up
+to the current display pixel. The field subtree receives the same clamped Dynamic Type environment.
+The SE layout test explicitly retains the xxLarge input rectangle `(48, 473.5, 279, 25)` and reports
+the requested category, native category and resolved font on geometry/font failures.
+Existing Forgot, Sign in and Two-factor PNGs are unchanged.
+
+Host verification: `make quick` reaches only the known sandbox-denied loopback listener in
+`APICookieTests.realRedirectCookieHandlingIsDisabled` (`Operation not permitted`).
+`make -k quick` completes the remaining host checks; logs are
+`build/phase-11a-round4-quick{,-all}.log`. Direct iOS 17 host compilation/type-checking of DesignSystem,
+Auth, all hosted AppTests and AppUITests passes (`build/phase-11a-round4-typecheck.log`), without
+simulator execution. Runtime geometry, pixel equality and unchanged default-size references remain
+the user's checks. Build the changed sources and compare without recording:
+
+```sh
+make targeted DEVICES="17e" ONLY="AppTests/ForgotPasswordLayoutTests AppTests/ForgotPasswordSnapshotTests AppTests/ForgotPasswordControlTests AppTests/AuthSnapshotTests AppTests/TwoFactorSnapshotTests"
+```
+
+### Phase 11a fix round 4b — language-independent banner attribution
+
+The exception now matches the current `auth.banner` identifier/frame and unattributed descendants,
+with no copy checks. Previously accepted unattributed wordmark reports match the current `auth.brand`
+frame. Both require a complete finite banner-text minimum ≥ 4.5:1 measured in the same audit context.
+The user's round-3 Dutch server results already report **14.8840:1 light / 12.4197:1 dark**; the new
+code still measures fresh screenshots. All other named controls, unrelated frames/states and other
+audit types remain strict. Issue/banner/brand frames are included in diagnostics, and the policy test
+covers containment, missing/invalid geometry and all measurement/state/type gates.
+
+The round-4 host verification above includes the updated audit code. Strict lint and direct iOS 17
+compilation/type-checking pass; `make -k quick` reports only the known APICookieTests listener EPERM,
+with all other 333 package tests, 10 TokenGen tests, 4 AssetGen tests and 88 signing/resource/runner
+fixtures passing. No simulator, matrix, Duo runtime or recording command is run here.
+After the round-4a command builds the current sources, reuse that unchanged build:
+
+```sh
+make targeted DEVICES="17e" REUSE_BUILD=1 ONLY="AppUITests/AuthAuditTests/testBannerExceptionRequiresMatchingGeometryAndPassingPixels AppUITests/AuthAuditTests/testForgotServerInLeanAuditMatrix AppUITests/AuthAuditTests/testForgotThrottleInLeanAuditMatrix"
+```
+
+Each targeted command replaces `build/test-results/17e/Debug-compare.{log,xcresult,jsonl}`; preserve
+prior results when investigating failures. Runtime equality, default-size reference preservation and
+strict audit acceptance remain unclaimed until these reruns pass.

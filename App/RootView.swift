@@ -21,6 +21,7 @@ final class RootNavigator: Navigator {
 }
 
 struct RootView: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     var navigator = RootNavigator()
     var authModel: SignInModel?
     var moonAnchorStore: MoonAnchorStore?
@@ -29,6 +30,7 @@ struct RootView: View {
 
     var body: some View {
         content.dynamicTypeSize(...ContentSizeCap.maximum)
+            .environment(\.dynamicTypeSize, ContentSizeCap.clamp(dynamicTypeSize))
     }
 
     @ViewBuilder private var content: some View {

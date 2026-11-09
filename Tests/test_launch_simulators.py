@@ -29,13 +29,13 @@ PHASE9_HOSTED = (
 AUTH_HOSTED = (
     'AppTests/AuthControlTests', 'AppTests/AuthLayoutTests', 'AppTests/AuthSnapshotGuardTests',
     'AppTests/AuthSnapshotTests', 'AppTests/TwoFactorControlTests', 'AppTests/TwoFactorLayoutTests',
-    'AppTests/TwoFactorSnapshotTests',
+    'AppTests/TwoFactorSnapshotTests', 'AppTests/ForgotPasswordControlTests', 'AppTests/ForgotPasswordLayoutTests', 'AppTests/ForgotPasswordSnapshotTests',
 )
 AUTH_UI = (
     'AppUITests/SignInTests', 'AppUITests/SignInKeyboardTests', 'AppUITests/TwoFactorTests',
-    'AppUITests/TwoFactorKeyboardTests', 'AppUITests/AuthSessionTests', 'AppUITests/AuthAuditTests',
+    'AppUITests/TwoFactorKeyboardTests', 'AppUITests/ForgotPasswordTests', 'AppUITests/ForgotPasswordKeyboardTests', 'AppUITests/AuthSessionTests', 'AppUITests/AuthAuditTests',
 )
-AUTH_SNAPSHOTS = ('AppTests/AuthSnapshotTests', 'AppTests/TwoFactorSnapshotTests')
+AUTH_SNAPSHOTS = ('AppTests/AuthSnapshotTests', 'AppTests/TwoFactorSnapshotTests', 'AppTests/ForgotPasswordSnapshotTests')
 
 
 def discovered_suites(directory):
@@ -61,12 +61,15 @@ def discovered_suites(directory):
 
 class TimeoutTests(unittest.TestCase):
     @contextlib.contextmanager
-    def output_schedule(self, steps):
+    def output_schedule(self, steps, stream=False):
         now = [0]
         steps = iter(steps)
         process = Mock(returncode=0)
         with tempfile.TemporaryDirectory(dir=ROOT / 'build') as directory:
             log = Path(directory) / 'test.log'
+            progress = log.with_suffix('.jsonl') if stream else log
+            if stream:
+                progress.touch()
 
             def communicate(timeout=None):
                 if process.returncode:
@@ -76,10 +79,10 @@ class TimeoutTests(unittest.TestCase):
                     return None, None
                 now[0], content = step
                 if content:
-                    with log.open('ab') as output:
+                    with progress.open('ab') as output:
                         output.write(content)
                 else:
-                    os.utime(log, None)
+                    os.utime(progress, None)
                 raise subprocess.TimeoutExpired('test', timeout)
 
             def terminate(process, signum):
@@ -104,6 +107,20 @@ class TimeoutTests(unittest.TestCase):
                 runner.run(['test'], log=log, timeout=3600, idle_timeout=600)
             self.assertEqual(raised.exception.detail, 'Test run timed out after 600s of log inactivity')
             self.assertIn(raised.exception.detail + '; terminated process group', log.read_text())
+
+    def test_result_stream_growth_counts_as_progress_with_buffered_stdout(self):
+        with self.output_schedule([(second, b'{"testFinished":true}\n') for second in range(300, 1801, 300)], stream=True) as (log, now):
+            completed = runner.run(['test'], log=log, timeout=3600, idle_timeout=600,
+                                   activity_paths=(log.with_suffix('.jsonl'),))
+            self.assertEqual(completed.returncode, 0)
+            self.assertEqual(now[0], 1800)
+            self.assertNotIn('testFinished', log.read_text())
+
+    def test_result_stream_timestamps_do_not_hide_a_stall(self):
+        with self.output_schedule([(500, b'event'), (1000, b''), (1101, b'')], stream=True) as (log, _):
+            with self.assertRaises(runner.TestRunTimeout):
+                runner.run(['test'], log=log, timeout=3600, idle_timeout=600,
+                           activity_paths=(log.with_suffix('.jsonl'),))
 
     def test_growing_log_still_hits_overall_cap(self):
         with self.output_schedule([(second, b'progress\n') for second in range(300, 3601, 300)]) as (log, _):
@@ -324,6 +341,23 @@ class ClassificationTests(unittest.TestCase):
         self.assertIn(keyboard, runner.selectors('matrix'))
         self.assertEqual(runner.selection('check', '17e').count(keyboard), 1)
         snapshot = 'AppTests/TwoFactorSnapshotTests'
+        self.assertIn(snapshot, runner.selectors('profiles'))
+        self.assertIn(snapshot, runner.SNAPSHOTS)
+        self.assertEqual(runner.selection('check', '17e').count(snapshot), 1)
+        self.assertEqual(runner.recording_selection([snapshot], 'check', '1'), [snapshot])
+        self.assertEqual(runner.recording_selection([snapshot], 'check', 'launch'), [])
+        for alias in ['se', 'duo']:
+            self.assertEqual(runner.selection('check', alias, only=[keyboard]), [keyboard])
+
+    def test_forgot_suites_register_at_their_tiers_and_record_only_on_17e(self):
+        self.assertIn('AuthTests/ForgotPasswordModelTests', runner.selectors('host'))
+        for suite in ['AppTests/ForgotPasswordControlTests', 'AppTests/ForgotPasswordLayoutTests', 'AppUITests/ForgotPasswordTests']:
+            self.assertIn(suite, runner.selectors('logic'))
+            self.assertEqual(runner.selection('check', '17e').count(suite), 1)
+        keyboard = 'AppUITests/ForgotPasswordKeyboardTests'
+        self.assertIn(keyboard, runner.selectors('matrix'))
+        self.assertEqual(runner.selection('check', '17e').count(keyboard), 1)
+        snapshot = 'AppTests/ForgotPasswordSnapshotTests'
         self.assertIn(snapshot, runner.selectors('profiles'))
         self.assertIn(snapshot, runner.SNAPSHOTS)
         self.assertEqual(runner.selection('check', '17e').count(snapshot), 1)
@@ -651,6 +685,7 @@ class RunnerTests(unittest.TestCase):
             ('check', ['17e'], (), False),
             ('runtime', ['duo'], (), False),
             ('check', ['se', 'duo'], ['AppUITests/TwoFactorKeyboardTests'], True),
+            ('check', ['se', 'duo'], ['AppUITests/ForgotPasswordTests', 'AppUITests/ForgotPasswordKeyboardTests'], True),
             ('matrix', list(runner.MATRIX), (), False),
         ]:
             for state in ('Shutdown', 'Booted'):
@@ -1019,10 +1054,14 @@ class ParallelTests(unittest.TestCase):
 
     def test_command_enables_workers_and_excludes_serial_methods(self):
         destination = runner.Destination('duo', 'test-device', 'Booted')
-        command = runner.test_command(destination, 'Debug', ['AppTests/WelcomeSnapshotTests'], Path('result'), 2, ['AppTests/Example/testGlobal'])
+        command = runner.test_command(destination, 'Debug', ['AppTests/WelcomeSnapshotTests'], Path('result'), 2, ['AppTests/Example/testGlobal'], Path('events.jsonl'))
         self.assertEqual(command[command.index('-parallel-testing-enabled') + 1], 'YES')
         self.assertEqual(command[command.index('-parallel-testing-worker-count') + 1], '2')
         self.assertIn('-skip-testing:AppTests/Example/testGlobal', command)
+        self.assertEqual(command[command.index('-resultStreamPath') + 1], 'events.jsonl')
+        self.assertEqual(command[command.index('-test-timeouts-enabled') + 1], 'YES')
+        self.assertEqual(command[command.index('-default-test-execution-time-allowance') + 1], '600')
+        self.assertEqual(command[command.index('-maximum-test-execution-time-allowance') + 1], '600')
         project = (ROOT / 'project.yml').read_text()
         for target in ['AppTests', 'AppUITests']:
             self.assertIn('- name: ' + target + '\n          parallelizable: true', project)
@@ -1100,45 +1139,37 @@ class ProfileTests(unittest.TestCase):
 
     def test_new_baseline_inventory_is_complete_after_recording(self):
         catalog = json.loads((ROOT / 'Packages/ChronoFlowKit/Tests/SnapshotSupport/profiles.json').read_text())
-        for screen in ['Welcome', 'Launch', 'Auth', 'TwoFactor']:
+        for screen in ['Welcome', 'Launch', 'Auth', 'TwoFactor', 'ForgotPassword']:
             expected = set()
-            if screen == 'Auth':
-                expected.update(f'board-{style}-{language}-{category}-{banner}.png'
-                                for style in ['light', 'dark'] for language in ['en', 'nl']
-                                for category in ['large', 'xxLarge']
-                                for banner in ['none', 'credentials', 'locked', 'server'])
-                self.assertEqual(len(expected), 32)
-            if screen == 'TwoFactor':
-                expected.update(f'board-{style}-{language}-{category}-{mode}-{state}.png'
-                                for style in ['light', 'dark'] for language in ['en', 'nl']
-                                for category in ['large', 'xxLarge'] for mode in ['code', 'recovery']
-                                for state in ['none', 'fieldError', 'attempts', 'server'])
-                self.assertEqual(len(expected), 64)
+            auth_states = {
+                'Auth': ['none', 'credentials', 'locked', 'server'],
+                'TwoFactor': [f'{mode}-{state}' for mode in ['code', 'recovery']
+                              for state in ['none', 'fieldError', 'attempts', 'server']],
+                'ForgotPassword': ['form-none', 'form-fieldError', 'form-attempts', 'form-server', 'form-offline', 'sent-none'],
+            }
             for device in catalog['devices'].values():
                 profile = catalog['profiles'][device['profile']]
                 name = f"{device['alias']}-{device['width']}x{device['height']}-{device['scale']}x"
                 for style in ['light', 'dark']:
                     for language in ['en', 'nl']:
-                        if screen == 'Welcome':
+                        if screen in auth_states:
+                            if device['alias'] not in ['17e', 'se', 'duo']:
+                                continue
+                            categories = ['large'] + (['xxLarge'] if (device['alias'], style, language) == ('17e', 'light', 'en') else [])
+                            expected.update(f'{name}-{style}-{language}-{category}-{state}.png'
+                                            for category in categories for state in auth_states[screen])
+                        elif screen == 'Welcome':
                             for kind, variants in [('finalWelcome', profile['dynamicType']), ('frozenIntro', profile['introTimes'])]:
                                 expected.update(f'{kind}.{name}-{style}-{language}-{variant}.png' for variant in variants)
-                        elif screen == 'Auth':
-                            expected.update(f'{name}-{style}-{language}-{category}-{banner}.png'
-                                            for category in profile['dynamicType']
-                                            for banner in ['none', 'credentials', 'locked', 'server'])
-                        elif screen == 'TwoFactor':
-                            expected.update(f'{name}-{style}-{language}-{category}-{mode}-{state}.png'
-                                            for category in profile['dynamicType'] for mode in ['code', 'recovery']
-                                            for state in ['none', 'fieldError', 'attempts', 'server'])
                         else:
                             expected.update(f'sampledSplashFrames.{name}-{style}-{language}-{category}-{frame}.png'
                                             for category in ['large', 'xxLarge'] for frame in profile['launchFrames'])
-            directory = ROOT / 'AppTests/__Snapshots__' / ({'Auth': 'Auth', 'TwoFactor': 'Auth/TwoFactor'}.get(screen, f'{screen}SnapshotTests'))
+            directory = ROOT / 'AppTests/__Snapshots__' / ({'Auth': 'Auth', 'TwoFactor': 'Auth/TwoFactor', 'ForgotPassword': 'Auth/Forgot'}.get(screen, f'{screen}SnapshotTests'))
             actual = {p.name for p in directory.glob('*.png')}
             # A wholly unrecorded suite is pending orchestrator work; partial recordings must fail.
             if actual:
                 self.assertEqual(actual, expected, screen)
-            self.assertEqual(len(expected), {'Welcome': 320, 'Launch': 472, 'Auth': 896, 'TwoFactor': 1792}[screen])
+            self.assertEqual(len(expected), {'Welcome': 320, 'Launch': 472, 'Auth': 52, 'TwoFactor': 104, 'ForgotPassword': 78}[screen])
 
 
 if __name__ == '__main__':

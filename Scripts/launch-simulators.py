@@ -29,7 +29,7 @@ MATRIX = {
     "duo": ("iPhone Duo", "iPhone-Duo", DUO_RUNTIME),
 }
 # Each suite has one scheduling policy. Fixed geometry fixtures are logic; running-window/scale assertions are matrix.
-SUITES = {'AppTests': {'logic': ('AuthControlTests', 'AuthLayoutTests', 'AuthSnapshotGuardTests', 'AuthSubtitleContrastTests', 'TwoFactorControlTests', 'TwoFactorLayoutTests', 'LaunchArgumentLogicTests',
+SUITES = {'AppTests': {'logic': ('AuthControlTests', 'AuthLayoutTests', 'AuthSnapshotGuardTests', 'AuthSubtitleContrastTests', 'TwoFactorControlTests', 'TwoFactorLayoutTests', 'ForgotPasswordControlTests', 'ForgotPasswordLayoutTests', 'LaunchArgumentLogicTests',
                         'RasterPixelLogicTests',
                         'ContentSizeCapLogicTests',
                         'AppIconTests',
@@ -56,13 +56,13 @@ SUITES = {'AppTests': {'logic': ('AuthControlTests', 'AuthLayoutTests', 'AuthSna
                          'WelcomeHandOverTests',
                          'LaunchImageMutationTests',
                          'SnapshotContainerTests'),
-              'profiles': ('LaunchSnapshotTests', 'WelcomeSnapshotTests', 'AuthSnapshotTests', 'TwoFactorSnapshotTests'),
+              'profiles': ('LaunchSnapshotTests', 'WelcomeSnapshotTests', 'AuthSnapshotTests', 'TwoFactorSnapshotTests', 'ForgotPasswordSnapshotTests'),
               'reference': ('LaunchFrameParityTests', 'LaunchStoryboardTests'),
               'release': ('ReleaseReadinessTests',)},
  'RenderTests': {'profiles': ('WelcomeRenderingTests',)},
- 'AppUITests': {'logic': ('SignInTests', 'TwoFactorTests', 'AuthSessionTests', 'AuthAuditTests', 'ReadinessTests', 'WelcomeLogicTests'),
+ 'AppUITests': {'logic': ('SignInTests', 'TwoFactorTests', 'ForgotPasswordTests', 'AuthSessionTests', 'AuthAuditTests', 'ReadinessTests', 'WelcomeLogicTests'),
                 'reference': ('LaunchToWelcomeTests', 'LaunchSceneTests', 'LaunchSceneDarkTests'),
-                'matrix': ('SignInKeyboardTests', 'TwoFactorKeyboardTests', 'WelcomeTests', 'WelcomeEnglishAccessibilityTests', 'WelcomeDutchAccessibilityTests')},
+                'matrix': ('SignInKeyboardTests', 'TwoFactorKeyboardTests', 'ForgotPasswordKeyboardTests', 'WelcomeTests', 'WelcomeEnglishAccessibilityTests', 'WelcomeDutchAccessibilityTests')},
  'AppCoreTests': {'host': ('CatalogTests',
                            'CubicBezierTests',
                            'LaunchCoordinatorTests',
@@ -93,7 +93,7 @@ SUITES = {'AppTests': {'logic': ('AuthControlTests', 'AuthLayoutTests', 'AuthSna
                            'ReadyTimelineTests',
                            'SmokeTests',
                            'WelcomeTimelineTests')},
- 'AuthTests': {'host': ('AuthFormModelTests', 'AuthFailureMappingTests', 'AuthSnapshotCaptureTests', 'AuthCatalogTests', 'AuthLayoutTests', 'AuthCardShadowTests', 'SignInModelTests', 'TwoFactorModelTests', 'PasskeyEncodingTests', 'PasskeySignInTests')},
+ 'AuthTests': {'host': ('AuthFormModelTests', 'AuthFailureMappingTests', 'AuthSnapshotCaptureTests', 'AuthCatalogTests', 'AuthLayoutTests', 'AuthCardShadowTests', 'SignInModelTests', 'TwoFactorModelTests', 'ForgotPasswordModelTests', 'PasskeyEncodingTests', 'PasskeySignInTests')},
  'WelcomeTests': {'logic': ('SmokeTests', 'WelcomeGeometryTests')},
  'ToolingTests': {'host': ('LaunchImageComparisonTests', 'UIWaitTests', 'AuthScrollGestureTests')},
  'PerfUITests': {'perf': ('LaunchPerfTests',)},
@@ -124,7 +124,7 @@ SUITES = {'AppTests': {'logic': ('AuthControlTests', 'AuthLayoutTests', 'AuthSna
                               'SessionAccountDatabaseTests',
                               'AccountWiperTests',
                               'AccountReadinessTests')}}
-SNAPSHOTS = ("AppTests/LaunchSnapshotTests", "AppTests/WelcomeSnapshotTests", "AppTests/WelcomeSnapshotGuardTests", "RenderTests/WelcomeRenderingTests", "AppTests/AuthSnapshotTests", "AppTests/TwoFactorSnapshotTests", "AppTests/AuthSnapshotGuardTests")
+SNAPSHOTS = ("AppTests/LaunchSnapshotTests", "AppTests/WelcomeSnapshotTests", "AppTests/WelcomeSnapshotGuardTests", "RenderTests/WelcomeRenderingTests", "AppTests/AuthSnapshotTests", "AppTests/TwoFactorSnapshotTests", "AppTests/ForgotPasswordSnapshotTests", "AppTests/AuthSnapshotGuardTests")
 XCODEBUILD_COMMON = ["xcodebuild", "-project", "ChronoFlow.xcodeproj", "-derivedDataPath", "build/DerivedData",
                      "-onlyUsePackageVersionsFromResolvedFile"]
 
@@ -136,7 +136,7 @@ PARALLEL_TARGETS = {"AppTests", "AppUITests", "RenderTests"}
 RUNTIME_SMOKE = (
     "AppTests/DeviceGeometrySmokeTests", "AppTests/LaunchHandOffTests", "AppTests/WelcomeHandOverTests",
     "AppUITests/LaunchToWelcomeTests", "AppUITests/SignInKeyboardTests", "AppUITests/TwoFactorKeyboardTests",
-    "AppUITests/SignInTests", "AppUITests/TwoFactorTests",
+    "AppUITests/SignInTests", "AppUITests/TwoFactorTests", "AppUITests/ForgotPasswordTests", "AppUITests/ForgotPasswordKeyboardTests",
 )
 
 
@@ -431,7 +431,7 @@ class TestRunTimeout(subprocess.TimeoutExpired):
         self.detail = f"Test run timed out after {timeout:g}s {reason}"
 
 
-def run(command, *, log=None, capture=False, record=False, check=True, intro_order=None, timeout=None, idle_timeout=None):
+def run(command, *, log=None, capture=False, record=False, check=True, intro_order=None, timeout=None, idle_timeout=None, activity_paths=()):
     print("+ " + shlex.join(map(str, command)), flush=True)
     kwargs = dict(cwd=ROOT, text=True, env=environment(record, intro_order), check=check)
     if log is None:
@@ -446,6 +446,8 @@ def run(command, *, log=None, capture=False, record=False, check=True, intro_ord
         if _RUN_SIGNAL is not None:
             raise SystemExit(128 + _RUN_SIGNAL)
         log_size = os.fstat(output.fileno()).st_size
+        activity_sizes = {path: path.stat().st_size for path in activity_paths}
+        last_progress = time.monotonic()
         with subprocess.Popen(command, stdout=output, stderr=subprocess.STDOUT, start_new_session=True, **options) as process:
             with _RUN_LOCK:
                 _ACTIVE_RUNS.add(process)
@@ -461,6 +463,15 @@ def run(command, *, log=None, capture=False, record=False, check=True, intro_ord
                     if size > log_size and idle_timeout is not None:
                         idle_deadline = now + idle_timeout
                     log_size = size
+                    for path, previous_size in activity_sizes.items():
+                        current_size = path.stat().st_size
+                        if current_size > previous_size:
+                            if idle_timeout is not None:
+                                idle_deadline = now + idle_timeout
+                            if now - last_progress >= 30:
+                                print(f"XCTest result stream advancing: {path.name} ({current_size} bytes)", flush=True)
+                                last_progress = now
+                        activity_sizes[path] = current_size
                     if now >= deadline:
                         raise TestRunTimeout(command, timeout)
                     if now >= idle_deadline:
@@ -594,11 +605,13 @@ def build(configuration):
                log=ROOT / "build/test-results/build" / (configuration + ".log"))
 
 
-def test_command(destination, configuration, selected, bundle, workers=1, skipped=()):
+def test_command(destination, configuration, selected, bundle, workers=1, skipped=(), stream=None):
     return build_command(configuration) + ["-destination", destination.flag, "-testLanguage", "en", "-testRegion", "US",
         "-parallel-testing-enabled", "YES" if workers > 1 else "NO",
         "-parallel-testing-worker-count", str(workers),
-        "-maximum-concurrent-test-simulator-destinations", "1", "-resultBundlePath", str(bundle)] + [
+        "-test-timeouts-enabled", "YES", "-default-test-execution-time-allowance", "600",
+        "-maximum-test-execution-time-allowance", "600",
+        "-maximum-concurrent-test-simulator-destinations", "1", "-resultBundlePath", str(bundle)] + (["-resultStreamPath", str(stream)] if stream else []) + [
         "-only-testing:" + suite for suite in selected] + ["-skip-testing:" + suite for suite in skipped] + ["test-without-building"]
 
 
@@ -675,7 +688,7 @@ def read_results(destination, label, selected, bundle, returncode, log, timing=N
                         timing.setdefault("tests", {})[identifier] = duration
         for suite in selected:
             matches = matching_nodes(nodes, suite)
-            strict_auth = suite.split("/")[1].startswith(("Auth", "SignIn", "TwoFactor"))
+            strict_auth = suite.split("/")[1].startswith(("Auth", "SignIn", "TwoFactor", "ForgotPassword"))
             allowed = ("Passed",) if strict_auth else ("Passed", "Skipped", "Expected Failure")
             failed = [str(n.get("nodeIdentifier", n.get("name"))) + ": " + str(n.get("result"))
                       for n in matches if n.get("result") not in allowed]
@@ -712,7 +725,10 @@ def test_pass(destination, configuration, selected, label, record=False, intro_o
         idle_timeout = float(os.environ.get("TEST_RUN_IDLE_TIMEOUT", "600"))
         if not math.isfinite(idle_timeout) or idle_timeout <= 0:
             raise ValueError("TEST_RUN_IDLE_TIMEOUT must be a positive finite number of seconds")
-        completed = run(test_command(destination, configuration, selected, bundle, workers, skipped), log=log, record=record, check=False, intro_order=intro_order, timeout=timeout, idle_timeout=idle_timeout)
+        stream = destination.directory / (label + ".jsonl")
+        stream.parent.mkdir(parents=True, exist_ok=True)
+        stream.write_text("")
+        completed = run(test_command(destination, configuration, selected, bundle, workers, skipped, stream), log=log, record=record, check=False, intro_order=intro_order, timeout=timeout, idle_timeout=idle_timeout, activity_paths=(stream,))
         return read_results(destination, label, selected, bundle, completed.returncode, log, timing, require_executed=intro_order is not None)
     except TestRunTimeout as error:
         return [Result(destination.alias, label + " " + suite, False,
@@ -722,7 +738,7 @@ def test_pass(destination, configuration, selected, label, record=False, intro_o
 
 
 def recording_selection(selected, mode, recording):
-    baseline = (SNAPSHOTS[0], SNAPSHOTS[1], "AppTests/AuthSnapshotTests", "AppTests/TwoFactorSnapshotTests")
+    baseline = (SNAPSHOTS[0], SNAPSHOTS[1], "AppTests/AuthSnapshotTests", "AppTests/TwoFactorSnapshotTests", "AppTests/ForgotPasswordSnapshotTests")
     candidates = baseline if recording == "all" or (recording == "1" and mode == "snapshots") else baseline[:1] if recording == "launch" or mode == "launch-snapshots" else baseline[1:]
     return [s for s in selected if any(s == c or s.startswith(c + "/") for c in candidates)]
 

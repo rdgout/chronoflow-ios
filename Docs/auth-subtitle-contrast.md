@@ -1,12 +1,14 @@
-# Auth subtitle contrast, Phase 10b fix round 3
+# Auth subtitle contrast
 
-User decision, 2026-11-07: **ignore Apple's contrast result only for the Sign in and Two-factor
-subtitle, and only while rendered pixels prove every visible line is at least 4.5:1.** Every other
-text element stays strict. `(sign-in.guest, .contrast)` remains the only unconditional allow-list
+User decision, 2026-11-07, extended in Phase 11a fix round 1: **ignore Apple's contrast result
+only for the shared `auth.subtitle` on every auth screen, and only while that screen’s rendered
+pixels prove every visible line is at least 4.5:1.** This covers Sign in, Two-factor and Forgot now,
+and Reset, Sign up and Verify when implemented. Named text elements other than the subtitle stay strict. The conditional Forgot banner policy below additionally covers only unattributed issues. `(sign-in.guest, .contrast)` remains the only unconditional allow-list
 pair (OQ 33); this adds no token, design or snapshot change.
 
 `AuthAuditTests` matches the exact `auth.subtitle` accessibility identifier and `.contrast` type,
-then requires a unique static-text subtitle in the current auth scroll view with the issue's frame.
+then requires a unique static-text subtitle in a unique containing scroll view with the issue's frame.
+There is no screen-name allow-list; a new auth screen must pass its own measurement.
 Inside that issue handler it captures the app screenshot, reads the live safe-area/scroll/keyboard
 viewport and subtitle frame, derives scale from the raster/app bounds, and uses the audited
 appearance and default/xxLarge category with generated `skyTitle` and `Typography.authBody`.
@@ -70,8 +72,8 @@ for changing the token, moving the subtitle or redesigning the gradient. The con
 design Open question (board text below 4.5:1) has not been established.
 
 `AppTests/AuthSubtitleContrastTests` now renders the board and 17e fixtures, en/nl × light/dark ×
-default/xxLarge × Sign in/code/recovery. It reveals controls in the audit's order, measures the
-actual subtitle frame after each scroll, verifies clean background pixels across the subtitle's
+default/xxLarge × Sign in/code/recovery and Forgot form, field error, attempts, server, offline
+and sent. It reveals controls in the audit's order, measures the actual subtitle frame after each scroll, verifies clean background pixels across the subtitle's
 columns against the corresponding x/y pixels of a full-window rendered board sky, samples rendered
 text ink and background behind each line, and prints ratios, frames and scroll
 offsets. Missing ink and ratios below 4.5 fail. It never reads or writes snapshot references. The
@@ -93,3 +95,30 @@ corresponding x/y sky mismatch, one surviving token pixel, 37.5% surviving token
 ink, normal antialiasing, and a rectangle without clean background. Read-only remeasurement of all
 80 saved round-1 crops remains measurable and above 4.5:1; sampled background differences from the
 same-row sky stay within 2/255. This is sampler validation, not a new simulator acceptance run.
+
+Phase 11a’s supplied Forgot audit failures were excluded from measurement by the previous
+Sign in/Two-factor scroll-name gate. The gate is removed; the same unique-element, visible-line,
+finite-ratio and ≥ 4.5:1 requirements apply. This policy change does not establish a passing Forgot
+measurement: revised hosted and UI execution remains required.
+
+
+Phase 11a fix round 3 (user, 2026-11-08) replaces the full hosted/audit matrix with the lean five
+variants per state: en/nl × light/dark at default size, plus en/light xxLarge once. The hosted
+contrast suite now renders only the 17e profile; all-profile geometry/layout/capture guards remain.
+Both suites split methods per screen/state and avoid duplicate measurements/audits at identical
+scroll/keyboard positions. All control reveals and the 600 s watchdog remain.
+
+Forgot server/throttle banners add a conditional exception for unattributed `.contrast` issues with
+nil/empty identifier and nil/empty/ChronoFlow label. The audit finds the unique current `auth.banner`
+in `forgot.scroll`, captures its own screenshot and derives the text rectangle from the element frame
+and generated banner padding/glyph/gap tokens. `authStrong` and `authHint` share the generated line
+height and subheadline scaling. Every visible title/body line must have measured ink and backgrounds
+with a finite minimum ≥ 4.5:1. Missing, offscreen-only, incomplete or lower measurements fail the
+exception. Named banner/control issues, other states and combined/non-contrast types stay strict;
+policy tests pin the threshold, identity, state and issue-type exclusions.
+
+Read-only measurement of the eight saved default-size 17e banner references (en/nl, server/throttle,
+light/dark) with the existing RenderedTextContrast sampler gives 14.8840:1 light and 12.4197:1 dark.
+The foreground is `cardForeground`, background `authErrorBackground`; all lines measure completely.
+The diagnostic log is `build/phase-11a-round3-banner-contrast.log`. No saved ratio is used by the
+exception. Same-context UI measurements and hosted checks still need the user's simulator run.

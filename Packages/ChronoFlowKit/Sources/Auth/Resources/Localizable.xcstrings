@@ -706,6 +706,150 @@
           }
         }
       }
+    },
+    "Back to sign in": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back to sign in"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terug naar inloggen"
+          }
+        }
+      }
+    },
+    "Reset your password": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset your password"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stel je wachtwoord opnieuw in"
+          }
+        }
+      }
+    },
+    "Enter your email and we'll send you a link to choose a new one.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter your email and we'll send you a link to choose a new one."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vul je e-mailadres in. We sturen je een link om een nieuw wachtwoord te kiezen."
+          }
+        }
+      }
+    },
+    "Send reset link": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send reset link"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verstuur resetlink"
+          }
+        }
+      }
+    },
+    "Check your inbox.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check your inbox."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bekijk je inbox."
+          }
+        }
+      }
+    },
+    "If %@ has an account, a link to choose a new password is on its way.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If %@ has an account, a link to choose a new password is on its way."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Als er een account bestaat voor %@, is er een link onderweg om een nieuw wachtwoord te kiezen."
+          }
+        }
+      }
+    },
+    "Open email app": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open email app"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open je e-mailapp"
+          }
+        }
+      }
+    },
+    "Too many requests.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too many requests."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te veel verzoeken."
+          }
+        }
+      }
+    },
+    "Wait a few minutes before you ask for another link.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wait a few minutes before you ask for another link."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wacht een paar minuten voordat je een nieuwe link aanvraagt."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -2,6 +2,26 @@ import CoreGraphics
 import Testing
 
 struct AuthScrollGestureTests {
+    @Test func navigationViewportIncludesBackButtonWithoutChangingContentOrKeyboardBounds() {
+        let window = CGRect(x: 10, y: 20, width: 390, height: 844)
+        let safeArea = window.insetBy(dx: 24, dy: 47)
+        let keyboard = CGRect(x: window.minX, y: 580, width: window.width, height: 284)
+        let back = CGRect(x: safeArea.minX, y: window.minY + 15, width: 44, height: 44)
+        for keyboard in [nil, keyboard] {
+            let content = AuthScrollGesture.viewport(
+                window: window, safeArea: safeArea, scroll: safeArea, keyboard: keyboard)
+            let navigation = AuthScrollGesture.viewport(
+                window: window, safeArea: safeArea, scroll: safeArea, keyboard: keyboard, includingNavigationBar: true)
+            #expect(!content.contains(back))
+            #expect(navigation.contains(back))
+            #expect(navigation.minY == window.minY)
+            #expect(navigation.minX == content.minX)
+            #expect(navigation.maxX == content.maxX)
+            #expect(navigation.maxY == content.maxY)
+            #expect(AuthScrollGesture.reveal(back, in: navigation) == nil)
+        }
+    }
+
     @Test func duoGestureStartsAboveTheRecordedKeyboardInsteadOfOnIt() throws {
         let window = CGRect(x: 0, y: 0, width: 466, height: 678)
         let safeArea = window.insetBy(dx: 24, dy: 20)

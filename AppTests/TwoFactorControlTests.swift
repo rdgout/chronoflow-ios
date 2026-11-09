@@ -7,7 +7,7 @@ import XCTest
 
 nonisolated final class TwoFactorControlTests: XCTestCase {
     @MainActor func testRecoveryPlaceholderSurvivesErrorsAndClearsWhenReturningToCode() async throws {
-        try await FontRegistry.register()
+        try await AuthTestHost.registerFonts()
         for language in ["en", "nl"] {
             for style in [UIUserInterfaceStyle.light, .dark] {
                 let model = twoFactorSnapshotModel(recovery: true, state: .fieldError)
@@ -28,7 +28,7 @@ nonisolated final class TwoFactorControlTests: XCTestCase {
     }
 
     @MainActor func testFailedAttemptsRefocusTheEnabledFieldWithoutEditingAwayFeedback() async throws {
-        try await FontRegistry.register()
+        try await AuthTestHost.registerFonts()
         for recovery in [false, true] {
             let model = twoFactorSnapshotModel(recovery: recovery)
             let host = try AuthTestHost(TwoFactorView(model: model), size: SnapshotDevice.all()[0].size)
@@ -58,7 +58,7 @@ nonisolated final class TwoFactorControlTests: XCTestCase {
     }
 
     @MainActor func testBothModesKeepInteractiveKeyboardDismissalAndVerticalBouncing() async throws {
-        try await FontRegistry.register()
+        try await AuthTestHost.registerFonts()
         let fixture = try XCTUnwrap(AuthDeviceFixture.all().first { $0.name == "17e" })
         for recovery in [false, true] {
             let model = twoFactorSnapshotModel(recovery: recovery)
@@ -79,7 +79,7 @@ nonisolated final class TwoFactorControlTests: XCTestCase {
     }
 
     @MainActor func testDisplayedCodeRejectsOverflowAndNonDigitsEvenWhenTheModelDoesNotChange() async throws {
-        try await FontRegistry.register()
+        try await AuthTestHost.registerFonts()
         let model = twoFactorSnapshotModel()
         let host = try AuthTestHost(TwoFactorView(model: model), size: SnapshotDevice.all()[0].size)
         defer { host.close() }
@@ -97,7 +97,7 @@ nonisolated final class TwoFactorControlTests: XCTestCase {
     }
 
     @MainActor func testBothDisplayedProofsFollowModelEditsAndAttemptClearingWithoutErasingErrors() async throws {
-        try await FontRegistry.register()
+        try await AuthTestHost.registerFonts()
         for recovery in [false, true] {
             let model = twoFactorSnapshotModel(recovery: recovery)
             let host = try AuthTestHost(TwoFactorView(model: model), size: SnapshotDevice.all()[0].size)
@@ -123,7 +123,7 @@ nonisolated final class TwoFactorControlTests: XCTestCase {
     }
 
     @MainActor func testNativeInputTraitsAndModeToggleDiscardTheOldKeyboardConfiguration() async throws {
-        try await FontRegistry.register()
+        try await AuthTestHost.registerFonts()
         let model = twoFactorSnapshotModel()
         let host = try AuthTestHost(TwoFactorView(model: model), size: SnapshotDevice.all()[0].size)
         defer { host.close() }
@@ -145,7 +145,7 @@ nonisolated final class TwoFactorControlTests: XCTestCase {
     }
 
     @MainActor func testVerifyKeepsItsLabelAndSizeWhileBusyInBothLanguages() async throws {
-        try await FontRegistry.register()
+        try await AuthTestHost.registerFonts()
         let fixture = try XCTUnwrap(AuthDeviceFixture.all().first { $0.name == "se" })
         for language in ["en", "nl"] {
             var frames: [AuthElement: CGRect] = [:]

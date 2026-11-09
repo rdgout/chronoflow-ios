@@ -19,12 +19,17 @@ nonisolated public enum AuthBannerKind: String, CaseIterable, Sendable {
         }
     }
     public func body(for context: AuthFormContext) -> String {
+        if self == .locked && context == .forgot { return "Wait a few minutes before you ask for another link." }
         if self == .locked && context == .twoFactor { return "Wait a few minutes before you try again." }
         return body
     }
+    public func title(for context: AuthFormContext) -> String {
+        if self == .locked && context == .forgot { return "Too many requests." }
+        return title
+    }
 }
 
-nonisolated public enum AuthFormContext: Sendable { case signIn, twoFactor }
+nonisolated public enum AuthFormContext: Sendable { case signIn, twoFactor, forgot }
 
 nonisolated public struct AuthFailureMapping: Sendable, Equatable {
     public var banner: AuthBannerKind?
@@ -71,7 +76,7 @@ nonisolated public struct AuthFailureMapping: Sendable, Equatable {
 }
 
 @MainActor @Observable public final class AuthFormModel {
-    public enum Action: Sendable { case password, passkey, verify }
+    public enum Action: Sendable { case password, passkey, verify, sendResetLink }
     public private(set) var pending: Action?
     public private(set) var banner: AuthBannerKind?
     public private(set) var fields: [String: FieldMessage] = [:]
@@ -124,7 +129,7 @@ nonisolated public struct AuthFailureMapping: Sendable, Equatable {
     public func takeAnnouncement(locale: Locale) -> String? {
         guard let banner, announcedRevision != announcementRevision else { return nil }
         announcedRevision = announcementRevision
-        return AuthCopy.string(banner.title, locale: locale) + " "
+        return AuthCopy.string(banner.title(for: context), locale: locale) + " "
             + AuthCopy.string(banner.body(for: context), locale: locale)
     }
 }

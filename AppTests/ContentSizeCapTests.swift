@@ -1,6 +1,7 @@
 import CoreText
 import DesignSystem
 import Launch
+import SwiftUI
 import UIKit
 import XCTest
 
@@ -83,6 +84,7 @@ nonisolated final class ContentSizeCapLogicTests: XCTestCase {
             .accessibilityExtraExtraLarge, .accessibilityExtraExtraExtraLarge,
         ] {
             XCTAssertEqual(ContentSizeCap.clamp(category), .extraExtraLarge)
+            XCTAssertEqual(ContentSizeCap.clamp(DynamicTypeSize(category)!), .xxLarge)
         }
         for category: UIContentSizeCategory in [.extraSmall, .small, .medium, .large, .extraLarge, .extraExtraLarge] {
             XCTAssertEqual(ContentSizeCap.clamp(category), category)
