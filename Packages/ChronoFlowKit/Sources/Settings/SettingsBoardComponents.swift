@@ -152,6 +152,7 @@
                     .strokeBorder(ColorToken.border.color, lineWidth: AuthTokens.borderWidth)
             }.settingsSoftShadow()
             .padding(.horizontal, PlanUITokens.space4).padding(.bottom, PlanUITokens.space6).planPageRail()
+            .frame(maxWidth: .infinity).planPageSafeArea()
         }
     }
 
