@@ -332,7 +332,7 @@
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Overstap op {{airport}} · {{duration}}"
+            "value": "Overstap in {{airport}} · {{duration}}"
           }
         }
       }
@@ -956,7 +956,7 @@
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stop op {{airport}} · {{count}} volledige nacht"
+            "value": "Tussenstop in {{airport}} · {{count}} volledige nacht"
           }
         }
       }
@@ -1052,7 +1052,7 @@
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "De tijden zijn lokaal op elke luchthaven."
+            "value": "Tijden zijn lokaal op elke luchthaven."
           }
         }
       }
@@ -1649,18 +1649,18 @@
         }
       }
     },
-    "{{hours}} h {{minutes}}": {
+    "{{hours}} h {{minutes}} min": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "{{hours}} h {{minutes}}"
+            "value": "{{hours}} h {{minutes}} min"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "{{hours}} u {{minutes}}"
+            "value": "{{hours}} u {{minutes}} min"
           }
         }
       }
@@ -1692,7 +1692,7 @@
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stop op {{airport}} · {{count}} volledige nacht"
+            "value": "Tussenstop in {{airport}} · {{count}} volledige nacht"
           }
         }
       }

@@ -180,23 +180,10 @@
                 ) { index, leg in
                     if index > 0 { connection(index) }
                     VStack(alignment: .leading, spacing: PlanUITokens.space2) {
-                        Label(leg.fromIata + " → " + leg.toIata, systemImage: "airplane")
-                            .font(Typography.wizardRoute.font).foregroundStyle(ColorToken.dawnText.color)
-                            .accessibilityAddTraits(.isHeader)
-                        VStack(spacing: 0) {
-                            WizardFlightDateTimeRow(model: model, index: index, arrival: false)
-                            Divider().overlay(ColorToken.border.color)
-                            WizardFlightDateTimeRow(model: model, index: index, arrival: true)
-                        }.wizardCard()
+                        flightCard(index: index, leg: leg)
                     }
                 }
-                if let itinerary = model.draft.form.itinerary,
-                    itinerary.legs.contains(where: { $0.journey == .outbound })
-                {
-                    let minutes = itinerary.legs.filter { $0.journey == .outbound }.reduce(0) { $0 + $1.flightMin }
-                    Text(t("Flight time {{d}}", ["d": duration(minutes)]))
-                        .font(Typography.wizardHint.font).foregroundStyle(ColorToken.mutedForeground.color)
-                }
+                if model.draft.form.returnBoundary == 1 { flightDuration(index: 0) }
                 if model.draft.form.legs.count < WizardForm.maxFlights {
                     Button {
                         model.openAirport(WizardAirportSheet(index: model.draft.form.returnBoundary - 1, side: .stop))
@@ -205,7 +192,8 @@
                             t(model.draft.form.returnBoundary > 1 ? "Add another stop" : "Add a stop"),
                             systemImage: "plus"
                         )
-                        .frame(minHeight: AuthTokens.touch)
+                        .font(Typography.wizardNavTitle.font)
+                        .padding(.horizontal, PlanUITokens.space1).frame(minHeight: AuthTokens.touch)
                     }.tint(ColorToken.dawnText.color).accessibilityIdentifier("wizard.add-stop")
                 }
             }
@@ -213,9 +201,9 @@
 
         func connection(_ index: Int) -> some View {
             HStack(spacing: PlanUITokens.space2) {
-                Divider().overlay(ColorToken.border.color)
+                dottedRule
                 if let message = WizardOutboundRules.connection(
-                    form: model.draft.form, index: index,
+                    form: model.draft.form, index: index, airports: model.draft.airports,
                     duration: duration)
                 {
                     HStack(spacing: PlanUITokens.space1) {
@@ -228,12 +216,15 @@
                                     }
                                     return value.string ?? ""
                                 })
-                        ).font(Typography.wizardHint.font)
+                        ).font(Typography.wizardHint.font).monospacedDigit()
                         Button {
                             UIImpactFeedbackGenerator(style: .light).impactOccurred()
                             model.removeStop(at: index)
                         } label: {
-                            Image(systemName: "xmark").frame(minWidth: AuthTokens.touch, minHeight: AuthTokens.touch)
+                            Image(systemName: "xmark").font(.system(size: PlanUITokens.wizardStopGlyphSize))
+                                .foregroundStyle(ColorToken.mutedForeground.color)
+                                .frame(
+                                    width: PlanUITokens.wizardStopRemoveSize, height: PlanUITokens.wizardStopRemoveSize)
                         }
                         .accessibilityLabel(
                             t(
@@ -242,18 +233,68 @@
                             )
                         )
                         .accessibilityIdentifier("wizard.remove-stop.\(index)")
-                    }.padding(.leading, PlanUITokens.space3)
+                    }.padding(.leading, PlanUITokens.space3).padding(.trailing, PlanUITokens.space1)
+                        .padding(.vertical, PlanUITokens.wizardLabelGap)
                         .background(ColorToken.surface2.color, in: Capsule())
                 }
-                Divider().overlay(ColorToken.border.color)
+                dottedRule
             }.fixedSize(horizontal: false, vertical: true).accessibilityElement(children: .contain)
                 .accessibilityIdentifier("wizard.connection.\(index)")
         }
 
+        private var dottedRule: some View {
+            Color.clear.frame(height: AuthTokens.focusWidth).overlay {
+                GeometryReader { geometry in
+                    Path { path in
+                        path.move(to: .zero)
+                        path.addLine(to: CGPoint(x: geometry.size.width, y: 0))
+                    }.stroke(
+                        ColorToken.border.color,
+                        style: StrokeStyle(
+                            lineWidth: AuthTokens.focusWidth, lineCap: .round,
+                            dash: [PlanUITokens.wizardStopDotWidth, PlanUITokens.wizardStopDotGap]))
+                }
+            }.accessibilityHidden(true)
+        }
+
+        func flightCard(index: Int, leg: WizardLeg) -> some View {
+            VStack(alignment: .leading, spacing: PlanUITokens.space2) {
+                Label {
+                    Text(leg.fromIata + " → " + leg.toIata).foregroundStyle(ColorToken.foreground.color)
+                } icon: {
+                    Image(systemName: "airplane.departure").foregroundStyle(ColorToken.dawnText.color)
+                }.font(Typography.wizardRoute.font).padding(.horizontal, PlanUITokens.space1)
+                    .accessibilityAddTraits(.isHeader)
+                VStack(spacing: 0) {
+                    WizardFlightDateTimeRow(model: model, index: index, arrival: false)
+                    Divider().overlay(ColorToken.border.color)
+                    WizardFlightDateTimeRow(model: model, index: index, arrival: true)
+                }.wizardCard()
+                ForEach(["departLocal", "arriveLocal"], id: \.self) { field in
+                    if let error = model.draft.fieldErrors["legs.\(index).\(field)"] {
+                        errorLine(
+                            fieldCopy(error),
+                            identifier: "wizard.\(index)." + (field == "arriveLocal" ? "arrival" : "departure")
+                                + ".error")
+                    }
+                }
+            }
+        }
+
+        @ViewBuilder func flightDuration(index: Int) -> some View {
+            if let minutes = WizardOutboundRules.flightMinutes(
+                form: model.draft.form, index: index, airports: model.draft.airports)
+            {
+                Text(t("Flight time {{d}}", ["d": duration(minutes)]))
+                    .font(Typography.wizardHint.font).monospacedDigit().foregroundStyle(
+                        ColorToken.mutedForeground.color)
+            }
+        }
+
         func duration(_ minutes: Int) -> String {
             t(
-                "{{hours}} h {{minutes}}",
-                ["hours": String(minutes / 60), "minutes": String(format: "%02d", minutes % 60)])
+                "{{hours}} h {{minutes}} min",
+                ["hours": String(minutes / 60), "minutes": String(minutes % 60)])
         }
 
         private func shell<Content: View>(

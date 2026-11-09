@@ -103,6 +103,43 @@ actor WizardSearchProbe {
                 == nil)
     }
 
+    @Test func localFactsBeforeCheckingUseZonesAndCompleteNights() throws {
+        var form = try WizardForm(input: generationInput())
+        let airports = [
+            "AMS": wizardAirport("AMS", city: "Amsterdam", zone: "Europe/Amsterdam"),
+            "HND": wizardAirport("HND", city: "Tokyo", zone: "Asia/Tokyo"),
+            "DXB": wizardAirport("DXB", city: "Dubai", zone: "Asia/Dubai"),
+        ]
+        form.legs[0].departLocal = "2026-10-12T14:40"
+        form.legs[0].arriveLocal = "2026-10-13T09:15"
+        #expect(form.itinerary == nil)
+        #expect(WizardOutboundRules.flightMinutes(form: form, index: 0, airports: airports) == 695)
+        form.legs[0].arriveLocal = "2026-10-11T09:15"
+        #expect(WizardOutboundRules.flightMinutes(form: form, index: 0, airports: airports) == nil)
+        form.insertStop(airports["DXB"]!, beforeDestinationOf: 0)
+        form.legs[0].arriveLocal = "2026-10-12T23:25"
+        form.legs[1].departLocal = "2026-10-13T02:05"
+        let connection = WizardOutboundRules.connection(
+            form: form, index: 1, airports: airports, duration: { String($0) })
+        #expect(connection?.arguments["duration"] == .string("160"))
+        form.legs[0].arriveLocal = "2026-10-12T22:25"
+        form.legs[1].departLocal = "2026-10-14T02:05"
+        #expect(
+            WizardOutboundRules.connection(form: form, index: 1, airports: airports, duration: { String($0) })?
+                .arguments["count"] == .number(1))
+        form.legs[0].toIata = "AMS"
+        form.legs[1].fromIata = "AMS"
+        form.legs[0].arriveLocal = "2026-10-24T23:00"
+        form.legs[1].departLocal = "2026-10-25T07:00"
+        #expect(
+            WizardOutboundRules.connection(form: form, index: 1, airports: airports, duration: { String($0) })?
+                .arguments["count"] == .number(1))
+        form.legs[0].arriveLocal = "2026-10-24T23:01"
+        #expect(
+            WizardOutboundRules.connection(form: form, index: 1, airports: airports, duration: { String($0) })?.key
+                == "Connection in {{airport}} · {{duration}}")
+    }
+
     @Test func errorsPastConnectionsAndOvernightUseAirportClock() throws {
         var form = try WizardForm(input: generationInput())
         let airports = [
