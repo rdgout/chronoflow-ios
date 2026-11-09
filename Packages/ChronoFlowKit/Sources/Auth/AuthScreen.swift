@@ -6,7 +6,7 @@
     public enum AuthElement: String, CaseIterable {
         case brand, heading, card, footer, email, password, submit, forgot, signup, forgotLabel, signupLabel
         case code, modeToggle, passkey, subtitle
-        case notice, openEmail, backToSignIn, confirmation
+        case notice, openEmail, backToSignIn, confirmation, name, consent, visibility
     }
 
     public struct AuthScreen<Card: View, Footer: View>: View {
@@ -15,6 +15,7 @@
         let title: String
         let description: String
         let headingGlyph: AuthGlyph?
+        let compact: Bool
         let back: () -> Void
         let card: Card
         let footer: Footer
@@ -22,6 +23,7 @@
         let showsBack: Bool
         public init(
             scrollIdentifier: String, title: String, description: String, headingGlyph: AuthGlyph? = nil,
+            compact: Bool = false,
             back: @escaping () -> Void,
             measure: @escaping (AuthElement, CGRect) -> Void = { _, _ in },
             showsBack: Bool = true,
@@ -31,6 +33,7 @@
             self.title = title
             self.description = description
             self.headingGlyph = headingGlyph
+            self.compact = compact
             self.back = back
             self.measure = measure
             self.card = card()
@@ -60,7 +63,8 @@
                             .accessibilityIdentifier("auth.heading")
                             WelcomeText(description, style: Typography.authBody, color: .skyTitle)
                                 .accessibilityIdentifier("auth.subtitle").authMeasure(.subtitle, measure)
-                        }.padding(.top, AuthTokens.headingMargin).authMeasure(.heading, measure)
+                        }.padding(.top, compact ? AuthTokens.spacer : AuthTokens.headingMargin).authMeasure(
+                            .heading, measure)
                         Spacer(minLength: AuthTokens.spacer)
                         VStack(alignment: .leading, spacing: AuthTokens.cardGap) { card }
                             .padding(AuthTokens.cardPadding)

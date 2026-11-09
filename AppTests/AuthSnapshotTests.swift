@@ -96,6 +96,8 @@ nonisolated func snapshotFailure(_ banner: AuthBannerKind) -> DataFailure {
         .validation(fields: ["email": FieldMessage(key: "These sign-in details don't match our records.")], status: 422)
     case .locked: .throttled(retryAfterSeconds: 60, status: 429)
     case .server: .server(status: 500)
+    case .emailTaken:
+        .validation(fields: ["email": FieldMessage(key: "This email address is already in use.")], status: 422)
     }
 }
 private actor AuthSnapshotCredentials: SessionStore {

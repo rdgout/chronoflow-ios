@@ -16,6 +16,8 @@ struct AuthRootView: View {
                     if case .reset(let link) = destination {
                         ResetPasswordView(model: model.makeResetPasswordModel(link)).toolbar(
                             .hidden, for: .navigationBar)
+                    } else if destination == .signUp {
+                        SignUpView(model: model.makeSignUpModel()).toolbar(.hidden, for: .navigationBar)
                     } else if destination == .forgot {
                         ForgotPasswordView(model: model.makeForgotPasswordModel()).toolbar(.hidden, for: .navigationBar)
                     } else if destination == .twoFactor {
