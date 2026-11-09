@@ -13,6 +13,7 @@ let package = Package(
         .library(name: "DataAccess", targets: ["DataAccess"]),
         .library(name: "Sync", targets: ["Sync"]),
         .library(name: "PlanUI", targets: ["PlanUI"]),
+        .library(name: "Settings", targets: ["Settings"]),
         .library(name: "PlanCore", targets: ["PlanCore"]),
         .library(name: "TripWizard", targets: ["TripWizard"]),
         .library(name: "Launch", targets: ["Launch"]),
@@ -43,6 +44,11 @@ let package = Package(
         .testTarget(
             name: "PlanUITests", dependencies: ["PlanUI", "DataAccess"], resources: [.copy("Fixtures")],
             swiftSettings: [.defaultIsolation(nil)]),
+        .target(
+            name: "Settings", dependencies: ["AppCore", "LocalStore", "Sync", "PlanCore", "PlanUI", "DesignSystem"],
+            resources: [.process("Resources")], swiftSettings: [.defaultIsolation(nil)]),
+        .testTarget(
+            name: "SettingsTests", dependencies: ["Settings", "DataAccess"], swiftSettings: [.defaultIsolation(nil)]),
         .target(name: "AppCore", swiftSettings: [.defaultIsolation(nil)]),
         .target(name: "DataAccess", dependencies: ["AppCore"], swiftSettings: [.defaultIsolation(nil)]),
         .testTarget(

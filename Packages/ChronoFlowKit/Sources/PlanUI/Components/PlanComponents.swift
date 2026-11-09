@@ -5,11 +5,19 @@
     import SwiftUI
 
     public struct CategorySwatch: View {
+        public enum Size { case regular, small }
         public let type: BlockType
-        public init(_ type: BlockType) { self.type = type }
+        public let size: Size
+        public init(_ type: BlockType, size: Size = .regular) {
+            self.type = type
+            self.size = size
+        }
+        private var dimension: CGFloat {
+            size == .small ? PlanUITokens.space6 + PlanUITokens.space1 : PlanUITokens.space8
+        }
         public var body: some View {
-            Image(systemName: symbol).font(Typography.screenBodyLg.font)
-                .frame(width: PlanUITokens.space8, height: PlanUITokens.space8)
+            Image(systemName: symbol).font(size == .small ? Typography.screenBody.font : Typography.screenBodyLg.font)
+                .frame(width: dimension, height: dimension)
                 .background { pattern }.background(
                     fill.color, in: RoundedRectangle(cornerRadius: PlanUITokens.radiusLg)
                 )

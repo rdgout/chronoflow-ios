@@ -38,7 +38,11 @@ import XCTest
         let field = app.textFields["sign-in.email"]
         reveal(field, in: app)
         field.tap()
+        if let previous = field.value as? String, previous != field.placeholderValue, !previous.isEmpty {
+            field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: previous.count))
+        }
         field.typeText(email + "\n")
+        XCTAssertEqual(field.value as? String, email)
         app.secureTextFields["sign-in.password"].typeText(MockScenarioValues.password + "\n")
     }
 
@@ -110,13 +114,24 @@ import XCTest
     }
 
     static func scroll(in app: XCUIApplication) -> XCUIElement {
-        for screen in ["reset.scroll", "sign-up.scroll", "verify.scroll"] {
+        for screen in [
+            "reset.scroll", "sign-up.scroll", "verify.scroll", "forgot.scroll", "two-factor.scroll", "sign-in.scroll",
+            "settings.pending",
+        ] {
             if app.scrollViews[screen].exists { return app.scrollViews[screen] }
         }
-        let forgot = app.scrollViews["forgot.scroll"]
-        if forgot.exists { return forgot }
-        let twoFactor = app.scrollViews["two-factor.scroll"]
-        return twoFactor.exists ? twoFactor : app.scrollViews["sign-in.scroll"]
+        for containers in [app.scrollViews, app.collectionViews, app.tables] {
+            if containers.firstMatch.exists { return containers.firstMatch }
+        }
+        return app.scrollViews.firstMatch
+    }
+
+    private static func scroll(containing element: XCUIElement, in app: XCUIApplication) -> XCUIElement {
+        for containers in [app.scrollViews, app.collectionViews, app.tables] {
+            let container = containers.containing(.any, identifier: element.identifier).firstMatch
+            if container.exists { return container }
+        }
+        return scroll(in: app)
     }
 
     static func control(_ identifier: String, in app: XCUIApplication) -> XCUIElement {
@@ -142,13 +157,7 @@ import XCTest
     }
 
     static func reveal(_ element: XCUIElement, in app: XCUIApplication, scroll: XCUIElement? = nil) {
-        let scroll =
-            scroll
-            ?? (element.identifier.hasPrefix("sign-in.")
-                ? app.scrollViews["sign-in.scroll"]
-                : element.identifier.hasPrefix("two-factor.")
-                    ? app.scrollViews["two-factor.scroll"]
-                    : element.identifier.hasPrefix("forgot.") ? app.scrollViews["forgot.scroll"] : self.scroll(in: app))
+        let scroll = scroll ?? self.scroll(containing: element, in: app)
         for _ in 0..<12 {
             do {
                 if app.keyboards.firstMatch.exists

@@ -1,0 +1,30 @@
+import AppCore
+import Settings
+import Testing
+
+@Suite struct SettingsStringsTests {
+    @Test func pluralsAndDutchComeFromRN() {
+        for (key, enOne, enMany, nlOne, nlMany) in [
+            ("%lld credits left", "1 credit left", "2 credits left", "Nog 1 tegoed over", "Nog 2 tegoeden over"),
+            (
+                "%lld to answer", "1 to answer", "2 to answer", "Nog 1 vraag te beantwoorden",
+                "Nog 2 vragen te beantwoorden"
+            ),
+            (
+                "Sign out and lose %lld changes?", "Sign out and lose 1 change?", "Sign out and lose 2 changes?",
+                "Uitloggen en 1 wijziging kwijtraken?", "Uitloggen en 2 wijzigingen kwijtraken?"
+            ),
+            (
+                "Synced %lld hours ago", "Synced 1 hour ago", "Synced 2 hours ago", "1 uur geleden gesynchroniseerd",
+                "2 uur geleden gesynchroniseerd"
+            ),
+        ] {
+            #expect(SettingsStrings.text(key, language: .en, count: 1) == enOne)
+            #expect(SettingsStrings.text(key, language: .en, count: 2) == enMany)
+            #expect(SettingsStrings.text(key, language: .nl, count: 1) == nlOne)
+            #expect(SettingsStrings.text(key, language: .nl, count: 2) == nlMany)
+        }
+        #expect(SettingsStrings.text("Sign out", language: .nl) == "Uitloggen")
+        #expect(SettingsStrings.text("Stay signed in", language: .nl) == "Ingelogd blijven")
+    }
+}

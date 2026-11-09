@@ -4324,5 +4324,19 @@
    "name": "Details, sign-in & pages"
   }
  ],
- "title": "ChronoFlow mobile app"
+ "title": "ChronoFlow mobile app",
+ "imports": [
+  {
+   "phase": "17e",
+   "source": "/Users/rickgout/Sites/chronoflow-mobile/_design/canvas",
+   "commit": "e24872afd47ff671fbbab315665920f2805054df",
+   "importedAt": "2026-11-08",
+   "files": {
+    "SetHome.dc.html": "271132a063680e7a4620d4f86f4117da0d52bf3a4aded8364b8edaadc8318f84",
+    "SetHomeNL.dc.html": "7cc9fc14837e9ba4b63cdaaf0476d854900dbd27f743f8733c557f583bc0a924",
+    "SignOutPending.dc.html": "16660462420fbaa2cb829caf56ef472d705b7dcfe4ea04478c7c72e872dd2e82",
+    "SignOutPendingSettings.dc.html": "950f1113e878972a1f1b5d3e36ad0f6c968eaf19df059e770a57d717930d2d69"
+   }
+  }
+ ]
 }

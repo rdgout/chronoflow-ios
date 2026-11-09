@@ -122,8 +122,13 @@ nonisolated final class AuthSessionTests: XCTestCase {
     }
 
     @MainActor private func diagnostics(_ app: XCUIApplication) -> XCUIElement {
+        let element = app.staticTexts["route.settings.account"]
+        if element.exists { return element }
         app.tabBars.buttons["Settings"].tap()
-        let element = app.staticTexts["route.settings"]
+        let row = app.descendants(matching: .any)["settings.account"].firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 4))
+        AuthUIFlow.reveal(row, in: app)
+        row.tap()
         XCTAssertTrue(element.waitForExistence(timeout: 4))
         return element
     }

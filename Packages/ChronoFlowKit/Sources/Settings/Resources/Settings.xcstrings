@@ -1,0 +1,701 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Settings": {
+      "comment": "RN exact English key: Settings",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instellingen"
+          }
+        }
+      }
+    },
+    "Profile": {
+      "comment": "RN exact English key: Profile",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profile"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profiel"
+          }
+        }
+      }
+    },
+    "Account": {
+      "comment": "RN exact English key: Account",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account"
+          }
+        }
+      }
+    },
+    "Security": {
+      "comment": "RN exact English key: Security",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Security"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beveiliging"
+          }
+        }
+      }
+    },
+    "Body clock": {
+      "comment": "RN exact English key: Body clock",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Body clock"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biologische klok"
+          }
+        }
+      }
+    },
+    "Preferences": {
+      "comment": "RN exact English key: Preferences",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preferences"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voorkeuren"
+          }
+        }
+      }
+    },
+    "Plan & credits": {
+      "comment": "RN exact English key: Plan & credits",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan & credits"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abonnement en tegoed"
+          }
+        }
+      }
+    },
+    "Profile, language, your data": {
+      "comment": "RN exact English key: Profile, language, your data",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profile, language, your data"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profiel, taal, je gegevens"
+          }
+        }
+      }
+    },
+    "Password, passkeys, two-factor": {
+      "comment": "RN exact English key: Password, passkeys, two-factor",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password, passkeys, two-factor"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wachtwoord, toegangssleutels, tweestapsverificatie"
+          }
+        }
+      }
+    },
+    "The answers every plan is built from": {
+      "comment": "RN exact English key: The answers every plan is built from",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The answers every plan is built from"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De antwoorden waarop elk plan wordt gebouwd"
+          }
+        }
+      }
+    },
+    "Appearance, timeline, reminders": {
+      "comment": "RN exact English key: Appearance, timeline, reminders",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appearance, timeline, reminders"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weergave, tijdlijn, herinneringen"
+          }
+        }
+      }
+    },
+    "Sign out": {
+      "comment": "RN exact English key: Sign out",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign out"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uitloggen"
+          }
+        }
+      }
+    },
+    "Syncing…": {
+      "comment": "RN exact English key: Syncing…",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Syncing…"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synchroniseren…"
+          }
+        }
+      }
+    },
+    "Saved on this phone · syncs when you're online": {
+      "comment": "RN exact English key: Saved on this phone · syncs when you're online",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved on this phone · syncs when you're online"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opgeslagen op deze telefoon · synchroniseert zodra je online bent"
+          }
+        }
+      }
+    },
+    "Synced just now": {
+      "comment": "RN exact English key: Synced just now",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synced just now"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zojuist gesynchroniseerd"
+          }
+        }
+      }
+    },
+    "Synced yesterday": {
+      "comment": "RN exact English key: Synced yesterday",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synced yesterday"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gisteren gesynchroniseerd"
+          }
+        }
+      }
+    },
+    "Synced on {{date}}": {
+      "comment": "RN exact English key: Synced on {{date}}",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synced on {{date}}"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesynchroniseerd op {{date}}"
+          }
+        }
+      }
+    },
+    "A change waiting to sync": {
+      "comment": "RN exact English key: A change waiting to sync",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A change waiting to sync"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een wijziging wacht om te synchroniseren"
+          }
+        }
+      }
+    },
+    "Checked off \"{{step}}\"": {
+      "comment": "RN exact English key: Checked off \"{{step}}\"",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checked off \"{{step}}\""
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"{{step}}\" afgevinkt"
+          }
+        }
+      }
+    },
+    "Changed your usual sleep times": {
+      "comment": "RN exact English key: Changed your usual sleep times",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changed your usual sleep times"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je gebruikelijke slaaptijden aangepast"
+          }
+        }
+      }
+    },
+    "These haven't reached your account yet. If you sign out now, they're removed from this phone.": {
+      "comment": "RN exact English key: These haven't reached your account yet. If you sign out now, they're removed from this phone.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These haven't reached your account yet. If you sign out now, they're removed from this phone."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze staan nog niet in je account. Als je nu uitlogt, worden ze van deze telefoon verwijderd."
+          }
+        }
+      }
+    },
+    "Stay signed in": {
+      "comment": "RN exact English key: Stay signed in",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stay signed in"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingelogd blijven"
+          }
+        }
+      }
+    },
+    "Sign out and discard": {
+      "comment": "RN exact English key: Sign out and discard",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign out and discard"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uitloggen en verwijderen"
+          }
+        }
+      }
+    },
+    "Changes sync by themselves when you're online. Staying signed in keeps them.": {
+      "comment": "RN exact English key: Changes sync by themselves when you're online. Staying signed in keeps them.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changes sync by themselves when you're online. Staying signed in keeps them."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wijzigingen synchroniseren vanzelf zodra je online bent. Als je ingelogd blijft, blijven ze bewaard."
+          }
+        }
+      }
+    },
+    "%lld credits left": {
+      "comment": "RN exact English key: {{count}} credits left",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld credit left"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld credits left"
+                }
+              }
+            }
+          }
+        },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Nog %lld tegoed over"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Nog %lld tegoeden over"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld to answer": {
+      "comment": "RN exact English key: {{count}} to answer",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld to answer"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld to answer"
+                }
+              }
+            }
+          }
+        },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Nog %lld vraag te beantwoorden"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Nog %lld vragen te beantwoorden"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Synced %lld min ago": {
+      "comment": "RN exact English key: Synced {{count}} min ago",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Synced %lld min ago"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Synced %lld min ago"
+                }
+              }
+            }
+          }
+        },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld min geleden gesynchroniseerd"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld min geleden gesynchroniseerd"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Synced %lld hours ago": {
+      "comment": "RN exact English key: Synced {{count}} hours ago",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Synced %lld hour ago"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Synced %lld hours ago"
+                }
+              }
+            }
+          }
+        },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld uur geleden gesynchroniseerd"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld uur geleden gesynchroniseerd"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Synced %lld days ago": {
+      "comment": "RN exact English key: Synced {{count}} days ago",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Synced %lld day ago"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Synced %lld days ago"
+                }
+              }
+            }
+          }
+        },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld dagen geleden gesynchroniseerd"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld dagen geleden gesynchroniseerd"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld changes waiting to sync": {
+      "comment": "RN exact English key: {{count}} changes waiting to sync",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld change waiting to sync"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld changes waiting to sync"
+                }
+              }
+            }
+          }
+        },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld wijziging wacht op synchronisatie"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld wijzigingen wachten op synchronisatie"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Sign out and lose %lld changes?": {
+      "comment": "RN exact English key: Sign out and lose {{count}} changes?",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Sign out and lose %lld change?"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Sign out and lose %lld changes?"
+                }
+              }
+            }
+          }
+        },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Uitloggen en %lld wijziging kwijtraken?"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Uitloggen en %lld wijzigingen kwijtraken?"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}
