@@ -113,7 +113,15 @@ Verification:
 - Final `make lint`: passed (`build/wizard-measurements-lint.log`). Direct Swift 6/iOS 17 compilation of DesignSystem, TripWizardUI and the app, plus AppTests/AppUITests type checking: passed (`build/wizard-measurements-typecheck.log`).
 - No simulator, runtime suite, snapshot or matrix was run. The two corrected suites need the focused 17e rerun below.
 
-Rerun the two corrected hosted/UI suites on 17e:
+### Screen behavior without window diagnostics (2026-11-09)
+
+The user's 17e rerun at `1f0ab13` passes `WizardErrorScrollTests` across all profiles and `TripWizardTests`. The UI scroll check still times out; its window safe-area diagnostic is not reliably exposed on the wizard screen. The hosted suite retains the last-card/footer and first-error viewport geometry assertions.
+
+The UI check now launches the same bottom-seeded `WizardOutboundScrollErrors` screen and waits for the last error to exist, the first error to have an existing non-empty frame and be unhittable, and Continue to be hittable and enabled. After tapping Continue it waits for the first error to become hittable, again checking existence and a non-empty frame before asking for hittability. Both waits have distinct failure messages. This test no longer reads the window diagnostic or calls an auth viewport helper.
+
+Verification: `make lint` passes. No simulator, runtime suite, snapshot or matrix was run for this test-only simplification; the 17e rerun remains pending.
+
+Rerun the screen suite and hosted geometry suite on 17e:
 
 ```sh
 make generate
