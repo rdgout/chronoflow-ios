@@ -15,8 +15,8 @@ Codex's `workspace-write` sandbox cannot run `xcodebuild` (nested `sandbox-exec`
 `make generate` creates the ignored project. `Scripts/ci.sh` runs `make generate check`.
 Use `make quick` for fix rounds: strict lint and every SwiftPM host suite, plus runner/resource fixtures.
 The warm inner-loop target is under one minute. `make check` adds generator/font freshness and one
-17e simulator: hosted AppTests with fixed worst-case screen fixtures, the UI smoke set and isolated
-Release readiness. Debug and Release build once each; target under five minutes remains to be measured.
+17e model on primary and isolated destinations: hosted AppTests with fixed worst-case screen fixtures, the UI smoke set and isolated
+Release readiness. Debug builds first; Release builds alongside tests with isolated DerivedData; target under five minutes remains to be measured.
 
 User decision, 2026-11-06: **skip the seven-simulator matrix unless asked for**. Device fit is covered
 by the Mac device-table tests and hosted worst-case layout checks on 17e. Reference-comparing
@@ -64,3 +64,8 @@ Regenerate the project before running; Release no longer compiles the Debug AppT
 Simulator passes use `-collect-test-diagnostics never` by default. Failure results, attachments
 and session/stdout logs remain. `TEST_DIAGNOSTICS=1 make targeted DEVICES="17e" ONLY="AppUITests/SignInTests"`
 restores Xcode's on-failure logarchive/sysdiagnose collection.
+
+ChronoFlow's iOS test action includes only DesignSystemTests among package bundles. Explicit
+LaunchTests/WelcomeTests selections use `PackageLogic` (Debug); host-only bundles stay in quick.
+Build logs print elapsed time per scheme/configuration. Concurrent Swift Testing suite timings
+use max case duration; XCTest/serialized suites keep sums. See Docs/tooling.md for warm-run timing commands.

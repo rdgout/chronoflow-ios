@@ -666,6 +666,44 @@ class RunnerTests(unittest.TestCase):
                     else:
                         self.assertEqual(command[command.index('-collect-test-diagnostics') + 1], 'never')
 
+    def test_selected_targets_belong_to_their_schemes_and_host_bundles_stay_off_ios(self):
+        project = (ROOT / 'project.yml').read_text()
+        schemes = project.split('schemes:\n', 1)[1]
+        sections = {m[1]: m[2] for m in re.finditer(r'^  (\w+):\n(.*?)(?=^  \w+:\n|\Z)', schemes, re.M | re.S)}
+        self.assertEqual(re.findall(r'- package: ChronoFlowKit/(\w+)', sections['ChronoFlow']), ['DesignSystemTests'])
+        self.assertIn('targets: {}', sections['PackageLogic'])
+        self.assertEqual(set(re.findall(r'- package: ChronoFlowKit/(\w+)', sections['PackageLogic'])),
+                         {'DesignSystemTests', 'LaunchTests', 'WelcomeTests'})
+        for target in ('AppCoreTests', 'LocalStoreTests', 'DataAccessTests', 'AuthTests'):
+            self.assertNotIn('ChronoFlowKit/' + target, schemes)
+        for selector in runner.expand(list(runner.SUITES.keys() - {'AppCoreTests', 'AuthTests', 'DataAccessTests',
+                                                   'LocalStoreTests', 'PlanCoreTests', 'PlanUITests', 'SettingsTests',
+                                                   'SyncTests', 'ToolingTests', 'TripWizardTests'})):
+            configuration = next(iter(runner.configurations([selector])))
+            command = runner.build_command(configuration)
+            scheme = command[command.index('-scheme') + 1]
+            self.assertIn(selector.split('/')[0], sections[scheme])
+        status, output = self.execute(aliases=['17e'], only=['LaunchTests/SmokeTests', 'WelcomeTests/SmokeTests'])
+        self.assertEqual(status, 0, output)
+        for command in self.commands_for_tests():
+            self.assertEqual(command[command.index('-scheme') + 1], 'PackageLogic')
+            self.assertEqual(command[command.index('-configuration') + 1], 'Debug')
+        self.assertIn('Build PackageLogic elapsed:', output)
+
+    def test_concurrent_swift_testing_xcresult_durations_use_max_and_keep_case_times(self):
+        swift, xctest, serialized = ('AppTests/DataSourceFactoryHostedTests', 'AppTests/LaunchSceneTests',
+                                      'AppTests/WelcomeSnapshotTests')
+        self.nodes = [dict(nodeType='Test Case', nodeIdentifier=suite + '/case' + str(i),
+                           durationInSeconds=duration, result='Passed')
+                      for suite in (swift, xctest, serialized) for i, duration in enumerate((3, 7, 5))]
+        status, output = self.execute(aliases=['17e'], only=[swift, xctest, serialized])
+        self.assertEqual(status, 0, output)
+        value = json.loads((self.scratch / 'build/test-results/timings.json').read_text())['devices']['17e']
+        self.assertEqual(value['suites'][swift], 7)
+        self.assertEqual(value['suites'][xctest], 15)
+        self.assertEqual(value['suites'][serialized], 15)
+        self.assertEqual(value['tests'][swift + '/case0'], 3)
+
     def test_background_builds_have_isolated_products_and_lower_priority(self):
         calls = []
         with patch.dict(runner.build.__globals__, run=lambda command, **kw: calls.append(command)):
@@ -708,14 +746,14 @@ class RunnerTests(unittest.TestCase):
         self.assertIn('Release build unavailable', output)
         self.assertIn('PASS 17e Debug-compare', output)
 
-    def test_builds_debug_and_release_once_without_clean_or_reboot(self):
+    def test_builds_each_required_scheme_once_without_clean_or_reboot(self):
         status, output = self.execute()
         self.assertEqual(status, 0, output)
         builds = [c for c in self.commands if c[-1] == 'build-for-testing']
-        self.assertEqual(len(builds), 2)
-        self.assertEqual([c[c.index('-configuration') + 1] for c in builds], ['Debug', 'Release'])
-        self.assertIn('ENABLE_TESTABILITY=YES', builds[1])
-        self.assertEqual(len(self.commands_for_tests()), 9)
+        self.assertEqual(len(builds), 3)
+        self.assertEqual([c[c.index('-scheme') + 1] for c in builds], ['ChronoFlow', 'PackageLogic', 'ReadinessRelease'])
+        self.assertIn('ENABLE_TESTABILITY=YES', builds[2])
+        self.assertEqual(len(self.commands_for_tests()), 13)
         self.assertFalse(any('clean' in c or 'shutdown' in c or 'erase' in c or 'boot' in c for c in self.commands))
         self.assertEqual(sum('uninstall' in c for c in self.commands), 8)
         self.assertNotIn(['make', 'check'], self.commands)
@@ -1072,7 +1110,7 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(status, 1)
         self.assertIn('Debug build unavailable', output)
         self.assertIn('PASS 17e Release-compare', output)
-        self.assertEqual(len(self.commands_for_tests()), 1)
+        self.assertTrue(any('ReadinessRelease' in c for c in self.commands_for_tests()))
 
     def test_inherited_record_flags_are_cleared_from_every_compare_and_build(self):
         with patch.dict(os.environ, {'SNAPSHOT_RECORD': '0', 'TEST_RUNNER_SNAPSHOT_RECORD': '1'}):
@@ -1272,6 +1310,30 @@ class SchedulerTests(unittest.TestCase):
             self.assertEqual(runner.machine_resources()[1], 9 * 16384)
         with patch.object(runner.subprocess, 'run', side_effect=OSError):
             self.assertEqual(runner.machine_resources()[1], 0)
+
+    def test_concurrent_suite_inventory_matches_simulator_swift_testing_declarations(self):
+        concurrent = set()
+        for target, groups in runner.SUITES.items():
+            if all(policy == 'host' for policy in groups):
+                continue
+            directory = ROOT / target if (ROOT / target).exists() else ROOT / 'Packages/ChronoFlowKit/Tests' / target
+            names = {s for suites in groups.values() for s in suites}
+            for file in directory.glob('*.swift'):
+                for match in re.finditer(r'((?:@\w+(?:\([^)]*\))?\s+|nonisolated\s+)*)struct\s+(\w+)\b', file.read_text()):
+                    if match[2] in names and '.serialized' not in match[1]:
+                        concurrent.add(target + '/' + match[2])
+        self.assertEqual(concurrent, runner.CONCURRENT_SWIFT_SUITES)
+
+    def test_concurrent_log_cases_use_max_while_serialized_and_xctest_use_sum(self):
+        content = "+ xcodebuild -only-testing:AppTests/DataSourceFactoryHostedTests -only-testing:AppTests/WelcomeSnapshotTests -only-testing:AppUITests/SignInTests\n"
+        for suite in ('DataSourceFactoryHostedTests', 'WelcomeSnapshotTests', 'SignInTests'):
+            for i, duration in enumerate((3, 7, 5)):
+                content += f"Test case '{suite}/case{i}()' passed on 'Clone 1 - ChronoFlow (123)' ({duration} seconds)\n"
+        value = runner.log_timings(content)
+        self.assertEqual(value['suites']['AppTests/DataSourceFactoryHostedTests'], 7)
+        self.assertEqual(value['suites']['AppTests/WelcomeSnapshotTests'], 15)
+        self.assertEqual(value['suites']['AppUITests/SignInTests'], 15)
+        self.assertEqual(value['tests']['AppTests/DataSourceFactoryHostedTests/case0()'], 3)
 
     def test_clone_log_timings_resolve_exact_suites_and_include_failed_work(self):
         content = """+ xcodebuild -only-testing:AppUITests/WelcomeTests -only-testing:AppUITests/WelcomeLogicTests -only-testing:AppTests/WelcomeSnapshotTests -only-testing:RenderTests/WelcomeRenderingTests

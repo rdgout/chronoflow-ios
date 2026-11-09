@@ -6,6 +6,21 @@ import Testing
 
 extension DataSourceSelectionTests {
     #if DEBUG
+        @Test func cachedFixtureTemplatesRebaseWithoutSharingSeedMutations() throws {
+            let now = MockClock().now()
+            let first = try MockAppSeed.make(now: now)
+            let shifted = try MockAppSeed.make(
+                now: now.addingTimeInterval(3 * 24 * 60 * 60), unverified: true, walkthroughSeen: true)
+            let firstAccount = try #require(first.accounts[MockScenarioValues.demoID])
+            let shiftedAccount = try #require(shifted.accounts[MockScenarioValues.demoID])
+            #expect(firstAccount.trips.map(\.planStartUtc) != shiftedAccount.trips.map(\.planStartUtc))
+            #expect(firstAccount.snapshot.hasVerifiedEmail && !firstAccount.walkthroughSeen)
+            #expect(!shiftedAccount.snapshot.hasVerifiedEmail && shiftedAccount.walkthroughSeen)
+            let repeated = try MockAppSeed.make(now: now)
+            #expect(repeated.accounts == first.accounts)
+            #expect(repeated.signingKey != first.signingKey)
+        }
+
         @Test func defaultAppMockSignsInDemoWithRNSettingsAndTrips() async throws {
             let store = MemoryMockStateStore()
             let source = try appMock(store: store)

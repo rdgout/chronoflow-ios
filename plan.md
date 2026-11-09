@@ -2185,3 +2185,11 @@ Continue on `test/fast-ui-tests`; UI-test launch-speed acceptance runs separatel
 - [x] 5. Add memcmp equality fast path and pointer mismatch scan with unchanged error threshold/message; scan parity opacity/moon in one UInt32 pass. Extend existing pixel logic regression for equal/empty buffers and negative channel differences.
 - [x] 6. Add predicate/layout settling for hosted Forgot, Two-factor, Auth and Reset control checks; require two stable frame passes within 5 s, keep per-host raster/pixel coverage and assert the predicate path never captures.
 - [x] 7. Disable automatic simulator diagnostics by default with TEST_DIAGNOSTICS=1 opt-in; assert Debug/Release/Perf commands retain the switch semantics.
+- [x] 8. Keep only DesignSystemTests package tests in ChronoFlow; add PackageLogic for explicit package/matrix selectors, cache immutable decoded seeds with per-call rebasing, and report concurrent Swift Testing durations without summing overlaps. Add scheme/inventory/max-versus-sum fixtures and independent-clock/seed regression.
+- [ ] User-host acceptance: after the launch-speed run finishes, execute first/warm `make check` and Perf commands in Docs/tooling.md; collect build/pass/overall timings, both result folders, merged timings and failure details. No matrix, release stamp or persistent shards.
+
+Host verification: strict lint, 93 runner fixtures, resource/signing/contracts fixtures, 10 TokenGen
+and 7 AssetGen tests pass; XcodeGen spec validation and direct Swift 6/iOS 17 app/hosted/Release/Perf
+compiler checks pass. Final quick fails only at the known cookie-listener sandbox EPERM; all other
+package checks, including the new cache regression and timeline budgets, pass. See Docs/tooling.md
+for logs and the exact host acceptance/timing commands. UI/Perf test source files are unchanged.

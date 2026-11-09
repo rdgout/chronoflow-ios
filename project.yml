@@ -189,12 +189,15 @@ schemes:
         - name: AppUITests
           parallelizable: true
         - package: ChronoFlowKit/DesignSystemTests
-        - package: ChronoFlowKit/AppCoreTests
-        - package: ChronoFlowKit/LocalStoreTests
-        - package: ChronoFlowKit/DataAccessTests
+  PackageLogic:
+    build:
+      targets: {}
+    test:
+      config: Debug
+      targets:
+        - package: ChronoFlowKit/DesignSystemTests
         - package: ChronoFlowKit/LaunchTests
         - package: ChronoFlowKit/WelcomeTests
-        - package: ChronoFlowKit/AuthTests
   ReadinessRelease:
     build:
       targets:

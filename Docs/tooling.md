@@ -249,8 +249,11 @@ run the commands above on 17e. No snapshot recording, `make check`, Duo or seven
 also check on 17e; only `--matrix` or explicit compatibility matrix flags request all seven.
 `make test` and `make snapshots` select subsets on 17e. No default flow calls Duo or the matrix.
 Generate the project after manifest/project changes. Debug/ChronoFlow and isolated Release/ReadinessRelease
-build once each into `build/DerivedData`, with pinned resolution, then use `test-without-building`.
-Only the Release verification build gets `ENABLE_TESTABILITY=YES`. Perf stays separate.
+build once each for arm64 with pinned resolution, then use `test-without-building`. Debug uses
+`build/DerivedData`; low-priority Release/Perf builds overlap tests using `build/DerivedData-Release`
+and `build/DerivedData-Perf`. All use `build/SourcePackages`. Only the Release verification build
+gets `ENABLE_TESTABILITY=YES`. On 17e the primary Debug comparison overlaps serial then Release
+on the persistent regular-runtime isolated 17e when the worker budget permits.
 
 Each `test-without-building` pass watches its combined stdout/stderr log for byte growth. A pass
 may run for more than the former 1,200-second limit while it keeps producing output:
@@ -2824,3 +2827,55 @@ are unchanged. The native-input regression verifies focus/resignation without ca
 Simulator passes use `-collect-test-diagnostics never` by default. Failure results, attachments
 and session/stdout logs remain. `TEST_DIAGNOSTICS=1 make targeted DEVICES="17e" ONLY="AppUITests/SignInTests"`
 restores Xcode's on-failure logarchive/sysdiagnose collection.
+
+## Build and runner audit acceptance (2026-11-09)
+
+ChronoFlow's test action keeps AppTests, RenderTests, AppUITests and only DesignSystemTests from
+the package. PackageLogic builds LaunchTests, WelcomeTests and DesignSystemTests in Debug for
+explicit matrix/package selections, sharing Debug DerivedData. Host-only package tests stay in
+`make quick`. ReleaseReadinessTests remains a separate hosted target. No default matrix is added.
+
+MockAppSeed caches a Sendable decoded fixture Result lazily on first use; make/refresh copy the
+value before rebasing to each call's clock. Per-seed options and signing keys remain independent.
+The hosted factory suites retain their current isolation; changing it was secondary in the audit.
+
+`timings.json` uses the maximum case duration for concurrent Swift Testing suites, while retaining
+individual case durations. XCTest and `.serialized` suites still sum serial cases; suite elapsed
+lines in logs take precedence when present. A fixture checks the concurrent-suite inventory against
+source declarations. Existing per-case timing entries remain available for comparisons.
+
+After the separate launch-speed acceptance run has finished, run from this branch:
+
+```sh
+set -o pipefail
+make generate
+make lint
+/usr/bin/time -p make quick 2>&1 | tee build/build-speed-quick-host.log
+/usr/bin/time -p make check 2>&1 | tee build/build-speed-check-first.log
+cp -R build/test-results build/build-speed-results-first
+/usr/bin/time -p make check 2>&1 | tee build/build-speed-check-warm.log
+cp -R build/test-results build/build-speed-results-warm
+/usr/bin/time -p make perf 2>&1 | tee build/build-speed-perf.log
+```
+
+The first check includes the new arm64 build settings and cold Release DerivedData; compare the
+warm check separately. Collect overall `real`/runner `Elapsed`, each printed `Build … elapsed`,
+and each pass's elapsed time from `17e/Debug-compare` and
+`17e-isolated/{Debug-serial,Release-compare}.{log,jsonl,xcresult}`. Retain both timing JSON files,
+per-case launch parity/control timings, failure names and Perf launch metrics. Check that build
+logs show arm64 only, Release excludes AppTests compilation, and serial/Release timestamps overlap
+Debug comparison. Perf products/logs use `DerivedData-Perf` and `17e/Perf-compare`.
+Do not use REUSE_BUILD until these new products exist. No matrix, Duo or reference recording is
+needed. For failure diagnostics, opt in with `TEST_DIAGNOSTICS=1` on a focused rerun.
+
+Host verification: strict lint, all 93 runner fixtures, signing/resource/contracts fixtures, 10
+TokenGen and 7 AssetGen tests pass. XcodeGen validates the updated project spec without replacing
+the acceptance run's generated project. Direct Swift 6/iOS 17 checks pass for the app, all hosted
+AppTests, the new ReleaseReadinessTests target and Perf app/tests; these checks execute no UIKit.
+The final `make quick` run has only the existing sandbox-denied cookie listener
+`APICookieTests.realRedirectCookieHandlingIsDisabled` (`POSIXErrorCode(1)`). All other package
+checks pass, including the cache regression and timeline performance budgets. The first quick run
+under concurrent compilation also exceeded the 30-day timeline budget; the final run passes it.
+Logs: `build/build-speed-final-{quick,fixtures}.log`, `build/build-speed-6-typecheck.log` and
+`build/build-speed-release-typecheck.log`. Runtime builds, both-device overlap and timings remain
+user-host acceptance. No simulator, matrix, Duo or recording was run here.

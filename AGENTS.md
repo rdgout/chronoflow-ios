@@ -89,3 +89,8 @@ Regenerate the project before running; Release no longer compiles the Debug AppT
 Simulator passes use `-collect-test-diagnostics never` by default. Failure results, attachments
 and session/stdout logs remain. `TEST_DIAGNOSTICS=1 make targeted DEVICES="17e" ONLY="AppUITests/SignInTests"`
 restores Xcode's on-failure logarchive/sysdiagnose collection.
+
+ChronoFlow's iOS test action includes only DesignSystemTests among package bundles. Explicit
+LaunchTests/WelcomeTests selections use `PackageLogic` (Debug); host-only bundles stay in quick.
+Build logs print elapsed time per scheme/configuration. Concurrent Swift Testing suite timings
+use max case duration; XCTest/serialized suites keep sums. See Docs/tooling.md for warm-run timing commands.

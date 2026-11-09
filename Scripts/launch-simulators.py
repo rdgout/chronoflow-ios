@@ -315,6 +315,12 @@ XCODEBUILD_COMMON = ["xcodebuild", "-project", "ChronoFlow.xcodeproj",
 # Device-wide mutations must be registered here; launch/window-scoped traits are clone-safe.
 SERIAL_TESTS = ("AppUITests/SettingsBoardCaptureTests", "AppUITests/AuthSessionTests", "AppUITests/LaunchSceneTests", "AppUITests/LaunchSceneDarkTests", "AppUITests/LaunchToWelcomeTests")
 PARALLEL_TARGETS = {"AppTests", "AppUITests", "RenderTests"}
+PACKAGE_LOGIC_TARGETS = {"LaunchTests", "WelcomeTests"}
+CONCURRENT_SWIFT_SUITES = {
+    "AppTests/DataSourceBuildSettingTests", "AppTests/DataSourceFactoryHostedTests",
+    "AppTests/UITestReseedTests", "AppTests/WelcomeSnapshotGuardTests",
+} | {f"{target}/{suite}" for target in PACKAGE_LOGIC_TARGETS | {"DesignSystemTests"}
+     for suites in SUITES[target].values() for suite in suites}
 
 
 RUNTIME_SMOKE = (
@@ -449,6 +455,11 @@ def save_timings(timings, path=None):
     temporary.replace(path)
 
 
+def suite_duration(selector, durations):
+    suite = "/".join(selector.split("/")[:2])
+    return max(durations, default=0) if suite in CONCURRENT_SWIFT_SUITES else sum(durations)
+
+
 def log_timings(content):
     target = None
     suites, tests = {}, {}
@@ -461,7 +472,7 @@ def log_timings(content):
         if case:
             name = case[1] + "/" + case[2]
             duration = float(case[4])
-            suites[name] = suites.get(name, 0) + duration
+            suites[name] = suite_duration(name, [suites.get(name, 0), duration])
             tests[name + "/" + case[3]] = duration
         clone = re.search(r"Test case '([^']+)' (?:passed|failed) on '[^']+ - ([^']+?) \(\d+\)' \(([\d.]+) seconds\)", line)
         if clone:
@@ -474,7 +485,7 @@ def log_timings(content):
             if len(path) == 2 and len(candidates) == 1:
                 name = candidates.pop()
                 duration = float(clone[3])
-                suites[name] = suites.get(name, 0) + duration
+                suites[name] = suite_duration(name, [suites.get(name, 0), duration])
                 tests[name + '/' + path[1]] = duration
         swift = re.search(r"[✔✓] Suite (\w+) passed after ([\d.]+) seconds", line)
         if swift:
@@ -810,12 +821,14 @@ def selection(mode, alias, only=(), include_logic=True, include_matrix=True):
 def configurations(selected):
     release = set(selectors("release"))
     perf = set(selectors("perf"))
-    groups = {"Debug": [], "Release": [], "Perf": []}
+    groups = {"Debug": [], "PackageLogic": [], "Release": [], "Perf": []}
     for suite in selected:
         if any(suite == s or suite.startswith(s + "/") for s in perf):
             configuration = "Perf"
         elif any(suite == s or suite.startswith(s + "/") for s in release):
             configuration = "Release"
+        elif suite.split("/")[0] in PACKAGE_LOGIC_TARGETS:
+            configuration = "PackageLogic"
         else:
             configuration = "Debug"
         groups[configuration].append(suite)
@@ -823,7 +836,8 @@ def configurations(selected):
 
 
 def build_command(configuration):
-    scheme = {"Debug": "ChronoFlow", "Release": "ReadinessRelease", "Perf": "Perf"}[configuration]
+    scheme = {"Debug": "ChronoFlow", "PackageLogic": "PackageLogic", "Release": "ReadinessRelease", "Perf": "Perf"}[configuration]
+    configuration = "Debug" if configuration == "PackageLogic" else configuration
     derived_data = "build/DerivedData" + ("-" + configuration if configuration != "Debug" else "")
     return XCODEBUILD_COMMON + ["-derivedDataPath", derived_data, "-scheme", scheme, "-configuration", configuration]
 
@@ -835,12 +849,15 @@ def build(configuration, background=False):
 
 
 def build_configuration(configuration, results, background=False):
+    started = time.monotonic()
     try:
         build(configuration, background=background)
         return True
     except (subprocess.CalledProcessError, OSError) as error:
         results.append(Result("build", configuration, False, str(error)))
         return False
+    finally:
+        print(f"Build {configuration} elapsed: {time.monotonic() - started:.1f}s", flush=True)
 
 
 def build_available(ready, configuration):
@@ -923,7 +940,7 @@ def read_results(destination, label, selected, bundle, returncode, log, timing=N
                 executed = [n for n in matches if n.get("result") in ("Passed", "Failed", "Expected Failure")]
                 durations = [positive_seconds(n.get("durationInSeconds", n.get("duration"))) for n in executed]
                 if durations and all(d is not None for d in durations):
-                    timing.setdefault("suites", {})[suite] = sum(durations)
+                    timing.setdefault("suites", {})[suite] = suite_duration(suite, durations)
                     for node, duration in zip(executed, durations):
                         identifier = str(node.get("nodeIdentifier"))
                         target = suite.split("/")[0]
@@ -1076,10 +1093,11 @@ def main(mode="check", aliases=None, only=(), concurrency=None, reuse_build=Fals
     with ThreadPoolExecutor(max_workers=concurrency) as preparations, ThreadPoolExecutor(max_workers=1) as builds:
         prepared = {d: preparations.submit(prepare, d) for d, _, _, _ in jobs}
         if not reuse_build:
-            if "Debug" in required:
-                ready["Debug"] = build_configuration("Debug", results)
             for configuration in required:
-                if configuration != "Debug":
+                if configuration in ("Debug", "PackageLogic"):
+                    ready[configuration] = build_configuration(configuration, results)
+            for configuration in required:
+                if configuration not in ("Debug", "PackageLogic"):
                     ready[configuration] = builds.submit(build_configuration, configuration, results, True)
         with ThreadPoolExecutor(max_workers=min(concurrency, len(jobs) or 1)) as pool:
             futures = []
