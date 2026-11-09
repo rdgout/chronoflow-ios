@@ -95,6 +95,17 @@ public final class MemoryMockStateStore: MockStateStore, @unchecked Sendable {
     public init(_ state: MockServerState? = nil) { self.state = state }
     public func load() -> MockServerState? { lock.withLock { state } }
     public func save(_ state: MockServerState) { lock.withLock { self.state = state } }
+
+    func update<T>(initial: MockServerState, _ change: (inout MockServerState) throws -> T) rethrows
+        -> (T, MockServerState)
+    {
+        try lock.withLock {
+            var candidate = state ?? initial
+            let result = try change(&candidate)
+            state = candidate
+            return (result, candidate)
+        }
+    }
 }
 
 public struct FileMockStateStore: MockStateStore {

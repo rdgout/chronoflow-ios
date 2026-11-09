@@ -59,6 +59,10 @@ public actor MockDataSource: DataSource {
     }
 
     private func load() throws {
+        if state != nil, let memory = store as? MemoryMockStateStore, let current = memory.load() {
+            state = current
+            return
+        }
         guard state == nil else { return }
         do {
             let restored: MockServerState?
@@ -102,6 +106,11 @@ public actor MockDataSource: DataSource {
         requestToken = bearer == nil ? currentToken : token
     }
     private func update<T>(_ change: (inout MockServerState) throws -> T) throws -> T {
+        if let memory = store as? MemoryMockStateStore {
+            let (result, current) = try memory.update(initial: state!, change)
+            state = current
+            return result
+        }
         var candidate = state!
         let result = try change(&candidate)
         do { try store.save(candidate) } catch { throw DataFailure.server(status: nil) }

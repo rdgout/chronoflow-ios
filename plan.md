@@ -2127,7 +2127,7 @@ Main restoration validation: source comparison confirms the two methods and enti
 
 - [x] Log every Debug URL delivery (including scene connection), structured parse/authorization rejection, reset start and ready/failure with nonce and PID; attach screen and app hierarchy on runner acknowledgement failure. Compare UUID authorization by value.
 - [x] Replace launch-by-URL (`XCUIApplication.open`) with system URL dispatch (`XCUIDevice.shared.system.open`) so the existing scene receives the command; retain account/sheet replacement and the two benchmark methods as runtime acceptance.
-- [ ] Refresh memory-backed mock request snapshots and serialize mutations against the shared store, retaining independent source credentials; cover cross-factory mail and session invalidation and concurrent writes.
+- [x] Refresh memory-backed mock request snapshots and serialize mutations against the shared store, retaining independent source credentials; cover cross-factory mail and session invalidation and concurrent writes.
 - [ ] Accept an absent lazy Release store as empty while still rejecting seeded accounts.
 - [ ] Honor the exact gated UI-fixture mock delay (zero by default), bypassing MockDataSource's ordinary 300–800 ms clamp without bypassing sign-in, two-factor, full pull, account storage or readiness. Add configuration-ready timing to separate fixture preparation from session restoration.
 - [ ] Restore XcodeGen generation for PackageLogic with an explicit test-only app build target; keep its three selected package suites and default manifest unchanged.

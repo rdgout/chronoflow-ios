@@ -33,6 +33,10 @@
             #expect(try await dynamic.fetchIdentity().id == MockScenarioValues.demoID)
             try await bound.requestPasswordReset(email: MockScenarioValues.demoEmail)
             #expect(try await dynamic.inbox().count == 1)
+            try await dynamic.requestPasswordReset(email: MockScenarioValues.demoEmail)
+            #expect(try await bound.inbox().count == 2)
+            try await dynamic.signOut()
+            await #expect(throws: DataFailure.unauthorized(status: 401)) { try await bound.fetchIdentity() }
             #expect(!FileManager.default.fileExists(atPath: FileMockStateStore(applicationSupport: directory).url.path))
             try await MockSessionSeed.reset(applicationSupport: directory, credentials: credentials)
         }
