@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Passkeys</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="ds/chronoflow/components/bundle.css">
+<script src="ds/chronoflow/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Figtree';src:url("/_blob/74876cc764ebb15bf4ae98bcdbf3140c") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/741b1ce40b46479a73d934d0d5be9774") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/079d83fda74d66d1f31e35072f71201d") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/991830890debdac04981f1a27656ed5c") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Fraunces';src:url("/_blob/fc815083784d00806d267d81858d2414") format("woff2");font-weight:400 500;font-style:normal;font-display:swap}
+body{margin:0}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="position: relative; width: 375px; height: 812px; overflow: hidden; background: var(--background); color: var(--foreground); font-family: var(--font-sans);">
+  <div style="position: absolute; inset: 0; overflow-y: auto;">
+    <header class="ios ios-navbar">
+      <span><a href="SetSecurity.dc.html" class="ios ios-glass ios-back"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>Security</a></span>
+      <span></span>
+      <span></span>
+    </header>
+
+    <main style="padding: 4px 16px 40px; display: flex; flex-direction: column; gap: 24px;">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <h1 class="ios-largetitle">Passkeys</h1>
+        <p style="margin: 0; font-size: 16px; line-height: 24px; color: var(--muted-foreground);">Sign in with Face ID, a fingerprint or your screen lock instead of your password.</p>
+      </div>
+
+      <sc-if value="{{hasKeys}}" hint-placeholder-val="{{ true }}">
+        <ul aria-label="Your passkeys" style="margin: 0; padding: 0; list-style: none; border-radius: 22px; border: 1px solid var(--border); background: var(--card); overflow: hidden;">
+          <sc-for list="{{keys}}" as="k" hint-placeholder-count="2">
+            <li style="{{k.rowStyle}}">
+              <span aria-hidden="true" style="display: grid; place-items: center; width: 36px; height: 36px; flex-shrink: 0; border-radius: 9999px; background: var(--muted);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"></path><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"></circle></svg></span>
+              <span style="flex: 1; min-width: 0;">
+                <span style="display: block; font-size: 16px; line-height: 24px; font-weight: 500;">{{k.name}}</span>
+                <span style="display: block; font-size: 14px; line-height: 20px; color: var(--muted-foreground); font-variant-numeric: tabular-nums;">{{k.meta}}</span>
+              </span>
+              <x-import component-from-global-scope="ChronoFlow.Button" variant="ghost" size="touch" aria-label="{{k.removeLabel}}" on-click="{{k.remove}}">
+                <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+              </x-import>
+            </li>
+          </sc-for>
+        </ul>
+      </sc-if>
+      <sc-if value="{{noKeys}}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 32px 20px; border-radius: 26px; border: 2px dashed var(--border); text-align: center;">
+          <span aria-hidden="true" style="display: grid; place-items: center; width: 48px; height: 48px; border-radius: 9999px; background: var(--muted);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"></path><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"></circle></svg></span>
+          <p style="margin: 0; font-size: 16px; line-height: 24px; font-weight: 600;">No passkeys yet</p>
+          <p style="margin: 0; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">Add one on this phone and you can sign in without typing a password.</p>
+        </div>
+      </sc-if>
+
+      <div style="display: grid;">
+        <x-import component-from-global-scope="ChronoFlow.Button" size="lg">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+          Add a passkey
+        </x-import>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"startEmpty":{"editor":"boolean","default":false},"$preview":{"width":375,"height":812}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { removed: props.startEmpty ? { iphone: true, mac: true } : {} };
+  }
+  renderVals() {
+    const all = [
+      { id: 'iphone', name: 'iPhone 16', meta: 'Added 14 Sep 2026 · used today' },
+      { id: 'mac', name: 'MacBook Pro', meta: 'Added 2 Oct 2026 · used 28 Oct' }
+    ];
+    const keys = all.filter((k) => !this.state.removed[k.id]).map((k, i) => ({
+      ...k,
+      removeLabel: 'Remove passkey ' + k.name,
+      rowStyle: 'display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 8px 8px 8px 16px; box-sizing: border-box;' + (i > 0 ? ' border-top: 1px solid var(--border);' : ''),
+      remove: () => this.setState({ removed: { ...this.state.removed, [k.id]: true } })
+    }));
+    return { theme: this.props.theme ?? 'light', keys, hasKeys: keys.length > 0, noKeys: keys.length === 0 };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Your data and policies</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="ds/chronoflow/components/bundle.css">
+<script src="ds/chronoflow/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Figtree';src:url("/_blob/74876cc764ebb15bf4ae98bcdbf3140c") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/741b1ce40b46479a73d934d0d5be9774") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/079d83fda74d66d1f31e35072f71201d") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/991830890debdac04981f1a27656ed5c") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Fraunces';src:url("/_blob/fc815083784d00806d267d81858d2414") format("woff2");font-weight:400 500;font-style:normal;font-display:swap}
+body{margin:0}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="position: relative; width: 375px; height: 812px; overflow: hidden; background: var(--background); color: var(--foreground); font-family: var(--font-sans);">
+  <div style="position: absolute; inset: 0; overflow-y: auto;">
+    <header class="ios ios-navbar">
+      <span><a href="SetAccount.dc.html" class="ios ios-glass ios-back"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>Account</a></span>
+      <span></span>
+      <span></span>
+    </header>
+
+    <main style="padding: 4px 16px 40px; display: flex; flex-direction: column; gap: 24px;">
+      <h1 class="ios-largetitle">Your data &amp; policies</h1>
+
+      <section style="display: flex; flex-direction: column; gap: 12px;">
+        <h2 style="margin: 0; font-family: var(--font-sans); font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">What you accepted</h2>
+        <div style="border-radius: 22px; border: 1px solid var(--border); background: var(--card); overflow: hidden;">
+          <a href="PolicyReader.dc.html" style="display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 16px; box-sizing: border-box; color: var(--card-foreground); text-decoration: none;">
+            <span style="flex: 1; min-width: 0;"><span style="display: block; font-size: 16px; line-height: 24px; font-weight: 500;">Terms of service</span><span style="display: block; font-size: 14px; line-height: 20px; color: var(--muted-foreground); font-variant-numeric: tabular-nums;">Version 3.1 · accepted 2 Sep 2026</span></span>
+            <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: var(--muted-foreground);"><path d="m9 18 6-6-6-6"></path></svg>
+          </a>
+          <a href="PolicyReader.dc.html" style="display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 16px; box-sizing: border-box; border-top: 1px solid var(--border); color: var(--card-foreground); text-decoration: none;">
+            <span style="flex: 1; min-width: 0;"><span style="display: block; font-size: 16px; line-height: 24px; font-weight: 500;">Privacy policy</span><span style="display: block; font-size: 14px; line-height: 20px; color: var(--muted-foreground); font-variant-numeric: tabular-nums;">Version 2.4 · accepted 2 Sep 2026</span></span>
+            <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: var(--muted-foreground);"><path d="m9 18 6-6-6-6"></path></svg>
+          </a>
+        </div>
+        <p style="margin: 0; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">When a policy changes, we ask you to accept the new version before you build your next plan.</p>
+      </section>
+
+      <section style="display: flex; flex-direction: column; gap: 12px;">
+        <h2 style="margin: 0; font-family: var(--font-sans); font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">Your data</h2>
+        <x-import component-from-global-scope="ChronoFlow.Card">
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <p style="margin: 0; font-size: 16px; line-height: 24px;">Get a copy of your account, trips, plans and body-clock answers as one file.</p>
+            <sc-if value="{{dl.idle}}" hint-placeholder-val="{{ true }}">
+              <div style="display: grid;">
+                <x-import component-from-global-scope="ChronoFlow.Button" variant="outline" size="lg" on-click="{{dl.start}}">
+                  <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" x2="12" y1="15" y2="3"></line></svg>
+                  Download my data
+                </x-import>
+              </div>
+            </sc-if>
+            <sc-if value="{{dl.preparing}}" hint-placeholder-val="{{ false }}">
+              <div role="status" aria-live="polite" style="display: flex; flex-direction: column; gap: 10px;">
+                <p style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 14px; line-height: 20px; font-weight: 600;">
+                  <svg class="animate-spin" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--dawn-text);"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
+                  Preparing your file…
+                </p>
+                <p style="margin: 0; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">This usually takes less than a minute. You can leave this screen; we'll keep going.</p>
+              </div>
+            </sc-if>
+            <sc-if value="{{dl.ready}}" hint-placeholder-val="{{ false }}">
+              <div role="status" aria-live="polite" style="display: flex; flex-direction: column; gap: 12px;">
+                <p style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 14px; line-height: 20px; font-weight: 600;">
+                  <span aria-hidden="true" style="display: grid; place-items: center; width: 22px; height: 22px; border-radius: 9999px; background: var(--dawn); color: var(--dawn-foreground);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span>
+                  Your file is ready
+                </p>
+                <p style="margin: 0; font-size: 14px; line-height: 20px; color: var(--muted-foreground); font-variant-numeric: tabular-nums;">chronoflow-data-2026-10-31.zip · 184 KB</p>
+                <div style="display: grid;">
+                  <x-import component-from-global-scope="ChronoFlow.Button" size="lg">Save or share file</x-import>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </x-import>
+      </section>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"download":{"editor":"enum","options":["idle","preparing","ready"],"default":"idle"},"$preview":{"width":375,"height":812}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { dl: props.download ?? 'idle' };
+  }
+  componentWillUnmount() { clearTimeout(this.timer); }
+  renderVals() {
+    const dl = this.state.dl;
+    return {
+      theme: this.props.theme ?? 'light',
+      dl: {
+        idle: dl === 'idle', preparing: dl === 'preparing', ready: dl === 'ready',
+        start: () => {
+          this.setState({ dl: 'preparing' });
+          this.timer = setTimeout(() => this.setState({ dl: 'ready' }), 2500);
+        }
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

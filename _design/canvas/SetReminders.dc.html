@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Connectivity and reminders</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="ds/chronoflow/components/bundle.css">
+<script src="ds/chronoflow/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Figtree';src:url("/_blob/74876cc764ebb15bf4ae98bcdbf3140c") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/741b1ce40b46479a73d934d0d5be9774") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/079d83fda74d66d1f31e35072f71201d") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/991830890debdac04981f1a27656ed5c") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Fraunces';src:url("/_blob/fc815083784d00806d267d81858d2414") format("woff2");font-weight:400 500;font-style:normal;font-display:swap}
+body{margin:0}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="position: relative; width: 375px; height: 812px; overflow: hidden; background: var(--background); color: var(--foreground); font-family: var(--font-sans);">
+  <div style="position: absolute; inset: 0; overflow-y: auto;">
+    <header class="ios ios-navbar">
+      <span><a href="SetPreferences.dc.html" class="ios ios-glass ios-back"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>Preferences</a></span>
+      <span></span>
+      <span></span>
+    </header>
+
+    <main style="padding: 4px 16px 40px; display: flex; flex-direction: column; gap: 24px;">
+      <h1 class="ios-largetitle">Connectivity &amp; reminders</h1>
+
+      <section aria-labelledby="rem-title" style="display: flex; flex-direction: column; gap: 16px; padding: 20px; border-radius: 26px; border: 1px solid var(--border); background: var(--card); box-shadow: var(--shadow-soft);">
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <h2 id="rem-title" style="margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 20px; line-height: 28px; letter-spacing: -0.01em;">Reminders on this phone</h2>
+          <p style="margin: 0; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">A nudge before each step in your plan. Reminders are scheduled on this phone, so they arrive without a connection. Each device has its own setting.</p>
+        </div>
+
+        <sc-if value="{{isUnsupported}}" hint-placeholder-val="{{ false }}">
+          <x-import component-from-global-scope="ChronoFlow.Notice" tone="info" title="This device can't show reminders.">You can still follow every step in your plan.</x-import>
+        </sc-if>
+
+        <sc-if value="{{canToggle}}" hint-placeholder-val="{{ true }}">
+          <button type="button" role="switch" aria-checked="{{rem.checked}}" disabled="{{isBlocked}}" onClick="{{rem.toggle}}" style="display: flex; width: 100%; align-items: center; gap: 12px; min-height: 52px; padding: 0; border: 0; background: transparent; color: var(--card-foreground); font: inherit; text-align: left;">
+            <span style="flex: 1; min-width: 0; font-size: 16px; line-height: 24px; font-weight: 500;">Push reminders</span>
+            <span aria-hidden="true" class="ios-switch" data-on="{{rem.checked}}"></span>
+          </button>
+        </sc-if>
+
+        <sc-if value="{{isAsk}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <p style="margin: 0; font-size: 14px; line-height: 20px;">Reminders are off. When you turn them on, your phone asks once whether ChronoFlow may send notifications.</p>
+            <a href="SetReminders.dc.html" class="inline-flex shrink-0 items-center justify-center gap-2 text-sm font-medium whitespace-nowrap transition-colors rounded-full bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6" style="height: 48px; text-decoration: none;">Turn on reminders</a>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{isBlocked}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <x-import component-from-global-scope="ChronoFlow.Notice" tone="warning" title="Notifications are blocked for ChronoFlow.">Allow them in your phone's settings to get reminders.</x-import>
+            <ol style="margin: 0; padding: 0 0 0 4px; list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 14px; line-height: 20px;">
+              <li style="display: flex; gap: 10px;"><span aria-hidden="true" style="display: grid; place-items: center; width: 24px; height: 24px; flex-shrink: 0; border-radius: 9999px; background: var(--muted); font-size: 12px; font-weight: 600;">1</span><span>Open your phone's <strong>Settings</strong>.</span></li>
+              <li style="display: flex; gap: 10px;"><span aria-hidden="true" style="display: grid; place-items: center; width: 24px; height: 24px; flex-shrink: 0; border-radius: 9999px; background: var(--muted); font-size: 12px; font-weight: 600;">2</span><span>Tap <strong>Notifications</strong>, then <strong>ChronoFlow</strong>.</span></li>
+              <li style="display: flex; gap: 10px;"><span aria-hidden="true" style="display: grid; place-items: center; width: 24px; height: 24px; flex-shrink: 0; border-radius: 9999px; background: var(--muted); font-size: 12px; font-weight: 600;">3</span><span>Turn on <strong>Allow notifications</strong>.</span></li>
+              <li style="display: flex; gap: 10px;"><span aria-hidden="true" style="display: grid; place-items: center; width: 24px; height: 24px; flex-shrink: 0; border-radius: 9999px; background: var(--muted); font-size: 12px; font-weight: 600;">4</span><span>Come back here. Reminders switch on by themselves.</span></li>
+            </ol>
+            <div style="display: grid;">
+              <x-import component-from-global-scope="ChronoFlow.Button" variant="outline" size="lg">Open phone settings</x-import>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{showAhead}}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 16px; border-top: 1px solid var(--border);">
+            <p id="ahead-label" style="margin: 0; font-size: 16px; line-height: 24px; font-weight: 500;">Remind me ahead by</p>
+            <div role="radiogroup" aria-labelledby="ahead-label" style="display: flex; flex-wrap: wrap; gap: 8px;">
+              <sc-for list="{{ahead}}" as="o" hint-placeholder-count="3">
+                <button type="button" role="radio" aria-checked="{{o.checked}}" onClick="{{o.pick}}" style="{{o.style}}"><sc-if value="{{o.selected}}" hint-placeholder-val="{{ false }}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--dawn-text);"><path d="M20 6 9 17l-5-5"></path></svg></sc-if>{{o.label}}</button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+      </section>
+
+      <section style="display: flex; flex-direction: column; gap: 8px; padding: 20px; border-radius: 26px; border: 1px solid var(--border); background: var(--card); box-shadow: var(--shadow-soft);">
+        <button type="button" role="switch" aria-checked="{{la.checked}}" aria-describedby="la-desc" onClick="{{la.toggle}}" class="cf-press" style="display: flex; width: 100%; align-items: center; gap: 12px; min-height: 52px; padding: 0; border: 0; background: transparent; color: var(--card-foreground); font: inherit; text-align: left;">
+          <span style="flex: 1; min-width: 0; font-size: 16px; line-height: 24px; font-weight: 500;">Live Activity</span>
+          <span aria-hidden="true" class="ios-switch" data-on="{{la.checked}}"></span>
+        </button>
+        <p id="la-desc" style="margin: 0; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">The current step and the next one on your lock screen and in the Dynamic Island. Works offline. iPhone only.</p>
+      </section>
+
+      <section style="display: flex; flex-direction: column; gap: 12px; padding: 20px; border-radius: 26px; border: 1px solid var(--border); background: var(--card); box-shadow: var(--shadow-soft);">
+        <button type="button" role="switch" aria-checked="{{fly.checked}}" aria-describedby="fly-desc" onClick="{{fly.toggle}}" style="display: flex; width: 100%; align-items: center; gap: 12px; min-height: 52px; padding: 0; border: 0; background: transparent; color: var(--card-foreground); font: inherit; text-align: left;">
+          <span style="flex: 1; min-width: 0; font-size: 16px; line-height: 24px; font-weight: 500;">Practice in-flight mode</span>
+          <span aria-hidden="true" class="ios-switch" data-on="{{fly.checked}}"></span>
+        </button>
+        <p id="fly-desc" style="margin: 0; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">Use the app as if you had no connection, so you know your plan works on the plane. Anything that needs a connection is paused until you turn it off.</p>
+      </section>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"status":{"editor":"enum","options":["on","ask","blocked","unsupported"],"default":"on"},"$preview":{"width":375,"height":812}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { on: (props.status ?? 'on') === 'on', ahead: '30', fly: false, la: true };
+  }
+  renderVals() {
+    const status = this.props.status ?? 'on';
+    const sw = (on, dim) => ({
+      trackStyle: 'position: relative; flex-shrink: 0; width: 52px; height: 32px; border-radius: 9999px; background: ' + (on ? 'var(--primary)' : 'color-mix(in oklab, var(--muted-foreground) 40%, transparent)') + ';' + (dim ? ' opacity: 0.5;' : ''),
+      knobStyle: 'position: absolute; top: 3px; left: ' + (on ? '23px' : '3px') + '; width: 26px; height: 26px; border-radius: 9999px; background: ' + (on ? 'var(--primary-foreground)' : 'var(--card)') + '; box-shadow: var(--shadow-soft);',
+      checked: on ? 'true' : 'false'
+    });
+    const pill = (on) =>
+      'display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px; box-sizing: border-box; border-radius: 9999px; font-family: var(--font-sans); font-size: 14px; line-height: 20px; background: var(--card); color: var(--foreground); ' +
+      (on ? 'border: 2px solid var(--dawn); font-weight: 600;' : 'border: 2px solid var(--border); font-weight: 500;');
+    const on = status === 'on' && this.state.on;
+    return {
+      theme: this.props.theme ?? 'light',
+      isBlocked: status === 'blocked',
+      isUnsupported: status === 'unsupported',
+      isAsk: status === 'ask',
+      canToggle: status !== 'unsupported' && status !== 'ask',
+      showAhead: on,
+      rem: { ...sw(on, status === 'blocked'), toggle: () => this.setState({ on: !this.state.on }) },
+      la: { ...sw(this.state.la), toggle: () => this.setState({ la: !this.state.la }) },
+      fly: { ...sw(this.state.fly), toggle: () => this.setState({ fly: !this.state.fly }) },
+      ahead: [['15', '15 min'], ['30', '30 min'], ['60', '1 hour']].map(([id, label]) => ({
+        id, label, selected: this.state.ahead === id, checked: this.state.ahead === id ? 'true' : 'false',
+        style: pill(this.state.ahead === id), pick: () => this.setState({ ahead: id })
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

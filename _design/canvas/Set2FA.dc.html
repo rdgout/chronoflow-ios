@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Two-factor authentication, off</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="ds/chronoflow/components/bundle.css">
+<script src="ds/chronoflow/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Figtree';src:url("/_blob/74876cc764ebb15bf4ae98bcdbf3140c") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/741b1ce40b46479a73d934d0d5be9774") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/079d83fda74d66d1f31e35072f71201d") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/991830890debdac04981f1a27656ed5c") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Fraunces';src:url("/_blob/fc815083784d00806d267d81858d2414") format("woff2");font-weight:400 500;font-style:normal;font-display:swap}
+body{margin:0}
+</style>
+</helmet>
+<div data-theme="{{theme}}" lang="{{lang}}" style="position: relative; width: 375px; height: 812px; overflow: hidden; background: var(--background); color: var(--foreground); font-family: var(--font-sans);">
+  <div style="position: absolute; inset: 0; overflow-y: auto;">
+    <header class="ios ios-navbar">
+      <span><a href="SetSecurity.dc.html" class="ios ios-glass ios-back"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>{{t.back}}</a></span>
+      <span></span>
+      <span></span>
+    </header>
+    <main style="padding: 4px 16px 120px; display: flex; flex-direction: column; gap: 20px; ">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <h1 class="ios-largetitle">{{t.title}}</h1>
+        <div style="display: flex;"><x-import component-from-global-scope="ChronoFlow.Badge" variant="secondary">{{t.off}}</x-import></div>
+      </div>
+      <x-import component-from-global-scope="ChronoFlow.Card">
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <p style="margin: 0; font-size: 16px; line-height: 24px;">{{t.offBody}}</p>
+          <ul style="margin: 0; padding: 0 0 0 20px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">
+            <li>{{t.b1}}</li><li>{{t.b2}}</li><li>{{t.b3}}</li>
+          </ul>
+          <a href="PasswordPrompt2FAOn.dc.html" class="inline-flex shrink-0 items-center justify-center gap-2 text-sm font-medium whitespace-nowrap transition-colors rounded-full bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6" style="height: 48px; text-decoration: none;">{{t.turnOn}}</a>
+          <p style="margin: 0; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; line-height: 18px; color: var(--muted-foreground);"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: var(--muted-foreground);"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>{{t.lockFirst}}</p>
+        </div>
+      </x-import>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"lang":{"editor":"enum","options":["en","nl"],"default":"en"},"$preview":{"width":375,"height":812}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const T = {"en": {"back": "Security", "title": "Two-factor authentication", "off": "Off", "on": "On", "since": "Since 30 Oct 2026", "offBody": "Ask for a code from an authenticator app each time you sign in with your password, so a stolen password isn't enough.", "b1": "You need an authenticator app, like the one built into Passwords on iPhone.", "b2": "You get recovery codes for when you lose your phone.", "b3": "Signing in with a passkey doesn't ask for a code.", "turnOn": "Turn on two-factor", "lockFirst": "You'll be asked for your password first.", "codes": "Recovery codes", "show": "Show recovery codes", "showSub": "Each code works once and is then replaced", "newc": "Make new codes", "newSub": "Your current codes stop working", "offRow": "Turn off two-factor", "offSub": "Sign in with only your password or passkey", "eachLock": "Each of these asks for your password first.", "codesBody": "If you lose your phone, sign in with one of these. Each code works once and is then replaced. Keep them somewhere safe.", "copy": "Copy", "download": "Download", "toast": "Two-factor is on. Save your recovery codes now."}, "nl": {"back": "Beveiliging", "title": "Tweestapsverificatie", "off": "Uit", "on": "Aan", "since": "Sinds 30 okt 2026", "offBody": "Vraag bij elke aanmelding met je wachtwoord om een code uit een authenticator-app, zodat een gestolen wachtwoord niet genoeg is.", "b1": "Je hebt een authenticator-app nodig, zoals die in Wachtwoorden op de iPhone.", "b2": "Je krijgt herstelcodes voor als je je telefoon kwijtraakt.", "b3": "Aanmelden met een passkey vraagt geen code.", "turnOn": "Tweestapsverificatie aanzetten", "lockFirst": "Je wordt eerst om je wachtwoord gevraagd.", "codes": "Herstelcodes", "show": "Herstelcodes tonen", "showSub": "Elke code werkt één keer en wordt daarna vervangen", "newc": "Nieuwe codes maken", "newSub": "Je huidige codes werken dan niet meer", "offRow": "Tweestapsverificatie uitzetten", "offSub": "Meld je aan met alleen je wachtwoord of passkey", "eachLock": "Elk van deze vraagt eerst om je wachtwoord.", "codesBody": "Raak je je telefoon kwijt, meld je dan aan met een van deze codes. Elke code werkt één keer en wordt daarna vervangen. Bewaar ze op een veilige plek.", "copy": "Kopiëren", "download": "Downloaden", "toast": "Tweestapsverificatie staat aan. Bewaar nu je herstelcodes."}};
+    const lang = this.props.lang === 'nl' ? 'nl' : 'en';
+    return { theme: this.props.theme ?? 'light', lang, t: T[lang], fresh: (this.props.state ?? 'fresh') === 'fresh' };
+  }
+}
+</script>
+</body>
+</html>

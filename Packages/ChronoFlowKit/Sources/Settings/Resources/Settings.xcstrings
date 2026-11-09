@@ -222,6 +222,23 @@
         }
       }
     },
+    "Saved": {
+      "comment": "RN exact English key: Saved",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opgeslagen"
+          }
+        }
+      }
+    },
     "Saved on this phone · syncs when you're online": {
       "comment": "RN exact English key: Saved on this phone · syncs when you're online",
       "localizations": {
@@ -692,6 +709,3228 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "Name": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naam"
+          }
+        }
+      }
+    },
+    "Email": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Email"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-mailadres"
+          }
+        }
+      }
+    },
+    "Save changes": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save changes"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wijzigingen opslaan"
+          }
+        }
+      }
+    },
+    "Enter your name.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter your name."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vul je naam in."
+          }
+        }
+      }
+    },
+    "Loading": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laden"
+          }
+        }
+      }
+    },
+    "Your account isn't on this phone yet": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your account isn't on this phone yet"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je account staat nog niet op deze telefoon"
+          }
+        }
+      }
+    },
+    "We need a connection once to load your settings. After that they work offline.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We need a connection once to load your settings. After that they work offline."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We hebben één keer verbinding nodig om je instellingen te laden. Daarna werken ze ook offline."
+          }
+        }
+      }
+    },
+    "We couldn't save your change. Please try again.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We couldn't save your change. Please try again."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je wijziging kon niet worden opgeslagen. Probeer het opnieuw."
+          }
+        }
+      }
+    },
+    "Every plan is built from these answers. Changes save automatically.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every plan is built from these answers. Changes save automatically."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elk plan is gebaseerd op deze antwoorden. Wijzigingen worden automatisch opgeslagen."
+          }
+        }
+      }
+    },
+    "About you": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About you"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Over jou"
+          }
+        }
+      }
+    },
+    "Sleep schedule": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sleep schedule"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slaapritme"
+          }
+        }
+      }
+    },
+    "Light equipment": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light equipment"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lichtmiddelen"
+          }
+        }
+      }
+    },
+    "Health checks": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Health checks"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gezondheidsvragen"
+          }
+        }
+      }
+    },
+    "When do you naturally feel most awake?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When do you naturally feel most awake?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wanneer voel je je van nature het meest wakker?"
+          }
+        }
+      }
+    },
+    "Early bird": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Early bird"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vroege vogel"
+          }
+        }
+      }
+    },
+    "In between": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In between"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ertussenin"
+          }
+        }
+      }
+    },
+    "Night owl": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Night owl"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nachtuil"
+          }
+        }
+      }
+    },
+    "Not sure": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not sure"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weet ik niet"
+          }
+        }
+      }
+    },
+    "Your age": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your age"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je leeftijd"
+          }
+        }
+      }
+    },
+    "Under 18": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Under 18"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jonger dan 18"
+          }
+        }
+      }
+    },
+    "18–64": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "18–64"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "18–64"
+          }
+        }
+      }
+    },
+    "65 or older": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "65 or older"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "65 of ouder"
+          }
+        }
+      }
+    },
+    "On a normal work or school day.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On a normal work or school day."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Op een normale werk- of schooldag."
+          }
+        }
+      }
+    },
+    "Usual bedtime": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usual bedtime"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gewone bedtijd"
+          }
+        }
+      }
+    },
+    "Usual wake time": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usual wake time"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gewone opstaantijd"
+          }
+        }
+      }
+    },
+    "Do your free days follow the same schedule?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do your free days follow the same schedule?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volg je op vrije dagen hetzelfde schema?"
+          }
+        }
+      }
+    },
+    "Yes": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yes"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ja"
+          }
+        }
+      }
+    },
+    "No": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nee"
+          }
+        }
+      }
+    },
+    "Not set": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not set"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niet ingesteld"
+          }
+        }
+      }
+    },
+    "Free-day bedtime": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free-day bedtime"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bedtijd op vrije dagen"
+          }
+        }
+      }
+    },
+    "Free-day wake time": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free-day wake time"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wektijd op vrije dagen"
+          }
+        }
+      }
+    },
+    "Do you usually drink caffeine?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do you usually drink caffeine?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drink je normaal cafeïne?"
+          }
+        }
+      }
+    },
+    "What do you drink on a normal day?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What do you drink on a normal day?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wat drink je op een gewone dag?"
+          }
+        }
+      }
+    },
+    "Coffee": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coffee"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koffie"
+          }
+        }
+      }
+    },
+    "Tea": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tea"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thee"
+          }
+        }
+      }
+    },
+    "Soft drinks": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Soft drinks"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frisdrank"
+          }
+        }
+      }
+    },
+    "Energy drinks": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Energy drinks"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Energiedrank"
+          }
+        }
+      }
+    },
+    "Does caffeine affect you strongly?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Does caffeine affect you strongly?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heeft cafeïne een sterk effect op je?"
+          }
+        }
+      }
+    },
+    "Have you been told to avoid caffeine?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Have you been told to avoid caffeine?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Is je verteld dat je cafeïne moet vermijden?"
+          }
+        }
+      }
+    },
+    "Do you use oral contraception?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do you use oral contraception?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gebruik je de anticonceptiepil?"
+          }
+        }
+      }
+    },
+    "Optional. If you have any of these, your plan can use them.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional. If you have any of these, your plan can use them."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optioneel. Als je deze hulpmiddelen hebt, kan je plan ze gebruiken."
+          }
+        }
+      }
+    },
+    "Do you have a light box, light visor or light glasses?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do you have a light box, light visor or light glasses?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heb je een lichtbox, lichtvizier of lichtbril?"
+          }
+        }
+      }
+    },
+    "None": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geen"
+          }
+        }
+      }
+    },
+    "Light box or visor": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light box or visor"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lichtbox of lichtvizier"
+          }
+        }
+      }
+    },
+    "Light glasses": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light glasses"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lichtbril"
+          }
+        }
+      }
+    },
+    "Blue-blocking glasses": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blue-blocking glasses"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blauwlichtfilterbril"
+          }
+        }
+      }
+    },
+    "Yes, rating unknown": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yes, rating unknown"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ja, waarde onbekend"
+          }
+        }
+      }
+    },
+    "Yes, I know the rating": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yes, I know the rating"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ja, ik ken de beoordeling"
+          }
+        }
+      }
+    },
+    "Rating (mDFD)": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rating (mDFD)"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waarde (mDFD)"
+          }
+        }
+      }
+    },
+    "Your answers help tailor the timing advice. They are stored in your account.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your answers help tailor the timing advice. They are stored in your account."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je antwoorden helpen het timingadvies af te stemmen. Ze worden in je account bewaard."
+          }
+        }
+      }
+    },
+    "Are you pregnant or breastfeeding?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Are you pregnant or breastfeeding?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ben je zwanger of geef je borstvoeding?"
+          }
+        }
+      }
+    },
+    "Do you have bipolar disorder?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do you have bipolar disorder?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heb je een bipolaire stoornis?"
+          }
+        }
+      }
+    },
+    "Do you have an eye disease, or take medicine that makes your eyes sensitive to light?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do you have an eye disease, or take medicine that makes your eyes sensitive to light?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heb je een oogziekte, of gebruik je medicijnen die je ogen gevoelig maken voor licht?"
+          }
+        }
+      }
+    },
+    "Do you have a risk factor for blood clots, such as a past clot or a clotting disorder?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do you have a risk factor for blood clots, such as a past clot or a clotting disorder?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heb je een risicofactor voor bloedstolsels, zoals een eerdere trombose of een stollingsstoornis?"
+          }
+        }
+      }
+    },
+    "In the past 14 days, have you worked night or rotating shifts, or had a very irregular sleep schedule?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In the past 14 days, have you worked night or rotating shifts, or had a very irregular sleep schedule?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heb je de afgelopen 14 dagen in nacht- of wisseldiensten gewerkt, of een heel onregelmatig slaapritme gehad?"
+          }
+        }
+      }
+    },
+    "Check your bedtime and wake-up time.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check your bedtime and wake-up time."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controleer je bedtijd en opstatijd."
+          }
+        }
+      }
+    },
+    "Choose one of the available options.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose one of the available options."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kies een van de beschikbare opties."
+          }
+        }
+      }
+    },
+    "Add at least one drink to save this answer.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add at least one drink to save this answer."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voeg minstens één drankje toe om dit antwoord op te slaan."
+          }
+        }
+      }
+    },
+    "Enter a rating between 0.1 and 9.9.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a rating between 0.1 and 9.9."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vul een waarde tussen 0,1 en 9,9 in."
+          }
+        }
+      }
+    },
+    "No plan available": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No plan available"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geen plan beschikbaar"
+          }
+        }
+      }
+    },
+    "Based on your health answers, light and caffeine timing may not be right for you, so we can't build a plan. Your doctor can tell you what's safe when you travel.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Based on your health answers, light and caffeine timing may not be right for you, so we can't build a plan. Your doctor can tell you what's safe when you travel."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Op basis van je gezondheidsantwoorden is het timen van licht en cafeïne mogelijk niet geschikt voor je. Daarom kunnen we geen plan maken. Je arts kan je vertellen wat veilig is als je reist."
+          }
+        }
+      }
+    },
+    "Almost ready": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Almost ready"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bijna klaar"
+          }
+        }
+      }
+    },
+    "Go to the first one": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Go to the first one"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ga naar de eerste"
+          }
+        }
+      }
+    },
+    "Required answers complete": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Required answers complete"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verplichte antwoorden ingevuld"
+          }
+        }
+      }
+    },
+    "You can build a plan for any trip.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can build a plan for any trip."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je kunt een plan maken voor elke reis."
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuleren"
+          }
+        }
+      }
+    },
+    "Done": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klaar"
+          }
+        }
+      }
+    },
+    "Language": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Language"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taal"
+          }
+        }
+      }
+    },
+    "Appearance": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appearance"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weergave"
+          }
+        }
+      }
+    },
+    "Theme": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Theme"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thema"
+          }
+        }
+      }
+    },
+    "System": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Systeem"
+          }
+        }
+      }
+    },
+    "Light": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Licht"
+          }
+        }
+      }
+    },
+    "Dark": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dark"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Donker"
+          }
+        }
+      }
+    },
+    "Time format": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time format"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tijdnotatie"
+          }
+        }
+      }
+    },
+    "24-hour (14:30)": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "24-hour (14:30)"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "24-uursnotatie (14:30)"
+          }
+        }
+      }
+    },
+    "12-hour (2:30 PM)": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "12-hour (2:30 PM)"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "12-uursnotatie (2:30 PM)"
+          }
+        }
+      }
+    },
+    "Timeline categories": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timeline categories"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tijdlijncategorieën"
+          }
+        }
+      }
+    },
+    "Hide a category to keep your timeline calmer. Its steps stay in your plan.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide a category to keep your timeline calmer. Its steps stay in your plan."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verberg een categorie om je tijdlijn rustiger te maken. De stappen blijven gewoon in je plan."
+          }
+        }
+      }
+    },
+    "Sleep": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sleep"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slapen"
+          }
+        }
+      }
+    },
+    "Caffeine": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caffeine"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cafeïne"
+          }
+        }
+      }
+    },
+    "Travel": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Travel"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reizen"
+          }
+        }
+      }
+    },
+    "Replay walkthrough": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replay walkthrough"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rondleiding opnieuw bekijken"
+          }
+        }
+      }
+    },
+    "The short tour from your first trip": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The short tour from your first trip"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De korte uitleg die je bij je eerste reis zag"
+          }
+        }
+      }
+    },
+    "ChronoFlow follows your phone's language, and uses English if your phone is set to a language we don't offer yet. Pick a language here only if you want something different.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChronoFlow follows your phone's language, and uses English if your phone is set to a language we don't offer yet. Pick a language here only if you want something different."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChronoFlow volgt de taal van je telefoon en gebruikt Engels als je telefoon is ingesteld op een taal die we nog niet aanbieden. Kies hier alleen een taal als je iets anders wilt."
+          }
+        }
+      }
+    },
+    "Phone language": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Phone language"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefoontaal"
+          }
+        }
+      }
+    },
+    "English": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "English"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "English"
+          }
+        }
+      }
+    },
+    "Dutch": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dutch"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nederlands"
+          }
+        }
+      }
+    },
+    "Saved. ChronoFlow follows your phone.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved. ChronoFlow follows your phone."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opgeslagen. ChronoFlow volgt je telefoon."
+          }
+        }
+      }
+    },
+    "Saved. The app is in English.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved. The app is in English."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opgeslagen. De app is in het Engels."
+          }
+        }
+      }
+    },
+    "Saved. The app is in Dutch.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved. The app is in Dutch."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opgeslagen. De app is in het Nederlands."
+          }
+        }
+      }
+    },
+    "Password": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wachtwoord"
+          }
+        }
+      }
+    },
+    "Change your password": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change your password"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wijzig je wachtwoord"
+          }
+        }
+      }
+    },
+    "Current password": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current password"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Huidig wachtwoord"
+          }
+        }
+      }
+    },
+    "New password": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New password"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nieuw wachtwoord"
+          }
+        }
+      }
+    },
+    "Confirm new password": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm new password"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bevestig je nieuwe wachtwoord"
+          }
+        }
+      }
+    },
+    "Change password": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change password"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wachtwoord wijzigen"
+          }
+        }
+      }
+    },
+    "The passwords don't match yet.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The passwords don't match yet."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De wachtwoorden komen nog niet overeen."
+          }
+        }
+      }
+    },
+    "Enter your password.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter your password."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vul je wachtwoord in."
+          }
+        }
+      }
+    },
+    "Password updated": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password updated"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wachtwoord bijgewerkt"
+          }
+        }
+      }
+    },
+    "Check the highlighted field.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the highlighted field."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controleer het gemarkeerde veld."
+          }
+        }
+      }
+    },
+    "The provided password was incorrect.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The provided password was incorrect."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Het opgegeven wachtwoord is onjuist."
+          }
+        }
+      }
+    },
+    "Two-factor authentication": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Two-factor authentication"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tweestapsverificatie"
+          }
+        }
+      }
+    },
+    "A code from an app when you sign in": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A code from an app when you sign in"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een code uit een app bij het inloggen"
+          }
+        }
+      }
+    },
+    "On": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aan"
+          }
+        }
+      }
+    },
+    "Off": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uit"
+          }
+        }
+      }
+    },
+    "Ask for a code from an authenticator app each time you sign in with your password, so a stolen password isn't enough.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask for a code from an authenticator app each time you sign in with your password, so a stolen password isn't enough."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vraag bij elke keer inloggen met je wachtwoord om een code uit een authenticator-app, zodat een gestolen wachtwoord niet genoeg is."
+          }
+        }
+      }
+    },
+    "You need an authenticator app, like the one built into Passwords on iPhone.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You need an authenticator app, like the one built into Passwords on iPhone."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je hebt een authenticator-app nodig, zoals die in Wachtwoorden op de iPhone."
+          }
+        }
+      }
+    },
+    "You get recovery codes for when you lose your phone.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You get recovery codes for when you lose your phone."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je krijgt herstelcodes voor als je je telefoon kwijtraakt."
+          }
+        }
+      }
+    },
+    "Signing in with a passkey doesn't ask for a code.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signing in with a passkey doesn't ask for a code."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inloggen met een passkey vraagt geen code."
+          }
+        }
+      }
+    },
+    "Turn on two-factor": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn on two-factor"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tweestapsverificatie aanzetten"
+          }
+        }
+      }
+    },
+    "You'll be asked for your password first.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You'll be asked for your password first."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je wordt eerst om je wachtwoord gevraagd."
+          }
+        }
+      }
+    },
+    "1 · Scan this code with your authenticator app": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 · Scan this code with your authenticator app"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 · Scan deze code met je authenticator-app"
+          }
+        }
+      }
+    },
+    "Using this phone? Copy the setup key into the app instead.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Using this phone? Copy the setup key into the app instead."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gebruik je deze telefoon? Kopieer dan de instelsleutel naar de app."
+          }
+        }
+      }
+    },
+    "Copy": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopiëren"
+          }
+        }
+      }
+    },
+    "2 · Enter the 6-digit code it shows": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2 · Enter the 6-digit code it shows"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2 · Vul de getoonde 6-cijferige code in"
+          }
+        }
+      }
+    },
+    "6-digit code": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "6-digit code"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "6-cijferige code"
+          }
+        }
+      }
+    },
+    "QR code for your authenticator app": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR code for your authenticator app"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR-code voor je authenticator-app"
+          }
+        }
+      }
+    },
+    "Recovery codes": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recovery codes"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herstelcodes"
+          }
+        }
+      }
+    },
+    "Show recovery codes": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show recovery codes"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herstelcodes tonen"
+          }
+        }
+      }
+    },
+    "Each code works once and is then replaced": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Each code works once and is then replaced"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elke code werkt één keer en wordt daarna vervangen"
+          }
+        }
+      }
+    },
+    "If you lose your phone, sign in with one of these. Each code works once and is then replaced. Keep them somewhere safe.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you lose your phone, sign in with one of these. Each code works once and is then replaced. Keep them somewhere safe."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raak je je telefoon kwijt, log dan in met een van deze codes. Elke code werkt één keer en wordt daarna vervangen. Bewaar ze op een veilige plek."
+          }
+        }
+      }
+    },
+    "Download": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloaden"
+          }
+        }
+      }
+    },
+    "Make new codes": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make new codes"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nieuwe codes maken"
+          }
+        }
+      }
+    },
+    "Your current codes stop working": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your current codes stop working"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je huidige codes werken dan niet meer"
+          }
+        }
+      }
+    },
+    "Turn off two-factor": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn off two-factor"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tweestapsverificatie uitzetten"
+          }
+        }
+      }
+    },
+    "Sign in with only your password or passkey": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in with only your password or passkey"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log in met alleen je wachtwoord of passkey"
+          }
+        }
+      }
+    },
+    "Each of these asks for your password first.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Each of these asks for your password first."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elk van deze vraagt eerst om je wachtwoord."
+          }
+        }
+      }
+    },
+    "Since {{date}}": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Since {{date}}"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sinds {{date}}"
+          }
+        }
+      }
+    },
+    "Confirm it's you": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm it's you"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bevestig dat jij het bent"
+          }
+        }
+      }
+    },
+    "Checking…": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking…"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controleren…"
+          }
+        }
+      }
+    },
+    "Enter your password to turn on two-factor authentication.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter your password to turn on two-factor authentication."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voer je wachtwoord in om tweestapsverificatie aan te zetten."
+          }
+        }
+      }
+    },
+    "Enter your password to turn off two-factor authentication.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter your password to turn off two-factor authentication."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voer je wachtwoord in om tweestapsverificatie uit te zetten."
+          }
+        }
+      }
+    },
+    "Enter your password to show your recovery codes.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter your password to show your recovery codes."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voer je wachtwoord in om je herstelcodes te tonen."
+          }
+        }
+      }
+    },
+    "Enter your password to make new recovery codes. Your current codes stop working.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter your password to make new recovery codes. Your current codes stop working."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voer je wachtwoord in om nieuwe herstelcodes te maken. Je huidige codes werken dan niet meer."
+          }
+        }
+      }
+    },
+    "Continue": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doorgaan"
+          }
+        }
+      }
+    },
+    "Turn off": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn off"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uitzetten"
+          }
+        }
+      }
+    },
+    "Show codes": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show codes"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codes tonen"
+          }
+        }
+      }
+    },
+    "Needs a connection.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs a connection."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbinding nodig."
+          }
+        }
+      }
+    },
+    "Too many attempts.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too many attempts."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te veel pogingen."
+          }
+        }
+      }
+    },
+    "Something went wrong": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Something went wrong"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er ging iets mis"
+          }
+        }
+      }
+    },
+    "That code didn't work. Codes change every 30 seconds; try the newest one.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That code didn't work. Codes change every 30 seconds; try the newest one."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die code werkt niet. Codes veranderen elke 30 seconden; probeer de nieuwste code."
+          }
+        }
+      }
+    },
+    "Enter the 6-digit code from your authenticator app.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the 6-digit code from your authenticator app."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vul de 6-cijferige code uit je authenticator-app in."
+          }
+        }
+      }
+    },
+    "Two-factor is on. Save your recovery codes now.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Two-factor is on. Save your recovery codes now."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tweestapsverificatie staat aan. Bewaar nu je herstelcodes."
+          }
+        }
+      }
+    },
+    "Two-factor authentication is already on.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Two-factor authentication is already on."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tweestapsverificatie staat al aan."
+          }
+        }
+      }
+    },
+    "Two-factor authentication is off.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Two-factor authentication is off."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tweestapsverificatie staat uit."
+          }
+        }
+      }
+    },
+    "Start two-factor setup again.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start two-factor setup again."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start de tweestapsverificatie opnieuw op."
+          }
+        }
+      }
+    },
+    "Try again in {{seconds}} seconds.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try again in {{seconds}} seconds."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Probeer het over {{seconds}} seconden opnieuw."
+          }
+        }
+      }
+    },
+    "Forgot password?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forgot password?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wachtwoord vergeten?"
+          }
+        }
+      }
+    },
+    "Reset your password?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset your password?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je wachtwoord opnieuw instellen?"
+          }
+        }
+      }
+    },
+    "Send link": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send link"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link sturen"
+          }
+        }
+      }
+    },
+    "We'll send a link to {{email}}. You stay signed in on this phone.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We'll send a link to {{email}}. You stay signed in on this phone."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We sturen een link naar {{email}}. Je blijft op deze telefoon aangemeld."
+          }
+        }
+      }
+    },
+    "Check your inbox.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check your inbox."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bekijk je inbox."
+          }
+        }
+      }
+    },
+    "Use at least {{min}} characters.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use at least {{min}} characters."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gebruik minstens {{min}} tekens."
+          }
+        }
+      }
+    },
+    "Use both uppercase and lowercase letters.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use both uppercase and lowercase letters."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gebruik hoofdletters en kleine letters."
+          }
+        }
+      }
+    },
+    "Use at least one number.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use at least one number."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gebruik minstens één cijfer."
+          }
+        }
+      }
+    },
+    "Use at least one symbol.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use at least one symbol."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gebruik minstens één symbool."
+          }
+        }
+      }
+    },
+    "Your plan": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your plan"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je plan"
+          }
+        }
+      }
+    },
+    "Payment processing.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Payment processing."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Betaling wordt verwerkt."
+          }
+        }
+      }
+    },
+    "Your credit shows up here in a minute or two. You can leave this screen.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your credit shows up here in a minute or two. You can leave this screen."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je tegoed verschijnt hier over een minuut of twee. Je kunt dit scherm verlaten."
+          }
+        }
+      }
+    },
+    "Your last payment failed.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your last payment failed."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je laatste betaling is mislukt."
+          }
+        }
+      }
+    },
+    "Update your payment method to keep unlimited trips.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update your payment method to keep unlimited trips."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Werk je betaalmethode bij om onbeperkt reizen te behouden."
+          }
+        }
+      }
+    },
+    "Update your payment method to get unlimited trips back.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update your payment method to get unlimited trips back."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Werk je betaalmethode bij om weer onbeperkt te kunnen reizen."
+          }
+        }
+      }
+    },
+    "Unlimited trips": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlimited trips"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onbeperkt reizen"
+          }
+        }
+      }
+    },
+    "Cancelled": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelled"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opgezegd"
+          }
+        }
+      }
+    },
+    "Ends on {{date}}. After that, you can buy credits per trip.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ends on {{date}}. After that, you can buy credits per trip."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eindigt op {{date}}. Daarna kun je tegoed per reis kopen."
+          }
+        }
+      }
+    },
+    "Renews on {{date}} · {{interval}}": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renews on {{date}} · {{interval}}"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wordt verlengd op {{date}} · {{interval}}"
+          }
+        }
+      }
+    },
+    "yearly": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "yearly"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "jaarlijks"
+          }
+        }
+      }
+    },
+    "monthly": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "monthly"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "maandelijks"
+          }
+        }
+      }
+    },
+    "One credit plans one direction of a trip, so a return trip uses 2. Small time shifts are free.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One credit plans one direction of a trip, so a return trip uses 2. Small time shifts are free."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eén tegoed plant één richting van een reis, dus een retourreis kost er 2. Kleine tijdsverschillen zijn gratis."
+          }
+        }
+      }
+    },
+    "Credits and plans aren't sold in the app. Your balance updates here automatically.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Credits and plans aren't sold in the app. Your balance updates here automatically."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tegoed en abonnementen worden niet in de app verkocht. Je saldo wordt hier automatisch bijgewerkt."
+          }
+        }
+      }
+    },
+    "Try again": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try again"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opnieuw proberen"
+          }
+        }
+      }
+    },
+    "Delete account": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete account"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account verwijderen"
+          }
+        }
+      }
+    },
+    "Delete your account?": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete your account?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je account verwijderen?"
+          }
+        }
+      }
+    },
+    "Your trips, plans, body-clock answers and any credits left are deleted for good, here and on the web. This can't be undone.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your trips, plans, body-clock answers and any credits left are deleted for good, here and on the web. This can't be undone."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je reizen, plannen, antwoorden over je lichaamsklok en resterende credits worden definitief verwijderd, hier en op het web. Dit kun je niet ongedaan maken."
+          }
+        }
+      }
+    },
+    "Delete my account": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete my account"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mijn account verwijderen"
+          }
+        }
+      }
+    },
+    "You'll be asked for your password next.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You'll be asked for your password next."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daarna vragen we om je wachtwoord."
+          }
+        }
+      }
+    },
+    "Keep my account": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep my account"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mijn account houden"
+          }
+        }
+      }
+    },
+    "Enter your password to delete your account. This can't be undone.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter your password to delete your account. This can't be undone."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voer je wachtwoord in om je account te verwijderen. Dit kun je niet ongedaan maken."
+          }
+        }
+      }
+    },
+    "Your subscription could not be cancelled. Please try deleting your account again.": {
+      "comment": "17h · RN settings copy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your subscription could not be cancelled. Please try deleting your account again."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je abonnement kon niet worden opgezegd. Probeer je account opnieuw te verwijderen."
           }
         }
       }

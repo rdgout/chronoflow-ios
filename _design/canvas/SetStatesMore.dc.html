@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>More settings states</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="ds/chronoflow/components/bundle.css">
+<script src="ds/chronoflow/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Figtree';src:url("/_blob/74876cc764ebb15bf4ae98bcdbf3140c") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/741b1ce40b46479a73d934d0d5be9774") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/079d83fda74d66d1f31e35072f71201d") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/991830890debdac04981f1a27656ed5c") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Fraunces';src:url("/_blob/fc815083784d00806d267d81858d2414") format("woff2");font-weight:400 500;font-style:normal;font-display:swap}
+body{margin:0}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 375px; min-height: 2300px; box-sizing: border-box; padding: 24px 16px 40px; display: flex; flex-direction: column; gap: 28px; background: var(--background); color: var(--foreground); font-family: var(--font-sans);">
+  <header style="display: flex; flex-direction: column; gap: 6px;">
+    <h1 style="margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 28px; line-height: 34px; letter-spacing: -0.01em;">More settings states</h1>
+    <p style="margin: 0; font-size: 15px; line-height: 22px; color: var(--muted-foreground);">Loading, unavailable, refused changes and failures across Settings.</p>
+  </header>
+  <section style="display: flex; flex-direction: column; gap: 12px;">
+    <h3 style="margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">Loading (any settings page)</h3>
+    <div style="display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 26px; border: 1px solid var(--border); background: var(--card); color: var(--card-foreground); box-shadow: var(--shadow-soft);">
+      <div style="display: flex; align-items: center; gap: 4px; height: 44px; color: var(--muted-foreground); font-size: 16px;"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>Settings</div>
+      <div style="width: 55%; height: 32px; border-radius: 10px; overflow: hidden; flex-shrink: 0;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div>
+      <div aria-busy="true" aria-label="Loading" style="border-radius: 22px; border: 1px solid var(--border); overflow: hidden;"><div style="display: flex; align-items: center; gap: 12px; height: 64px; padding: 0 16px;"><div style="width: 36px; height: 36px; border-radius: 9999px; overflow: hidden; flex-shrink: 0;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div><div style="width: 140px; height: 16px; border-radius: 9999px; overflow: hidden; flex-shrink: 0;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div></div><div style="display: flex; align-items: center; gap: 12px; height: 64px; padding: 0 16px; border-top: 1px solid var(--border);"><div style="width: 36px; height: 36px; border-radius: 9999px; overflow: hidden; flex-shrink: 0;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div><div style="width: 180px; height: 16px; border-radius: 9999px; overflow: hidden; flex-shrink: 0;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div></div><div style="display: flex; align-items: center; gap: 12px; height: 64px; padding: 0 16px; border-top: 1px solid var(--border);"><div style="width: 36px; height: 36px; border-radius: 9999px; overflow: hidden; flex-shrink: 0;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div><div style="width: 120px; height: 16px; border-radius: 9999px; overflow: hidden; flex-shrink: 0;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div></div></div>
+    </div>
+    <p style="margin: 0; font-size: 13px; line-height: 18px; color: var(--muted-foreground);">Account, Security, Body clock, Preferences, Reminders and two-factor setup all use this: the real title, then skeleton rows in the page's own layout. Only shown before the account is stored on the phone.</p>
+  </section>
+  <section style="display: flex; flex-direction: column; gap: 12px;">
+    <h3 style="margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">Not available yet</h3>
+    <div style="display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 26px; border: 1px solid var(--border); background: var(--card); color: var(--card-foreground); box-shadow: var(--shadow-soft);">
+      <div style="display: flex; align-items: center; gap: 4px; height: 44px; color: var(--muted-foreground); font-size: 16px;"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>Settings</div>
+      <h2 style="margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 24px; line-height: 32px; letter-spacing: -0.01em;">Your account isn't on this phone yet</h2>
+      <p style="margin: 0; font-size: 16px; line-height: 24px; color: var(--muted-foreground);">We need a connection once to load your settings. After that they work offline.</p>
+      <div style="display: grid; gap: 6px;"><button type="button" class="inline-flex shrink-0 items-center justify-center gap-2 text-sm font-medium whitespace-nowrap transition-colors rounded-full border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-6" style="height: 48px; text-decoration: none; color: var(--foreground); border-width: 1px; font: inherit; font-size: 14px; font-weight: 500;">Try again</button></div>
+    </div>
+    <p style="margin: 0; font-size: 13px; line-height: 18px; color: var(--muted-foreground);">When loading fails before anything is stored. The page title stays, so the user knows where they are.</p>
+  </section>
+  <section style="display: flex; flex-direction: column; gap: 12px;">
+    <h3 style="margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">A synced change the server refused</h3>
+    <div role="alert" style="display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 8px 8px 8px 16px; box-sizing: border-box; border-radius: 22px; border: 1px solid var(--border); background: var(--popover); color: var(--popover-foreground); box-shadow: var(--shadow-soft); font-size: 14px; line-height: 20px;"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: var(--destructive);"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="8" y2="12"></line><line x1="12" x2="12.01" y1="16" y2="16"></line></svg><span style="flex: 1;">Couldn't save your sleep times, so we undid the change.</span><x-import component-from-global-scope="ChronoFlow.Button" variant="ghost">Details</x-import></div>
+    <div role="alert" style="display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 8px 8px 8px 16px; box-sizing: border-box; border-radius: 22px; border: 1px solid var(--border); background: var(--popover); color: var(--popover-foreground); box-shadow: var(--shadow-soft); font-size: 14px; line-height: 20px;"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: var(--destructive);"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="8" y2="12"></line><line x1="12" x2="12.01" y1="16" y2="16"></line></svg><span style="flex: 1;">Couldn't save "Avoid bright light" as done, so we undid it.</span><x-import component-from-global-scope="ChronoFlow.Button" variant="ghost">Details</x-import></div>
+    <p style="margin: 0; font-size: 13px; line-height: 18px; color: var(--muted-foreground);">The change is reverted on screen and a toast names it. No Try again, because retrying gives the same answer. Details opens the reason when the server sends one. This replaces the generic "Something went wrong".</p>
+  </section>
+  <section style="display: flex; flex-direction: column; gap: 12px;">
+    <h3 style="margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">Signing out with changes waiting</h3>
+    <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px; border-radius: 26px; border: 1px solid var(--border); background: var(--card); color: var(--card-foreground); box-shadow: var(--shadow-soft);">
+      <p style="margin: 0; font-size: 14px; line-height: 22px;">Sign out opens a confirm sheet that lists the waiting changes. See the board "Sign out with unsynced changes".</p>
+    </div>
+    <p style="margin: 0; font-size: 13px; line-height: 18px; color: var(--muted-foreground);">Without waiting changes, Sign out works as before, without a confirm step.</p>
+  </section>
+  <section style="display: flex; flex-direction: column; gap: 12px;">
+    <h3 style="margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">Data download failed</h3>
+    <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px; border-radius: 26px; border: 1px solid var(--border); background: var(--card); color: var(--card-foreground); box-shadow: var(--shadow-soft);">
+      <div role="alert" style="display: flex; gap: 10px; padding: 12px 14px; border-radius: 18px; background: color-mix(in oklab, var(--destructive) 10%, var(--card)); border: 1px solid color-mix(in oklab, var(--destructive) 35%, transparent); color: var(--card-foreground);"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px; color: var(--destructive);"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="8" y2="12"></line><line x1="12" x2="12.01" y1="16" y2="16"></line></svg><span style="flex: 1; font-size: 14px; line-height: 20px;"><span style="display: block; font-weight: 600;">We couldn't prepare your download.</span>Nothing was sent. Try again in a few minutes.</span></div>
+      <div style="display: grid; gap: 6px;"><button type="button" class="inline-flex shrink-0 items-center justify-center gap-2 text-sm font-medium whitespace-nowrap transition-colors rounded-full border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-6" style="height: 48px; text-decoration: none; color: var(--foreground); border-width: 1px; font: inherit; font-size: 14px; font-weight: 500;">Try again</button></div>
+    </div>
+    <p style="margin: 0; font-size: 13px; line-height: 18px; color: var(--muted-foreground);">Shown on Your data, above the Download button.</p>
+  </section>
+  <section style="display: flex; flex-direction: column; gap: 12px;">
+    <h3 style="margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">Two-factor activation failed</h3>
+    <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px; border-radius: 26px; border: 1px solid var(--border); background: var(--card); color: var(--card-foreground); box-shadow: var(--shadow-soft);">
+      <x-import component-from-global-scope="ChronoFlow.Field" id="tf-err" label="6-digit code" inputmode="numeric" default-value="482913" error="That code didn't work. Codes change every 30 seconds; try the newest one."></x-import>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px; border-radius: 26px; border: 1px solid var(--border); background: var(--card); color: var(--card-foreground); box-shadow: var(--shadow-soft);">
+      <div role="alert" style="display: flex; gap: 10px; padding: 12px 14px; border-radius: 18px; background: color-mix(in oklab, var(--destructive) 10%, var(--card)); border: 1px solid color-mix(in oklab, var(--destructive) 35%, transparent); color: var(--card-foreground);"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px; color: var(--destructive);"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="8" y2="12"></line><line x1="12" x2="12.01" y1="16" y2="16"></line></svg><span style="flex: 1; font-size: 14px; line-height: 20px;"><span style="display: block; font-weight: 600;">Couldn't turn on two-factor.</span>Nothing changed on your account. Try again in a moment.</span></div>
+      <div style="display: grid; gap: 6px;"><button type="button" class="inline-flex shrink-0 items-center justify-center gap-2 text-sm font-medium whitespace-nowrap transition-colors rounded-full bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6" style="height: 48px; text-decoration: none; border-width: 0; font: inherit; font-size: 14px; font-weight: 500;">Try again</button></div>
+    </div>
+    <p style="margin: 0; font-size: 13px; line-height: 18px; color: var(--muted-foreground);">A wrong code stays a field error. A server failure shows the banner; the QR code and secret stay on screen so the user doesn't have to scan again.</p>
+  </section>
+  <section style="display: flex; flex-direction: column; gap: 12px;">
+    <h3 style="margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">Notifications not asked yet</h3>
+    <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px; border-radius: 26px; border: 1px solid var(--border); background: var(--card); color: var(--card-foreground); box-shadow: var(--shadow-soft);">
+      <p style="margin: 0; font-size: 14px; line-height: 22px;">See the board "Reminders, permission not asked yet": reminders are off and one button starts the phone's permission prompt.</p>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":375,"height":2300}}'>
+class Component extends DCLogic {
+  renderVals() { return { theme: this.props.theme ?? 'light' }; }
+}
+</script>
+</body>
+</html>

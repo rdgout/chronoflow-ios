@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Settings shared states</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="ds/chronoflow/components/bundle.css">
+<script src="ds/chronoflow/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Figtree';src:url("/_blob/74876cc764ebb15bf4ae98bcdbf3140c") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/741b1ce40b46479a73d934d0d5be9774") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/079d83fda74d66d1f31e35072f71201d") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/991830890debdac04981f1a27656ed5c") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Fraunces';src:url("/_blob/fc815083784d00806d267d81858d2414") format("woff2");font-weight:400 500;font-style:normal;font-display:swap}
+body{margin:0}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 375px; height: 2450px; box-sizing: border-box; overflow: hidden; padding: 24px 16px; display: flex; flex-direction: column; gap: 28px; background: var(--background); color: var(--foreground); font-family: var(--font-sans);">
+
+  <section style="display: flex; flex-direction: column; gap: 12px;">
+    <h2 style="margin: 0; font-family: var(--font-sans); font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">Body clock readiness</h2>
+    <div style="display: flex; align-items: center; gap: 12px; padding: 20px; border-radius: 26px; border: 1px solid var(--border); background: var(--card); box-shadow: var(--shadow-soft);">
+      <span aria-hidden="true" style="display: grid; place-items: center; width: 36px; height: 36px; flex-shrink: 0; border-radius: 9999px; background: var(--dawn); color: var(--dawn-foreground);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span>
+      <span style="flex: 1;"><span style="display: block; font-size: 16px; line-height: 24px; font-weight: 600;">Required answers complete</span><span style="display: block; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">You can build a plan for any trip.</span></span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px; border-radius: 26px; border: 1px solid var(--border); background: var(--card); box-shadow: var(--shadow-soft);">
+      <p style="margin: 0; font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dawn-text);">Almost ready</p>
+      <p style="margin: 0; font-family: var(--font-display); font-size: 20px; line-height: 28px; letter-spacing: -0.01em;">We need 3 more answers before we can build a plan</p>
+      <x-import component-from-global-scope="ChronoFlow.DayProgress" done="{{six}}" total="{{nine}}"></x-import>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px; padding: 20px; border-radius: 26px; border: 1px solid color-mix(in oklab, var(--dawn) 40%, transparent); background: color-mix(in oklab, var(--dawn) 10%, var(--card));">
+      <p style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 16px; line-height: 24px; font-weight: 600;">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--dawn-text);"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>
+        No plan available
+      </p>
+      <p style="margin: 0; font-size: 14px; line-height: 20px;">Based on your health answers, light and caffeine timing may not be right for you, so we can't build a plan. Your doctor can tell you what's safe when you travel.</p>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 12px;">
+    <h2 style="margin: 0; font-family: var(--font-sans); font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">Toasts (bottom of the screen)</h2>
+    <div role="status" style="display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 12px 16px; box-sizing: border-box; border-radius: 22px; border: 1px solid var(--border); background: var(--popover); color: var(--popover-foreground); box-shadow: var(--shadow-soft); font-size: 14px; line-height: 20px;">
+      <span aria-hidden="true" style="display: grid; place-items: center; width: 24px; height: 24px; flex-shrink: 0; border-radius: 9999px; background: var(--dawn); color: var(--dawn-foreground);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span>
+      <span style="flex: 1;">Saved</span>
+    </div>
+    <div role="alert" style="display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 8px 8px 8px 16px; box-sizing: border-box; border-radius: 22px; border: 1px solid var(--border); background: var(--popover); color: var(--popover-foreground); box-shadow: var(--shadow-soft); font-size: 14px; line-height: 20px;">
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: var(--destructive);"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="8" y2="12"></line><line x1="12" x2="12.01" y1="16" y2="16"></line></svg>
+      <span style="flex: 1;">Couldn't save. Check your connection.</span>
+      <x-import component-from-global-scope="ChronoFlow.Button" variant="ghost">Try again</x-import>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 12px;">
+    <h2 style="margin: 0; font-family: var(--font-sans); font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">Reminders not supported</h2>
+    <x-import component-from-global-scope="ChronoFlow.Notice" tone="info" title="This device can't show reminders.">You can still follow every step in your plan.</x-import>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 12px;">
+    <h2 style="margin: 0; font-family: var(--font-sans); font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">Offline-disabled row</h2>
+    <div style="border-radius: 22px; border: 1px solid var(--border); background: var(--card); overflow: hidden;">
+      <button type="button" disabled="" aria-describedby="needs-conn" style="display: flex; width: 100%; align-items: center; gap: 12px; min-height: 64px; padding: 10px 16px; box-sizing: border-box; border: 0; background: transparent; color: var(--card-foreground); font: inherit; text-align: left; opacity: 0.5;">
+        <span aria-hidden="true" style="display: grid; place-items: center; width: 36px; height: 36px; flex-shrink: 0; border-radius: 9999px; background: var(--muted);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"></path><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"></circle></svg></span>
+        <span style="flex: 1; font-size: 16px; line-height: 24px; font-weight: 500;">Add a passkey</span>
+      </button>
+    </div>
+    <p id="needs-conn" style="margin: 0; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">Needs a connection.</p>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 12px;">
+    <h2 style="margin: 0; font-family: var(--font-sans); font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">Sync status (under the profile card)</h2>
+    <div style="display: flex; flex-direction: column; gap: 10px; padding: 14px 12px; border-radius: 22px; border: 1px solid var(--border); background: var(--card);">
+      <p role="status" style="margin: 0; padding: 0 4px; display: flex; align-items: center; gap: 6px; font-size: 13px; line-height: 18px; color: var(--muted-foreground); font-variant-numeric: tabular-nums;"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path><path d="m9 14 2 2 4-4"></path></svg><span>Synced 2 min ago</span></p>
+      <p role="status" style="margin: 0; padding: 0 4px; display: flex; align-items: center; gap: 6px; font-size: 13px; line-height: 18px; color: var(--muted-foreground); font-variant-numeric: tabular-nums;"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 13v8"></path><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path><path d="m8 17 4-4 4 4"></path></svg><span>2 changes waiting to sync</span></p>
+      <p role="status" style="margin: 0; padding: 0 4px; display: flex; align-items: center; gap: 6px; font-size: 13px; line-height: 18px; color: var(--muted-foreground); font-variant-numeric: tabular-nums;"><svg aria-hidden="true" class="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg><span>Syncing…</span></p>
+      <p role="status" style="margin: 0; padding: 0 4px; display: flex; align-items: center; gap: 6px; font-size: 13px; line-height: 18px; color: var(--muted-foreground); font-variant-numeric: tabular-nums;"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 2 20 20"></path><path d="M5.782 5.782A7 7 0 0 0 9 19h8.5a4.5 4.5 0 0 0 1.307-.193"></path><path d="M21.532 16.5A4.5 4.5 0 0 0 17.5 10h-1.79A7.008 7.008 0 0 0 10 5.07"></path></svg><span>Saved on this phone · syncs when you're online</span></p>
+    </div>
+    <p style="margin: 0; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">One quiet line, never a banner. No action needed from the user.</p>
+    <div aria-label="Sync wording" style="border-radius: 18px; border: 1px solid var(--border); background: var(--card); overflow: hidden;"><div style="display: grid; grid-template-columns: 96px 1fr; gap: 10px; padding: 10px 12px;"><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground);">Under 1 minute</span><span style="font-size: 13px; line-height: 18px;"><span style="display: block;">Synced just now</span><span lang="nl" style="display: block; color: var(--muted-foreground);">Zojuist gesynchroniseerd</span></span></div><div style="display: grid; grid-template-columns: 96px 1fr; gap: 10px; padding: 10px 12px; border-top: 1px solid var(--border);"><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground);">1–59 minutes</span><span style="font-size: 13px; line-height: 18px;"><span style="display: block;">Synced 2 min ago</span><span lang="nl" style="display: block; color: var(--muted-foreground);">2 min geleden gesynchroniseerd</span></span></div><div style="display: grid; grid-template-columns: 96px 1fr; gap: 10px; padding: 10px 12px; border-top: 1px solid var(--border);"><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground);">1–23 hours</span><span style="font-size: 13px; line-height: 18px;"><span style="display: block;">Synced 1 hour ago · Synced 3 hours ago</span><span lang="nl" style="display: block; color: var(--muted-foreground);">1 uur geleden · 3 uur geleden gesynchroniseerd</span></span></div><div style="display: grid; grid-template-columns: 96px 1fr; gap: 10px; padding: 10px 12px; border-top: 1px solid var(--border);"><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground);">Yesterday</span><span style="font-size: 13px; line-height: 18px;"><span style="display: block;">Synced yesterday</span><span lang="nl" style="display: block; color: var(--muted-foreground);">Gisteren gesynchroniseerd</span></span></div><div style="display: grid; grid-template-columns: 96px 1fr; gap: 10px; padding: 10px 12px; border-top: 1px solid var(--border);"><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground);">2–6 days</span><span style="font-size: 13px; line-height: 18px;"><span style="display: block;">Synced 2 days ago</span><span lang="nl" style="display: block; color: var(--muted-foreground);">2 dagen geleden gesynchroniseerd</span></span></div><div style="display: grid; grid-template-columns: 96px 1fr; gap: 10px; padding: 10px 12px; border-top: 1px solid var(--border);"><span style="font-size: 13px; line-height: 18px; color: var(--muted-foreground);">7 days or more</span><span style="font-size: 13px; line-height: 18px;"><span style="display: block;">Synced on 24 Oct</span><span lang="nl" style="display: block; color: var(--muted-foreground);">Gesynchroniseerd op 24 okt</span></span></div></div>
+    <p style="margin: 0; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">The line updates once a minute while Settings is open. Never "0 min ago".</p>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 12px;">
+    <h2 style="margin: 0; font-family: var(--font-sans); font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">Validation error</h2>
+    <x-import component-from-global-scope="ChronoFlow.Card">
+      <x-import component-from-global-scope="ChronoFlow.Field" id="email-err" label="Email" type="email" default-value="rick@example" error="Enter a full email address, like name@example.com."></x-import>
+    </x-import>
+  </section>
+
+  <section lang="nl" style="display: flex; flex-direction: column; gap: 12px;">
+    <h2 style="margin: 0; font-family: var(--font-sans); font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">Long Dutch labels</h2>
+    <div style="border-radius: 22px; border: 1px solid var(--border); background: var(--card); overflow: hidden;">
+      <div style="display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 16px; box-sizing: border-box;">
+        <span style="flex: 1; min-width: 0;"><span style="display: block; font-size: 16px; line-height: 24px; font-weight: 500;">Tweestapsverificatie</span><span style="display: block; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">Een code uit een authenticatie-app wanneer je inlogt</span></span>
+        <x-import component-from-global-scope="ChronoFlow.Badge" variant="secondary">Uit</x-import>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 16px; box-sizing: border-box; border-top: 1px solid var(--border);">
+        <span style="flex: 1; min-width: 0;"><span style="display: block; font-size: 16px; line-height: 24px; font-weight: 500;">Betaalmethode bijwerken</span><span style="display: flex; margin-top: 6px;"><x-import component-from-global-scope="ChronoFlow.Badge" variant="dawn">Actie vereist</x-import></span></span>
+      </div>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+      <span style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; box-sizing: border-box; border-radius: 9999px; border: 2px solid var(--border); background: var(--card); font-size: 14px; font-weight: 500;">Ja, beoordeling onbekend</span>
+      <span style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; box-sizing: border-box; border-radius: 9999px; border: 2px solid var(--dawn); background: var(--card); font-size: 14px; font-weight: 600;">Ja, ik ken de beoordeling</span>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":375,"height":2450}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light', six: 6, nine: 9 };
+  }
+}
+</script>
+</body>
+</html>
