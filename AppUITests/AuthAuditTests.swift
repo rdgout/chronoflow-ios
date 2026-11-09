@@ -18,6 +18,7 @@ nonisolated class AuthAuditCase: ScreenTestCase {
     @MainActor fileprivate func auditReset(state: String) async throws {
         try await FontRegistry.register()
         for (language, appearance, xxLarge) in variants() {
+            let context = "Reset audit [\(language), \(appearance), xxLarge=\(xxLarge), \(state)]"
             let app = ScreenTestApp.makeApplication()
             app.launchArguments =
                 AuthUIFlow.arguments(language: language, xxLarge: xxLarge) + [
@@ -33,18 +34,24 @@ nonisolated class AuthAuditCase: ScreenTestCase {
             }
             app.launchMeasured()
             if state == "expired" {
-                XCTAssertTrue(app.textFields["forgot.email"].waitUntil(.exists, timeout: 12))
+                XCTAssertTrue(
+                    app.textFields["forgot.email"].waitUntil(.exists, timeout: 12),
+                    "\(context): expected Forgot email after opening the expired link")
             } else {
                 openResetFromMockMail(app)
                 if state != "form" {
                     submitPrefilled(app, screen: "reset", state: state)
                     if state == "done" {
-                        XCTAssertTrue(app.buttons["reset.continue"].waitUntil(.exists, timeout: 6))
+                        XCTAssertTrue(
+                            app.buttons["reset.continue"].waitUntil(.exists, timeout: 6),
+                            "\(context): expected Continue after resetting the password")
                     } else {
                         let finished = { () -> Bool in
                             app.secureTextFields["reset.password"].isEnabled
                         }
-                        XCTAssertTrue(UIWait.until(timeout: 6, condition: finished))
+                        XCTAssertTrue(
+                            UIWait.until(timeout: 6, condition: finished),
+                            "\(context): expected the password field to unlock after submitting")
                     }
                 }
             }
@@ -171,6 +178,7 @@ nonisolated class AuthAuditCase: ScreenTestCase {
     @MainActor fileprivate func auditSignInOrTwoFactor(mode: Int) async throws {
         try await FontRegistry.register()
         for (language, appearance, xxLarge) in variants() {
+            let context = "Auth audit [\(language), \(appearance), xxLarge=\(xxLarge), mode=\(mode)]"
             let app = ScreenTestApp.makeApplication()
             app.launchArguments =
                 AuthUIFlow.arguments(language: language, xxLarge: xxLarge) + [
@@ -181,11 +189,15 @@ nonisolated class AuthAuditCase: ScreenTestCase {
             app.launchMeasured()
             if mode == 0 { AuthUIFlow.openSignIn(app) }
             if mode > 0 {
-                XCTAssertTrue(app.textFields["two-factor.code"].waitUntil(.exists, timeout: 12))
+                XCTAssertTrue(
+                    app.textFields["two-factor.code"].waitUntil(.exists, timeout: 12),
+                    "\(context): expected Two-factor code after seed readiness")
                 let keyboardHidden = { () -> Bool in
                     !app.keyboards.firstMatch.exists
                 }
-                XCTAssertTrue(UIWait.until(timeout: 5, condition: keyboardHidden))
+                XCTAssertTrue(
+                    UIWait.until(timeout: 5, condition: keyboardHidden),
+                    "\(context): expected the keyboard to be hidden before auditing")
                 if mode == 2 {
                     AuthUIFlow.reveal(app.buttons["two-factor.toggle"], in: app)
                     app.buttons["two-factor.toggle"].tap()
@@ -209,25 +221,44 @@ nonisolated class AuthAuditCase: ScreenTestCase {
     @MainActor fileprivate func auditForgot(state: String) async throws {
         try await FontRegistry.register()
         for (language, appearance, xxLarge) in variants() {
+            let context = "Forgot audit [\(language), \(appearance), xxLarge=\(xxLarge), \(state)]"
             let app = launchForgotApp(
                 language: language, xxLarge: xxLarge, failure: state, offline: state == "offline",
                 appearance: appearance, seedScreen: true)
             openForgot(app)
             if state != "form" {
                 let field = app.textFields["forgot.email"]
-                field.tap()
-                field.typeText(state == "field" ? "invalid\n" : "unknown@example.com\n")
+                let email = state == "field" ? "invalid" : "unknown@example.com"
+                guard AuthUIFlow.type(email, into: field, in: app) else { return }
+                let submit = app.buttons["forgot.submit"]
+                AuthUIFlow.reveal(submit, in: app)
+                let frames = try UIWait.stableFrames([field, submit], timeout: 6)
+                let minimumErrorGap = frames[1].minY - frames[0].maxY + AuthTokens.fieldGap
+                submit.tap()
                 if state == "sent" {
-                    XCTAssertTrue(AuthUIFlow.control("forgot.notice", in: app).waitUntil(.exists, timeout: 6))
-                } else if state == "server" || state == "throttle" {
+                    XCTAssertTrue(
+                        AuthUIFlow.control("forgot.notice", in: app).waitUntil(.exists, timeout: 6),
+                        "\(context): expected the sent notice after submitting")
+                } else if state == "field" {
+                    // The inline error is accessibility-hidden; its copy is the field's VoiceOver hint.
+                    let received = { () -> Bool in
+                        field.exists && submit.exists && field.isEnabled && field.value as? String == email
+                            && submit.frame.minY - field.frame.maxY > minimumErrorGap
+                    }
+                    XCTAssertTrue(
+                        UIWait.until(timeout: 6, condition: received),
+                        "\(context): expected the inline email error to expand the field-to-submit gap beyond \(minimumErrorGap); field=\(field.frame), submit=\(submit.frame)"
+                    )
+                    XCTAssertFalse(
+                        AuthUIFlow.control("auth.banner", in: app).exists,
+                        "\(context): field validation must not show a server banner")
+                    XCTAssertFalse(
+                        AuthUIFlow.control("forgot.notice", in: app).exists,
+                        "\(context): invalid email must not show a sent notice")
+                } else {
                     XCTAssertTrue(
                         AuthUIFlow.control("auth.banner", in: app).waitUntil(.exists, timeout: 6),
-                        "Missing Forgot \(state) banner: \(language), \(appearance), xxLarge=\(xxLarge)")
-                } else {
-                    let received = { () -> Bool in
-                        field.isEnabled && field.value(forKey: "hasKeyboardFocus") as? Bool == true
-                    }
-                    XCTAssertTrue(UIWait.until(timeout: 6, condition: received))
+                        "\(context): expected the \(state) banner after submitting")
                 }
             }
             let identifiers =

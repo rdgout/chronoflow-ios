@@ -2234,3 +2234,9 @@ CoreSimulator 405). Identical preparation did not resolve dark parity; supersede
 - [x] Make `ForgotPasswordTests/testServerBannerClearsOnEdit` use the shared tap/focus/backoff typing helper before submission and after the server banner appears. Wait for the field to unlock and the edited banner to disappear; describe each assertion. The view intentionally resigns focus while submitting and restores it after failure, so banner existence alone does not guarantee keyboard focus.
 
 Validation: strict `make lint` and direct Swift 6/iOS 17 UI-test compilation pass. CoreSimulator is unavailable in this sandbox; runtime acceptance remains pending.
+
+- [x] Make Forgot audits focus before typing and submit explicitly. Wait for the rendered inline-error row to expand the measured email-to-submit gap for malformed email, rather than treating keyboard focus as proof of validation; wait for the offline banner as well as server/throttle banners. Add messages to every assertion in `AuthAuditTests.swift` and the shared Forgot entry, Sign in entry and keyboard-dismiss helpers.
+
+Validation: final strict `make lint`, direct Swift 6/iOS 17 UI-test compilation, 17 generator tests and all 125 resource/runner fixtures pass. `make quick` fails only at the unchanged `APICookieTests/realRedirectCookieHandlingIsDisabled` loopback bind (`Operation not permitted`); all other package suites pass. TripWizardTests is unchanged. No simulator execution is claimed because CoreSimulator is unavailable here. User-host evidence on `04727a2`: cold `make check` passed in 1104 seconds; the warm run reported these Forgot flakes plus the excluded wizard picker failure.
+
+Focused runtime acceptance: `make targeted DEVICES="17e" ONLY="AppUITests/ForgotPasswordTests AppUITests/ForgotAuditTests"`.

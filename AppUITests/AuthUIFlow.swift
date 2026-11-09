@@ -41,7 +41,8 @@ import XCTest
         let ready = { () -> Bool in
             button.exists || app.textFields["sign-in.email"].exists
         }
-        XCTAssertTrue(UIWait.until(timeout: 12, condition: ready))
+        XCTAssertTrue(
+            UIWait.until(timeout: 12, condition: ready), "Expected Welcome Sign in or the Sign in email field")
         if app.textFields["sign-in.email"].exists { return }
         reveal(button, in: app, scroll: app.scrollViews.containing(.button, identifier: "welcome.signIn").element)
         button.tap()
@@ -49,7 +50,7 @@ import XCTest
             app.textFields["sign-in.email"].waitUntil(.exists, timeout: 4),
             "Expected sign-in.email after Welcome Sign in"
         )
-        XCTAssertFalse(app.images["launch.opening"].exists)
+        XCTAssertFalse(app.images["launch.opening"].exists, "Expected the splash to be dismissed before Sign in")
     }
 
     static func signIn(_ app: XCUIApplication, email: String) {
@@ -83,7 +84,7 @@ import XCTest
         let dismissed = { () -> Bool in
             !owner.buttons["GenerateStrongPasswordButton"].exists
         }
-        XCTAssertTrue(UIWait.until(timeout: 3, condition: dismissed))
+        XCTAssertTrue(UIWait.until(timeout: 3, condition: dismissed), "Expected the strong-password sheet to close")
         return true
     }
 
@@ -127,7 +128,7 @@ import XCTest
             !app.keyboards.firstMatch.exists
                 || !SoftwareKeyboardVisibility.isVisible(app.keyboards.firstMatch.frame, in: window.frame)
         }
-        XCTAssertTrue(UIWait.until(timeout: 3, condition: hidden))
+        XCTAssertTrue(UIWait.until(timeout: 3, condition: hidden), "Expected the software keyboard to dismiss")
     }
 
     static func scroll(in app: XCUIApplication) -> XCUIElement {

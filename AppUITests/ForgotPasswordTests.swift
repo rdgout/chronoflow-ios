@@ -86,12 +86,14 @@ nonisolated final class ForgotPasswordTests: ScreenTestCase {
             UIWait.until(timeout: 12) {
                 app.textFields["forgot.email"].exists || app.textFields["sign-in.email"].exists
                     || app.buttons["welcome.signIn"].exists
-            })
+            }, "Expected Forgot, Sign in or Welcome after Forgot seed readiness")
         if app.textFields["forgot.email"].exists { return }
     }
     AuthUIFlow.openSignIn(app)
     AuthUIFlow.reveal(app.buttons["sign-in.forgot"], in: app)
     app.buttons["sign-in.forgot"].tap()
-    XCTAssertTrue(app.textFields["forgot.email"].waitUntil(.exists, timeout: 4))
+    XCTAssertTrue(
+        app.textFields["forgot.email"].waitUntil(.exists, timeout: 4),
+        "Expected Forgot email after tapping Forgot password on Sign in")
     AuthUIFlow.reveal(app.textFields["forgot.email"], in: app)
 }
