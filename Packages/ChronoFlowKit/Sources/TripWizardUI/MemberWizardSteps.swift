@@ -10,7 +10,7 @@
         func wizardShell<Content: View>(
             title: String, subtitle: String? = nil, eyebrow: String? = nil, id: String, button: String? = nil,
             answerHint: Bool = false,
-            enabled: Bool = true, action: @escaping () -> Void = {}, @ViewBuilder content: () -> Content
+            enabled: Bool = true, action: @escaping () -> Void = {}, @ViewBuilder content: @escaping () -> Content
         ) -> some View {
             VStack(spacing: 0) {
                 GeometryReader { geometry in
