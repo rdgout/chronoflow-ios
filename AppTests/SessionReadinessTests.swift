@@ -10,99 +10,107 @@ import XCTest
 nonisolated final class SessionReadinessTests: XCTestCase {
     @MainActor
     func testAuthReusesNativeSessionAndStoredGateThroughRestoreAndSignOut() async throws {
-        for (verified, accepted, seen, expected) in [
-            (false, false, false, Route.verify), (true, false, false, .terms),
-            (true, true, false, .walkthrough), (true, true, true, .today),
+        for (verified, accepted, seen, expected, method, cancelAfterCommit) in [
+            (false, false, false, Route.verify, "password", false),
+            (false, false, false, .verify, "password", true),
+            (true, false, false, .terms, "passkey", false),
+            (true, true, false, .walkthrough, "password", false),
+            (true, true, true, .today, "twoFactor", true),
         ] {
-            for method in ["password", "passkey", "twoFactor"] {
-                for cancelAfterCommit in [false, true] {
-                    let root = FileManager.default.temporaryDirectory.appendingPathComponent(
-                        "auth-session-" + UUID().uuidString)
-                    defer { try? FileManager.default.removeItem(at: root) }
-                    let credentials = AuthMemoryCredentials()
-                    let probe = AuthSyncProbe(suspended: cancelAfterCommit)
-                    let app = AppDelegate()
-                    let native = NativeSessionController(
-                        applicationSupport: root, namespace: .mock, credentials: credentials,
-                        requestSync: { await probe.request($0) },
-                        signedOut: { app.navigator.navigate(to: .signIn) })
-                    app.nativeSession = native
-                    let fixture = URL(filePath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
-                        .appending(path: "Packages/ChronoFlowKit/Tests/DataAccessTests/Fixtures/account/snapshot.json")
-                    var snapshot = try JSONDecoder().decode(AccountSnapshot.self, from: Data(contentsOf: fixture))
-                    snapshot.hasVerifiedEmail = verified
-                    snapshot.settings.policies = AccountPolicies(
-                        termsVersion: "2", privacyVersion: "2", acceptedTermsVersion: accepted ? "2" : "1")
-                    let accountID = snapshot.id
-                    let server = MockServerAccount(
-                        snapshot: snapshot, password: "Password123!",
-                        twoFactorCode: method == "password" ? nil : "123456",
-                        walkthroughSeen: seen)
-                    let auth = AuthSessionServices(
-                        services: try AppServices(info: ["CHRONOFLOW_DATA_SOURCE": "mock"], testing: true),
-                        applicationSupport: root, nativeSession: native, navigator: app.navigator,
-                        source: MockDataSource(
-                            seed: MockServerState(accounts: [server]), delay: { 0 }, sleep: { _ in },
-                            assertionProvider: { credential, _ in credential.id == "AQ" ? accountID : nil }),
-                        assertionProvider: DeterministicAssertionProvider { _ in
-                            Base64URL.assertion(
-                                credentialID: Data([1]), clientDataJSON: Data([2]), authenticatorData: Data([3]),
-                                signature: Data([4]), userHandle: nil)
-                        },
-                        verification: { epoch in await app.verificationRequired(epoch: epoch) })
-                    XCTAssertTrue(auth.nativeSession === native)
-                    auth.model.editEmail(snapshot.email)
-                    auth.model.editPassword("Password123!")
-                    let request = Task {
-                        if method == "passkey" {
-                            await auth.model.submitPasskey()
-                        } else {
-                            await auth.model.submitPassword()
-                        }
-                        if method == "twoFactor" {
-                            let twoFactor = try? XCTUnwrap(auth.model.twoFactor)
-                            XCTAssertNotNil(twoFactor)
-                            let earlySession = await native.controller.activeSession()
-                            XCTAssertNil(earlySession)
-                            let stored = try? await credentials.readStoredSession()
-                            XCTAssertNil(stored)
-                            twoFactor?.editCode("123456")
-                            await twoFactor?.submit()
-                            XCTAssertNil(twoFactor?.sessionFailure)
-                            XCTAssertTrue(twoFactor?.code.isEmpty == true)
-                        }
-                    }
-                    if cancelAfterCommit {
-                        await probe.waitForRequest()
-                        XCTAssertNil(app.navigator.route)
-                        request.cancel()
-                        await probe.release()
-                    }
-                    await request.value
-                    XCTAssertNil(auth.model.sessionFailure)
-                    XCTAssertEqual(app.navigator.route, expected)
-                    let current = await native.controller.activeSession()
-                    XCTAssertEqual(current?.session.accountId, snapshot.id)
-                    let requests = await probe.epochs
-                    XCTAssertEqual(requests, [current?.epoch].compactMap { $0 })
-                    let restored = try await native.controller.restore()
-                    XCTAssertEqual(restored, .signedIn(accountID: snapshot.id))
-                    await native.routeAcceptedSession(navigator: app.navigator) { epoch in
-                        await app.verificationRequired(epoch: epoch)
-                    }
-                    XCTAssertEqual(app.navigator.route, expected)
-                    let staleEpoch = await native.controller.epoch
-                    _ = try await native.controller.signOut(discardPending: true, unauthorized: true)
-                    XCTAssertEqual(app.navigator.route, .signIn)
-                    await app.verificationRequired(epoch: staleEpoch)
-                    XCTAssertEqual(app.navigator.route, .signIn)
-                    let stored = try await credentials.readStoredSession()
-                    let database = await native.accounts.activeDatabase()
+            let root = FileManager.default.temporaryDirectory.appendingPathComponent(
+                "auth-session-" + UUID().uuidString)
+            defer { try? FileManager.default.removeItem(at: root) }
+            let credentials = AuthMemoryCredentials()
+            let probe = AuthSyncProbe(suspended: cancelAfterCommit)
+            let app = AppDelegate()
+            let native = NativeSessionController(
+                applicationSupport: root, namespace: .mock, credentials: credentials,
+                requestSync: { await probe.request($0) },
+                signedOut: { app.navigator.navigate(to: .signIn) })
+            app.nativeSession = native
+            let fixture = URL(filePath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+                .appending(path: "Packages/ChronoFlowKit/Tests/DataAccessTests/Fixtures/account/snapshot.json")
+            var snapshot = try JSONDecoder().decode(AccountSnapshot.self, from: Data(contentsOf: fixture))
+            snapshot.hasVerifiedEmail = verified
+            snapshot.settings.policies = AccountPolicies(
+                termsVersion: "2", privacyVersion: "2", acceptedTermsVersion: accepted ? "2" : "1")
+            let accountID = snapshot.id
+            let server = MockServerAccount(
+                snapshot: snapshot, password: "Password123!",
+                twoFactorCode: method == "password" ? nil : "123456",
+                walkthroughSeen: seen)
+            let auth = AuthSessionServices(
+                services: try AppServices(info: ["CHRONOFLOW_DATA_SOURCE": "mock"], testing: true),
+                applicationSupport: root, nativeSession: native, navigator: app.navigator,
+                source: MockDataSource(
+                    seed: MockServerState(accounts: [server]), delay: { 0 }, sleep: { _ in },
+                    assertionProvider: { credential, _ in credential.id == "AQ" ? accountID : nil }),
+                assertionProvider: DeterministicAssertionProvider { _ in
+                    Base64URL.assertion(
+                        credentialID: Data([1]), clientDataJSON: Data([2]), authenticatorData: Data([3]),
+                        signature: Data([4]), userHandle: nil)
+                },
+                verification: { epoch in await app.verificationRequired(epoch: epoch) })
+            app.authServices = auth
+            defer {
+                app.authServices = nil
+                app.nativeSession = nil
+            }
+            XCTAssertTrue(auth.nativeSession === native)
+            auth.model.editEmail(snapshot.email)
+            auth.model.editPassword("Password123!")
+            let request = Task {
+                if method == "passkey" {
+                    await auth.model.submitPasskey()
+                } else {
+                    await auth.model.submitPassword()
+                }
+                if method == "twoFactor" {
+                    let twoFactor = try? XCTUnwrap(auth.model.twoFactor)
+                    XCTAssertNotNil(twoFactor)
+                    let earlySession = await native.controller.activeSession()
+                    XCTAssertNil(earlySession)
+                    let stored = try? await credentials.readStoredSession()
                     XCTAssertNil(stored)
-                    XCTAssertNil(database)
-                    await native.stopObserving()
+                    twoFactor?.editCode("123456")
+                    await twoFactor?.submit()
+                    XCTAssertNil(twoFactor?.sessionFailure)
+                    XCTAssertTrue(twoFactor?.code.isEmpty == true)
                 }
             }
+            if cancelAfterCommit {
+                await probe.waitForRequest()
+                XCTAssertNil(app.navigator.route)
+                request.cancel()
+                await probe.release()
+            }
+            await request.value
+            XCTAssertNil(auth.model.sessionFailure)
+            XCTAssertEqual(app.navigator.route, expected)
+            if expected == .verify {
+                XCTAssertTrue(app.authServices === auth)
+                XCTAssertTrue(auth.verifyModel?.isActive == true)
+            }
+            let current = await native.controller.activeSession()
+            XCTAssertEqual(current?.session.accountId, snapshot.id)
+            let requests = await probe.epochs
+            XCTAssertEqual(requests, [current?.epoch].compactMap { $0 })
+            let restored = try await native.controller.restore()
+            XCTAssertEqual(restored, .signedIn(accountID: snapshot.id))
+            await native.routeAcceptedSession(navigator: app.navigator) { epoch in
+                await app.verificationRequired(epoch: epoch)
+            }
+            XCTAssertEqual(app.navigator.route, expected)
+            let staleEpoch = await native.controller.epoch
+            _ = try await native.controller.signOut(discardPending: true, unauthorized: true)
+            XCTAssertEqual(app.navigator.route, .signIn)
+            await app.verificationRequired(epoch: staleEpoch)
+            XCTAssertEqual(app.navigator.route, .signIn)
+            let stored = try await credentials.readStoredSession()
+            let database = await native.accounts.activeDatabase()
+            XCTAssertNil(stored)
+            XCTAssertNil(database)
+            await native.stopObserving()
         }
     }
 

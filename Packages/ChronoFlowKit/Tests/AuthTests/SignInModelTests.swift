@@ -145,7 +145,7 @@ func authTestSource(verified: Bool = true, twoFactor: Bool = false) throws -> Mo
     func committedSessionUsesStoredGateWithAndWithoutCancellation(_ storedGate: Gate, _ cancelAfterCommit: Bool)
         async throws
     {
-        for usePasskey in [false, true] {
+        for method in ["password", "passkey", "twoFactor"] {
             let gate = AcceptedSessionSyncGate()
             let credentials = AcceptedSessionCredentials()
             let session = SessionController(
@@ -159,7 +159,7 @@ func authTestSource(verified: Bool = true, twoFactor: Bool = false) throws -> Mo
             let navigator = AcceptedSessionNavigator()
             var verificationEpochs: [UInt64] = []
             let model = SignInModel(
-                source: try authTestSource(), session: session,
+                source: try authTestSource(twoFactor: method == "twoFactor"), session: session,
                 deviceIdentity: { "0199a3c0-0000-7000-8000-000000000001" }, deviceName: "test",
                 assertionProvider: DeterministicAssertionProvider { _ in
                     Base64URL.assertion(
@@ -176,7 +176,20 @@ func authTestSource(verified: Bool = true, twoFactor: Bool = false) throws -> Mo
             model.editEmail("demo@example.com")
             model.editPassword("Password123!")
             let request = Task {
-                if usePasskey { await model.submitPasskey() } else { await model.submitPassword() }
+                if method == "passkey" {
+                    await model.submitPasskey()
+                } else {
+                    await model.submitPassword()
+                    if method == "twoFactor" {
+                        let challenge = model.twoFactor
+                        #expect(challenge != nil)
+                        #expect(await session.activeSession() == nil)
+                        #expect(await credentials.data == nil)
+                        challenge?.editCode("123456")
+                        await challenge?.submit()
+                        #expect(challenge?.code.isEmpty == true && challenge?.sessionFailure == nil)
+                    }
+                }
             }
             await gate.waitUntilEntered()
             let data = try #require(await credentials.data)
