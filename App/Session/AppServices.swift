@@ -3,6 +3,11 @@ import DataAccess
 import Foundation
 import Reminders
 
+#if DEBUG
+    import LocalStore
+    import Sync
+#endif
+
 nonisolated struct AppServices: Sendable {
     enum Failure: Error { case invalidReadiness, applicationSupportUnavailable }
     let signedOutReadiness: Bool
@@ -118,7 +123,7 @@ nonisolated struct AppServices: Sendable {
             }
         #endif
     }
-    static func launchConfiguration() throws -> (AppServices, URL?) {
+    static func launchConfiguration() async throws -> (AppServices, URL?) {
         assert(!Thread.isMainThread)
         let services = try AppServices()
         var root =
@@ -133,9 +138,48 @@ nonisolated struct AppServices: Sendable {
             } else if let test = services.authTest, let support = root {
                 root = test.applicationSupport(in: support)
             }
+            if let root { try await services.seedSignedIn(applicationSupport: root) }
         #endif
         return (services, root)
     }
+
+    #if DEBUG
+        func seedSignedIn(applicationSupport root: URL) async throws {
+            guard let test = authTest, let account = test.signedInAccount else { return }
+            let marker = root.appending(path: "signed-in-seed.done")
+            // Seed once so relaunch still exercises restoration and cannot undo sign-out.
+            guard !FileManager.default.fileExists(atPath: marker.path) else { return }
+            let credentials = test.credentials
+            let source = MockDataSource(
+                store: FileMockStateStore(applicationSupport: root), seed: authTestSeed,
+                sleep: { _ in }, bearer: { try await credentials.readStoredSession()?.token })
+            let result: SessionResult
+            switch try await source.signIn(
+                PasswordSignInInput(
+                    email: account == "demo" ? MockScenarioValues.demoEmail : MockScenarioValues.twoFactorEmail,
+                    password: MockScenarioValues.password, deviceID: test.id, deviceName: "UI test"))
+            {
+            case .session(let session): result = session
+            case .twoFactor(let challenge):
+                result = try await source.completeTwoFactor(
+                    TwoFactorInput(challengeId: challenge, proof: .code(MockScenarioValues.twoFactorCode)))
+            }
+            let accounts = SessionAccountDatabase(applicationSupport: root, namespace: namespace)
+            let controller = SessionController(credentials: credentials, accounts: accounts)
+            do {
+                try await controller.accept(result)
+                guard let database = await accounts.activeDatabase(), let session = await controller.activeSession()
+                else { throw SessionFailure.databaseUnavailable }
+                let epoch = SyncEpoch(accountID: try AccountID(result.account.id), generation: session.epoch)
+                _ = try await FullPull(database: database, source: source).run(epoch: epoch)
+                try await accounts.close()
+                try Data().write(to: marker, options: .atomic)
+            } catch {
+                try? await accounts.close()
+                throw error
+            }
+        }
+    #endif
 
     func makeDataSource(applicationSupport: URL, session: StoredSession) -> any DataSource {
         assert(!Thread.isMainThread)

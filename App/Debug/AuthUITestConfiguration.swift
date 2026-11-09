@@ -14,6 +14,7 @@
         let refreshUpdatesTrip: Bool
         let auditScreen: String?
         let auditState: String?
+        let signedInAccount: String?
 
         init?(environment: [String: String] = ProcessInfo.processInfo.environment) {
             guard let value = environment["CF_AUTH_TEST_ID"], let uuid = UUID(uuidString: value) else { return nil }
@@ -27,6 +28,9 @@
             refreshUpdatesTrip = environment["CF_REFRESH_TEST_UPDATE_TRIP"] == "1"
             auditScreen = environment["CF_AUTH_TEST_AUDIT_SCREEN"]
             auditState = environment["CF_AUTH_TEST_AUDIT_STATE"]
+            signedInAccount = environment["CF_AUTH_TEST_SIGNED_IN"].flatMap {
+                ["demo", "twofactor"].contains($0) ? $0 : nil
+            }
         }
 
         @MainActor func prefill(_ model: SignUpModel) {

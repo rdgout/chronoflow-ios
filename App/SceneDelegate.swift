@@ -163,7 +163,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                     let load = self?.serviceConfigurationFactory
                     let configuration = try await Task.detached {
                         if let load { return try await load() }
-                        return try AppServices.launchConfiguration()
+                        return try await AppServices.launchConfiguration()
                     }.value
                     guard let self, let windowScene, !Task.isCancelled, connectionGeneration == generation else {
                         return
@@ -281,7 +281,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                     do {
                         serviceConfiguration = try await Task.detached {
                             if let load { return try await load() }
-                            return try AppServices.launchConfiguration()
+                            return try await AppServices.launchConfiguration()
                         }.value
                     } catch { serviceFailure = error }
                 }

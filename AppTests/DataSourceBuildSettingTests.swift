@@ -1,6 +1,7 @@
 import AppCore
 import Auth
 import Foundation
+import LocalStore
 import Reminders
 import Testing
 
@@ -90,6 +91,55 @@ import Testing
 
 @MainActor @Suite struct DataSourceFactoryHostedTests {
     #if DEBUG
+        @Test(arguments: ["demo", "twofactor"], ["app", "verify", "terms", "walkthrough"])
+        func signedInSeedUsesRestorableCredentialsAndAccountGates(account: String, gate: String) async throws {
+            let root = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+            defer { try? FileManager.default.removeItem(at: root) }
+            let environment = [
+                "CF_AUTH_TEST_ID": UUID().uuidString, "CF_AUTH_TEST_SIGNED_IN": account,
+                "CF_AUTH_TEST_OFFLINE": "1", "CF_AUTH_TEST_WALKTHROUGH_SEEN": gate == "walkthrough" ? "0" : "1",
+                "CF_AUTH_TEST_UNVERIFIED": gate == "verify" ? "1" : "0",
+                "CF_AUTH_TEST_TERMS_PENDING": gate == "terms" ? "1" : "0",
+            ]
+            let services = try AppServices(info: [:], testing: true, environment: environment)
+            try await Task.detached { try await services.seedSignedIn(applicationSupport: root) }.value
+            let credentials = services.sessionCredentials()
+            let stored = try #require(try await credentials.readStoredSession())
+            #expect(
+                stored.accountId == (account == "demo" ? MockScenarioValues.demoID : MockScenarioValues.twoFactorID))
+            let accounts = SessionAccountDatabase(applicationSupport: root, namespace: .mock)
+            let controller = SessionController(credentials: credentials, accounts: accounts)
+            #expect(try await controller.restore() == .signedIn(accountID: stored.accountId))
+            let database = try #require(await accounts.activeDatabase())
+            var updates = try await AccountReadinessRepository(database: database).values(accountID: stored.accountId)
+                .makeAsyncIterator()
+            let values = try #require(try await updates.next() ?? nil)
+            let expected: Gate =
+                gate == "verify" ? .verify : gate == "terms" ? .terms : gate == "walkthrough" ? .walkthrough : .app
+            #expect(values.gate == expected)
+            #expect(values.hasStoredData == (gate != "verify"))
+            let source = MockDataSource(
+                store: FileMockStateStore(applicationSupport: root), sleep: { _ in }, bearer: { stored.token })
+            #expect(try await source.fetchIdentity().id == stored.accountId)
+            try await accounts.close()
+            try await credentials.delete()
+            try await Task.detached { try await services.seedSignedIn(applicationSupport: root) }.value
+            #expect(try await credentials.readStoredSession() == nil)
+        }
+
+        @Test func signedInSeedRequiresAuthTestGateAndKnownAccount() async throws {
+            for environment in [
+                ["CF_AUTH_TEST_SIGNED_IN": "demo"],
+                ["CF_AUTH_TEST_ID": "invalid", "CF_AUTH_TEST_SIGNED_IN": "demo"],
+                ["CF_AUTH_TEST_ID": UUID().uuidString, "CF_AUTH_TEST_SIGNED_IN": "unknown"],
+            ] {
+                let root = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+                let services = try AppServices(info: [:], testing: true, environment: environment)
+                try await Task.detached { try await services.seedSignedIn(applicationSupport: root) }.value
+                #expect(!FileManager.default.fileExists(atPath: root.path))
+            }
+        }
+
         @Test(arguments: [false, true], [false, true])
         func authOfflineFlagReachesBothMockFactories(offline: Bool, storedSession: Bool) async throws {
             let root = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
