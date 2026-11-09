@@ -14,6 +14,7 @@ import Observation
     private let deviceName: String
     private let route: @MainActor (Route) async -> Void
     private let passkey: PasskeySignIn
+    public var mockMail: (@MainActor () async -> AuthLink?)?
     public private(set) var sessionFailure: SessionFailure?
 
     public init(
@@ -38,7 +39,25 @@ import Observation
         form.edit("email")
     }
     public func makeForgotPasswordModel() -> ForgotPasswordModel {
-        ForgotPasswordModel(source: source, navigation: navigation, email: navigation.forgotEmail)
+        ForgotPasswordModel(source: source, navigation: navigation, email: navigation.forgotEmail, mail: mailAction)
+    }
+    private var mailAction: (@MainActor () async -> Bool)? {
+        guard mockMail != nil else { return nil }
+        return { [weak self] in
+            guard let self, let link = await mockMail?() else { return false }
+            if case .reset(let input) = link { openReset(input) }
+            return true
+        }
+    }
+    public func openReset(_ link: ResetPasswordLink) {
+        password = ""
+        twoFactor?.cancel()
+        twoFactor = nil
+        navigation.reset()
+        navigation.push(.reset(link))
+    }
+    public func makeResetPasswordModel(_ link: ResetPasswordLink) -> ResetPasswordModel {
+        ResetPasswordModel(link: link, source: source, navigation: navigation, mail: mailAction)
     }
     public func editPassword(_ value: String) {
         guard !form.busy else { return }

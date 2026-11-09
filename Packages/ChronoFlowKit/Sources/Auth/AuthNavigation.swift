@@ -4,6 +4,7 @@ import Observation
 
 nonisolated public enum AuthDestination: Hashable, Sendable {
     case forgot, signUp, twoFactor
+    case reset(ResetPasswordLink)
 }
 
 @MainActor @Observable public final class AuthNavigation {

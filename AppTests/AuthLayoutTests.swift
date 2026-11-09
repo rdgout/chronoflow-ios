@@ -20,7 +20,10 @@ nonisolated final class AuthLayoutTests: XCTestCase {
                     try await host.settle()
                     XCTAssertEqual(
                         Set(frames.keys),
-                        Set(AuthElement.allCases).subtracting([.code, .modeToggle, .notice, .openEmail, .backToSignIn]))
+                        Set([
+                            AuthElement.brand, .heading, .card, .footer, .email, .password, .submit, .forgot, .signup,
+                            .forgotLabel, .signupLabel, .passkey, .subtitle,
+                        ]))
                     let brand = try XCTUnwrap(frames[.brand])
                     XCTAssertEqual(brand.minY, fixture.insets.top + AuthTokens.gutter, accuracy: 0.5)
                     XCTAssertEqual(brand.minX, fixture.insets.left + AuthTokens.gutter, accuracy: 0.5)

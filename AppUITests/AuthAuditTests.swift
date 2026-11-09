@@ -19,6 +19,66 @@ nonisolated final class AuthAuditTests: XCTestCase {
     @MainActor func testForgotThrottleInLeanAuditMatrix() async throws { try await auditForgot(state: "throttle") }
     @MainActor func testForgotOfflineInLeanAuditMatrix() async throws { try await auditForgot(state: "offline") }
 
+    @MainActor func testResetFormInLeanAuditMatrix() async throws { try await auditReset(state: "form") }
+    @MainActor func testResetPasswordInLeanAuditMatrix() async throws { try await auditReset(state: "password") }
+    @MainActor func testResetConfirmationInLeanAuditMatrix() async throws {
+        try await auditReset(state: "confirmation")
+    }
+    @MainActor func testResetExpiredInLeanAuditMatrix() async throws { try await auditReset(state: "expired") }
+    @MainActor func testResetDoneInLeanAuditMatrix() async throws { try await auditReset(state: "done") }
+    @MainActor func testResetServerInLeanAuditMatrix() async throws { try await auditReset(state: "server") }
+    @MainActor func testResetThrottleInLeanAuditMatrix() async throws { try await auditReset(state: "throttle") }
+    @MainActor func testResetOfflineInLeanAuditMatrix() async throws { try await auditReset(state: "offline") }
+
+    @MainActor private func auditReset(state: String) async throws {
+        try await FontRegistry.register()
+        let previous = XCUIDevice.shared.appearance
+        defer { XCUIDevice.shared.appearance = previous }
+        for (language, appearance, xxLarge) in variants {
+            try DeviceAppearance.set(appearance)
+            let app = XCUIApplication()
+            app.launchArguments = AuthUIFlow.arguments(language: language, xxLarge: xxLarge)
+            app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
+            if state == "expired" {
+                app.launchEnvironment["CF_AUTH_TEST_LINK"] = "https://app.chronoflow.net/reset-password"
+            }
+            if ["server", "throttle", "offline"].contains(state) {
+                app.launchEnvironment["CF_AUTH_TEST_RESET_FAILURE"] = state
+            }
+            app.launch()
+            defer { app.terminate() }
+            if state == "expired" {
+                XCTAssertTrue(app.textFields["forgot.email"].waitForExistence(timeout: 12))
+            } else {
+                openResetFromMockMail(app)
+                if state != "form" {
+                    fillReset(
+                        app, password: state == "password" ? "short" : "NewPassword123!",
+                        confirmation: state == "confirmation"
+                            ? "different" : state == "password" ? "short" : "NewPassword123!")
+                    if state == "done" {
+                        XCTAssertTrue(app.buttons["reset.continue"].waitForExistence(timeout: 6))
+                    } else {
+                        let finished = XCTNSPredicateExpectation(
+                            predicate: NSPredicate { _, _ in app.secureTextFields["reset.password"].isEnabled },
+                            object: nil)
+                        XCTAssertEqual(XCTWaiter.wait(for: [finished], timeout: 6), .completed)
+                    }
+                }
+            }
+            let identifiers =
+                state == "expired"
+                ? ["auth.back", "forgot.email", "forgot.submit", "forgot.back"]
+                : state == "done"
+                    ? ["auth.back", "reset.continue"]
+                    : ["auth.back", "reset.password", "reset.confirmation", "reset.submit"]
+                        + (["server", "throttle"].contains(state) ? ["auth.banner"] : [])
+            auditControls(
+                app, identifiers: identifiers, language: "\(language), reset-\(state)", appearance: appearance,
+                xxLarge: xxLarge)
+        }
+    }
+
     @MainActor private func auditSignInOrTwoFactor(mode: Int) async throws {
         try await FontRegistry.register()
         let device = XCUIDevice.shared

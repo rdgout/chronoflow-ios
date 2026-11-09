@@ -19,8 +19,11 @@ nonisolated public enum AuthBannerKind: String, CaseIterable, Sendable {
         }
     }
     public func body(for context: AuthFormContext) -> String {
+        if self == .server && context == .reset { return "Your new password wasn't saved. Try again in a moment." }
         if self == .locked && context == .forgot { return "Wait a few minutes before you ask for another link." }
-        if self == .locked && context == .twoFactor { return "Wait a few minutes before you try again." }
+        if self == .locked && (context == .twoFactor || context == .reset) {
+            return "Wait a few minutes before you try again."
+        }
         return body
     }
     public func title(for context: AuthFormContext) -> String {
@@ -29,7 +32,7 @@ nonisolated public enum AuthBannerKind: String, CaseIterable, Sendable {
     }
 }
 
-nonisolated public enum AuthFormContext: Sendable { case signIn, twoFactor, forgot }
+nonisolated public enum AuthFormContext: Sendable { case signIn, twoFactor, forgot, reset }
 
 nonisolated public struct AuthFailureMapping: Sendable, Equatable {
     public var banner: AuthBannerKind?
@@ -76,7 +79,7 @@ nonisolated public struct AuthFailureMapping: Sendable, Equatable {
 }
 
 @MainActor @Observable public final class AuthFormModel {
-    public enum Action: Sendable { case password, passkey, verify, sendResetLink }
+    public enum Action: Sendable { case password, passkey, verify, sendResetLink, reset }
     public private(set) var pending: Action?
     public private(set) var banner: AuthBannerKind?
     public private(set) var fields: [String: FieldMessage] = [:]

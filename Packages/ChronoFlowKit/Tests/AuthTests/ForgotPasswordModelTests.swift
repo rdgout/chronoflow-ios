@@ -153,7 +153,7 @@ import Testing
     }
 }
 
-private actor ForgotRequestGate {
+actor ForgotRequestGate {
     private var continuation: CheckedContinuation<Void, Never>?
     private var entry: CheckedContinuation<Void, Never>?
     private(set) var entries = 0

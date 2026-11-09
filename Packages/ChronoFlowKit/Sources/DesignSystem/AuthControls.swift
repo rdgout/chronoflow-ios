@@ -27,6 +27,7 @@ import SwiftUI
         case alert = "AuthAlert"
         case info = "AuthInfo"
         case check = "AuthCheck"
+        case problem = "AuthProblem"
         case key = "AuthKey"
         public var image: Image { Image(rawValue, bundle: .module) }
     }
@@ -38,10 +39,12 @@ import SwiftUI
         let kind: Kind
         let busy: Bool
         let glyph: AuthGlyph?
+        let minimumHeight: CGFloat
         let measure: ((AuthControlPart, CGRect) -> Void)?
         let action: () -> Void
         public init(
             _ title: String, kind: Kind = .primary, busy: Bool = false, glyph: AuthGlyph? = nil,
+            minimumHeight: CGFloat = AuthTokens.touch,
             measure: ((AuthControlPart, CGRect) -> Void)? = nil,
             action: @escaping () -> Void
         ) {
@@ -49,6 +52,7 @@ import SwiftUI
             self.kind = kind
             self.busy = busy
             self.glyph = glyph
+            self.minimumHeight = minimumHeight
             self.measure = measure
             self.action = action
         }
@@ -78,7 +82,10 @@ import SwiftUI
                 .authControlMeasure(.content, measure)
                 .padding(.horizontal, AuthTokens.spacer)
                 .padding(.vertical, AuthTokens.fieldGap)
-                .frame(maxWidth: .infinity, minHeight: kind == .footer ? AuthTokens.footerHeight : AuthTokens.touch)
+                .frame(
+                    maxWidth: .infinity,
+                    minHeight: kind == .footer ? max(AuthTokens.footerHeight, minimumHeight) : minimumHeight
+                )
                 .background {
                     switch kind {
                     case .primary: Capsule(style: .circular).fill(ColorToken.primary.color)
@@ -160,8 +167,9 @@ import SwiftUI
                 .font(.custom(Typography.authBody.face.rawValue, fixedSize: font.pointSize))
                 .foregroundStyle(ColorToken.cardForeground.color)
                 .textContentType(contentType)
+                .background { AuthInputTraits(contentType: contentType) }
                 .keyboardType(keyboard)
-                .textInputAutocapitalization(.never)
+                .textInputAutocapitalization(contentType == .name ? .words : .never)
                 .autocorrectionDisabled()
                 .textFieldStyle(.plain)
                 .submitLabel(submitLabel)

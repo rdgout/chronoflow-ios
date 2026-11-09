@@ -16,7 +16,7 @@ nonisolated final class AuthSnapshotTests: XCTestCase {
             defer { host.close() }
             for (style, language, category) in fixture.authSnapshotVariants {
                 print("Sign in snapshots: \(fixture.snapshotName), \(style), \(language), \(category.rawValue)")
-                for banner in [nil] + AuthBannerKind.allCases.map(Optional.some) {
+                for banner in [nil] + [AuthBannerKind.credentials, .locked, .server].map(Optional.some) {
                     let model = authSnapshotModel()
                     if let banner { model.form.receive(snapshotFailure(banner)) }
                     XCTAssertEqual(model.form.banner, banner)
@@ -35,9 +35,10 @@ nonisolated final class AuthSnapshotTests: XCTestCase {
                         viewport: CGRect(origin: .zero, size: fixture.size).inset(by: fixture.insets),
                         frames: Dictionary(uniqueKeysWithValues: frames.map { ($0.key.rawValue, $0.value) }),
                         required: Set(
-                            (Set(AuthElement.allCases).subtracting([
-                                .code, .modeToggle, .notice, .openEmail, .backToSignIn,
-                            ])).map(\.rawValue)),
+                            [
+                                AuthElement.brand, .heading, .card, .footer, .email, .password, .submit, .forgot,
+                                .signup, .forgotLabel, .signupLabel, .passkey, .subtitle,
+                            ].map(\.rawValue)),
                         reference: reference,
                         record: ProcessInfo.processInfo.environment["SNAPSHOT_RECORD"] == "1")
                     if ProcessInfo.processInfo.environment["SNAPSHOT_RECORD"] == "1" {

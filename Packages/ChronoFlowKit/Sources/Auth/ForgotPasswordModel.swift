@@ -9,11 +9,16 @@ import Observation
     private let source: any DataSource
     private let navigation: AuthNavigation
     private var active = true
+    private let mail: (@MainActor () async -> Bool)?
 
-    public init(source: any DataSource, navigation: AuthNavigation, email: String = "") {
+    public init(
+        source: any DataSource, navigation: AuthNavigation, email: String = "",
+        mail: (@MainActor () async -> Bool)? = nil
+    ) {
         self.source = source
         self.navigation = navigation
         self.email = email
+        self.mail = mail
     }
 
     public func editEmail(_ value: String) {
@@ -40,7 +45,7 @@ import Observation
 
     public func openEmail(using open: @MainActor (URL) async -> Bool) async {
         guard active, sentEmail != nil, let url = URL(string: "message://") else { return }
-        _ = await open(url)
+        if let mail { _ = await mail() } else { _ = await open(url) }
     }
 
     public func backToSignIn() {

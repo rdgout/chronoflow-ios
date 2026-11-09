@@ -173,8 +173,8 @@ extension Int { fileprivate var double: Double { Double(self) } }
 
 @Test func authGlyphsRetainBoardPathsAndTemplateRendering() throws {
     let outputs = try authGlyphOutputs(root: root)
-    #expect(outputs.count == 13)
-    for name in ["AuthBack", "AuthEye", "AuthAlert", "AuthInfo", "AuthCheck", "AuthKey"] {
+    #expect(outputs.count == 15)
+    for name in ["AuthBack", "AuthEye", "AuthAlert", "AuthInfo", "AuthProblem", "AuthCheck", "AuthKey"] {
         let directory = "Packages/ChronoFlowKit/Sources/DesignSystem/Resources/Auth.xcassets/\(name).imageset"
         let svg = String(decoding: try #require(outputs["\(directory)/\(name).svg"]), as: UTF8.self)
         #expect(svg.contains("viewBox=\"0 0 24 24\""))

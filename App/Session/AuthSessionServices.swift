@@ -6,6 +6,7 @@ import UIKit
 
 @MainActor
 final class AuthSessionServices {
+    let resetLinks: GuestResetLinkRouter
     let nativeSession: NativeSessionController
     let model: SignInModel
     #if DEBUG
@@ -32,6 +33,18 @@ final class AuthSessionServices {
                 Task { await mock.failNext(method: .completeTwoFactor, error: .server(status: 503)) }
             }
             if services.factory.source == .mock, let mock = source as? MockDataSource {
+                if services.authUITestEnabled,
+                    let failure = ProcessInfo.processInfo.environment["CF_AUTH_TEST_RESET_FAILURE"]
+                {
+                    Task {
+                        await mock.failNext(
+                            method: .resetPassword,
+                            error: failure == "offline"
+                                ? .offline
+                                : failure == "throttle"
+                                    ? .throttled(retryAfterSeconds: 60, status: 429) : .server(status: 503))
+                    }
+                }
                 if ProcessInfo.processInfo.arguments.contains("-cf.forgotServerFailure") {
                     Task { await mock.failNext(method: .requestPasswordReset, error: .server(status: 503)) }
                 } else if ProcessInfo.processInfo.arguments.contains("-cf.forgotThrottleFailure") {
@@ -54,6 +67,19 @@ final class AuthSessionServices {
             deviceName: DeviceIdentityStore.deviceName(UIDevice.current.name, model: UIDevice.current.model),
             assertionProvider: assertion,
             route: { _ in await native.routeAcceptedSession(navigator: navigator, verification: verification) })
+        resetLinks = GuestResetLinkRouter(session: native.controller) { [model, navigator] input in
+            navigator.navigate(to: .signIn)
+            model.openReset(input)
+        }
+        if let mock = source as? MockDataSource {
+            model.mockMail = {
+                guard let event = try? await mock.inbox().last else { return nil }
+                if case .passwordReset(_, _, _, let input) = event {
+                    return .reset(ResetPasswordLink(token: input.token, email: input.email))
+                }
+                return nil
+            }
+        }
         native.observe()
     }
 }

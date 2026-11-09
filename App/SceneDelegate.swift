@@ -10,6 +10,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     private(set) var overlayWindow: UIWindow?
     private(set) var overlayController: LaunchOverlayController?
     private(set) var pendingIntent = PendingLaunchIntent()
+    private(set) var pendingAuthLink: AuthLink?
     private(set) var coordinator: LaunchCoordinator?
     var navigator = RootNavigator()
     private(set) var moonAnchorStore = MoonAnchorStore()
@@ -39,6 +40,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = scene as? UIWindowScene,
             let app = UIApplication.shared.delegate as? AppDelegate
         else { return }
+        captureAuthActivities(connectionOptions.userActivities)
         let response = connectionOptions.notificationResponse
         pendingIntent = PendingLaunchIntent(
             urls: Set(connectionOptions.urlContexts.map(\.url)),
@@ -289,6 +291,17 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                             })
                     }
                 }
+                #if DEBUG
+                    if app?.authServices?.authUITestEnabled == true,
+                        let value = ProcessInfo.processInfo.environment["CF_AUTH_TEST_LINK"],
+                        let url = URL(string: value)
+                    {
+                        let activity = NSUserActivity(activityType: NSUserActivityTypeBrowsingWeb)
+                        activity.webpageURL = url
+                        captureAuthActivities([activity])
+                    }
+                #endif
+                consumePendingAuthLink()
                 let controller = LaunchHostingController(
                     rootView: RootView(
                         navigator: navigator, authModel: app?.authServices?.model, moonAnchorStore: moonAnchorStore,
@@ -358,6 +371,33 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         signposts.end(.exit)
         signposts.end(.launch)
         UIAccessibility.post(notification: .screenChanged, argument: nil)
+    }
+
+    func captureAuthActivities(_ activities: Set<NSUserActivity>) {
+        for activity in activities {
+            if activity.activityType == NSUserActivityTypeBrowsingWeb, let url = activity.webpageURL,
+                let link = AuthLink(url: url)
+            {
+                pendingAuthLink = link
+                break
+            }
+        }
+    }
+
+    func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
+        captureAuthActivities([userActivity])
+        consumePendingAuthLink()
+    }
+
+    func consumePendingAuthLink() {
+        guard let link = pendingAuthLink,
+            let auth = (UIApplication.shared.delegate as? AppDelegate)?.authServices
+        else { return }
+        pendingAuthLink = nil
+        switch link {
+        case .reset(let input):
+            Task { await auth.resetLinks.receive(input) }
+        }
     }
 
     func sceneDidBecomeActive(_ scene: UIScene) { setActive(true) }
