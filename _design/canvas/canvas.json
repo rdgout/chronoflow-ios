@@ -1398,7 +1398,7 @@
    "page": "settings"
   },
   "WizardSpec.dc.html": {
-   "h": 5160,
+   "h": 5600,
    "is_interactive": true,
    "radius": 24,
    "title": "Wizard · flow, rules, haptics and decisions (updated 4 Nov)",
@@ -1711,7 +1711,7 @@
    "h": 844,
    "is_interactive": true,
    "radius": 40,
-   "title": "Wizard · Outbound · with a connection",
+   "title": "Wizard · Times · two flights, with a connection",
    "w": 390,
    "x": 470,
    "y": 18776,
@@ -1771,7 +1771,7 @@
    "h": 844,
    "is_interactive": true,
    "radius": 40,
-   "title": "Wizard · Stop search sheet",
+   "title": "Wizard · Stop search sheet (from Where)",
    "w": 390,
    "x": 0,
    "y": 18776,
@@ -1781,7 +1781,7 @@
    "h": 844,
    "is_interactive": true,
    "radius": 40,
-   "title": "Wizard · Your flight home · first view",
+   "title": "Wizard · Your flight home · times",
    "w": 390,
    "x": 940,
    "y": 18776,
@@ -1941,29 +1941,9 @@
    "h": 844,
    "is_interactive": true,
    "radius": 40,
-   "title": "Wizard · Stop search sheet · dark, Dutch",
+   "title": "Wizard · Stop search sheet (from Where) · dark, Dutch",
    "w": 390,
    "x": 3600,
-   "y": 22224,
-   "page": "trip"
-  },
-  "WizardOutboundStopNew.dc.html": {
-   "h": 844,
-   "is_interactive": true,
-   "radius": 40,
-   "title": "Wizard · Outbound · stop just added (middle times empty)",
-   "w": 390,
-   "x": 4070,
-   "y": 21300,
-   "page": "trip"
-  },
-  "WizardOutboundStopNewDarkNL.dc.html": {
-   "h": 844,
-   "is_interactive": true,
-   "radius": 40,
-   "title": "Wizard · Outbound · stop just added (middle times empty) · dark, Dutch",
-   "w": 390,
-   "x": 4070,
    "y": 22224,
    "page": "trip"
   },
@@ -1971,7 +1951,7 @@
    "h": 844,
    "is_interactive": true,
    "radius": 40,
-   "title": "Wizard · Outbound · with a connection · dark, Dutch",
+   "title": "Wizard · Times · two flights, with a connection · dark, Dutch",
    "w": 390,
    "x": 4540,
    "y": 22224,
@@ -1981,7 +1961,7 @@
    "h": 844,
    "is_interactive": true,
    "radius": 40,
-   "title": "Wizard · Outbound · overnight stop",
+   "title": "Wizard · Times · two flights, overnight stop",
    "w": 390,
    "x": 5010,
    "y": 21300,
@@ -1991,7 +1971,7 @@
    "h": 844,
    "is_interactive": true,
    "radius": 40,
-   "title": "Wizard · Outbound · overnight stop · dark, Dutch",
+   "title": "Wizard · Times · two flights, overnight stop · dark, Dutch",
    "w": 390,
    "x": 5010,
    "y": 22224,
@@ -2071,7 +2051,7 @@
    "h": 844,
    "is_interactive": true,
    "radius": 40,
-   "title": "Wizard · Your flight home · first view · dark, Dutch",
+   "title": "Wizard · Your flight home · times · dark, Dutch",
    "w": 390,
    "x": 1720,
    "y": 24312,
@@ -3139,6 +3119,186 @@
    "w": 1400,
    "x": -3360,
    "y": 0
+  },
+  "WizardWhereStop.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 40,
+   "title": "Wizard · Where · one stop",
+   "w": 390,
+   "x": 1720,
+   "y": 35916,
+   "page": "trip"
+  },
+  "WizardWhereStopDarkNL.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 40,
+   "title": "Wizard · Where · one stop · dark, Dutch",
+   "w": 390,
+   "x": 1720,
+   "y": 36840,
+   "page": "trip"
+  },
+  "WizardWhereStops.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 40,
+   "title": "Wizard · Where · two stops",
+   "w": 390,
+   "x": 2190,
+   "y": 35916,
+   "page": "trip"
+  },
+  "WizardWhereStopsDarkNL.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 40,
+   "title": "Wizard · Where · two stops · dark, Dutch",
+   "w": 390,
+   "x": 2190,
+   "y": 36840,
+   "page": "trip"
+  },
+  "WizardStopSearchSecond.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 40,
+   "title": "Wizard · Stop search · second stop",
+   "w": 390,
+   "x": 2660,
+   "y": 35916,
+   "page": "trip"
+  },
+  "WizardStopSearchSecondDarkNL.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 40,
+   "title": "Wizard · Stop search · second stop · dark, Dutch",
+   "w": 390,
+   "x": 2660,
+   "y": 36840,
+   "page": "trip"
+  },
+  "WizardOutboundStopEmpty.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 40,
+   "title": "Wizard · Times · two flights, nothing picked yet",
+   "w": 390,
+   "x": 3130,
+   "y": 35916,
+   "page": "trip"
+  },
+  "WizardOutboundStopEmptyDarkNL.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 40,
+   "title": "Wizard · Times · two flights, nothing picked yet · dark, Dutch",
+   "w": 390,
+   "x": 3130,
+   "y": 36840,
+   "page": "trip"
+  },
+  "WizardOutboundThree.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 40,
+   "title": "Wizard · Times · three flights (scrolls)",
+   "w": 390,
+   "x": 3600,
+   "y": 35916,
+   "page": "trip"
+  },
+  "WizardOutboundThreeDarkNL.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 40,
+   "title": "Wizard · Times · three flights (scrolls) · dark, Dutch",
+   "w": 390,
+   "x": 3600,
+   "y": 36840,
+   "page": "trip"
+  },
+  "WizardOutboundTwoErrors.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 40,
+   "title": "Wizard · Times · error on the second flight",
+   "w": 390,
+   "x": 4070,
+   "y": 35916,
+   "page": "trip"
+  },
+  "WizardOutboundTwoErrorsDarkNL.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 40,
+   "title": "Wizard · Times · error on the second flight · dark, Dutch",
+   "w": 390,
+   "x": 4070,
+   "y": 36840,
+   "page": "trip"
+  },
+  "WizardHomeRoute.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 40,
+   "title": "Wizard · Your flight home · route",
+   "w": 390,
+   "x": 4540,
+   "y": 35916,
+   "page": "trip"
+  },
+  "WizardHomeRouteDarkNL.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 40,
+   "title": "Wizard · Your flight home · route · dark, Dutch",
+   "w": 390,
+   "x": 4540,
+   "y": 36840,
+   "page": "trip"
+  },
+  "WizardHomeRouteStop.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 40,
+   "title": "Wizard · Your flight home · route with a stop",
+   "w": 390,
+   "x": 5010,
+   "y": 35916,
+   "page": "trip"
+  },
+  "WizardHomeRouteStopDarkNL.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 40,
+   "title": "Wizard · Your flight home · route with a stop · dark, Dutch",
+   "w": 390,
+   "x": 5010,
+   "y": 36840,
+   "page": "trip"
+  },
+  "WizardStopSearchHome.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 40,
+   "title": "Wizard · Stop search · flight home",
+   "w": 390,
+   "x": 5480,
+   "y": 35916,
+   "page": "trip"
+  },
+  "WizardStopSearchHomeDarkNL.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 40,
+   "title": "Wizard · Stop search · flight home · dark, Dutch",
+   "w": 390,
+   "x": 5480,
+   "y": 36840,
+   "page": "trip"
   }
  },
  "createdOnFiles": {
@@ -3237,7 +3397,8 @@
   "wizStopsRoute",
   "planCompactTitle",
   "planCompactNote",
-  "planCompactQuestions"
+  "planCompactQuestions",
+  "wiz9Sec"
  ],
  "notes": {
   "moreRowAuth": {
@@ -3998,7 +4159,8 @@
    "w": 640,
    "page": "trip",
    "size": "m",
-   "text": "Request (Claude Code, 4 Nov): stops move to the Where screen\n\nRick tried the build and decided: the route comes first, then the times. Where sets the whole route (From, any stops, To); the next screen sets the times for every flight in it. Today a stop is added from the times screen, which jumps back into airport search halfway through entering times.\n\nPlease redraw:\n\n1. Where with stops. An \"Add a stop\" button under the route. A stop is an airport row between From and To; a new stop goes before the destination. Its search still names the two airports it splits (\"Between AMS and DXB\"). Say how a stop is removed here (it moves off the times screen) and whether the swap button hides once there is a stop (swapping a route with stops is unclear). Limit stays 16 flights: say what replaces \"Add a stop\" at the limit.\n2. Where · with one stop and with two stops, light and Nederlands.\n3. Outbound times as one card per flight (Departure + Arrival rows, each flight labelled e.g. \"AMS → IST\", \"IST → DXB\"), with \"Add a stop\" and the stop removal gone from this screen. Show how it fits with two and three flights: this breaks \"no scrolling\", so say whether scrolling is fine here or what replaces it.\n4. Your flight home: it picks airports and times on one screen and copies no stops. Decide whether it gets its own route step (From fixed, To, Add a stop) before its times, or keeps one screen with a stop button on the route rows. Draw the choice.\n5. Field errors on the times cards with several flights, e.g. \"Check the departure and arrival times.\" on the second flight's Arrival.\n6. Any copy new to these boards in en + nl.\n\nEverything else in the flow stays as drawn."
+   "text": "Request (Claude Code, 4 Nov): stops move to the Where screen\n\nRick tried the build and decided: the route comes first, then the times. Where sets the whole route (From, any stops, To); the next screen sets the times for every flight in it. Today a stop is added from the times screen, which jumps back into airport search halfway through entering times.\n\nPlease redraw:\n\n1. Where with stops. An \"Add a stop\" button under the route. A stop is an airport row between From and To; a new stop goes before the destination. Its search still names the two airports it splits (\"Between AMS and DXB\"). Say how a stop is removed here (it moves off the times screen) and whether the swap button hides once there is a stop (swapping a route with stops is unclear). Limit stays 16 flights: say what replaces \"Add a stop\" at the limit.\n2. Where · with one stop and with two stops, light and Nederlands.\n3. Outbound times as one card per flight (Departure + Arrival rows, each flight labelled e.g. \"AMS → IST\", \"IST → DXB\"), with \"Add a stop\" and the stop removal gone from this screen. Show how it fits with two and three flights: this breaks \"no scrolling\", so say whether scrolling is fine here or what replaces it.\n4. Your flight home: it picks airports and times on one screen and copies no stops. Decide whether it gets its own route step (From fixed, To, Add a stop) before its times, or keeps one screen with a stop button on the route rows. Draw the choice.\n5. Field errors on the times cards with several flights, e.g. \"Check the departure and arrival times.\" on the second flight's Arrival.\n6. Any copy new to these boards in en + nl.\n\nEverything else in the flow stays as drawn.\n\nDone 9 Nov (Rick asked for the same thing: ask about a transfer right after From → To). Boards in the row \"Wizard 9 Nov · Route first, then times\", light English above, dark Dutch below.\n1. Where asks \"Do you change planes on the way?\" (No, direct / Yes) once From and To are picked. Yes opens the stop search; the stop becomes a row between From and To, removed with its ×. \"Add another stop\" sits under the question and adds the next stop before the destination; its search names the two airports it splits (\"Between Dubai and Tokyo\"). \"No, direct\" removes all stops. The swap button only shows on a direct route. At 16 flights \"Add another stop\" is replaced by \"That's the most we can plan: 16 flights.\"\n2. WizardWhereStop, WizardWhereStops (+ dark Dutch).\n3. Times: one card per flight with its route, the connection or overnight line between cards, no stop controls. WizardOutboundStopEmpty, WizardOutboundStop, WizardOutboundThree. Scrolling is fine from three flights: Continue stays fixed and an error after Continue scrolls to the first one.\n4. Your flight home gets the same two steps: a route step (From fixed with the lock, the same stop question, To) and then its times (\"When do you fly home?\"). WizardHomeRoute, WizardHomeRouteStop, WizardStopSearchHome, WizardReturnFlight.\n5. WizardOutboundTwoErrors: \"Check the departure and arrival times.\" under the second card. New for flights out of order: \"This flight leaves before the previous one lands.\"\n6. All new copy, en + nl, is in WizardCopy; WizardSpec is updated. WizardOutboundStopNew is removed (that state no longer exists).",
+   "fill": "green"
   },
   "planCompactTitle": {
    "kind": "title1",
@@ -4023,6 +4185,15 @@
    "size": "m",
    "text": "Request (Claude Code, 5 Nov): compact trip page, five open points\n\nBuilding the compact trip page from Plan, PlanScrolled, PlanDayMenu and PlanListScrolled now. Each point below is built with the stated default; please redraw or confirm.\n\n1. Full header to compact line. Only the end state is drawn. Default: an instant swap when the full header's top reaches the navigation bar; the full header keeps scrolling under the line until it has passed. Is a transition wanted?\n2. Type values that are not tokens yet. Lane label 11/14 Figtree 500; compact date 10/12 (600 and 400); list compact line 13/18; title 17/22 and subtitle 12/15 (the boards draw the system font, the app uses Figtree like its other stack titles). Please confirm or add them to the canonical decisions.\n3. Wide (iPad). PlanWide has no view button, no compact state, no day menu and the old text-only lane header. Default: the phone layout at every width. Please redraw PlanWide.\n4. Settings → Preferences. SetPreferences still draws the Optional items switch, which this redesign removes. Please redraw it without.\n5. Day menu. SDK 58 has no native title menu, so the title opens the system menu (SwiftUI on iOS, Compose on Android), not the drawn glass popover, and the date is a subtitle line rather than a trailing column. Please redraw PlanDayMenu as the system menu.\n\nAlso missing: Dutch for \"Show as list\", \"Show as timeline\" and the title's VoiceOver labels; the app ships provisional Dutch until approved.\n\nDecided by Rick (5 Nov): the app never shows optional steps and gives them no reminders; the tab bar minimises on every tab; the iOS minimum stays 16.4.\n\nDone 5 Nov:\n1. Yes, a small one, tied to scrolling rather than a timer. The full header scrolls up under the compact line; over the last 24 pt the compact line fades in. Its lanes sit exactly where the full header's lane row was, so it reads as that row rolling up. With Reduce Motion: your instant swap.\n2. Confirmed, and Figtree everywhere: the app wins over the boards' system font. Title Figtree 600 17/22; subtitle Figtree 400 12/15, muted; lane label 500 11/14; compact date 10/12 (day 600, date 400); list compact line 13/18 (label 600, date 400). The day menu uses the system font because it is the system menu. Recorded in the note \"Trip page, compact timeline\".\n3. PlanWide redrawn: compact line (lanes over the timeline, \"Steps\" over the list), day menu, lane header with dots, aligned to the timeline column. No view button on wide: it shows the timeline and the list side by side, so there is nothing to switch. New boards PlanWideScrolled and PlanWideDayMenu.\n4. The switch was already gone in the 5 Nov version; I've now also removed its leftover strings and state from SetPreferences.\n5. PlanDayMenu redrawn as the system menu: \"Go to day\" as the menu title, checkmark in front of the current day, the date as a subtitle line. Android: Compose DropdownMenu with the same two-line items.\nDutch: \"Als lijst tonen\", \"Als tijdlijn tonen\", menu title \"Ga naar dag\", \"Stappen\" (wide). Title for VoiceOver: label \"Amsterdam naar Tokio, 12 tot 18 oktober\" at the top, \"Amsterdam naar Tokio, Aankomstdag, dinsdag 13 oktober\" once scrolled; hint \"Kies een dag\" (en: \"Choose a day\").",
    "fill": "green"
+  },
+  "wiz9Sec": {
+   "kind": "title1",
+   "x": 1720,
+   "y": 35816,
+   "maxW": 4150,
+   "w": 240,
+   "page": "trip",
+   "text": "Wizard 9 Nov · Route first, then times"
   }
  },
  "order": [
@@ -4224,8 +4395,6 @@
   "WizardOutboundEmpty.dc.html",
   "WizardOutboundEmptyDarkNL.dc.html",
   "WizardStopSearchDarkNL.dc.html",
-  "WizardOutboundStopNew.dc.html",
-  "WizardOutboundStopNewDarkNL.dc.html",
   "WizardOutboundStopDarkNL.dc.html",
   "WizardOutboundOvernight.dc.html",
   "WizardOutboundOvernightDarkNL.dc.html",
@@ -4343,7 +4512,25 @@
   "PlanScrolledDark.dc.html",
   "PlanWideScrolled.dc.html",
   "PlanWideDayMenu.dc.html",
-  "AppIcon.dc.html"
+  "AppIcon.dc.html",
+  "WizardWhereStop.dc.html",
+  "WizardWhereStopDarkNL.dc.html",
+  "WizardWhereStops.dc.html",
+  "WizardWhereStopsDarkNL.dc.html",
+  "WizardStopSearchSecond.dc.html",
+  "WizardStopSearchSecondDarkNL.dc.html",
+  "WizardOutboundStopEmpty.dc.html",
+  "WizardOutboundStopEmptyDarkNL.dc.html",
+  "WizardOutboundThree.dc.html",
+  "WizardOutboundThreeDarkNL.dc.html",
+  "WizardOutboundTwoErrors.dc.html",
+  "WizardOutboundTwoErrorsDarkNL.dc.html",
+  "WizardHomeRoute.dc.html",
+  "WizardHomeRouteDarkNL.dc.html",
+  "WizardHomeRouteStop.dc.html",
+  "WizardHomeRouteStopDarkNL.dc.html",
+  "WizardStopSearchHome.dc.html",
+  "WizardStopSearchHomeDarkNL.dc.html"
  ],
  "pages": [
   {

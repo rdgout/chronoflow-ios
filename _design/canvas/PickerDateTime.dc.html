@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Choose departure date and time</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="ds/chronoflow/components/bundle.css">
+<script src="ds/chronoflow/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Figtree';src:url("/_blob/74876cc764ebb15bf4ae98bcdbf3140c") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/741b1ce40b46479a73d934d0d5be9774") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/079d83fda74d66d1f31e35072f71201d") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/991830890debdac04981f1a27656ed5c") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Fraunces';src:url("/_blob/fc815083784d00806d267d81858d2414") format("woff2");font-weight:400 500;font-style:normal;font-display:swap}
+body{margin:0}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="position: relative; width: 375px; height: 812px; overflow: hidden; background: var(--background); color: var(--foreground); font-family: var(--font-sans);">
+  <div aria-hidden="true" style="position: absolute; inset: 0; overflow: hidden;">
+    <dc-import name="TripEditor" theme="{{theme}}" hint-size="375px,4200px"></dc-import>
+  </div>
+  <a href="TripEditor.dc.html" aria-label="Close" style="position: absolute; inset: 0; background: oklch(0.15 0.03 272 / 0.5);"></a>
+
+  <section role="dialog" aria-modal="true" aria-labelledby="pdt-title" style="position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; gap: 14px; padding: 12px 20px 32px; border-radius: 38px 38px 0 0; background: var(--card); color: var(--card-foreground); box-shadow: var(--shadow-soft);">
+    <span aria-hidden="true" style="align-self: center; width: 36px; height: 5px; border-radius: 9999px; background: rgba(120, 120, 128, 0.4);"></span>
+    <div style="display: flex; flex-direction: column; gap: 4px;">
+      <h2 id="pdt-title" style="margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 24px; line-height: 32px; letter-spacing: -0.01em;">Flight 1 departs</h2>
+      <p style="margin: 0; display: flex; align-items: center; gap: 6px; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">
+        <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        Local time at Amsterdam Schiphol (AMS)
+      </p>
+    </div>
+
+    <div class="ios" aria-label="Date and time, system picker" style="display: flex; flex-direction: column; gap: 6px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; height: 44px; padding: 0 4px;">
+        <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 17px; line-height: 22px; font-weight: 600;">October 2026<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="color: var(--dawn-text);"><path d="m9 18 6-6-6-6"></path></svg></span>
+        <span style="display: inline-flex; gap: 22px; color: var(--dawn-text);"><svg aria-label="Previous month" role="img" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg><svg aria-label="Next month" role="img" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg></span>
+      </div>
+      <div aria-hidden="true" style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 13px; line-height: 18px; font-weight: 600; color: rgba(120, 120, 128, 0.8);">
+        <span>SUN</span><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span>
+      </div>
+      <div role="grid" style="display: grid; grid-template-columns: repeat(7, 1fr); row-gap: 2px; justify-items: center;">
+        <sc-for list="{{cells}}" as="c" hint-placeholder-count="35">
+          <button type="button" aria-label="{{c.aria}}" aria-pressed="{{c.checked}}" onClick="{{c.pick}}" style="{{c.style}}">{{c.num}}</button>
+        </sc-for>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: space-between; min-height: 52px; margin-top: 4px; padding-top: 6px; border-top: 0.5px solid rgba(120, 120, 128, 0.3);">
+        <span style="font-size: 17px; line-height: 22px;">Time</span>
+        <span style="padding: 6px 12px; border-radius: 8px; background: rgba(118, 118, 128, 0.12); font-size: 17px; line-height: 22px; font-variant-numeric: tabular-nums;">14:40</span>
+      </div>
+    </div>
+
+    <p role="status" style="margin: 0; padding: 10px 14px; border-radius: 14px; background: var(--surface-2); font-size: 14px; line-height: 20px; font-weight: 500; text-align: center; font-variant-numeric: tabular-nums;">{{summary}}</p>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+      <a href="TripEditor.dc.html" class="inline-flex shrink-0 items-center justify-center gap-2 text-sm font-medium whitespace-nowrap transition-colors rounded-full border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-6" style="color: var(--foreground); text-decoration: none;">Cancel</a>
+      <a href="TripEditor.dc.html" class="inline-flex shrink-0 items-center justify-center gap-2 text-sm font-medium whitespace-nowrap transition-colors rounded-full bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6" style="text-decoration: none;">Done</a>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":375,"height":812}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { day: 12 };
+  }
+  renderVals() {
+    const pad = (n) => String(n).padStart(2, '0');
+    const dows = { 9: 'Fri', 10: 'Sat', 11: 'Sun', 12: 'Mon', 13: 'Tue', 14: 'Wed', 15: 'Thu', 16: 'Fri' };
+    const longDows = { 9: 'Friday', 10: 'Saturday', 11: 'Sunday', 12: 'Monday', 13: 'Tuesday', 14: 'Wednesday', 15: 'Thursday', 16: 'Friday' };
+    const cells = [];
+    for (let b = 0; b < 4; b++) cells.push({ num: '', aria: '', checked: 'false', pick: () => {}, style: 'width: 44px; height: 40px; border: 0; background: transparent;' });
+    for (let n = 1; n <= 31; n++) {
+      const on = this.state.day === n;
+      const dow = ['Thursday', 'Friday', 'Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday'][(n - 1) % 7];
+      cells.push({
+        num: String(n), aria: dow + ' ' + n + ' October', checked: on ? 'true' : 'false',
+        pick: () => this.setState({ day: n }),
+        style: 'width: 44px; height: 40px; border: 0; border-radius: 9999px; font: inherit; font-size: 20px; line-height: 24px; font-variant-numeric: tabular-nums; ' +
+          (on ? 'background: color-mix(in oklab, var(--dawn) 22%, transparent); color: var(--dawn-text); font-weight: 600;' : 'background: transparent; color: var(--foreground); font-weight: 400;')
+      });
+    }
+    const hours = [];
+    for (let i = 0; i < 24; i++) { const v = (13 + i) % 24; hours.push({ label: pad(v), sel: v === 14 ? 'true' : 'false' }); }
+    const minutes = [];
+    for (let i = 0; i < 12; i++) { const v = (35 + i * 5) % 60; minutes.push({ label: pad(v), sel: v === 40 ? 'true' : 'false' }); }
+    return {
+      theme: this.props.theme ?? 'light',
+      cells, hours, minutes,
+      summary: ['Thu', 'Fri', 'Sat', 'Sun', 'Mon', 'Tue', 'Wed'][(this.state.day - 1) % 7] + ' ' + this.state.day + ' Oct · 14:40 Amsterdam time'
+    };
+  }
+}
+</script>
+</body>
+</html>

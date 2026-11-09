@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Choose your usual bedtime</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="ds/chronoflow/components/bundle.css">
+<script src="ds/chronoflow/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Figtree';src:url("/_blob/74876cc764ebb15bf4ae98bcdbf3140c") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/741b1ce40b46479a73d934d0d5be9774") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/079d83fda74d66d1f31e35072f71201d") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/991830890debdac04981f1a27656ed5c") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Fraunces';src:url("/_blob/fc815083784d00806d267d81858d2414") format("woff2");font-weight:400 500;font-style:normal;font-display:swap}
+body{margin:0}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="position: relative; width: 375px; height: 812px; overflow: hidden; background: var(--background); color: var(--foreground); font-family: var(--font-sans);">
+  <div aria-hidden="true" style="position: absolute; inset: 0;">
+    <dc-import name="GuestSleep" theme="{{theme}}" hint-size="375px,812px"></dc-import>
+  </div>
+  <a href="GuestSleep.dc.html" aria-label="Close" style="position: absolute; inset: 0; background: oklch(0.15 0.03 272 / 0.5);"></a>
+
+  <section role="dialog" aria-modal="true" aria-labelledby="pt-title" style="position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; gap: 16px; padding: 12px 20px 32px; border-radius: 38px 38px 0 0; background: var(--card); color: var(--card-foreground); box-shadow: var(--shadow-soft);">
+    <span aria-hidden="true" style="align-self: center; width: 36px; height: 5px; border-radius: 9999px; background: rgba(120, 120, 128, 0.4);"></span>
+    <div style="display: flex; flex-direction: column; gap: 4px;">
+      <h2 id="pt-title" style="margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 24px; line-height: 32px; letter-spacing: -0.01em;">Usual bedtime</h2>
+      <p style="margin: 0; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">On a normal work or school day.</p>
+    </div>
+
+    <div aria-label="System time picker" style="position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 0; height: 220px;">
+      <div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 92px; height: 36px; border-radius: 9px; background: rgba(118, 118, 128, 0.12);"></div>
+      <div role="listbox" aria-label="Hour" tabindex="0" style="position: relative; height: 220px; overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none; -webkit-mask-image: linear-gradient(to bottom, transparent, #000 30%, #000 70%, transparent); mask-image: linear-gradient(to bottom, transparent, #000 30%, #000 70%, transparent);">
+        <sc-for list="{{hours}}" as="h" hint-placeholder-count="8">
+          <div role="option" aria-selected="{{h.sel}}" class="ios" style="height: 44px; display: grid; place-items: center; scroll-snap-align: center; font-size: 22px; line-height: 28px; font-weight: 400; font-variant-numeric: tabular-nums;">{{h.label}}</div>
+        </sc-for>
+      </div>
+      <div role="listbox" aria-label="Minutes" tabindex="0" style="position: relative; height: 220px; overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none; -webkit-mask-image: linear-gradient(to bottom, transparent, #000 30%, #000 70%, transparent); mask-image: linear-gradient(to bottom, transparent, #000 30%, #000 70%, transparent);">
+        <sc-for list="{{minutes}}" as="m" hint-placeholder-count="8">
+          <div role="option" aria-selected="{{m.sel}}" class="ios" style="height: 44px; display: grid; place-items: center; scroll-snap-align: center; font-size: 22px; line-height: 28px; font-weight: 400; font-variant-numeric: tabular-nums;">{{m.label}}</div>
+        </sc-for>
+      </div>
+    </div>
+    <p style="margin: 0; font-size: 14px; line-height: 20px; color: var(--muted-foreground); text-align: center;">Steps of 5 minutes.</p>
+
+    <div style="display: grid; gap: 8px;">
+      <a href="GuestSleep.dc.html" class="inline-flex shrink-0 items-center justify-center gap-2 text-sm font-medium whitespace-nowrap transition-colors rounded-full bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6" style="text-decoration: none;">Done</a>
+      <a href="GuestSleep.dc.html" class="inline-flex shrink-0 items-center justify-center gap-2 text-sm font-medium whitespace-nowrap transition-colors rounded-full hover:bg-accent hover:text-accent-foreground h-10 px-6" style="color: var(--foreground); text-decoration: none;">Cancel</a>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":375,"height":812}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const pad = (n) => String(n).padStart(2, '0');
+    const hours = [];
+    for (let i = 0; i < 24; i++) { const v = (21 + i) % 24; hours.push({ label: pad(v), sel: v === 23 ? 'true' : 'false' }); }
+    const minutes = [];
+    for (let i = 0; i < 12; i++) { const v = (50 + i * 5) % 60; minutes.push({ label: pad(v), sel: v === 0 ? 'true' : 'false' }); }
+    return { theme: this.props.theme ?? 'light', hours, minutes };
+  }
+}
+</script>
+</body>
+</html>
