@@ -125,10 +125,13 @@
                     SettingsStrings.text(
                         "Sign out", language: locale.language.languageCode?.identifier == "nl" ? .nl : .en)
                 )
-                .font(Typography.screenLabel.font).frame(maxWidth: .infinity)
-                .frame(minHeight: PlanUITokens.actionMinHeight)
+                .font(Typography.screenLabel.font).foregroundStyle(ColorToken.foreground.color)
+                .frame(maxWidth: .infinity, minHeight: PlanUITokens.actionMinHeight)
+                .background(ColorToken.background.color, in: Capsule())
+                .overlay { Capsule().strokeBorder(ColorToken.input.color, lineWidth: AuthTokens.borderWidth) }
+                .contentShape(Capsule())
             }
-            .buttonStyle(.bordered).buttonBorderShape(.capsule)
+            .buttonStyle(PressStyle())
             .disabled(model.busy || model.state.account == nil).accessibilityIdentifier("settings.signOut")
         }
     }

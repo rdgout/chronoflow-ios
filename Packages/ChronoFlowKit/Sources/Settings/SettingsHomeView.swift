@@ -114,7 +114,7 @@
                     SettingsSignOutButton(model: model)
                 }.listRowBackground(Color.clear).listRowSeparator(.hidden)
             }
-            .listStyle(.insetGrouped).scrollContentBackground(.hidden)
+            .listStyle(.insetGrouped).listSectionSpacing(PlanUITokens.space4).scrollContentBackground(.hidden)
             .background(ColorToken.background.color).foregroundStyle(ColorToken.cardForeground.color)
             .tint(ColorToken.primary.color)
             .accessibilityElement(children: .contain).accessibilityIdentifier("settings.screen")
