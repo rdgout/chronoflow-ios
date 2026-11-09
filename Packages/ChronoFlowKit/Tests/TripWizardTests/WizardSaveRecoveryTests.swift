@@ -7,6 +7,63 @@ import Testing
 import TripWizard
 
 @Suite struct WizardSaveRecoveryTests {
+    @Test @MainActor func recoveryDeleteFailureStillCompletesTheSavedTrip() async throws {
+        let fixture = try await completionFixture(firstTrip: false)
+        try await fixture.database.write { db in
+            try db.execute(
+                sql: """
+                    CREATE TRIGGER fail_recovery_delete BEFORE DELETE ON drafts
+                    BEGIN SELECT RAISE(FAIL, 'injected delete failure'); END
+                    """)
+        }
+        fixture.model.savePlan()
+        try await eventually { fixture.model.createdTripID == "created" }
+        #expect(fixture.model.closed && fixture.model.draft.state.saveFailure == nil)
+        #expect(await fixture.source.count("save") == 1)
+        let recovery = try #require(try await fixture.store.recover())
+        #expect(recovery.state.savedTripId == "created" && recovery.state.step == .calculating)
+        try await fixture.database.write { try $0.execute(sql: "DROP TRIGGER fail_recovery_delete") }
+        let restarted = MemberWizardModel(
+            draft: recovery, store: fixture.store, search: noAirportSearch(),
+            generation: TripGenerationService(
+                source: fixture.source,
+                effects: TripGenerationEffects(
+                    mergeProfile: { _ in }, pullCreatedTrip: { _ in }, requestSync: {})))
+        restarted.resumeCompletion()
+        try await eventually { restarted.createdTripID == "created" }
+        #expect(await fixture.source.count("save") == 1)
+        #expect(try await fixture.store.recover() == nil)
+        try await fixture.database.close()
+    }
+
+    @Test @MainActor func transientSavedIDWriteFailurePersistsKnownTripBeforeRecovery() async throws {
+        let fixture = try await completionFixture()
+        let recovery = fixture.model.draft
+        let generation = FailingSavedIDWriteGeneration(service: fixture.service)
+        let model = MemberWizardModel(
+            draft: recovery, store: fixture.store, search: noAirportSearch(), now: { fixture.clock.now },
+            generation: generation)
+        model.savePlan()
+        try await eventually { model.draft.state.saveFailure != nil }
+        await model.flush()
+        let saved = try #require(try await fixture.store.recover())
+        #expect(saved.state.savedTripId == "created" && saved.state.step == .ready)
+        #expect(!model.needsReadyReview)
+        let restarted = MemberWizardModel(
+            draft: saved, store: fixture.store, search: noAirportSearch(), now: { fixture.clock.now },
+            generation: TripGenerationService(
+                source: fixture.source,
+                effects: TripGenerationEffects(
+                    mergeProfile: { _ in }, pullCreatedTrip: { _ in }, requestSync: {})))
+        restarted.resumeCompletion()
+        #expect(!restarted.needsReadyReview && !restarted.reviewing)
+        restarted.savePlan()
+        try await eventually { restarted.createdTripID == "created" }
+        #expect(await fixture.source.count("save") == 1)
+        #expect(await fixture.source.count("review") == 0)
+        try await fixture.database.close()
+    }
+
     @Test(arguments: [true, false]) @MainActor
     func onlySuccessfulFirstTripSaveQueuesReminders(firstTrip: Bool) async throws {
         let fixture = try await completionFixture(firstTrip: firstTrip)
@@ -129,4 +186,18 @@ import TripWizard
         let balance = try await mock.fetchAccount().settings.planCredits["credits"]
         #expect(balance == .number(Decimal(review.review.price.balance - review.review.price.cost)))
     }
+}
+
+private struct FailingSavedIDWriteGeneration: MemberWizardGeneration {
+    let service: TripGenerationService
+    func review(instance: String, input: ApiTripReviewInput) async throws -> TripGenerationReviewResult {
+        try await service.review(instance: instance, input: input)
+    }
+    func save(
+        _ state: TripGenerationState, didCreate: @escaping @Sendable (String) async throws -> Void
+    ) async throws -> TripGenerationSaveResult {
+        try await service.save(state) { _ in throw StoreFailure.unavailable }
+    }
+    func cancelReviews(instance: String) async { await service.cancelReviews(instance: instance) }
+    func cancel() async { await service.cancel() }
 }

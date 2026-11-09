@@ -222,7 +222,8 @@ extension MemberWizardModel {
                 self.draft.state.savedTripId = result.state.savedTripId
                 switch result.outcome {
                 case .saved(let id):
-                    try await store.didSave(instance: snapshot.state.instance, firstTrip: snapshot.state.firstTrip)
+                    try? await store.didSave(instance: snapshot.state.instance, firstTrip: snapshot.state.firstTrip)
+                    guard !Task.isCancelled, !self.closed else { return }
                     self.createdTripID = id
                     self.closed = true
                 case .reReviewNeeded:

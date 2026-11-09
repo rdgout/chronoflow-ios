@@ -204,6 +204,9 @@ public actor TripGenerationService {
         } catch is CancellationError {
             throw CancellationError()
         } catch let failure as DataFailure {
+            if state.savedTripId != nil {
+                return TripGenerationSaveResult(state: state, outcome: .failed(failure))
+            }
             switch failure {
             case .reviewExpired, .notEnoughCredits:
                 state.review = nil
@@ -214,6 +217,8 @@ public actor TripGenerationService {
                     outcome: .reReviewNeeded(failure == .reviewExpired ? .reviewExpired : .notEnoughCredits))
             default: return TripGenerationSaveResult(state: state, outcome: .failed(failure))
             }
+        } catch {
+            return TripGenerationSaveResult(state: state, outcome: .failed(.server(status: nil)))
         }
     }
 

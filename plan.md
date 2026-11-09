@@ -1850,6 +1850,8 @@ Source: canvas version 1794242613-8e6a, WizardSpec "Route first, then times (Ric
 
 - [x] Review round 3, retry/state: share the model-owned Checking/save countdown, expire deadlines, clear controls on failure reset/navigation, and limit Updated to unchanged-input re-checks. Package regressions are authored; tests remain unrun by instruction.
 
+- [x] Review round 3, save durability: retain the created trip ID for every non-cancellation local write failure and navigate after successful creation even if recovery cleanup fails. Recovery/cleanup regressions are authored and unrun.
+
 - [ ] **Create gate (M2).** Against local Valet on trip-wizard after the user runs the four migrations (OQ 37): create a trip, land on its page and see the timeline in en and nl. Record the result. Production acceptance waits for the merge and deploy.
 
 ### Phase 17: Day-to-day (`feat/phase-17-day-to-day`), M3
