@@ -74,9 +74,10 @@
                             .opacity(model.draft.fieldErrors[key] == nil ? 0 : 1).allowsHitTesting(false)
                     }
                     .frame(minHeight: AuthTokens.touch)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain).accessibilityIdentifier(identifier + ".date-time")
-            .accessibilityLabel(title).accessibilityValue(displayedValue)
+            .accessibilityLabel(title).accessibilityValue(value.isEmpty ? t("not set") : displayedValue)
         }
     }
 
@@ -103,6 +104,7 @@
                             ColorToken.mutedForeground.color)
                         DatePicker(title, selection: $value, displayedComponents: [.date, .hourAndMinute])
                             .datePickerStyle(.graphical).labelsHidden()
+                            .tint(ColorToken.dawnText.color)
                             .environment(\.calendar, WizardDateTime.calendar)
                             .environment(\.timeZone, WizardDateTime.calendar.timeZone)
                             .accessibilityIdentifier("wizard.native-picker")
@@ -122,7 +124,6 @@
                     }
                 }
             }
-            .tint(ColorToken.primary.color)
             .presentationDetents([.large]).presentationDragIndicator(.visible)
             .accessibilityIdentifier("wizard.date-time-sheet")
         }

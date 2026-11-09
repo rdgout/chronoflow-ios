@@ -2960,6 +2960,22 @@
           }
         }
       }
+    },
+    "not set": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "not set"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "niet ingesteld"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

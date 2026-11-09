@@ -24,7 +24,7 @@ import TripWizardUI
             "Do you change planes on the way?", "No, direct", "Stop", "Stop {{number}}", "Add another stop",
             "That's the most we can plan: 16 flights.", "When are your flights?", "When do you fly home?",
             "It leaves from where you landed. Add any stops on the way.", "Where you landed",
-            "This flight leaves before the previous one lands.", "Choose", "Departure", "Done", "Cancel",
+            "This flight leaves before the previous one lands.", "Choose", "Departure", "Done", "Cancel", "not set",
         ] {
             #expect(strings[key] != nil)
         }

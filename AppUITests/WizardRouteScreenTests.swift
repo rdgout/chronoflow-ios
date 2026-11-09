@@ -109,19 +109,19 @@ nonisolated final class WizardRouteScreenTests: XCTestCase {
         let app = WizardScreenUIFlow.launch("WizardOutboundEmpty")
         defer { app.terminate() }
         let pill = app.buttons["wizard.0.departure.date-time"]
-        XCTAssertEqual(pill.value as? String, "Choose")
+        XCTAssertEqual(pill.value as? String, "not set")
         let picker = WizardPickerUIFlow.open("departure", in: app)
         let title = app.navigationBars["Departure"]
         XCTAssertTrue(title.exists)
         let tomorrow = WizardPickerUIFlow.date(days: 1, from: Date())
         WizardPickerUIFlow.selectDate(tomorrow, picker: picker)
         app.buttons["wizard.picker.cancel"].tap()
-        XCTAssertEqual(pill.value as? String, "Choose")
+        XCTAssertEqual(pill.value as? String, "not set")
         _ = WizardPickerUIFlow.open("departure", in: app)
         XCTAssertTrue(title.exists)
         app.buttons["wizard.picker.done"].tap()
         let committed = pill.value as? String
-        XCTAssertNotEqual(committed, "Choose")
+        XCTAssertNotEqual(committed, "not set")
         let filled = WizardPickerUIFlow.open("departure", in: app)
         XCTAssertTrue(title.exists)
         WizardPickerUIFlow.selectDate(tomorrow, picker: filled)
