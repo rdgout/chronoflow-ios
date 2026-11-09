@@ -3,6 +3,7 @@ import DesignSystem
 import LocalStore
 import PlanCore
 import PlanUI
+import Reminders
 import Settings
 import SwiftUI
 import TripWizard
@@ -31,6 +32,7 @@ struct AppTabs: View {
     @State private var step: StepSelection?
     #if DEBUG
         @State private var showingLegend = false
+        @State private var showingReminders = false
     #endif
 
     private var language: Language { locale.language.languageCode?.identifier == "nl" ? .nl : .en }
@@ -45,6 +47,14 @@ struct AppTabs: View {
                         showingLegend = true
                     }
                 }
+                .onChange(of: home?.formatter != nil) { _, ready in
+                    if ready, ProcessInfo.processInfo.arguments.contains("-cf.firstTripReminders"),
+                        (UIApplication.shared.delegate as? AppDelegate)?.authServices?.authUITestEnabled == true
+                    {
+                        showingReminders = true
+                    }
+                }
+                .sheet(isPresented: $showingReminders) { RemindersDestination(native: native, firstTrip: true) }
                 .sheet(isPresented: $showingLegend) { LegendSheet() }
         #else
             tabs.planPageSafeArea()
@@ -69,6 +79,7 @@ struct AppTabs: View {
                 case .bodyClock: SettingsBodyClockView(store: settingsPages)
                 case .preferences: SettingsPreferencesView(store: settingsPages)
                 case .security: SettingsSecurityView(store: settingsPages)
+                case .reminders: RemindersDestination(native: native)
                 case .plan:
                     SettingsPlanView(store: settingsPages, offline: settingsHome.offline) {
                         try? await native?.refreshNow()
@@ -176,6 +187,22 @@ struct AppTabs: View {
                     airportSearch = nil
                     return
                 }
+            }
+        }
+        .task(id: locale) { await native?.reminders.setLanguage(language) }
+        .onChange(of: native?.reminderTaps.pending, initial: true) { _, tap in
+            guard let tap, let native else { return }
+            native.reminderTaps.clear()
+            Task {
+                guard let current = await native.controller.activeSession(),
+                    tap.accountID == nil || tap.accountID == current.session.accountId
+                else { return }
+                selection = .trips
+                tripsPath = [
+                    TripPageRoute(
+                        tripID: tap.tripID, blockID: tap.blockID, notificationInputHash: tap.inputHash,
+                        notificationToken: UUID())
+                ]
             }
         }
         .onDisappear {

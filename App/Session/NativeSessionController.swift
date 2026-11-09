@@ -1,7 +1,9 @@
 import AppCore
 import Foundation
 import LocalStore
+import Reminders
 import Sync
+import UIKit
 
 @MainActor
 final class NativeSessionController {
@@ -9,6 +11,10 @@ final class NativeSessionController {
     let accounts: SessionAccountDatabase
     let model: AccountModel
     let sync: SessionSync?
+    let reminders: ReminderService
+    let reminderTaps: ReminderTapRouter
+    private var reminderEvents: Task<Void, Never>?
+    private let timeObservers: ReminderTimeObservers
     let wiper: AccountWiper
     lazy var readiness = StoredDataReadiness(controller: controller) { [accounts] id in
         guard let database = await accounts.activeDatabase() else { throw StoreFailure.closed }
@@ -30,9 +36,31 @@ final class NativeSessionController {
         signedOut: @escaping @MainActor @Sendable () -> Void = {}
     ) {
         sourceFactory = source
+        let notificationCenter: any ReminderNotificationCenter
+        #if DEBUG
+            let arguments = ProcessInfo.processInfo.arguments
+            if namespace == .mock,
+                UUID(uuidString: ProcessInfo.processInfo.environment["CF_AUTH_TEST_ID"] ?? "") != nil,
+                let index = arguments.firstIndex(of: "-cf.notificationAuthorization"),
+                arguments.indices.contains(index + 1),
+                let permission = ReminderPermission(rawValue: arguments[index + 1])
+            {
+                notificationCenter = MockReminderCenter(permission: permission)
+            } else {
+                notificationCenter = SystemReminderCenter()
+            }
+        #else
+            notificationCenter = SystemReminderCenter()
+        #endif
+        let taps = ReminderTapRouter()
+        reminderTaps = taps
+        let reminders = ReminderService(center: notificationCenter)
+        self.reminders = reminders
         let model = AccountModel()
         self.model = model
         let accounts = SessionAccountDatabase(applicationSupport: applicationSupport, namespace: namespace) {
+            await taps.clear()
+            await reminders.detach()
             await model.detach()
         }
         self.accounts = accounts
@@ -75,7 +103,10 @@ final class NativeSessionController {
         }
         controller = SessionController(
             credentials: credentials, accounts: accountStore?(accounts) ?? accounts, teardown: teardown,
-            stopSync: { await sync?.stop() },
+            stopSync: {
+                await reminders.detach()
+                await sync?.stop()
+            },
             requestSync: { epoch in
                 if let controller = reference.value() {
                     await sync?.requestStart(controller: controller, epoch: epoch)
@@ -83,6 +114,7 @@ final class NativeSessionController {
                 await requestSync(epoch)
             })
         reference.set(controller)
+        timeObservers = ReminderTimeObservers(service: reminders)
     }
 
     func deleteAccount(password: String, session: SessionSnapshot) async throws {
@@ -116,6 +148,7 @@ final class NativeSessionController {
     func setActive(_ active: Bool) async {
         await sync?.setEnabled(active)
         if active {
+            await reminders.reschedule()
             do { try await controller.retryUnauthorized() } catch { return }
             await readiness.retry()
             if let current = await controller.activeSession() {
@@ -130,7 +163,15 @@ final class NativeSessionController {
 
     func observe() {
         guard subscription == nil else { return }
-        subscription = Task { [weak self, controller, accounts, model] in
+        if let sync {
+            reminderEvents = Task { [reminders] in
+                for await event in await sync.events() {
+                    guard !Task.isCancelled else { return }
+                    if case .finished(_, _, let result) = event, result.state == .idle { await reminders.reschedule() }
+                }
+            }
+        }
+        subscription = Task { [weak self, controller, accounts, model, reminders] in
             for await update in await controller.updates() {
                 guard !Task.isCancelled, self != nil else { return }
                 let attachmentToken = model.attachmentToken
@@ -140,6 +181,11 @@ final class NativeSessionController {
                 if case .signedIn(let id) = update.presence, let database = await accounts.activeDatabase(),
                     await database.accountID?.rawValue == id, await controller.epoch == update.epoch
                 {
+                    await reminders.attach(database: database)
+                    guard await controller.epoch == update.epoch, await controller.presence == update.presence else {
+                        await reminders.detach()
+                        continue
+                    }
                     await model.attach(
                         to: AccountRepository(database: database), epoch: update.epoch, ifCurrent: attachmentToken)
                 } else if model.attachmentToken == attachmentToken {
@@ -156,10 +202,17 @@ final class NativeSessionController {
         subscription = nil
         previous?.cancel()
         await previous?.value
+        let events = reminderEvents
+        reminderEvents = nil
+        events?.cancel()
+        await events?.value
         await model.detach()
     }
 
-    deinit { subscription?.cancel() }
+    deinit {
+        subscription?.cancel()
+        reminderEvents?.cancel()
+    }
 }
 
 nonisolated private final class SessionControllerReference: @unchecked Sendable {

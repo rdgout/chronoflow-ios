@@ -70,7 +70,7 @@ targets:
         basedOnDependencyAnalysis: false
     dependencies:
       - package: ChronoFlowKit
-        products: [DesignSystem, AppCore, LocalStore, DataAccess, Sync, PlanCore, PlanUI, Settings, TripWizard, TripWizardUI, Launch, Welcome, Auth]
+        products: [DesignSystem, AppCore, LocalStore, DataAccess, Sync, PlanCore, PlanUI, Settings, Reminders, TripWizard, TripWizardUI, Launch, Welcome, Auth]
   AppTests:
     type: bundle.unit-test
     platform: iOS

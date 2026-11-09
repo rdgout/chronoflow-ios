@@ -1,10 +1,11 @@
 #if canImport(UIKit)
     import DesignSystem
+    import Reminders
     import SwiftUI
     import UIKit
 
     public enum SettingsDestination: String, CaseIterable, Identifiable {
-        case profile, account, security, bodyClock, preferences, plan
+        case profile, account, security, bodyClock, preferences, plan, reminders
         public var id: String { rawValue }
         public var title: String {
             switch self {
@@ -14,6 +15,7 @@
             case .bodyClock: "Body clock"
             case .preferences: "Preferences"
             case .plan: "Plan & credits"
+            case .reminders: "Reminders"
             }
         }
         var subtitle: String? {
@@ -32,6 +34,7 @@
             case .bodyClock: "moon"
             case .preferences: "slider.horizontal.3"
             case .plan: "creditcard"
+            case .reminders: "bell"
             }
         }
     }
@@ -73,6 +76,7 @@
 
     @MainActor public struct SettingsHomeContent: View {
         private let model: SettingsHomeModel
+        @Environment(\.locale) private var locale
         private let navigationEnabled: Bool
 
         public init(model: SettingsHomeModel, navigationEnabled: Bool = false) {
@@ -96,7 +100,7 @@
                     }.listRowBackground(Color.clear).listRowSeparator(.hidden)
                 }
                 Section {
-                    ForEach(SettingsDestination.visible.filter { $0 != .profile }) { destination in
+                    ForEach(SettingsDestination.visible.filter { $0 != .profile && $0 != .reminders }) { destination in
                         self.destination(destination) {
                             SettingsDestinationRow(
                                 destination: destination, credits: model.state.credits,
@@ -107,6 +111,16 @@
                 }.listRowBackground(ColorToken.card.color)
                     .listRowInsets(
                         EdgeInsets(top: 0, leading: PlanUITokens.space4, bottom: 0, trailing: PlanUITokens.space4))
+                Section {
+                    if navigationEnabled {
+                        NavigationLink(value: SettingsDestination.reminders) {
+                            Label(
+                                ReminderStrings.text(
+                                    "Reminders", language: locale.language.languageCode?.identifier == "nl" ? .nl : .en),
+                                systemImage: "bell")
+                        }.accessibilityIdentifier("settings.reminders")
+                    }
+                }.listRowBackground(ColorToken.card.color)
                 Section {
                     SettingsSignOutButton(model: model)
                 }.listRowBackground(Color.clear).listRowSeparator(.hidden)
