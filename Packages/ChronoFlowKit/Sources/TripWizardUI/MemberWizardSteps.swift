@@ -21,27 +21,38 @@
                 }.frame(height: PlanUITokens.wizardProgressHeight)
                     .padding(.horizontal, PlanUITokens.space5)
                     .accessibilityLabel(t("Progress, {{pct}} percent", ["pct": String(Int(model.progress * 100))]))
-                ScrollView {
-                    VStack(alignment: .leading, spacing: PlanUITokens.wizardContentGap) {
-                        VStack(alignment: .leading, spacing: PlanUITokens.wizardControlGap) {
-                            if let eyebrow {
-                                Text(eyebrow.uppercased()).font(Typography.screenEyebrow.font)
-                                    .tracking(Typography.screenEyebrow.tracking).foregroundStyle(
-                                        ColorToken.dawnText.color)
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: PlanUITokens.wizardContentGap) {
+                            VStack(alignment: .leading, spacing: PlanUITokens.wizardControlGap) {
+                                if let eyebrow {
+                                    Text(eyebrow.uppercased()).font(Typography.screenEyebrow.font)
+                                        .tracking(Typography.screenEyebrow.tracking).foregroundStyle(
+                                            ColorToken.dawnText.color)
+                                }
+                                WelcomeText(
+                                    title,
+                                    style: title.count > 80 ? Typography.wizardLongTitle : Typography.screenPageTitle,
+                                    color: .foreground
+                                )
+                                .accessibilityAddTraits(.isHeader).accessibilityIdentifier("wizard.title")
+                                if let subtitle {
+                                    Text(subtitle).font(Typography.wizardSubtitle.font).foregroundStyle(
+                                        ColorToken.mutedForeground.color)
+                                }
                             }
-                            WelcomeText(
-                                title,
-                                style: title.count > 80 ? Typography.wizardLongTitle : Typography.screenPageTitle,
-                                color: .foreground
-                            )
-                            .accessibilityAddTraits(.isHeader).accessibilityIdentifier("wizard.title")
-                            if let subtitle {
-                                Text(subtitle).font(Typography.wizardSubtitle.font).foregroundStyle(
-                                    ColorToken.mutedForeground.color)
-                            }
+                            content()
+                        }.frame(maxWidth: .infinity, alignment: .leading).padding(PlanUITokens.space5)
+                    }
+                    .onChange(of: errorScrollRequest) { _, _ in
+                        let start = id == "return-flight" ? model.draft.form.returnBoundary : 0
+                        let end = id == "return-flight" ? model.draft.form.legs.count : model.draft.form.returnBoundary
+                        if let index = (start..<end).first(where: { index in
+                            model.draft.fieldErrors.keys.contains { $0.hasPrefix("legs.\(index).") }
+                        }) {
+                            withAnimation { proxy.scrollTo("wizard.flight.\(index)", anchor: .top) }
                         }
-                        content()
-                    }.frame(maxWidth: .infinity, alignment: .leading).padding(PlanUITokens.space5)
+                    }
                 }
             }
             .background(ColorToken.background.color).foregroundStyle(ColorToken.foreground.color)
@@ -60,6 +71,7 @@
                             guard !continuing, !closing, enabled else { return }
                             continuing = true
                             action()
+                            if id == "outbound" || id == "return-flight" { errorScrollRequest += 1 }
                             continuing = false
                         } label: {
                             Text(button).font(Typography.wizardButton.font)
@@ -134,98 +146,7 @@
             }
         }
 
-        var returnFlightScreen: some View {
-            wizardShell(
-                title: t("Your flight home"), subtitle: t("It leaves from where you landed. Add your date and times."),
-                id: "return-flight",
-                button: t("Continue"), enabled: model.returnComplete,
-                action: {
-                    if model.finishReturn() {
-                        model.finishFlightInput()
-                    } else {
-                        UINotificationFeedbackGenerator().notificationOccurred(.warning)
-                    }
-                },
-                content: {
-                    if let banner = model.draft.fieldErrors["review"] {
-                        flightNotice(banner, identifier: "wizard.return-flight.past")
-                    }
-                    if model.draft.form.legs.indices.contains(model.draft.form.returnBoundary) {
-                        let first = model.draft.form.legs[model.draft.form.returnBoundary]
-                        VStack(spacing: 0) {
-                            returnAirportRow("From", iata: first.fromIata, city: first.fromCity, locked: true) {}
-                                .accessibilityElement(children: .ignore)
-                                .accessibilityLabel(
-                                    t(
-                                        "Leaves from {{city}}, where you landed. You can't change this.",
-                                        ["city": first.fromCity ?? first.fromIata])
-                                )
-                                .accessibilityIdentifier("wizard.return-flight.from")
-                            Divider().overlay(ColorToken.border.color)
-                            let last = model.draft.form.legs.last!
-                            returnAirportRow("To", iata: last.toIata, city: last.toCity, locked: false) {
-                                model.openAirport(
-                                    WizardAirportSheet(index: model.draft.form.legs.count - 1, side: .home))
-                            }.accessibilityIdentifier("wizard.to")
-                        }.wizardCard()
-                        ForEach(
-                            Array(model.draft.form.legs.enumerated()).filter {
-                                $0.offset >= model.draft.form.returnBoundary
-                            }, id: \.element.id
-                        ) { index, leg in
-                            if index > model.draft.form.returnBoundary { connection(index) }
-                            VStack(alignment: .leading, spacing: PlanUITokens.space2) {
-                                flightCard(index: index, leg: leg)
-                            }
-                        }
-                        if model.draft.form.legs.count - model.draft.form.returnBoundary == 1 {
-                            flightDuration(index: model.draft.form.returnBoundary)
-                        }
-                        if model.draft.form.legs.count < WizardForm.maxFlights {
-                            Button {
-                                model.openAirport(
-                                    WizardAirportSheet(index: model.draft.form.legs.count - 1, side: .stop))
-                            } label: {
-                                Label(
-                                    t(
-                                        model.draft.form.legs.count - model.draft.form.returnBoundary > 1
-                                            ? "Add another stop" : "Add a stop"), systemImage: "plus"
-                                )
-                                .font(Typography.wizardNavTitle.font).padding(.horizontal, PlanUITokens.space1)
-                                .frame(minHeight: AuthTokens.touch)
-                            }
-                            .tint(ColorToken.dawnText.color).accessibilityIdentifier("wizard.return-flight.add-stop")
-                        }
-                    }
-                })
-        }
-
-        func returnAirportRow(_ label: String, iata: String, city: String?, locked: Bool, action: @escaping () -> Void)
-            -> some View
-        {
-            let row = HStack(spacing: PlanUITokens.space2) {
-                Text(t(label)).font(Typography.wizardFieldLabel.font).foregroundStyle(ColorToken.mutedForeground.color)
-                    .frame(width: PlanUITokens.wizardReturnLabelWidth, alignment: .leading)
-                VStack(alignment: .leading, spacing: PlanUITokens.wizardLabelGap) {
-                    Text([iata, city].compactMap { $0 }.joined(separator: " · ")).font(Typography.wizardButton.font)
-                    if locked {
-                        Text(t("Where you landed")).font(Typography.wizardHint.font).foregroundStyle(
-                            ColorToken.mutedForeground.color)
-                    }
-                }
-                Spacer(minLength: 0)
-                Image(systemName: locked ? "lock" : "chevron.right").font(.system(size: PlanUITokens.space4))
-                    .foregroundStyle(ColorToken.mutedForeground.color).accessibilityHidden(true)
-            }
-            .padding(.leading, PlanUITokens.space4).padding(
-                .trailing, locked ? PlanUITokens.space4 : PlanUITokens.space3
-            )
-            .padding(.vertical, PlanUITokens.wizardControlGap)
-            .frame(maxWidth: .infinity, minHeight: PlanUITokens.wizardReturnRowHeight, alignment: .leading)
-            return Group {
-                if locked { row } else { Button(action: action) { row }.buttonStyle(.plain) }
-            }
-        }
+        var returnFlightScreen: some View { timesScreen(home: true) }
 
         var sleepScreen: some View {
             wizardShell(

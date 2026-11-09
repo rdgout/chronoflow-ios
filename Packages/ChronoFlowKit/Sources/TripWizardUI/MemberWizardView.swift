@@ -14,6 +14,7 @@
         @State var confirmingDiscard = false
         @State var continuing = false
         @State var closing = false
+        @State var errorScrollRequest = 0
         typealias Destination = MemberWizardDestination
         @State var copyFormatter: CopyLineFormatter?
 
@@ -75,33 +76,38 @@
 
         private var whereScreen: some View { routeScreen() }
 
-        private var outboundScreen: some View {
-            shell(title: "When is your flight?", subtitle: "Times are local at each airport.", outbound: true) {
-                if let banner = model.draft.fieldErrors["review"] {
-                    flightNotice(banner, identifier: "wizard.outbound.past")
-                }
-                ForEach(
-                    Array(model.draft.form.legs.prefix(model.draft.form.returnBoundary).enumerated()), id: \.element.id
-                ) { index, leg in
-                    if index > 0 { connection(index) }
-                    VStack(alignment: .leading, spacing: PlanUITokens.space2) {
-                        flightCard(index: index, leg: leg)
+        private var outboundScreen: some View { timesScreen() }
+
+        func timesScreen(home: Bool = false) -> some View {
+            let start = home ? model.draft.form.returnBoundary : 0
+            let end = home ? model.draft.form.legs.count : model.draft.form.returnBoundary
+            return wizardShell(
+                title: t(
+                    home ? "When do you fly home?" : end - start > 1 ? "When are your flights?" : "When is your flight?"
+                ),
+                subtitle: t("Times are local at each airport."), id: home ? "return-flight" : "outbound",
+                button: t("Continue"), enabled: home ? model.returnComplete : model.outboundComplete,
+                action: {
+                    if home ? model.finishReturn() : model.finishOutbound() {
+                        if home { model.finishFlightInput() } else { model.go(.returnChoice) }
+                    } else {
+                        UINotificationFeedbackGenerator().notificationOccurred(.warning)
                     }
-                }
-                if model.draft.form.returnBoundary == 1 { flightDuration(index: 0) }
-                if model.draft.form.legs.count < WizardForm.maxFlights {
-                    Button {
-                        model.openAirport(WizardAirportSheet(index: model.draft.form.returnBoundary - 1, side: .stop))
-                    } label: {
-                        Label(
-                            t(model.draft.form.returnBoundary > 1 ? "Add another stop" : "Add a stop"),
-                            systemImage: "plus"
-                        )
-                        .font(Typography.wizardNavTitle.font)
-                        .padding(.horizontal, PlanUITokens.space1).frame(minHeight: AuthTokens.touch)
-                    }.tint(ColorToken.dawnText.color).accessibilityIdentifier("wizard.add-stop")
-                }
-            }
+                },
+                content: {
+                    if let banner = model.draft.fieldErrors["review"] {
+                        flightNotice(banner, identifier: home ? "wizard.return-flight.past" : "wizard.outbound.past")
+                    }
+                    ForEach(
+                        Array(model.draft.form.legs.enumerated()).filter { (start..<end).contains($0.offset) },
+                        id: \.element.id
+                    ) { index, leg in
+                        if index > start { connection(index) }
+                        flightCard(index: index, leg: leg).id("wizard.flight.\(index)")
+                            .accessibilityElement(children: .contain).accessibilityIdentifier("wizard.flight.\(index)")
+                    }
+                    if end - start == 1 { flightDuration(index: start) }
+                })
         }
 
         func connection(_ index: Int) -> some View {
@@ -122,23 +128,7 @@
                                     return value.string ?? ""
                                 })
                         ).font(Typography.wizardHint.font).monospacedDigit()
-                        Button {
-                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                            model.removeStop(at: index)
-                        } label: {
-                            Image(systemName: "xmark").font(.system(size: PlanUITokens.wizardStopGlyphSize))
-                                .foregroundStyle(ColorToken.mutedForeground.color)
-                                .frame(
-                                    width: PlanUITokens.wizardStopRemoveSize, height: PlanUITokens.wizardStopRemoveSize)
-                        }
-                        .accessibilityLabel(
-                            t(
-                                "Remove stop in {{city}}",
-                                ["city": model.draft.form.legs[index].fromCity ?? model.draft.form.legs[index].fromIata]
-                            )
-                        )
-                        .accessibilityIdentifier("wizard.remove-stop.\(index)")
-                    }.padding(.leading, PlanUITokens.space3).padding(.trailing, PlanUITokens.space1)
+                    }.padding(.horizontal, PlanUITokens.space3)
                         .padding(.vertical, PlanUITokens.wizardLabelGap)
                         .background(ColorToken.surface2.color, in: Capsule())
                 }
@@ -215,25 +205,6 @@
             t(
                 "{{hours}} h {{minutes}} min",
                 ["hours": String(minutes / 60), "minutes": String(minutes % 60)])
-        }
-
-        private func shell<Content: View>(
-            title: String, subtitle: String, outbound: Bool, @ViewBuilder content: () -> Content
-        ) -> some View {
-            wizardShell(
-                title: t(title), subtitle: t(subtitle), id: outbound ? "outbound" : "where",
-                button: t("Continue"), enabled: outbound ? model.outboundComplete : model.whereComplete,
-                action: {
-                    if outbound {
-                        if model.finishOutbound() {
-                            model.go(.returnChoice)
-                        } else {
-                            UINotificationFeedbackGenerator().notificationOccurred(.warning)
-                        }
-                    } else {
-                        model.go(.outbound)
-                    }
-                }, content: content)
         }
 
         #if DEBUG

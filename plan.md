@@ -1813,17 +1813,17 @@ Source: canvas version 1794242613-8e6a, WizardSpec "Route first, then times (Ric
   - The swap button shows only on a direct route.
   - Haptics: light impact on add/remove stop and swap.
   - Continue goes to Times. The flight-home route uses its own title and the sub "It leaves from where you landed. Add any stops on the way."
-- [ ] Times screen.
+- [x] Times screen.
   - One card per flight, labelled with its route. The connection/overnight line between cards is information only; the stop chip has no remove button. Remove the Outbound and return-flight "Add a stop" links and the inline From/To block on the flight home.
   - Title "When are your flights?" when there are 2+ flights, "When do you fly home?" on the flight home.
   - With three or more flights the screen scrolls and Continue stays fixed. An error after Continue scrolls to the first card with an error. Errors sit under their own card.
 - [x] Copy (en+nl from WizardCopy): stop question and options, Stop/Stop {n}, Add another stop, 16-flight limit, next-stop search sub, both new titles, the flight-home route sub, flights out of order.
-- [ ] Screen tests: seed each new board state with `CF_WIZARD_BOARD_CAPTURE` and check only the screen:
+- [x] Screen tests: seed each new board state with `CF_WIZARD_BOARD_CAPTURE` and check only the screen:
   - Where: direct/one/two stops, Same, limit;
   - Times: three flights scroll and two errors;
   - home route and home route with a stop.
   - One mock journey: Where with a stop → Times → One way → Checking. Add the new boards to the opt-in capture list.
-- [ ] Date and time picking per OQ 46. Today an empty pill opens our own wheel popover with Done, while a filled pill uses the system compact picker; that inconsistency goes away either way.
+- [x] Date and time picking per settled OQ 46 and PickerDateTime: one pill per Departs/Arrives row opens the same native sheet for empty and filled values. It uses the system graphical date-and-time picker in the fixed-zone calendar, the airport-local time line and Done/Cancel. Only Done writes, with selection feedback; the pill owns the error ring. Remove the custom wheel popover and split compact controls, update UI helpers and replace obsolete continuity assertions with native picker configuration coverage.
 
 **16c: Fine-tune, Ready, Save and create acceptance**
 - [ ] Boards: WizardFineTune*; the sheets WizardSheet, WizardSheetBlue, BlueError, Busy, Checkout, Drinks, DrinksError, FreeSleep, Light, Room and Wake (each with DarkNL); WizardReady* (Return, Unlimited, Free, OneFree, Adjusted, NoCredits); WizardCalculating; SaveOffline; SaveServer; WizardDiscard.

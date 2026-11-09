@@ -68,7 +68,8 @@ public enum WizardDateTime {
 
     public static func formatLocal(_ value: String?, locale: Locale) -> String? {
         guard let value, let date = date(value) else { return value }
-        return format(date, template: "EEE d MMM", locale: locale) + " · " + value.suffix(5)
+        return format(date, template: "EEE d MMM", locale: locale) + " · "
+            + format(date, template: "jmm", locale: locale)
     }
 
     public static func formatWeekdayTime(_ value: String?, locale: Locale, twelveHour: Bool = false) -> String? {
