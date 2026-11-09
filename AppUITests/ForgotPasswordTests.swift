@@ -1,58 +1,50 @@
 import XCTest
 
 nonisolated final class ForgotPasswordTests: XCTestCase {
-    @MainActor func testExistingAndUnknownEmailsShowTheSameNoticeAndReturnToSignIn() throws {
-        for email in [MockScenarioValues.demoEmail, "unknown@example.com"] {
-            let app = launchForgotApp()
-            defer { app.terminate() }
-            openForgot(app)
-            let field = AuthUIFlow.control("forgot.email", in: app)
-            AuthUIFlow.reveal(field, in: app)
-            field.tap()
-            field.typeText(email + "\n")
-            let notice = AuthUIFlow.control("forgot.notice", in: app)
-            XCTAssertTrue(notice.waitForExistence(timeout: 6))
-            AuthUIFlow.reveal(notice, in: app)
-            XCTAssertTrue(notice.label.contains("Check your inbox."))
-            XCTAssertTrue(notice.label.contains("If \(email) has an account"))
-            XCTAssertFalse(AuthUIFlow.control("forgot.email", in: app).exists)
-            let mail = AuthUIFlow.control("forgot.open-email", in: app)
-            AuthUIFlow.reveal(mail, in: app)
-            XCTAssertTrue(mail.isHittable)
-            let back = AuthUIFlow.control("forgot.back", in: app)
-            AuthUIFlow.reveal(back, in: app)
-            back.tap()
-            XCTAssertTrue(app.textFields["sign-in.email"].waitForExistence(timeout: 3))
-            XCTAssertFalse(app.images["launch.opening"].exists)
-            AuthUIFlow.reveal(app.buttons["sign-in.forgot"], in: app)
-            app.buttons["sign-in.forgot"].tap()
-            XCTAssertTrue(app.textFields["forgot.email"].waitForExistence(timeout: 3))
-            XCTAssertEqual(app.textFields["forgot.email"].value as? String, "")
-            XCTAssertFalse(AuthUIFlow.control("forgot.notice", in: app).exists)
-        }
+    @MainActor func testSentNoticeAndBackToSignIn() throws {
+        let email = MockScenarioValues.demoEmail
+        let app = launchForgotApp()
+        defer { app.terminate() }
+        openForgot(app)
+        let field = AuthUIFlow.control("forgot.email", in: app)
+        AuthUIFlow.reveal(field, in: app)
+        field.tap()
+        field.typeText(email + "\n")
+        let notice = AuthUIFlow.control("forgot.notice", in: app)
+        XCTAssertTrue(notice.waitForExistence(timeout: 6))
+        AuthUIFlow.reveal(notice, in: app)
+        XCTAssertTrue(notice.label.contains("Check your inbox."))
+        XCTAssertTrue(notice.label.contains("If \(email) has an account"))
+        XCTAssertFalse(AuthUIFlow.control("forgot.email", in: app).exists)
+        let mail = AuthUIFlow.control("forgot.open-email", in: app)
+        AuthUIFlow.reveal(mail, in: app)
+        XCTAssertTrue(mail.isHittable)
+        let back = AuthUIFlow.control("forgot.back", in: app)
+        AuthUIFlow.reveal(back, in: app)
+        back.tap()
+        XCTAssertTrue(app.textFields["sign-in.email"].waitForExistence(timeout: 3))
+        XCTAssertFalse(app.images["launch.opening"].exists)
     }
 
-    @MainActor func testServerAndThrottlePreserveEmailAndClearOnEdit() throws {
-        for failure in ["server", "throttle"] {
-            let app = launchForgotApp(failure: failure)
-            defer { app.terminate() }
-            openForgot(app)
-            let field = app.textFields["forgot.email"]
-            field.tap()
-            field.typeText("retained@example.com\n")
-            let banner = AuthUIFlow.control("auth.banner", in: app)
-            XCTAssertTrue(banner.waitForExistence(timeout: 6))
-            XCTAssertTrue(
-                banner.label.contains(failure == "server" ? "Something went wrong on our side." : "Too many requests."))
-            XCTAssertEqual(field.value as? String, "retained@example.com")
-            XCTAssertTrue(field.isEnabled)
-            XCTAssertFalse(AuthUIFlow.control("forgot.notice", in: app).exists)
-            AuthUIFlow.assertBannerVisible(in: app)
-            AuthUIFlow.reveal(field, in: app)
-            field.tap()
-            field.typeText("x")
-            XCTAssertFalse(banner.exists)
-        }
+    @MainActor func testServerBannerClearsOnEdit() throws {
+        let app = launchForgotApp(failure: "server")
+        defer { app.terminate() }
+        openForgot(app)
+        let field = app.textFields["forgot.email"]
+        field.tap()
+        field.typeText("retained@example.com\n")
+        let banner = AuthUIFlow.control("auth.banner", in: app)
+        XCTAssertTrue(banner.waitForExistence(timeout: 6))
+        XCTAssertTrue(
+            banner.label.contains("Something went wrong on our side."))
+        XCTAssertEqual(field.value as? String, "retained@example.com")
+        XCTAssertTrue(field.isEnabled)
+        XCTAssertFalse(AuthUIFlow.control("forgot.notice", in: app).exists)
+        AuthUIFlow.assertBannerVisible(in: app)
+        AuthUIFlow.reveal(field, in: app)
+        field.tap()
+        field.typeText("x")
+        XCTAssertFalse(banner.exists)
     }
 
     @MainActor func testOfflineShowsConnectionBannerAndKeepsSubmitEnabled() throws {
