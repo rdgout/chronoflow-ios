@@ -132,7 +132,7 @@
         }
     }
 
-    private struct SettingsNavigationStyle: UIViewControllerRepresentable {
+    struct SettingsNavigationStyle: UIViewControllerRepresentable {
         func makeUIViewController(context: Context) -> Styler { Styler() }
         func updateUIViewController(_ controller: Styler, context: Context) { controller.style() }
         final class Styler: UIViewController {

@@ -15,12 +15,24 @@
             self.content = content()
         }
         public var body: some View {
-            Form { content.listRowBackground(ColorToken.card.color) }
-                .scrollContentBackground(.hidden).background(ColorToken.background.color)
-                .foregroundStyle(ColorToken.cardForeground.color).tint(ColorToken.primary.color)
-                .navigationTitle(SettingsStrings.text(title, language: language))
-                .navigationBarTitleDisplayMode(.inline)
-                .accessibilityElement(children: .contain).accessibilityIdentifier(identifier)
+            ScrollView {
+                VStack(alignment: .leading, spacing: PlanUITokens.space6) {
+                    content
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, PlanUITokens.space4)
+                .padding(.top, PlanUITokens.space1)
+                .padding(.bottom, SettingsTokens.pageBottom)
+                .planPageRail()
+            }
+            .scrollDismissesKeyboard(.interactively)
+            .background(ColorToken.background.color)
+            .foregroundStyle(ColorToken.cardForeground.color).tint(ColorToken.primary.color)
+            .font(Typography.screenBodyLg.font)
+            .navigationTitle(SettingsStrings.text(title, language: language))
+            .navigationBarTitleDisplayMode(.large)
+            .background(SettingsNavigationStyle())
+            .accessibilityElement(children: .contain).accessibilityIdentifier(identifier)
         }
         private var language: Language { locale.language.languageCode?.identifier == "nl" ? .nl : .en }
     }

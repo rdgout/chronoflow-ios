@@ -1859,7 +1859,7 @@ User decision, 2026-11-08: “Make the walkthrough pages first. So we can safely
 
 **17h: Settings pages** (`feat/phase-17h-settings-pages`)
 
-User decision, 2026-11-08: build the Settings destination pages in order, using RN's Set* boards and behaviour, native List/Form/NavigationStack controls and paired RN en/nl copy. This lifts the destination-page and Preferences replay deferrals for this phase. Keep edits to shared plan/catalog/runner entries scoped to 17h. No simulator or snapshot execution; run `make lint` and `make quick`, and deliver atomic patches under `build/commits/`.
+User decision, 2026-11-08: build the Settings destination pages in order, using RN's Set* boards and behaviour and paired RN en/nl copy. Clarification (user report, 2026-11-09): native controls apply only where the board draws a system control; designed surfaces stay as drawn, including cards, rows, fields, radio groups, notices and buttons. This lifts the destination-page and Preferences replay deferrals for this phase. Keep edits to shared plan/catalog/runner entries scoped to 17h. No simulator or snapshot execution; run `make lint` and `make quick`, and deliver atomic patches under `build/commits/`.
 
 - [x] Import the non-Wide Settings boards at RN `e24872a`, including password-prompt states needed by security/deletion, and append SHA-256 provenance to `rn-canvas.json`.
 - [x] Account + Profile: display name/email and edit the name through the existing `profile` outbox → PATCH users/me. Preserve pending values and validate before enqueueing. Email changes require the drawn online password-confirmation flow.
@@ -1896,6 +1896,18 @@ Verification (2026-11-08): strict `make lint` passes. `make quick` reaches only 
   - Verification: `make lint` passes. `make quick` passes the new regression cases and all other package checks except the known cookie-listener sandbox EPERM (543/544 Swift Testing tests pass; all XCTest checks pass). Its remaining tiers pass separately: 17 generator tests and 100 runner/resource fixtures. Direct iOS 17 compilation passes for Settings and AppUITests. No simulator or snapshots were run. Delivery: `build/commits/1.patch` against `990ae04`, with its subject in `messages.txt`; logs are `build/settings-replay-{lint,quick,remaining-quick,ios}.log`.
 
 Deferrals: Reminders and notification permissions/delivery remain excluded. Optional timeline items remain excluded by the 5 Nov compact-timeline decision. Purchases, paywall checkout and cancellation remain excluded. Unbuilt destinations stay hidden in Release. Register host/UI suites in the 17h runner entries; no snapshot suites.
+
+### Settings board fidelity (2026-11-09)
+
+Stack: `feat/settings-board-fidelity` on `feat/phase-19-reminders` (PR #30). The verified audit is `chronoflow-ios-handoff/settings-fidelity.json`. No simulator execution; capture attachments are a manual visual aid, never reference snapshots.
+
+- [x] Scaffold + components: large title using Settings home's navigation styler; scrolling, bordered token cards, row discs, Fields/Notices/capsule actions, visible ChoiceCards and wrapping pill groups, badges, toast and content-sized native sheets. Keep root xxLarge and all safe-area edges via the existing page rail and native scroll/navigation insets. Generate missing board metrics, warning surfaces, popover and destructive foreground tokens.
+- [ ] Account: rebuild rows, Profile fields and missing-account state; retain email/data deferrals.
+- [ ] Body clock: rebuild cards, choice groups, time tiles, readiness, counters and hint/validation layout; record backend/board conflicts.
+- [ ] Preferences: rebuild appearance, category swatches, links, Reminders states and Language choices/toast.
+- [ ] Security: rebuild rows, password validation, 2FA intro/setup/codes/manage and shared password-prompt states.
+- [ ] Plan + delete: rebuild hero/skeletons/notices, offline/no-link text and compact destructive confirmation/shared prompt.
+- [ ] Capture + verification: opt-in Debug UI capture suite, light/dark board-named attachments; lint/quick and compiler checks without simulator execution; export atomic patches/messages.
 
 ### Phase 18 (later, separate decision): guest wizard and claim
 

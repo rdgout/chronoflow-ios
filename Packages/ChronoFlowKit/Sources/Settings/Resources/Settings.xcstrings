@@ -3968,6 +3968,40 @@
           }
         }
       }
+    },
+    "Too many attempts. Try again in {{seconds}} seconds.": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too many attempts. Try again in {{seconds}} seconds."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te veel pogingen. Probeer het over {{seconds}} seconden opnieuw."
+          }
+        }
+      }
+    },
+    "We'll email a reset link to {{email}}. You stay signed in on this phone.": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We'll email a reset link to {{email}}. You stay signed in on this phone."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We sturen een link naar {{email}}. Je blijft op deze telefoon aangemeld."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

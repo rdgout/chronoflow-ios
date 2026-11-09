@@ -1,0 +1,86 @@
+{
+  "pageBottom": {
+    "source": "_design/canvas/SetAccount.dc.html",
+    "pattern": "padding: 4px 16px (\\d+)px"
+  },
+  "rowVertical": {
+    "source": "_design/canvas/SetAccount.dc.html",
+    "pattern": "min-height: \\d+px; padding: (\\d+)px 16px"
+  },
+  "rowDisc": {
+    "source": "_design/canvas/SetAccount.dc.html",
+    "pattern": "width: (\\d+)px; height: 36px"
+  },
+  "rowHeight": {
+    "source": "_design/canvas/SetAccount.dc.html",
+    "pattern": "min-height: (\\d+)px; padding: 10px 16px; box-sizing: border-box; color: var\\(--card-foreground\\)"
+  },
+  "destructiveRowHeight": {
+    "source": "_design/canvas/SetAccount.dc.html",
+    "pattern": "min-height: (\\d+)px; padding: 10px 16px; box-sizing: border-box; color: var\\(--destructive\\)"
+  },
+  "pillHeight": {
+    "source": "_design/canvas/SetPreferences.dc.html",
+    "pattern": "min-height: (\\d+)px; padding: 0 16px"
+  },
+  "pillGap": {
+    "source": "_design/canvas/SetPreferences.dc.html",
+    "pattern": "align-items: center; gap: (\\d+)px; min-height: 44px"
+  },
+  "selectionWidth": {
+    "source": "_design/canvas/SetPreferences.dc.html",
+    "pattern": "border: (\\d+)px solid var\\(--dawn\\)"
+  },
+  "timeHeight": {
+    "source": "_design/canvas/SetBodyClock.dc.html",
+    "pattern": "min-height: (\\d+)px; padding: 14px"
+  },
+  "timeVertical": {
+    "source": "_design/canvas/SetBodyClock.dc.html",
+    "pattern": "min-height: 84px; padding: (\\d+)px"
+  },
+  "counterHeight": {
+    "source": "_design/canvas/SetBodyClock.dc.html",
+    "pattern": "min-height: (\\d+)px; padding: 8px 8px"
+  },
+  "qrSize": {
+    "source": "_design/canvas/Set2FASetup.dc.html",
+    "pattern": "width: (\\d+)px; height: 168px"
+  },
+  "toastHeight": {
+    "source": "_design/canvas/SetLanguage.dc.html",
+    "pattern": "min-height: (\\d+)px; padding: 12px 16px"
+  },
+  "sheetRadius": {
+    "source": "_design/canvas/PasswordPrompt.dc.html",
+    "pattern": "border-radius: (\\d+)px 38px"
+  },
+  "promptButtonHeight": {
+    "source": "_design/canvas/PasswordPrompt.dc.html",
+    "pattern": "height: (\\d+)px; text-decoration: none; font-size: 16px"
+  },
+  "promptFieldHeight": {
+    "source": "_design/canvas/PasswordPrompt.dc.html",
+    "pattern": "min-height: (\\d+)px; padding: 0 16px"
+  },
+  "dimmedFieldOpacity": {
+    "source": "_design/canvas/PasswordPrompt.dc.html",
+    "pattern": "opacity: (0\\.55)"
+  },
+  "disabledOpacity": {
+    "source": "_design/canvas/PasswordPrompt.dc.html",
+    "pattern": "opacity: (0\\.45)"
+  },
+  "skeletonEyebrowWidth": {
+    "source": "_design/canvas/SetPlanCredits.dc.html",
+    "pattern": "width: (96)px; height: 16px"
+  },
+  "skeletonTitleWidth": {
+    "source": "_design/canvas/SetPlanCredits.dc.html",
+    "pattern": "width: (\\d+)px; height: 36px; border-radius: 12px"
+  },
+  "skeletonLineRatio": {
+    "source": "_design/canvas/SetPlanCredits.dc.html",
+    "pattern": "width: (70)%; height: 16px"
+  }
+}
