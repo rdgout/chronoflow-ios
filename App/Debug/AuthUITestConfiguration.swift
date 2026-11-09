@@ -1,6 +1,7 @@
 #if DEBUG
     import AppCore
     import Auth
+    import DataAccess
     import Foundation
 
     nonisolated struct AuthUITestConfiguration: Sendable {
@@ -50,6 +51,13 @@
             let password = state == "password" ? "short" : "NewPassword123!"
             model.editPassword(password)
             model.editConfirmation(state == "confirmation" ? "different" : password)
+        }
+
+        @MainActor func prepareChallenge(_ model: SignInModel) async {
+            guard auditScreen == "two-factor" else { return }
+            model.editEmail(MockScenarioValues.twoFactorEmail)
+            model.editPassword(MockScenarioValues.password)
+            await model.submitPassword()
         }
 
         var credentials: KeychainSessionStore {

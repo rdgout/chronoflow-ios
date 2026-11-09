@@ -91,6 +91,26 @@ import Testing
 
 @MainActor @Suite struct DataSourceFactoryHostedTests {
     #if DEBUG
+        @Test func auditChallengeSeedRequiresExplicitScreenAndNeverAcceptsSession() async throws {
+            let root = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+            let credentials = FactoryCredentialProbe()
+            let controller = SessionController(
+                credentials: credentials, accounts: SessionAccountDatabase(applicationSupport: root, namespace: .mock))
+            let source = MockDataSource(seed: try MockAppSeed.make(now: Date()), sleep: { _ in })
+            let model = SignInModel(
+                source: source, session: controller, deviceIdentity: { UUID().uuidString }, deviceName: "test",
+                accepted: { _ in Issue.record("Challenge seed accepted a session") })
+            var environment = ["CF_AUTH_TEST_ID": UUID().uuidString]
+            await AuthUITestConfiguration(environment: environment)?.prepareChallenge(model)
+            #expect(model.email.isEmpty && model.navigation.challengeID == nil)
+            environment["CF_AUTH_TEST_AUDIT_SCREEN"] = "two-factor"
+            await AuthUITestConfiguration(environment: environment)?.prepareChallenge(model)
+            #expect(model.navigation.challengeID != nil && model.twoFactor != nil)
+            #expect(model.password.isEmpty && model.twoFactor?.code.isEmpty == true)
+            #expect(await controller.activeSession() == nil)
+            #expect(!FileManager.default.fileExists(atPath: root.path))
+        }
+
         @Test(arguments: ["demo", "twofactor"], ["app", "verify", "terms", "walkthrough"])
         func signedInSeedUsesRestorableCredentialsAndAccountGates(account: String, gate: String) async throws {
             let root = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)

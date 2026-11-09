@@ -298,6 +298,12 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                     }
                 }
                 #if DEBUG
+                    if let test = AuthUITestConfiguration(), test.auditScreen == "two-factor",
+                        let model = app?.authServices?.model
+                    {
+                        navigator.navigate(to: .signIn)
+                        await test.prepareChallenge(model)
+                    }
                     if app?.authServices?.authUITestEnabled == true,
                         let value = ProcessInfo.processInfo.environment["CF_AUTH_TEST_LINK"],
                         let url = URL(string: value)
