@@ -220,7 +220,7 @@ extension MemberWizardModel {
                 self.draft.state.savedTripId = result.state.savedTripId
                 switch result.outcome {
                 case .saved(let id):
-                    try await store.didSave(instance: snapshot.state.instance)
+                    try await store.didSave(instance: snapshot.state.instance, firstTrip: snapshot.state.firstTrip)
                     self.createdTripID = id
                     self.closed = true
                 case .reReviewNeeded:

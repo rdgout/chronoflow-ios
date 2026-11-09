@@ -236,13 +236,16 @@ struct CompletionFixture {
     }
 }
 
-@MainActor func completionFixture(optional: Bool = false, effects: TripGenerationEffects? = nil) async throws
+@MainActor func completionFixture(
+    optional: Bool = false, effects: TripGenerationEffects? = nil, firstTrip: Bool = true
+) async throws
     -> CompletionFixture
 {
     let database = try await wizardDatabase()
     let clock = WizardTestClock()
     let store = MemberWizardStore(database: database, now: { clock.now })
     var draft = try await store.start()
+    draft.state.firstTrip = firstTrip
     draft.form = try WizardForm(input: generationInput())
     // Keep the fixture's flight future while testing a freely advancing Ready clock.
     for index in draft.form.legs.indices {

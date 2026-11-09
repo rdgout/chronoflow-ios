@@ -26,6 +26,7 @@ struct AppTabs: View {
     @State private var tripsPath: [TripPageRoute] = []
     @State private var path: [TripPageRoute] = []
     @State private var wizard: MemberWizardModel?
+    @State private var savedTrip: TripPageRoute?
     @State private var wizardStore: MemberWizardStore?
     @State private var airportSearch: AirportSearchService?
     @State private var openingWizard = false
@@ -141,14 +142,21 @@ struct AppTabs: View {
         }
         .accessibilityIdentifier("app.tabs").tint(ColorToken.primary.color)
         .accessibilityElement(children: .contain)
-        .fullScreenCover(isPresented: Binding(get: { wizard != nil }, set: { if !$0 { wizard = nil } })) {
+        .fullScreenCover(
+            isPresented: Binding(get: { wizard != nil }, set: { if !$0 { wizard = nil } }),
+            onDismiss: {
+                guard let savedTrip else { return }
+                self.savedTrip = nil
+                selection = .trips
+                tripsPath = [savedTrip]
+            }
+        ) {
             if let wizard {
                 MemberWizardView(
                     model: wizard,
                     saved: { id in
+                        savedTrip = TripPageRoute(tripID: id, awaitingSync: true)
                         self.wizard = nil
-                        selection = .trips
-                        tripsPath = [TripPageRoute(tripID: id, awaitingSync: true)]
                     }
                 ) { self.wizard = nil }
             }
@@ -275,6 +283,7 @@ struct AppTabs: View {
                     await wizardGeneration?.cancel()
                     wizardGeneration = nil
                     wizard = nil
+                    savedTrip = nil
                     wizardStore = nil
                     airportSearch = nil
                     return

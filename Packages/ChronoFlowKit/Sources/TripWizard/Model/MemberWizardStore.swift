@@ -1,6 +1,7 @@
 import AppCore
 import Foundation
 import LocalStore
+import Reminders
 
 public enum MemberWizardStep: String, Codable, Sendable {
     case whereTo, outbound, returnChoice, returnRoute, returnFlight, sleep, checking, question, excluded, continuation,
@@ -75,6 +76,7 @@ public actor MemberWizardStore {
     private let drafts: DraftRepository
     private let trips: TripRepository
     private let settings: SettingsRepository
+    private let remindersOffer: FirstTripRemindersOffer
     private let permit: SessionMutationPermit?
     private let now: @Sendable () -> Date
 
@@ -85,6 +87,7 @@ public actor MemberWizardStore {
         drafts = DraftRepository(database: database)
         trips = TripRepository(database: database)
         settings = SettingsRepository(database: database)
+        remindersOffer = FirstTripRemindersOffer(database: database, permit: permit)
         self.permit = permit
         self.now = now
     }
@@ -148,7 +151,10 @@ public actor MemberWizardStore {
     public func discard(instance: String) async throws {
         try await drafts.deleteRecovery(instance: instance, permit: permit)
     }
-    public func didSave(instance: String) async throws { try await discard(instance: instance) }
+    public func didSave(instance: String, firstTrip: Bool) async throws {
+        try await remindersOffer.queue(firstTrip: firstTrip)
+        try await discard(instance: instance)
+    }
 
     private func record(_ draft: MemberWizardDraft) throws -> DraftRecord {
         let formatter = ISO8601DateFormatter()

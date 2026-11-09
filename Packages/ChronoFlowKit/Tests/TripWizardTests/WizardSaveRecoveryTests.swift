@@ -2,10 +2,30 @@ import AppCore
 import DataAccess
 import Foundation
 import LocalStore
+import Reminders
 import Testing
 import TripWizard
 
 @Suite struct WizardSaveRecoveryTests {
+    @Test(arguments: [true, false]) @MainActor
+    func onlySuccessfulFirstTripSaveQueuesReminders(firstTrip: Bool) async throws {
+        let fixture = try await completionFixture(firstTrip: firstTrip)
+        try await SettingsRepository(database: fixture.database).upsert(
+            SettingsRecord(section: "reminders", value: .encoding(ReminderSettings())))
+        let offer = FirstTripRemindersOffer(database: fixture.database)
+        #expect(try await offer.consume(permission: .undetermined) == false)
+        await fixture.source.configure(saveFailure: .offline)
+        fixture.model.savePlan()
+        try await eventually { fixture.model.draft.state.saveFailure?.kind == .offline }
+        #expect(try await offer.consume(permission: .undetermined) == false)
+        await fixture.source.configure()
+        fixture.model.savePlan()
+        try await eventually { fixture.model.createdTripID == "created" }
+        #expect(try await offer.consume(permission: .undetermined) == firstTrip)
+        #expect(try await offer.consume(permission: .undetermined) == false)
+        try await fixture.database.close()
+    }
+
     @Test @MainActor func savedTripIDIsDurableBeforePullAndRecoverySkipsCreate() async throws {
         let gate = GenerationGate()
         let fixture = try await completionFixture(
@@ -18,6 +38,10 @@ import TripWizard
             return recovered?.state.savedTripId != nil
         }
         let saved = try #require(recovered)
+        try await SettingsRepository(database: fixture.database).upsert(
+            SettingsRecord(section: "reminders", value: .encoding(ReminderSettings())))
+        let offer = FirstTripRemindersOffer(database: fixture.database)
+        #expect(try await offer.consume(permission: .undetermined) == false)
         #expect(saved.state.step == .calculating && saved.state.savedTripId == "created")
         #expect(await fixture.source.count("save") == 1 && fixture.model.createdTripID == nil)
         let nextService = TripGenerationService(
@@ -30,8 +54,10 @@ import TripWizard
         try await eventually { nextModel.createdTripID == "created" }
         #expect(await fixture.source.count("save") == 1)
         #expect(try await fixture.store.recover() == nil)
+        #expect(try await offer.consume(permission: .undetermined) == true)
         await gate.open()
         try await eventually { fixture.model.createdTripID == "created" }
+        #expect(try await offer.consume(permission: .undetermined) == false)
         try await fixture.database.close()
     }
 
