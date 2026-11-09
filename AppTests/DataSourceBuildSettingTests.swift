@@ -139,6 +139,40 @@ import Testing
             }
         }
 
+        @Test(arguments: [false, true])
+        func defaultMockFactoriesUseLazyPersistentStore(storedSession: Bool) async throws {
+            let root = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+            defer { try? FileManager.default.removeItem(at: root) }
+            let services = try AppServices(info: [:], testing: false, environment: [:], mockDelay: { 0 })
+            func makeSource() async -> MockDataSource? {
+                let source: any DataSource
+                if storedSession {
+                    source = await Task.detached {
+                        services.makeDataSource(
+                            applicationSupport: root,
+                            session: StoredSession(token: "unused", accountId: MockScenarioValues.demoID))
+                    }.value
+                } else {
+                    source = services.makeDataSource(applicationSupport: root, credentials: FactoryCredentialProbe())
+                }
+                return source as? MockDataSource
+            }
+            let source = try #require(await makeSource())
+            #expect(!FileManager.default.fileExists(atPath: FileMockStateStore(applicationSupport: root).url.path))
+            #expect(try await source.inbox().isEmpty)
+            let initial = try #require(
+                try await Task.detached { try FileMockStateStore(applicationSupport: root).load() }.value)
+            #expect(Set(initial.accounts.keys) == [MockScenarioValues.demoID, MockScenarioValues.twoFactorID])
+            #expect(initial.accounts[MockScenarioValues.demoID]?.trips.count == 7)
+            #expect(initial.accounts[MockScenarioValues.demoID]?.snapshot.hasVerifiedEmail == true)
+            #expect(initial.accounts[MockScenarioValues.twoFactorID]?.twoFactorCode != nil)
+            try await source.requestPasswordReset(email: MockScenarioValues.demoEmail)
+            let mail = try await source.inbox()
+            #expect(mail.count == 1)
+            let recreated = try #require(await makeSource())
+            #expect(try await recreated.inbox() == mail)
+        }
+
         @Test(arguments: [false, true], [false, true])
         func authOfflineFlagReachesBothMockFactories(offline: Bool, storedSession: Bool) async throws {
             let root = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)

@@ -2102,7 +2102,7 @@ User decision 2026-11-06: implement these when the named states exist; this roun
 - [x] Keep Step/Legend content within asymmetric horizontal safe areas using the shared measured rail modifier; retain both SE and asymmetric Duo hosted fixtures.
 - [x] Route committed unverified sessions after request cancellation and restore; keep all gate routing and verification reads outside the cancelled request.
 - [x] Restore cheap default Welcome self-comparisons and auth capture guards, without references; use fixed SE xxLarge fixtures and enforce required recovery elements in every layout state.
-- [ ] Cover AppServices default file-store wiring through both factories.
+- [x] Cover AppServices default file-store wiring through both factories, including lazy creation, the supplied root, seed content and persisted mail after source recreation.
 - [ ] Replace unreliable tab minimization UI observations with configuration coverage and stable native tab navigation.
 - [ ] Correct the tier map, pass lint/host and Debug/Release compile checks, and deliver atomic follow-up commits or patches.
 
