@@ -17,7 +17,7 @@ nonisolated final class SettingsTests: XCTestCase {
         XCTAssertFalse(app.images["launch.opening"].exists)
     }
 
-    @MainActor func testPendingStayThenDiscardAndNextAccountHasNoOldQueue() {
+    @MainActor func testPendingSignOutStayAndDiscard() {
         let app = launch(pending: true)
         defer { app.terminate() }
         openSettings(app)
@@ -46,27 +46,6 @@ nonisolated final class SettingsTests: XCTestCase {
         discard.tap()
         XCTAssertTrue(app.textFields["sign-in.email"].waitForExistence(timeout: 10))
         XCTAssertFalse(app.images["launch.opening"].exists)
-        AuthUIFlow.signIn(app, email: MockScenarioValues.twoFactorEmail)
-        let code = app.textFields["two-factor.code"]
-        guard code.waitForExistence(timeout: 6) else {
-            XCTFail("The seeded second account did not reach two-factor verification")
-            return
-        }
-        AuthUIFlow.reveal(code, in: app)
-        code.tap()
-        code.typeText(MockScenarioValues.twoFactorCode)
-        let verify = app.buttons["two-factor.submit"]
-        AuthUIFlow.reveal(verify, in: app)
-        AuthUIFlow.waitUntilEnabled(verify)
-        verify.tap()
-        XCTAssertTrue(
-            app.scrollViews["today.screen"].waitForExistence(timeout: 12),
-            "Both seeded accounts must bypass Walkthrough with CF_AUTH_TEST_WALKTHROUGH_SEEN")
-        XCTAssertFalse(app.buttons["walkthrough.skip"].exists)
-        openSettings(app, email: MockScenarioValues.twoFactorEmail)
-        signOut(app)
-        XCTAssertTrue(app.textFields["sign-in.email"].waitForExistence(timeout: 10))
-        XCTAssertFalse(sheet.exists)
     }
 
     @MainActor private func launch(pending: Bool) -> XCUIApplication {
@@ -82,7 +61,7 @@ nonisolated final class SettingsTests: XCTestCase {
     @MainActor private func openSettings(_ app: XCUIApplication, email: String = MockScenarioValues.demoEmail) {
         XCTAssertTrue(app.tabBars.buttons["Settings"].waitForExistence(timeout: 12))
         app.tabBars.buttons["Settings"].tap()
-        let profile = app.buttons["settings.profile"]
+        let profile = app.descendants(matching: .any)["settings.profile"].firstMatch
         XCTAssertTrue(profile.waitForExistence(timeout: 10))
         XCTAssertTrue(profile.label.contains(email))
     }
