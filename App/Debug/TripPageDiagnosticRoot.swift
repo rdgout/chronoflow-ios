@@ -57,7 +57,7 @@
             }
         }
         private func diagnosticPage(_ model: TripPageModel) -> TripPageView {
-            var page = TripPageView(model: model)
+            var page = TripPageView(model: model, refresh: { nil })
             page.onFirstTimelineFrame = { probe.rendered() }
             return page
         }

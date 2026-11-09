@@ -5,11 +5,11 @@ nonisolated final class RefreshTests: XCTestCase {
         let app = try launchPlanAccount()
         defer { app.terminate() }
         XCTAssertFalse(feedback(in: app).exists)
-        pull(app.scrollViews["today.screen"], in: app)
+        pull(app.buttons["today.trip"], in: app)
         try assertFeedback("Up to date", in: app, above: "today.trip")
         app.tabBars.buttons["My trips"].tap()
         XCTAssertFalse(feedback(in: app).exists)
-        pull(app.scrollViews["trips.screen"], in: app)
+        pull(app.staticTexts["trips.section.active"], in: app)
         try assertFeedback("Up to date", in: app, above: "trips.section.active")
     }
 
@@ -18,11 +18,11 @@ nonisolated final class RefreshTests: XCTestCase {
         defer { app.terminate() }
         XCTAssertTrue(app.otherElements["today.empty"].waitForExistence(timeout: 10))
         XCTAssertFalse(feedback(in: app).exists)
-        pull(app.scrollViews["today.screen"], in: app)
+        pull(app.otherElements["today.empty"], in: app)
         try assertFeedback("Up to date", in: app, above: "today.empty")
         app.tabBars.buttons["My trips"].tap()
         XCTAssertFalse(feedback(in: app).exists)
-        pull(app.scrollViews["trips.screen"], in: app)
+        pull(app.otherElements["trips.empty"], in: app)
         try assertFeedback("Up to date", in: app, above: "trips.empty")
     }
 
@@ -30,11 +30,11 @@ nonisolated final class RefreshTests: XCTestCase {
         let app = try launchPlanAccount(updateTripOnRefresh: true)
         defer { app.terminate() }
         XCTAssertFalse(feedback(in: app).exists)
-        pull(app.scrollViews["today.screen"], in: app)
+        pull(app.buttons["today.trip"], in: app)
         try assertFeedback("1 trip updated", in: app, above: "today.trip")
         app.tabBars.buttons["My trips"].tap()
         XCTAssertFalse(feedback(in: app).exists)
-        pull(app.scrollViews["trips.screen"], in: app)
+        pull(app.staticTexts["trips.section.active"], in: app)
         try assertFeedback("1 trip updated", in: app, above: "trips.section.active")
     }
 
@@ -55,23 +55,19 @@ nonisolated final class RefreshTests: XCTestCase {
             return
         }
         AuthUIFlow.reveal(legend, in: app, scroll: scroll)
-        pull(scroll, in: app)
+        pull(app.staticTexts["Your plan"], in: app)
         try assertFeedback("Up to date", in: app, above: "Your plan")
     }
 
-    @MainActor private func pull(_ scroll: XCUIElement, in app: XCUIApplication) {
-        XCTAssertTrue(scroll.waitForExistence(timeout: 10))
-        // Scroll-view frames extend under navigation and tab bars.
-        let viewport = AuthUIFlow.viewport(in: app, scrollFrame: scroll.frame)
-        guard !viewport.isEmpty else {
-            XCTFail("Expected visible content for \(scroll.identifier): \(app.debugDescription)")
+    @MainActor private func pull(_ content: XCUIElement, in app: XCUIApplication) {
+        guard content.waitForExistence(timeout: 10), content.isHittable else {
+            XCTFail("Expected visible first content \(content.identifier): \(app.debugDescription)")
             return
         }
-        let origin = app.coordinate(withNormalizedOffset: .zero)
-        let start = origin.withOffset(CGVector(dx: viewport.midX, dy: viewport.minY + viewport.height * 0.1))
-        let end = origin.withOffset(CGVector(dx: viewport.midX, dy: viewport.minY + viewport.height * 0.9))
-        start.press(forDuration: 0.1, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.2)
-        attachScreenshot("\(scroll.identifier) immediately after pull")
+        let start = content.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1))
+        let end = start.withOffset(CGVector(dx: 0, dy: 350))
+        start.press(forDuration: 0.05, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.6)
+        attachScreenshot("\(content.identifier) immediately after pull")
     }
 
     @MainActor private func feedback(in app: XCUIApplication) -> XCUIElement {

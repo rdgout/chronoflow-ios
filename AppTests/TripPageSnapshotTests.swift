@@ -86,11 +86,13 @@ nonisolated final class TripPageSnapshotTests: XCTestCase {
                 context.model.timeline = false
                 context.model.acceptPreparedPlan()
                 context.model.select(dayID: last.id)
-                let view = NavigationStack { TripPageView(model: context.model, formatter: formatter) }
-                    .transaction {
-                        $0.disablesAnimations = true
-                        $0.animation = nil
-                    }
+                let view = NavigationStack {
+                    TripPageView(model: context.model, formatter: formatter, refresh: { nil })
+                }
+                .transaction {
+                    $0.disablesAnimations = true
+                    $0.animation = nil
+                }
                 let host = try AuthTestHost(
                     view, size: fixture.size, insets: fixture.insets, style: style, language: language,
                     category: category, scale: fixture.scale)
@@ -126,7 +128,7 @@ nonisolated final class TripPageSnapshotTests: XCTestCase {
     let context = try await TripSnapshotContext(state: state, language: language)
     do {
         try await context.wait()
-        var page = TripPageView(model: context.model, formatter: formatter)
+        var page = TripPageView(model: context.model, formatter: formatter, refresh: { nil })
         page.onFirstTimelineFrame = { context.timelineReady = true }
         let host = try AuthTestHost(
             NavigationStack { page }.transaction {
@@ -194,7 +196,7 @@ private enum TripSnapshotFailure: Error {
     }
 }
 
-@MainActor private final class TripSnapshotContext {
+@MainActor final class TripSnapshotContext {
     let database: AccountDatabase
     let model: TripPageModel
     let root: URL

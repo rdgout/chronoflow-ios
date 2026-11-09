@@ -17,11 +17,13 @@
         public var openStep: (String) -> Void
         public var settings: () -> Void
         public var pastTrips: () -> Void
+        public var refresh: () async -> Void
         public init(
             trips: [TripListValue], detail: TripDetail?, now: Date, loading: Bool, formatter: CopyLineFormatter,
             hidden: [BlockType] = [], timeFormat: TimeFormat = .value24,
             openTrip: @escaping (String) -> Void, openStep: @escaping (String) -> Void,
-            settings: @escaping () -> Void, pastTrips: @escaping () -> Void
+            settings: @escaping () -> Void, pastTrips: @escaping () -> Void,
+            refresh: @escaping () async -> Void
         ) {
             self.trips = trips
             self.detail = detail
@@ -34,6 +36,7 @@
             self.openStep = openStep
             self.settings = settings
             self.pastTrips = pastTrips
+            self.refresh = refresh
         }
         private var language: Language { locale.language.languageCode?.identifier == "nl" ? .nl : .en }
         private func t(_ key: String, _ values: [String: String] = [:]) -> String {
@@ -65,9 +68,10 @@
                     } else if let ended = lastEndedTrip(trips, now: now) {
                         completed(ended)
                     }
-                }.planContentBounds().padding(PlanUITokens.space4).planPageRail().planRefreshContent()
+                }.planContentBounds().padding(PlanUITokens.space4).planPageRail()
             }
-            .planRefreshScroll()
+            .refreshable { await refresh() }
+            .scrollBounceBehavior(.always, axes: .vertical)
             .background(ColorToken.background.color).foregroundStyle(ColorToken.foreground.color)
             .navigationTitle(t("Today")).accessibilityElement(children: .contain)
             .accessibilityIdentifier("today.screen")

@@ -28,6 +28,8 @@ struct AppTabs: View {
     @State private var wizardStore: MemberWizardStore?
     @State private var airportSearch: AirportSearchService?
     @State private var openingWizard = false
+    @State private var todayFeedback = RefreshFeedbackModel()
+    @State private var tripsFeedback = RefreshFeedbackModel()
     private struct StepSelection: Identifiable {
         let tripID: String
         let blockID: String
@@ -280,7 +282,11 @@ struct AppTabs: View {
     }
 
     private var today: some View {
-        ZStack { todayContent }.planRefreshable { try await native?.refreshNow() }
+        ZStack { todayContent }.planRefreshFeedback(todayFeedback)
+    }
+
+    private func refreshToday() async {
+        await todayFeedback.refresh { try await native?.refreshNow() }
     }
 
     @ViewBuilder private var todayContent: some View {
@@ -295,14 +301,14 @@ struct AppTabs: View {
                         step = StepSelection(tripID: tripID, blockID: $0)
                     }
                 }, settings: { selection = .settings },
-                pastTrips: { selection = .trips }
+                pastTrips: { selection = .trips }, refresh: refreshToday
             )
         } else if native != nil {
             ScrollView {
                 PlanLoadingView(label: t("Loading today")).padding(PlanUITokens.space4).planPageRail()
-                    .planRefreshContent()
             }
-            .planRefreshScroll()
+            .refreshable { await refreshToday() }
+            .scrollBounceBehavior(.always, axes: .vertical)
             .navigationTitle(t("Today")).background(ColorToken.background.color)
             .accessibilityElement(children: .contain).accessibilityIdentifier("today.screen")
         } else {
@@ -310,7 +316,11 @@ struct AppTabs: View {
         }
     }
     private var trips: some View {
-        ZStack { tripsContent }.planRefreshable { try await native?.refreshNow() }
+        ZStack { tripsContent }.planRefreshFeedback(tripsFeedback)
+    }
+
+    private func refreshTrips() async {
+        await tripsFeedback.refresh { try await native?.refreshNow() }
     }
 
     @ViewBuilder private var tripsContent: some View {
@@ -320,12 +330,13 @@ struct AppTabs: View {
                 now: home.trips.now, loading: !home.synced || !home.trips.hasLoaded, formatter: formatter,
                 timeFormat: home.timeFormat, hidden: home.hidden,
                 open: { tripsPath.append(TripPageRoute(tripID: $0)) },
-                create: { openWizard() })
+                create: { openWizard() }, refresh: refreshTrips)
         } else if native != nil {
             ScrollView {
-                TripsLoadingView().padding(PlanUITokens.space4).planPageRail().planRefreshContent()
+                TripsLoadingView().padding(PlanUITokens.space4).planPageRail()
             }
-            .planRefreshScroll()
+            .refreshable { await refreshTrips() }
+            .scrollBounceBehavior(.always, axes: .vertical)
             .navigationTitle(t("My trips")).background(ColorToken.background.color)
             .accessibilityElement(children: .contain).accessibilityIdentifier("trips.screen")
         } else {

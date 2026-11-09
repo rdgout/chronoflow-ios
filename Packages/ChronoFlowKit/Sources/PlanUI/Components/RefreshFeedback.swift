@@ -34,6 +34,7 @@ public struct RefreshFeedback: Sendable, Equatable {
 @MainActor @Observable public final class RefreshFeedbackModel {
     public private(set) var refreshing = false
     public private(set) var feedback: [RefreshFeedback] = []
+    public private(set) var presentationID = UUID()
     public init() {}
 
     public func refresh(
@@ -42,7 +43,10 @@ public struct RefreshFeedback: Sendable, Equatable {
         guard !refreshing else { return }
         refreshing = true
         feedback = []
-        defer { refreshing = false }
+        defer {
+            refreshing = false
+            presentationID = UUID()
+        }
         do {
             let result = try await action()
             try Task.checkCancellation()

@@ -78,8 +78,7 @@ struct TripPageDestination: View {
     }
 
     private func tripPage(_ model: TripPageModel) -> TripPageView {
-        var page = TripPageView(model: model)
-        page.refresh = { try await native?.refreshNow() }
+        var page = TripPageView(model: model, refresh: { try await native?.refreshNow() })
         page.onTrips = onTrips
         page.onToday = onToday
         page.onSettings = onSettings

@@ -18,7 +18,8 @@ public struct TripPageView: View {
     @State private var showLegend = false
     @State private var renderer = TimelineRenderer()
     @State private var timelineSymbols = TimelineSymbols()
-    public var refresh: () async throws -> SyncResult? = { nil }
+    @State private var feedback = RefreshFeedbackModel()
+    public var refresh: () async throws -> SyncResult?
     public var onActions: (() -> Void)?
     public var onSettings: (() -> Void)?
     public var onMakePlan: (() -> Void)?
@@ -26,22 +27,27 @@ public struct TripPageView: View {
     public var onToday: (() -> Void)?
     public var onFirstTimelineFrame: () -> Void = {}
 
-    public init(model: TripPageModel, formatter: CopyLineFormatter? = nil) {
+    public init(
+        model: TripPageModel, formatter: CopyLineFormatter? = nil,
+        refresh: @escaping () async throws -> SyncResult?
+    ) {
         _model = State(initialValue: model)
         _copy = State(initialValue: PageCopy(language: model.plan.language))
         _formatter = State(initialValue: formatter)
+        self.refresh = refresh
     }
     public init(
         tripID: String, repository: TripRepository, retention: PlanRetention,
         dayID: String? = nil, blockID: String? = nil, keptDay: String? = nil, awaitingSync: Bool = false,
         timeFormat: TimeFormat = .value24, hiddenCategories: [BlockType] = [],
-        fetchDetail: @escaping @Sendable (String) async throws -> Void = { _ in }
+        fetchDetail: @escaping @Sendable (String) async throws -> Void = { _ in },
+        refresh: @escaping () async throws -> SyncResult?
     ) {
         self.init(
             model: TripPageModel(
                 tripID: tripID, repository: repository, retention: retention,
                 dayID: dayID, blockID: blockID, keptDay: keptDay, awaitingSync: awaitingSync,
-                timeFormat: timeFormat, hiddenCategories: hiddenCategories, fetchDetail: fetchDetail))
+                timeFormat: timeFormat, hiddenCategories: hiddenCategories, fetchDetail: fetchDetail), refresh: refresh)
     }
 
     public var body: some View {
@@ -50,15 +56,17 @@ public struct TripPageView: View {
             if model.state == .notFound || model.state == .server {
                 GeometryReader { geometry in
                     ScrollView {
-                        errorPage.frame(minHeight: geometry.size.height).planRefreshContent()
-                    }.planRefreshScroll().accessibilityElement(children: .contain).accessibilityIdentifier(
-                        "trip.scroll")
+                        errorPage.frame(minHeight: geometry.size.height)
+                    }
+                    .refreshable { await refreshPlan() }
+                    .scrollBounceBehavior(.always, axes: .vertical)
+                    .accessibilityElement(children: .contain).accessibilityIdentifier("trip.scroll")
                 }
             } else {
                 page
             }
         }
-        .planRefreshable(action: refresh)
+        .planRefreshFeedback(feedback)
         .foregroundStyle(ColorToken.foreground.color).background(ColorToken.background.color)
         .task {
             model.plan.language = locale.language.languageCode?.identifier == "nl" ? .nl : .en
@@ -85,6 +93,10 @@ public struct TripPageView: View {
                     }
             }.presentationDetents([.medium, .large])
         }
+    }
+
+    private func refreshPlan() async {
+        await feedback.refresh(action: refresh)
     }
 
     private var page: some View {
@@ -124,9 +136,9 @@ public struct TripPageView: View {
                             if model.state == .remoteOffline { remoteOffline } else { skeleton }
                         }
                     }.padding(.horizontal, PlanMetrics.gutter).padding(.bottom, PlanMetrics.gutter)
-                        .planRefreshContent()
                 }
-                .planRefreshScroll()
+                .refreshable { await refreshPlan() }
+                .scrollBounceBehavior(.always, axes: .vertical)
                 .coordinateSpace(name: "trip.scroll").accessibilityElement(children: .contain)
                 .accessibilityIdentifier("trip.scroll")
                 .onAppear {
