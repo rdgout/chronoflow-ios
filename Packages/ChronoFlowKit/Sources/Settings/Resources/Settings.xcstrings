@@ -4513,6 +4513,74 @@
         }
       }
     },
+    "Loading your plan": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading your plan"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je plan laden"
+          }
+        }
+      }
+    },
+    "Needs a connection. Your plans and reminders still work.": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs a connection. Your plans and reminders still work."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbinding nodig. Je plannen en herinneringen blijven werken."
+          }
+        }
+      }
+    },
+    "Update your payment method on the website to keep unlimited trips after {{date}}.": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update your payment method on the website to keep unlimited trips after {{date}}."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Werk je betaalmethode bij op de website om na {{date}} onbeperkt reizen te behouden."
+          }
+        }
+      }
+    },
+    "Update your payment method on the website to keep unlimited trips.": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update your payment method on the website to keep unlimited trips."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Werk je betaalmethode bij op de website om onbeperkt reizen te behouden."
+          }
+        }
+      }
+    },
     "123456": {
       "comment": "Settings board copy; RN nl.json checked first.",
       "localizations": {

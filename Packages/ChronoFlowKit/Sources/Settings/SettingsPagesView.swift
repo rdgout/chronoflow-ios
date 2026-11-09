@@ -84,7 +84,8 @@
                     SettingsStoredState(loaded: store.loaded, failed: store.failure) { Task { await store.retry() } }
                 }
             }.sheet(isPresented: $showingDelete) {
-                SettingsDeleteAccountView(delete: store.deleteAccount)
+                SettingsDeleteAccountView(
+                    delete: store.deleteAccount, email: store.account?.email ?? "", security: store.performSecurity)
             }
         }
         private var languageSubtitle: String {
