@@ -19,8 +19,8 @@
         }
         var subtitle: String? {
             switch self {
-            case .account: "Profile, language, your data"
-            case .security: "Password, passkeys, two-factor"
+            case .account: "Profile, language"
+            case .security: "Password, two-factor"
             case .bodyClock: "The answers every plan is built from"
             case .preferences: "Appearance, timeline, reminders"
             default: nil

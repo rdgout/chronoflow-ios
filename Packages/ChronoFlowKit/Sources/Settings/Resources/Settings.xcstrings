@@ -2616,7 +2616,7 @@
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vraag bij elke keer inloggen met je wachtwoord om een code uit een authenticator-app, zodat een gestolen wachtwoord niet genoeg is."
+            "value": "Vraag bij elke aanmelding met je wachtwoord om een code uit een authenticator-app, zodat een gestolen wachtwoord niet genoeg is."
           }
         }
       }
@@ -2670,7 +2670,7 @@
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Inloggen met een passkey vraagt geen code."
+            "value": "Aanmelden met een passkey vraagt geen code."
           }
         }
       }
@@ -2886,7 +2886,7 @@
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Raak je je telefoon kwijt, log dan in met een van deze codes. Elke code werkt één keer en wordt daarna vervangen. Bewaar ze op een veilige plek."
+            "value": "Raak je je telefoon kwijt, meld je dan aan met een van deze codes. Elke code werkt één keer en wordt daarna vervangen. Bewaar ze op een veilige plek."
           }
         }
       }
@@ -2976,7 +2976,7 @@
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Log in met alleen je wachtwoord of passkey"
+            "value": "Meld je aan met alleen je wachtwoord of passkey"
           }
         }
       }
@@ -4424,6 +4424,108 @@
           "stringUnit": {
             "state": "translated",
             "value": "Altijd Nederlands"
+          }
+        }
+      }
+    },
+    "Your new password isn't saved yet.": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your new password isn't saved yet."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je nieuwe wachtwoord is nog niet opgeslagen."
+          }
+        }
+      }
+    },
+    "When it's on, you sign in with your password and a code from an authenticator app.": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When it's on, you sign in with your password and a code from an authenticator app."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Als dit aanstaat, log je in met je wachtwoord en een code uit een authenticator-app."
+          }
+        }
+      }
+    },
+    "Profile, language": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profile, language"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profiel, taal"
+          }
+        }
+      }
+    },
+    "Password, two-factor": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password, two-factor"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wachtwoord, tweestapsverificatie"
+          }
+        }
+      }
+    },
+    "The passwords don't match.": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The passwords don't match."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De wachtwoorden komen niet overeen."
+          }
+        }
+      }
+    },
+    "123456": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "123456"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "123456"
           }
         }
       }
