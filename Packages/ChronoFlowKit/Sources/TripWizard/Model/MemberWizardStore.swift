@@ -3,7 +3,8 @@ import Foundation
 import LocalStore
 
 public enum MemberWizardStep: String, Codable, Sendable {
-    case whereTo, outbound, returnChoice, returnRoute, returnFlight, sleep, checking, question, excluded, continuation
+    case whereTo, outbound, returnChoice, returnRoute, returnFlight, sleep, checking, question, excluded, continuation,
+        fineTune, ready, calculating
 }
 
 public struct WizardAirportSheet: Codable, Sendable, Equatable, Identifiable {
@@ -41,6 +42,13 @@ public struct MemberWizardState: Codable, Sendable, Equatable {
     public var sleepCompleted: Bool?
     public var savedProfile: JSONObject?
     public var savedTripId: String?
+    public var checkedInput: Data?
+    public var reviewedAt: Date?
+    public var revisit: Data?
+    public var returnToReady: Bool?
+    public var promptSheetID: String?
+    public var saveFailure: WizardSaveFailure?
+    public var updated: Bool?
     public init() {}
 }
 
@@ -85,14 +93,13 @@ public actor MemberWizardStore {
         guard let record = try await drafts.recovery(now: now(), permit: permit) else { return nil }
         do {
             var state = try record.wizardState!.decode(MemberWizardState.self)
-            if state.savedTripId != nil {
-                try await discard(instance: state.instance)
-                return nil
-            }
             let form = try record.form.decode(WizardForm.self)
             guard !form.legs.isEmpty, form.legs.count <= WizardForm.maxFlights, form.stays.count == form.legs.count,
                 (1...form.legs.count).contains(form.returnBoundary)
             else { throw DataFailure.server(status: nil) }
+            if state.step == .continuation {
+                state.step = state.review?.prompts.contains(where: { !$0.blocking }) == true ? .fineTune : .ready
+            }
             if state.step == .returnFlight, state.returnRouteConfirmed != true { state.step = .returnRoute }
             return MemberWizardDraft(
                 form: form, state: state,
@@ -134,10 +141,6 @@ public actor MemberWizardStore {
     }
 
     public func persist(_ draft: MemberWizardDraft) async throws {
-        if draft.state.savedTripId != nil {
-            try await discard(instance: draft.state.instance)
-            return
-        }
         try await drafts.updateRecovery(
             record(draft), instance: draft.state.instance, revision: draft.state.revision, permit: permit)
     }

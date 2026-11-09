@@ -151,8 +151,10 @@ enum MockTripGeneration {
         let template = try template(input)
         let profile = settings.bodyClock
         let excluded = profile["ageBand"] == .string("under_18") || profile["shiftWork"] == .bool(true)
-        let prompts = excluded ? [] : prompts(profile)
-        let status: PlanStatus = excluded ? .noPlan : prompts.isEmpty ? template.detail.plan.status : .needsAnswers
+        let blocking = excluded ? [] : prompts(profile)
+        let prompts =
+            excluded ? [] : blocking.isEmpty ? MockWizardPrompts.make(input: input, profile: profile) : blocking
+        let status: PlanStatus = excluded ? .noPlan : blocking.isEmpty ? template.detail.plan.status : .needsAnswers
         let planned = status == .ok || status == .modified
         let unlimited = settings.planCredits["unlimited"] == .bool(true)
         let balance: Int
@@ -188,7 +190,7 @@ enum MockTripGeneration {
                         : "This plan is not available if, in the past 14 days, you have worked night or rotating shifts or had a very irregular sleep schedule.",
                     args: [])
             ]
-        } else if !prompts.isEmpty {
+        } else if !blocking.isEmpty {
             reasons = [CopyLine(key: "Answer the health questions to get your plan.", args: [])]
         } else {
             reasons = plan.reasons

@@ -34,7 +34,9 @@ extension MemberWizardModel {
         case .checking, .excluded: draft.state.checkingAnswers == true ? 0.70 : 0.52
         case .question:
             0.54 + 0.16 * Double(draft.state.questionIndex ?? 0) / Double(max(1, draft.state.questions?.count ?? 1))
-        case .continuation: 0.72
+        case .continuation, .fineTune: 0.80
+        case .ready: 0.95
+        case .calculating: 1
         }
     }
 
@@ -100,6 +102,12 @@ extension MemberWizardModel {
     }
 
     public func finishFlightInput() {
+        if draft.state.revisit != nil, draft.state.revisit == inputFingerprint {
+            draft.state.revisit = nil
+            draft.state.returnToReady = nil
+            go(.ready)
+            return
+        }
         if draft.state.sleepNeeded { go(.sleep) } else { beginChecking() }
     }
 
@@ -117,7 +125,7 @@ extension MemberWizardModel {
     }
 
     public func resumeChecking() {
-        guard draft.state.step == .checking, checkTask == nil else { return }
+        guard draft.state.step == .checking, checkTask == nil, checking.failure == nil else { return }
         if draft.state.sleepNeeded, draft.state.sleepCompleted != true {
             go(.sleep)
             return
@@ -177,12 +185,22 @@ extension MemberWizardModel {
         }
     }
 
-    private func applyReview(_ result: TripGenerationReviewResult) {
+    func applyReview(_ result: TripGenerationReviewResult) {
         do {
             draft.form = try WizardForm(reviewInput: result.input, retained: draft.form)
             draft.form.itinerary = result.review.itinerary
             draft.state.profile = result.input.profile ?? JSONObject()
+            let previous = draft.state.review
             draft.state.review = result.review
+            draft.state.updated =
+                previous != nil
+                && (previous?.summary != result.review.summary || previous?.price.cost != result.review.price.cost
+                    || previous?.price.state != result.review.price.state
+                    || previous?.price.unlimited != result.review.price.unlimited
+                    || previous?.price.freeDirections != result.review.price.freeDirections)
+            draft.state.reviewedAt = now()
+            draft.state.checkedInput = inputFingerprint
+            draft.state.saveFailure = nil
             if draft.state.sleepCompleted == true { draft.state.sleepNeeded = false }
             draft.fieldErrors = [:]
             let errors = WizardFlightRules.errors(
@@ -200,17 +218,27 @@ extension MemberWizardModel {
             } else if !questions.isEmpty {
                 go(.question)
             } else {
-                go(.continuation)
+                let destination: MemberWizardStep =
+                    draft.state.returnToReady == true || optionalPrompts.isEmpty ? .ready : .fineTune
+                draft.state.returnToReady = nil
+                draft.state.revisit = nil
+                go(destination)
             }
         } catch { applyFailure(.server(status: nil)) }
     }
 
-    private func applyFailure(_ failure: DataFailure) {
+    func applyFailure(_ failure: DataFailure) {
         switch failure {
         case .validation(let fields, _), .profileInvalid(let fields):
             draft.fieldErrors = WizardJourney.errors(fields, form: draft.form)
-            if draft.fieldErrors.keys.contains(where: { $0.hasPrefix("profile.") }) {
-                go(.sleep)
+            if draft.fieldErrors.keys.contains(where: {
+                $0.hasPrefix("override.") || $0.hasPrefix("preparation.") || $0.hasPrefix("stays.")
+                    || $0.contains("seatWindow")
+            }) {
+                go(.fineTune)
+            } else if draft.fieldErrors.keys.contains(where: { $0.hasPrefix("profile.") }) {
+                let sleepFields = ["profile.habitual_bed", "profile.habitual_wake", "profile.chronotype"]
+                go(draft.fieldErrors.keys.contains(where: sleepFields.contains) ? .sleep : .fineTune)
             } else {
                 go(WizardJourney.errorStep(draft.fieldErrors, form: draft.form))
             }

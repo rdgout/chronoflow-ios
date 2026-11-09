@@ -131,12 +131,21 @@ public enum WizardPresentation {
                     "From {{time}}",
                     ["time": String((answers["stay.bed_available_from_local"]?.string ?? "").suffix(5))])
         }
-        if prompt.kind.rawValue == "blue_blockers", value == .string("rated"),
-            case .number(let number) = answers["blue_blocker_mdfd"]
-        {
+        if prompt.kind == .blueBlockers, value == .string("rated") {
+            let number: Decimal?
+            if case .number(let value) = answers["blue_blocker_mdfd"] {
+                number = value
+            } else {
+                number = answers["blue_blocker_mdfd"]?.string.flatMap {
+                    Decimal(
+                        string: $0.replacingOccurrences(of: ",", with: "."), locale: Locale(identifier: "en_US_POSIX"))
+                }
+            }
             let formatter = NumberFormatter()
             formatter.locale = locale
-            return t("Rated {{rating}}", ["rating": formatter.string(from: NSDecimalNumber(decimal: number)) ?? ""])
+            return t(
+                "Rated {{rating}}",
+                ["rating": number.flatMap { formatter.string(from: NSDecimalNumber(decimal: $0)) } ?? ""])
         }
         if case .bool(let value) = value { return t(value ? "Yes" : "No", [:]) }
         let names = [
