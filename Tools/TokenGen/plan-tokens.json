@@ -1,24 +1,129 @@
 {
-  "source": "plan.md Phase 14b, canvas.json planCompactNote; RN timeline.ts spacing references",
-  "type": {
-    "planTitle": {"size": 17, "lineHeight": 22, "weight": 600},
-    "planSubtitle": {"size": 12, "lineHeight": 15, "weight": 400},
-    "planLane": {"size": 11, "lineHeight": 14, "weight": 500},
-    "planCompactDate": {"size": 10, "lineHeight": 12, "weight": 400},
-    "planListLine": {"size": 13, "lineHeight": 18, "weight": 400}
+  "scalars" : {
+    "coreBorderOpacity" : 0.69999999999999996,
+    "dotOpacity" : 0.16,
+    "gridOpacity" : 0.59999999999999998,
+    "hatchOpacity" : 0.12,
+    "markedOpacity" : 0.59999999999999998,
+    "markedRowOpacity" : 0.69999999999999996,
+    "optionalBorderOpacity" : 0.5,
+    "optionalOpacity" : 0.75,
+    "tagOpacity" : 0.40000000000000002,
+    "warningOpacity" : 0.10000000000000001
   },
-  "spacingMultipliers": {
-    "pointsPerHour": 10,
-    "gutterWidth": 11,
-    "tileInset": 0.5,
-    "minLaneWidth": 11,
-    "minColumnWidth": 7.5,
-    "minTickSpacing": 7.5
+  "source" : "plan.md Phase 14b and fix round 1; Plan board compact/tile styles; RN DayTimeline compact window threshold space(160), tileModel and Notice spacing references",
+  "spacingMultipliers" : {
+    "blockIcon" : 3.5,
+    "border" : 0.25,
+    "cardPadding" : 4,
+    "cardRadius" : 6.5,
+    "compactFadeDistance" : 6,
+    "compactHeaderHeight" : 9,
+    "coreBorder" : 1,
+    "detailsThreshold" : 19,
+    "dot" : 1.5,
+    "dotRadius" : 0.25,
+    "dotStep" : 1.75,
+    "emphasisBorder" : 0.5,
+    "gutter" : 4,
+    "gutterWidth" : 11,
+    "icon" : 4,
+    "line" : 0.25,
+    "minColumnWidth" : 7.5,
+    "minLaneWidth" : 11,
+    "minTickSpacing" : 7.5,
+    "patternLine" : 0.5,
+    "patternStep" : 2,
+    "pointsPerHour" : 10,
+    "prioritySampleHeight" : 7,
+    "prioritySampleWidth" : 10,
+    "rowGap" : 2,
+    "rowRadius" : 5.5,
+    "sectionGap" : 3,
+    "skeletonSummary" : 30,
+    "skeletonTimeline" : 95,
+    "smallGap" : 1,
+    "textPlateRadius" : 2.5,
+    "tileInset" : 0.5,
+    "tilePadding" : 1.5,
+    "tileRadius" : 3.5,
+    "timelineLabelBreakpoint" : 160,
+    "touch" : 11,
+    "zonePadding" : 5,
+    "zonePillPadding" : 2,
+    "zonePillVerticalPadding" : 0.5
   },
-  "spacingTokens": {
-    "minTileHeight": "space-6",
-    "tinyTileHeight": "space-14",
-    "gutterMarkerSize": "space-6",
-    "laneGap": "space-1"
+  "spacingTokens" : {
+    "gutterMarkerSize" : "space-6",
+    "laneGap" : "space-1",
+    "minTileHeight" : "space-6",
+    "tinyTileHeight" : "space-14"
+  },
+  "type" : {
+    "planBlockLabel" : {
+      "lineHeight" : 14,
+      "size" : 11,
+      "weight" : 600
+    },
+    "planCardTitle" : {
+      "lineHeight" : 32,
+      "size" : 24,
+      "weight" : 400
+    },
+    "planCompactDate" : {
+      "lineHeight" : 12,
+      "size" : 10,
+      "weight" : 400
+    },
+    "planCompactWeekday" : {
+      "lineHeight" : 12,
+      "size" : 10,
+      "weight" : 600
+    },
+    "planDayTitle" : {
+      "lineHeight" : 26,
+      "size" : 18,
+      "weight" : 400
+    },
+    "planLane" : {
+      "lineHeight" : 14,
+      "size" : 11,
+      "weight" : 500
+    },
+    "planListLine" : {
+      "lineHeight" : 18,
+      "size" : 13,
+      "weight" : 400
+    },
+    "planListTitle" : {
+      "lineHeight" : 18,
+      "size" : 13,
+      "weight" : 600
+    },
+    "planNow" : {
+      "lineHeight" : 16,
+      "size" : 10,
+      "weight" : 600
+    },
+    "planPriority" : {
+      "lineHeight" : 14,
+      "size" : 10,
+      "weight" : 500
+    },
+    "planRemoteTitle" : {
+      "lineHeight" : 28,
+      "size" : 22,
+      "weight" : 400
+    },
+    "planSubtitle" : {
+      "lineHeight" : 15,
+      "size" : 12,
+      "weight" : 400
+    },
+    "planTitle" : {
+      "lineHeight" : 22,
+      "size" : 17,
+      "weight" : 600
+    }
   }
 }

@@ -35,6 +35,18 @@ struct RootView: View {
     }
 
     @ViewBuilder private var content: some View {
+        #if DEBUG || CHRONOFLOW_TIMELINE_PERF
+            if let trip = TripPageDiagnosticRoot.requestedTrip {
+                TripPageDiagnosticRoot(requestedTrip: trip)
+            } else {
+                routedContent
+            }
+        #else
+            routedContent
+        #endif
+    }
+
+    @ViewBuilder private var routedContent: some View {
         if let route = navigator.route {
             if route == .welcome {
                 WelcomeView()

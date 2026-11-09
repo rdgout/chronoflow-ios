@@ -9,12 +9,21 @@
         }
         typealias TripFixture = MockTripFixtures.Template
 
-        public static func make(now: Date, unverified: Bool = false, walkthroughSeen: Bool = false) throws
+        public static func make(
+            now: Date, unverified: Bool = false, walkthroughSeen: Bool = false,
+            includeTimelinePerformanceTrips: Bool = false
+        ) throws
             -> MockServerState
         {
             var fixtures = try JSONDecoder().decode(Fixtures.self, from: MockTripFixtures.fixtureData())
             fixtures.trips = try fixtures.trips.enumerated().map {
                 try rebase($0.element, index: $0.offset, now: now)
+            }
+            if includeTimelinePerformanceTrips {
+                for name in ["large30", "large60"] {
+                    let value = try MockTimelineFixtures.fixture(named: name)
+                    fixtures.trips.append(TripFixture(card: value.card, detail: value.detail))
+                }
             }
             let trips = fixtures.trips.map { listItem($0, now: now) }
             let details = Dictionary(uniqueKeysWithValues: fixtures.trips.map { ($0.card.id, $0.detail) })

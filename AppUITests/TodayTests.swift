@@ -26,7 +26,8 @@ nonisolated final class TodayTests: XCTestCase {
         let card = app.buttons["today.trip"]
         XCTAssertTrue(card.waitForExistence(timeout: 12))
         card.tap()
-        XCTAssertTrue(app.staticTexts["trip.destination"].waitForExistence(timeout: 4))
+        XCTAssertTrue(app.scrollViews["trip.scroll"].waitForExistence(timeout: 12))
+        XCTAssertTrue(app.buttons["trip.viewToggle"].waitForExistence(timeout: 12))
         app.navigationBars.buttons.element(boundBy: 0).tap()
         XCTAssertTrue(app.scrollViews["today.screen"].waitForExistence(timeout: 4))
     }

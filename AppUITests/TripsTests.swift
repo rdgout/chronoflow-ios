@@ -12,7 +12,8 @@ nonisolated final class TripsTests: XCTestCase {
         let card = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "trip.")).firstMatch
         XCTAssertTrue(card.waitForExistence(timeout: 6))
         card.tap()
-        XCTAssertTrue(app.staticTexts["trip.destination"].waitForExistence(timeout: 4))
+        XCTAssertTrue(app.scrollViews["trip.scroll"].waitForExistence(timeout: 12))
+        XCTAssertTrue(app.buttons["trip.viewToggle"].waitForExistence(timeout: 12))
         app.navigationBars.buttons.element(boundBy: 0).tap()
         XCTAssertTrue(screen.waitForExistence(timeout: 4))
     }

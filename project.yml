@@ -61,6 +61,7 @@ targets:
       configs:
         Perf:
           CHRONOFLOW_READINESS: signed-out
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) CHRONOFLOW_TIMELINE_PERF"
     preBuildScripts:
       - name: Require device signing for associated domains
         script: sh "$SRCROOT/Scripts/check-device-entitlements.sh"
@@ -133,7 +134,9 @@ targets:
   PerfUITests:
     type: bundle.ui-testing
     platform: iOS
-    sources: [PerfUITests]
+    sources:
+      - PerfUITests
+      - Packages/ChronoFlowKit/Tests/PlanUITests/TimelineBudgetMetric.swift
     settings:
       TARGETED_DEVICE_FAMILY: "1"
       SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO

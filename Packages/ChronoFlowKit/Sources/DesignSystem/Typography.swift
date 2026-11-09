@@ -48,6 +48,16 @@ public enum Typography {
         #endif
     }
 
+    public static var planCardTitle: Style {
+        Style(face: .fraunces400Opsz20, metrics: PlanTypeMetrics.planCardTitle, relativeTo: .title2)
+    }
+    public static var planDayTitle: Style {
+        Style(face: .fraunces400Opsz20, metrics: PlanTypeMetrics.planDayTitle, relativeTo: .title3)
+    }
+    public static var planRemoteTitle: Style {
+        Style(face: .fraunces400Opsz20, metrics: PlanTypeMetrics.planRemoteTitle, relativeTo: .title2)
+    }
+
     public static var planTitle: Style {
         Style(face: PlanTypeMetrics.planTitleFace, metrics: PlanTypeMetrics.planTitle, relativeTo: .headline)
     }
@@ -60,6 +70,23 @@ public enum Typography {
     public static var planCompactDate: Style {
         Style(
             face: PlanTypeMetrics.planCompactDateFace, metrics: PlanTypeMetrics.planCompactDate, relativeTo: .caption2)
+    }
+    public static var planCompactWeekday: Style {
+        Style(
+            face: PlanTypeMetrics.planCompactWeekdayFace, metrics: PlanTypeMetrics.planCompactWeekday,
+            relativeTo: .caption2)
+    }
+    public static var planListTitle: Style {
+        Style(face: PlanTypeMetrics.planListTitleFace, metrics: PlanTypeMetrics.planListTitle, relativeTo: .subheadline)
+    }
+    public static var planBlockLabel: Style {
+        Style(face: PlanTypeMetrics.planBlockLabelFace, metrics: PlanTypeMetrics.planBlockLabel, relativeTo: .caption2)
+    }
+    public static var planNow: Style {
+        Style(face: PlanTypeMetrics.planNowFace, metrics: PlanTypeMetrics.planNow, relativeTo: .caption2)
+    }
+    public static var planPriority: Style {
+        Style(face: PlanTypeMetrics.planPriorityFace, metrics: PlanTypeMetrics.planPriority, relativeTo: .caption2)
     }
     public static var planListLine: Style {
         Style(face: PlanTypeMetrics.planListLineFace, metrics: PlanTypeMetrics.planListLine, relativeTo: .subheadline)

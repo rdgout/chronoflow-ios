@@ -18,6 +18,7 @@ public actor SyncEngine {
     private var timerID: UInt64 = 0
     private var rerun = false
     private var stopped = false
+    private var detailTasks: [UUID: (SyncEpoch, Task<Void, any Error>)] = [:]
     private var observers: [UUID: AsyncStream<SyncEvent>.Continuation] = [:]
 
     public init(
@@ -45,6 +46,25 @@ public actor SyncEngine {
         return stream
     }
     private func removeObserver(_ id: UUID) { observers.removeValue(forKey: id) }
+
+    public func fetchDetail(tripID: String) async throws {
+        try epoch.check()
+        guard !stopped, let source else { throw CancellationError() }
+        let id = UUID()
+        let requestEpoch = epoch.child()
+        let pull = FullPull(database: database, source: source, retention: retention, now: scheduler.now)
+        let task = Task { try await pull.fetchDetail(tripID: tripID, epoch: requestEpoch) }
+        detailTasks[id] = (requestEpoch, task)
+        defer { detailTasks[id] = nil }
+        try await withTaskCancellationHandler {
+            try await task.value
+            try Task.checkCancellation()
+            try requestEpoch.check()
+        } onCancel: {
+            requestEpoch.invalidate()
+            task.cancel()
+        }
+    }
 
     public func requestSync() {
         guard !stopped else { return }
@@ -232,6 +252,11 @@ public actor SyncEngine {
 
     public func cancelAndWait() async {
         stopped = true
+        let details = detailTasks.values
+        for (epoch, task) in details {
+            epoch.invalidate()
+            task.cancel()
+        }
         let pendingTimer = cancelTimer()
         flightEpoch?.invalidate()
         flight?.cancel()
@@ -241,8 +266,9 @@ public actor SyncEngine {
         let timers = canceledTimers
         canceledTimers.removeAll()
         for timer in timers.values { await timer.value }
+        for (_, task) in details { _ = await task.result }
+        detailTasks.removeAll()
         source = nil
-        retention.clear()
         for observer in observers.values { observer.finish() }
         observers.removeAll()
     }

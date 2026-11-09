@@ -441,7 +441,8 @@ class ClassificationTests(unittest.TestCase):
     def test_target_and_method_selection_is_explicit_and_validated(self):
         self.assertEqual(runner.expand(['AppTests/WelcomeSnapshotTests/frozenIntro']), ['AppTests/WelcomeSnapshotTests/frozenIntro'])
         self.assertIn('AppTests/WelcomeSnapshotTests', runner.expand(['AppTests']))
-        for selector in ['Unknown', 'PerfUITests', 'AppTests/NewTests']:
+        self.assertEqual(runner.expand(['PerfUITests']), sorted(runner.selectors('perf')))
+        for selector in ['Unknown', 'PerfUITests/NewTests', 'AppTests/NewTests']:
             with self.assertRaises(ValueError): runner.expand([selector])
         self.assertEqual(runner.selection('welcome', 'duo', ['AppUITests/ReadinessTests']), ['AppUITests/ReadinessTests'])
 
@@ -637,6 +638,21 @@ class RunnerTests(unittest.TestCase):
                 self.assertRegex(output, r'FAIL 17e Debug-(?:compare|serial) ' + re.escape(suite))
                 self.assertIn('PASS 17e Release-compare AppTests/ReleaseReadinessTests', output)
         self.result_fail = None
+
+    def test_trip_snapshots_record_then_compare_without_leaking_record_flags(self):
+        suite = 'AppTests/TripPageSnapshotTests'
+        with patch.dict(os.environ, SNAPSHOT_RECORD='1'):
+            status, output = self.execute(aliases=['17e'], only=[suite])
+        self.assertEqual(status, 0, output)
+        passes = [(c, e) for c, e in zip(self.commands, self.environments)
+                  if '-only-testing:' + suite in c and c[-1] == 'test-without-building']
+        self.assertEqual(len(passes), 2)
+        self.assertEqual(passes[0][1].get('TEST_RUNNER_SNAPSHOT_RECORD'), '1')
+        self.assertNotIn('TEST_RUNNER_SNAPSHOT_RECORD', passes[1][1])
+        for command, environment in passes:
+            self.assertEqual([v for v in command if v.startswith('-only-testing:')],
+                             ['-only-testing:' + suite])
+            self.assertNotIn('SNAPSHOT_RECORD', environment)
 
     def test_auth_skipped_expected_failure_or_missing_execution_cannot_pass(self):
         for suite in AUTH_HOSTED + AUTH_UI:

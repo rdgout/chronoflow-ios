@@ -7,6 +7,8 @@
     public struct StepSheet: View {
         @Environment(\.locale) private var locale
         @Environment(\.dismiss) private var dismiss
+        @ScaledMetric(relativeTo: .body) private var titleLineHeight =
+            Typography.screenCardTitle.lineHeight ?? Typography.screenCardTitle.size
         private enum ActionFocus: Hashable { case done, undo }
         @AccessibilityFocusState private var actionFocus: ActionFocus?
         public let detail: TripDetail?
@@ -59,6 +61,7 @@
                             .background(ColorToken.muted.color, in: Circle()).accessibilityHidden(true)
                         Text(t("This step is no longer in your plan")).planTextStyle(Typography.screenCardTitle)
                             .accessibilityAddTraits(.isHeader)
+                            .accessibilityIdentifier("step.gone")
                         Text(
                             t(
                                 "Your plan changed after you opened it, for example because you edited the trip. Your other check-offs are kept."
@@ -103,10 +106,11 @@
                         HStack { badges(block, mark: mark, running: running) }
                         VStack(alignment: .leading) { badges(block, mark: mark, running: running) }
                     }
-                    Text(t(stepLabelKey(block.type) ?? "Note")).planTextStyle(
-                        Typography.screenCardTitle, context: "step.title"
-                    )
-                    .accessibilityAddTraits(.isHeader)
+                    Text(t(stepLabelKey(block.type) ?? "Note"))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, minHeight: titleLineHeight, alignment: .leading)
+                        .planTextStyle(Typography.screenCardTitle, context: "step.title")
+                        .accessibilityAddTraits(.isHeader)
                     Text(
                         running
                             ? time + " · "
@@ -186,12 +190,4 @@
         }
     }
 
-    func priorityKey(_ priority: Priority) -> String {
-        switch priority {
-        case .core: "Important"
-        case .recommended: "Recommended"
-        case .optional: "Optional"
-        default: "Information"
-        }
-    }
 #endif

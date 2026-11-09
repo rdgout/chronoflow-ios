@@ -56,11 +56,11 @@ struct AppTabs: View {
         TabView(selection: $selection) {
             NavigationStack(path: $path) {
                 today
-                    .navigationDestination(for: TripPageRoute.self) { TripPageDestination(route: $0, native: native) }
+                    .navigationDestination(for: TripPageRoute.self) { tripDestination($0) }
             }
             .tabItem { Label(t("Today"), systemImage: "square.grid.2x2") }.tag(Tab.today)
             NavigationStack(path: $tripsPath) {
-                trips.navigationDestination(for: TripPageRoute.self) { TripPageDestination(route: $0, native: native) }
+                trips.navigationDestination(for: TripPageRoute.self) { tripDestination($0) }
             }
             .tabItem { Label(t("My trips"), systemImage: "airplane") }.tag(Tab.trips)
             NavigationStack {
@@ -140,6 +140,22 @@ struct AppTabs: View {
             }
         }
 
+    }
+
+    private func tripDestination(_ route: TripPageRoute) -> TripPageDestination {
+        TripPageDestination(
+            route: route, native: native,
+            onTrips: {
+                path.removeAll()
+                tripsPath.removeAll()
+                selection = .trips
+            },
+            onToday: {
+                path.removeAll()
+                tripsPath.removeAll()
+                selection = .today
+            },
+            onSettings: { selection = .settings })
     }
 
     @ViewBuilder private var today: some View {

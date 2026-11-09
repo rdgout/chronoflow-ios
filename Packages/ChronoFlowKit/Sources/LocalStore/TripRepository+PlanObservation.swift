@@ -4,8 +4,8 @@ import GRDB
 public struct TripPlanSnapshot: Sendable, Equatable {
     public var trip: TripRecord?
     public var plan: PlanVersionRecord?
-    public var checks: [CheckMarkRecord]
-    public var pendingChecks: [CheckOffChange]
+    public var checks: [CheckMarkRecord] = []
+    public var pendingChecks: [CheckOffChange] = []
 }
 
 extension TripRepository {
@@ -19,13 +19,11 @@ extension TripRepository {
                     arguments: [tripID, hash])
             }
             let checks = try CheckMarkRecord.fetchAll(
-                db, sql: "SELECT * FROM check_marks WHERE trip_id=?", arguments: [tripID])
-            let pending = try OutboxRecord.fetchAll(
-                db, sql: "SELECT * FROM outbox WHERE kind='check-off' ORDER BY created_at,id"
-            )
-            .compactMap { row -> CheckOffChange? in
-                guard case .checkOff(let change) = try row.change, change.tripID == tripID else { return nil }
-                return change
+                db, sql: "SELECT * FROM check_marks WHERE trip_id=? AND input_hash=? ORDER BY marked_at",
+                arguments: [tripID, trip?.currentInputHash ?? ""])
+            let pending = try StoreApplication.pending(db).compactMap { row -> CheckOffChange? in
+                guard case .checkOff(let check) = try? row.change, check.tripID == tripID else { return nil }
+                return check
             }
             return TripPlanSnapshot(trip: trip, plan: plan, checks: checks, pendingChecks: pending)
         }

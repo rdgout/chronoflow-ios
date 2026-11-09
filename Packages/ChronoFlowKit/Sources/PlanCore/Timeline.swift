@@ -191,8 +191,39 @@ public func layoutPlan(_ plan: PlanView, timeline: TimelinePresentationView, hid
 {
     let presentation = indexTimeline(timeline)
     let excluded = Set(hidden)
+    let blocks = timelineBlocksByDay(plan)
     return Dictionary(
         uniqueKeysWithValues: plan.days.map {
-            ($0.id, layoutDay($0, blocks: plan.blocks, presentation: presentation, hidden: excluded))
+            ($0.id, layoutDay($0, blocks: blocks[$0.id] ?? [], presentation: presentation, hidden: excluded))
         })
+}
+
+public func timelineBlocksByDay(_ plan: PlanView) -> [String: [BlockView]] {
+    struct TimedBlock {
+        var index: Int
+        var block: BlockView
+        var start: Date
+        var end: Date
+    }
+    var ordered: [TimedBlock] = []
+    ordered.reserveCapacity(plan.blocks.count)
+    for (index, block) in plan.blocks.enumerated() {
+        ordered.append(
+            TimedBlock(index: index, block: block, start: planDate(block.startUtc), end: planDate(block.endUtc)))
+    }
+    ordered.sort { a, b in a.start == b.start ? a.index < b.index : a.start < b.start }
+    var cursor = 0
+    var active: [TimedBlock] = []
+    var result: [String: [BlockView]] = [:]
+    for day in plan.days.sorted(by: { planDate($0.startUtc) < planDate($1.startUtc) }) {
+        let start = planDate(day.startUtc)
+        let end = planDate(day.endUtc)
+        while cursor < ordered.count && ordered[cursor].start < end {
+            active.append(ordered[cursor])
+            cursor += 1
+        }
+        active.removeAll { $0.end <= start && !($0.start == $0.end && $0.start >= start) }
+        result[day.id] = active.filter { $0.start < end }.sorted { $0.index < $1.index }.map(\.block)
+    }
+    return result
 }

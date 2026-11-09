@@ -29,9 +29,10 @@ nonisolated public enum ColorToken: String, CaseIterable, Sendable {
     case border = "border"
     case ring = "ring"
     case surface2 = "surface2"
+    case muted = "muted"
     case secondary = "secondary"
     case secondaryForeground = "secondaryForeground"
-    case muted = "muted"
+    case now = "now"
     case catSleep = "catSleep"
     case catSleepFg = "catSleepFg"
     case catLight = "catLight"
@@ -113,6 +114,9 @@ nonisolated public enum ColorToken: String, CaseIterable, Sendable {
             TokenRGBA(red: 0.9251244923, green: 0.9431324556, blue: 0.9707691894, alpha: 1.0000000000)
         case (.surface2, .dark):
             TokenRGBA(red: 0.0578175276, green: 0.0714425184, blue: 0.1388982826, alpha: 1.0000000000)
+        case (.muted, .light):
+            TokenRGBA(red: 0.9056695846, green: 0.9236057415, blue: 0.9511331744, alpha: 1.0000000000)
+        case (.muted, .dark): TokenRGBA(red: 0.1093640046, green: 0.1259110583, blue: 0.2012873893, alpha: 1.0000000000)
         case (.secondary, .light):
             TokenRGBA(red: 0.8847974871, green: 0.9115972334, blue: 0.9527738438, alpha: 1.0000000000)
         case (.secondary, .dark):
@@ -121,9 +125,8 @@ nonisolated public enum ColorToken: String, CaseIterable, Sendable {
             TokenRGBA(red: 0.1041834620, green: 0.1307694195, blue: 0.2458902483, alpha: 1.0000000000)
         case (.secondaryForeground, .dark):
             TokenRGBA(red: 0.8781215809, green: 0.8970877486, blue: 0.9329531607, alpha: 1.0000000000)
-        case (.muted, .light):
-            TokenRGBA(red: 0.9056695846, green: 0.9236057415, blue: 0.9511331744, alpha: 1.0000000000)
-        case (.muted, .dark): TokenRGBA(red: 0.1093640046, green: 0.1259110583, blue: 0.2012873893, alpha: 1.0000000000)
+        case (.now, .light): TokenRGBA(red: 0.7909938660, green: 0.3111337212, blue: 0.2376974406, alpha: 1.0000000000)
+        case (.now, .dark): TokenRGBA(red: 0.9351702356, green: 0.5324048954, blue: 0.4155009762, alpha: 1.0000000000)
         case (.catSleep, .light):
             TokenRGBA(red: 0.2399741594, green: 0.2660090250, blue: 0.5353412823, alpha: 1.0000000000)
         case (.catSleep, .dark):

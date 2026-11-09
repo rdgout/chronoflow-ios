@@ -231,6 +231,31 @@ import Testing
         await engine.cancelAndWait()
         try await store.close()
     }
+    @Test(.timeLimit(.minutes(1)), arguments: [false, true])
+    func tripPageDetailFetchIsCancelledBeforeItsLateResponseCanWrite(cancelRequest: Bool) async throws {
+        let store = try await SyncStore()
+        let source = ScriptedSource()
+        let gate = TestGate()
+        await source.configure(hook: { method in
+            if method == "detail" {
+                await withTaskCancellationHandler {
+                    await gate.block()
+                } onCancel: {
+                    Task { await gate.release() }
+                }
+            }
+        })
+        let engine = SyncEngine(database: store.database, source: source, epoch: store.epoch)
+        let request = Task { try await engine.fetchDetail(tripID: syncTrip) }
+        await gate.waitUntilBlocked()
+        if cancelRequest { request.cancel() }
+        await engine.cancelAndWait()
+        await #expect(throws: CancellationError.self) { try await request.value }
+        #expect(try await TripRepository(database: store.database).plan(tripID: syncTrip, inputHash: "hash") == nil)
+        await #expect(throws: CancellationError.self) { try await engine.fetchDetail(tripID: syncTrip) }
+        try await store.close()
+    }
+
     @Test func cancelAndWaitStopsWorkAndPreservesQueue() async throws {
         let store = try await SyncStore()
         let source = ScriptedSource()

@@ -35,10 +35,10 @@ let package = Package(
             name: "PlanCore", dependencies: ["AppCore"], resources: [.process("Resources")],
             swiftSettings: [.defaultIsolation(nil)]),
         .testTarget(
-            name: "PlanCoreTests", dependencies: ["PlanCore"], resources: [.copy("Fixtures")],
+            name: "PlanCoreTests", dependencies: ["PlanCore", "SnapshotSupport"], resources: [.copy("Fixtures")],
             swiftSettings: [.defaultIsolation(nil)]),
         .target(
-            name: "PlanUI", dependencies: ["PlanCore", "LocalStore", "DesignSystem"],
+            name: "PlanUI", dependencies: ["PlanCore", "LocalStore", "Sync", "DesignSystem"],
             resources: [.process("Resources")], swiftSettings: [.defaultIsolation(MainActor.self)]
         ),
         .testTarget(

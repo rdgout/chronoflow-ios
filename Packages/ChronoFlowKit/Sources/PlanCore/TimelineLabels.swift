@@ -31,11 +31,10 @@ extension CopyLineFormatter {
 }
 
 public func localDate(_ at: String, zone: String) -> String {
-    let formatter = DateFormatter()
-    formatter.locale = Locale(identifier: "en_US_POSIX")
-    formatter.timeZone = TimeZone(identifier: zone)
-    formatter.dateFormat = "yyyy-MM-dd"
-    return formatter.string(from: planDate(at))
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = TimeZone(identifier: zone) ?? .gmt
+    let parts = calendar.dateComponents([.year, .month, .day], from: planDate(at))
+    return String(format: "%04d-%02d-%02d", parts.year!, parts.month!, parts.day!)
 }
 
 public func utcOffset(_ at: String, zone: String) -> String {

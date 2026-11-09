@@ -32,6 +32,12 @@ public actor PlanDecoder {
         var inputHash: String
         var version: String?
     }
+    private var layoutCache: [Key: (PlanView, TimelinePresentationView, [BlockType], [String: DayLayout])] = [:]
+    private var preparedCache:
+        [Key: (TripDetail, Language, TimeFormat, [CheckMark], [BlockType], [CheckOffChange], PreparedPlan)] =
+            [:]
+    private var formatter: CopyLineFormatter?
+    public private(set) var layoutCount = 0
     private var cache: [Key: (Data, TripDetail)] = [:]
     public private(set) var decodeCount = 0
     public private(set) var decodedOnMainThread = false
@@ -49,8 +55,8 @@ public actor PlanDecoder {
                         card: card, planStartUtc: record.planStartUtc, planEndUtc: record.planEndUtc,
                         status: tripDisplayStatus(
                             card, planStartUtc: record.planStartUtc, planEndUtc: record.planEndUtc, now: now),
-                        planStartZone: record.planStartZone,
-                        planEndDate: record.planEndDate, preparationDays: record.preparationDays))
+                        planStartZone: record.planStartZone, planEndDate: record.planEndDate,
+                        preparationDays: record.preparationDays))
             } catch { firstError = firstError ?? error }
         }
         return (values, firstError)
@@ -90,10 +96,57 @@ public actor PlanDecoder {
     }
 
     public func layouts(_ detail: TripDetail, hidden: [BlockType]) -> [String: DayLayout] {
-        layoutPlan(withoutOptionalSteps(detail.plan), timeline: detail.timeline, hidden: hidden)
+        assertWorker()
+        let id = Key(trip: detail.trip.id, inputHash: detail.plan.meta.inputHash, version: detail.detailVersion)
+        if let cached = layoutCache[id], cached.0 == detail.plan, cached.1 == detail.timeline, cached.2 == hidden {
+            return cached.3
+        }
+        let result = layoutPlan(withoutOptionalSteps(detail.plan), timeline: detail.timeline, hidden: hidden)
+        layoutCache = layoutCache.filter { $0.key.trip != detail.trip.id }
+        layoutCache[id] = (detail.plan, detail.timeline, hidden, result)
+        layoutCount += 1
+        return result
     }
 
-    public func evict(tripID: String) { cache = cache.filter { $0.key.trip != tripID } }
+    public func evict(tripID: String) {
+        cache = cache.filter { $0.key.trip != tripID }
+        layoutCache = layoutCache.filter { $0.key.trip != tripID }
+        preparedCache = preparedCache.filter { $0.key.trip != tripID }
+    }
+
+    public func adaptation(_ record: TripRecord) throws -> AdaptationView? {
+        try record.adaptation?.decode(AdaptationView.self)
+    }
+
+    public func card(_ record: TripRecord) throws -> TripCardView { try record.card.decode(TripCardView.self) }
+
+    public func prepare(
+        _ detail: TripDetail, hidden: [BlockType], language: Language, timeFormat: TimeFormat, marks: [CheckMark],
+        pendingChecks: [CheckOffChange] = []
+    ) async throws -> PreparedPlan {
+        let id = Key(trip: detail.trip.id, inputHash: detail.plan.meta.inputHash, version: detail.detailVersion)
+        if let c = preparedCache[id], c.0 == detail, c.1 == language, c.2 == timeFormat, c.3 == marks, c.4 == hidden,
+            c.5 == pendingChecks
+        {
+            return c.6
+        }
+        if formatter == nil { formatter = CopyLineFormatter(catalog: try await CopyCatalog.load()) }
+        let result = preparePlan(
+            detail, layouts: layouts(detail, hidden: hidden), formatter: formatter!, language: language,
+            timeFormat: timeFormat, marks: marks, pendingChecks: pendingChecks)
+        preparedCache = preparedCache.filter { $0.key.trip != detail.trip.id }
+        preparedCache[id] = (detail, language, timeFormat, marks, hidden, pendingChecks, result)
+        return result
+    }
+
+    public func nowTexts(layouts: [String: DayLayout], now: Date, language: Language, timeFormat: TimeFormat)
+        async throws -> [String: String]
+    {
+        if formatter == nil { formatter = CopyLineFormatter(catalog: try await CopyCatalog.load()) }
+        let options = CopyFormat(language: language, timeFormat: timeFormat)
+        return layouts.filter { nowLineOffset($0.value.day, now: now) != nil }
+            .mapValues { formatter!.nowLabel($0, now: now, options: options) }
+    }
 
     private func assertWorker() {
         decodedOnMainThread = decodedOnMainThread || Thread.isMainThread

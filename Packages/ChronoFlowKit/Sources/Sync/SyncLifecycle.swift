@@ -40,7 +40,7 @@ public actor SyncLifecycle {
     public init(
         database: AccountDatabase, source: any DataSource, epoch: SyncEpoch,
         scheduler: SyncScheduler = SyncScheduler(), retryState: SyncRetryState = SyncRetryState(),
-        path: (any SyncPathMonitoring)? = nil,
+        path: (any SyncPathMonitoring)? = nil, retention: PlanRetention = PlanRetention(),
         unauthorized: @escaping @Sendable (UInt64) async -> Void = { _ in },
         verification: @escaping @Sendable (UInt64) async -> Void = { _ in }
     ) {
@@ -53,7 +53,8 @@ public actor SyncLifecycle {
         self.path = path
         self.unauthorized = unauthorized
         self.verification = verification
-        engine = SyncEngine(database: database, source: source, epoch: epoch, scheduler: scheduler)
+        engine = SyncEngine(
+            database: database, source: source, epoch: epoch, retention: retention, scheduler: scheduler)
     }
 
     public func start() async throws {
