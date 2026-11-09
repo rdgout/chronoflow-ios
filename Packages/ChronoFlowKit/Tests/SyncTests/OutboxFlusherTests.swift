@@ -42,7 +42,7 @@ import Testing
     ])
     func failureClassification(_ failure: DataFailure, final: Bool, attempts: Int, lastError: String?) async throws {
         let store = try await SyncStore()
-        _ = try await store.enqueue(.walkthrough)
+        _ = try await store.enqueue(.settings(section: .preferences, patch: JSONObject(["time_format": .string("12")])))
         let source = ScriptedSource()
         await source.configure(failures: [failure])
         let flusher = OutboxFlusher(database: store.database, source: source, now: { syncDate })

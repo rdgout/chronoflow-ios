@@ -106,6 +106,9 @@ extension OutboxRepository {
             case .walkthrough:
                 account.walkthroughSeen = true
                 try account.save(db)
+                if let pending = try StoreApplication.pending(db).first(where: { $0.kind == "walkthrough" }) {
+                    return pending
+                }
             case .unsupported: throw LocalMutationFailure.unsupported
             }
             try row.insert(db)

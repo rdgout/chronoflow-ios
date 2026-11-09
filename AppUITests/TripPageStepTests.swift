@@ -1,16 +1,16 @@
 import XCTest
 
 nonisolated final class TripPageStepTests: XCTestCase {
-    @MainActor func testTodayTripTimelineAndListOpenTheSameStepSheet() {
-        checkStepSheet(fromTrips: false)
+    @MainActor func testTodayTripTimelineAndListOpenTheSameStepSheet() throws {
+        try checkStepSheet(fromTrips: false)
     }
 
-    @MainActor func testMyTripsTimelineAndListOpenTheSameStepSheet() {
-        checkStepSheet(fromTrips: true)
+    @MainActor func testMyTripsTimelineAndListOpenTheSameStepSheet() throws {
+        try checkStepSheet(fromTrips: true)
     }
 
-    @MainActor private func checkStepSheet(fromTrips: Bool) {
-        let app = launchPlanAccount()
+    @MainActor private func checkStepSheet(fromTrips: Bool) throws {
+        let app = try launchPlanAccount()
         defer { app.terminate() }
         let row = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "today.step.actionable."))
             .firstMatch

@@ -35,7 +35,7 @@ nonisolated final class AuthSessionTests: XCTestCase {
         AuthUIFlow.openSignIn(app)
         AuthUIFlow.signIn(app, email: MockScenarioValues.demoEmail)
         assertRoute("verify", in: app)
-        XCTAssertFalse(app.staticTexts["route.walkthrough"].exists)
+        XCTAssertFalse(app.staticTexts["walkthrough.title"].exists)
         XCTAssertFalse(app.scrollViews["today.screen"].exists)
         app.terminate()
         app.launch()
@@ -76,7 +76,7 @@ nonisolated final class AuthSessionTests: XCTestCase {
         AuthUIFlow.signIn(app, email: MockScenarioValues.twoFactorEmail)
         let code = app.textFields["two-factor.code"]
         XCTAssertTrue(code.waitForExistence(timeout: 8))
-        XCTAssertFalse(app.staticTexts["route.walkthrough"].exists)
+        XCTAssertFalse(app.staticTexts["walkthrough.title"].exists)
         XCTAssertFalse(app.scrollViews["today.screen"].exists)
         if recovery {
             AuthUIFlow.reveal(app.buttons["two-factor.toggle"], in: app)

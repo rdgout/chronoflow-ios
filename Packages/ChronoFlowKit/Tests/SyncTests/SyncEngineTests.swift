@@ -149,7 +149,7 @@ import Testing
         let store = try await SyncStore()
         let source = ScriptedSource()
         let gate = TestGate()
-        _ = try await store.enqueue(.walkthrough)
+        _ = try await store.enqueue(.profile(ProfileChange(name: "Edited", email: "demo@example.com")))
         _ = try await store.enqueue(
             .settings(section: .preferences, patch: JSONObject(["time_format": .string("12")])), index: 1)
         await source.configure(
@@ -332,7 +332,7 @@ import Testing
             AccountRecord(id: syncAccount, name: "Local", email: "demo@example.com", hasVerifiedEmail: true))
         #expect(try await AccountRepository(database: store.database).account()?.hasVerifiedEmail == true)
         let source = ScriptedSource()
-        _ = try await store.enqueue(.walkthrough)
+        _ = try await store.enqueue(.settings(section: .preferences, patch: JSONObject(["time_format": .string("12")])))
         await source.configure(failures: [failure])
         let engine = SyncEngine(database: store.database, source: source, epoch: store.epoch)
         let result = try await engine.refreshNow()

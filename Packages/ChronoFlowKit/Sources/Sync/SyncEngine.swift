@@ -205,6 +205,8 @@ public actor SyncEngine {
                 serverRetryAfter = flush.serverRetryAfter
                 if flush.offline {
                     state = .offline
+                } else if flush.deferredWalkthroughAuthorization {
+                    state = .failed
                 } else {
                     let pull = try await FullPull(
                         database: database, source: source, retention: retention, now: scheduler.now

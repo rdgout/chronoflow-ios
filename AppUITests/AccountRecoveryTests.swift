@@ -26,7 +26,7 @@ nonisolated final class AccountRecoveryTests: XCTestCase {
         AuthUIFlow.reveal(mail, in: app)
         mail.tap()
         XCTAssertTrue(
-            app.staticTexts["route.walkthrough"].waitForExistence(timeout: 8),
+            app.staticTexts["walkthrough.title"].waitForExistence(timeout: 8),
             "Expected second account’s mail to verify its session and open Walkthrough with accepted terms")
     }
 

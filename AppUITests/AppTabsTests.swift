@@ -3,7 +3,7 @@ import XCTest
 
 nonisolated final class AppTabsTests: XCTestCase {
     @MainActor func testSignedInAccountCanSwitchAllThreeTabs() throws {
-        let app = launchPlanAccount()
+        let app = try launchPlanAccount()
         defer { app.terminate() }
         _ = try expandedTabs(in: app, selected: "Today")
         capture(app, name: "today-tabs")
@@ -37,7 +37,7 @@ nonisolated final class AppTabsTests: XCTestCase {
 
     @MainActor private func verifyMinimization(tab: String, screen: String, name: String) throws {
         guard #available(iOS 26, *) else { throw XCTSkip("System tab minimization requires iOS 26") }
-        let app = launchPlanAccount()
+        let app = try launchPlanAccount()
         defer { app.terminate() }
         if tab != "Today" { app.tabBars.buttons[tab].tap() }
         let scroll = app.scrollViews[screen]

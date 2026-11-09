@@ -1,8 +1,8 @@
 import XCTest
 
 nonisolated final class TripsTests: XCTestCase {
-    @MainActor func testTripsSectionsRefreshAndOpenOneTripRoute() {
-        let app = launchPlanAccount()
+    @MainActor func testTripsSectionsRefreshAndOpenOneTripRoute() throws {
+        let app = try launchPlanAccount()
         defer { app.terminate() }
         app.tabBars.buttons["My trips"].tap()
         let screen = app.scrollViews["trips.screen"]

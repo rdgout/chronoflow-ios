@@ -60,6 +60,10 @@ struct RootView: View {
                     guest: { navigator.navigate(to: .guestWizard) })
             } else if route == .today {
                 AppTabs(native: authServices?.nativeSession)
+            } else if route == .walkthrough, let native = authServices?.nativeSession {
+                WalkthroughDestination(native: native)
+                    .environment(\.forcesReduceMotion, forcesReduceMotion)
+                    .id(navigator.revision)
             } else if route == .verify, let model = authServices?.verifyModel {
                 VerifyEmailView(model: model).id(ObjectIdentifier(model))
             } else {

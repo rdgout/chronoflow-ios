@@ -1,0 +1,516 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Your plan on one timeline": {
+      "comment": "Dutch: exact RN nl.json match.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your plan on one timeline"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je plan op één tijdlijn"
+          }
+        }
+      }
+    },
+    "Sleep, light, caffeine and your flights side by side, each at the right local time.": {
+      "comment": "Dutch: exact RN nl.json match.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sleep, light, caffeine and your flights side by side, each at the right local time."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slaap, licht, cafeïne en je vluchten naast elkaar, steeds op de juiste lokale tijd."
+          }
+        }
+      }
+    },
+    "Know each step at a glance": {
+      "comment": "Dutch: exact RN nl.json match.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Know each step at a glance"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herken elke stap in één oogopslag"
+          }
+        }
+      }
+    },
+    "Every kind of step has its own icon and pattern, so you never need colour to tell them apart.": {
+      "comment": "Dutch: exact RN nl.json match.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every kind of step has its own icon and pattern, so you never need colour to tell them apart."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elke soort stap heeft een eigen pictogram en patroon, zodat je ze ook zonder kleur uit elkaar kunt houden."
+          }
+        }
+      }
+    },
+    "Tick off what you did": {
+      "comment": "Dutch: exact RN nl.json match.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tick off what you did"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vink af wat je hebt gedaan"
+          }
+        }
+      }
+    },
+    "Checking off changes your progress, never your plan. Turn on reminders to get a nudge before each step.": {
+      "comment": "Dutch: exact RN nl.json match.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking off changes your progress, never your plan. Turn on reminders to get a nudge before each step."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afvinken verandert je voortgang, nooit je plan. Zet herinneringen aan om vóór elke stap een seintje te krijgen."
+          }
+        }
+      }
+    },
+    "{{current}} of {{total}}": {
+      "comment": "Dutch: exact RN nl.json match.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{current}} of {{total}}"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{current}} van {{total}}"
+          }
+        }
+      }
+    },
+    "Skip": {
+      "comment": "Dutch: exact RN nl.json match.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skip"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overslaan"
+          }
+        }
+      }
+    },
+    "Next": {
+      "comment": "Dutch: exact RN nl.json match.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volgende"
+          }
+        }
+      }
+    },
+    "Done": {
+      "comment": "Dutch: exact RN nl.json match.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klaar"
+          }
+        }
+      }
+    },
+    "Sleep": {
+      "comment": "Dutch: exact RN nl.json match.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sleep"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slapen"
+          }
+        }
+      }
+    },
+    "Seek bright light": {
+      "comment": "Dutch: exact RN nl.json match.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seek bright light"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zoek fel licht op"
+          }
+        }
+      }
+    },
+    "Avoid light": {
+      "comment": "Dutch: exact RN nl.json match.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avoid light"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vermijd licht"
+          }
+        }
+      }
+    },
+    "Caffeine": {
+      "comment": "Dutch: exact RN nl.json match.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caffeine"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cafeïne"
+          }
+        }
+      }
+    },
+    "Flight": {
+      "comment": "Dutch: exact RN nl.json match.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flight"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vlucht"
+          }
+        }
+      }
+    },
+    "1 cup of coffee": {
+      "comment": "Dutch: exact RN nl.json match.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 cup of coffee"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 kop koffie"
+          }
+        }
+      }
+    },
+    "Seek bright light outdoors": {
+      "comment": "Dutch: exact RN nl.json match.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seek bright light outdoors"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zoek buiten fel licht op"
+          }
+        }
+      }
+    },
+    "1 cup of filter coffee": {
+      "comment": "Dutch: exact RN nl.json match.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 cup of filter coffee"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 kop filterkoffie"
+          }
+        }
+      }
+    },
+    "In 15 min": {
+      "comment": "Dutch: exact RN nl.json match.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In 15 min"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Over 15 min"
+          }
+        }
+      }
+    },
+    "Tokyo": {
+      "comment": "Dutch: exact RN nl.json match.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tokyo"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tokio"
+          }
+        }
+      }
+    },
+    "{{done}}/{{total}} done": {
+      "comment": "Dutch: exact RN nl.json match.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{done}}/{{total}} done"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{done}}/{{total}} gedaan"
+          }
+        }
+      }
+    },
+    "{{time}} · {{zone}} · {{relative}}": {
+      "comment": "Dutch: exact RN nl.json match.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{time}} · {{zone}} · {{relative}}"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{time}} · {{zone}} · {{relative}}"
+          }
+        }
+      }
+    },
+    "KL 861": {
+      "comment": "Dutch: exact RN nl.json match.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KL 861"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KL 861"
+          }
+        }
+      }
+    },
+    "23:00–07:00": {
+      "comment": "Dutch: exact RN nl.json match.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "23:00–07:00"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "23:00–07:00"
+          }
+        }
+      }
+    },
+    "08:00–10:00": {
+      "comment": "Dutch: exact RN nl.json match.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "08:00–10:00"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "08:00–10:00"
+          }
+        }
+      }
+    },
+    "09:30": {
+      "comment": "Dutch: exact RN nl.json match.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "09:30"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "09:30"
+          }
+        }
+      }
+    },
+    "14:40–09:15": {
+      "comment": "Dutch: exact RN nl.json match.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "14:40–09:15"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "14:40–09:15"
+          }
+        }
+      }
+    },
+    "11:00": {
+      "comment": "Dutch: exact RN nl.json match.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "11:00"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "11:00"
+          }
+        }
+      }
+    },
+    "10:45": {
+      "comment": "Dutch: exact RN nl.json match.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "10:45"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "10:45"
+          }
+        }
+      }
+    },
+    "{{title}} · {{time}}": {
+      "comment": "Dutch: exact RN nl.json match.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{title}} · {{time}}"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{title}} · {{time}}"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

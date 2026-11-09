@@ -7,6 +7,7 @@
         let id: String
         let offline: Bool
         let settingsPending: Bool
+        let walkthroughPending: Bool
         let unverified: Bool
         let walkthroughSeen: Bool
         let auditScreen: String?
@@ -17,6 +18,7 @@
             id = uuid.uuidString.lowercased()
             offline = environment["CF_AUTH_TEST_OFFLINE"] == "1"
             settingsPending = environment["CF_SETTINGS_TEST_PENDING"] == "1"
+            walkthroughPending = environment["CF_WALKTHROUGH_TEST_PENDING"] == "1"
             unverified = environment["CF_AUTH_TEST_UNVERIFIED"] == "1"
             walkthroughSeen = environment["CF_AUTH_TEST_WALKTHROUGH_SEEN"] == "1"
             auditScreen = environment["CF_AUTH_TEST_AUDIT_SCREEN"]

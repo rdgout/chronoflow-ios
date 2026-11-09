@@ -9,12 +9,12 @@ nonisolated final class TwoFactorTests: XCTestCase {
         code.tap()
         code.typeText("1234567")
         XCTAssertEqual(code.value as? String, "123456")
-        XCTAssertFalse(app.staticTexts["route.walkthrough"].exists)
+        XCTAssertFalse(app.staticTexts["walkthrough.title"].exists)
         let submit = app.buttons["two-factor.submit"]
         try assertTwoFactorKeyboardPair(code, app: app)
         XCTAssertFalse(app.keyboards.buttons["Go"].exists)
         submit.tap()
-        XCTAssertTrue(app.staticTexts["route.walkthrough"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["walkthrough.title"].waitForExistence(timeout: 10))
         XCTAssertFalse(app.textFields["two-factor.code"].exists)
         XCTAssertFalse(app.images["launch.opening"].exists)
     }
@@ -38,7 +38,7 @@ nonisolated final class TwoFactorTests: XCTestCase {
         XCTAssertEqual(recovery.value as? String, "AbCdEf1234-GhIjKl5678")
         try assertTwoFactorKeyboardPair(recovery, app: app)
         recovery.typeText("\n")
-        XCTAssertTrue(app.staticTexts["route.walkthrough"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["walkthrough.title"].waitForExistence(timeout: 10))
         XCTAssertFalse(app.images["launch.opening"].exists)
     }
 
@@ -112,7 +112,7 @@ nonisolated final class TwoFactorTests: XCTestCase {
     email.typeText("\n")
     app.secureTextFields["sign-in.password"].typeText("password\n")
     XCTAssertTrue(app.textFields["two-factor.code"].waitForExistence(timeout: 8))
-    XCTAssertFalse(app.staticTexts["route.walkthrough"].exists)
+    XCTAssertFalse(app.staticTexts["walkthrough.title"].exists)
     revealTwoFactor(app.textFields["two-factor.code"], in: AuthUIFlow.scroll(in: app))
 }
 
