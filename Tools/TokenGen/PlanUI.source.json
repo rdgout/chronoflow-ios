@@ -96,5 +96,6 @@
   "wizardReadySummaryPadding": 18,
   "wizardReadySummaryFontSize": 20,
   "wizardReadySummaryLineHeight": 27,
-  "wizardColumnWidth": 520
+  "wizardColumnWidth": 520,
+  "wizardTimeWheelHeight": 180
 }

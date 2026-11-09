@@ -40,11 +40,11 @@
                                             }
                                         }
                                         Spacer(minLength: 0)
-                                        Text(
-                                            (try? WizardPresentation.promptAnswerText(
-                                                prompt, input: model.reviewInput, locale: locale, t: t)) ?? t("Add")
-                                        )
-                                        .font(Typography.wizardNavTitle.font).foregroundStyle(ColorToken.dawnText.color)
+                                        let answer = try? WizardPresentation.promptAnswerText(
+                                            prompt, input: model.reviewInput, locale: locale, t: t)
+                                        Text(answer ?? t("Add"))
+                                            .font(Typography.wizardNavTitle.font)
+                                            .foregroundStyle((answer == nil ? ColorToken.dawnText : .foreground).color)
                                         Image(systemName: "chevron.right").foregroundStyle(
                                             ColorToken.mutedForeground.color
                                         )

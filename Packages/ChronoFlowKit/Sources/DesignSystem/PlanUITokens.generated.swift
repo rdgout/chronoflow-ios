@@ -117,6 +117,7 @@ nonisolated public enum PlanUITokens {
     public static var wizardStopRemoveSize: CGFloat { 36 }
     public static var wizardSwapInset: CGFloat { 14 }
     public static var wizardSwapSize: CGFloat { 40 }
+    public static var wizardTimeWheelHeight: CGFloat { 180 }
 }
 extension Typography {
     public static var screenHero: Style {

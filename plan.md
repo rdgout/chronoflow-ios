@@ -1854,6 +1854,8 @@ Source: canvas version 1794242613-8e6a, WizardSpec "Route first, then times (Ric
 
 - [x] Review round 3, copy: add the missing Dutch sheet errors, singular/plural credit balance without punctuation, scoped Dark room labels, contextual room From/Vanaf and the adjusted wake assumption suffix. Paired catalog regressions are authored and unrun.
 
+- [x] Review round 3, board fidelity: distinguish answered extras, restore notice icons and price emphasis, use the native wake wheel, render compact busy ranges with circular removal and a dawn add link, put full-width Today actions in board order, and fire save success feedback. Busy range editing reuses the existing PickerDateTime sheet for each endpoint; free-day time pills remain as drawn on WizardSheetFreeSleep. No test execution.
+
 - [ ] **Create gate (M2).** Against local Valet on trip-wizard after the user runs the four migrations (OQ 37): create a trip, land on its page and see the timeline in en and nl. Record the result. Production acceptance waits for the merge and deploy.
 
 ### Phase 17: Day-to-day (`feat/phase-17-day-to-day`), M3

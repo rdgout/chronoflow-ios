@@ -4033,6 +4033,22 @@
           }
         }
       }
+    },
+    "Remove {{range}}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove {{range}}"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verwijder {{range}}"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -89,7 +89,7 @@
                 Text(t("Add your flights and you get a day-by-day plan for sleep, light and caffeine."))
                     .foregroundStyle(ColorToken.mutedForeground.color)
                 if let create {
-                    Button(t("Plan a trip"), action: create).buttonStyle(.borderedProminent).buttonBorderShape(.capsule)
+                    AuthButton(t("Plan a trip"), minimumHeight: PlanUITokens.actionMinHeight, action: create)
                         .accessibilityIdentifier("today.create")
                 }
             }.font(Typography.screenBodyLg.font).multilineTextAlignment(.center).frame(maxWidth: .infinity)
@@ -118,11 +118,16 @@
                                 ? formatter.formatDayMonth(endDate, language: language)
                                 : formatter.formatDate(endDate, language: language),
                         ]))
-                Button(t("See past trips"), action: pastTrips).buttonStyle(.bordered)
+                VStack(spacing: PlanUITokens.space1) {
+                    if let create {
+                        AuthButton(t("Plan a trip"), minimumHeight: PlanUITokens.actionMinHeight, action: create)
+                            .accessibilityIdentifier("today.create")
+                    }
+                    AuthButton(
+                        t("See past trips"), kind: .ghost, minimumHeight: PlanUITokens.actionMinHeight,
+                        action: pastTrips
+                    )
                     .accessibilityIdentifier("today.past")
-                if let create {
-                    Button(t("Plan a trip"), action: create).buttonStyle(.borderedProminent).buttonBorderShape(.capsule)
-                        .accessibilityIdentifier("today.create")
                 }
             }.font(Typography.screenBodyLg.font).multilineTextAlignment(.center).frame(maxWidth: .infinity)
                 .planCard().accessibilityIdentifier("today.completed")

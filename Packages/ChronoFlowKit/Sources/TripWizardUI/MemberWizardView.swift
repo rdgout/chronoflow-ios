@@ -87,7 +87,10 @@
                 model.resumeCompletion()
             }
             .onChange(of: model.createdTripID) { _, id in
-                if let id { saved(id) }
+                if let id {
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                    saved(id)
+                }
             }
             .sheet(
                 isPresented: Binding(

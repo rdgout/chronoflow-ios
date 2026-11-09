@@ -140,8 +140,8 @@
         }
         private var priceBlock: some View {
             VStack(alignment: .leading, spacing: PlanUITokens.wizardControlGap) {
-                Text(model.credits == .unlimited ? price : t("Price") + " " + price).font(
-                    Typography.wizardSubtitle.font)
+                Text("\(model.credits == .unlimited ? "" : t("Price") + " ")\(Text(price).fontWeight(.semibold))")
+                    .font(Typography.wizardSubtitle.font)
                 if model.credits == .free {
                     Text(t("This trip is free: only a small body-clock shift is needed."))
                 }
@@ -150,6 +150,7 @@
                 }
                 if let review = model.draft.state.review, !review.price.unlimited, review.price.cost > 0 {
                     Text(t("You have {{count}} credits", ["count": String(review.price.balance)]))
+                        .fontWeight(model.credits == .unavailable ? .semibold : .regular)
                         .foregroundStyle(
                             (model.credits == .unavailable ? ColorToken.destructive : .mutedForeground).color)
                 }
@@ -192,19 +193,25 @@
             }
         }
         func readyBanner(title: String, body: String, failure: Bool = false) -> some View {
-            VStack(alignment: .leading, spacing: PlanUITokens.wizardLabelGap) {
-                Text(title).font(Typography.screenLabel.font)
-                Text(body).font(Typography.screenBody.font)
-            }.frame(maxWidth: .infinity, alignment: .leading).padding(PlanUITokens.wizardContentGap)
-                .background(
-                    (failure ? ColorToken.authErrorBackground : .wizardNoticeBackground).color,
-                    in: RoundedRectangle(cornerRadius: PlanUITokens.radiusXl)
-                )
-                .overlay {
-                    RoundedRectangle(cornerRadius: PlanUITokens.radiusXl).strokeBorder(
-                        (failure ? ColorToken.authErrorBorder : .wizardNoticeBorder).color,
-                        lineWidth: AuthTokens.borderWidth)
+            HStack(alignment: .top, spacing: PlanUITokens.wizardNoticeGap) {
+                Image(systemName: "info.circle").font(.system(size: PlanUITokens.wizardNoticeIconSize))
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: PlanUITokens.wizardLabelGap) {
+                    Text(title).font(Typography.screenLabel.font)
+                    Text(body).font(Typography.screenBody.font)
                 }
+            }.accessibilityElement(children: .combine).frame(maxWidth: .infinity, alignment: .leading).padding(
+                PlanUITokens.wizardContentGap
+            )
+            .background(
+                (failure ? ColorToken.authErrorBackground : .wizardNoticeBackground).color,
+                in: RoundedRectangle(cornerRadius: PlanUITokens.radiusXl)
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: PlanUITokens.radiusXl).strokeBorder(
+                    (failure ? ColorToken.authErrorBorder : .wizardNoticeBorder).color,
+                    lineWidth: AuthTokens.borderWidth)
+            }
         }
         private func saveFailureBanner(_ failure: WizardSaveFailure) -> some View {
             let title: String

@@ -15,6 +15,8 @@
         @State private var values: [String: JSONValue] = [:]
         @State private var error: String?
         @State private var loaded = false
+        @State private var busyPicker: BusyPicker?
+        @State private var pendingBusyEnd: BusyPicker?
         private func t(_ key: String) -> String { WizardStrings.text(key, locale: locale) }
         private var optionField: String { prompt.kind == .room ? "stay.bed_available_mode" : prompt.fields.first ?? "" }
         private var options: [(JSONValue, String, String?)] {
@@ -73,6 +75,30 @@
             }.tint(ColorToken.dawnText.color).presentationDetents([.medium, .large]).presentationDragIndicator(.visible)
                 .accessibilityIdentifier("wizard.answer.\(prompt.kind.rawValue)")
                 .onAppear(perform: load)
+                .sheet(
+                    item: $busyPicker,
+                    onDismiss: {
+                        busyPicker = pendingBusyEnd
+                        pendingBusyEnd = nil
+                    },
+                    content: { picker in
+                        WizardDateTimeSheet(
+                            title: t(picker.start == nil ? "From" : "To"), localTime: busyLocalTime,
+                            value: picker.value, minimum: picker.start?.addingTimeInterval(60)
+                        ) { date in
+                            if let start = picker.start {
+                                saveBusyRange(index: picker.index, start: start, end: date)
+                            } else {
+                                let previousEnd = picker.index.flatMap {
+                                    WizardDateTime.date(intervals[$0].object?["end_local"]?.string ?? "")
+                                }
+                                pendingBusyEnd = BusyPicker(
+                                    index: picker.index, start: date,
+                                    value: max(
+                                        previousEnd ?? date.addingTimeInterval(3600), date.addingTimeInterval(60)))
+                            }
+                        }
+                    })
         }
         private var legIndex: Int {
             (prompt.scope.journey == .return ? model.draft.form.returnBoundary : 0)
@@ -164,7 +190,17 @@
                                 )
                             }))
                 }
-            case .latestWake: time("Latest you can wake up", field: "latest_wake")
+            case .latestWake:
+                time("Latest you can wake up", field: "latest_wake")
+                    .datePickerStyle(.wheel).labelsHidden()
+                    .frame(maxWidth: .infinity).frame(height: PlanUITokens.wizardTimeWheelHeight).clipped()
+                    .background(
+                        ColorToken.background.color, in: RoundedRectangle(cornerRadius: PlanUITokens.wizardCardRadius)
+                    )
+                    .overlay {
+                        RoundedRectangle(cornerRadius: PlanUITokens.wizardCardRadius).strokeBorder(
+                            ColorToken.border.color, lineWidth: AuthTokens.borderWidth)
+                    }
             case .freeDayTimes:
                 if values["free_day_status"] == .string("declared") {
                     time("Bedtime", field: "free_day_bed")
@@ -217,45 +253,98 @@
             if case .array(let rows) = values["pre_departure_busy_intervals"] { return rows }
             return []
         }
+        private struct BusyPicker: Identifiable {
+            let id = UUID()
+            let index: Int?
+            var start: Date?
+            let value: Date
+        }
+        private var busyLocalTime: String {
+            let city = model.draft.form.legs.first?.fromCity
+            return city.map { WizardStrings.text("Time in {{city}}", locale: locale, arguments: ["city": $0]) }
+                ?? t("Local time")
+        }
         private var busy: some View {
-            VStack(spacing: PlanUITokens.space3) {
-                ForEach(intervals.indices, id: \.self) { index in
-                    VStack {
-                        busyDate("From", index: index, field: "start_local")
-                        busyDate("To", index: index, field: "end_local")
-                        Button(t("Remove"), role: .destructive) {
-                            var rows = intervals
-                            rows.remove(at: index)
-                            update("pre_departure_busy_intervals", .array(rows))
-                            update("pre_departure_busy_answered", .bool(true))
+            VStack(alignment: .leading, spacing: PlanUITokens.space3) {
+                if !intervals.isEmpty {
+                    VStack(spacing: 0) {
+                        ForEach(intervals.indices, id: \.self) { index in
+                            if index > 0 { Divider().overlay(ColorToken.border.color) }
+                            HStack(spacing: PlanUITokens.space2) {
+                                Button {
+                                    openBusyPicker(index: index)
+                                } label: {
+                                    Text(busyRangeText(index)).monospacedDigit()
+                                        .frame(maxWidth: .infinity, minHeight: AuthTokens.touch, alignment: .leading)
+                                        .contentShape(Rectangle())
+                                }.buttonStyle(.plain)
+                                Button {
+                                    var rows = intervals
+                                    rows.remove(at: index)
+                                    update("pre_departure_busy_intervals", .array(rows))
+                                    update("pre_departure_busy_answered", .bool(true))
+                                } label: {
+                                    Image(systemName: "xmark").font(.system(size: PlanUITokens.wizardStopGlyphSize))
+                                        .foregroundStyle(ColorToken.mutedForeground.color)
+                                        .frame(width: PlanUITokens.space8, height: PlanUITokens.space8)
+                                        .background(Color.wizardPickerFill, in: Circle())
+                                        .frame(minWidth: AuthTokens.touch, minHeight: AuthTokens.touch)
+                                        .contentShape(Rectangle())
+                                }.buttonStyle(.plain)
+                                    .accessibilityLabel(
+                                        WizardStrings.text(
+                                            "Remove {{range}}", locale: locale,
+                                            arguments: ["range": busyRangeText(index)])
+                                    )
+                                    .accessibilityIdentifier("wizard.answer.remove-busy.\(index)")
+                            }.padding(.horizontal, PlanUITokens.space4).padding(.vertical, PlanUITokens.space2)
                         }
-                    }.padding(PlanUITokens.space4).wizardCard()
+                    }.font(Typography.screenBodyLg.font)
+                        .background(
+                            ColorToken.background.color,
+                            in: RoundedRectangle(cornerRadius: PlanUITokens.wizardCardRadius)
+                        )
+                        .overlay {
+                            RoundedRectangle(cornerRadius: PlanUITokens.wizardCardRadius).strokeBorder(
+                                ColorToken.border.color, lineWidth: AuthTokens.borderWidth)
+                        }
                 }
-                Button(t("Add busy hours")) {
-                    update("pre_departure_busy_answered", .bool(true))
-                    update(
-                        "pre_departure_busy_intervals",
-                        .array(intervals + [.object(["start_local": .string(""), "end_local": .string("")])]))
-                }.frame(minHeight: AuthTokens.touch).accessibilityIdentifier("wizard.answer.add-busy")
+                Button {
+                    openBusyPicker(index: nil)
+                } label: {
+                    Label(t("Add busy hours"), systemImage: "plus")
+                        .font(Typography.screenBodyLg.font).foregroundStyle(ColorToken.dawnText.color)
+                        .frame(minHeight: AuthTokens.touch).padding(.horizontal, PlanUITokens.space1)
+                }.buttonStyle(.plain).accessibilityIdentifier("wizard.answer.add-busy")
             }
         }
-        private func busyDate(_ key: String, index: Int, field: String) -> some View {
-            DatePicker(
-                t(key),
-                selection: Binding(
-                    get: {
-                        WizardDateTime.date(intervals[index].object?[field]?.string ?? "")
-                            ?? WizardDateTime.date(model.draft.form.legs[0].departLocal) ?? Date()
-                    },
-                    set: { date in
-                        var rows = intervals
-                        var row = rows[index].object ?? [:]
-                        row[field] = .string(WizardDateTime.string(date))
-                        rows[index] = .object(row)
-                        update("pre_departure_busy_intervals", .array(rows))
-                        update("pre_departure_busy_answered", .bool(true))
-                    })
-            ).environment(\.calendar, WizardDateTime.calendar).environment(\.timeZone, WizardDateTime.calendar.timeZone)
+        private func busyRangeText(_ index: Int) -> String {
+            guard let row = intervals[index].object,
+                let start = row["start_local"]?.string, let startDate = WizardDateTime.date(start),
+                let end = row["end_local"]?.string, let endDate = WizardDateTime.date(end)
+            else { return t("Choose") }
+            let endText =
+                start.prefix(10) == end.prefix(10)
+                ? String(end.suffix(5))
+                : WizardDateTime.format(endDate, template: "EEE d MMM", locale: locale) + " · " + end.suffix(5)
+            return WizardDateTime.format(startDate, template: "EEE d MMM", locale: locale)
+                + " · " + start.suffix(5) + "–" + endText
+        }
+        private func openBusyPicker(index: Int?) {
+            let start = index.flatMap { WizardDateTime.date(intervals[$0].object?["start_local"]?.string ?? "") }
+            busyPicker = BusyPicker(
+                index: index,
+                value: start ?? WizardDateTime.date(model.draft.form.legs[0].departLocal) ?? Date())
+        }
+        private func saveBusyRange(index: Int?, start: Date, end: Date) {
+            var rows = intervals
+            let range: JSONValue = .object([
+                "start_local": .string(WizardDateTime.string(start)),
+                "end_local": .string(WizardDateTime.string(end)),
+            ])
+            if let index, rows.indices.contains(index) { rows[index] = range } else { rows.append(range) }
+            update("pre_departure_busy_intervals", .array(rows))
+            update("pre_departure_busy_answered", .bool(true))
         }
         private func time(_ key: String, field: String) -> some View {
             WizardTimeControl(
