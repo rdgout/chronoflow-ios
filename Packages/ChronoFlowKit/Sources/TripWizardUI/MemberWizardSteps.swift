@@ -7,42 +7,6 @@
     import UIKit
 
     extension MemberWizardView {
-        static func destinations(_ model: MemberWizardModel) -> [Destination] {
-            let step = model.draft.state.step
-            if step == .whereTo { return [] }
-            if step == .outbound { return [.outbound] }
-            var result: [Destination] = [.outbound, .returnChoice]
-            if step == .returnChoice { return result }
-            if model.draft.form.end.kind == "return_legs" { result.append(.returnFlight) }
-            if step == .returnFlight { return result }
-            if model.draft.state.sleepNeeded || model.draft.state.lastInputStep == .sleep || step == .sleep {
-                result.append(.sleep)
-            }
-            switch step {
-            case .checking: result.append(.checking)
-            case .question:
-                for index in 0...(model.draft.state.questionIndex ?? 0) { result.append(.question(index)) }
-            case .excluded: result.append(.excluded)
-            case .continuation: result.append(.continuation)
-            default: break
-            }
-            return result
-        }
-
-        static func step(_ destination: Destination?) -> MemberWizardStep {
-            switch destination {
-            case nil: .whereTo
-            case .outbound: .outbound
-            case .returnChoice: .returnChoice
-            case .returnFlight: .returnFlight
-            case .sleep: .sleep
-            case .checking: .checking
-            case .question: .question
-            case .excluded: .excluded
-            case .continuation: .continuation
-            }
-        }
-
         func wizardShell<Content: View>(
             title: String, subtitle: String? = nil, eyebrow: String? = nil, id: String, button: String? = nil,
             answerHint: Bool = false,

@@ -1,6 +1,8 @@
 import XCTest
 
 nonisolated final class TripWizardReviewTests: XCTestCase {
+    private let dateAnchor = Date()
+
     override func setUp() {
         super.setUp()
         continueAfterFailure = false
@@ -51,8 +53,10 @@ nonisolated final class TripWizardReviewTests: XCTestCase {
         if returnFlight {
             XCTAssertTrue(app.otherElements["wizard.return-flight"].waitForExistence(timeout: 5))
             XCTAssertTrue(app.descendants(matching: .any)["wizard.return-flight.from"].exists)
-            WizardPickerUIFlow.emptyDate("departure", index: 1, day: "22", in: app)
-            WizardPickerUIFlow.emptyDate("arrival", index: 1, day: "22", in: app)
+            WizardPickerUIFlow.emptyDate(
+                "departure", index: 1, date: WizardPickerUIFlow.date(days: 42, from: dateAnchor), in: app)
+            WizardPickerUIFlow.emptyDate(
+                "arrival", index: 1, date: WizardPickerUIFlow.date(days: 42, from: dateAnchor), in: app)
             WizardPickerUIFlow.time("departure", index: 1, hour: "10", minute: "25", in: app)
             WizardPickerUIFlow.time("arrival", index: 1, hour: "15", minute: "30", in: app)
             app.buttons["wizard.return-flight.continue"].tap()
@@ -87,8 +91,10 @@ nonisolated final class TripWizardReviewTests: XCTestCase {
         chooseAirport("AMS", side: "from", in: app)
         chooseAirport("HND", side: "to", in: app)
         app.buttons["wizard.where.continue"].tap()
-        WizardPickerUIFlow.emptyDate("departure", index: 0, day: "10", in: app)
-        WizardPickerUIFlow.emptyDate("arrival", index: 0, day: "11", in: app)
+        WizardPickerUIFlow.emptyDate(
+            "departure", index: 0, date: WizardPickerUIFlow.date(days: 30, from: dateAnchor), in: app)
+        WizardPickerUIFlow.emptyDate(
+            "arrival", index: 0, date: WizardPickerUIFlow.date(days: 31, from: dateAnchor), in: app)
         WizardPickerUIFlow.time("departure", index: 0, hour: "14", minute: "40", in: app)
         WizardPickerUIFlow.time("arrival", index: 0, hour: "9", minute: "15", in: app)
         app.buttons["wizard.outbound.continue"].tap()

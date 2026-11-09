@@ -1,6 +1,8 @@
 import XCTest
 
 nonisolated final class TripWizardTests: XCTestCase {
+    private let dateAnchor = Date()
+
     override func setUp() {
         super.setUp()
         continueAfterFailure = false
@@ -18,9 +20,9 @@ nonisolated final class TripWizardTests: XCTestCase {
         AuthUIFlow.waitUntilEnabled(next)
         next.tap()
         XCTAssertTrue(app.otherElements["wizard.outbound"].waitForExistence(timeout: 5))
-        WizardPickerUIFlow.emptyDate("departure", month: "November", day: "10", year: "2040", in: app)
+        WizardPickerUIFlow.emptyDate("departure", date: WizardPickerUIFlow.date(days: 30, from: dateAnchor), in: app)
         WizardPickerUIFlow.time("departure", hour: "14", minute: "40", in: app)
-        WizardPickerUIFlow.emptyDate("arrival", month: "November", day: "9", year: "2040", in: app)
+        WizardPickerUIFlow.emptyDate("arrival", date: WizardPickerUIFlow.date(days: 29, from: dateAnchor), in: app)
         WizardPickerUIFlow.time("arrival", hour: "9", minute: "15", in: app)
         app.buttons["wizard.outbound.continue"].tap()
         XCTAssertTrue(app.descendants(matching: .any)["wizard.0.arrival.error"].waitForExistence(timeout: 5))
@@ -33,9 +35,9 @@ nonisolated final class TripWizardTests: XCTestCase {
         choose("AMS", side: "from", in: app)
         choose("HND", side: "to", in: app)
         app.buttons["wizard.where.continue"].tap()
-        WizardPickerUIFlow.emptyDate("departure", month: "November", day: "10", year: "2001", in: app)
+        WizardPickerUIFlow.emptyDate("departure", date: WizardPickerUIFlow.date(days: -30, from: dateAnchor), in: app)
         WizardPickerUIFlow.time("departure", hour: "14", minute: "40", in: app)
-        WizardPickerUIFlow.emptyDate("arrival", month: "November", day: "11", year: "2001", in: app)
+        WizardPickerUIFlow.emptyDate("arrival", date: WizardPickerUIFlow.date(days: -29, from: dateAnchor), in: app)
         WizardPickerUIFlow.time("arrival", hour: "9", minute: "15", in: app)
         app.buttons["wizard.outbound.continue"].tap()
         XCTAssertTrue(app.buttons["wizard.choice.one-way"].waitForExistence(timeout: 5))

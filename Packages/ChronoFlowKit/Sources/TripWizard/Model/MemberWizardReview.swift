@@ -125,27 +125,26 @@ extension MemberWizardModel {
         checkID = UUID()
         checkTask?.cancel()
         checkTask = nil
-        let instance = draft.state.instance
+        guard let instance = checkInstance else { return }
+        checkInstance = nil
         let generation = generation
-        let previous = cancellingCheck
-        cancellingCheck = Task {
-            await previous?.value
+        Task {
             await generation?.cancelReviews(instance: instance)
         }
     }
 
     private func runCheck() {
-        checkTask?.cancel()
+        cancelCheck()
         checking = WizardCheckingProgress()
         retrySeconds = 0
         let id = UUID()
         checkID = id
         let input = draft.form.reviewInput(
             identity: draft.form.identity, profile: draft.state.profile.fields.isEmpty ? nil : draft.state.profile)
-        let instance = draft.state.instance
+        let instance = "\(draft.state.instance)/\(id)"
+        checkInstance = instance
         let generation = generation
-        checkTask = Task { [weak self, checkingClock, cancellingCheck] in
-            await cancellingCheck?.value
+        checkTask = Task { [weak self, checkingClock] in
             guard !Task.isCancelled else { return }
             await WizardChecking.run(
                 clock: checkingClock,

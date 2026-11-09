@@ -66,6 +66,81 @@ import TripWizard
         try await fixture.database.close()
     }
 
+    @Test(arguments: [false, true]) @MainActor
+    func resumedQuestionChecksOfflineWithoutWaitingForPreviousCancellation(suspendCancellation: Bool) async throws {
+        let fixture = try await reviewFixture()
+        var draft = fixture.model.draft
+        draft.state.step = .question
+        draft.state.lastInputStep = .sleep
+        draft.state.sleepCompleted = true
+        var review = try generationReview()
+        review.prompts = [screeningPrompt("shift_work")]
+        draft.form.identity = review.identity
+        draft.state.review = review
+        draft.state.questions = review.prompts
+        draft.state.questionIndex = 0
+        draft.state.revision += 1
+        try await fixture.store.persist(draft)
+        let recovered = try #require(try await fixture.store.recover())
+        await fixture.source.configure(reviewFailure: .offline)
+        let service = TripGenerationService(
+            source: fixture.source,
+            effects: TripGenerationEffects(mergeProfile: { _ in }, pullCreatedTrip: { _ in }, requestSync: {}))
+        let generation = SuspendedReviewCancellation(service: service)
+        let model = MemberWizardModel(
+            draft: recovered, store: fixture.store, search: noAirportSearch(), now: { .distantPast },
+            generation: generation, checkingClock: fixture.clock.clock)
+        if suspendCancellation {
+            // Keep the previous review's cleanup suspended throughout the answer's new check.
+            model.beginChecking()
+            try await eventually { model.checking.failure == .offline }
+            model.navigateToQuestion(0)
+            try await eventually { await generation.cancellations.count == 1 }
+        }
+        model.answerQuestion(.bool(false))
+        try await eventually { fixture.clock.deadlines.contains(0.25) }
+        fixture.clock.advance(to: 0.25)
+        try await eventually { model.checking.failure == .offline && model.draft.state.step == .checking }
+        #expect(await fixture.source.count("review") == (suspendCancellation ? 2 : 1))
+        #expect(fixture.clock.now == 0.25 && !model.checking.slow)
+        let instances = await generation.instances
+        if suspendCancellation {
+            #expect(instances.count == 2 && instances[0] != instances[1])
+            #expect(await generation.cancellations == [instances[0]])
+        } else {
+            #expect(instances.count == 1)
+            #expect(await generation.cancellations.isEmpty)
+        }
+        #expect(await fixture.source.reviewInputs.last?.profile?["shift_work"] == .bool(false))
+        #expect(await fixture.source.reviewInputs.last?.identity == review.identity)
+        await generation.releaseCancellations()
+        try await model.discard()
+        try await fixture.database.close()
+    }
+
+    @Test @MainActor func staleQuestionStackCannotCancelCheckingAndCurrentBackStillWorks() async throws {
+        let fixture = try await reviewFixture()
+        var review = try generationReview()
+        review.prompts = [screeningPrompt("shift_work")]
+        await fixture.source.queueReviews([.success(review)])
+        fixture.model.beginChecking()
+        try await finishCheck(fixture)
+        let oldPath = fixture.model.navigationPath
+        await fixture.source.configure(reviewFailure: .offline)
+        fixture.model.answerQuestion(.bool(false))
+        try await eventually { fixture.clock.deadlines.contains(1.75) }
+        fixture.clock.advance(to: 1.75)
+        try await eventually { fixture.model.draft.state.step == .checking }
+        fixture.model.popNavigation(to: Array(oldPath.dropLast()), from: oldPath)
+        #expect(fixture.model.draft.state.step == .checking)
+        try await eventually { fixture.model.checking.failure == .offline }
+        let path = fixture.model.navigationPath
+        fixture.model.popNavigation(to: Array(path.dropLast()), from: path)
+        #expect(fixture.model.draft.state.step == .returnChoice)
+        try await fixture.model.discard()
+        try await fixture.database.close()
+    }
+
     @Test @MainActor func throttleUsesServerDeadlineAndBlocksRetry() async throws {
         let fixture = try await reviewFixture()
         await fixture.source.configure(reviewFailure: .throttled(retryAfterSeconds: 2.4, status: 429))
@@ -213,6 +288,36 @@ import TripWizard
             WizardFlightRules.errors(form: form, airports: airports, now: now, checkPast: true)["legs.1.arriveLocal"]
                 != nil)
     }
+}
+
+private actor SuspendedReviewCancellation: MemberWizardGeneration {
+    let service: TripGenerationService
+    var instances: [String] = []
+    var cancellations: [String] = []
+    private var waiters: [CheckedContinuation<Void, Never>] = []
+    private var released = false
+
+    init(service: TripGenerationService) { self.service = service }
+
+    func review(instance: String, input: ApiTripReviewInput) async throws -> TripGenerationReviewResult {
+        instances.append(instance)
+        return try await service.review(instance: instance, input: input)
+    }
+
+    func cancelReviews(instance: String) async {
+        cancellations.append(instance)
+        if !released { await withCheckedContinuation { waiters.append($0) } }
+        await service.cancelReviews(instance: instance)
+    }
+
+    func releaseCancellations() {
+        released = true
+        let ready = waiters
+        waiters = []
+        for waiter in ready { waiter.resume() }
+    }
+
+    func cancel() async { await service.cancel() }
 }
 
 private struct ReviewFixture {

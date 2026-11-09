@@ -2,6 +2,18 @@ import AppCore
 import Foundation
 import Observation
 
+public protocol MemberWizardGeneration: Sendable {
+    func review(instance: String, input: ApiTripReviewInput) async throws -> TripGenerationReviewResult
+    func cancelReviews(instance: String) async
+    func cancel() async
+}
+
+extension TripGenerationService: MemberWizardGeneration {
+    public func review(instance: String, input: ApiTripReviewInput) async throws -> TripGenerationReviewResult {
+        try await review(instance: instance, input: input, edit: nil)
+    }
+}
+
 @MainActor @Observable
 public final class MemberWizardModel {
     public internal(set) var draft: MemberWizardDraft
@@ -11,12 +23,12 @@ public final class MemberWizardModel {
     public internal(set) var checking = WizardCheckingProgress()
     public internal(set) var retrySeconds = 0
     public internal(set) var choicePending = false
-    let generation: TripGenerationService?
+    let generation: (any MemberWizardGeneration)?
     let checkingClock: WizardCheckingClock
     @ObservationIgnored var checkTask: Task<Void, Never>?
     @ObservationIgnored var choiceTask: Task<Void, Never>?
     @ObservationIgnored var checkID = UUID()
-    @ObservationIgnored var cancellingCheck: Task<Void, Never>?
+    @ObservationIgnored var checkInstance: String?
     let store: MemberWizardStore
     let now: @Sendable () -> Date
     @ObservationIgnored private var pending: Task<Void, Never>?
@@ -24,7 +36,7 @@ public final class MemberWizardModel {
     public init(
         draft: MemberWizardDraft, store: MemberWizardStore, search: AirportSearchService,
         now: @escaping @Sendable () -> Date = { Date() },
-        generation: TripGenerationService? = nil, checkingClock: WizardCheckingClock = .continuous
+        generation: (any MemberWizardGeneration)? = nil, checkingClock: WizardCheckingClock = .continuous
     ) {
         self.draft = draft
         self.store = store

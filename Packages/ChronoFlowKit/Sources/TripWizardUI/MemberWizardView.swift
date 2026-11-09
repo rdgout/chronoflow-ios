@@ -11,21 +11,15 @@
         @Environment(\.colorScheme) var scheme
         @Bindable var model: MemberWizardModel
         let dismiss: () -> Void
-        @State var path: [Destination]
         @State var confirmingDiscard = false
         @State var continuing = false
         @State var closing = false
-        enum Destination: Hashable {
-            case outbound, returnChoice, returnFlight, sleep, checking
-            case question(Int)
-            case excluded, continuation
-        }
+        typealias Destination = MemberWizardDestination
         @State var copyFormatter: CopyLineFormatter?
 
         public init(model: MemberWizardModel, dismiss: @escaping () -> Void) {
             self.model = model
             self.dismiss = dismiss
-            _path = State(initialValue: Self.destinations(model))
         }
 
         func t(_ key: String, _ arguments: [String: String] = [:]) -> String {
@@ -33,7 +27,15 @@
         }
 
         public var body: some View {
-            NavigationStack(path: $path) {
+            let presented = model.navigationPath
+            NavigationStack(
+                path: Binding(
+                    get: { model.navigationPath },
+                    set: {
+                        continuing = false
+                        model.popNavigation(to: $0, from: presented)
+                    })
+            ) {
                 whereScreen.navigationDestination(for: Destination.self) { destination in
                     switch destination {
                     case .outbound: outboundScreen
@@ -58,17 +60,7 @@
                 if copyFormatter == nil { copyFormatter = try? await CopyLineFormatter(catalog: CopyCatalog.load()) }
                 model.resumeChecking()
             }
-            .onChange(of: model.draft.state.step) { _, _ in path = Self.destinations(model) }
-            .onChange(of: model.draft.state.questionIndex) { _, _ in path = Self.destinations(model) }
-            .onChange(of: path) { previous, next in
-                continuing = false
-                guard next.count < previous.count else { return }
-                if case .question(let index) = next.last {
-                    model.navigateToQuestion(index)
-                } else if next != Self.destinations(model) {
-                    model.go(Self.step(next.last))
-                }
-            }
+            .onChange(of: model.navigationPath) { _, _ in continuing = false }
             .sheet(item: Binding(get: { model.draft.state.sheet }, set: { model.openAirport($0) })) { sheet in
                 WizardAirportSearchView(sheet: sheet, model: model)
             }
