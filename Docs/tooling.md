@@ -2813,3 +2813,5 @@ destination; recording and intro-order diagnostics retain their existing single-
 with `TEST_HOST`/`BUNDLE_LOADER` and only a ChronoFlow dependency. Select it with
 `make targeted DEVICES="17e" ONLY="ReleaseReadinessTests/ReleaseReadinessTests"`.
 Regenerate the project before running; Release no longer compiles the Debug AppTests bundle.
+
+Launch hosted pixel comparisons use `memcmp` for equal buffers and a pointer scan for maximum error/first mismatch; the ≤ 2 byte threshold and report are unchanged. Whole-frame opacity/moon checks share one UInt32 pass.

@@ -25,9 +25,20 @@ nonisolated final class LaunchFrameParityTests: XCTestCase {
                 style: style, context: "Whole-frame")
             var isOpaque = true
             var hasMoon = false
-            for pixel in stride(from: 0, to: frame.count, by: 4) {
-                isOpaque = isOpaque && frame[pixel + 3] == 255
-                hasMoon = hasMoon || (0..<3).contains { abs(Int(frame[pixel + $0]) - Int(frame[$0])) > 2 }
+            frame.withUnsafeBytes { buffer in
+                let pixels = buffer.baseAddress!.assumingMemoryBound(to: UInt32.self)
+                let first = pixels[0].littleEndian
+                var index = 0
+                while index < buffer.count / 4 {
+                    let pixel = pixels[index].littleEndian
+                    isOpaque = isOpaque && pixel >> 24 == 255
+                    hasMoon =
+                        hasMoon
+                        || abs(Int(pixel & 0xff) - Int(first & 0xff)) > 2
+                        || abs(Int((pixel >> 8) & 0xff) - Int((first >> 8) & 0xff)) > 2
+                        || abs(Int((pixel >> 16) & 0xff) - Int((first >> 16) & 0xff)) > 2
+                    index += 1
+                }
             }
             XCTAssertTrue(isOpaque)
             XCTAssertTrue(hasMoon)
