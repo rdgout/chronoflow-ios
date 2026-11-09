@@ -17,6 +17,7 @@ nonisolated final class RootNavigationTests: XCTestCase {
 
     @MainActor func testAppTabsConfigureNativeScrollMinimization() async throws {
         guard #available(iOS 26, *) else { throw XCTSkip("System tab minimization requires iOS 26") }
+        try await AuthTestHost.registerFonts()
         let host = try AuthTestHost(
             AppTabs(), size: try XCTUnwrap(AuthDeviceFixture.all().first { $0.name == "17e" }).size)
         defer { host.close() }

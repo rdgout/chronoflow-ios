@@ -2104,7 +2104,7 @@ User decision 2026-11-06: implement these when the named states exist; this roun
 - [x] Restore cheap default Welcome self-comparisons and auth capture guards, without references; use fixed SE xxLarge fixtures and enforce required recovery elements in every layout state.
 - [x] Cover AppServices default file-store wiring through both factories, including lazy creation, the supplied root, seed content and persisted mail after source recreation.
 - [x] Replace unreliable tab minimization UI observations with a hosted assertion of the actual UIKit configuration, exact-label native tab navigation and a stable Trips screen check after scrolling.
-- [ ] Correct the tier map, pass lint/host and Debug/Release compile checks, and deliver atomic follow-up commits or patches.
+- [x] Correct the tier map, validate lint/host and Debug/Release compilation, and deliver atomic follow-up patches on `53ea64e` with an exact 17e rerun list. Lint, 591 Swift Testing tests + 19 XCTest methods (excluding the sandbox-blocked loopback test), generators/runner fixtures and SDK checks pass; full host execution fails only at the unchanged APICookieTests socket bind (`EPERM`). Simulator acceptance remains external.
 
 ## Open questions for the user
 
