@@ -120,6 +120,8 @@
             search.autocorrectionType = .no
             search.addTarget(context.coordinator, action: #selector(Coordinator.changed(_:)), for: .editingChanged)
             search.setContentHuggingPriority(.defaultLow, for: .horizontal)
+            search.accessibilityTraits.insert(.searchField)
+            search.accessibilityIdentifier = "wizard.airport.query"
             return search
         }
 

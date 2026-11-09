@@ -46,7 +46,7 @@
                             board == "WizardAirportFrom"
                                 ? "wizard.from" : board == "WizardAirportHome" ? "wizard.to" : "wizard.add-stop"
                         ].tap()
-                        let search = app.searchFields.firstMatch
+                        let search = app.descendants(matching: .any)["wizard.airport.query"].firstMatch
                         XCTAssertTrue(search.waitForExistence(timeout: 5))
                         search.tap()
                         search.typeText(board == "WizardStopSearch" ? "Du" : "Am")

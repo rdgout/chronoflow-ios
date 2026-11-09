@@ -62,7 +62,7 @@ nonisolated final class TripWizardTests: XCTestCase {
 
     @MainActor private func choose(_ code: String, side: String, in app: XCUIApplication) {
         app.buttons["wizard.\(side)"].tap()
-        let search = app.searchFields.firstMatch
+        let search = app.descendants(matching: .any)["wizard.airport.query"].firstMatch
         XCTAssertTrue(search.waitForExistence(timeout: 5))
         search.tap()
         search.typeText(code)

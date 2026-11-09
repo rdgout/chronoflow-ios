@@ -107,7 +107,7 @@ nonisolated final class TripWizardReviewTests: XCTestCase {
         let button = app.buttons["wizard.\(side)"]
         XCTAssertTrue(button.waitForExistence(timeout: 5))
         button.tap()
-        let search = app.searchFields.firstMatch
+        let search = app.descendants(matching: .any)["wizard.airport.query"].firstMatch
         XCTAssertTrue(search.waitForExistence(timeout: 5))
         search.tap()
         search.typeText(code)
