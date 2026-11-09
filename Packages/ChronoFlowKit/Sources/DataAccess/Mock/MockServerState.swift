@@ -42,6 +42,10 @@ public struct MockServerState: Codable, Sendable, Equatable {
     var resets: [String: MockReset] = [:]
     var rateWindows: [String: MockRateLimiter.Window] = [:]
     var mail: [MockMail] = []
+    var wizardDrafts: [String: MockWizardDraft]?
+    var wizardReceipts: [String: MockWizardReceipt]?
+    var wizardPaidDirections: [String: [TripDirection]]?
+    var wizardInputs: [String: ApiTripInputSnapshot]?
     var signingKey: Data
     public var claims: [String: MockClaim] = [:]
     public init(accounts: [MockServerAccount] = [], signingKey: Data = Data(UUID().uuidString.utf8)) {

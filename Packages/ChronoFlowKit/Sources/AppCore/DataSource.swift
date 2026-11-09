@@ -14,5 +14,11 @@ public protocol DataSource: Sendable {
     func fetchAccount() async throws -> AccountSnapshot
     func fetchTrips() async throws -> [TripListItem]
     func fetchTripDetail(id: String) async throws -> TripDetailResponse
+    func searchAirports(query: String, limit: Int?) async throws -> [ApiAirportSuggestion]
+    func reviewTrip(_ input: ApiTripReviewInput) async throws -> ApiTripReview
+    func reviewTripEdit(_ input: ApiTripReviewInput, id: String, sourceRevision: String) async throws -> ApiTripReview
+    func saveTrip(identity: ApiTripSaveInput) async throws -> ApiTripSaveResult
+    func updateTrip(id: String, identity: ApiTripSaveInput, sourceRevision: String) async throws -> ApiTripSaveResult
+    func tripInput(id: String) async throws -> ApiTripInputSnapshot
     func send(_ change: OutboxChange) async throws -> MutationReceipt
 }

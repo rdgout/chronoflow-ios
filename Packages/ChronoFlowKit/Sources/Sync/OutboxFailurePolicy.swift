@@ -10,6 +10,10 @@ public enum OutboxFailurePolicy {
 
     public static func sanitized(_ error: DataFailure) -> String {
         switch error {
+        case .reviewExpired: "review_expired"
+        case .notEnoughCredits: "not_enough_credits"
+        case .saveCapacity: "save_capacity"
+        case .profileInvalid: "profile_invalid"
         case .offline: "offline"
         case .unauthorized: "unauthorized"
         case .emailUnverified: "email_unverified"

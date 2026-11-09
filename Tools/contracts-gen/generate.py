@@ -18,6 +18,9 @@ OVERRIDES = {
     ('CopyArg', 'value'): ('string | number', 'CopyArgValue'),
     ('CopyLine', 'args'): ('(CopyArg| CaffeineCopyArg)[]', '[CopyArgument]'),
 }
+ROOT_TYPES = ['ApiTripListItem', 'ApiTripDetail', 'ApiTripInput', 'ApiTripReview',
+              'ApiTripSaveResult', 'ApiTripInputSnapshot', 'ApiAirportSearchResults']
+REQUEST_ROOT_TYPES = ['ApiTripInput']
 KEYWORDS = {'public', 'private', 'internal', 'return', 'case', 'default', 'extension', 'repeat', 'in', 'is', 'switch', 'where', 'throw', 'throws', 'try', 'false', 'true', 'none', 'operator'}
 
 def identifier(value):
@@ -40,23 +43,32 @@ def generate(repo):
             definitions[name] = body.strip()
     selected = set()
 
-    def include(name):
-        if name in selected:
+    def include(name, graph):
+        if name in graph:
             return
-        selected.add(name)
+        graph.add(name)
         body = definitions[name]
         for ref in re.findall(r'\b[A-Z]\w*\b', re.sub(r"'[^']*'", '', body)):
-            include(ref)
-    for name in ['ApiTripListItem', 'ApiTripDetail']:
-        include(name)
+            if ref != 'Record':
+                include(ref, graph)
+    for name in ROOT_TYPES:
+        include(name, selected)
+    request_types = set()
+    for name in REQUEST_ROOT_TYPES:
+        include(name, request_types)
     # Check every planner/output and domain enum, including currently unused literals.
     for path in ['Planner/Output', 'Enums']:
         source = subprocess.check_output(['git', '-C', str(repo), 'show', f'{PIN}:resources/js/types/App/{path}/index.ts'], text=True)
         for name in re.findall(r'export type (\w+) =', source):
-            include(name)
+            include(name, selected)
 
     def swift_type(ts):
         ts = ts.strip()
+        record = re.fullmatch(r'Record<string, (.+)>', ts)
+        if record:
+            return '[String: ' + swift_type(record[1]) + ']'
+        if ts == 'boolean | number | string | null':
+            return 'JSONValue'
         if ts.endswith(' | null'):
             return swift_type(ts[:-7]) + '?'
         if ts.endswith('[]'):
@@ -86,17 +98,24 @@ def generate(repo):
             lines = [f'public typealias {swift_name} = JSONObject']
         elif body.startswith('{') and body.endswith('}'):
             fields = []
+            optional_keys = set()
             for field in body[1:-1].strip().splitlines():
                 match = re.fullmatch(r'readonly (\w+)(\?)?: (.+),', field.strip())
                 if not match:
                     raise ValueError(f'unsupported declaration in {name}: {field}')
                 key, optional, ts = match.groups()
+                if optional:
+                    optional_keys.add(key)
                 if (name, key) in OVERRIDES:
                     expected, kind = OVERRIDES[name, key]
                     if ts != expected:
                         raise ValueError(f'hand-written union changed: {name}.{key}')
                 else:
                     kind = swift_type(ts)
+                if name == 'ApiReviewPromptShape' and key in {'min', 'max'}:
+                    if ts != 'number | null':
+                        raise ValueError(f'prompt numeric bound changed: {key}')
+                    kind = 'Double?'
                 if optional and not kind.endswith('?'):
                     kind += '?'
                 fields.append((key, kind))
@@ -105,6 +124,14 @@ def generate(repo):
             lines += ['', '    public init(', ',\n'.join(f'        {identifier(k)}: {t}' + (' = nil' if t.endswith('?') else '') for k, t in fields), '    ) {']
             lines += [f'        self.{identifier(k)} = {identifier(k)}' for k, _ in fields]
             lines += ['    }']
+            explicit_encoder = name in request_types and any(t.endswith('?') for _, t in fields)
+            if explicit_encoder:
+                lines += ['', '    public func encode(to encoder: any Encoder) throws {',
+                          '        var container = encoder.container(keyedBy: CodingKeys.self)']
+                for k, _ in fields:
+                    method = 'encodeIfPresent' if k in optional_keys else 'encode'
+                    lines += [f'        try container.{method}({identifier(k)}, forKey: .{identifier(k)})']
+                lines += ['    }']
             if name == 'BlockView':
                 lines += ['', '    public init(from decoder: any Decoder) throws {', '        let container = try decoder.container(keyedBy: CodingKeys.self)']
                 for k, t in fields:
@@ -113,6 +140,11 @@ def generate(repo):
                     else:
                         method = 'decodeIfPresent' if t.endswith('?') else 'decode'
                         lines += [f'        {identifier(k)} = try container.{method}({t.rstrip("?")}.self, forKey: .{identifier(k)})']
+                lines += ['    }']
+            coding_keys = [(k, identifier(k)) for k, _ in fields if k != identifier(k).strip('`')]
+            if coding_keys or explicit_encoder:
+                lines += ['', '    enum CodingKeys: String, CodingKey {']
+                lines += [f'        case {identifier(k)}' + (f' = "{k}"' if (k, identifier(k)) in coding_keys else '') for k, _ in fields]
                 lines += ['    }']
             lines += ['}']
         else:

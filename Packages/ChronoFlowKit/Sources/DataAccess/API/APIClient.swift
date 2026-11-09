@@ -35,11 +35,13 @@ public actor APIClient {
         self.now = now
     }
 
-    public func request<Value: Decodable & Sendable>(_ endpoint: APIEndpoint, as: Value.Type = Value.self) async throws
+    public func request<Value: Decodable & Sendable>(
+        _ endpoint: APIEndpoint, as: Value.Type = Value.self, expectedStatus: Int = 200
+    ) async throws
         -> Value
     {
         let (data, response) = try await perform(endpoint)
-        guard response.statusCode == 200 else { throw DataFailure.server(status: response.statusCode) }
+        guard response.statusCode == expectedStatus else { throw DataFailure.server(status: response.statusCode) }
         do { return try JSONDecoder().decode(Value.self, from: data) } catch {
             throw DataFailure.server(status: response.statusCode)
         }
@@ -103,6 +105,8 @@ public actor APIClient {
         return (result.0, response)
     }
 
+    private struct RetryHint: Decodable { let retryAfterSeconds: JSONValue? }
+
     private struct ErrorEnvelope: Decodable {
         let code: String
         let message: String
@@ -113,12 +117,26 @@ public actor APIClient {
 
     private func mapError(_ data: Data, response: HTTPURLResponse) -> DataFailure {
         let status = response.statusCode
-        guard let envelope = try? JSONDecoder().decode(ErrorEnvelope.self, from: data) else {
+        let decoded = try? JSONDecoder().decode(ErrorEnvelope.self, from: data)
+        if status == 429 {
+            let body: Double?
+            if case .number(let value) = (try? JSONDecoder().decode(RetryHint.self, from: data))?.retryAfterSeconds {
+                let seconds = NSDecimalNumber(decimal: value).doubleValue
+                body = seconds.isFinite && seconds >= 0 ? seconds : nil
+            } else {
+                body = nil
+            }
+            return .throttled(
+                retryAfterSeconds: body ?? retryAfter(response.value(forHTTPHeaderField: "Retry-After")) ?? 60,
+                status: status)
+        }
+        guard let envelope = decoded else {
             return .server(status: status)
         }
         switch (status, envelope.code) {
         case (401, "unauthenticated"): return .unauthorized(status: status)
         case (403, "email_unverified"): return .emailUnverified(status: status)
+        case (422, "review_expired"): return .reviewExpired
         case (422, "validation_failed"):
             guard let errors = envelope.errors, !errors.isEmpty,
                 errors.allSatisfy({ !$0.key.isEmpty && !$0.value.isEmpty }),
@@ -136,17 +154,6 @@ public actor APIClient {
                 fields[field] = FieldMessage(key: key, arguments: envelope.args?[field] ?? [:])
             }
             return .validation(fields: fields, status: status)
-        case (429, "throttled"):
-            let body: Double?
-            if case .number(let value) = envelope.retryAfterSeconds {
-                let seconds = NSDecimalNumber(decimal: value).doubleValue
-                body = seconds.isFinite && seconds >= 0 ? seconds : nil
-            } else {
-                body = nil
-            }
-            return .throttled(
-                retryAfterSeconds: body ?? retryAfter(response.value(forHTTPHeaderField: "Retry-After")) ?? 60,
-                status: status)
         case (409, "conflict"): return .conflict(status: status)
         default: return .server(status: status)
         }

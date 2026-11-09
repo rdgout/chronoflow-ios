@@ -34,7 +34,7 @@ host tests can use the scenarios without compiling credentials into the Release 
 `MockAppSeed+Fixtures.swift` embeds RN's `fixture-data.ts` default settings (including
 `createMockAccount`'s optional-items override), `fixtures/trips.ts` and all seven `fixtures/plans`
 payloads, read on 6 November 2026. They are mock data, separate from the sanitized API contract
-fixtures. Trip detail contracts exclude mock-only form/revision; no wizard is implemented here.
+fixtures. Trip detail contracts exclude mock-only form/revision. Phase 13 shares these non-account trip templates with mock generation; default account seeding and its credentials remain Debug-only. The template data is now available to the explicitly selected mock source in either build configuration.
 
 Verify on the host with `sh Scripts/host-tests.sh --filter DataSourceSelectionTests`.
 Hosted composition: `make targeted DEVICES="17e" ONLY="AppTests/DataSourceFactoryHostedTests"`.
@@ -45,6 +45,34 @@ recovery-code consumption across restart. Four Release host selection tests pass
 DataAccess object files were checked for absent demo identities, recovery code, trip fixture data
 and seed symbols. New Debug/Release hosted tests type-check for iOS 17 against the existing app
 modules; hosted execution remains open. No xcodebuild or simulator was run for this fix.
+
+## Member trip generation — Phase 13
+
+The `TripWizard` package product is nonisolated and depends only on AppCore and DataAccess.
+`TripGenerationService` accepts an injected data source and Sendable effects. The Sync target's
+`TripGenerationEffects.storing` adapter binds profile merges and trip pulls to an existing database/session
+epoch, preserving pending body-clock edits and raw detail bytes. It requests sync through the caller's
+existing trigger, without constructing another sync engine or adding wizard writes to the outbox.
+
+Review calls deduplicate by instance, sorted input/profile bytes, token and review revision (plus edit
+context), with a 30 s cancellable deadline over the API's 90 s write timeout. `answerPrompts` applies
+profile, leg, stay and top-level fields using the server's scope, then re-reviews. Save returns the
+updated caller-owned `TripGenerationState`; keep that state, including `savedTripId`, for retries.
+Expiry/credits clear its identity and return `reReviewNeeded`; other typed failures retain it. There
+is no automatic retry or connectivity refusal. A supplied saved ID skips POST, and a successful
+identity is also cached in the session-scoped actor. Successful saves pull list/detail best-effort
+and request sync. End the actor with `cancel()` at session teardown; recovery persistence is Phase 16a.
+
+The mock uses the shared seven RN templates, route selection and calendar/DST rebasing. It persists
+member drafts, receipts, paid directions and exact generated-trip input snapshots in optional fields
+so older mock-state files still restore. Seeded trips reconstruct input from flight blocks, using DTO
+defaults for wizard answers absent from the old seed; newly saved inputs round-trip exactly. Mock
+planning stays fixture-based. API wire fixtures and their exact pinned backend sources live in
+`Tests/DataAccessTests/Fixtures/wizard/SOURCE.md`. No backend runs or UI changes are needed.
+
+Verification is host-only: `make quick` and `make contracts-check`. The Phase 13 run passes all new
+suites and strict lint; only the known cookie-test loopback `EPERM` prevents a zero exit from quick.
+The remaining quick targets pass separately. See `build/phase13-{quick,host-tools,host-fixtures,contracts-check}.log`.
 
 ## Trip contracts — Phase 12
 
@@ -58,15 +86,15 @@ These manual commands are excluded from `make quick` and `make check` because th
 that sibling and pinned commit. Generation also requires Python 3 and the toolchain’s
 `xcrun swift format`, with no added dependencies or network access.
 
-The generator follows the trip list/detail DTO dependency graph through Data/Api,
+The generator follows the trip list/detail and member trip-wizard DTO dependency graphs through Data/Api,
 Data/Trips, Data/Plan, Planner/Input, Planner/Output, Enums and Planning/Copy.
 It also includes all Planner/Output and Enums literals for the manual contracts gate.
 The backend literal `unknown` becomes `.unknownValue`, reserving `.unknown(String)` for future literals.
 It emits Codable/Sendable/Equatable structs, public initializers, optional nullable or
 optional properties and string enums that round-trip `.unknown(String)` values.
-Web DTO numbers here are integral (PHP `int`); mixed copy values retain decimal JSON numbers.
+Web DTO numbers are integral (PHP `int`) except wizard prompt min/max bounds, which use Double for 0.1–9.9 ratings; mixed copy values retain decimal JSON numbers.
 Unsupported syntax and changed hand-written union signatures stop generation.
-Only block parameter dispatch and copy argument unions are hand-written. Block parameters
+Block parameter dispatch and copy argument unions are hand-written; wizard primitive answer records reuse JSONValue and their envelope/profile request shapes are hand-written because they have no generated TS DTO. Snake_case DTO fields have generated CodingKeys. Block parameters
 are decoded by the enclosing block’s `type`; the three caffeine families distinguish
 legacy string amounts from structured drinks, while `caffeine_routine` uses its string shape.
 The indistinguishable null-exception `no_caffeine` shapes decode to the legacy variant.

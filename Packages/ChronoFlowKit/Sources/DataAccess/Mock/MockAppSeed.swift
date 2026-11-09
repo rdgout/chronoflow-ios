@@ -7,15 +7,12 @@
             let settings: AccountSettings
             var trips: [TripFixture]
         }
-        struct TripFixture: Decodable {
-            var card: TripCardView
-            let detail: TripDetail
-        }
+        typealias TripFixture = MockTripFixtures.Template
 
         public static func make(now: Date, unverified: Bool = false, walkthroughSeen: Bool = false) throws
             -> MockServerState
         {
-            var fixtures = try JSONDecoder().decode(Fixtures.self, from: fixtureData())
+            var fixtures = try JSONDecoder().decode(Fixtures.self, from: MockTripFixtures.fixtureData())
             fixtures.trips = try fixtures.trips.enumerated().map {
                 try rebase($0.element, index: $0.offset, now: now)
             }
@@ -70,7 +67,7 @@
         static func refresh(_ stored: MockServerState, now: Date) throws -> MockServerState {
             var state = stored
             let anchor = anchor(now: now)
-            let fixtures = try JSONDecoder().decode(Fixtures.self, from: fixtureData())
+            let fixtures = try JSONDecoder().decode(Fixtures.self, from: MockTripFixtures.fixtureData())
             for accountID in [MockScenarioValues.demoID, MockScenarioValues.twoFactorID] {
                 guard var account = state.accounts[accountID] else { continue }
                 for (index, fixture) in fixtures.trips.enumerated() {
