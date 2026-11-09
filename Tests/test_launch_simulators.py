@@ -578,6 +578,8 @@ class RunnerTests(unittest.TestCase):
         for index, (_, device_type, runtime) in enumerate(runner.MATRIX.values()):
             self.devices[runtime].append(dict(deviceTypeIdentifier='com.apple.CoreSimulator.SimDeviceType.' + device_type,
                                               isAvailable=True, state='Booted', udid=f'device-{index}'))
+        self.devices[runner.REGULAR_RUNTIME].append(dict(self.devices[runner.REGULAR_RUNTIME][1],
+                                                        udid='isolated-device', name=runner.ISOLATED_NAME))
         self.temporary = tempfile.TemporaryDirectory(dir=ROOT / "build", prefix="runner-tests-")
         self.addCleanup(self.temporary.cleanup)
         self.scratch = Path(self.temporary.name)
@@ -690,7 +692,7 @@ class RunnerTests(unittest.TestCase):
         self.assertIn('ENABLE_TESTABILITY=YES', builds[1])
         self.assertEqual(len(self.commands_for_tests()), 9)
         self.assertFalse(any('clean' in c or 'shutdown' in c or 'erase' in c or 'boot' in c for c in self.commands))
-        self.assertEqual(sum('uninstall' in c for c in self.commands), 7)
+        self.assertEqual(sum('uninstall' in c for c in self.commands), 8)
         self.assertNotIn(['make', 'check'], self.commands)
         self.assertNotIn(['make', 'duo'], self.commands)
         for c in self.commands_for_tests():
@@ -703,8 +705,9 @@ class RunnerTests(unittest.TestCase):
         status, output = self.execute(mode='check')
         self.assertEqual(status, 0, output)
         commands = self.commands_for_tests()
-        self.assertEqual({c[c.index('-destination') + 1] for c in commands}, {'platform=iOS Simulator,id=device-1'})
-        self.assertEqual(sum('uninstall' in c for c in self.commands), 1)
+        self.assertEqual({c[c.index('-destination') + 1] for c in commands},
+                         {'platform=iOS Simulator,id=device-1', 'platform=iOS Simulator,id=isolated-device'})
+        self.assertEqual(sum('uninstall' in c for c in self.commands), 2)
         self.assertEqual(len(commands), 3)
         serial = next(c for c in commands if c[c.index('-resultBundlePath') + 1].endswith('Debug-serial.xcresult'))
         defaults = set(runner.selection('check', '17e'))
@@ -736,7 +739,7 @@ class RunnerTests(unittest.TestCase):
             self.assertEqual(len(matches), 1, suite)
             command = matches[0]
             self.assertEqual(command[command.index('-destination') + 1],
-                             'platform=iOS Simulator,id=device-1')
+                             'platform=iOS Simulator,id=' + ('isolated-device' if suite.endswith('/ReleaseReadinessTests') else 'device-1'))
             configuration = 'Release' if suite.endswith('/ReleaseReadinessTests') else 'Debug'
             self.assertEqual(command[command.index('-configuration') + 1], configuration)
             self.assertNotIn('-skip-testing:' + suite, command)
@@ -761,7 +764,8 @@ class RunnerTests(unittest.TestCase):
         for suite in tuple(s for s in AUTH_HOSTED if s not in AUTH_SNAPSHOTS) + AUTH_UI:
             commands = [c for c in self.commands_for_tests() if '-only-testing:' + suite in c]
             self.assertEqual(len(commands), 1, suite)
-            self.assertIn('platform=iOS Simulator,id=device-1', commands[0])
+            device = 'isolated-device' if suite in runner.SERIAL_TESTS else 'device-1'
+            self.assertIn('platform=iOS Simulator,id=' + device, commands[0])
             self.assertIn(' ' + suite, output)
         for suite in tuple(s for s in AUTH_HOSTED if s not in AUTH_SNAPSHOTS) + AUTH_UI:
             with self.subTest(suite=suite):
@@ -828,6 +832,79 @@ class RunnerTests(unittest.TestCase):
             self.assertTrue(any('-only-testing:' + suite in c and not any('record.xcresult' in a for a in c)
                                 for c in self.commands_for_tests()), suite)
         self.assertIn('PASS 17e Release-compare AppTests/ReleaseReadinessTests', output)
+
+    def test_isolated_device_is_reused_by_type_and_runtime_and_never_a_clone(self):
+        primary = runner.resolve('17e', self.devices)
+        isolated = self.devices[runner.REGULAR_RUNTIME].pop()
+        self.devices[runner.REGULAR_RUNTIME].insert(0, dict(isolated, udid='clone', name='Clone 1 of iPhone 17e'))
+        self.devices[runner.DUO_RUNTIME].append(isolated)
+        self.assertEqual(runner.resolve('17e', self.devices), primary)
+        create = Mock(return_value=subprocess.CompletedProcess([], 0, 'new-device\n'))
+        with patch.dict(runner.resolve_isolated.__globals__, run=create):
+            destination = runner.resolve_isolated(primary, self.devices)
+        self.assertEqual(destination.udid, 'new-device')
+        self.assertEqual(destination.directory_name, '17e-isolated')
+        self.assertEqual(create.call_args.args[0], ['xcrun', 'simctl', 'create', runner.ISOLATED_NAME,
+                         'com.apple.CoreSimulator.SimDeviceType.iPhone-17e', runner.REGULAR_RUNTIME])
+        self.devices[runner.REGULAR_RUNTIME].insert(0, isolated)
+        with patch.dict(runner.resolve_isolated.__globals__, run=Mock(side_effect=AssertionError('must reuse'))):
+            self.assertEqual(runner.resolve_isolated(primary, self.devices).udid, 'isolated-device')
+            self.assertEqual(runner.resolve('17e', self.devices), primary)
+
+    def test_serial_then_release_overlap_debug_compare_and_merge_timings(self):
+        compare_started, release_finished = threading.Event(), threading.Event()
+        serial_finished = threading.Event()
+        original = runner.test_pass
+        def test_pass(destination, configuration, selected, label, **kwargs):
+            if label == 'Debug-compare':
+                self.assertEqual(destination.udid, 'device-1')
+                compare_started.set()
+                self.assertTrue(release_finished.wait(2), 'isolated passes did not overlap Debug')
+            else:
+                self.assertEqual(destination.udid, 'isolated-device')
+                self.assertTrue(compare_started.wait(2))
+                if label == 'Debug-serial':
+                    serial_finished.set()
+                else:
+                    self.assertTrue(serial_finished.is_set())
+                    release_finished.set()
+            return original(destination, configuration, selected, label, **kwargs)
+        with patch.dict(runner.main.__globals__, test_pass=test_pass):
+            status, output = self.execute(mode='check')
+        self.assertEqual(status, 0, output)
+        timings = json.loads((self.scratch / 'build/test-results/timings.json').read_text())['devices']['17e']
+        self.assertIn('AppUITests/AuthSessionTests', timings['suites'])
+        self.assertIn('AppTests/ReleaseReadinessTests', timings['suites'])
+        self.assertIn('AppTests/AuthControlTests', timings['suites'])
+        self.assertEqual(set(timings['selection']), set(runner.selection('check', '17e')))
+        bundles = [c[c.index('-resultBundlePath') + 1] for c in self.commands_for_tests()]
+        self.assertEqual(len(bundles), len(set(bundles)))
+        self.assertTrue(any('/17e-isolated/' in b for b in bundles))
+
+    def test_preparation_overlaps_debug_build_and_secondary_failure_stays_visible(self):
+        preparing = threading.Event()
+        original_prepare, original_build = runner.prepare, runner.build
+        def prepare(destination):
+            if destination.directory_name:
+                preparing.set()
+                raise OSError('isolated preparation failed')
+            return original_prepare(destination)
+        def build(configuration, background=False):
+            self.assertTrue(preparing.wait(2), 'preparation waited for Debug build')
+            return original_build(configuration, background)
+        with patch.dict(runner.main.__globals__, prepare=prepare, build=build):
+            status, output = self.execute(mode='check')
+        self.assertEqual(status, 1)
+        self.assertIn('Preparation: isolated preparation failed', output)
+        self.assertIn('PASS 17e Debug-compare', output)
+        self.assertNotIn('PASS 17e Release-compare', output)
+
+    def test_single_destination_budget_avoids_the_second_device(self):
+        status, output = self.execute(mode='check', concurrency=1)
+        self.assertEqual(status, 0, output)
+        self.assertEqual({c[c.index('-destination') + 1] for c in self.commands_for_tests()},
+                         {'platform=iOS Simulator,id=device-1'})
+        self.assertFalse(any('isolated-device' in c for c in self.commands))
 
     def test_resolves_aliases_by_type_and_runtime_never_name(self):
         self.devices[runner.REGULAR_RUNTIME].insert(0, dict(self.devices[runner.DUO_RUNTIME][0], udid='wrong-runtime'))
@@ -1067,8 +1144,9 @@ class RunnerTests(unittest.TestCase):
         with patch.dict(runner.main.__globals__, split_passes=split):
             status, output = self.execute(aliases=['17e'], only=['AppUITests/WelcomeTests'])
         self.assertEqual(status, 0, output)
-        commands = self.commands_for_tests()
+        commands = sorted(self.commands_for_tests(), key=lambda c: c[c.index('-resultBundlePath') + 1])
         self.assertEqual(len(commands), 2)
+        commands.sort(key=lambda c: '-skip-testing:' + method not in c)
         self.assertIn('-skip-testing:' + method, commands[0])
         self.assertEqual(commands[0][commands[0].index('-parallel-testing-enabled') + 1], 'YES')
         self.assertIn('-only-testing:' + method, commands[1])

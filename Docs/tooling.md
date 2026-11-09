@@ -2801,3 +2801,10 @@ After the foreground Debug build, Release/Perf build in a background queue under
 while Debug tests run. Each uses `build/DerivedData-Release` / `build/DerivedData-Perf`; Debug
 keeps `build/DerivedData`. All share `build/SourcePackages`. Each pass waits for its build;
 build failures still fail the run. `REUSE_BUILD=1` requires current products in these paths.
+
+When the worker budget permits, 17e Debug comparison runs on the primary plus Xcode clones
+while Debug serial tests, then Release/Perf tests, run on a persistent `ChronoFlow 17e Isolated`.
+The runner resolves/creates it by iPhone 17e type and regular runtime, excludes clones, and
+prepares destinations in background threads during builds. Results stay under `17e/` and
+`17e-isolated/`; summaries and `timings.json` merge under 17e. `SIM_CONCURRENCY=1` keeps one
+destination; recording and intro-order diagnostics retain their existing single-device sequence.

@@ -367,9 +367,9 @@ class WorkerBudget:
                 self.condition.notify_all()
 
 
-def budgeted_device(budget, workers, *args):
+def budgeted_device(budget, workers, *args, **kwargs):
     with budget.claim(workers):
-        return test_device(*args, workers=workers)
+        return test_device(*args, workers=workers, **kwargs)
 
 
 def workers_for(alias, selected, timings, single_device=False):
@@ -542,6 +542,7 @@ class Destination:
     alias: str
     udid: str
     state: str
+    directory_name: str | None = None
 
     @property
     def flag(self):
@@ -549,7 +550,7 @@ class Destination:
 
     @property
     def directory(self):
-        return ROOT / "build/test-results" / self.alias
+        return ROOT / "build/test-results" / (self.directory_name or self.alias)
 
 
 @dataclass
@@ -692,14 +693,56 @@ def run(command, *, log=None, capture=False, record=False, check=True, intro_ord
             return completed
 
 
-def resolve(alias, devices):
+ISOLATED_NAME = "ChronoFlow 17e Isolated"
+
+
+def device_matches(alias, devices):
     _, device_type, runtime = MATRIX[alias]
     identifier = "com.apple.CoreSimulator.SimDeviceType." + device_type
-    matches = [d for d in devices.get(runtime, []) if d.get("isAvailable") and d.get("deviceTypeIdentifier") == identifier]
+    return [d for d in devices.get(runtime, []) if d.get("isAvailable")
+            and d.get("deviceTypeIdentifier") == identifier and not d.get("isClone")
+            and not d.get("name", "").startswith("Clone ")]
+
+
+def resolve(alias, devices):
+    matches = [d for d in device_matches(alias, devices) if d.get("name") != ISOLATED_NAME]
     if not matches:
-        raise RuntimeError("No available simulator: " + identifier + " on " + runtime)
+        _, device_type, runtime = MATRIX[alias]
+        raise RuntimeError("No available simulator: com.apple.CoreSimulator.SimDeviceType." + device_type + " on " + runtime)
     device = matches[0]
     return Destination(alias, device["udid"], device["state"])
+
+
+def resolve_isolated(primary, devices):
+    matches = [d for d in device_matches("17e", devices)
+               if d["udid"] != primary.udid and d.get("name") == ISOLATED_NAME]
+    if matches:
+        device = matches[0]
+        return Destination("17e", device["udid"], device["state"], "17e-isolated")
+    _, device_type, runtime = MATRIX["17e"]
+    identifier = "com.apple.CoreSimulator.SimDeviceType." + device_type
+    created = run(["xcrun", "simctl", "create", ISOLATED_NAME, identifier, runtime], capture=True).stdout.strip()
+    if not created or created == primary.udid:
+        raise RuntimeError("Could not create isolated 17e")
+    return Destination("17e", created, "Shutdown", "17e-isolated")
+
+
+def device_jobs(destination, selected, workers, devices, isolate):
+    groups = configurations(selected)
+    parts = {c: split_passes(c, suites, workers) for c, suites in groups.items()}
+    debug = parts.get("Debug", [])
+    compare = [p for p in debug if p.suffix == "compare"]
+    isolated = {c: passes for c, passes in parts.items() if c != "Debug"}
+    serial = [p for p in debug if p.suffix == "serial"]
+    if serial:
+        isolated = {"Debug": serial, **isolated}
+    if destination.alias != "17e" or not isolate or not compare or not isolated:
+        return [(destination, selected, workers, parts)]
+    secondary = resolve_isolated(destination, devices)
+    primary_selection = list(dict.fromkeys(s for p in compare for s in p.selected))
+    secondary_selection = list(dict.fromkeys(s for passes in isolated.values() for p in passes for s in p.selected))
+    return [(destination, primary_selection, workers, {"Debug": compare}),
+            (secondary, secondary_selection, 1, isolated)]
 
 
 def prepare(destination):
@@ -943,11 +986,14 @@ def recording_selection(selected, mode, recording):
     return [s for s in selected if any(s == c or s.startswith(c + "/") for c in candidates)]
 
 
-def test_device(destination, selected, mode, recording, ready, intro_order_check=False, timing=None, workers=1):
+def test_device(destination, selected, mode, recording, ready, intro_order_check=False, timing=None, workers=1, passes=None, preparation=None):
     started = time.monotonic()
     results = []
     try:
-        prepare(destination)
+        if preparation is None:
+            prepare(destination)
+        else:
+            preparation.result()
     except (subprocess.CalledProcessError, OSError) as error:
         return [Result(destination.alias, suite, False, "Preparation: " + str(error)) for suite in selected]
     if intro_order_check:
@@ -968,7 +1014,7 @@ def test_device(destination, selected, mode, recording, ready, intro_order_check
                               for s in selected if s not in record_suites]
     for configuration, suites in configurations(selected).items():
         if build_available(ready, configuration):
-            for part in split_passes(configuration, suites, workers):
+            for part in (passes[configuration] if passes is not None else split_passes(configuration, suites, workers)):
                 results += test_pass(destination, configuration, part.selected, configuration + "-" + part.suffix,
                                      timing=timing, workers=part.workers, skipped=part.skipped)
                 if any(r.detail.startswith("Test run timed out") for r in results):
@@ -1010,30 +1056,55 @@ def main(mode="check", aliases=None, only=(), concurrency=None, reuse_build=Fals
             destinations.append(resolve(alias, devices))
         except (RuntimeError, KeyError) as error:
             results.append(Result(alias, "destination", False, str(error)))
-    required = list(dict.fromkeys(c for alias in aliases for c in configurations(selections[alias])))
-    ready = {c: True for c in required} if reuse_build else {}
-    if not reuse_build and "Debug" in required:
-        ready["Debug"] = build_configuration("Debug", results)
     recording = os.environ.get("SNAPSHOT_RECORD", "0")
     if recording not in ("0", "1", "launch", "all"):
         raise ValueError("SNAPSHOT_RECORD must be 0, 1, launch or all")
+    jobs = []
+    for destination in destinations:
+        alias = destination.alias
+        try:
+            jobs += device_jobs(destination, selections[alias], workers[alias], devices,
+                                not intro_order_check and recording == "0" and concurrency >= workers[alias] + 1)
+        except (subprocess.CalledProcessError, OSError, RuntimeError) as error:
+            results.extend(Result(alias, suite, False, "Isolated destination: " + str(error)) for suite in selections[alias])
+    required = list(dict.fromkeys(c for alias in aliases for c in configurations(selections[alias])))
+    ready = {c: True for c in required} if reuse_build else {}
     budget = WorkerBudget(max(concurrency, max(workers.values())))
-    observations = {d.alias: {} for d in destinations}
-    with ThreadPoolExecutor(max_workers=1) as builds:
+    observations = {}
+    with ThreadPoolExecutor(max_workers=concurrency) as preparations, ThreadPoolExecutor(max_workers=1) as builds:
+        prepared = {d: preparations.submit(prepare, d) for d, _, _, _ in jobs}
         if not reuse_build:
+            if "Debug" in required:
+                ready["Debug"] = build_configuration("Debug", results)
             for configuration in required:
                 if configuration != "Debug":
                     ready[configuration] = builds.submit(build_configuration, configuration, results, True)
-        with ThreadPoolExecutor(max_workers=min(concurrency, len(destinations) or 1)) as pool:
-            futures = [pool.submit(budgeted_device, budget, workers[d.alias], d, selections[d.alias], mode, recording if recording != "0" else None, ready, intro_order_check, observations[d.alias]) for d in destinations]
+        with ThreadPoolExecutor(max_workers=min(concurrency, len(jobs) or 1)) as pool:
+            futures = []
+            for destination, selected, count, passes in jobs:
+                observation = {}
+                observations[destination] = observation
+                futures.append(pool.submit(budgeted_device, budget, count, destination, selected, mode,
+                                           recording if recording != "0" else None, ready, intro_order_check,
+                                           observation, passes=passes, preparation=prepared[destination]))
             for future in futures:
                 results.extend(future.result())
-    for alias, observation in observations.items():
+    for destination, observation in observations.items():
         if observation:
+            alias = destination.alias
             previous = timings["devices"].setdefault(alias, {})
             for key in ("suites", "tests"):
-                previous.setdefault(key, {}).update(observation.pop(key, {}))
-            previous.update(observation)
+                previous.setdefault(key, {}).update(observation.get(key, {}))
+    for alias in aliases:
+        samples = [o for d, o in observations.items() if d.alias == alias]
+        if samples and all("wall" in o for o in samples):
+            previous = timings["devices"][alias]
+            previous["wall"] = max(o["wall"] for o in samples)
+            previous["selection"] = selections[alias]
+            if set(selectors("matrix")) <= set(selections[alias]):
+                logic = sum(previous.get("suites", {}).get(s, suite_seconds(s, alias, {}))
+                            for s in selections[alias] if s not in selectors("matrix"))
+                previous["matrix_wall"] = max(1, previous["wall"] - logic)
     save_timings(timings)
     print("\nSimulator results:", flush=True)
     for result in results:

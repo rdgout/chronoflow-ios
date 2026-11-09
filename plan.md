@@ -2180,3 +2180,4 @@ Continue on `test/fast-ui-tests`; UI-test launch-speed acceptance runs separatel
 
 - [x] 1. Build simulator Debug/Release/Perf for arm64 only; assert runner flags for every configuration. Device/archive settings stay unchanged.
 - [x] 2. Overlap low-priority Release/Perf builds with Debug tests using separate DerivedData and build futures; cover waiting, reuse and failure propagation in runner fixtures.
+- [x] 3. Overlap primary 17e Debug comparison with serial then Release/Perf on a second persistent regular-runtime 17e; prepare alongside builds, keep separate bundles and merge summaries/timings. Fixtures cover reuse/create, clone exclusion, overlap, ordering, budget and preparation failure.
