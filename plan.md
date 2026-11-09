@@ -2113,7 +2113,8 @@ User decision 2026-11-06: implement these when the named states exist; this roun
 - [x] Add a gated Debug fast launch profile, explicit slow mock opt-in and host parsing coverage.
 - [x] Share cold-launch and in-process seed setup with teardown and readiness acknowledgement; test equivalence.
 - [x] Reuse each eligible class process, reseed tests, balance classes and use typed queries.
-- [ ] Validate strict lint, host tests and actual Release compilation; deliver ordered atomic commits/patches and exact 17e acceptance selectors.
+- [x] Validate strict lint, host tests and actual Release source compilation; deliver ordered atomic patches on `07c6ab8` and exact 17e selectors. Lint, 599 Swift Testing tests + 19 XCTest methods excluding the unchanged loopback EPERM, 17 generator tests and 103 resource/runner fixtures pass. Debug app/hosted/UI sources and actual Release DataAccess/Sync/app plus all AppTests typecheck against iOS 17. All 117 existing UI methods remain; two transport/isolation tests are added.
+- [ ] User-host acceptance: run the focused and full default UI manifests plus the single-worker launch/reset benchmark in Docs/ui-test-tiers.md, build/run ReadinessRelease, and fill the p50/p95/default-tier table. Actual Xcode build-for-testing is blocked here by unavailable CoreSimulator/package products; no simulator run or speed claim is recorded.
 
 ## Open questions for the user
 

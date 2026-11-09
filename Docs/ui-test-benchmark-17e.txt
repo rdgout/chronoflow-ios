@@ -1,0 +1,4 @@
+AppUITests/TodayTests
+AppUITests/SettingsTests
+AppUITests/SignInTests
+AppUITests/AuthAuditTests/testSignInAudit

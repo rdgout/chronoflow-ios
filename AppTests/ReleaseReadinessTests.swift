@@ -25,6 +25,25 @@
     }
 
     nonisolated final class ReleaseReadinessTests: XCTestCase {
+        func testReleaseIgnoresUITestSeedsAndHasNoTestURLRegistration() async throws {
+            XCTAssertNil(Bundle.main.object(forInfoDictionaryKey: "CFBundleURLTypes"))
+            let root = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+            defer { try? FileManager.default.removeItem(at: root) }
+            let services = try AppServices(
+                info: [:], testing: true,
+                environment: [
+                    "CF_AUTH_TEST_ID": UUID().uuidString, "CF_UI_TEST_PROFILE": "screen", "CF_MOCK_DELAY": "0",
+                    "CF_AUTH_TEST_SIGNED_IN": "demo", "CF_AUTH_TEST_UNVERIFIED": "1",
+                ], mockDelay: { 0 })
+            let source = await Task.detached {
+                services.makeDataSource(
+                    applicationSupport: root, session: StoredSession(token: "unused", accountId: "unused"))
+            }.value
+            let mock = try XCTUnwrap(source as? MockDataSource)
+            _ = try await mock.inbox()
+            XCTAssertTrue(try FileMockStateStore(applicationSupport: root).load()?.accounts.isEmpty == true)
+        }
+
         func testReleaseDefaultMockDoesNotSeedAccounts() async throws {
             let store = MemoryMockStateStore()
             let source = MockDataSource(store: store, sleep: { _ in })

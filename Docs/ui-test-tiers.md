@@ -135,3 +135,36 @@ Auth/Plan audits check app UI after launch and now set app-scoped `-AppleInterfa
 Every query has an explicit native role. Settings home uses its native collection view and profile link button; banners/notices use combined static text; timeline containers use otherElements; sheet queries use scrollViews. Step title/time/footer identifiers come from the same generated typography styles as the views. Prefix searches remain only inside a typed screen/button subset when the mock's current-day actionable block or trip ID is variable, and inside the Plan audit's static-text subset to enumerate all token-bearing text. The exact-label native tab predicate remains necessary to exclude nested system symbol buttons.
 
 Fixed Auth audit seeds also prepare their real model navigation before mounting: Sign in, Sign up, Forgot and Reset open directly; Reset issues real mock reset mail and opens that token. The existing audit prefill still supplies the form values. Audit screen checks no longer traverse Welcome/Sign in/Forgot or type an email merely to reach a fixed Reset state. Dedicated navigation and mock-mail journeys in SignInTests, ForgotPasswordTests and ResetPasswordTests remain. Hosted `UITestReseedTests.auditRoutesPrepareActualNavigationAndResetMailWithoutAcceptingASession` covers this wiring. The real `launch` profile retains the original route behavior.
+
+### Fast UI acceptance on 17e
+
+The committed selector manifests are exact: `Docs/ui-test-rerun-17e.txt` selects native fixture/route/factory wiring, ReleaseReadiness, the reseed transport and the suites that retain real launch behavior; `Docs/ui-test-default-17e.txt` selects every default UI class (including all five audit classes and the new Settings security class). No selector uses another simulator or reference snapshot suite.
+
+```sh
+make generate
+make targeted DEVICES="17e" ONLY="$(cat Docs/ui-test-rerun-17e.txt)"
+TEST_WORKERS=2 REUSE_BUILD=1 make targeted DEVICES="17e" ONLY="$(cat Docs/ui-test-default-17e.txt)"
+mkdir -p build/ui-fast/acceptance
+cp -R build/test-results/17e build/ui-fast/acceptance/default-17e
+cp build/test-results/timings.json build/ui-fast/acceptance/default-timings.json
+```
+
+Keep the console's `Elapsed` line, `Host`/worker-count lines, `build/test-results/timings.json`, and `build/test-results/17e/Debug-compare.{log,jsonl,xcresult}` plus `Debug-serial.{log,jsonl,xcresult}`. Preserve/copy those files before the next targeted run; the runner replaces per-pass results. The focused run also produces `Release-compare` and `build/test-results/build/Release.log`; keep these as the actual Release build/runtime evidence. Report failing test identifiers with their log/xcresult; do not fill the timing table from a failing run.
+
+For a controlled launch/reset breakdown, use one worker and the common benchmark selectors (unchanged method names on the instrumentation-only patch and the final series):
+
+```sh
+TEST_WORKERS=1 REUSE_BUILD=1 make targeted DEVICES="17e" ONLY="$(cat Docs/ui-test-benchmark-17e.txt)"
+```
+
+Collect the app's `UITestTimeline` unified log from the executing 17e (single-worker runs do not use parallel clones), using the stream command above or `log show --last 30m --info --style compact` with the same predicate after completion. Save that as `build/ui-app-timeline.log`, then run:
+
+```sh
+python3 Scripts/summarize-ui-timing.py build/test-results/17e/Debug-compare.log build/ui-app-timeline.log > build/ui-timing-summary.md
+```
+
+Send `build/ui-timing-summary.md`, both raw timing logs and the preserved default-tier results/timings JSON. The summary filters app events to runner IDs in the selected run, deduplicates records and reports p50/p95 with sample counts. The reset-to-first-screen-element row excludes cleanup resets that have no screen assertion. `reset-return` acknowledges the new root layout; actual seeded content may finish asynchronously, so the first-screen-element row is the per-test overhead acceptance metric (target under roughly 1 s). First class launches remain visible separately. Run the same benchmark after patch 1 to collect the baseline; its polling/profile behavior is unchanged. Do not compare different worker counts or include builds in the UI tier wall time. No clean, reboot or matrix is needed.
+
+Implementation validation (2026-11-09): strict lint passes. The complete host gate reaches only the existing APICookieTests loopback `EPERM`; excluding that one environment-blocked test passes 599 Swift Testing tests and 19 XCTest methods. All 17 generator tests and 103 resource/runner fixtures pass. Direct iOS 17 SDK compilation/typechecking covers Debug app, all hosted/UI/Render sources, actual Release DataAccess/Sync/app modules and the entire AppTests target without DEBUG. A Release-only regression checks that valid UI seed environment keys create no mock accounts and the built Info.plist registers no test URL scheme. A generated-info host guard checks that Debug's derived plist adds only the test registration and Release retains the base plist. No sub-second launch/reset or full-tier speedup is claimed yet.
+
+`make generate` succeeds. Actual Xcode ReadinessRelease build-for-testing was attempted with isolated output/cache directories; this sandbox cannot contact CoreSimulator and Xcode reports missing package products before compilation. That build and the 17e UI/hosted runtime acceptance remain user-host work. All test control handlers, seed models, runtime environment overrides, animation modifiers and URL registration are absent from the Release path. Live gate observation is reattached after both cold seed and reset, so Terms/Walkthrough changes continue routing without relaunch; the hosted equivalence regression also checks a post-reset Terms acceptance reaches Today.

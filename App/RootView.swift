@@ -1,11 +1,14 @@
 import AppCore
 import Auth
-import DataAccess
 import DesignSystem
 import Observation
 import Settings
 import SwiftUI
 import Welcome
+
+#if DEBUG
+    import DataAccess
+#endif
 
 @Observable
 final class RootNavigator: Navigator {
@@ -37,17 +40,22 @@ struct RootView: View {
         UIRefreshControl.appearance().tintColor = ColorToken.primary.uiColor
     }()
 
+    @ViewBuilder private var animationConfiguredContent: some View {
+        #if DEBUG
+            content.transaction {
+                if AuthUITestConfiguration(environment: UITestRuntime.environment)?.fastLaunch == true {
+                    $0.disablesAnimations = true
+                    $0.animation = nil
+                }
+            }
+        #else
+            content
+        #endif
+    }
+
     var body: some View {
         let _ = Self.refreshTint
-        content
-            .transaction {
-                #if DEBUG
-                    if AuthUITestConfiguration(environment: UITestRuntime.environment)?.fastLaunch == true {
-                        $0.disablesAnimations = true
-                        $0.animation = nil
-                    }
-                #endif
-            }
+        animationConfiguredContent
             .environment(devicePreferences)
             .environment(\.locale, devicePreferences.resolvedLocale(phone: phoneLocale))
             .preferredColorScheme(
