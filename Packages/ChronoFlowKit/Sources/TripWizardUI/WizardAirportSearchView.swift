@@ -31,10 +31,16 @@
                 VStack(alignment: .leading, spacing: PlanUITokens.wizardContentGap) {
                     if sheet.side == .stop {
                         let leg = model.draft.form.legs[sheet.index]
+                        let destination =
+                            sheet.replacingStop == true
+                            ? model.draft.form.legs[sheet.index + 1] : leg
                         Text(
                             t(
                                 "Between {{from}} and {{to}}",
-                                arguments: ["from": leg.fromCity ?? leg.fromIata, "to": leg.toCity ?? leg.toIata])
+                                arguments: [
+                                    "from": leg.fromCity ?? leg.fromIata,
+                                    "to": destination.toCity ?? destination.toIata,
+                                ])
                         )
                         .font(Typography.wizardHint.font).foregroundStyle(ColorToken.mutedForeground.color)
                     }

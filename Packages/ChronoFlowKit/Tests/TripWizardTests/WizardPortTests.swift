@@ -280,7 +280,8 @@ import TripWizard
         form.insertStop(wizardAirport("DXB", city: "Dubai", zone: "Asia/Dubai"), beforeDestinationOf: 0)
         #expect(form.legs.count == 2 && form.stays.count == 2)
         #expect(form.legs[0].departLocal == before.legs[0].departLocal && form.legs[0].arriveLocal.isEmpty)
-        #expect(form.legs[1].departLocal.isEmpty && form.legs[1].arriveLocal == before.legs[0].arriveLocal)
+        #expect(form.legs[1].departLocal.isEmpty && form.legs[1].arriveLocal.isEmpty)
+        form.legs[1].arriveLocal = before.legs[0].arriveLocal
         form.removeStop(at: 1)
         #expect(form == before)
     }

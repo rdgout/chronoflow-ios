@@ -47,10 +47,10 @@ public final class MemberWizardModel {
     }
 
     public var whereComplete: Bool {
-        guard let first = draft.form.legs.first, let last = draft.form.legs.prefix(draft.form.returnBoundary).last
-        else { return false }
-        return !first.fromIata.isEmpty && !last.toIata.isEmpty && first.fromIata != last.toIata
+        draft.form.routeComplete()
     }
+
+    public var returnRouteComplete: Bool { draft.form.routeComplete(home: true) }
 
     public var outboundComplete: Bool {
         draft.form.legs.prefix(draft.form.returnBoundary).allSatisfy {
@@ -80,21 +80,22 @@ public final class MemberWizardModel {
 
     public func chooseAirport(_ airport: ApiAirportSuggestion, sheet: WizardAirportSheet) {
         guard !closed, draft.form.legs.indices.contains(sheet.index) else { return }
+        let home = sheet.index >= draft.form.returnBoundary
+        guard !home || sheet.side != .from else { return }
         draft.airports[airport.iata] = airport
         if sheet.side == .stop {
-            draft.form.insertStop(airport, beforeDestinationOf: sheet.index)
-        } else {
-            draft.form.updateLeg(sheet.index) { leg in
-                if sheet.side == .from {
-                    leg.fromIata = airport.iata
-                    leg.fromCity = airport.city
-                } else {
-                    leg.toIata = airport.iata
-                    leg.toCity = airport.city
-                }
+            if sheet.replacingStop == true {
+                draft.form.setRouteAirport(
+                    airport, at: sheet.index + 1 - (home ? draft.form.returnBoundary : 0), home: home)
+            } else {
+                let last = home ? draft.form.legs.count - 1 : draft.form.returnBoundary - 1
+                draft.form.insertStop(airport, beforeDestinationOf: last)
             }
+        } else {
+            let position = sheet.side == .from ? 0 : sheet.index + 1 - (home ? draft.form.returnBoundary : 0)
+            draft.form.setRouteAirport(airport, at: position, home: home)
             if sheet.side == .from { draft.state.fromLastTrip = false }
-            if sheet.side == .home { draft.state.homeChanged = true }
+            if home { draft.state.homeChanged = true }
             if sheet.side == .from, draft.form.end.kind == "return_legs", !draft.state.homeChanged {
                 let last = draft.form.legs.count - 1
                 draft.form.updateLeg(last) {
@@ -108,7 +109,7 @@ public final class MemberWizardModel {
     }
 
     public func swapAirports() {
-        guard !closed, let first = draft.form.legs.first,
+        guard !closed, draft.form.returnBoundary == 1, let first = draft.form.legs.first,
             let last = draft.form.legs.prefix(draft.form.returnBoundary).last,
             !first.fromIata.isEmpty, !last.toIata.isEmpty
         else { return }
@@ -140,6 +141,18 @@ public final class MemberWizardModel {
         guard !closed else { return }
         draft.form.removeStop(at: index)
         changed()
+    }
+
+    public func makeDirect(home: Bool = false) {
+        guard !closed else { return }
+        draft.form.makeDirect(home: home)
+        changed()
+    }
+
+    public func finishReturnRoute() {
+        guard !closed, !persistenceFailed, returnRouteComplete else { return }
+        draft.state.returnRouteConfirmed = true
+        go(.returnFlight)
     }
 
     public func finishOutbound() -> Bool {

@@ -3,17 +3,19 @@ import Foundation
 import LocalStore
 
 public enum MemberWizardStep: String, Codable, Sendable {
-    case whereTo, outbound, returnChoice, returnFlight, sleep, checking, question, excluded, continuation
+    case whereTo, outbound, returnChoice, returnRoute, returnFlight, sleep, checking, question, excluded, continuation
 }
 
 public struct WizardAirportSheet: Codable, Sendable, Equatable, Identifiable {
     public enum Side: String, Codable, Sendable { case from, to, home, stop }
     public var index: Int
     public var side: Side
-    public var id: String { "\(index)-\(side.rawValue)" }
-    public init(index: Int, side: Side) {
+    public var replacingStop: Bool?
+    public var id: String { "\(index)-\(side.rawValue)-\(replacingStop == true)" }
+    public init(index: Int, side: Side, replacingStop: Bool = false) {
         self.index = index
         self.side = side
+        self.replacingStop = replacingStop ? true : nil
     }
 }
 
@@ -26,6 +28,7 @@ public struct MemberWizardState: Codable, Sendable, Equatable {
     public var firstTrip = true
     public var sleepNeeded = true
     public var homeChanged = false
+    public var returnRouteConfirmed: Bool?
     public var profile = JSONObject()
     public var airports: [String: ApiAirportSuggestion] = [:]
     public var sheet: WizardAirportSheet?
@@ -81,7 +84,7 @@ public actor MemberWizardStore {
     public func recover() async throws -> MemberWizardDraft? {
         guard let record = try await drafts.recovery(now: now(), permit: permit) else { return nil }
         do {
-            let state = try record.wizardState!.decode(MemberWizardState.self)
+            var state = try record.wizardState!.decode(MemberWizardState.self)
             if state.savedTripId != nil {
                 try await discard(instance: state.instance)
                 return nil
@@ -90,6 +93,7 @@ public actor MemberWizardStore {
             guard !form.legs.isEmpty, form.legs.count <= WizardForm.maxFlights, form.stays.count == form.legs.count,
                 (1...form.legs.count).contains(form.returnBoundary)
             else { throw DataFailure.server(status: nil) }
+            if state.step == .returnFlight, state.returnRouteConfirmed != true { state.step = .returnRoute }
             return MemberWizardDraft(
                 form: form, state: state,
                 airports: state.airports,

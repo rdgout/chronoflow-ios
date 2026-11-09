@@ -57,7 +57,7 @@ public enum WizardValidation {
                     WizardDateTime.date(previous.arriveLocal) != nil,
                     WizardDateTime.date(leg.departLocal) != nil, leg.departLocal <= previous.arriveLocal
                 {
-                    error(path + ".departLocal", "Check the departure and arrival times.")
+                    error(path + ".departLocal", "This flight leaves before the previous one lands.")
                 }
             }
         }

@@ -175,7 +175,6 @@ public struct WizardForm: Codable, Sendable, Equatable {
         var next = WizardLeg(fromIata: airport.iata, fromCity: airport.city)
         next.toIata = original.toIata
         next.toCity = original.toCity
-        next.arriveLocal = original.arriveLocal
         legs[index].toIata = airport.iata
         legs[index].toCity = airport.city
         legs[index].arriveLocal = ""
@@ -187,13 +186,14 @@ public struct WizardForm: Codable, Sendable, Equatable {
 
     public mutating func removeStop(at index: Int) {
         guard index > 0, legs.indices.contains(index), index != returnBoundary else { return }
+        let boundary = returnBoundary
         let last = legs[index]
         legs[index - 1].toIata = last.toIata
         legs[index - 1].toCity = last.toCity
         legs[index - 1].arriveLocal = last.arriveLocal
         legs.remove(at: index)
         stays.remove(at: index - 1)
-        if end.kind == "return_legs", index < returnBoundary { end.returnFromLeg = returnBoundary - 1 }
+        if end.kind == "return_legs", index < boundary { end.returnFromLeg = boundary - 1 }
         itinerary = nil
     }
 }

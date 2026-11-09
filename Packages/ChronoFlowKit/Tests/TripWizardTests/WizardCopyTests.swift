@@ -21,6 +21,10 @@ import TripWizardUI
             "Where are you flying?", "When is your flight?", "From your last trip",
             "Check the departure and arrival times.", "Where do you fly home to?",
             "Stop in {{airport}} · {{count}} complete night", "What you entered is not saved.",
+            "Do you change planes on the way?", "No, direct", "Stop", "Stop {{number}}", "Add another stop",
+            "That's the most we can plan: 16 flights.", "When are your flights?", "When do you fly home?",
+            "It leaves from where you landed. Add any stops on the way.", "Where you landed",
+            "This flight leaves before the previous one lands.", "Choose", "Departure", "Done", "Cancel",
         ] {
             #expect(strings[key] != nil)
         }

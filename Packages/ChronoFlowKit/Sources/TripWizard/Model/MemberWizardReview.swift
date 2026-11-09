@@ -29,7 +29,7 @@ extension MemberWizardModel {
         switch draft.state.step {
         case .whereTo: whereComplete ? 0.15 : 0.08
         case .outbound: outboundComplete ? 0.30 : 0.22
-        case .returnChoice, .returnFlight: 0.45
+        case .returnChoice, .returnRoute, .returnFlight: 0.45
         case .sleep: 0.50
         case .checking, .excluded: draft.state.checkingAnswers == true ? 0.70 : 0.52
         case .question:
@@ -45,6 +45,8 @@ extension MemberWizardModel {
                 draft.form.end.nights = nil
                 draft.form.end.checkOutDate = nil
                 draft.form.addReturn()
+                draft.state.returnRouteConfirmed = false
+                draft.state.homeChanged = false
                 let first = draft.form.legs[0]
                 draft.form.updateLeg(draft.form.legs.count - 1) {
                     $0.toIata = first.fromIata
@@ -55,12 +57,14 @@ extension MemberWizardModel {
         } else if kind == "one_way" {
             draft.form.removeReturn()
             draft.form.end = WizardEnd()
+            draft.state.returnRouteConfirmed = nil
+            draft.state.homeChanged = false
         } else {
             guard kind == draft.form.end.kind, ["nights", "check_out"].contains(kind) else { return }
         }
         changed()
         advanceChoice { model in
-            if kind == "return_legs" { model.go(.returnFlight) } else { model.finishFlightInput() }
+            if kind == "return_legs" { model.go(.returnRoute) } else { model.finishFlightInput() }
         }
     }
 
@@ -185,7 +189,7 @@ extension MemberWizardModel {
                 form: draft.form, airports: draft.airports, now: now(), checkPast: true)
             if !errors.isEmpty {
                 draft.fieldErrors = errors
-                go(draft.form.end.kind == "return_legs" ? .returnFlight : .outbound)
+                go(WizardJourney.errorStep(errors, form: draft.form))
                 return
             }
             let questions = result.review.prompts.filter(\.blocking)
@@ -208,12 +212,7 @@ extension MemberWizardModel {
             if draft.fieldErrors.keys.contains(where: { $0.hasPrefix("profile.") }) {
                 go(.sleep)
             } else {
-                let home = draft.form.end.kind == "return_legs"
-                let boundary = draft.form.returnBoundary
-                let outbound = draft.fieldErrors.keys.contains { key in
-                    (0..<boundary).contains { key.hasPrefix("legs.\($0).") }
-                }
-                go(home && !outbound ? .returnFlight : .outbound)
+                go(WizardJourney.errorStep(draft.fieldErrors, form: draft.form))
             }
         default:
             checking.failure = failure

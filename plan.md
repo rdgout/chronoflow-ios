@@ -1797,7 +1797,7 @@ Boards come from page "trip", drawn to the `wizTodo1` rules. **WizardSpec is the
 Source: canvas version 1794242613-8e6a, WizardSpec "Route first, then times (Rick, 9 Nov)". New boards: WizardWhereStop, WizardWhereStops, WizardStopSearchSecond, WizardOutboundThree, WizardOutboundTwoErrors, WizardHomeRoute, WizardHomeRouteStop (each with DarkNL where drawn). Changed: Wizard, WizardSpec, WizardCopy. Path becomes Where (route) → Times → Coming back? → [Your flight home (route) → its times] → [Your sleep] → Checking. Guests keep one-way only.
 
 - [x] Refresh `_design/canvas/` from the canvas version above. Record the version in `_design/SOURCE.md`.
-- [ ] Model (logic, host tests only). Where owns the whole route as a list of airports [From, stops…, To]; the legs are derived from it.
+- [x] Model (logic, host tests only). Where owns the whole route as a list of airports [From, stops…, To]; the legs are derived from it.
   - Adding a stop splits the last leg before To, and the new flight starts with empty times.
   - Removing a stop joins its two legs, keeping the first departure and the last arrival.
   - "No, direct" removes every stop. The stop question is answered once From and To are set; "Yes" with no stop picked stays direct.
@@ -1806,7 +1806,7 @@ Source: canvas version 1794242613-8e6a, WizardSpec "Route first, then times (Ric
   - Add a `returnRoute` step before `returnFlight` (times). Recovery must keep working when an old stored step is decoded: map an old `returnFlight` without a route to `returnRoute`.
   - New validation line "This flight leaves before the previous one lands." on the later card.
   - Tests: split/join/direct/swap guard/limit, return-route From lock and To follow, step mapping, old-recovery decode, the out-of-order rule, back from Times to Where keeping the stops.
-- [ ] Where screen.
+- [x] Where screen.
   - Rows: From, Stop / Stop 1…n, To. Stop rows have a remove button. The From row keeps the last-trip hint; on the flight home it is locked with "Where you landed".
   - The "Do you change planes on the way?" segmented control (No, direct / Yes) shows once both airports are set and the route is valid.
   - "Add another stop" adds the next stop before the destination. Its search names the two airports it splits. At the limit, the "That's the most we can plan: 16 flights." line replaces it.
@@ -1817,7 +1817,7 @@ Source: canvas version 1794242613-8e6a, WizardSpec "Route first, then times (Ric
   - One card per flight, labelled with its route. The connection/overnight line between cards is information only; the stop chip has no remove button. Remove the Outbound and return-flight "Add a stop" links and the inline From/To block on the flight home.
   - Title "When are your flights?" when there are 2+ flights, "When do you fly home?" on the flight home.
   - With three or more flights the screen scrolls and Continue stays fixed. An error after Continue scrolls to the first card with an error. Errors sit under their own card.
-- [ ] Copy (en+nl from WizardCopy): stop question and options, Stop/Stop {n}, Add another stop, 16-flight limit, next-stop search sub, both new titles, the flight-home route sub, flights out of order.
+- [x] Copy (en+nl from WizardCopy): stop question and options, Stop/Stop {n}, Add another stop, 16-flight limit, next-stop search sub, both new titles, the flight-home route sub, flights out of order.
 - [ ] Screen tests: seed each new board state with `CF_WIZARD_BOARD_CAPTURE` and check only the screen:
   - Where: direct/one/two stops, Same, limit;
   - Times: three flights scroll and two errors;
