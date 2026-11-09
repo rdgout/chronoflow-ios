@@ -77,7 +77,7 @@
                     do {
                         let values = try await model.search.results(for: query)
                         guard !Task.isCancelled else { return }
-                        results = values
+                        results = values.filter { model.airportIsAllowed($0.iata, sheet: sheet) }
                     } catch is CancellationError { return } catch { results = [] }
                 }
                 .accessibilityElement(children: .contain).accessibilityIdentifier("wizard.airport-search")

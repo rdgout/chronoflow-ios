@@ -79,9 +79,8 @@ public final class MemberWizardModel {
     }
 
     public func chooseAirport(_ airport: ApiAirportSuggestion, sheet: WizardAirportSheet) {
-        guard !closed, draft.form.legs.indices.contains(sheet.index) else { return }
+        guard !closed, airportIsAllowed(airport.iata, sheet: sheet) else { return }
         let home = sheet.index >= draft.form.returnBoundary
-        guard !home || sheet.side != .from else { return }
         draft.airports[airport.iata] = airport
         if sheet.side == .stop {
             if sheet.replacingStop == true {
@@ -106,6 +105,21 @@ public final class MemberWizardModel {
         }
         draft.state.sheet = nil
         changed()
+    }
+
+    public func airportIsAllowed(_ iata: String, sheet: WizardAirportSheet) -> Bool {
+        guard draft.form.legs.indices.contains(sheet.index) else { return false }
+        let home = sheet.index >= draft.form.returnBoundary
+        let route = draft.form.route(home: home)
+        if sheet.side == .stop, sheet.replacingStop != true {
+            return !route.suffix(2).contains { $0.iata == iata }
+        }
+        let position = sheet.side == .from ? 0 : sheet.index + 1 - (home ? draft.form.returnBoundary : 0)
+        guard route.indices.contains(position), !home || position > 0 else { return false }
+        if route.count == 2 { return true }
+        return ![position - 1, position + 1].contains { neighbor in
+            route.indices.contains(neighbor) && route[neighbor].iata == iata
+        }
     }
 
     public func swapAirports() {

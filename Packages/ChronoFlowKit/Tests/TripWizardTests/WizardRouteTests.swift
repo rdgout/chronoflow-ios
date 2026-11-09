@@ -33,9 +33,11 @@ import TripWizard
         model.finishReturnRoute()
         #expect(model.draft.state.step == .returnFlight)
         model.openAirport(WizardAirportSheet(index: 0, side: .stop, replacingStop: true))
-        model.chooseAirport(second, sheet: WizardAirportSheet(index: 0, side: .stop, replacingStop: true))
+        model.chooseAirport(
+            wizardAirport("LHR", city: "London", zone: "Europe/London"),
+            sheet: WizardAirportSheet(index: 0, side: .stop, replacingStop: true))
         #expect(model.draft.form.legs.count == 4)
-        #expect(model.draft.form.legs[0].toIata == "HEL" && model.draft.form.legs[1].fromIata == "HEL")
+        #expect(model.draft.form.legs[0].toIata == "LHR" && model.draft.form.legs[1].fromIata == "LHR")
         await model.flush()
         #expect(try await store.recover()?.state.step == .returnFlight)
         try await model.discard()
