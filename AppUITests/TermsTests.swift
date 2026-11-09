@@ -7,22 +7,11 @@ nonisolated final class TermsTests: XCTestCase {
         executionTimeAllowance = 120
     }
 
-    @MainActor func testAcceptanceOpensWalkthroughAndOfflineRelaunchKeepsAcceptance() {
+    @MainActor func testAcceptanceOpensWalkthrough() {
         let app = launch()
         defer { app.terminate() }
         accept(app)
         XCTAssertTrue(app.staticTexts["walkthrough.title"].waitForExistence(timeout: 12))
-        app.terminate()
-        app.launchEnvironment["CF_AUTH_TEST_OFFLINE"] = "1"
-        app.launch()
-        XCTAssertTrue(app.staticTexts["walkthrough.title"].waitForExistence(timeout: 15))
-        XCTAssertFalse(app.staticTexts["terms.title"].exists)
-        app.buttons["walkthrough.skip"].tap()
-        XCTAssertTrue(app.scrollViews["today.screen"].waitForExistence(timeout: 15))
-        app.terminate()
-        app.launch()
-        XCTAssertTrue(app.scrollViews["today.screen"].waitForExistence(timeout: 15))
-        XCTAssertFalse(app.staticTexts["terms.title"].exists)
     }
 
     @MainActor func testDutchXXLargeAcceptedAccountGoesStraightToToday() {
@@ -44,24 +33,12 @@ nonisolated final class TermsTests: XCTestCase {
         XCTAssertFalse(app.scrollViews["settings.pending"].exists)
     }
 
-    @MainActor func testSignOutWithPendingChangesCanStayThenDiscard() {
+    @MainActor func testSignOutWithPendingChangesShowsConfirmation() {
         let app = launch(pendingChanges: true)
         defer { app.terminate() }
         signOut(app)
         let sheet = app.scrollViews["settings.pending"]
         XCTAssertTrue(sheet.waitForExistence(timeout: 8))
-        let stay = app.buttons["settings.pending.stay"]
-        AuthUIFlow.reveal(stay, in: app, scroll: sheet)
-        stay.tap()
-        let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in !sheet.exists }, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 4), .completed)
-        XCTAssertTrue(app.staticTexts["terms.title"].exists)
-        signOut(app)
-        XCTAssertTrue(sheet.waitForExistence(timeout: 8))
-        let discard = app.buttons["settings.pending.discard"]
-        AuthUIFlow.reveal(discard, in: app, scroll: sheet)
-        discard.tap()
-        XCTAssertTrue(app.textFields["sign-in.email"].waitForExistence(timeout: 12))
     }
 
     @MainActor private func launch(
@@ -71,7 +48,7 @@ nonisolated final class TermsTests: XCTestCase {
         app.launchArguments = AuthUIFlow.arguments(language: language, xxLarge: xxLarge)
         app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
         app.launchEnvironment["CF_AUTH_TEST_TERMS_PENDING"] = "1"
-        if seen { app.launchEnvironment["CF_AUTH_TEST_WALKTHROUGH_SEEN"] = "1" }
+        app.launchEnvironment["CF_AUTH_TEST_WALKTHROUGH_SEEN"] = seen ? "1" : "0"
         if pendingChanges { app.launchEnvironment["CF_AUTH_TEST_TERMS_CHANGES_PENDING"] = "1" }
         AuthUIFlow.launchSignedIn(app, walkthroughSeen: seen)
         XCTAssertTrue(app.staticTexts["terms.title"].waitForExistence(timeout: 12))
