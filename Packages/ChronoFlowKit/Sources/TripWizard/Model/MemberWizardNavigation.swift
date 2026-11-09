@@ -3,7 +3,7 @@ import Foundation
 public enum MemberWizardDestination: Hashable, Sendable {
     case outbound, returnChoice, returnRoute, returnFlight, sleep, checking
     case question(Int)
-    case excluded, continuation
+    case excluded, continuation, fineTune, ready, calculating
 
     var step: MemberWizardStep {
         switch self {
@@ -16,6 +16,9 @@ public enum MemberWizardDestination: Hashable, Sendable {
         case .question: .question
         case .excluded: .excluded
         case .continuation: .continuation
+        case .fineTune: .fineTune
+        case .ready: .ready
+        case .calculating: .calculating
         }
     }
 }
@@ -41,7 +44,11 @@ extension MemberWizardModel {
         case .question:
             for index in 0...(draft.state.questionIndex ?? 0) { result.append(.question(index)) }
         case .excluded: result.append(.excluded)
-        case .continuation: result.append(.continuation)
+        case .continuation, .fineTune: result.append(.fineTune)
+        case .ready, .calculating:
+            if !optionalPrompts.isEmpty { result.append(.fineTune) }
+            result.append(.ready)
+            if step == .calculating { result.append(.calculating) }
         default: break
         }
         return result
@@ -49,7 +56,9 @@ extension MemberWizardModel {
 
     public func popNavigation(to path: [MemberWizardDestination], from presented: [MemberWizardDestination]) {
         // SwiftUI can finish writing an older stack after a review has already changed the step.
-        guard presented == navigationPath, path.count < presented.count, presented.starts(with: path) else { return }
+        guard draft.state.step != .calculating, presented == navigationPath, path.count < presented.count,
+            presented.starts(with: path)
+        else { return }
         if case .question(let index) = path.last {
             navigateToQuestion(index)
         } else {

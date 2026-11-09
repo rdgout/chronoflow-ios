@@ -2673,38 +2673,6 @@
         }
       }
     },
-    "The next wizard steps are being built in Phase 16c.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The next wizard steps are being built in Phase 16c."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "De volgende stappen worden gebouwd in fase 16c."
-          }
-        }
-      }
-    },
-    "Continue · Phase 16c (temporary)": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Continue · Phase 16c (temporary)"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Doorgaan · Fase 16c (tijdelijk)"
-          }
-        }
-      }
-    },
     "You gave this answer on an earlier trip. Change it to plan this trip.": {
       "localizations": {
         "en": {

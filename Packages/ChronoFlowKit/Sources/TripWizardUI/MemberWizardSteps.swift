@@ -65,14 +65,19 @@
                                     if id == "outbound" || id == "return-flight" { errorScrollRequest += 1 }
                                     continuing = false
                                 } label: {
-                                    Text(button).font(Typography.wizardButton.font)
+                                    HStack(spacing: PlanUITokens.space2) {
+                                        if model.reviewing { ProgressView().tint(ColorToken.primaryForeground.color) }
+                                        Text(button)
+                                    }.font(Typography.wizardButton.font)
                                         .frame(maxWidth: .infinity, minHeight: PlanUITokens.wizardButtonHeight)
                                 }
                                 .buttonStyle(.plain).foregroundStyle(
                                     (id == "excluded" ? ColorToken.foreground : .primaryForeground).color
                                 )
                                 .background((id == "excluded" ? ColorToken.surface2 : .primary).color, in: Capsule())
-                                .disabled(!enabled || closing || continuing || model.persistenceFailed)
+                                .disabled(
+                                    !enabled || closing || continuing || model.persistenceFailed || model.reviewing
+                                )
                                 .opacity(enabled ? 1 : PlanUITokens.wizardDisabledOpacity)
                                 .accessibilityIdentifier("wizard.\(id).continue")
                             }.padding(.horizontal, PlanUITokens.space5).padding(.vertical, PlanUITokens.space3)
@@ -81,6 +86,13 @@
                                     footerIdentifier(for: id)
                                 )
                                 .planContentBounds(identifier: "wizard.\(id).footer")
+                        } else if id == "ready", model.credits == .unavailable {
+                            Button(t("Close")) { confirmingDiscard = true }
+                                .buttonStyle(.plain).font(Typography.wizardSecondary.font)
+                                .frame(maxWidth: .infinity, minHeight: AuthTokens.touch)
+                                .padding(.horizontal, PlanUITokens.space5).padding(.vertical, PlanUITokens.space3)
+                                .background(ColorToken.background.color)
+                                .accessibilityIdentifier("wizard.ready.no-credits")
                         } else if answerHint {
                             tapHint.frame(maxWidth: .infinity).multilineTextAlignment(.center)
                                 .padding(.horizontal, PlanUITokens.space5).padding(
@@ -106,23 +118,26 @@
                     }
                 }
             }
+            .frame(maxWidth: PlanUITokens.wizardColumnWidth).frame(maxWidth: .infinity)
             .background(ColorToken.background.color).foregroundStyle(ColorToken.foreground.color)
             .navigationTitle(t("New trip")).navigationBarTitleDisplayMode(.inline)
             .toolbarRole(.editor)
-            .navigationBarBackButtonHidden(id == "checking" && model.checking.failure == nil)
+            .navigationBarBackButtonHidden(id == "calculating" || (id == "checking" && model.checking.failure == nil))
             .background { if id == "checking" { WizardSwipeBack() } }
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text(t("New trip")).font(Typography.wizardNavTitle.font)
                         .foregroundStyle(ColorToken.mutedForeground.color)
                 }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        if model.draft.state.entered { confirmingDiscard = true } else { close() }
-                    } label: {
-                        Image(systemName: "xmark")
+                if id != "calculating" {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            if model.draft.state.entered { confirmingDiscard = true } else { close() }
+                        } label: {
+                            Image(systemName: "xmark")
+                        }
+                        .accessibilityLabel(t("Close")).accessibilityIdentifier("wizard.close").disabled(closing)
                     }
-                    .accessibilityLabel(t("Close")).accessibilityIdentifier("wizard.close").disabled(closing)
                 }
             }
             .accessibilityElement(children: .contain).accessibilityIdentifier("wizard.\(id)")
