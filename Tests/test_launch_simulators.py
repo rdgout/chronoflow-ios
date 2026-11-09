@@ -282,14 +282,14 @@ with runner['forward_run_signals']():
             execute = Mock(side_effect=runner.TestRunTimeout('test', 0.1, inactive=inactive))
             reset = Mock()
             with self.subTest(inactive=inactive), tempfile.TemporaryDirectory(dir=ROOT / 'build') as directory, \
-                 patch.dict(namespace, ROOT=Path(directory), prepare=lambda _: None, reset_appearance=reset, run=execute):
+                 patch.dict(namespace, ROOT=Path(directory), prepare=lambda _: None, cleanup_appearance=reset, run=execute):
                 results = runner.test_device(destination, selected, 'runtime', None, {'Debug': True, 'Release': True}, workers=2)
             self.assertEqual(len(results), 3)
             self.assertTrue(all(not r.passed for r in results))
             self.assertIn('of log inactivity' if inactive else 'overall', results[0].detail)
             self.assertTrue(all(r.detail == 'Not run after timeout' for r in results[1:]))
             execute.assert_called_once()
-            reset.assert_called_once_with(destination)
+            reset.assert_called_once_with(destination, 'Debug-compare')
 
 
 class ClassificationTests(unittest.TestCase):
@@ -662,6 +662,11 @@ class RunnerTests(unittest.TestCase):
                 raise subprocess.CalledProcessError(status, command)
             if command[:4] == ['xcrun', 'simctl', 'list', 'devices']:
                 return subprocess.CompletedProcess(command, status, json.dumps({'devices': self.devices}))
+            if command[:3] == ['xcrun', 'simctl', 'boot'] and status == 0:
+                for devices in self.devices.values():
+                    for device in devices:
+                        if device['udid'] == command[3]:
+                            device['state'] = 'Booted'
             if '-enumerate-tests' in command:
                 listing = Path(command[command.index('-test-enumeration-output-path') + 1])
                 listing.parent.mkdir(parents=True, exist_ok=True)
@@ -823,6 +828,7 @@ class RunnerTests(unittest.TestCase):
             if selector in defaults:
                 self.assertIn('-only-testing:' + selector, serial)
         self.assertEqual(serial[serial.index('-parallel-testing-enabled') + 1], 'NO')
+        self.assertIn('platform=iOS Simulator,id=device-1', serial)
         self.assertFalse(any('-only-testing:' + s in c for s in runner.selectors('snapshots') for c in commands))
         self.assertFalse(any('-only-testing:AppCoreTests/LaunchCoordinatorTests' in c for c in commands))
 
@@ -872,8 +878,7 @@ class RunnerTests(unittest.TestCase):
         for suite in tuple(s for s in AUTH_HOSTED if s not in AUTH_SNAPSHOTS) + AUTH_UI:
             commands = [c for c in self.commands_for_tests() if '-only-testing:' + suite in c]
             self.assertEqual(len(commands), 1, suite)
-            device = 'isolated-device' if suite in runner.SERIAL_TESTS else 'device-1'
-            self.assertIn('platform=iOS Simulator,id=' + device, commands[0])
+            self.assertIn('platform=iOS Simulator,id=device-1', commands[0])
             self.assertIn(' ' + suite, output)
         for suite in tuple(s for s in AUTH_HOSTED if s not in AUTH_SNAPSHOTS) + AUTH_UI:
             with self.subTest(suite=suite):
@@ -959,23 +964,28 @@ class RunnerTests(unittest.TestCase):
             self.assertEqual(runner.resolve_isolated(primary, self.devices).udid, 'isolated-device')
             self.assertEqual(runner.resolve('17e', self.devices), primary)
 
-    def test_serial_then_release_overlap_debug_compare_and_merge_timings(self):
+    def test_release_overlaps_primary_debug_compare_then_serial_and_merges_timings(self):
         compare_started, release_finished = threading.Event(), threading.Event()
-        serial_finished = threading.Event()
+        compare_finished = threading.Event()
         original = runner.test_pass
         def test_pass(destination, configuration, selected, label, **kwargs):
             if label == 'Debug-compare':
                 self.assertEqual(destination.udid, 'device-1')
                 compare_started.set()
-                self.assertTrue(release_finished.wait(2), 'isolated passes did not overlap Debug')
+                self.assertTrue(release_finished.wait(2), 'isolated Release did not overlap Debug')
+                results = original(destination, configuration, selected, label, **kwargs)
+                compare_finished.set()
+                return results
+            elif label == 'Debug-serial':
+                self.assertEqual(destination.udid, 'device-1')
+                self.assertTrue(compare_finished.is_set())
             else:
+                self.assertEqual(configuration, 'Release')
                 self.assertEqual(destination.udid, 'isolated-device')
                 self.assertTrue(compare_started.wait(2))
-                if label == 'Debug-serial':
-                    serial_finished.set()
-                else:
-                    self.assertTrue(serial_finished.is_set())
-                    release_finished.set()
+                results = original(destination, configuration, selected, label, **kwargs)
+                release_finished.set()
+                return results
             return original(destination, configuration, selected, label, **kwargs)
         with patch.dict(runner.main.__globals__, test_pass=test_pass):
             status, output = self.execute(mode='check')
@@ -1014,6 +1024,68 @@ class RunnerTests(unittest.TestCase):
                          {'platform=iOS Simulator,id=device-1'})
         self.assertFalse(any('isolated-device' in c for c in self.commands))
 
+    def test_only_release_and_perf_move_to_isolated_device(self):
+        primary = runner.resolve('17e', self.devices)
+        debug = ['AppTests/AuthControlTests', 'AppUITests/LaunchSceneDarkTests']
+        background = ['ReleaseReadinessTests/ReleaseReadinessTests', 'PerfUITests/LaunchPerfTests']
+        for selected in (debug, [debug[1]] + background, debug + ['LaunchTests/SmokeTests'] + background):
+            with self.subTest(selected=selected):
+                jobs = runner.device_jobs(primary, selected, 2, self.devices, True)
+                self.assertEqual(jobs[0][0], primary)
+                self.assertEqual(set(jobs[0][1]), set(selected) - set(background))
+                self.assertEqual(len(jobs), 2 if set(selected) & set(background) else 1)
+                if len(jobs) == 2:
+                    self.assertEqual(jobs[1][0].udid, 'isolated-device')
+                    self.assertEqual(jobs[1][1], background)
+                    self.assertEqual(set(jobs[1][3]), {'Release', 'Perf'})
+
+    def test_shutdown_cleanup_skips_reset_and_primary_is_prepared_before_serial(self):
+        original = runner.test_pass
+        def test_pass(destination, configuration, selected, label, **kwargs):
+            results = original(destination, configuration, selected, label, **kwargs)
+            if configuration == 'Debug':
+                self.assertEqual(destination.udid, 'device-1')
+                self.devices[runner.REGULAR_RUNTIME][1]['state'] = 'Shutdown'
+            return results
+        with patch.dict(runner.main.__globals__, test_pass=test_pass):
+            status, output = self.execute(mode='check')
+        self.assertEqual(status, 0, output)
+        self.assertNotIn('FAIL', output)
+        for label in ('Debug-compare', 'Debug-serial'):
+            message = label + ' appearance reset skipped: device is Shutdown'
+            self.assertIn(message, output)
+            self.assertIn(message, (self.scratch / 'build/test-results/17e/prepare.log').read_text())
+        commands = self.commands_for_tests()
+        compare = next(c for c in commands if any(v.endswith('Debug-compare.xcresult') for v in c))
+        serial = next(c for c in commands if any(v.endswith('Debug-serial.xcresult') for v in c))
+        between = self.commands[self.commands.index(compare) + 1:self.commands.index(serial)]
+        primary_steps = [c for c in between if c[:2] == ['xcrun', 'simctl'] and c[3:4] == ['device-1']]
+        self.assertEqual(primary_steps, [
+            ['xcrun', 'simctl', 'boot', 'device-1'],
+            ['xcrun', 'simctl', 'bootstatus', 'device-1', '-b'],
+            ['xcrun', 'simctl', 'spawn', 'device-1', 'defaults', 'write',
+             'com.apple.keyboard.preferences', 'AutomaticMinimizationEnabled', '-bool', 'false'],
+            ['xcrun', 'simctl', 'ui', 'device-1', 'appearance', 'light'],
+            ['xcrun', 'simctl', 'get_app_container', 'device-1', 'net.chronoflow.app.native', 'app'],
+            ['xcrun', 'simctl', 'uninstall', 'device-1', 'net.chronoflow.app.native'],
+        ])
+        self.assertFalse(any(c[:2] == ['xcrun', 'simctl'] and c[3:4] == ['device-1']
+                             for c in self.commands[self.commands.index(serial) + 1:]))
+
+    def test_appearance_cleanup_state_lookup_and_reset_errors_are_best_effort(self):
+        destination = runner.Destination('17e', 'device-1', 'Booted')
+        for error in (subprocess.CalledProcessError(149, ['xcrun', 'simctl']), OSError('simctl unavailable'),
+                      ValueError('invalid device list'), KeyError('devices')):
+            for operation in ('device_state', 'reset_appearance'):
+                with self.subTest(error=error, operation=operation), \
+                     patch.dict(runner.cleanup_appearance.__globals__, ROOT=self.scratch,
+                                device_state=Mock(return_value='Booted'), reset_appearance=Mock()) as namespace, \
+                     contextlib.redirect_stdout(io.StringIO()) as output:
+                    namespace[operation].side_effect = error
+                    runner.cleanup_appearance(destination, 'Debug-compare')
+                    self.assertIn('Debug-compare appearance reset failed (ignored)', output.getvalue())
+                    self.assertIn(str(error), (self.scratch / 'build/test-results/17e/prepare.log').read_text())
+
     def test_primary_and_isolated_receive_identical_preparation_for_every_pass(self):
         only = ['AppTests/AuthControlTests', 'AppUITests/LaunchSceneTests', 'AppUITests/LaunchSceneDarkTests',
                 'AppUITests/LaunchToWelcomeTests', 'ReleaseReadinessTests/ReleaseReadinessTests',
@@ -1030,9 +1102,9 @@ class RunnerTests(unittest.TestCase):
                     status, output = self.execute(mode='check', only=only, concurrency=concurrency)
                     self.assertEqual(status, 0, output)
                     for udid, directory, labels in (
-                        ('device-1', '17e', ['Debug-compare'] if concurrency == 3 else
+                        ('device-1', '17e', ['Debug-compare', 'Debug-serial'] if concurrency == 3 else
                          ['Debug-compare', 'Debug-serial', 'Release-compare', 'Perf-compare']),
-                        ('isolated-device', '17e-isolated', ['Debug-serial', 'Release-compare', 'Perf-compare']
+                        ('isolated-device', '17e-isolated', ['Release-compare', 'Perf-compare']
                          if concurrency == 3 else []),
                     ):
                         reset = ['xcrun', 'simctl', 'ui', udid, 'appearance', 'light']
@@ -1060,7 +1132,7 @@ class RunnerTests(unittest.TestCase):
                         else:
                             self.assertFalse(log.exists())
 
-    def test_failed_serial_pass_resets_appearance_before_release_preparation(self):
+    def test_failed_serial_pass_resets_primary_appearance_and_release_still_passes(self):
         self.result_fail = 'AppUITests/LaunchSceneDarkTests'
         status, output = self.execute(mode='check')
         self.assertEqual(status, 1, output)
@@ -1068,20 +1140,16 @@ class RunnerTests(unittest.TestCase):
         self.assertIn('PASS 17e Release-compare', output)
         serial = next(c for c in self.commands_for_tests() if
                       c[c.index('-resultBundlePath') + 1].endswith('Debug-serial.xcresult'))
-        release = next(c for c in self.commands_for_tests() if
-                       c[c.index('-resultBundlePath') + 1].endswith('Release-compare.xcresult'))
-        between = self.commands[self.commands.index(serial) + 1:self.commands.index(release)]
-        reset = ['xcrun', 'simctl', 'ui', 'isolated-device', 'appearance', 'light']
-        simctl = [c for c in between if c[:2] == ['xcrun', 'simctl'] and c[3:4] == ['isolated-device']]
-        self.assertEqual(simctl[0], reset)
-        self.assertEqual(simctl.count(reset), 2)
-        self.assertEqual(simctl[-1], ['xcrun', 'simctl', 'uninstall', 'isolated-device', 'net.chronoflow.app.native'])
+        self.assertIn('platform=iOS Simulator,id=device-1', serial)
+        after = self.commands[self.commands.index(serial) + 1:]
+        simctl = [c for c in after if c[:2] == ['xcrun', 'simctl'] and c[3:4] == ['device-1']]
+        self.assertEqual(simctl, [['xcrun', 'simctl', 'ui', 'device-1', 'appearance', 'light']])
 
-    def test_appearance_cleanup_failure_is_reported_and_other_passes_continue(self):
+    def test_appearance_cleanup_failure_is_logged_without_failing_tests(self):
         failed = False
         def failure(command):
             nonlocal failed
-            if (not failed and command == ['xcrun', 'simctl', 'ui', 'isolated-device', 'appearance', 'light']
+            if (not failed and command == ['xcrun', 'simctl', 'ui', 'device-1', 'appearance', 'light']
                     and any(c[-1] == 'test-without-building' and any(v.endswith('Debug-serial.xcresult') for v in c)
                             for c in self.commands)):
                 failed = True
@@ -1089,9 +1157,14 @@ class RunnerTests(unittest.TestCase):
             return False
         self.command_failure = failure
         status, output = self.execute(mode='check')
-        self.assertEqual(status, 1, output)
-        self.assertIn('FAIL 17e Debug-serial appearance reset', output)
+        self.assertEqual(status, 0, output)
+        self.assertTrue(failed)
+        self.assertNotIn('FAIL', output)
+        message = 'Debug-serial appearance reset failed (ignored)'
+        self.assertIn(message, output)
+        self.assertIn(message, (self.scratch / 'build/test-results/17e/prepare.log').read_text())
         self.assertIn('PASS 17e Debug-compare', output)
+        self.assertIn('PASS 17e Debug-serial', output)
         self.assertIn('PASS 17e Release-compare', output)
 
     def test_resolves_aliases_by_type_and_runtime_never_name(self):

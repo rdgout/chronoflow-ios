@@ -252,8 +252,8 @@ Generate the project after manifest/project changes. Debug/ChronoFlow and isolat
 build once each for arm64 with pinned resolution, then use `test-without-building`. Debug uses
 `build/DerivedData`; low-priority Release/Perf builds overlap tests using `build/DerivedData-Release`
 and `build/DerivedData-Perf`. All use `build/SourcePackages`. Only the Release verification build
-gets `ENABLE_TESTABILITY=YES`. On 17e the primary Debug comparison overlaps serial then Release
-on the persistent regular-runtime isolated 17e when the worker budget permits.
+gets `ENABLE_TESTABILITY=YES`. On 17e Debug comparison and then Debug serial run on the primary;
+only Release/Perf overlap them on the persistent regular-runtime isolated 17e when the worker budget permits.
 
 Each `test-without-building` pass watches its combined stdout/stderr log for byte growth. A pass
 may run for more than the former 1,200-second limit while it keeps producing output:
@@ -2806,19 +2806,39 @@ keeps `build/DerivedData`. All share `build/SourcePackages`. Each pass waits for
 build failures still fail the run. `REUSE_BUILD=1` requires current products in these paths.
 
 When the worker budget permits, 17e Debug comparison runs on the primary plus Xcode clones
-while Debug serial tests, then Release/Perf tests, run on a persistent `ChronoFlow 17e Isolated`.
+followed by Debug serial tests on the primary. Only Release/Perf tests run concurrently on a
+persistent `ChronoFlow 17e Isolated`.
 The runner resolves/creates it by iPhone 17e type and regular runtime, excludes clones, and
 prepares destinations in background threads during builds. Results stay under `17e/` and
 `17e-isolated/`; summaries and `timings.json` merge under 17e. `SIM_CONCURRENCY=1` keeps one
 destination; recording and intro-order diagnostics retain their existing single-device sequence.
 
-Every pass on either destination uses the same preparation: wait for boot, write the simulator's
-keyboard preference, reset system appearance to light, and uninstall an existing app so installation
+Every pass on either destination uses the same preparation: check live device state, boot if needed,
+wait for boot, write the simulator's keyboard preference, reset system appearance to light,
+and uninstall an existing app so installation
 refreshes its launch-screen cache and defaults. The first preparation overlaps the build; subsequent
-passes repeat it without rebooting. Each pass resets appearance to light afterward, including failed
-and timed-out runs. Preparation commands and cleanup resets are recorded in each device's
-`prepare.log`; runner fixtures check identical steps and ordering on the primary and isolated 17e.
+passes repeat it, booting a destination that Xcode shut down after comparison before Debug serial.
+After each pass, including failed and timed-out runs, appearance resets to light only if the device
+is still booted. Cleanup never boots a device, and a state-lookup or reset error is logged without
+adding a test failure. Preparation commands, cleanup resets and skipped/failed cleanup messages
+are recorded in each device's `prepare.log`; runner fixtures check preparation on both destinations,
+shutdown cleanup and primary boot/preparation ordering before serial tests.
 UI appearance tests continue to switch and restore `XCUIDevice.shared.appearance` themselves.
+
+The orchestrator's 324-second rerun of `b883962` passed the 15-suite manifest except for a
+post-comparison reset on the shutdown primary (simctl exit 149/CoreSimulator 405), and dark opening
+parity rendering light on the isolated device. Identical preparation did not resolve the latter.
+The 2026-11-09 repair returns appearance/system-launch serial tests to the known-good primary;
+Release and selected Perf tests retain the isolated destination. Host lint and all 102 runner
+fixtures pass. Runtime acceptance remains pending; rerun the same selection without recording:
+
+```sh
+make targeted DEVICES="17e" ONLY="$(cat Docs/ui-test-reseed-rerun-17e.txt)"
+```
+
+Preserve both result folders. Verify that Debug serial uses the primary after full preparation,
+dark opening parity passes, Release still overlaps Debug, and a shutdown cleanup skip is logged
+without a `FAIL` result. No matrix or Duo run is needed.
 
 `ReadinessRelease` builds only the hosted `ReleaseReadinessTests` target from its own directory,
 with `TEST_HOST`/`BUNDLE_LOADER` and only a ChronoFlow dependency. Select it with
@@ -2868,11 +2888,12 @@ cp -R build/test-results build/build-speed-results-warm
 
 The first check includes the new arm64 build settings and cold Release DerivedData; compare the
 warm check separately. Collect overall `real`/runner `Elapsed`, each printed `Build … elapsed`,
-and each pass's elapsed time from `17e/Debug-compare` and
-`17e-isolated/{Debug-serial,Release-compare}.{log,jsonl,xcresult}`. Retain both timing JSON files,
+and each pass's elapsed time from `17e/{Debug-compare,Debug-serial}.{log,jsonl,xcresult}` and
+`17e-isolated/Release-compare.{log,jsonl,xcresult}`. Retain both timing JSON files,
 per-case launch parity/control timings, failure names and Perf launch metrics. Check that build
-logs show arm64 only, Release excludes AppTests compilation, and serial/Release timestamps overlap
-Debug comparison. Perf products/logs use `DerivedData-Perf` and `17e/Perf-compare`.
+logs show arm64 only, Release excludes AppTests compilation, Debug serial follows comparison on the
+primary, and Release overlaps Debug. Perf products/logs use `DerivedData-Perf` and `17e/Perf-compare`
+when selected alone, or `17e-isolated/Perf-compare` when overlapping Debug with enough workers.
 Do not use REUSE_BUILD until these new products exist. No matrix, Duo or reference recording is
 needed. For failure diagnostics, opt in with `TEST_DIAGNOSTICS=1` on a focused rerun.
 

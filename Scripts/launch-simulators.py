@@ -1,7 +1,7 @@
 import argparse
 from concurrent.futures import Future, ThreadPoolExecutor
 from contextlib import contextmanager
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 import json
 import math
 import os
@@ -742,19 +742,20 @@ def resolve_isolated(primary, devices):
 def device_jobs(destination, selected, workers, devices, isolate):
     groups = configurations(selected)
     parts = {c: split_passes(c, suites, workers) for c, suites in groups.items()}
-    debug = parts.get("Debug", [])
-    compare = [p for p in debug if p.suffix == "compare"]
-    isolated = {c: passes for c, passes in parts.items() if c != "Debug"}
-    serial = [p for p in debug if p.suffix == "serial"]
-    if serial:
-        isolated = {"Debug": serial, **isolated}
-    if destination.alias != "17e" or not isolate or not compare or not isolated:
+    primary = {c: passes for c, passes in parts.items() if c not in ("Release", "Perf")}
+    isolated = {c: passes for c, passes in parts.items() if c in ("Release", "Perf")}
+    if destination.alias != "17e" or not isolate or not parts.get("Debug") or not isolated:
         return [(destination, selected, workers, parts)]
     secondary = resolve_isolated(destination, devices)
-    primary_selection = list(dict.fromkeys(s for p in compare for s in p.selected))
+    primary_selection = list(dict.fromkeys(s for passes in primary.values() for p in passes for s in p.selected))
     secondary_selection = list(dict.fromkeys(s for passes in isolated.values() for p in passes for s in p.selected))
-    return [(destination, primary_selection, workers, {"Debug": compare}),
+    return [(destination, primary_selection, workers, primary),
             (secondary, secondary_selection, 1, isolated)]
+
+
+def device_state(destination):
+    devices = json.loads(run(["xcrun", "simctl", "list", "devices", "-j"], capture=True).stdout)["devices"]
+    return next((d["state"] for group in devices.values() for d in group if d["udid"] == destination.udid), "Unavailable")
 
 
 def reset_appearance(destination):
@@ -762,9 +763,27 @@ def reset_appearance(destination):
         log=destination.directory / "prepare.log")
 
 
+def cleanup_appearance(destination, label):
+    try:
+        state = device_state(destination)
+        if state == "Booted":
+            reset_appearance(destination)
+            return
+        message = f"{label} appearance reset skipped: device is {state}"
+    except (subprocess.CalledProcessError, OSError, ValueError, KeyError) as error:
+        message = f"{label} appearance reset failed (ignored): {error}"
+    print(f"{destination.alias}: {message}", flush=True)
+    try:
+        destination.directory.mkdir(parents=True, exist_ok=True)
+        with (destination.directory / "prepare.log").open("a") as output:
+            output.write(message + "\n")
+    except OSError as error:
+        print(f"{destination.alias}: could not log appearance cleanup: {error}", flush=True)
+
+
 def prepare(destination):
     log = destination.directory / "prepare.log"
-    if destination.state != "Booted":
+    if device_state(destination) != "Booted":
         run(["xcrun", "simctl", "boot", destination.udid], log=log)
     run(["xcrun", "simctl", "bootstatus", destination.udid, "-b"], log=log)
     run(["xcrun", "simctl", "spawn", destination.udid, "defaults", "write",
@@ -1035,7 +1054,6 @@ def test_device(destination, selected, mode, recording, ready, intro_order_check
             preparation.result()
     except (subprocess.CalledProcessError, OSError) as error:
         return [Result(destination.alias, suite, False, "Preparation: " + str(error)) for suite in selected]
-    destination = replace(destination, state="Booted")
     prepared = True
 
     def run_pass(configuration, suites, label, **kwargs):
@@ -1046,15 +1064,11 @@ def test_device(destination, selected, mode, recording, ready, intro_order_check
         except (subprocess.CalledProcessError, OSError) as error:
             return [Result(destination.alias, label + " " + s, False, "Preparation: " + str(error)) for s in suites]
         prepared = False
-        cleanup = []
         try:
             outcome = test_pass(destination, configuration, suites, label, **kwargs)
         finally:
-            try:
-                reset_appearance(destination)
-            except (subprocess.CalledProcessError, OSError) as error:
-                cleanup.append(Result(destination.alias, label + " appearance reset", False, str(error)))
-        return outcome + cleanup
+            cleanup_appearance(destination, label)
+        return outcome
 
     if intro_order_check:
         if not build_available(ready, "Debug"):

@@ -75,11 +75,15 @@ keeps `build/DerivedData`. All share `build/SourcePackages`. Each pass waits for
 build failures still fail the run. `REUSE_BUILD=1` requires current products in these paths.
 
 When the worker budget permits, 17e Debug comparison runs on the primary plus Xcode clones
-while Debug serial tests, then Release/Perf tests, run on a persistent `ChronoFlow 17e Isolated`.
+followed by Debug serial tests on the primary. Only Release/Perf tests run concurrently on a
+persistent `ChronoFlow 17e Isolated`.
 The runner resolves/creates it by iPhone 17e type and regular runtime, excludes clones, and
 prepares destinations in background threads during builds. Results stay under `17e/` and
 `17e-isolated/`; summaries and `timings.json` merge under 17e. `SIM_CONCURRENCY=1` keeps one
 destination; recording and intro-order diagnostics retain their existing single-device sequence.
+Before each pass, live device state is checked and the destination is booted and prepared as needed.
+Post-pass appearance cleanup skips devices that are not booted and never boots them; skips/errors
+are logged in `prepare.log` and do not fail tests.
 
 `ReadinessRelease` builds only the hosted `ReleaseReadinessTests` target from its own directory,
 with `TEST_HOST`/`BUNDLE_LOADER` and only a ChronoFlow dependency. Select it with

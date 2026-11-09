@@ -2198,7 +2198,7 @@ Continue on `test/fast-ui-tests`; UI-test launch-speed acceptance runs separatel
 
 - [x] 1. Build simulator Debug/Release/Perf for arm64 only; assert runner flags for every configuration. Device/archive settings stay unchanged.
 - [x] 2. Overlap low-priority Release/Perf builds with Debug tests using separate DerivedData and build futures; cover waiting, reuse and failure propagation in runner fixtures.
-- [x] 3. Overlap primary 17e Debug comparison with serial then Release/Perf on a second persistent regular-runtime 17e; prepare alongside builds, keep separate bundles and merge summaries/timings. Fixtures cover reuse/create, clone exclusion, overlap, ordering, budget and preparation failure.
+- [x] 3. Overlap primary 17e Debug comparison then Debug serial with Release/Perf on a second persistent regular-runtime 17e; prepare alongside builds, keep separate bundles and merge summaries/timings. Fixtures cover reuse/create, clone exclusion, overlap, ordering, budget and preparation failure. Serial placement supersedes the initial isolated-serial implementation per the repair below.
 - [x] 4. Isolate the three unchanged Release readiness tests in an iPhone-only hosted target depending only on ChronoFlow; update scheme, selectors, discovery/result mapping fixtures and commands.
 - [x] 5. Add memcmp equality fast path and pointer mismatch scan with unchanged error threshold/message; scan parity opacity/moon in one UInt32 pass. Extend existing pixel logic regression for equal/empty buffers and negative channel differences.
 - [x] 6. Add predicate/layout settling for hosted Forgot, Two-factor, Auth and Reset control checks; require two stable frame passes within 5 s, keep per-host raster/pixel coverage and assert the predicate path never captures.
@@ -2217,4 +2217,14 @@ for logs and the exact host acceptance/timing commands. UI/Perf test source file
 - [x] Repeat the shared boot-readiness, keyboard preference, appearance reset and installed-app removal before every pass on the primary and persistent isolated device. Reset appearance after every pass, including failures and timeouts; log preparation and cleanup in each destination's `prepare.log`.
 - [x] Add runner fixtures comparing the exact per-pass preparation and cleanup on both 17e destinations, with booted/shutdown devices, single/concurrent destinations and Debug/Release/Perf passes; cover preparation and cleanup failures and timeout cleanup.
 - [x] Validate `make lint` and all 99 runner fixtures on the host. Simulator acceptance remains pending.
-- [ ] User-host acceptance: rerun the 15-suite manifest in `Docs/ui-test-reseed-rerun-17e.txt` with default workers and preserve both result directories. Confirm dark launch parity on the isolated device and compare its preparation steps with the primary.
+
+User-host result: the 324-second 15-suite rerun on `b883962` still rendered dark opening light on
+the isolated device, and post-comparison cleanup failed on the shutdown primary (simctl 149,
+CoreSimulator 405). Identical preparation did not resolve dark parity; superseded by the repair below.
+
+## Primary-device serial pass repair (user, 2026-11-09)
+
+- [x] Keep Debug comparison then Debug serial on the primary 17e; overlap only Release and selected Perf on the persistent isolated 17e. Preserve budget/recording/intro-order behavior and result/timing merging.
+- [x] Check live boot state before preparation; boot and fully prepare the primary before serial if Xcode shut it down. Skip post-pass appearance reset on nonbooted devices without booting them; log cleanup errors without reporting test failures.
+- [x] Update runner fixtures, Docs/tooling.md and CLAUDE.md/AGENTS.md placement/cleanup wording. Strict `make lint` and all 102 runner fixtures pass on the host.
+- [ ] User-host acceptance: rerun the 15 suites in `Docs/ui-test-reseed-rerun-17e.txt` with default workers and preserve both result directories. Confirm primary Debug serial dark opening parity, Release overlap and nonfailing shutdown cleanup. No simulator execution is claimed by this repair.
