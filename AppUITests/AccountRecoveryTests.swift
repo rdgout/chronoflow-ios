@@ -7,13 +7,13 @@ nonisolated final class AccountRecoveryTests: XCTestCase {
         submitSignUp(app)
         let different = app.buttons["verify.different-email"]
         XCTAssertTrue(
-            different.waitForMeasuredExistence(timeout: 8), "Expected verify.different-email for the unverified account"
+            different.waitUntil(.exists, timeout: 8), "Expected verify.different-email for the unverified account"
         )
         AuthUIFlow.waitUntilEnabled(different)
         AuthUIFlow.reveal(different, in: app)
         different.tap()
         XCTAssertTrue(
-            app.textFields["sign-in.email"].waitForMeasuredExistence(timeout: 8),
+            app.textFields["sign-in.email"].waitUntil(.exists, timeout: 8),
             "Expected sign-in.email after discarding and wiping the unverified account")
         openSignUp(app)
         let email = app.textFields["sign-up.email"]
@@ -23,7 +23,7 @@ nonisolated final class AccountRecoveryTests: XCTestCase {
         email.typeText("second@example.com\n")
         submitSignUp(app)
         let mail = app.buttons["verify.open-email"]
-        XCTAssertTrue(mail.waitForMeasuredExistence(timeout: 8), "Expected verify.open-email for second@example.com")
+        XCTAssertTrue(mail.waitUntil(.exists, timeout: 8), "Expected verify.open-email for second@example.com")
         XCTAssertTrue(
             AuthUIFlow.control("auth.subtitle", in: app).label.contains("second@example.com"),
             "Expected Verify subtitle to identify second@example.com after the first account was wiped")
@@ -31,7 +31,7 @@ nonisolated final class AccountRecoveryTests: XCTestCase {
         AuthUIFlow.reveal(mail, in: app)
         mail.tap()
         XCTAssertTrue(
-            app.staticTexts["walkthrough.title"].waitForMeasuredExistence(timeout: 8),
+            app.staticTexts["walkthrough.title"].waitUntil(.exists, timeout: 8),
             "Expected second account’s mail to verify its session and open Walkthrough with accepted terms")
     }
 
@@ -41,13 +41,13 @@ nonisolated final class AccountRecoveryTests: XCTestCase {
         submitSignUp(app)
         let different = app.buttons["verify.different-email"]
         XCTAssertTrue(
-            different.waitForMeasuredExistence(timeout: 8), "Expected verify.different-email for the unverified account"
+            different.waitUntil(.exists, timeout: 8), "Expected verify.different-email for the unverified account"
         )
         AuthUIFlow.waitUntilEnabled(different)
         AuthUIFlow.reveal(different, in: app)
         different.tap()
         XCTAssertTrue(
-            app.textFields["sign-in.email"].waitForMeasuredExistence(timeout: 8),
+            app.textFields["sign-in.email"].waitUntil(.exists, timeout: 8),
             "Expected sign-in.email after discarding and wiping the unverified account")
         XCTAssertFalse(app.scrollViews["verify.scroll"].exists)
     }
@@ -60,7 +60,7 @@ nonisolated final class AccountRecoveryTests: XCTestCase {
         AuthUIFlow.launchSignedIn(app, walkthroughSeen: true)
         defer { app.terminate() }
         XCTAssertTrue(
-            app.buttons["verify.retry"].waitForMeasuredExistence(timeout: 12),
+            app.buttons["verify.retry"].waitUntil(.exists, timeout: 12),
             "Expected verify.retry after authenticating the account bound to the tampered link")
     }
 }

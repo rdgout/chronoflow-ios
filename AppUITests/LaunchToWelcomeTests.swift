@@ -15,7 +15,7 @@ nonisolated final class LaunchToWelcomeTests: XCTestCase {
             app.launchMeasured()
             XCTAssertEqual(app.windows.firstMatch.frame, app.frame)
             XCTAssertEqual(app.windows.firstMatch.screenshot().image.size, XCUIScreen.main.screenshot().image.size)
-            XCTAssertTrue(app.staticTexts["welcome.wordmark"].waitForMeasuredExistence(timeout: 30))
+            XCTAssertTrue(app.staticTexts["welcome.wordmark"].waitUntil(.exists, timeout: 30))
             XCTAssertFalse(app.images["launch.opening"].exists)
         }
     }

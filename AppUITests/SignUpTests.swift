@@ -5,7 +5,7 @@ nonisolated final class SignUpTests: XCTestCase {
         let app = submitPrefilledSignUp(state: "offline", offline: true)
         defer { app.terminate() }
         let banner = AuthUIFlow.control("auth.banner", in: app)
-        XCTAssertTrue(banner.waitForMeasuredExistence(timeout: 6))
+        XCTAssertTrue(banner.waitUntil(.exists, timeout: 6))
         AuthUIFlow.reveal(banner, in: app)
         XCTAssertTrue(banner.isHittable)
         XCTAssertTrue(banner.label.contains("Needs a connection"))
@@ -19,13 +19,13 @@ nonisolated final class SignUpTests: XCTestCase {
         let app = submitPrefilledSignUp(state: "taken")
         defer { app.terminate() }
         let banner = AuthUIFlow.control("auth.banner", in: app)
-        XCTAssertTrue(banner.waitForMeasuredExistence(timeout: 6))
+        XCTAssertTrue(banner.waitUntil(.exists, timeout: 6))
         XCTAssertTrue(banner.label.contains("There's already an account with this email."))
         let signIn = app.buttons["sign-up.back"]
         AuthUIFlow.reveal(signIn, in: app)
         XCTAssertTrue(signIn.label.contains("Already have an account? Sign in"))
         signIn.tap()
-        XCTAssertTrue(app.textFields["sign-in.email"].waitForMeasuredExistence(timeout: 4))
+        XCTAssertTrue(app.textFields["sign-in.email"].waitUntil(.exists, timeout: 4))
     }
 
     @MainActor func testRegistrationToggleConsentAndUnverifiedGate() {
@@ -44,7 +44,7 @@ nonisolated final class SignUpTests: XCTestCase {
         let submit = app.buttons["sign-up.submit"]
         AuthUIFlow.reveal(submit, in: app)
         submit.tap()
-        XCTAssertTrue(app.scrollViews["verify.scroll"].waitForMeasuredExistence(timeout: 8))
+        XCTAssertTrue(app.scrollViews["verify.scroll"].waitUntil(.exists, timeout: 8))
     }
 
     @MainActor private func submitPrefilledSignUp(state: String, offline: Bool = false) -> XCUIApplication {
@@ -68,7 +68,7 @@ nonisolated final class SignUpTests: XCTestCase {
     AuthUIFlow.reveal(app.buttons["sign-in.signup"], in: app)
     app.buttons["sign-in.signup"].tap()
     XCTAssertTrue(
-        app.textFields["sign-up.name"].waitForMeasuredExistence(timeout: 4),
+        app.textFields["sign-up.name"].waitUntil(.exists, timeout: 4),
         "Expected sign-up.name after opening Create account")
 }
 

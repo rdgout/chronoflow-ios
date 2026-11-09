@@ -44,17 +44,15 @@ nonisolated final class WalkthroughTests: XCTestCase {
         _ page: Int, title: String, in app: XCUIApplication, language: String = "en"
     ) {
         let counter = app.staticTexts["walkthrough.counter"]
-        let changed = XCTNSPredicateExpectation(
-            predicate: NSPredicate(format: "label == %@", "\(page) \(language == "nl" ? "VAN" : "OF") 3"),
-            object: counter)
-        XCTAssertEqual(XCTWaiter.wait(for: [changed], timeout: 12), .completed)
+        let changed = { counter.label == "\(page) \(language == "nl" ? "VAN" : "OF") 3" }
+        XCTAssertTrue(UIWait.until(timeout: 12, condition: changed))
         XCTAssertEqual(app.staticTexts["walkthrough.title"].label, title)
         XCTAssertTrue(app.buttons["walkthrough.skip"].isHittable)
         XCTAssertTrue(app.buttons[page == 3 ? "walkthrough.done" : "walkthrough.next"].isHittable)
     }
 
     @MainActor private func assertToday(_ app: XCUIApplication) {
-        XCTAssertTrue(app.scrollViews["today.screen"].waitForMeasuredExistence(timeout: 15))
+        XCTAssertTrue(app.scrollViews["today.screen"].waitUntil(.exists, timeout: 15))
         XCTAssertFalse(app.staticTexts["walkthrough.title"].exists)
     }
 }

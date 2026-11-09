@@ -115,3 +115,5 @@ Pending user measurements on 17e (same selectors before and after the fast profi
 | default UI tier wall time / test count / worker count | pending | pending | xcresult + runner |
 
 Capture app events while the test runs with `xcrun simctl spawn <17e-udid> log stream --level info --style compact --predicate 'subsystem == "net.chronoflow.app.native" AND category == "UITestTimeline"' > build/ui-timeline.log`. Preserve the test runner log and xcresult as well. No timing improvement is claimed until these cells are filled from a successful run.
+
+UI waits now use an immediate check followed by 50 ms × 1.5 backoff, capped at 1 s. Snapshot time counts toward the existing timeout. The runner sleeps between snapshots; it never spins on the app's main actor. Frame stability, keyboard/focus, disappearance and appearance waits share this policy. Host tests cover immediate success, delayed success, backoff/cap and timeout accounting.

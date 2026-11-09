@@ -27,11 +27,3 @@ import XCTest
 extension XCUIApplication {
     func launchMeasured() { UITestTiming.launch(self) }
 }
-
-extension XCUIElement {
-    func waitForMeasuredExistence(timeout: TimeInterval) -> Bool {
-        let found = waitForExistence(timeout: timeout)
-        if found { UITestTiming.firstElementFound() }
-        return found
-    }
-}

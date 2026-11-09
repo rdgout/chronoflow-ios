@@ -32,10 +32,10 @@ nonisolated final class SignInKeyboardTests: XCTestCase {
         app.launchMeasured()
         defer { app.terminate() }
         let signIn = app.buttons["welcome.signIn"]
-        XCTAssertTrue(signIn.waitForMeasuredExistence(timeout: 6))
+        XCTAssertTrue(signIn.waitUntil(.exists, timeout: 6))
         reveal(signIn, in: app.scrollViews.containing(.button, identifier: "welcome.signIn").element)
         signIn.tap()
-        XCTAssertTrue(app.staticTexts["auth.heading"].waitForMeasuredExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["auth.heading"].waitUntil(.exists, timeout: 3))
 
         let scroll = AuthUIFlow.scroll(in: app)
         let email = app.textFields["sign-in.email"]
@@ -55,7 +55,7 @@ nonisolated final class SignInKeyboardTests: XCTestCase {
             let passkey = app.buttons["sign-in.passkey"]
             reveal(passkey, in: scroll)
             passkey.tap()
-            XCTAssertTrue(app.descendants(matching: .any)["auth.banner"].waitForMeasuredExistence(timeout: 5))
+            XCTAssertTrue(app.descendants(matching: .any)["auth.banner"].waitUntil(.exists, timeout: 5))
             reveal(email, in: scroll)
             email.tap()
         }
@@ -81,9 +81,10 @@ nonisolated final class SignInKeyboardTests: XCTestCase {
             add(screenshot)
         }
         // Inspect keyboard focus without editing away the error state.
-        let focused = XCTNSPredicateExpectation(
-            predicate: NSPredicate { _, _ in field.value(forKey: "hasKeyboardFocus") as? Bool == true }, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [focused], timeout: 5), .completed, "\(context): \(field.identifier) focus")
+        let focused = { () -> Bool in
+            field.value(forKey: "hasKeyboardFocus") as? Bool == true
+        }
+        XCTAssertTrue(UIWait.until(timeout: 5, condition: focused), "\(context): \(field.identifier) focus")
         let submit = app.buttons["sign-in.submit"]
         let frames = try UIWait.keyboardFrames(in: app, including: [AuthUIFlow.scroll(in: app), field, submit])
         let viewport = AuthUIFlow.viewport(in: app, scrollFrame: frames[2])

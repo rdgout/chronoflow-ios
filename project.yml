@@ -114,6 +114,7 @@ targets:
     platform: iOS
     sources:
       - path: AppUITests
+      - path: Packages/ChronoFlowKit/Tests/ToolingTests/BackoffPoll.swift
       - path: Packages/ChronoFlowKit/Tests/ToolingTests/LaunchImageComparison.swift
       - path: Packages/ChronoFlowKit/Tests/ToolingTests/FrameStability.swift
       - path: Packages/ChronoFlowKit/Tests/ToolingTests/AuthScrollGesture.swift

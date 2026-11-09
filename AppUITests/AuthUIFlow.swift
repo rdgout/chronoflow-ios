@@ -30,23 +30,23 @@ import XCTest
     }
 
     static func waitUntilEnabled(_ element: XCUIElement) {
-        let enabled = XCTNSPredicateExpectation(
-            predicate: NSPredicate { _, _ in element.exists && element.isEnabled }, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [enabled], timeout: 6), .completed, "Expected enabled \(element.identifier)")
+        let enabled = { () -> Bool in
+            element.exists && element.isEnabled
+        }
+        XCTAssertTrue(UIWait.until(timeout: 6, condition: enabled), "Expected enabled \(element.identifier)")
     }
 
     static func openSignIn(_ app: XCUIApplication) {
         let button = app.buttons["welcome.signIn"]
-        let ready = XCTNSPredicateExpectation(
-            predicate: NSPredicate { _, _ in
-                button.exists || app.textFields["sign-in.email"].exists
-            }, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 12), .completed)
+        let ready = { () -> Bool in
+            button.exists || app.textFields["sign-in.email"].exists
+        }
+        XCTAssertTrue(UIWait.until(timeout: 12, condition: ready))
         if app.textFields["sign-in.email"].exists { return }
         reveal(button, in: app, scroll: app.scrollViews.containing(.button, identifier: "welcome.signIn").element)
         button.tap()
         XCTAssertTrue(
-            app.textFields["sign-in.email"].waitForMeasuredExistence(timeout: 4),
+            app.textFields["sign-in.email"].waitUntil(.exists, timeout: 4),
             "Expected sign-in.email after Welcome Sign in"
         )
         XCTAssertFalse(app.images["launch.opening"].exists)
@@ -67,23 +67,23 @@ import XCTest
     @discardableResult static func dismissStrongPassword(in app: XCUIApplication, wait: Bool = false) -> Bool {
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         let owners = [app, springboard]
-        let presented = XCTNSPredicateExpectation(
-            predicate: NSPredicate { _, _ in
-                owners.contains { $0.buttons["GenerateStrongPasswordButton"].exists }
-            }, object: nil)
-        if wait { _ = XCTWaiter.wait(for: [presented], timeout: 1) }
+        let presented = { () -> Bool in
+            owners.contains { $0.buttons["GenerateStrongPasswordButton"].exists }
+        }
+        if wait { _ = UIWait.until(timeout: 1, condition: presented) }
         guard let owner = owners.first(where: { $0.buttons["GenerateStrongPasswordButton"].exists }) else {
             return false
         }
         let close = owner.buttons["xmark"]
-        guard close.waitForMeasuredExistence(timeout: 2), close.isHittable else {
+        guard close.waitUntil(.exists, timeout: 2), close.isHittable else {
             XCTFail("Strong-password sheet has no reachable close control")
             return false
         }
         close.tap()
-        let dismissed = XCTNSPredicateExpectation(
-            predicate: NSPredicate { _, _ in !owner.buttons["GenerateStrongPasswordButton"].exists }, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 3), .completed)
+        let dismissed = { () -> Bool in
+            !owner.buttons["GenerateStrongPasswordButton"].exists
+        }
+        XCTAssertTrue(UIWait.until(timeout: 3, condition: dismissed))
         return true
     }
 
@@ -95,10 +95,10 @@ import XCTest
             reveal(field, in: app)
             field.tap()
             if newPassword, dismissStrongPassword(in: app, wait: true) { continue }
-            let focused = XCTNSPredicateExpectation(
-                predicate: NSPredicate { _, _ in field.value(forKey: "hasKeyboardFocus") as? Bool == true },
-                object: nil)
-            guard XCTWaiter.wait(for: [focused], timeout: 2) == .completed else { continue }
+            let focused = { () -> Bool in
+                field.value(forKey: "hasKeyboardFocus") as? Bool == true
+            }
+            guard UIWait.until(timeout: 2, condition: focused) else { continue }
             if dismissStrongPassword(in: app) { continue }
             field.typeText(text)
             return true
@@ -123,12 +123,11 @@ import XCTest
             let end = origin.withOffset(CGVector(dx: visible.midX - window.frame.minX, dy: window.frame.height - 1))
             start.press(forDuration: 0.1, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.1)
         }
-        let hidden = XCTNSPredicateExpectation(
-            predicate: NSPredicate { _, _ in
-                !app.keyboards.firstMatch.exists
-                    || !SoftwareKeyboardVisibility.isVisible(app.keyboards.firstMatch.frame, in: window.frame)
-            }, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [hidden], timeout: 3), .completed)
+        let hidden = { () -> Bool in
+            !app.keyboards.firstMatch.exists
+                || !SoftwareKeyboardVisibility.isVisible(app.keyboards.firstMatch.frame, in: window.frame)
+        }
+        XCTAssertTrue(UIWait.until(timeout: 3, condition: hidden))
     }
 
     static func scroll(in app: XCUIApplication) -> XCUIElement {

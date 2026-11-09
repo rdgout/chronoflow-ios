@@ -37,14 +37,15 @@ nonisolated final class TwoFactorKeyboardTests: XCTestCase {
         try assertTwoFactorKeyboardPair(field, app: app, context: "\(language), xxLarge, initial", attach: add)
         app.buttons["two-factor.submit"].tap()
         if server {
-            XCTAssertTrue(app.descendants(matching: .any)["auth.banner"].waitForMeasuredExistence(timeout: 5))
+            XCTAssertTrue(app.descendants(matching: .any)["auth.banner"].waitUntil(.exists, timeout: 5))
             AuthUIFlow.assertBannerVisible(in: app)
             AuthUIFlow.reveal(field, in: app)
             field.tap()
         } else {
-            let received = XCTNSPredicateExpectation(
-                predicate: NSPredicate { _, _ in field.value as? String == "" && field.isEnabled }, object: nil)
-            XCTAssertEqual(XCTWaiter.wait(for: [received], timeout: 5), .completed)
+            let received = { () -> Bool in
+                field.value as? String == "" && field.isEnabled
+            }
+            XCTAssertTrue(UIWait.until(timeout: 5, condition: received))
             XCTAssertFalse(app.descendants(matching: .any)["auth.banner"].exists)
         }
         try assertTwoFactorKeyboardPair(

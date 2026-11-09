@@ -17,11 +17,11 @@ import XCTest
     do {
         let screen = app.scrollViews[presentLegend ? "legend.sheet" : "today.screen"]
         _ = try XCTUnwrap(
-            screen.waitForMeasuredExistence(timeout: 15) ? screen : nil,
+            screen.waitUntil(.exists, timeout: 15) ? screen : nil,
             "Expected seeded plan account to bypass Walkthrough and open \(screen.identifier)")
         if !presentLegend && !emptyTrips {
             let trip = app.buttons["today.trip"]
-            _ = try XCTUnwrap(trip.waitForMeasuredExistence(timeout: 15) ? trip : nil, "Expected seeded Today trip")
+            _ = try XCTUnwrap(trip.waitUntil(.exists, timeout: 15) ? trip : nil, "Expected seeded Today trip")
         }
     } catch {
         app.terminate()
@@ -35,12 +35,12 @@ nonisolated final class TodayTests: XCTestCase {
         let app = try launchPlanAccount()
         defer { app.terminate() }
         let card = app.buttons["today.trip"]
-        XCTAssertTrue(card.waitForMeasuredExistence(timeout: 12))
+        XCTAssertTrue(card.waitUntil(.exists, timeout: 12))
         card.tap()
-        XCTAssertTrue(app.scrollViews["trip.scroll"].waitForMeasuredExistence(timeout: 12))
-        XCTAssertTrue(app.buttons["trip.viewToggle"].waitForMeasuredExistence(timeout: 12))
+        XCTAssertTrue(app.scrollViews["trip.scroll"].waitUntil(.exists, timeout: 12))
+        XCTAssertTrue(app.buttons["trip.viewToggle"].waitUntil(.exists, timeout: 12))
         app.navigationBars.buttons.element(boundBy: 0).tap()
-        XCTAssertTrue(app.scrollViews["today.screen"].waitForMeasuredExistence(timeout: 4))
+        XCTAssertTrue(app.scrollViews["today.screen"].waitUntil(.exists, timeout: 4))
     }
 }
 
@@ -50,21 +50,21 @@ nonisolated final class StepSheetTests: XCTestCase {
         defer { app.terminate() }
         let row = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "today.step.actionable."))
             .firstMatch
-        XCTAssertTrue(row.waitForMeasuredExistence(timeout: 12))
+        XCTAssertTrue(row.waitUntil(.exists, timeout: 12))
         AuthUIFlow.reveal(row, in: app, scroll: app.scrollViews["today.screen"])
         row.tap()
         let done = app.buttons["step.done"]
-        XCTAssertTrue(app.scrollViews["step.sheet"].waitForMeasuredExistence(timeout: 4), app.debugDescription)
-        XCTAssertTrue(done.waitForMeasuredExistence(timeout: 4))
+        XCTAssertTrue(app.scrollViews["step.sheet"].waitUntil(.exists, timeout: 4), app.debugDescription)
+        XCTAssertTrue(done.waitUntil(.exists, timeout: 4))
         AuthUIFlow.reveal(done, in: app, scroll: app.scrollViews["step.sheet"])
         done.tap()
         let undo = app.buttons["step.undo"]
-        XCTAssertTrue(undo.waitForMeasuredExistence(timeout: 6))
+        XCTAssertTrue(undo.waitUntil(.exists, timeout: 6))
         undo.tap()
         let skip = app.buttons["step.skip"]
-        XCTAssertTrue(skip.waitForMeasuredExistence(timeout: 6))
+        XCTAssertTrue(skip.waitUntil(.exists, timeout: 6))
         skip.tap()
-        XCTAssertTrue(undo.waitForMeasuredExistence(timeout: 6))
+        XCTAssertTrue(undo.waitUntil(.exists, timeout: 6))
     }
 }
 
@@ -74,6 +74,6 @@ nonisolated final class LegendTests: XCTestCase {
         defer { app.terminate() }
         app.scrollViews["legend.sheet"].swipeUp()
         app.buttons["Close"].tap()
-        XCTAssertTrue(app.scrollViews["today.screen"].waitForMeasuredExistence(timeout: 4))
+        XCTAssertTrue(app.scrollViews["today.screen"].waitUntil(.exists, timeout: 4))
     }
 }

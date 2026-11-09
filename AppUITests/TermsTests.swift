@@ -11,7 +11,7 @@ nonisolated final class TermsTests: XCTestCase {
         let app = launch()
         defer { app.terminate() }
         accept(app)
-        XCTAssertTrue(app.staticTexts["walkthrough.title"].waitForMeasuredExistence(timeout: 12))
+        XCTAssertTrue(app.staticTexts["walkthrough.title"].waitUntil(.exists, timeout: 12))
     }
 
     @MainActor func testDutchXXLargeAcceptedAccountGoesStraightToToday() {
@@ -20,7 +20,7 @@ nonisolated final class TermsTests: XCTestCase {
         XCTAssertEqual(app.staticTexts["terms.title"].label, "We hebben onze voorwaarden bijgewerkt")
         XCTAssertTrue(app.links["terms.policy"].exists)
         accept(app)
-        XCTAssertTrue(app.scrollViews["today.screen"].waitForMeasuredExistence(timeout: 15))
+        XCTAssertTrue(app.scrollViews["today.screen"].waitUntil(.exists, timeout: 15))
         XCTAssertFalse(app.staticTexts["walkthrough.title"].exists)
     }
 
@@ -28,7 +28,7 @@ nonisolated final class TermsTests: XCTestCase {
         let app = launch()
         defer { app.terminate() }
         signOut(app)
-        XCTAssertTrue(app.textFields["sign-in.email"].waitForMeasuredExistence(timeout: 12))
+        XCTAssertTrue(app.textFields["sign-in.email"].waitUntil(.exists, timeout: 12))
         XCTAssertFalse(app.staticTexts["terms.title"].exists)
         XCTAssertFalse(app.scrollViews["settings.pending"].exists)
     }
@@ -38,7 +38,7 @@ nonisolated final class TermsTests: XCTestCase {
         defer { app.terminate() }
         signOut(app)
         let sheet = app.scrollViews["settings.pending"]
-        XCTAssertTrue(sheet.waitForMeasuredExistence(timeout: 8))
+        XCTAssertTrue(sheet.waitUntil(.exists, timeout: 8))
     }
 
     @MainActor private func launch(
@@ -51,7 +51,7 @@ nonisolated final class TermsTests: XCTestCase {
         app.launchEnvironment["CF_AUTH_TEST_WALKTHROUGH_SEEN"] = seen ? "1" : "0"
         if pendingChanges { app.launchEnvironment["CF_AUTH_TEST_TERMS_CHANGES_PENDING"] = "1" }
         AuthUIFlow.launchSignedIn(app, walkthroughSeen: seen)
-        XCTAssertTrue(app.staticTexts["terms.title"].waitForMeasuredExistence(timeout: 12))
+        XCTAssertTrue(app.staticTexts["terms.title"].waitUntil(.exists, timeout: 12))
         return app
     }
 

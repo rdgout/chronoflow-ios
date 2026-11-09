@@ -4,7 +4,7 @@ nonisolated final class ReadinessTests: XCTestCase {
     @MainActor
     func testSignedInReadyHandsOffToToday() {
         let app = launch(["-cf.session", "in", "-cf.stored", "yes"])
-        XCTAssertTrue(app.tabBars.firstMatch.waitForMeasuredExistence(timeout: 12))
+        XCTAssertTrue(app.tabBars.firstMatch.waitUntil(.exists, timeout: 12))
         XCTAssertFalse(app.images["launch.opening"].exists)
     }
 
@@ -12,12 +12,9 @@ nonisolated final class ReadinessTests: XCTestCase {
     func testSlowStatusAndHiddenRootUntilDelayedHandOff() {
         let app = launch(["-cf.session", "in", "-cf.stored", "no", "-cf.readyDelay", "3.5"])
         let opening = app.images["launch.opening"]
-        let status = NSPredicate(format: "value == %@", "Getting your plan ready")
-        XCTAssertEqual(
-            XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: status, object: opening)], timeout: 5), .completed
-        )
+        XCTAssertTrue(UIWait.until(timeout: 5) { opening.value as? String == "Getting your plan ready" })
         XCTAssertFalse(app.tabBars.firstMatch.exists)
-        XCTAssertTrue(app.tabBars.firstMatch.waitForMeasuredExistence(timeout: 5))
+        XCTAssertTrue(app.tabBars.firstMatch.waitUntil(.exists, timeout: 5))
         XCTAssertFalse(opening.exists)
     }
 

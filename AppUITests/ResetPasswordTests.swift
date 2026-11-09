@@ -6,15 +6,15 @@ nonisolated final class ResetPasswordTests: XCTestCase {
         defer { app.terminate() }
         openResetFromMockMail(app)
         fillReset(app, password: "NewPassword123!", confirmation: "NewPassword123!")
-        XCTAssertTrue(app.buttons["reset.continue"].waitForMeasuredExistence(timeout: 6))
+        XCTAssertTrue(app.buttons["reset.continue"].waitUntil(.exists, timeout: 6))
         AuthUIFlow.reveal(app.buttons["reset.continue"], in: app)
         app.buttons["reset.continue"].tap()
-        XCTAssertTrue(app.textFields["sign-in.email"].waitForMeasuredExistence(timeout: 4))
+        XCTAssertTrue(app.textFields["sign-in.email"].waitUntil(.exists, timeout: 4))
         AuthUIFlow.reveal(app.textFields["sign-in.email"], in: app)
         app.textFields["sign-in.email"].tap()
         app.textFields["sign-in.email"].typeText(MockScenarioValues.demoEmail + "\n")
         app.secureTextFields["sign-in.password"].typeText("NewPassword123!\n")
-        XCTAssertTrue(app.staticTexts["walkthrough.title"].waitForMeasuredExistence(timeout: 8))
+        XCTAssertTrue(app.staticTexts["walkthrough.title"].waitUntil(.exists, timeout: 8))
     }
 }
 
@@ -23,10 +23,10 @@ nonisolated final class ResetPasswordTests: XCTestCase {
     app.textFields["forgot.email"].tap()
     app.textFields["forgot.email"].typeText(MockScenarioValues.demoEmail + "\n")
     let mail = app.buttons["forgot.open-email"]
-    XCTAssertTrue(mail.waitForMeasuredExistence(timeout: 6))
+    XCTAssertTrue(mail.waitUntil(.exists, timeout: 6))
     AuthUIFlow.reveal(mail, in: app)
     mail.tap()
-    XCTAssertTrue(app.secureTextFields["reset.password"].waitForMeasuredExistence(timeout: 6))
+    XCTAssertTrue(app.secureTextFields["reset.password"].waitUntil(.exists, timeout: 6))
 }
 
 @MainActor func fillReset(_ app: XCUIApplication, password: String, confirmation: String) {

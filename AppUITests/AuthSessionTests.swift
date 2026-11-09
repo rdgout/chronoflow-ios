@@ -36,11 +36,11 @@ nonisolated final class AuthSessionTests: XCTestCase {
         AuthUIFlow.launchSignedIn(app, walkthroughSeen: true, extraEnv: ["CF_AUTH_TEST_OFFLINE": "1"])
         defer { app.terminate() }
         assertRoute("today", in: app)
-        XCTAssertTrue(app.buttons["today.trip"].waitForMeasuredExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["today.trip"].waitUntil(.exists, timeout: 10))
         signOut(app, route: "today")
         app.terminate()
         app.launchMeasured()
-        XCTAssertTrue(app.buttons["welcome.signIn"].waitForMeasuredExistence(timeout: 12))
+        XCTAssertTrue(app.buttons["welcome.signIn"].waitUntil(.exists, timeout: 12))
         XCTAssertFalse(app.scrollViews["today.screen"].exists)
     }
 
@@ -57,18 +57,18 @@ nonisolated final class AuthSessionTests: XCTestCase {
 
     @MainActor private func assertRoute(_ route: String, in app: XCUIApplication) {
         if route == "verify" {
-            XCTAssertTrue(app.scrollViews["verify.scroll"].waitForMeasuredExistence(timeout: 12))
+            XCTAssertTrue(app.scrollViews["verify.scroll"].waitUntil(.exists, timeout: 12))
         } else if route == "today" {
-            XCTAssertTrue(app.scrollViews["today.screen"].waitForMeasuredExistence(timeout: 12))
+            XCTAssertTrue(app.scrollViews["today.screen"].waitUntil(.exists, timeout: 12))
         } else {
-            XCTAssertTrue(app.staticTexts["route.\(route)"].waitForMeasuredExistence(timeout: 12))
+            XCTAssertTrue(app.staticTexts["route.\(route)"].waitUntil(.exists, timeout: 12))
         }
         XCTAssertFalse(app.images["launch.opening"].exists)
         XCTAssertFalse(app.staticTexts["welcome.wordmark"].exists)
     }
 
     @MainActor private func waitForCache(in app: XCUIApplication) {
-        XCTAssertTrue(app.buttons["today.trip"].waitForMeasuredExistence(timeout: 12))
+        XCTAssertTrue(app.buttons["today.trip"].waitUntil(.exists, timeout: 12))
     }
 
     @MainActor private func signOut(_ app: XCUIApplication, route: String) {
@@ -80,11 +80,11 @@ nonisolated final class AuthSessionTests: XCTestCase {
         } else {
             app.tabBars.buttons["Settings"].tap()
             let button = app.buttons["settings.signOut"]
-            XCTAssertTrue(button.waitForMeasuredExistence(timeout: 6))
+            XCTAssertTrue(button.waitUntil(.exists, timeout: 6))
             AuthUIFlow.reveal(button, in: app)
             button.tap()
         }
-        XCTAssertTrue(app.textFields["sign-in.email"].waitForMeasuredExistence(timeout: 8))
+        XCTAssertTrue(app.textFields["sign-in.email"].waitUntil(.exists, timeout: 8))
         if route == "verify" {
             XCTAssertFalse(app.scrollViews["verify.scroll"].exists)
         } else {
