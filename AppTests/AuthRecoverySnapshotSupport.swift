@@ -60,11 +60,11 @@ import XCTest
     view: @MainActor (@escaping (AuthElement, CGRect) -> Void) async throws -> V
 ) async throws {
     try await AuthTestHost.registerFonts()
-    for fixture in try AuthDeviceFixture.all() where ["se", "duo", "17e"].contains(fixture.name) {
+    for fixture in try AuthDeviceFixture.layoutStressProfiles() {
         for language in ["en", "nl"] {
             var frames: [AuthElement: CGRect] = [:]
             var insets = fixture.insets
-            insets.bottom = max(insets.bottom, fixture.name == "duo" ? 264 : 218)
+            insets.bottom = max(insets.bottom, fixture.name.hasPrefix("duo") ? 264 : 218)
             let host = try AuthTestHost(
                 try await view { frames[$0] = $1 }, size: fixture.size, insets: insets, language: language,
                 category: .extraExtraLarge, scale: fixture.scale)
