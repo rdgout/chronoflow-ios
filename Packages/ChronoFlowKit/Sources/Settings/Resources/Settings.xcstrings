@@ -4360,6 +4360,74 @@
         }
       }
     },
+    "Connectivity & reminders": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connectivity & reminders"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbinding en herinneringen"
+          }
+        }
+      }
+    },
+    "Now {{language}} · changes with your phone": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Now {{language}} · changes with your phone"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu {{language}} · verandert met je telefoon"
+          }
+        }
+      }
+    },
+    "Always English": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Always English"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Altijd Engels"
+          }
+        }
+      }
+    },
+    "Always Dutch": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Always Dutch"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Altijd Nederlands"
+          }
+        }
+      }
+    },
     "Do you take oral contraception?": {
       "comment": "Settings board copy; RN nl.json checked first.",
       "localizations": {

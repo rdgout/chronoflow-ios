@@ -38,7 +38,7 @@ nonisolated final class RemindersTests: XCTestCase {
         let app = launch(permission: "blocked")
         defer { app.terminate() }
         openReminders(app)
-        XCTAssertTrue(app.staticTexts["reminders.blocked"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.descendants(matching: .any)["reminders.blocked"].firstMatch.waitForExistence(timeout: 8))
         let toggle = app.switches["reminders.enabled"]
         XCTAssertTrue(toggle.exists)
         XCTAssertFalse(toggle.isEnabled)

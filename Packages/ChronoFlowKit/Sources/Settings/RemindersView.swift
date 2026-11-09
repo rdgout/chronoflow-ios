@@ -14,82 +14,102 @@
         private func t(_ key: String) -> String { ReminderStrings.text(key, language: language) }
 
         public var body: some View {
-            List {
-                Section {
-                    Text(t("Reminders on this phone")).font(Typography.screenSectionTitle.font)
-                    Text(
-                        t(
-                            "A nudge before each step in your plan. Reminders are scheduled on this phone, so they arrive without a connection. Each device has its own setting."
-                        )
-                    )
-                    .font(Typography.screenBody.font).foregroundStyle(ColorToken.mutedForeground.color)
-                    if model.permission == .undetermined {
+            SettingsPage("Connectivity & reminders", identifier: "reminders.screen") {
+                SettingsCard {
+                    VStack(alignment: .leading, spacing: PlanUITokens.space1) {
+                        Text(t("Reminders on this phone")).settingsFont(Typography.screenSectionTitle)
                         Text(
                             t(
-                                "Reminders are off. When you turn them on, your phone asks once whether ChronoFlow may send notifications."
-                            ))
-                        Button(t("Turn on reminders")) { Task { await model.requestPermission() } }
-                            .buttonStyle(.borderedProminent).buttonBorderShape(.capsule)
+                                "A nudge before each step in your plan. Reminders are scheduled on this phone, so they arrive without a connection. Each device has its own setting."
+                            )
+                        )
+                        .settingsFont(Typography.screenBody).foregroundStyle(ColorToken.mutedForeground.color)
+                    }
+                    if model.permission == .undetermined {
+                        VStack(alignment: .leading, spacing: PlanUITokens.space3) {
+                            Text(
+                                t(
+                                    "Reminders are off. When you turn them on, your phone asks once whether ChronoFlow may send notifications."
+                                )
+                            )
+                            .settingsFont(Typography.screenBody)
+                            AuthButton(t("Turn on reminders"), minimumHeight: PlanUITokens.actionMinHeight) {
+                                Task { await model.requestPermission() }
+                            }
                             .disabled(model.busy || model.settings == nil).accessibilityIdentifier("reminders.ask")
+                        }
                     } else if model.permission == .unsupported {
-                        Text(t("This device can't show reminders."))
-                        Text(t("You can still follow every step in your plan."))
+                        AuthNotice(
+                            title: t("This device can't show reminders."),
+                            message: t("You can still follow every step in your plan.")
+                        ).accessibilityElement(children: .contain).accessibilityIdentifier("reminders.unsupported")
                     } else if model.permission != nil {
                         Toggle(
                             t("Push reminders"),
                             isOn: Binding(
-                                get: { model.active },
-                                set: { enabled in
-                                    Task { await model.setEnabled(enabled) }
-                                })
+                                get: { model.active }, set: { enabled in Task { await model.setEnabled(enabled) } })
                         )
+                        .settingsFont(Typography.settingsRow)
+                        .frame(minHeight: SettingsTokens.promptFieldHeight)
                         .disabled(model.permission != .granted || model.busy || model.settings == nil)
                         .accessibilityIdentifier("reminders.enabled")
                     }
                     if model.permission == .blocked {
-                        Text(t("Notifications are blocked for ChronoFlow.")).fontWeight(.medium)
+                        VStack(alignment: .leading, spacing: PlanUITokens.space3) {
+                            AuthNotice(
+                                title: t("Notifications are blocked for ChronoFlow."),
+                                message: t("Allow them in your phone's settings to get reminders."), tone: .warning
+                            )
                             .accessibilityIdentifier("reminders.blocked")
-                        Text(t("Allow them in your phone's settings to get reminders."))
-                        ForEach(instructions.indices, id: \.self) { index in
-                            HStack(alignment: .top, spacing: PlanUITokens.space3) {
-                                Text(ReminderStrings.text("{{count}}", language: language, count: index + 1))
-                                    .monospacedDigit().accessibilityHidden(true)
-                                Text(t(instructions[index]))
-                            }
+                            VStack(alignment: .leading, spacing: SettingsTokens.rowVertical) {
+                                ForEach(instructions.indices, id: \.self) { index in
+                                    HStack(alignment: .top, spacing: SettingsTokens.rowVertical) {
+                                        Text(ReminderStrings.text("{{count}}", language: language, count: index + 1))
+                                            .settingsFont(Typography.screenMeta).fontWeight(.semibold).monospacedDigit()
+                                            .frame(width: PlanUITokens.space6, height: PlanUITokens.space6)
+                                            .background(ColorToken.muted.color, in: Circle()).accessibilityHidden(true)
+                                        Text(instruction(index)).settingsFont(Typography.screenBody)
+                                    }
+                                }
+                            }.padding(.leading, PlanUITokens.space1)
+                            AuthButton(
+                                t("Open phone settings"), kind: .outline, minimumHeight: PlanUITokens.actionMinHeight
+                            ) {
+                                if let url = URL(string: UIApplication.openSettingsURLString) {
+                                    UIApplication.shared.open(url)
+                                }
+                            }.accessibilityIdentifier("reminders.openSettings")
                         }
-                        Button(t("Open phone settings")) {
-                            if let url = URL(string: UIApplication.openSettingsURLString) {
-                                UIApplication.shared.open(url)
-                            }
-                        }.buttonStyle(.bordered).buttonBorderShape(.capsule).accessibilityIdentifier(
-                            "reminders.openSettings")
                     }
                     if model.active {
-                        Picker(
-                            t("Remind me ahead by"),
-                            selection: Binding(
-                                get: { model.settings?.leadMin ?? 30 },
-                                set: { minutes in
-                                    Task { await model.setLead(minutes) }
-                                })
-                        ) {
-                            Text(t("15 min")).tag(15)
-                            Text(t("30 min")).tag(30)
-                            Text(t("1 hour")).tag(60)
-                        }.disabled(model.busy).accessibilityIdentifier("reminders.lead")
+                        VStack(alignment: .leading, spacing: PlanUITokens.space4) {
+                            SettingsDivider()
+                            Picker(
+                                t("Remind me ahead by"),
+                                selection: Binding(
+                                    get: { model.settings?.leadMin ?? 30 },
+                                    set: { minutes in Task { await model.setLead(minutes) } })
+                            ) {
+                                Text(t("15 min")).tag(15)
+                                Text(t("30 min")).tag(30)
+                                Text(t("1 hour")).tag(60)
+                            }.disabled(model.busy).accessibilityIdentifier("reminders.lead")
+                        }
                     }
-                }.listRowBackground(ColorToken.card.color)
+                }
             }
-            .font(Typography.screenBody.font).foregroundStyle(ColorToken.cardForeground.color)
-            .listStyle(.insetGrouped).scrollContentBackground(.hidden).background(ColorToken.background.color)
-            .planPageRail().tint(ColorToken.primary.color).navigationTitle(t("Connectivity & reminders"))
-            .navigationBarTitleDisplayMode(.large)
-            .accessibilityElement(children: .contain).accessibilityIdentifier("reminders.screen")
             .task { await model.start() }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active { Task { await model.refreshPermission() } }
             }
             .onDisappear { model.stop() }
+        }
+        private func instruction(_ index: Int) -> AttributedString {
+            var result = AttributedString(t(instructions[index]))
+            for key in ["Settings", "Notifications", "ChronoFlow", "Allow notifications"] {
+                if let range = result.range(of: t(key)) { result[range].font = Typography.screenLabel.font }
+            }
+            return result
         }
         private var instructions: [String] {
             [
@@ -117,13 +137,13 @@
                             .foregroundStyle(ColorToken.dawnText.color)
                             .frame(width: PlanUITokens.space14, height: PlanUITokens.space14)
                             .background(ColorToken.dawn.color, in: Circle()).accessibilityHidden(true)
-                        Text(t("Turn on reminders?")).font(Typography.screenCardTitle.font)
+                        Text(t("Turn on reminders?")).settingsFont(Typography.screenCardTitle)
                         Text(
                             t(
                                 "Reminders are off. When you turn them on, your phone asks once whether ChronoFlow may send notifications."
                             )
                         )
-                        .font(Typography.screenBody.font).foregroundStyle(ColorToken.mutedForeground.color)
+                        .settingsFont(Typography.screenBody).foregroundStyle(ColorToken.mutedForeground.color)
                         Button {
                             Task {
                                 await model.requestPermission()
