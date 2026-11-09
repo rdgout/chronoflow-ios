@@ -80,6 +80,22 @@ class ClassificationTests(unittest.TestCase):
             costs = [runner.estimated_seconds(a, selections[a], {}) for a in order]
             self.assertEqual(costs, sorted(costs, reverse=True))
 
+    def test_auth_host_logic_profiles_and_serial_appearance_are_in_check(self):
+        host = set(runner.selectors('host'))
+        self.assertTrue(any(s.startswith('AuthTests/') for s in host))
+        logic = {'DesignSystemTests/AuthBoardContrastTests', 'AppTests/AuthControlTests', 'AppTests/AuthLayoutTests',
+                 'AppUITests/SignInTests', 'AppUITests/AuthAuditTests'}
+        self.assertTrue(logic <= set(runner.selectors('logic')))
+        self.assertIn('AppTests/AuthSnapshotTests', runner.selectors('profiles'))
+        self.assertIn('AppTests/AuthSnapshotTests', runner.SNAPSHOTS)
+        selected = runner.selection('check', '17e')
+        for suite in logic | {'AppTests/AuthSnapshotTests'}:
+            self.assertEqual(selected.count(suite), 1, suite)
+        self.assertFalse(set(selected) & host)
+        self.assertIn('AppUITests/AuthAuditTests', runner.SERIAL_TESTS)
+        self.assertEqual(runner.recording_selection(['AppTests/AuthSnapshotTests'], 'welcome', '1'),
+                         ['AppTests/AuthSnapshotTests'])
+
     def test_store_and_core_logic_run_on_host_by_default(self):
         host = set(runner.selectors('host'))
         self.assertTrue(any(s.startswith('LocalStoreTests/') for s in host))
@@ -399,6 +415,19 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(order, ['se', '17e', 'duo'])
         self.assertTrue(all(s == ['AppTests/RootNavigationTests'] for s in selections.values()))
 
+    def test_check_executes_auth_logic_profiles_and_serial_audit_once(self):
+        status, output = self.execute(aliases=['17e'], mode='check')
+        self.assertEqual(status, 0, output)
+        commands = self.commands_for_tests()
+        for suite in ['DesignSystemTests/AuthBoardContrastTests', 'AppTests/AuthControlTests', 'AppTests/AuthLayoutTests',
+                      'AppTests/AuthSnapshotTests', 'AppUITests/SignInTests', 'AppUITests/AuthAuditTests']:
+            matches = [c for c in commands if '-only-testing:' + suite in c]
+            self.assertEqual(len(matches), 1, suite)
+            self.assertIn('-configuration', matches[0])
+            self.assertEqual(matches[0][matches[0].index('-configuration') + 1], 'Debug')
+            if suite == 'AppUITests/AuthAuditTests':
+                self.assertEqual(matches[0][matches[0].index('-parallel-testing-enabled') + 1], 'NO')
+
     def test_record_modes_are_isolated_and_paths_cannot_collide(self):
         for mode, expected in [('1', set(runner.SNAPSHOTS[1:])), ('launch', set(runner.SNAPSHOTS[:1])), ('all', set(runner.SNAPSHOTS))]:
             self.setUp()
@@ -695,8 +724,14 @@ class ProfileTests(unittest.TestCase):
 
     def test_new_baseline_inventory_is_complete_after_recording(self):
         catalog = json.loads((ROOT / 'Packages/ChronoFlowKit/Tests/SnapshotSupport/profiles.json').read_text())
-        for screen in ['Welcome', 'Launch']:
+        for screen in ['Welcome', 'Launch', 'Auth']:
             expected = set()
+            if screen == 'Auth':
+                expected.update(f'board-{style}-{language}-{category}-{banner}.png'
+                                for style in ['light', 'dark'] for language in ['en', 'nl']
+                                for category in ['large', 'xxLarge']
+                                for banner in ['none', 'credentials', 'locked', 'server'])
+                self.assertEqual(len(expected), 32)
             for device in catalog['devices'].values():
                 profile = catalog['profiles'][device['profile']]
                 name = f"{device['alias']}-{device['width']}x{device['height']}-{device['scale']}x"
@@ -705,15 +740,19 @@ class ProfileTests(unittest.TestCase):
                         if screen == 'Welcome':
                             for kind, variants in [('finalWelcome', profile['dynamicType']), ('frozenIntro', profile['introTimes'])]:
                                 expected.update(f'{kind}.{name}-{style}-{language}-{variant}.png' for variant in variants)
+                        elif screen == 'Auth':
+                            expected.update(f'{name}-{style}-{language}-{category}-{banner}.png'
+                                            for category in profile['dynamicType']
+                                            for banner in ['none', 'credentials', 'locked', 'server'])
                         else:
                             expected.update(f'sampledSplashFrames.{name}-{style}-{language}-{category}-{frame}.png'
                                             for category in ['large', 'xxLarge'] for frame in profile['launchFrames'])
-            directory = ROOT / f'AppTests/__Snapshots__/{screen}SnapshotTests'
+            directory = ROOT / 'AppTests/__Snapshots__' / ('Auth' if screen == 'Auth' else f'{screen}SnapshotTests')
             actual = {p.name for p in directory.glob('*.png')}
             # A wholly unrecorded suite is pending orchestrator work; partial recordings must fail.
             if actual:
-                self.assertEqual(actual, expected)
-            self.assertEqual(len(expected), 472 if screen == 'Launch' else 320)
+                self.assertEqual(actual, expected, screen)
+            self.assertEqual(len(expected), {'Welcome': 320, 'Launch': 472, 'Auth': 896}[screen])
 
 
 if __name__ == '__main__':

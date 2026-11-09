@@ -49,5 +49,6 @@ public func assetOutputs(root: URL) throws -> [String: Data] {
     }
     outputs["Packages/ChronoFlowKit/Sources/DesignSystem/MoonGlyph.generated.swift"] = try formattedSwift(
         moon.swiftSource, root: root)
+    outputs.merge(try authGlyphOutputs(root: root)) { _, new in new }
     return outputs
 }

@@ -27,6 +27,54 @@ import Testing
 }
 
 @MainActor @Suite struct DataSourceFactoryHostedTests {
+    #if DEBUG
+        @Test(arguments: [false, true])
+        func defaultAppMockUsesRNSeed(storedSession: Bool) async throws {
+            let root = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+            defer { try? FileManager.default.removeItem(at: root) }
+            let services = try AppServices(info: [:], testing: false)
+            let source: any DataSource
+            if storedSession {
+                source = await Task.detached {
+                    services.makeDataSource(
+                        applicationSupport: root, session: StoredSession(token: "unused", accountId: UUID().uuidString))
+                }.value
+            } else {
+                source = services.makeDataSource(applicationSupport: root, credentials: FactoryCredentialProbe())
+            }
+            let mock = try #require(source as? MockDataSource)
+            #expect(!FileManager.default.fileExists(atPath: FileMockStateStore(applicationSupport: root).url.path))
+            #expect(try await mock.inbox().isEmpty)
+            let state = try await Task.detached {
+                try FileMockStateStore(applicationSupport: root).load()
+            }.value
+            let accounts = try #require(state?.accounts)
+            #expect(accounts.count == 2)
+            let demo = try #require(accounts.values.first { $0.twoFactorCode == nil })
+            guard
+                case .session(let result) = try await source.signIn(
+                    PasswordSignInInput(
+                        email: demo.snapshot.email, password: demo.password, deviceID: UUID().uuidString,
+                        deviceName: "iPhone"))
+            else {
+                Issue.record("Expected seeded demo sign-in")
+                return
+            }
+            #expect(result.account.hasVerifiedEmail)
+            #expect(demo.trips.count == 7)
+            let twoFactor = try #require(accounts.values.first { $0.twoFactorCode != nil })
+            guard
+                case .twoFactor = try await source.signIn(
+                    PasswordSignInInput(
+                        email: twoFactor.snapshot.email, password: twoFactor.password, deviceID: UUID().uuidString,
+                        deviceName: "iPhone"))
+            else {
+                Issue.record("Expected seeded two-factor challenge")
+                return
+            }
+        }
+    #endif
+
     @Test func sourceConstructionIsLazyAndMockOnly() async throws {
         let credentials = FactoryCredentialProbe()
         let services = try AppServices(

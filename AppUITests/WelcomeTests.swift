@@ -143,7 +143,11 @@ nonisolated final class WelcomeLogicTests: XCTestCase {
         for _ in 0..<8 where !button.isHittable { app.scrollViews.firstMatch.swipeUp() }
         XCTAssertTrue(button.isHittable)
         button.tap()
-        XCTAssertTrue(app.staticTexts["route.\(route)"].waitForExistence(timeout: 3))
+        if route == "signIn" {
+            XCTAssertTrue(app.staticTexts["auth.heading"].waitForExistence(timeout: 3))
+        } else {
+            XCTAssertTrue(app.staticTexts["route.\(route)"].waitForExistence(timeout: 3))
+        }
     }
 
 }

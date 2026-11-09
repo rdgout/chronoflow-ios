@@ -28,7 +28,7 @@ MATRIX = {
     "duo": ("iPhone Duo", "iPhone-Duo", DUO_RUNTIME),
 }
 # Each suite has one scheduling policy. Fixed geometry fixtures are logic; running-window/scale assertions are matrix.
-SUITES = {'AppTests': {'logic': ('LaunchArgumentLogicTests',
+SUITES = {'AppTests': {'logic': ('AuthControlTests', 'AuthLayoutTests', 'LaunchArgumentLogicTests',
                         'RasterPixelLogicTests',
                         'ContentSizeCapLogicTests',
                         'AppIconTests',
@@ -55,13 +55,13 @@ SUITES = {'AppTests': {'logic': ('LaunchArgumentLogicTests',
                          'WelcomeHandOverTests',
                          'LaunchImageMutationTests',
                          'SnapshotContainerTests'),
-              'profiles': ('LaunchSnapshotTests', 'WelcomeSnapshotTests'),
+              'profiles': ('LaunchSnapshotTests', 'WelcomeSnapshotTests', 'AuthSnapshotTests'),
               'reference': ('LaunchFrameParityTests', 'LaunchStoryboardTests'),
               'release': ('ReleaseReadinessTests',)},
  'RenderTests': {'profiles': ('WelcomeRenderingTests',)},
- 'AppUITests': {'logic': ('ReadinessTests', 'WelcomeLogicTests'),
+ 'AppUITests': {'logic': ('SignInTests', 'AuthAuditTests', 'ReadinessTests', 'WelcomeLogicTests'),
                 'reference': ('LaunchToWelcomeTests', 'LaunchSceneTests', 'LaunchSceneDarkTests'),
-                'matrix': ('WelcomeTests', 'WelcomeEnglishAccessibilityTests', 'WelcomeDutchAccessibilityTests')},
+                'matrix': ('SignInKeyboardTests', 'WelcomeTests', 'WelcomeEnglishAccessibilityTests', 'WelcomeDutchAccessibilityTests')},
  'AppCoreTests': {'host': ('CatalogTests',
                            'CubicBezierTests',
                            'LaunchCoordinatorTests',
@@ -77,7 +77,7 @@ SUITES = {'AppTests': {'logic': ('LaunchArgumentLogicTests',
                            'StoredDataReadinessTests',
                            'DeviceIdentityTests',
                            'SmokeTests')},
- 'DesignSystemTests': {'logic': ('ExactLineTextLayoutTests', 'PrimitiveTests', 'SmokeTests', 'TypographyTests'),
+ 'DesignSystemTests': {'logic': ('AuthBoardContrastTests', 'ExactLineTextLayoutTests', 'PrimitiveTests', 'SmokeTests', 'TypographyTests'),
                        'matrix': ('LaunchImagesTests',)},
  'LaunchTests': {'logic': ('FlightPathTests',
                            'LaunchGlowTests',
@@ -92,6 +92,7 @@ SUITES = {'AppTests': {'logic': ('LaunchArgumentLogicTests',
                            'ReadyTimelineTests',
                            'SmokeTests',
                            'WelcomeTimelineTests')},
+ 'AuthTests': {'host': ('AuthFormModelTests', 'AuthFailureMappingTests', 'AuthCatalogTests', 'AuthLayoutTests', 'AuthCardShadowTests', 'SignInModelTests', 'PasskeyEncodingTests', 'PasskeySignInTests')},
  'WelcomeTests': {'logic': ('SmokeTests', 'WelcomeGeometryTests')},
  'ToolingTests': {'host': ('LaunchImageComparisonTests', 'UIWaitTests')},
  'PerfUITests': {'perf': ('LaunchPerfTests',)},
@@ -122,12 +123,12 @@ SUITES = {'AppTests': {'logic': ('LaunchArgumentLogicTests',
                               'SessionAccountDatabaseTests',
                               'AccountWiperTests',
                               'AccountReadinessTests')}}
-SNAPSHOTS = ("AppTests/LaunchSnapshotTests", "AppTests/WelcomeSnapshotTests", "AppTests/WelcomeSnapshotGuardTests", "RenderTests/WelcomeRenderingTests")
+SNAPSHOTS = ("AppTests/LaunchSnapshotTests", "AppTests/WelcomeSnapshotTests", "AppTests/WelcomeSnapshotGuardTests", "RenderTests/WelcomeRenderingTests", "AppTests/AuthSnapshotTests")
 XCODEBUILD_COMMON = ["xcodebuild", "-project", "ChronoFlow.xcodeproj", "-derivedDataPath", "build/DerivedData",
                      "-onlyUsePackageVersionsFromResolvedFile"]
 
 # Device-wide mutations must be registered here; launch/window-scoped traits are clone-safe.
-SERIAL_TESTS = ("AppUITests/LaunchSceneTests", "AppUITests/LaunchSceneDarkTests", "AppUITests/LaunchToWelcomeTests")
+SERIAL_TESTS = ("AppUITests/AuthAuditTests", "AppUITests/LaunchSceneTests", "AppUITests/LaunchSceneDarkTests", "AppUITests/LaunchToWelcomeTests")
 PARALLEL_TARGETS = {"AppTests", "AppUITests", "RenderTests"}
 
 
@@ -427,6 +428,7 @@ def expand(only):
 
 
 IOS_METHODS = (
+    "DesignSystemTests/AuthBoardContrastTests",
     "DesignSystemTests/LaunchImagesTests",
     "DesignSystemTests/TypographyTests/uiFontsUseTheExactFacesAndKeepTheSplashFixed()",
     "DesignSystemTests/ExactLineTextLayoutTests/scaledHeadlinePitchAndGlyphsFitNaturalLabels()",
@@ -593,7 +595,8 @@ def test_pass(destination, configuration, selected, label, record=False, intro_o
 
 
 def recording_selection(selected, mode, recording):
-    candidates = SNAPSHOTS[:2] if recording == "all" or (recording == "1" and mode == "snapshots") else SNAPSHOTS[:1] if recording == "launch" or mode == "launch-snapshots" else SNAPSHOTS[1:2]
+    baseline = (SNAPSHOTS[0], SNAPSHOTS[1], "AppTests/AuthSnapshotTests")
+    candidates = baseline if recording == "all" or (recording == "1" and mode == "snapshots") else baseline[:1] if recording == "launch" or mode == "launch-snapshots" else baseline[1:]
     return [s for s in selected if any(s == c or s.startswith(c + "/") for c in candidates)]
 
 

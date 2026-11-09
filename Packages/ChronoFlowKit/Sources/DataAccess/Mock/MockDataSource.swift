@@ -11,7 +11,7 @@ public enum MockMethod: String, Sendable, CaseIterable {
 public actor MockDataSource: DataSource {
     public typealias AssertionProvider = @Sendable (ApiPasskeyAssertion, ApiPasskeyChallenge) -> String?
     private let store: any MockStateStore
-    private let seed: MockServerState
+    private let seed: MockServerState?
     private let now: @Sendable () -> Date
     private let delay: @Sendable () -> TimeInterval
     private let sleep: APIClient.Sleep
@@ -25,7 +25,7 @@ public actor MockDataSource: DataSource {
     private var failures: [MockMethod: DataFailure] = [:]
 
     public init(
-        store: any MockStateStore = MemoryMockStateStore(), seed: MockServerState = MockServerState(),
+        store: any MockStateStore = MemoryMockStateStore(), seed: MockServerState? = nil,
         now: @escaping @Sendable () -> Date = { Date() },
         delay: @escaping @Sendable () -> TimeInterval = { Double.random(in: 0.3...0.8) },
         sleep: @escaping APIClient.Sleep = { try await Task.sleep(for: .seconds($0)) },
@@ -50,8 +50,33 @@ public actor MockDataSource: DataSource {
     }
 
     private func load() throws {
-        if state == nil {
-            do { state = try store.load() ?? seed } catch { throw DataFailure.server(status: nil) }
+        guard state == nil else { return }
+        do {
+            let restored: MockServerState?
+            do {
+                restored = try store.load()
+            } catch is DecodingError where seed == nil {
+                restored = nil
+            }
+            if let seed {
+                state = restored ?? seed
+                return
+            }
+            #if DEBUG
+                if let restored, !restored.accounts.isEmpty,
+                    restored.schemaVersion == MockServerState.currentSchemaVersion
+                {
+                    state = restored
+                } else {
+                    let initial = try MockAppSeed.make(now: now())
+                    try store.save(initial)
+                    state = initial
+                }
+            #else
+                state = restored ?? MockServerState()
+            #endif
+        } catch {
+            throw DataFailure.server(status: nil)
         }
     }
     private func begin(_ method: MockMethod) async throws {

@@ -4,6 +4,46 @@ Toolchain: Xcode 27.2 (27B52), Apple Swift 6.4.2, XcodeGen 2.46.0 at `/opt/homeb
 The app and package use Swift 6 language mode and an iOS 17.0 deployment target. UI modules default to
 MainActor; AppCore is nonisolated.
 
+## Trying the app on a simulator
+
+Run the Debug app with the default `CHRONOFLOW_DATA_SOURCE = mock`. Its fake server starts with
+the same accounts, settings and seven trip/plan fixtures as RN's mock:
+
+| Account | Email | Password | Two-factor code | Recovery code |
+|---|---|---|---|---|
+| Verified demo | `demo@example.com` | `password` | — | — |
+| Verified two-factor | `twofactor@example.com` | `password` | `123456` | `AbCdEf1234-GhIjKl5678` |
+
+Enter these values on Sign in; the form starts empty. Two-factor sign-in reaches its route seam
+until Phase 10b's screen is implemented. Both accounts start with walkthrough unseen and the RN
+accepted policy versions. Trip dates stay exactly as RN defines them (October 2026); progress
+and offline eligibility are calculated at initial seeding time.
+
+The seed and its fixture payload compile only in Debug; Release/Perf contain neither. API selection
+never constructs the mock. The seed loads lazily on the mock actor after the splash commit and is
+saved in `Application Support/ChronoFlowMock/Server/state.json`. Missing, empty, incompatible or
+unreadable JSON from an older shape reseeds, as in RN; filesystem errors still fail the request.
+Current saved accounts, settings, sessions and consumed recovery codes survive relaunch. Explicit
+empty/custom test seeds retain their existing persistence behavior and never acquire demo accounts.
+
+`Sources/DataAccess/Mock/MockScenarioValues.swift` owns the shared sign-in values. The test fixture
+path symlinks that file and enables `CHRONOFLOW_MOCK_SCENARIOS` only for DataAccessTests, so Release
+host tests can use the scenarios without compiling credentials into the Release library.
+`MockAppSeed+Fixtures.swift` embeds RN's `fixture-data.ts` default settings (including
+`createMockAccount`'s optional-items override), `fixtures/trips.ts` and all seven `fixtures/plans`
+payloads, read on 6 November 2026. They are mock data, separate from the sanitized API contract
+fixtures. Seed trip details retain the native optional form seam; no wizard is implemented here.
+
+Verify on the host with `sh Scripts/host-tests.sh --filter DataSourceSelectionTests`.
+Hosted composition: `make targeted DEVICES="17e" ONLY="AppTests/DataSourceFactoryHostedTests"`.
+Release seed exclusion runs with `ReleaseReadinessTests` in `make check`'s isolated Release pass.
+Verification in this worktree: `make quick` passed (307 Swift tests, three signing checks, ten
+resource checks and 53 runner fixtures); the final focused suite passed nine host tests, including
+recovery-code consumption across restart. Four Release host selection tests passed. All 14 Release
+DataAccess object files were checked for absent demo identities, recovery code, trip fixture data
+and seed symbols. New Debug/Release hosted tests type-check for iOS 17 against the existing app
+modules; hosted execution remains open. No xcodebuild or simulator was run for this fix.
+
 ## Test tiers — user decision 2026-11-06
 
 The user requests **skipping the seven-simulator matrix unless asked**. This section supersedes
@@ -1723,3 +1763,259 @@ make targeted DEVICES="17e" ONLY="AppTests/AccountStorageLifecycleTests AppTests
 make targeted DEVICES="17e" ONLY="AppTests/ReleaseReadinessTests"
 make check
 ```
+
+## Phase 10a: native Auth and passkey sign-in (6 November 2026)
+
+See `Docs/auth-gate.md` for implementation, defaults, missing Dutch rows, snapshot helper integration
+and open acceptance. The original early-stack verification below predates 9c/9d; the integrated stack retains both phases.
+No simulator execution or Auth reference recording is claimed for this port.
+Original early-stack host verification: 185 SwiftPM tests (21 Auth) pass; strict lint, XcodeGen, generator freshness
+(8 TokenGen / 4 AssetGen / 6 font/cache), 3 signing-guard, 9 resource and 22 runner tests pass.
+SwiftPM package/test compilation for the iOS 17 simulator floor and direct Swift 6/MainActor
+app/hosted/UI module compilation pass. No UIKit test has executed in this sandbox.
+
+Run on the one pinned 17e after applying patches:
+
+```sh
+make generate
+make targeted DEVICES="17e" ONLY="AppTests/AuthControlTests AppTests/AuthLayoutTests AppTests/SessionReadinessTests AppUITests/SignInTests AppUITests/AuthAuditTests"
+```
+
+Record only after review, then compare (the runner records and compares in that first command):
+
+```sh
+SNAPSHOT_RECORD=1 make targeted DEVICES="17e" ONLY="AppTests/AuthSnapshotTests"
+REUSE_BUILD=1 make targeted DEVICES="17e" ONLY="AppTests/AuthSnapshotTests"
+```
+
+The Auth host suites run in quick; controls/layout and UI are logic suites in check, with the
+appearance-switching audit isolated serially. AuthSnapshotTests uses the profiles policy and SNAPSHOTS.
+Its SnapshotContainer windows reuse the shared profile fixtures, exact four insets and CPU layer
+capture used by Welcome. Full SE/17e/Duo/Pro Max and compact 17/Air/18 Pro categories remain covered,
+alongside the zero-inset board and AX5 cap equality. No Auth reference PNGs are included.
+For explicit xcodebuild recording, set TEST_RUNNER_SNAPSHOT_RECORD=1 and select only
+AppTests/AuthSnapshotTests. Normal comparisons never record implicitly. make host-tests runs all Auth
+models/mapping/catalog/encoding and mock-provider logic on macOS.
+
+For later physical passkey verification, supply a confirmed team in ignored Local.xcconfig and build
+the app with -scheme ChronoFlow -configuration DeviceSigned -destination 'generic/platform=iOS'.
+This config adds webcredentials:app.chronoflow.net only on iphoneos for the app target; the signing
+guard requires an actual certificate/team. Debug/Release/simulator/ad-hoc builds have no association.
+AASA deployment/CDN/team/real-device checks remain open.
+
+## Phase 10a review fixes after the Phase 9b rebase — 6 November 2026
+
+The full package host suite passed immediately after the rebase: 198 tests. Only the backend's
+`These sign-in details don't match our records.` maps to the credentials banner; the old Laravel key
+now has a server-fallback regression. The rebased mock's `password_confirmation` mapping is retained.
+
+Auth controls now tint template glyphs with their button foreground, place the token-sized busy
+spinner first in the centered content, suppress empty-field placeholders, and draw the one-point
+field border plus its two-point outset focus ring. Error glyphs are centered. Forgot/Create fill the
+card width when both fit and use generated line height with underlined WelcomeText. Hosted
+AuthControlTests assert glyph ink in both appearances, spinner geometry, empty native fields,
+focus-ring pixels/error alignment and late passkey anchor fallbacks. AuthLayoutTests assert link
+edges on Pro Max/Duo and line height under a narrow Dutch xxLarge proposal.
+
+Auth token generation reads uniquely selected board declarations and component utilities, checks
+shared values for disagreement, and derives typography from the relevant element/named token.
+Source mutations cover repeated gap/height declarations, metrics, focus/opacity utilities, font
+family/weight/size/line height/tracking. Committed token values are numerically unchanged.
+
+SignInModel routes after successful session acceptance even when the caller has been canceled.
+The real SessionController already preserves committed acceptance after the rebase; a gated-sync
+host regression verifies credentials, presence, routing and secret clearing for verified/unverified
+accounts. Stale passkey anchor callbacks return the captured/current window or an empty anchor.
+
+The strict Auth audit retains its original type set and now adds identifier, label, type, language,
+appearance and scroll stage to failure messages, console output and retained attachments. Its issue
+handler always returns false; no Auth contrast exemptions were added. Removing the system
+placeholders and correcting the key foreground address real defects, but identifying the elements
+behind the supplied 24 failures still requires the hosted rerun below.
+
+TokenGen computes sRGB relative-luminance contrast from tokens.json (unrounded color values):
+
+| Pair | Light | Dark |
+|---|---:|---:|
+| `primary-foreground` / `primary` (key and passkey label) | 12.2052:1 | 9.4892:1 |
+| `muted-foreground` / `card` (divider text) | 11.6159:1 | 7.7103:1 |
+| `foreground` / `card` (Forgot) | 17.1478:1 | 14.9195:1 |
+| `dawn-text` / `card` (Create) | 5.4441:1 | 9.2888:1 |
+| `input` / `card` (empty field boundary, outline exterior) | 1.5076:1 | 1.5051:1 |
+| `input` / `background` (outline interior) | 1.4243:1 | 1.6222:1 |
+| `border` / `card` (decorative divider lines) | 1.4140:1 | 1.3951:1 |
+
+The border pairs are board properties, accepted, OQ 33 (user 2026-11-06), with their colors kept
+exactly as drawn. They were not the audit's failing elements. Text contrast checks remain strict;
+decorative divider lines are reported separately from passing text. RN keeps these values, and
+the web's P8-D16 scope is WCAG 1.4.3 text contrast only (`tokens.json:167`: “Kept exact, flagged”).
+
+Final host verification: **200 package tests (23 Auth), 9 TokenGen, 4 AssetGen, 6 font/cache,
+3 signing-guard, 10 resource and 22 runner tests pass**; strict lint and generated-output freshness
+pass. SwiftPM Auth/DataAccess/Launch compilation and direct Swift 6/MainActor type checking of
+AuthControlTests/AuthLayoutTests/AuthSnapshotTests and AuthAuditTests pass at the iOS 17 simulator
+floor. Hosted execution and screenshot review remained open in that round; no references were recorded.
+The board border/footer values are now accepted, OQ 33 (user 2026-11-06).
+The rebase's two explicit xcodebuild recipes above are preserved as separate complete shell blocks.
+
+Run the audit first, then the remaining requested suites on the same build:
+
+```sh
+make targeted DEVICES="17e" ONLY="AppUITests/AuthAuditTests"
+make targeted DEVICES="17e" ONLY="AppTests/AuthControlTests AppTests/AuthLayoutTests AppUITests/SignInTests" REUSE_BUILD=1
+```
+
+The second command is still useful if the first fails: each issue now supplies actionable details in
+`build/test-results/17e/Debug-compare.xcresult`. This runner replaces that result on each pass; retain
+the audit bundle/log before running the second command when diagnosing a failure.
+
+## Phase 10a second fix round — 6 November 2026
+
+The user's hosted 17e rerun passes AuthLayoutTests and SignInTests. AuthControlTests collected
+its four global measurements during LaunchTestHost's initial 390-point scene layout, before
+AuthTestHost resized the fixture to 375 points. Its count-only wait could therefore skip layout
+entirely and compare the old 195-point centre with the new 187.5-point window centre. AuthButton's
+inline spinner/glyph/label HStack already matches the board. The repaired test forces layout,
+waits for stable resized geometry (without waiting for animated spinner pixels), asserts the
+button width, and compares group/button frames in the same global coordinate space.
+
+All 24 audit failures identify only `sign-in.guest`, the AuthSignIn footer at line 59. Native uses
+exactly the board's `skyCopy` text and `skyCopyBackground` capsule, Figtree 500 at 14/20. Both
+appearances retain the generated pill alpha of 0.9. The table includes compositing that pill
+in encoded Display P3 over the generated sky ramp, followed by conversion to linear sRGB for
+WCAG relative luminance. The board footer centre is y = 764 on its 812-point sky; the full-ramp
+ranges cover other window heights and scroll positions without assuming the board's geometry.
+
+| Pair | Light | Dark |
+|---|---:|---:|
+| Text / composited pill, board footer centre | 14.9260:1 | 15.0953:1 |
+| Composited pill / sky, board footer centre | 2.3128:1 | 2.9450:1 |
+| Text / composited pill, full sky range | 13.4635–15.0882:1 | 14.9473–16.1298:1 |
+| Composited pill / sky, full sky range | 2.0004–10.7434:1 | 1.0001–3.4997:1 |
+
+Text passes 4.5:1 everywhere. The board-centre boundary is below 3:1 in both appearances.
+Following the user's instruction and Welcome's five explicit board pairs (including welcome.plan's
+pill/sky precedent), Auth now allows only `(sign-in.guest, .contrast)`. It retains the issue's
+identifier, label, type, language, appearance and stage in console/attachments and records whether
+the pair was allowed. Nil/unknown identifiers, all other elements, combined audit types and every
+non-contrast issue still fail. No partial-visibility exception was added. The footer and input/border
+values are accepted, OQ 33 (user 2026-11-06). Keep this exact allow-list and strict text ratio guards;
+rendered visual review remains open.
+
+AuthBoardContrastTests pins both appearances' generated text/pill/sky RGBA values, alpha, label
+font/size/leading and board-centre/full-ramp ratios. TokenGen checks the board's footer declarations
+and generated freshness. AuthControlTests adds native pill/ink pixel checks in en/nl and light/dark.
+A deliberate light-pill alpha mutation from 0.90 to 0.89 fails the pinned RGBA and ratio guards;
+restoring the generated file passes. The simulator runner classifies the new guard as 17e logic.
+All 201 package host tests, 10 TokenGen tests, 22 runner checks and 10 resource checks pass,
+as do strict lint and direct iOS 17 type checks of the hosted/UI tests and new ratio guard.
+CoreSimulator is inaccessible in this sandbox; revised UIKit/audit execution
+and visual acceptance remain open. No production colors or snapshot references changed.
+
+Apply the two ordered patches in `build/commits` and commit each corresponding line of
+`messages.txt`. `replay.txt` records verification against the starting HEAD. Then run:
+
+```sh
+make generate
+make targeted DEVICES="17e" ONLY="DesignSystemTests/AuthBoardContrastTests AppTests/AuthControlTests AppTests/AuthLayoutTests AppUITests/SignInTests AppUITests/AuthAuditTests"
+```
+
+This builds once and keeps the guard, native controls and all 24 audits in one result bundle:
+`build/test-results/17e/Debug-compare.xcresult`. To repeat the same selection after an unchanged build,
+add `REUSE_BUILD=1`. No reference recording or seven-device matrix is needed for these patches.
+
+## Integrated Phase 10a port — 6 November 2026
+
+This record supersedes the early-stack composition and patch-count instructions above while retaining
+both histories. Twelve patches preserve the twelve source commit messages on fffa67d (Phase 9a–9d,
+test tiers and recorded Launch/Welcome references). AuthSessionServices receives the scene's existing
+NativeSessionController; it creates no second lifecycle composition. Password and passkey acceptance
+use its SessionController and SQLite readiness gate. Unverified results call AppDelegate.verificationRequired;
+current terms precede walkthrough, then the Today seam. SessionReadinessTests covers both methods across
+all four gates, with and without cancellation after credential commit, followed by restore and sign-out.
+Those 16 native integration scenarios are type-checked; hosted execution remains for the commands below.
+
+AuthTests suites use the host policy in quick. AuthControlTests/AuthLayoutTests are hosted logic;
+AuthBoardContrastTests remains logic and is explicitly included in check's UIKit selection.
+SignInTests is UI logic; AuthAuditTests is registered for the serial device-appearance pass.
+AuthSnapshotTests uses profiles and SNAPSHOTS, with SnapshotContainer windows, shared full/compact
+profile fixtures, exact safe-area insets, window reuse and CPU layer capture. The zero-inset board and
+AX5 cap checks remain. Reference names describe the fixture, never the executing simulator.
+No Auth PNGs are supplied; existing recorded Launch/Welcome references are unchanged.
+
+Port verification: make quick passes with 286 package host tests (23 Auth), 10 TokenGen, 4 AssetGen,
+3 signing guards, 10 resource checks and 53 runner fixtures. Strict lint and generator freshness pass;
+fonts verify all 10 static faces and all 6 font/cache tests pass. Every package/test target compiles for
+arm64 iOS 17 simulator. Direct Swift 6/MainActor checks pass for the app and all hosted AppTests in
+Debug and Release, and all AppUITests in Debug. These are compilation checks, not UIKit execution.
+No xcodebuild, simulator, git commit or reference recording ran. OQ 23/24/28/30/33 defaults and records,
+including the exact (sign-in.guest, .contrast) allow-list, remain as in the source.
+
+Run the integrated Auth selection on 17e, then record only after review:
+
+```sh
+make generate
+make targeted DEVICES="17e" ONLY="DesignSystemTests/AuthBoardContrastTests AppTests/AuthControlTests AppTests/AuthLayoutTests AppTests/SessionReadinessTests AppUITests/SignInTests AppUITests/AuthAuditTests"
+SNAPSHOT_RECORD=1 make targeted DEVICES="17e" ONLY="AppTests/AuthSnapshotTests"
+REUSE_BUILD=1 make targeted DEVICES="17e" ONLY="AppTests/AuthSnapshotTests"
+```
+
+The default two-worker Debug run writes logic to Debug-compare.xcresult and appearance audits to
+Debug-serial.xcresult under build/test-results/17e. Recording runs serially, then compares in a fresh
+test process; the final command supplies another independent comparison. All default/CI flows remain
+single-simulator; no seven-device matrix or Duo-specific runtime run is introduced.
+
+## Phase 10a port fix round — 6 November 2026
+
+The user reports hosted passes for AuthBoardContrastTests, AuthControlTests, AuthLayoutTests,
+SignInTests and serial AuthAuditTests. SessionReadinessTests failed the canceled post-commit
+verify, terms and walkthrough cases: cancellation ends the gate's AsyncStream read immediately,
+so it falls back to `.app`. NativeSessionController now delegates to the shared
+StoredDataReadiness post-accept router, which reads the gate in an unstructured task and re-checks
+the active session and epoch before navigating or invoking verification. Launch readiness retains
+its existing cancellation behavior.
+
+Host SignInModelTests calls that production router, ignoring the model's suggested route just as
+AuthSessionServices does. It exercises password/passkey × four stored gates × canceled/uncanceled
+requests, asserts cancellation is already set before routing, and checks verification epochs.
+Four delayed-read/sign-out scenarios retain stale-session protection. Removing the unstructured
+task reproduces the reported Today misroutes for both methods on the host; restoring it passes.
+
+After applying the fix, rerun the full hosted SessionReadinessTests suite on the pinned 17e:
+
+```sh
+make generate
+make targeted DEVICES="17e" ONLY="AppTests/SessionReadinessTests"
+```
+
+These commands remain pending outside this sandbox. No simulator or xcodebuild execution is
+claimed for this round.
+
+The host baseline inventory now includes `AppTests/__Snapshots__/Auth`. Expected names are
+`board-{light,dark}-{en,nl}-{large,xxLarge}-{none,credentials,locked,server}.png` and
+`{device.name}-{style}-{language}-{dynamicType}-{banner}.png` for every catalog device's profile
+Dynamic Type entries. The total is 32 board + 4 full × 192 + 3 compact × 32 = **896**.
+An absent or empty Auth directory remains pending recording; once any PNG is present, the exact
+inventory is required. Partial sets, stale extras and changed suffixes at the same count fail
+the host guard. No Auth references are included, and shared Auth shell acceptance remains open.
+
+After reviewing and recording the references, compare and run the commit gate:
+
+```sh
+SNAPSHOT_RECORD=1 make targeted DEVICES="17e" ONLY="AppTests/AuthSnapshotTests"
+REUSE_BUILD=1 make targeted DEVICES="17e" ONLY="AppTests/AuthSnapshotTests"
+make check
+```
+
+The recording command builds, records serially and compares in a fresh test process; the next
+command repeats comparison with the same build. The inventory guard permits the pending state,
+but hosted Auth comparison in `make check` needs the references. The user records after this
+round, before closing the remaining acceptance task. All commands use one 17e; audits in
+`make check` retain their serial appearance pass.
+
+Round verification: `make quick` passes, including 24 Auth host tests, 53 runner fixtures,
+10 resource checks, 3 signing checks, the remaining package/generator suites and strict lint.
+Inventory probes accept absent/empty/complete Auth sets and reject partial/stale/suffix-drift
+sets. Two ordered patches and plain Conventional Commit subjects are in `build/commits`;
+`replay.txt` records application against the starting HEAD. No git commits or reference
+recording were performed in this worktree.

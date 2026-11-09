@@ -3,12 +3,12 @@ import Foundation
 
 @testable import DataAccess
 
-let demoID = "0199a3c0-0000-7000-8000-000000000000"
-let twoFactorID = "0199a3c0-0000-7000-8000-000000000001"
+let demoID = MockScenarioValues.demoID
+let twoFactorID = MockScenarioValues.twoFactorID
 let demoTripID = "0199a3c0-0000-7000-8000-000000000010"
 let mockDeviceID = "0199a3c0-0000-7000-8000-000000000100"
-let fixturePassword = "password"
-let fixtureRecovery = "AbCdEf1234-GhIjKl5678"
+let fixturePassword = MockScenarioValues.password
+let fixtureRecovery = MockScenarioValues.recoveryCode
 let newPassword = "NewPassword12!"
 
 final class MockClock: @unchecked Sendable {
@@ -41,9 +41,10 @@ func scenarioState() throws -> MockServerState {
         snapshot: snapshot, password: fixturePassword, trips: trips, details: [demoTripID: detail])
     var otherSnapshot = snapshot
     otherSnapshot.id = twoFactorID
-    otherSnapshot.email = "twofactor@example.com"
+    otherSnapshot.email = MockScenarioValues.twoFactorEmail
     let other = MockServerAccount(
-        snapshot: otherSnapshot, password: fixturePassword, twoFactorCode: "123456", recoveryCodes: [fixtureRecovery])
+        snapshot: otherSnapshot, password: fixturePassword, twoFactorCode: MockScenarioValues.twoFactorCode,
+        recoveryCodes: [fixtureRecovery])
     return MockServerState(accounts: [demo, other], signingKey: Data("artificial-mock-signing-key".utf8))
 }
 
@@ -66,11 +67,12 @@ func mockSource(
         })
 }
 func passwordInput(
-    email: String = "demo@example.com", password: String = fixturePassword, device: String = mockDeviceID
+    email: String = MockScenarioValues.demoEmail, password: String = fixturePassword, device: String = mockDeviceID
 ) -> PasswordSignInInput {
     PasswordSignInInput(email: email, password: password, deviceID: device, deviceName: "iPhone")
 }
-func login(_ source: any DataSource, email: String = "demo@example.com", device: String = mockDeviceID) async throws
+func login(_ source: any DataSource, email: String = MockScenarioValues.demoEmail, device: String = mockDeviceID)
+    async throws
     -> SessionResult
 {
     guard case .session(let session) = try await source.signIn(passwordInput(email: email, device: device)) else {

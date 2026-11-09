@@ -23,6 +23,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var readinessFactory: (@MainActor (LaunchArguments, any LaunchClock) -> any LaunchReadiness)?
     private(set) var nativeSession: NativeSessionController?
     private(set) var serviceFailure: (any Error)?
+    private var serviceConfiguration: (AppServices, URL?)?
     private var servicesTask: Task<Void, Never>?
     private var activityTask: Task<Void, Never>?
     private var isActive = true
@@ -164,35 +165,15 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                     guard let self, let windowScene, !Task.isCancelled, connectionGeneration == generation else {
                         return
                     }
+                    serviceConfiguration = configuration
                     let source: any LaunchReadiness
                     if configuration.0.signedOutReadiness {
                         source = SignedOutReadiness()
                     } else {
-                        let app = UIApplication.shared.delegate as? AppDelegate
-                        let native: NativeSessionController
-                        if let factory = nativeSessionFactory {
-                            guard let root = configuration.1 else {
-                                throw AppServices.Failure.applicationSupportUnavailable
-                            }
-                            native = factory(configuration.0, root)
-                        } else if let existing = app?.nativeSession {
-                            native = existing
-                        } else {
-                            guard let root = configuration.1 else {
-                                serviceFailure = AppServices.Failure.applicationSupportUnavailable
-                                runReadiness(UnavailableReadiness(), on: windowScene, clock: clock, fallback: fallback)
-                                return
-                            }
-                            let services = configuration.0
-                            native = NativeSessionController(
-                                applicationSupport: root, namespace: services.namespace,
-                                source: { session in services.makeDataSource(applicationSupport: root, session: session)
-                                },
-                                verification: { [weak app] epoch in await app?.verificationRequired(epoch: epoch) },
-                                signedOut: { [navigator] in navigator.navigate(to: .signIn) })
-                            app?.nativeSession = native
+                        guard let root = configuration.1 else {
+                            throw AppServices.Failure.applicationSupportUnavailable
                         }
-                        nativeSession = native
+                        let native = configureSession(services: configuration.0, root: root)
                         native.observe()
                         await native.setActive(isActive)
                         guard !Task.isCancelled, connectionGeneration == generation else { return }
@@ -214,6 +195,26 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 }
             }
         }
+    }
+
+    private func configureSession(services: AppServices, root: URL) -> NativeSessionController {
+        if let nativeSession { return nativeSession }
+        let app = UIApplication.shared.delegate as? AppDelegate
+        let native: NativeSessionController
+        if let factory = nativeSessionFactory {
+            native = factory(services, root)
+        } else if let existing = app?.nativeSession {
+            native = existing
+        } else {
+            native = NativeSessionController(
+                applicationSupport: root, namespace: services.namespace,
+                source: { session in services.makeDataSource(applicationSupport: root, session: session) },
+                verification: { [weak app] epoch in await app?.verificationRequired(epoch: epoch) },
+                signedOut: { [navigator] in navigator.navigate(to: .signIn) })
+            app?.nativeSession = native
+        }
+        nativeSession = native
+        return native
     }
 
     private func runReadiness(
@@ -266,15 +267,39 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 guard let self, self.connectionGeneration == generation else { return }
                 let window = UIWindow(windowScene: windowScene)
                 window.maximumContentSizeCategory = ContentSizeCap.maximumCategory
+                let app = UIApplication.shared.delegate as? AppDelegate
+                if serviceConfiguration == nil {
+                    let load = serviceConfigurationFactory
+                    do {
+                        serviceConfiguration = try await Task.detached {
+                            if let load { return try await load() }
+                            return try AppServices.launchConfiguration()
+                        }.value
+                    } catch { serviceFailure = error }
+                }
+                guard connectionGeneration == generation else { return }
+                if let (services, root) = serviceConfiguration, !services.signedOutReadiness, let root {
+                    let native = configureSession(services: services, root: root)
+                    if nativeSessionFactory == nil, app?.authServices == nil {
+                        app?.authServices = AuthSessionServices(
+                            services: services, applicationSupport: root, nativeSession: native,
+                            navigator: navigator, anchor: { [weak app] in app?.authWindow },
+                            verification: { [weak app] epoch in
+                                await app?.verificationRequired(epoch: epoch)
+                            })
+                    }
+                }
                 let controller = LaunchHostingController(
                     rootView: RootView(
-                        navigator: navigator, moonAnchorStore: moonAnchorStore, launchIntro: launchIntro,
+                        navigator: navigator, authModel: app?.authServices?.model, moonAnchorStore: moonAnchorStore,
+                        launchIntro: launchIntro,
                         forcesReduceMotion: overlayController?.launchScene.timeline.reduceMotion ?? false),
                     signposts: signposts)
                 controller.launchIsVisible = overlayWindow != nil
                 window.rootViewController = controller
                 controller.view.accessibilityElementsHidden = overlayWindow != nil
                 self.window = window
+                app?.authWindow = window
                 window.makeKeyAndVisible()
             }
         }

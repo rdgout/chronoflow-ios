@@ -5,6 +5,8 @@ import UIKit
 final class AppDelegate: UIResponder, UIApplicationDelegate {
     var launchProcess = LaunchProcessState()
     var nativeSession: NativeSessionController?
+    var authServices: AuthSessionServices?
+    weak var authWindow: UIWindow?
     let navigator = RootNavigator()
 
     func verificationRequired(epoch: UInt64) async {

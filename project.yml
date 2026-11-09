@@ -12,7 +12,9 @@ configs:
   Debug: debug
   Release: release
   Perf: release
+  DeviceSigned: debug
 configFiles:
+  DeviceSigned: Config/Base.xcconfig
   Debug: Config/Base.xcconfig
   Release: Config/Base.xcconfig
   Perf: Config/Base.xcconfig
@@ -32,6 +34,8 @@ packages:
     path: Packages/ChronoFlowKit
 targets:
   ChronoFlow:
+    configFiles:
+      DeviceSigned: Config/DeviceSigned.xcconfig
     type: application
     platform: iOS
     sources:
@@ -52,9 +56,13 @@ targets:
       configs:
         Perf:
           CHRONOFLOW_READINESS: signed-out
+    preBuildScripts:
+      - name: Require device signing for associated domains
+        script: sh "$SRCROOT/Scripts/check-device-entitlements.sh"
+        basedOnDependencyAnalysis: false
     dependencies:
       - package: ChronoFlowKit
-        products: [DesignSystem, AppCore, LocalStore, DataAccess, Sync, Launch, Welcome]
+        products: [DesignSystem, AppCore, LocalStore, DataAccess, Sync, Launch, Welcome, Auth]
   AppTests:
     type: bundle.unit-test
     platform: iOS
@@ -143,6 +151,7 @@ schemes:
         - package: ChronoFlowKit/DataAccessTests
         - package: ChronoFlowKit/LaunchTests
         - package: ChronoFlowKit/WelcomeTests
+        - package: ChronoFlowKit/AuthTests
   ReadinessRelease:
     build:
       targets:
