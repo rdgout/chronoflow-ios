@@ -1902,7 +1902,8 @@ Deferrals: Reminders and notification permissions/delivery remain excluded. Opti
 Stack: `feat/settings-board-fidelity` on `feat/phase-19-reminders` (PR #30). The verified audit is `chronoflow-ios-handoff/settings-fidelity.json`. No simulator execution; capture attachments are a manual visual aid, never reference snapshots.
 
 - [x] Scaffold + components: large title using Settings home's navigation styler; scrolling, bordered token cards, row discs, Fields/Notices/capsule actions, visible ChoiceCards and wrapping pill groups, badges, toast and content-sized native sheets. Keep root xxLarge and all safe-area edges via the existing page rail and native scroll/navigation insets. Generate missing board metrics, warning surfaces, popover and destructive foreground tokens.
-- [ ] Account: rebuild rows, Profile fields and missing-account state; retain email/data deferrals.
+- [x] Account: rebuild rows, Profile fields and missing-account state; retain email/data deferrals.
+  - Account uses the board’s separate destructive row and the actual SetDelete compact-sheet presentation (the audit’s suggestion of a pushed delete page conflicts with SetDelete). Profile retains the name-only “Save changes” action because “Save and send link” would promise the deferred email flow; email stays read-only. Email verification/prompt and data/policies remain omitted as recorded in 17h. Missing-account retry restarts observation and requests sync.
 - [ ] Body clock: rebuild cards, choice groups, time tiles, readiness, counters and hint/validation layout; record backend/board conflicts.
 - [ ] Preferences: rebuild appearance, category swatches, links, Reminders states and Language choices/toast.
 - [ ] Security: rebuild rows, password validation, 2FA intro/setup/codes/manage and shared password-prompt states.

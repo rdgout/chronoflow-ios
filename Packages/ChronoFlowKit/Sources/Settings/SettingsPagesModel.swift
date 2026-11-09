@@ -63,6 +63,15 @@ import Observation
         ]
     }
 
+    public func retry() async {
+        guard active else { return }
+        for task in tasks { task.cancel() }
+        tasks.removeAll()
+        failure = false
+        start()
+        await requestSync()
+    }
+
     public func saveProfile(name: String) async throws {
         guard let account else { throw LocalMutationFailure.missingAccount }
         try await enqueue(.profile(ProfileChange(name: name, email: account.email)))

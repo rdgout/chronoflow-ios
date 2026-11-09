@@ -4002,6 +4002,40 @@
           }
         }
       }
+    },
+    "Phone language ({{language}})": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Phone language ({{language}})"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefoontaal ({{language}})"
+          }
+        }
+      }
+    },
+    "Nederlands": {
+      "comment": "Settings board copy; RN nl.json checked first.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nederlands"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nederlands"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
