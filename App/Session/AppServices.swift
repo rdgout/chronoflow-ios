@@ -78,6 +78,7 @@ nonisolated struct AppServices: Sendable {
         testing: Bool = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
             || NSClassFromString("XCTestCase") != nil,
         environment: [String: String] = ProcessInfo.processInfo.environment,
+        arguments: [String] = ProcessInfo.processInfo.arguments,
         mockDelay: (@Sendable () -> TimeInterval)? = nil
     ) throws {
         #if DEBUG
@@ -85,8 +86,8 @@ nonisolated struct AppServices: Sendable {
             self.mockDelay = mockDelay ?? { requestedAuthTest?.mockDelay ?? Double.random(in: 0.3...0.8) }
             isolatedMockStore =
                 (requestedAuthTest?.fastLaunch == true
-                    || ProcessInfo.processInfo.arguments.contains("-cf.isolatedMockServer")
-                    || ProcessInfo.processInfo.arguments.contains("-cf.timeline-fixtures"))
+                    || arguments.contains("-cf.isolatedMockServer")
+                    || arguments.contains("-cf.timeline-fixtures"))
                 ? MemoryMockStateStore() : nil
         #else
             self.mockDelay = mockDelay ?? { Double.random(in: 0.3...0.8) }
@@ -113,7 +114,7 @@ nonisolated struct AppServices: Sendable {
             release: release, testing: testing || authTestRequested)
         #if DEBUG
             timelineSeed =
-                try factory.namespace == .mock && ProcessInfo.processInfo.arguments.contains("-cf.timeline-fixtures")
+                try factory.namespace == .mock && arguments.contains("-cf.timeline-fixtures")
                 ? MockAppSeed.make(now: Date(), walkthroughSeen: true, includeTimelinePerformanceTrips: true) : nil
             authTest = requestedAuthTest
             refreshScenario = requestedAuthTest?.refreshUpdatesTrip == true ? RefreshUITestScenario() : nil
@@ -133,23 +134,50 @@ nonisolated struct AppServices: Sendable {
     }
     static func launchConfiguration() async throws -> (AppServices, URL?) {
         assert(!Thread.isMainThread)
-        let services = try AppServices()
-        var root =
-            services.signedOutReadiness
-            ? nil
-            : FileManager.default.urls(
-                for: .applicationSupportDirectory, in: .userDomainMask
-            ).first
         #if DEBUG
+            return try await uiTestLaunchConfiguration(
+                environment: ProcessInfo.processInfo.environment, arguments: ProcessInfo.processInfo.arguments)
+        #else
+            let services = try AppServices()
+            let root =
+                services.signedOutReadiness
+                ? nil
+                : FileManager.default.urls(
+                    for: .applicationSupportDirectory, in: .userDomainMask
+                ).first
+            return (services, root)
+        #endif
+    }
+
+    #if DEBUG
+        static func uiTestLaunchConfiguration(
+            environment: [String: String], arguments: [String], reset: Bool = false,
+            applicationSupport: URL? = nil
+        ) async throws -> (AppServices, URL?) {
+            assert(!Thread.isMainThread)
+            let services = try AppServices(environment: environment, arguments: arguments)
+            var root =
+                services.signedOutReadiness
+                ? nil
+                : applicationSupport
+                    ?? FileManager.default.urls(
+                        for: .applicationSupportDirectory, in: .userDomainMask
+                    ).first
             if services.timelineSeed != nil, let support = root {
                 root = support.appending(path: "TimelineFixtures")
             } else if let test = services.authTest, let support = root {
                 root = test.applicationSupport(in: support)
             }
-            if let root { try await services.seedSignedIn(applicationSupport: root) }
-        #endif
-        return (services, root)
-    }
+            if let root {
+                if reset, services.authTest != nil {
+                    try await MockSessionSeed.reset(
+                        applicationSupport: root, credentials: services.sessionCredentials())
+                }
+                try await services.seedSignedIn(applicationSupport: root)
+            }
+            return (services, root)
+        }
+    #endif
 
     #if DEBUG
         func seedSignedIn(applicationSupport root: URL) async throws {

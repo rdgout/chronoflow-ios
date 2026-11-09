@@ -39,13 +39,13 @@ final class AuthSessionServices {
         self.verification = verification
         #if DEBUG
             if services.factory.source == .mock, let mock = source as? MockDataSource,
-                ProcessInfo.processInfo.arguments.contains("-cf.twoFactorServerFailure")
+                UITestRuntime.arguments.contains("-cf.twoFactorServerFailure")
             {
                 Task { await mock.failNext(method: .completeTwoFactor, error: .server(status: 503)) }
             }
             if services.factory.source == .mock, let mock = source as? MockDataSource {
                 if services.authUITestEnabled,
-                    let failure = ProcessInfo.processInfo.environment["CF_AUTH_TEST_RESET_FAILURE"]
+                    let failure = UITestRuntime.environment["CF_AUTH_TEST_RESET_FAILURE"]
                 {
                     Task {
                         await mock.failNext(
@@ -57,7 +57,7 @@ final class AuthSessionServices {
                     }
                 }
                 if services.authUITestEnabled,
-                    let failure = ProcessInfo.processInfo.environment["CF_AUTH_TEST_SIGNUP_FAILURE"]
+                    let failure = UITestRuntime.environment["CF_AUTH_TEST_SIGNUP_FAILURE"]
                 {
                     Task {
                         await mock.failNext(
@@ -69,7 +69,7 @@ final class AuthSessionServices {
                     }
                 }
                 if services.authUITestEnabled,
-                    let state = ProcessInfo.processInfo.environment["CF_AUTH_TEST_VERIFY_STATE"],
+                    let state = UITestRuntime.environment["CF_AUTH_TEST_VERIFY_STATE"],
                     ["server", "offline", "failedServer", "failedOffline", "failedThrottle"].contains(state)
                 {
                     Task {
@@ -81,9 +81,9 @@ final class AuthSessionServices {
                                     ? .throttled(retryAfterSeconds: 60, status: 429) : .server(status: 503))
                     }
                 }
-                if ProcessInfo.processInfo.arguments.contains("-cf.forgotServerFailure") {
+                if UITestRuntime.arguments.contains("-cf.forgotServerFailure") {
                     Task { await mock.failNext(method: .requestPasswordReset, error: .server(status: 503)) }
-                } else if ProcessInfo.processInfo.arguments.contains("-cf.forgotThrottleFailure") {
+                } else if UITestRuntime.arguments.contains("-cf.forgotThrottleFailure") {
                     Task {
                         await mock.failNext(
                             method: .requestPasswordReset, error: .throttled(retryAfterSeconds: 60, status: 429))
@@ -195,7 +195,7 @@ final class AuthSessionServices {
                     guard let self else { return }
                     #if DEBUG
                         if authUITestEnabled,
-                            ProcessInfo.processInfo.environment["CF_AUTH_TEST_VERIFY_STATE"] == "signOutError"
+                            UITestRuntime.environment["CF_AUTH_TEST_VERIFY_STATE"] == "signOutError"
                         {
                             throw DataFailure.offline
                         }
@@ -236,6 +236,16 @@ final class AuthSessionServices {
         }
         return true
     }
+
+    #if DEBUG
+        func stopUITestSession() async {
+            model.clearSecrets()
+            verifyModel?.cancel()
+            verificationSubscription?.cancel()
+            await verificationSubscription?.value
+            verificationSubscription = nil
+        }
+    #endif
 
     deinit { verificationSubscription?.cancel() }
 }

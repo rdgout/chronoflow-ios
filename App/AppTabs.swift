@@ -50,7 +50,7 @@ struct AppTabs: View {
         #if DEBUG
             tabs.planPageSafeArea()
                 .onChange(of: home?.formatter != nil) { _, ready in
-                    if ready, ProcessInfo.processInfo.environment["CF_PLAN_TEST_SHEET"] == "legend",
+                    if ready, UITestRuntime.environment["CF_PLAN_TEST_SHEET"] == "legend",
                         (UIApplication.shared.delegate as? AppDelegate)?.authServices?.authUITestEnabled == true
                     {
                         showingLegend = true
@@ -199,7 +199,7 @@ struct AppTabs: View {
                     try? await native.refreshNow()
                 }
                 if (UIApplication.shared.delegate as? AppDelegate)?.authServices?.authUITestEnabled == true,
-                    let route = ProcessInfo.processInfo.environment["CF_SETTINGS_ROUTE"]
+                    let route = UITestRuntime.environment["CF_SETTINGS_ROUTE"]
                 {
                     selection = .settings
                     switch route {
@@ -219,7 +219,7 @@ struct AppTabs: View {
             #endif
             var clock: any PlanClock = SystemPlanClock()
             #if DEBUG
-                if ProcessInfo.processInfo.environment["CF_PLAN_TEST_FREEZE_CLOCK"] == "1",
+                if UITestRuntime.environment["CF_PLAN_TEST_FREEZE_CLOCK"] == "1",
                     (UIApplication.shared.delegate as? AppDelegate)?.authServices?.authUITestEnabled == true
                 {
                     clock = FixedPlanClock(now: Date())

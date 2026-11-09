@@ -7,7 +7,7 @@
         database: AccountDatabase, permit: SessionMutationPermit
     ) async throws {
         guard (UIApplication.shared.delegate as? AppDelegate)?.authServices?.authUITestEnabled == true,
-            ProcessInfo.processInfo.environment["CF_AUTH_TEST_TERMS_CHANGES_PENDING"] == "1"
+            UITestRuntime.environment["CF_AUTH_TEST_TERMS_CHANGES_PENDING"] == "1"
         else { return }
         let outbox = OutboxRepository(database: database)
         guard try await outbox.pending().isEmpty else { return }

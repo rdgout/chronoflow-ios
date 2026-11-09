@@ -62,7 +62,11 @@
             return page
         }
         static var requestedTrip: String? {
-            let args = ProcessInfo.processInfo.arguments
+            #if DEBUG
+                let args = UITestRuntime.arguments
+            #else
+                let args = ProcessInfo.processInfo.arguments
+            #endif
             guard let index = args.firstIndex(of: "-cf.trip-page"), args.indices.contains(index + 1) else { return nil }
             return args[index + 1]
         }

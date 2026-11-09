@@ -43,7 +43,7 @@ struct AuthRootView: View {
 
     private var automaticallyFocusesErrors: Bool {
         #if DEBUG
-            AuthUITestConfiguration()?.auditState == nil
+            AuthUITestConfiguration(environment: UITestRuntime.environment)?.auditState == nil
         #else
             true
         #endif
@@ -52,7 +52,7 @@ struct AuthRootView: View {
     private func signUpModel() -> SignUpModel {
         let result = model.makeSignUpModel()
         #if DEBUG
-            AuthUITestConfiguration()?.prefill(result)
+            AuthUITestConfiguration(environment: UITestRuntime.environment)?.prefill(result)
         #endif
         return result
     }
@@ -60,7 +60,7 @@ struct AuthRootView: View {
     private func resetModel(_ link: ResetPasswordLink) -> ResetPasswordModel {
         let result = model.makeResetPasswordModel(link)
         #if DEBUG
-            AuthUITestConfiguration()?.prefill(result)
+            AuthUITestConfiguration(environment: UITestRuntime.environment)?.prefill(result)
         #endif
         return result
     }

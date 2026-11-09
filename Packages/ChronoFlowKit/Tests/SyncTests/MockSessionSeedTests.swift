@@ -57,6 +57,69 @@
             #expect(try await credentials.readStoredSession() == nil)
         }
 
+        @Test func reseedRemovesPreviousAccountQueueAndCompletionMarkerAndMatchesColdSeed() async throws {
+            let root = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+            defer { try? FileManager.default.removeItem(at: root) }
+            let credentials = SeedMemoryCredentials()
+            let now = Date(timeIntervalSince1970: 1_800_000_000)
+            func seed(account: String) async throws -> SeedSummary {
+                let source = MockDataSource(
+                    store: MemoryMockStateStore(), seed: try MockAppSeed.make(now: now, walkthroughSeen: true),
+                    delay: { 0 }, sleep: { _ in }, bearer: { try await credentials.readStoredSession()?.token })
+                try await MockSessionSeed.run(
+                    applicationSupport: root, namespace: .mock, credentials: credentials, source: source,
+                    input: PasswordSignInInput(
+                        email: account, password: MockScenarioValues.password, deviceID: UUID().uuidString,
+                        deviceName: "test"
+                    ),
+                    twoFactorCode: MockScenarioValues.twoFactorCode)
+                let stored = try #require(try await credentials.readStoredSession())
+                let accounts = SessionAccountDatabase(applicationSupport: root, namespace: .mock)
+                let controller = SessionController(credentials: credentials, accounts: accounts)
+                _ = try await controller.restore()
+                let database = try #require(await accounts.activeDatabase())
+                let account = try #require(try await AccountRepository(database: database).account())
+                #expect(stored.accountId == account.id)
+                let summary = SeedSummary(
+                    id: account.id, email: account.email, walkthrough: account.walkthroughSeen,
+                    verified: account.hasVerifiedEmail,
+                    trips: try await TripRepository(database: database).trips().map(\.id).sorted(),
+                    pending: try await OutboxRepository(database: database).pending().count,
+                    synced: account.syncedAt != nil)
+                try await accounts.close()
+                return summary
+            }
+            let cold = try await seed(account: MockScenarioValues.twoFactorEmail)
+            try await MockSessionSeed.reset(applicationSupport: root, credentials: credentials)
+            _ = try await seed(account: MockScenarioValues.demoEmail)
+            let accounts = SessionAccountDatabase(applicationSupport: root, namespace: .mock)
+            let controller = SessionController(credentials: credentials, accounts: accounts)
+            _ = try await controller.restore()
+            let database = try #require(await accounts.activeDatabase())
+            try await OutboxRepository(database: database).enqueue(
+                .settings(section: .preferences, patch: JSONObject(["time_format": .string("12")])))
+            #expect(try await OutboxRepository(database: database).pending().count == 1)
+            try await accounts.close()
+            try await MockSessionSeed.reset(applicationSupport: root, credentials: credentials)
+            #expect(try await credentials.readStoredSession() == nil)
+            #expect(!FileManager.default.fileExists(atPath: root.path))
+            let reseeded = try await seed(account: MockScenarioValues.twoFactorEmail)
+            #expect(reseeded == cold)
+            let oldDatabase = root.appending(
+                path: "\(StorageNamespace.mock.directoryName)/Accounts/\(MockScenarioValues.demoID)")
+            #expect(!FileManager.default.fileExists(atPath: oldDatabase.path))
+        }
+
+    }
+
+    private struct SeedSummary: Equatable {
+        let id: String
+        let email: String
+        let walkthrough: Bool
+        let verified: Bool
+        let trips: [String]
+        let pending: Int
+        let synced: Bool
     }
 
     private actor SeedMemoryCredentials: SessionStore {

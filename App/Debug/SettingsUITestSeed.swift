@@ -9,7 +9,7 @@
         permit: SessionMutationPermit
     ) async throws {
         guard (UIApplication.shared.delegate as? AppDelegate)?.authServices?.authUITestEnabled == true,
-            ProcessInfo.processInfo.environment["CF_SETTINGS_TEST_PENDING"] == "1"
+            UITestRuntime.environment["CF_SETTINGS_TEST_PENDING"] == "1"
         else { return }
         guard let account = try await AccountRepository(database: database).account(),
             account.email == "demo@example.com"

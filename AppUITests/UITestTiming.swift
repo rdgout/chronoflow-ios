@@ -10,6 +10,8 @@ import XCTest
         )
     }
 
+    static func awaitFirstElement(environment: [String: String]) { awaitingFirstElement = environment }
+
     static func firstElementFound() {
         guard let environment = awaitingFirstElement else { return }
         awaitingFirstElement = nil

@@ -61,10 +61,20 @@ targets:
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_EMIT_LOC_STRINGS: YES
       configs:
+        Debug:
+          INFOPLIST_FILE: "$(DERIVED_FILE_DIR)/ChronoFlow-Debug-Info.plist"
         Perf:
           CHRONOFLOW_READINESS: signed-out
           SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) CHRONOFLOW_TIMELINE_PERF"
     preBuildScripts:
+      - name: Generate Debug URL registration
+        script: |
+          if [ "$CONFIGURATION" = Debug ]; then
+            python3 -I "$SRCROOT/Scripts/make-debug-info.py" "$SRCROOT/App/Info.plist" "$DERIVED_FILE_DIR/ChronoFlow-Debug-Info.plist"
+          fi
+        inputFiles: ["$(SRCROOT)/App/Info.plist", "$(SRCROOT)/Scripts/make-debug-info.py"]
+        outputFiles: ["$(DERIVED_FILE_DIR)/ChronoFlow-Debug-Info.plist"]
+        basedOnDependencyAnalysis: false
       - name: Require device signing for associated domains
         script: sh "$SRCROOT/Scripts/check-device-entitlements.sh"
         basedOnDependencyAnalysis: false
@@ -115,6 +125,7 @@ targets:
     sources:
       - path: AppUITests
       - path: Packages/ChronoFlowKit/Tests/ToolingTests/BackoffPoll.swift
+      - path: Packages/ChronoFlowKit/Sources/DataAccess/UITestSeedCommand.swift
       - path: Packages/ChronoFlowKit/Tests/ToolingTests/LaunchImageComparison.swift
       - path: Packages/ChronoFlowKit/Tests/ToolingTests/FrameStability.swift
       - path: Packages/ChronoFlowKit/Tests/ToolingTests/AuthScrollGesture.swift

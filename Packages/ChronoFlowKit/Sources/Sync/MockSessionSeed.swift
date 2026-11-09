@@ -4,6 +4,11 @@
     import LocalStore
 
     public enum MockSessionSeed {
+        public static func reset(applicationSupport root: URL, credentials: any SessionStore) async throws {
+            try await credentials.delete()
+            if FileManager.default.fileExists(atPath: root.path) { try FileManager.default.removeItem(at: root) }
+        }
+
         public static func run(
             applicationSupport root: URL, namespace: StorageNamespace, credentials: any SessionStore,
             source: any DataSource, input: PasswordSignInInput, twoFactorCode: String

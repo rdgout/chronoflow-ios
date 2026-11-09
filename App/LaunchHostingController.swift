@@ -9,10 +9,12 @@ final class LaunchHostingController<Content: View>: UIHostingController<Content>
     private let signposts: LaunchSignposts
     private var recordedLayout = false
     #if DEBUG
+        var uiTestReadinessID: String?
         private var recordedVisibleScreen = false
         func recordVisibleScreen() {
             guard !recordedVisibleScreen, !launchIsVisible, view.window != nil else { return }
             recordedVisibleScreen = true
+            if let uiTestReadinessID { view.window?.accessibilityIdentifier = "uitest.ready.\(uiTestReadinessID)" }
             UITestTimeline.record("seeded-screen-visible")
         }
     #endif

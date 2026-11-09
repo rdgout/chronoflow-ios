@@ -42,7 +42,7 @@ struct RootView: View {
         content
             .transaction {
                 #if DEBUG
-                    if AuthUITestConfiguration()?.fastLaunch == true {
+                    if AuthUITestConfiguration(environment: UITestRuntime.environment)?.fastLaunch == true {
                         $0.disablesAnimations = true
                         $0.animation = nil
                     }
