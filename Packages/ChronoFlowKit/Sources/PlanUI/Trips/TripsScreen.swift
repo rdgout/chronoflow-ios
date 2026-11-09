@@ -49,6 +49,7 @@
                                 .planTextStyle(Typography.screenBodyLg, color: .mutedForeground)
                             if let create {
                                 Button(t("Plan a trip"), action: create).buttonStyle(.borderedProminent)
+                                    .foregroundStyle(ColorToken.primaryForeground.color)
                                     .buttonBorderShape(.capsule).accessibilityIdentifier("trips.create-empty")
                             }
                         }.multilineTextAlignment(.center).frame(maxWidth: .infinity)
