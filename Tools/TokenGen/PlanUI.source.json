@@ -64,5 +64,15 @@
   "wizardStopGlyphSize": 14,
   "wizardStopDotWidth": 2,
   "wizardStopDotGap": 4,
+  "wizardReturnLabelWidth": 52,
+  "wizardReturnRowHeight": 56,
+  "wizardChoiceHeight": 76,
+  "wizardChronotypeFontSize": 16,
+  "wizardChronotypeLineHeight": 22,
+  "wizardChoiceGap": 10,
+  "wizardChronotypePadding": 10,
+  "wizardHintBottom": 10,
+  "wizardNoticeGap": 10,
+  "wizardNoticeIconSize": 18,
   "wizardSheetRadius": 38
 }

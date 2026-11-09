@@ -161,19 +161,7 @@
         private var outboundScreen: some View {
             shell(title: "When is your flight?", subtitle: "Times are local at each airport.", outbound: true) {
                 if let banner = model.draft.fieldErrors["review"] {
-                    HStack(alignment: .top, spacing: PlanUITokens.space2) {
-                        Image(systemName: "info.circle").accessibilityHidden(true)
-                        Text(fieldCopy(banner)).font(Typography.screenBody.font)
-                    }
-                    .padding(PlanUITokens.space3)
-                    .background(
-                        ColorToken.authErrorBackground.color, in: RoundedRectangle(cornerRadius: PlanUITokens.radiusXl)
-                    )
-                    .overlay {
-                        RoundedRectangle(cornerRadius: PlanUITokens.radiusXl).strokeBorder(
-                            ColorToken.authErrorBorder.color, lineWidth: AuthTokens.borderWidth)
-                    }
-                    .accessibilityElement(children: .combine).accessibilityIdentifier("wizard.outbound.past")
+                    flightNotice(banner, identifier: "wizard.outbound.past")
                 }
                 ForEach(
                     Array(model.draft.form.legs.prefix(model.draft.form.returnBoundary).enumerated()), id: \.element.id
@@ -255,6 +243,21 @@
                             dash: [PlanUITokens.wizardStopDotWidth, PlanUITokens.wizardStopDotGap]))
                 }
             }.accessibilityHidden(true)
+        }
+
+        func flightNotice(_ message: FieldMessage, identifier: String) -> some View {
+            HStack(alignment: .top, spacing: PlanUITokens.wizardNoticeGap) {
+                Image(systemName: "info.circle").font(.system(size: PlanUITokens.wizardNoticeIconSize))
+                    .accessibilityHidden(true)
+                Text(fieldCopy(message)).font(Typography.screenBody.font)
+            }
+            .padding(.horizontal, PlanUITokens.wizardContentGap).padding(.vertical, PlanUITokens.space3)
+            .background(ColorToken.authErrorBackground.color, in: RoundedRectangle(cornerRadius: PlanUITokens.radiusXl))
+            .overlay {
+                RoundedRectangle(cornerRadius: PlanUITokens.radiusXl).strokeBorder(
+                    ColorToken.authErrorBorder.color, lineWidth: AuthTokens.borderWidth)
+            }
+            .accessibilityElement(children: .combine).accessibilityIdentifier(identifier)
         }
 
         func flightCard(index: Int, leg: WizardLeg) -> some View {

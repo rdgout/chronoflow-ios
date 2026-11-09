@@ -156,6 +156,14 @@ actor WizardSearchProbe {
         #expect(
             WizardOutboundRules.errors(form: form, airports: airports, now: after, checkPast: true)["review"]?.key
                 == "A new plan needs an upcoming arrival. Check your flight dates or add your return flight.")
+        var home = form
+        home.addReturn()
+        home.legs[1].toIata = "AMS"
+        home.legs[1].departLocal = "2026-11-11T10:25"
+        home.legs[1].arriveLocal = "2026-11-11T15:30"
+        #expect(
+            WizardFlightRules.errors(form: home, airports: airports, now: after, checkPast: true)["review"]?.key
+                == "A new plan needs an upcoming arrival. Check your flight dates.")
         form.insertStop(wizardAirport("DXB", city: "Dubai", zone: "Asia/Dubai"), beforeDestinationOf: 0)
         #expect(
             WizardOutboundRules.connection(form: form, index: 1, duration: { String($0) })?.key == "Stop in {{airport}}"

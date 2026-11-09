@@ -44,7 +44,7 @@
         }
 
         func wizardShell<Content: View>(
-            title: String, subtitle: String? = nil, id: String, button: String? = nil,
+            title: String, subtitle: String? = nil, id: String, button: String? = nil, answerHint: Bool = false,
             enabled: Bool = true, action: @escaping () -> Void = {}, @ViewBuilder content: () -> Content
         ) -> some View {
             VStack(spacing: 0) {
@@ -95,6 +95,10 @@
                         }
                     }.padding(.horizontal, PlanUITokens.space5).padding(.vertical, PlanUITokens.space3)
                         .background(ColorToken.background.color)
+                } else if answerHint {
+                    tapHint.frame(maxWidth: .infinity).multilineTextAlignment(.center)
+                        .padding(.horizontal, PlanUITokens.space5).padding(.bottom, PlanUITokens.wizardHintBottom)
+                        .background(ColorToken.background.color)
                 }
             }
             .navigationTitle(t("New trip")).navigationBarTitleDisplayMode(.inline)
@@ -119,33 +123,35 @@
         }
 
         var returnScreen: some View {
-            wizardShell(title: t("Coming back?"), id: "return") {
-                choice(
-                    "One way", hint: "Just this flight", selected: model.draft.form.end.kind == "one_way", id: "one-way"
-                ) {
-                    model.chooseReturn("one_way")
-                }
-                choice(
-                    "Add my return flight", hint: "We plan the shift back home too",
-                    selected: model.draft.form.end.kind == "return_legs", id: "add-return",
-                    enabled: model.draft.form.end.kind == "return_legs"
-                        || model.draft.form.legs.count < WizardForm.maxFlights
-                ) {
-                    model.chooseReturn("return_legs")
-                }
-                if ["nights", "check_out"].contains(model.draft.form.end.kind) {
-                    let title =
-                        model.draft.form.end.kind == "nights"
-                        ? t("Ends after {{count}} nights", ["count": String(model.draft.form.end.nights ?? 0)])
-                        : WizardPresentation.returnSummary(
-                            model.draft.form, stayEnd: model.draft.state.review?.summary?.stayEnd, locale: locale, t: t)
-                    choice(
-                        title, hint: "Set on the website. Keep it, or add your flight home.", selected: true, id: "web"
-                    ) {
-                        model.chooseReturn(model.draft.form.end.kind)
+            wizardShell(title: t("Coming back?"), id: "return", answerHint: true) {
+                VStack(spacing: PlanUITokens.wizardChoiceGap) {
+                    if ["nights", "check_out"].contains(model.draft.form.end.kind) {
+                        let title =
+                            model.draft.form.end.kind == "nights"
+                            ? t("Ends after {{count}} nights", ["count": String(model.draft.form.end.nights ?? 0)])
+                            : WizardPresentation.returnSummary(
+                                model.draft.form, stayEnd: model.draft.state.review?.summary?.stayEnd, locale: locale,
+                                t: t)
+                        choice(
+                            title, hint: "Set on the website. Keep it, or add your flight home.", selected: true,
+                            id: "web"
+                        ) {
+                            model.chooseReturn(model.draft.form.end.kind)
+                        }
                     }
+                    choice(
+                        "One way", hint: "Just this flight", selected: model.draft.form.end.kind == "one_way",
+                        id: "one-way"
+                    ) {
+                        model.chooseReturn("one_way")
+                    }
+                    choice(
+                        "Add my return flight", hint: "We plan the shift back home too",
+                        selected: model.choicePending && model.draft.form.end.kind == "return_legs", id: "add-return",
+                        enabled: model.draft.form.end.kind == "return_legs"
+                            || model.draft.form.legs.count < WizardForm.maxFlights
+                    ) { model.chooseReturn("return_legs") }
                 }
-                tapHint
             }
         }
 
@@ -163,28 +169,12 @@
                 },
                 content: {
                     if let banner = model.draft.fieldErrors["review"] {
-                        Text(fieldCopy(banner)).font(Typography.screenBody.font).padding(PlanUITokens.space3)
-                            .background(
-                                ColorToken.authErrorBackground.color,
-                                in: RoundedRectangle(cornerRadius: PlanUITokens.radiusXl)
-                            )
-                            .accessibilityIdentifier("wizard.return-flight.past")
+                        flightNotice(banner, identifier: "wizard.return-flight.past")
                     }
                     if model.draft.form.legs.indices.contains(model.draft.form.returnBoundary) {
                         let first = model.draft.form.legs[model.draft.form.returnBoundary]
                         VStack(spacing: 0) {
-                            HStack(spacing: PlanUITokens.space2) {
-                                Image(systemName: "lock").accessibilityHidden(true)
-                                VStack(alignment: .leading, spacing: PlanUITokens.space1) {
-                                    Text(t("From")).font(Typography.wizardHint.font)
-                                    Text([first.fromIata, first.fromCity].compactMap { $0 }.joined(separator: " · "))
-                                        .font(
-                                            Typography.wizardAirport.font)
-                                    Text(t("Where you landed")).font(Typography.wizardHint.font).foregroundStyle(
-                                        ColorToken.mutedForeground.color)
-                                }
-                                Spacer(minLength: 0)
-                            }.padding(PlanUITokens.space4)
+                            returnAirportRow("From", iata: first.fromIata, city: first.fromCity, locked: true) {}
                                 .accessibilityElement(children: .ignore)
                                 .accessibilityLabel(
                                     t(
@@ -194,10 +184,10 @@
                                 .accessibilityIdentifier("wizard.return-flight.from")
                             Divider().overlay(ColorToken.border.color)
                             let last = model.draft.form.legs.last!
-                            airportRow("To", iata: last.toIata, city: last.toCity) {
+                            returnAirportRow("To", iata: last.toIata, city: last.toCity, locked: false) {
                                 model.openAirport(
                                     WizardAirportSheet(index: model.draft.form.legs.count - 1, side: .home))
-                            }
+                            }.accessibilityIdentifier("wizard.to")
                         }.wizardCard()
                         ForEach(
                             Array(model.draft.form.legs.enumerated()).filter {
@@ -206,26 +196,56 @@
                         ) { index, leg in
                             if index > model.draft.form.returnBoundary { connection(index) }
                             VStack(alignment: .leading, spacing: PlanUITokens.space2) {
-                                Label(leg.fromIata + " → " + leg.toIata, systemImage: "airplane")
-                                    .font(Typography.wizardRoute.font).foregroundStyle(ColorToken.dawnText.color)
-                                VStack(spacing: 0) {
-                                    WizardFlightDateTimeRow(model: model, index: index, arrival: false)
-                                    Divider().overlay(ColorToken.border.color)
-                                    WizardFlightDateTimeRow(model: model, index: index, arrival: true)
-                                }.wizardCard()
+                                flightCard(index: index, leg: leg)
                             }
+                        }
+                        if model.draft.form.legs.count - model.draft.form.returnBoundary == 1 {
+                            flightDuration(index: model.draft.form.returnBoundary)
                         }
                         if model.draft.form.legs.count < WizardForm.maxFlights {
                             Button {
                                 model.openAirport(
                                     WizardAirportSheet(index: model.draft.form.legs.count - 1, side: .stop))
                             } label: {
-                                Label(t("Add a stop"), systemImage: "plus").frame(minHeight: AuthTokens.touch)
+                                Label(
+                                    t(
+                                        model.draft.form.legs.count - model.draft.form.returnBoundary > 1
+                                            ? "Add another stop" : "Add a stop"), systemImage: "plus"
+                                )
+                                .font(Typography.wizardNavTitle.font).padding(.horizontal, PlanUITokens.space1)
+                                .frame(minHeight: AuthTokens.touch)
                             }
-                            .accessibilityIdentifier("wizard.return-flight.add-stop")
+                            .tint(ColorToken.dawnText.color).accessibilityIdentifier("wizard.return-flight.add-stop")
                         }
                     }
                 })
+        }
+
+        func returnAirportRow(_ label: String, iata: String, city: String?, locked: Bool, action: @escaping () -> Void)
+            -> some View
+        {
+            let row = HStack(spacing: PlanUITokens.space2) {
+                Text(t(label)).font(Typography.wizardFieldLabel.font).foregroundStyle(ColorToken.mutedForeground.color)
+                    .frame(width: PlanUITokens.wizardReturnLabelWidth, alignment: .leading)
+                VStack(alignment: .leading, spacing: PlanUITokens.wizardLabelGap) {
+                    Text([iata, city].compactMap { $0 }.joined(separator: " · ")).font(Typography.wizardButton.font)
+                    if locked {
+                        Text(t("Where you landed")).font(Typography.wizardHint.font).foregroundStyle(
+                            ColorToken.mutedForeground.color)
+                    }
+                }
+                Spacer(minLength: 0)
+                Image(systemName: locked ? "lock" : "chevron.right").font(.system(size: PlanUITokens.space4))
+                    .foregroundStyle(ColorToken.mutedForeground.color).accessibilityHidden(true)
+            }
+            .padding(.leading, PlanUITokens.space4).padding(
+                .trailing, locked ? PlanUITokens.space4 : PlanUITokens.space3
+            )
+            .padding(.vertical, PlanUITokens.wizardControlGap)
+            .frame(maxWidth: .infinity, minHeight: PlanUITokens.wizardReturnRowHeight, alignment: .leading)
+            return Group {
+                if locked { row } else { Button(action: action) { row }.buttonStyle(.plain) }
+            }
         }
 
         var sleepScreen: some View {
@@ -293,46 +313,48 @@
             _ label: String, hint: String? = nil, selected: Bool, id: String, enabled: Bool = true,
             action: @escaping () -> Void
         ) -> some View {
-            Button {
+            let sleep = id.hasPrefix("sleep.")
+            let question = id.hasPrefix("question.")
+            let radius =
+                sleep ? PlanUITokens.radiusXl : question ? PlanUITokens.wizardQuestionRadius : PlanUITokens.radius2Xl
+            return Button {
                 UISelectionFeedbackGenerator().selectionChanged()
                 action()
             } label: {
                 HStack(spacing: PlanUITokens.space3) {
-                    VStack(alignment: .leading, spacing: PlanUITokens.space1) {
-                        Text(t(label)).font(Typography.wizardChoice.font)
+                    VStack(alignment: .leading, spacing: sleep ? PlanUITokens.wizardLabelGap : 0) {
+                        Text(t(label)).font((sleep ? Typography.wizardChronotype : Typography.wizardChoice).font)
                         if let hint {
-                            Text(t(hint)).font(Typography.wizardHint.font).foregroundStyle(
-                                ColorToken.mutedForeground.color)
+                            Text(t(hint)).font((sleep ? Typography.wizardHint : Typography.screenBody).font)
+                                .foregroundStyle(ColorToken.mutedForeground.color)
                         }
                     }
                     Spacer(minLength: 0)
-                    if selected { Image(systemName: "checkmark").foregroundStyle(ColorToken.dawnText.color) }
-                }.frame(
+                    if !sleep && !question {
+                        Image(systemName: id == "web" ? "checkmark" : "chevron.right")
+                            .font(.system(size: id == "web" ? PlanUITokens.space5 : PlanUITokens.space4))
+                            .foregroundStyle((id == "web" ? ColorToken.dawnText : .mutedForeground).color)
+                    }
+                }
+                .padding(.leading, sleep ? PlanUITokens.wizardContentGap : PlanUITokens.space5)
+                .padding(
+                    .trailing,
+                    sleep ? PlanUITokens.wizardContentGap : question ? PlanUITokens.space5 : PlanUITokens.space4
+                )
+                .padding(.vertical, sleep ? PlanUITokens.wizardChronotypePadding : question ? 0 : PlanUITokens.space3)
+                .frame(
                     maxWidth: .infinity,
-                    minHeight: id.hasPrefix("question.") ? PlanUITokens.wizardFlightRowHeight : AuthTokens.touch,
+                    minHeight: question ? PlanUITokens.wizardFlightRowHeight : PlanUITokens.wizardChoiceHeight,
                     alignment: .leading
-                ).padding(
-                    PlanUITokens.space4
                 )
-                .background(
-                    ColorToken.card.color,
-                    in: RoundedRectangle(
-                        cornerRadius: (id.hasPrefix("sleep.")
-                            ? PlanUITokens.radiusXl
-                            : id.hasPrefix("question.") ? PlanUITokens.wizardQuestionRadius : PlanUITokens.radius2Xl))
-                )
+                .background(ColorToken.card.color, in: RoundedRectangle(cornerRadius: radius))
                 .overlay {
-                    RoundedRectangle(
-                        cornerRadius: (id.hasPrefix("sleep.")
-                            ? PlanUITokens.radiusXl
-                            : id.hasPrefix("question.") ? PlanUITokens.wizardQuestionRadius : PlanUITokens.radius2Xl)
-                    ).strokeBorder(
+                    RoundedRectangle(cornerRadius: radius).strokeBorder(
                         (selected ? ColorToken.dawn : .border).color, lineWidth: AuthTokens.focusWidth)
                 }
-            }.buttonStyle(.plain).disabled(!enabled || model.choicePending).accessibilityIdentifier(
-                "wizard.choice.\(id)"
-            )
-            .accessibilityAddTraits(selected ? [.isSelected] : [])
+            }.buttonStyle(.plain).disabled(!enabled || model.choicePending)
+                .accessibilityIdentifier("wizard.choice.\(id)")
+                .accessibilityAddTraits(selected ? [.isSelected] : [])
         }
 
         var tapHint: some View {

@@ -56,19 +56,29 @@ nonisolated public enum PlanUITokens {
     public static var wizardButtonHeight: CGFloat { 52 }
     public static var wizardCardRadius: CGFloat { 16 }
     public static var wizardChoiceFontSize: CGFloat { 18 }
+    public static var wizardChoiceGap: CGFloat { 10 }
+    public static var wizardChoiceHeight: CGFloat { 76 }
     public static var wizardChoiceLineHeight: CGFloat { 24 }
+    public static var wizardChronotypeFontSize: CGFloat { 16 }
+    public static var wizardChronotypeLineHeight: CGFloat { 22 }
+    public static var wizardChronotypePadding: CGFloat { 10 }
     public static var wizardContentGap: CGFloat { 14 }
     public static var wizardControlGap: CGFloat { 6 }
     public static var wizardDisabledOpacity: Double { 0.4 }
     public static var wizardEmptyOpacity: Double { 0.35 }
     public static var wizardFlightRowHeight: CGFloat { 64 }
+    public static var wizardHintBottom: CGFloat { 10 }
     public static var wizardHintFontSize: CGFloat { 13 }
     public static var wizardHintLineHeight: CGFloat { 18 }
     public static var wizardLabelGap: CGFloat { 2 }
     public static var wizardLongTitleFontSize: CGFloat { 24 }
     public static var wizardLongTitleLineHeight: CGFloat { 30 }
+    public static var wizardNoticeGap: CGFloat { 10 }
+    public static var wizardNoticeIconSize: CGFloat { 18 }
     public static var wizardProgressHeight: CGFloat { 4 }
     public static var wizardQuestionRadius: CGFloat { 20 }
+    public static var wizardReturnLabelWidth: CGFloat { 52 }
+    public static var wizardReturnRowHeight: CGFloat { 56 }
     public static var wizardRouteFontSize: CGFloat { 15 }
     public static var wizardRouteLineHeight: CGFloat { 20 }
     public static var wizardRowFontSize: CGFloat { 17 }
@@ -179,6 +189,17 @@ extension Typography {
         Style(
             face: .figtree400, size: screenBodyLg.size, lineHeight: PlanUITokens.wizardRowLineHeight,
             tracking: screenBody.tracking, relativeTo: .body)
+    }
+    public static var wizardChronotype: Style {
+        Style(
+            face: .figtree600, size: PlanUITokens.wizardChronotypeFontSize,
+            lineHeight: PlanUITokens.wizardChronotypeLineHeight,
+            tracking: screenBody.tracking, relativeTo: .body)
+    }
+    public static var wizardFieldLabel: Style {
+        Style(
+            face: .figtree400, size: PlanUITokens.wizardRouteFontSize, lineHeight: PlanUITokens.wizardRouteLineHeight,
+            tracking: screenBody.tracking, relativeTo: .subheadline)
     }
     public static var wizardHint: Style {
         Style(

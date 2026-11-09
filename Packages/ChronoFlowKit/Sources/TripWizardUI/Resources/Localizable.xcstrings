@@ -2012,7 +2012,7 @@
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gewone bedtijd"
+            "value": "Meestal naar bed"
           }
         }
       }
@@ -2044,7 +2044,7 @@
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wanneer voel je je van nature het meest wakker?"
+            "value": "Wanneer voel je je van nature het fitst?"
           }
         }
       }
@@ -2060,7 +2060,7 @@
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vroege vogel"
+            "value": "Ochtendmens"
           }
         }
       }
@@ -2124,7 +2124,7 @@
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nachtuil"
+            "value": "Avondmens"
           }
         }
       }
@@ -2717,6 +2717,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Je gaf dit antwoord bij een eerdere reis. Wijzig het om deze reis te plannen."
+          }
+        }
+      }
+    },
+    "A new plan needs an upcoming arrival. Check your flight dates.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A new plan needs an upcoming arrival. Check your flight dates."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voor een nieuw plan is een aankomst nodig die nog moet plaatsvinden. Controleer je vluchtdata."
           }
         }
       }
