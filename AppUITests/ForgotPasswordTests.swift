@@ -29,20 +29,18 @@ nonisolated final class ForgotPasswordTests: ScreenTestCase {
         let app = launchForgotApp(failure: "server")
         openForgot(app)
         let field = app.textFields["forgot.email"]
-        field.tap()
-        field.typeText("retained@example.com\n")
+        guard AuthUIFlow.type("retained@example.com\n", into: field, in: app) else { return }
         let banner = AuthUIFlow.control("auth.banner", in: app)
-        XCTAssertTrue(banner.waitUntil(.exists, timeout: 6))
+        XCTAssertTrue(banner.waitUntil(.exists, timeout: 6), "Expected Forgot server banner after submitting")
         XCTAssertTrue(
-            banner.label.contains("Something went wrong on our side."))
-        XCTAssertEqual(field.value as? String, "retained@example.com")
-        XCTAssertTrue(field.isEnabled)
-        XCTAssertFalse(AuthUIFlow.control("forgot.notice", in: app).exists)
+            banner.label.contains("Something went wrong on our side."), "Expected Forgot server failure copy")
+        XCTAssertEqual(field.value as? String, "retained@example.com", "Expected the submitted email to be retained")
+        XCTAssertTrue(field.waitUntil(.enabled, timeout: 6), "Expected Forgot email to unlock after the server failure")
+        XCTAssertFalse(
+            AuthUIFlow.control("forgot.notice", in: app).exists, "Server failure must not show a sent notice")
         AuthUIFlow.assertBannerVisible(in: app)
-        AuthUIFlow.reveal(field, in: app)
-        field.tap()
-        field.typeText("x")
-        XCTAssertFalse(banner.exists)
+        guard AuthUIFlow.type("x", into: field, in: app) else { return }
+        XCTAssertTrue(banner.waitUntil(.gone, timeout: 3), "Expected the server banner to clear after editing email")
     }
 
     @MainActor func testOfflineShowsConnectionBannerAndKeepsSubmitEnabled() throws {

@@ -2228,3 +2228,9 @@ CoreSimulator 405). Identical preparation did not resolve dark parity; supersede
 - [x] Check live boot state before preparation; boot and fully prepare the primary before serial if Xcode shut it down. Skip post-pass appearance reset on nonbooted devices without booting them; log cleanup errors without reporting test failures.
 - [x] Update runner fixtures, Docs/tooling.md and CLAUDE.md/AGENTS.md placement/cleanup wording. Strict `make lint` and all 102 runner fixtures pass on the host.
 - [ ] User-host acceptance: rerun the 15 suites in `Docs/ui-test-reseed-rerun-17e.txt` with default workers and preserve both result directories. Confirm primary Debug serial dark opening parity, Release overlap and nonfailing shutdown cleanup. No simulator execution is claimed by this repair.
+
+## Forgot UI flake repairs (user, 2026-11-09)
+
+- [x] Make `ForgotPasswordTests/testServerBannerClearsOnEdit` use the shared tap/focus/backoff typing helper before submission and after the server banner appears. Wait for the field to unlock and the edited banner to disappear; describe each assertion. The view intentionally resigns focus while submitting and restores it after failure, so banner existence alone does not guarantee keyboard focus.
+
+Validation: strict `make lint` and direct Swift 6/iOS 17 UI-test compilation pass. CoreSimulator is unavailable in this sandbox; runtime acceptance remains pending.
