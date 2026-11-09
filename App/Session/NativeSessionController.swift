@@ -14,6 +14,7 @@ final class NativeSessionController {
         guard let database = await accounts.activeDatabase() else { throw StoreFailure.closed }
         return try await AccountReadinessRepository(database: database).values(accountID: id)
     }
+    private var gateRouter: SessionGateRouter?
     private var subscription: Task<Void, Never>?
 
     init(
@@ -83,9 +84,18 @@ final class NativeSessionController {
     }
 
     func routeAcceptedSession(
-        navigator: RootNavigator, verification: @MainActor (UInt64) async -> Void
+        navigator: RootNavigator, verification: @escaping @MainActor (UInt64) async -> Void
     ) async {
+        observeGates(navigator: navigator, verification: verification)
         await readiness.routeAcceptedSession(navigator: navigator, verification: verification)
+    }
+
+    func observeGates(navigator: RootNavigator, verification: @escaping @MainActor (UInt64) async -> Void) {
+        guard gateRouter == nil else { return }
+        let router = SessionGateRouter(
+            controller: controller, readiness: readiness, navigator: navigator, verification: verification)
+        gateRouter = router
+        router.start()
     }
 
     func setActive(_ active: Bool) async {
@@ -123,6 +133,8 @@ final class NativeSessionController {
     }
 
     func stopObserving() async {
+        gateRouter?.stop()
+        gateRouter = nil
         let previous = subscription
         subscription = nil
         previous?.cancel()

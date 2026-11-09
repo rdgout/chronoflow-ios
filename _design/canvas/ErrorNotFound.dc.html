@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Not found</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="ds/chronoflow/components/bundle.css">
+<script src="ds/chronoflow/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Figtree';src:url("/_blob/74876cc764ebb15bf4ae98bcdbf3140c") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/741b1ce40b46479a73d934d0d5be9774") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/079d83fda74d66d1f31e35072f71201d") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/991830890debdac04981f1a27656ed5c") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Fraunces';src:url("/_blob/fc815083784d00806d267d81858d2414") format("woff2");font-weight:400 500;font-style:normal;font-display:swap}
+body{margin:0}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="position: relative; width: 375px; height: 812px; overflow: hidden; background: var(--background); color: var(--foreground); font-family: var(--font-sans);">
+  <div style="position: absolute; inset: 0; display: grid;">
+    <x-import component-from-global-scope="ChronoFlow.SkyFrame" eyebrow="{{e.eyebrow}}" title="{{e.title}}">{{e.body}}</x-import>
+  </div>
+  <div style="position: absolute; left: 24px; right: 24px; bottom: 48px; display: grid; gap: 8px;">
+    <a href="{{e.primaryHref}}" class="inline-flex shrink-0 items-center justify-center gap-2 text-sm font-medium whitespace-nowrap transition-colors rounded-full bg-dawn text-dawn-foreground hover:bg-dawn/90 h-10 px-6" style="text-decoration: none;">{{e.primary}}</a>
+    <sc-if value="{{e.hasSecondary}}" hint-placeholder-val="{{ true }}">
+      <a href="{{e.secondaryHref}}" style="display: flex; align-items: center; justify-content: center; min-height: 44px; border-radius: 9999px; background: var(--sky-copy-background); color: var(--sky-copy); font-size: 14px; line-height: 20px; font-weight: 500; text-decoration: none;">{{e.secondary}}</a>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"kind":{"editor":"enum","options":["notfound","server"],"default":"notfound"},"$preview":{"width":375,"height":812}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const kind = this.props.kind ?? 'notfound';
+    const e = {
+      notfound: {
+        eyebrow: 'Not found', title: "We can't find that",
+        body: 'The link may be old, or the trip was deleted.',
+        primary: 'Go to my trips', primaryHref: 'Trips.dc.html', secondary: 'Open Today', secondaryHref: 'Today.dc.html'
+      },
+      server: {
+        eyebrow: 'Something went wrong', title: "We're having trouble",
+        body: "It's on our side, not yours, and your plans are safe. Try again in a few minutes.",
+        primary: 'Try again', primaryHref: 'ErrorServer.dc.html', secondary: 'Open my plan for today', secondaryHref: 'Today.dc.html'
+      }
+    }[kind];
+    return { theme: this.props.theme ?? 'light', e: { ...e, hasSecondary: !!e.secondary } };
+  }
+}
+</script>
+</body>
+</html>

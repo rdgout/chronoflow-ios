@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Walkthrough</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="ds/chronoflow/components/bundle.css">
+<script src="ds/chronoflow/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Figtree';src:url("/_blob/74876cc764ebb15bf4ae98bcdbf3140c") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/741b1ce40b46479a73d934d0d5be9774") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/079d83fda74d66d1f31e35072f71201d") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/991830890debdac04981f1a27656ed5c") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Fraunces';src:url("/_blob/fc815083784d00806d267d81858d2414") format("woff2");font-weight:400 500;font-style:normal;font-display:swap}
+body{margin:0}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="position: relative; width: 375px; height: 812px; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; padding: 8px 16px 32px; background: var(--background); color: var(--foreground); font-family: var(--font-sans);">
+  <div style="display: flex; align-items: center; justify-content: space-between; height: 48px;">
+    <p style="margin: 0; padding-left: 4px; font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dawn-text); font-variant-numeric: tabular-nums;">{{w.counter}}</p>
+    <a href="{{exitHref}}" style="display: inline-flex; align-items: center; height: 44px; padding: 0 12px; border-radius: 9999px; color: var(--foreground); text-decoration: none; font-size: 14px; line-height: 20px; font-weight: 500;">Skip</a>
+  </div>
+
+  <div aria-live="polite" style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 28px;">
+    <div style="display: flex; flex-direction: column; gap: 10px; padding: 20px; border-radius: 26px; border: 1px solid var(--border); background: var(--card); box-shadow: var(--shadow-soft);" aria-hidden="true">
+      <sc-if value="{{w.s1}}" hint-placeholder-val="{{ true }}">
+        <x-import component-from-global-scope="ChronoFlow.TimelineBlock" category="sleep" priority="core" title="Sleep" time="23:00–07:00"></x-import>
+        <x-import component-from-global-scope="ChronoFlow.TimelineBlock" category="seek_light" priority="core" title="Seek bright light" time="08:00–10:00"></x-import>
+        <x-import component-from-global-scope="ChronoFlow.TimelineBlock" category="caffeine_serving" title="1 cup of coffee" time="09:30"></x-import>
+        <x-import component-from-global-scope="ChronoFlow.TimelineBlock" category="flight" priority="core" title="KL 861" time="14:40–09:15"></x-import>
+      </sc-if>
+      <sc-if value="{{w.s2}}" hint-placeholder-val="{{ false }}">
+        <sc-for list="{{cats}}" as="c" hint-placeholder-count="5">
+          <div style="display: flex; align-items: center; gap: 12px; min-height: 44px;">
+            <x-import component-from-global-scope="ChronoFlow.CategorySwatch" category="{{c.id}}" size="md"></x-import>
+            <span style="font-size: 16px; line-height: 24px; font-weight: 500;">{{c.label}}</span>
+          </div>
+        </sc-for>
+      </sc-if>
+      <sc-if value="{{w.s3}}" hint-placeholder-val="{{ false }}">
+        <x-import component-from-global-scope="ChronoFlow.DayProgress" done="{{three}}" total="{{seven}}"></x-import>
+        <x-import component-from-global-scope="ChronoFlow.TodayRow" category="seek_light" title="Seek bright light outdoors" time="11:00" zone="Tokyo" relative="In 15 min"></x-import>
+        <x-import component-from-global-scope="ChronoFlow.TodayRow" category="caffeine_serving" title="1 cup of filter coffee" time="10:45" zone="Tokyo" relative="Done"></x-import>
+      </sc-if>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px; padding: 0 4px;">
+      <h1 style="margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: 36px; letter-spacing: -0.01em;">{{w.title}}</h1>
+      <p style="margin: 0; font-size: 16px; line-height: 24px; color: var(--muted-foreground);">{{w.body}}</p>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    <div aria-hidden="true" style="display: flex; justify-content: center; gap: 8px;">
+      <sc-for list="{{dots}}" as="d" hint-placeholder-count="3"><span style="{{d.style}}"></span></sc-for>
+    </div>
+    <sc-if value="{{w.notLast}}" hint-placeholder-val="{{ true }}">
+      <div style="display: grid;"><x-import component-from-global-scope="ChronoFlow.Button" size="lg" on-click="{{next}}">Next</x-import></div>
+    </sc-if>
+    <sc-if value="{{w.last}}" hint-placeholder-val="{{ false }}">
+      <a href="{{exitHref}}" class="inline-flex shrink-0 items-center justify-center gap-2 text-sm font-medium whitespace-nowrap transition-colors rounded-full bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6" style="text-decoration: none;">Done</a>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"step":{"editor":"enum","options":["1","2","3"],"default":"1"},"entry":{"editor":"enum","options":["first","replay"],"default":"first"},"$preview":{"width":375,"height":812}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { step: Number(props.step ?? 1) };
+  }
+  renderVals() {
+    const s = this.state.step;
+    const slides = {
+      1: { title: 'Your plan on one timeline', body: 'Sleep, light, caffeine and your flights side by side, each at the right local time.' },
+      2: { title: 'Know each step at a glance', body: "Every kind of step has its own icon and pattern, so you never need colour to tell them apart." },
+      3: { title: 'Tick off what you did', body: 'Checking off changes your progress, never your plan. Turn on reminders to get a nudge before each step.' }
+    };
+    return {
+      theme: this.props.theme ?? 'light',
+      three: 3, seven: 7,
+      exitHref: (this.props.entry ?? 'first') === 'replay' ? 'SetPreferences.dc.html' : 'Today.dc.html',
+      w: { ...slides[s], counter: s + ' of 3', s1: s === 1, s2: s === 2, s3: s === 3, last: s === 3, notLast: s !== 3 },
+      cats: [
+        { id: 'sleep', label: 'Sleep' }, { id: 'seek_light', label: 'Seek bright light' }, { id: 'avoid_light', label: 'Avoid light' },
+        { id: 'caffeine_serving', label: 'Caffeine' }, { id: 'flight', label: 'Flight' }
+      ],
+      dots: [1, 2, 3].map((n) => ({ style: 'display: block; height: 8px; border-radius: 9999px; transition: width 150ms ease; width: ' + (n === s ? '24px' : '8px') + '; background: ' + (n === s ? 'var(--dawn)' : 'var(--border)') + ';' })),
+      next: () => this.setState({ step: Math.min(3, this.state.step + 1) })
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Add to calendar</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="ds/chronoflow/components/bundle.css">
+<script src="ds/chronoflow/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Figtree';src:url("/_blob/74876cc764ebb15bf4ae98bcdbf3140c") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/741b1ce40b46479a73d934d0d5be9774") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/079d83fda74d66d1f31e35072f71201d") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/991830890debdac04981f1a27656ed5c") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Fraunces';src:url("/_blob/fc815083784d00806d267d81858d2414") format("woff2");font-weight:400 500;font-style:normal;font-display:swap}
+body{margin:0}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="position: relative; width: 390px; height: 844px; overflow: hidden; background: var(--background); color: var(--foreground); font-family: var(--font-sans);">
+  <div aria-hidden="true" style="position: absolute; inset: 0;">
+    <dc-import name="Plan" theme="{{theme}}" hint-size="390px,844px"></dc-import>
+  </div>
+  <a href="TripActions.dc.html" aria-label="Close" style="position: absolute; inset: 0; background: oklch(0.15 0.03 272 / 0.5);"></a>
+
+  <section role="dialog" aria-modal="true" aria-labelledby="ce-title" style="position: absolute; left: 0; right: 0; bottom: 0; max-height: calc(100% - 40px); box-sizing: border-box; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding: 12px 16px 28px; border-radius: 38px 38px 0 0; background: var(--card); color: var(--card-foreground); box-shadow: var(--shadow-soft);">
+    <span aria-hidden="true" style="align-self: center; width: 36px; height: 5px; border-radius: 9999px; background: rgba(120, 120, 128, 0.4);"></span>
+    <div style="padding: 0 4px;">
+      <h2 id="ce-title" style="margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 24px; line-height: 32px; letter-spacing: -0.01em;">Add to calendar</h2>
+      <p style="margin: 0; font-size: 14px; line-height: 20px; color: var(--muted-foreground); font-variant-numeric: tabular-nums;">Amsterdam → Tokyo · 12–22 Oct</p>
+    </div>
+
+    <sc-if value="{{problem}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <x-import component-from-global-scope="ChronoFlow.Notice" tone="warning" title="{{msg.title}}">{{msg.body}}</x-import>
+        <sc-if value="{{msg.hasAction}}" hint-placeholder-val="{{ true }}">
+          <button type="button" class="inline-flex shrink-0 items-center justify-center gap-2 text-sm font-medium whitespace-nowrap transition-colors rounded-full border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-6" style="height: 44px; color: var(--foreground); font: inherit; font-size: 14px; font-weight: 500;">{{msg.action}}</button>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <div role="radiogroup" aria-labelledby="ce-what" style="display: flex; flex-direction: column; gap: 6px;">
+      <h3 id="ce-what" style="margin: 0 4px; font-size: 13px; line-height: 18px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">What to add</h3>
+      <div style="border-radius: 20px; background: var(--surface-2); overflow: hidden;">
+        <sc-for list="{{scopes}}" as="o" hint-placeholder-count="3">
+          <button type="button" role="radio" aria-checked="{{o.checked}}" onClick="{{o.pick}}" class="cf-press" style="{{o.row}}">
+            <span style="flex: 1;"><span style="display: block; font-size: 16px; line-height: 22px; font-weight: 500;">{{o.label}}</span><span style="display: block; font-size: 13px; line-height: 18px; color: var(--muted-foreground);">{{o.hint}}</span></span>
+            <span style="font-size: 14px; line-height: 20px; color: var(--muted-foreground); font-variant-numeric: tabular-nums;">{{o.count}}</span>
+            <span aria-hidden="true" style="{{o.dot}}"></span>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+
+    <div role="radiogroup" aria-labelledby="ce-alarm" style="display: flex; flex-direction: column; gap: 6px;">
+      <h3 id="ce-alarm" style="margin: 0 4px; font-size: 13px; line-height: 18px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">Calendar alerts</h3>
+      <div class="ios ios-seg" style="grid-template-columns: repeat(3, 1fr);">
+        <sc-for list="{{alarms}}" as="a" hint-placeholder-count="3">
+          <button type="button" role="radio" aria-checked="{{a.checked}}" onClick="{{a.pick}}">{{a.label}}</button>
+        </sc-for>
+      </div>
+      <p style="margin: 0 4px; font-size: 13px; line-height: 18px; color: var(--muted-foreground);">Separate from ChronoFlow reminders, which keep working either way.</p>
+    </div>
+
+    <button type="button" class="cf-press" style="display: flex; align-items: center; gap: 14px; min-height: 56px; padding: 8px 16px; border: 0; border-radius: 20px; background: var(--surface-2); color: var(--foreground); font: inherit; text-align: left;">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg>
+      <span style="flex: 1; font-size: 16px; line-height: 22px; font-weight: 500;">Calendar</span>
+      <span style="font-size: 14px; line-height: 20px; color: var(--muted-foreground);">Personal</span>
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--muted-foreground);"><path d="m9 18 6-6-6-6"></path></svg>
+    </button>
+
+<sc-if value="{{noProblem}}" hint-placeholder-val="{{ true }}">
+    <x-import component-from-global-scope="ChronoFlow.Notice" tone="info" title="A one-time copy">Later changes to your plan don't update these events. Add the trip again after you edit it.</x-import>
+    </sc-if>
+
+    <div style="display: grid; gap: 4px;">
+      <sc-if value="{{canAdd}}" hint-placeholder-val="{{ true }}">
+      <a href="Plan.dc.html" class="inline-flex shrink-0 items-center justify-center gap-2 text-sm font-medium whitespace-nowrap transition-colors rounded-full bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6" style="height: 48px; text-decoration: none; font-variant-numeric: tabular-nums;">{{cta}}</a>
+      </sc-if>
+      <sc-if value="{{blocked}}" hint-placeholder-val="{{ false }}">
+        <button type="button" disabled class="inline-flex shrink-0 items-center justify-center gap-2 text-sm font-medium whitespace-nowrap transition-colors rounded-full bg-primary text-primary-foreground h-10 px-6" style="height: 48px; border: 0; font: inherit; font-size: 14px; font-weight: 500; opacity: 0.5; font-variant-numeric: tabular-nums;">{{cta}}</button>
+      </sc-if>
+      <a href="TripActions.dc.html" class="inline-flex shrink-0 items-center justify-center gap-2 text-sm font-medium whitespace-nowrap transition-colors rounded-full hover:bg-accent hover:text-accent-foreground h-10 px-6" style="color: var(--foreground); text-decoration: none;">Cancel</a>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"state":{"editor":"enum","options":["ready","denied","nocalendar","failed"],"default":"ready"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { scope: 'important', alarm: 'start' }; }
+  renderVals() {
+    const s = this.state;
+    const scopes = [
+      { id: 'important', label: 'Important and recommended', hint: 'The steps your plan depends on', n: 38 },
+      { id: 'all', label: 'All steps', hint: 'Also optional steps and notes', n: 61 },
+      { id: 'flights', label: 'Flights only', hint: 'Your 4 flights', n: 4 }
+    ];
+    const rowBase = 'display: flex; width: 100%; align-items: center; gap: 12px; min-height: 60px; padding: 8px 16px; box-sizing: border-box; border: 0; background: transparent; color: var(--foreground); font: inherit; text-align: left;';
+    const dot = (on) => 'width: 22px; height: 22px; flex-shrink: 0; box-sizing: border-box; border-radius: 9999px; ' + (on ? 'border: 7px solid var(--primary); background: var(--primary-foreground);' : 'border: 2px solid var(--border);');
+    const pill = (on) => 'min-height: 44px; border: 0; border-radius: 9999px; font: inherit; font-size: 14px; line-height: 20px; ' + (on ? 'background: var(--card); color: var(--foreground); font-weight: 600; box-shadow: 0 1px 2px oklch(0 0 0 / 0.12);' : 'background: transparent; color: var(--muted-foreground); font-weight: 500;');
+    const chosen = scopes.find(o => o.id === s.scope);
+    const st = this.props.state ?? 'ready';
+    const msgs = {
+      denied: { title: "ChronoFlow can't use your calendar", body: 'You turned off calendar access. Allow it in your phone\'s settings to add your plan.', action: 'Open phone settings' },
+      nocalendar: { title: 'No calendar to add to', body: 'There is no calendar on this phone that apps can add to. Turn one on in your phone\'s settings, then try again.', action: 'Open phone settings' },
+      failed: { title: "Couldn't add the events", body: 'Nothing was added to your calendar. Try again; if it keeps failing, restart the app.', action: '' }
+    };
+    const m = msgs[st];
+    return {
+      theme: this.props.theme ?? 'light',
+      scopes: scopes.map((o, i) => ({
+        label: o.label, hint: o.hint, count: o.n + ' events',
+        checked: s.scope === o.id ? 'true' : 'false',
+        row: rowBase + (i ? ' border-top: 1px solid var(--border);' : ''),
+        dot: dot(s.scope === o.id),
+        pick: () => this.setState({ scope: o.id })
+      })),
+      alarms: [['none', 'None'], ['start', 'At the start'], ['before', '15 min before']].map(([id, label]) => ({
+        label, checked: s.alarm === id ? 'true' : 'false', style: pill(s.alarm === id), pick: () => this.setState({ alarm: id })
+      })),
+      cta: st === 'failed' ? 'Try again' : 'Add ' + chosen.n + ' events',
+      problem: !!m, noProblem: !m, msg: m ? { ...m, hasAction: !!m.action } : { title: '', body: '', action: '', hasAction: false },
+      blocked: st === 'denied' || st === 'nocalendar', canAdd: !(st === 'denied' || st === 'nocalendar')
+    };
+  }
+}
+</script>
+</body>
+</html>

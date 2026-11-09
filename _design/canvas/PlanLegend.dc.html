@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Plan legend</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="ds/chronoflow/components/bundle.css">
+<script src="ds/chronoflow/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Figtree';src:url("/_blob/74876cc764ebb15bf4ae98bcdbf3140c") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/741b1ce40b46479a73d934d0d5be9774") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/079d83fda74d66d1f31e35072f71201d") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/991830890debdac04981f1a27656ed5c") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Fraunces';src:url("/_blob/fc815083784d00806d267d81858d2414") format("woff2");font-weight:400 500;font-style:normal;font-display:swap}
+body{margin:0}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="position: relative; width: 390px; height: 844px; overflow: hidden; background: var(--background); color: var(--foreground); font-family: var(--font-sans);">
+  <div aria-hidden="true" style="position: absolute; inset: 0;">
+    <dc-import name="Plan" theme="{{theme}}" hint-size="390px,844px"></dc-import>
+  </div>
+  <a href="Plan.dc.html" aria-label="Close" style="position: absolute; inset: 0; background: oklch(0.15 0.03 272 / 0.5);"></a>
+
+  <section role="dialog" aria-modal="true" aria-labelledby="lg-title" style="position: absolute; left: 0; right: 0; bottom: 0; top: 72px; display: flex; flex-direction: column; border-radius: 38px 38px 0 0; background: var(--card); color: var(--card-foreground); box-shadow: var(--shadow-soft);">
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 12px 8px 20px;">
+      <h2 id="lg-title" style="margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 24px; line-height: 32px; letter-spacing: -0.01em;">What the steps mean</h2>
+      <a href="Plan.dc.html" aria-label="Close" class="cf-press" style="display: grid; place-items: center; width: 44px; height: 44px; border-radius: 9999px; background: var(--surface-2); color: var(--foreground);"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></a>
+    </div>
+    <div style="flex: 1; overflow-y: auto; padding: 4px 20px 32px; display: flex; flex-direction: column; gap: 20px;">
+      <p style="margin: 0; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">Each kind of step has its own icon and pattern, so you can tell them apart without colour.</p>
+      <sc-for list="{{groups}}" as="g" hint-placeholder-count="4">
+        <section style="display: flex; flex-direction: column; gap: 8px;">
+          <h3 style="margin: 0; font-family: var(--font-sans); font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">{{g.title}}</h3>
+          <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px;">
+            <sc-for list="{{g.items}}" as="c" hint-placeholder-count="3">
+              <li style="display: flex; align-items: center; gap: 12px; min-height: 40px;">
+                <x-import component-from-global-scope="ChronoFlow.CategorySwatch" category="{{c.id}}" size="md"></x-import>
+                <span style="flex: 1; min-width: 0;"><span style="display: block; font-size: 16px; line-height: 22px; font-weight: 500;">{{c.name}}</span><span style="display: block; font-size: 14px; line-height: 20px; color: var(--muted-foreground);">{{c.hint}}</span></span>
+              </li>
+            </sc-for>
+          </ul>
+        </section>
+      </sc-for>
+      <section style="display: flex; flex-direction: column; gap: 8px;">
+        <h3 style="margin: 0; font-family: var(--font-sans); font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">How important</h3>
+        <x-import component-from-global-scope="ChronoFlow.PriorityKey"></x-import>
+      </section>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      theme: this.props.theme ?? 'light',
+      groups: [
+        { title: 'Sleep', items: [
+          { id: 'sleep', name: 'Sleep', hint: 'Your main sleep' },
+          { id: 'nap', name: 'Nap', hint: 'A short sleep, at most 20–30 minutes' },
+          { id: 'rest', name: 'Rest', hint: 'Lie down or relax, sleep is optional' }
+        ] },
+        { title: 'Light', items: [
+          { id: 'seek_light', name: 'Seek bright light', hint: 'Outdoors if you can' },
+          { id: 'light_ok', name: 'Light is fine', hint: 'Light now does no harm' },
+          { id: 'light_neutral', name: 'Neutral light', hint: 'Normal indoor light' },
+          { id: 'avoid_light', name: 'Avoid light', hint: 'Sunglasses, dim and warm light' }
+        ] },
+        { title: 'Caffeine', items: [
+          { id: 'caffeine_serving', name: 'Caffeine', hint: 'Coffee, tea or similar, at this time' },
+          { id: 'caffeine_routine', name: 'Caffeine routine', hint: 'As you normally would' },
+          { id: 'caffeine_ok', name: 'Caffeine OK', hint: 'If you want one' },
+          { id: 'no_caffeine', name: 'No caffeine', hint: 'Skip it so you can sleep later' }
+        ] },
+        { title: 'Travel', items: [
+          { id: 'flight', name: 'Flight', hint: 'Your flights' },
+          { id: 'layover', name: 'Layover', hint: 'Time between flights' },
+          { id: 'transfer', name: 'Transfer', hint: 'Getting to or from the airport' },
+          { id: 'movement_break', name: 'Movement break', hint: 'Stand up and walk for a few minutes' },
+          { id: 'zone_change', name: 'Zone change', hint: 'From here, times are in the new zone' },
+          { id: 'note', name: 'Note', hint: 'Good to know, nothing to do' }
+        ] }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

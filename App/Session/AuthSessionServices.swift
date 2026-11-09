@@ -102,7 +102,7 @@ final class AuthSessionServices {
             deviceIdentity: { try await identity.identity() },
             deviceName: DeviceIdentityStore.deviceName(UIDevice.current.name, model: UIDevice.current.model),
             assertionProvider: assertion,
-            route: { _ in await native.routeAcceptedSession(navigator: navigator, verification: verification) })
+            accepted: { _ in await native.routeAcceptedSession(navigator: navigator, verification: verification) })
         resetLinks = GuestResetLinkRouter(session: native.controller) { [model, navigator] input in
             navigator.navigate(to: .signIn)
             model.openReset(input)

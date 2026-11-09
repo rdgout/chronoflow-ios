@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sheet states</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="ds/chronoflow/components/bundle.css">
+<script src="ds/chronoflow/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Figtree';src:url("/_blob/74876cc764ebb15bf4ae98bcdbf3140c") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/741b1ce40b46479a73d934d0d5be9774") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/079d83fda74d66d1f31e35072f71201d") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/991830890debdac04981f1a27656ed5c") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Fraunces';src:url("/_blob/fc815083784d00806d267d81858d2414") format("woff2");font-weight:400 500;font-style:normal;font-display:swap}
+body{margin:0}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; min-height: 2300px; box-sizing: border-box; padding: 24px 16px 40px; display: flex; flex-direction: column; gap: 28px; background: var(--background); color: var(--foreground); font-family: var(--font-sans);">
+  <header style="display: flex; flex-direction: column; gap: 6px;">
+    <h1 style="margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 28px; line-height: 34px; letter-spacing: -0.01em;">Sheet states</h1>
+    <p style="margin: 0; font-size: 15px; line-height: 22px; color: var(--muted-foreground);">Loading, unavailable and failure states for Trip actions, Delete trip and Item detail.</p>
+  </header>
+  <section style="display: flex; flex-direction: column; gap: 12px;">
+    <h3 style="margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">Trip actions · loading</h3>
+    <div style="display: flex; flex-direction: column; gap: 14px; padding: 12px 20px 24px; border-radius: 26px; background: var(--card); color: var(--card-foreground); box-shadow: var(--shadow-soft); border: 1px solid var(--border);">
+      <span aria-hidden="true" style="align-self: center; width: 36px; height: 5px; border-radius: 9999px; background: rgba(120, 120, 128, 0.4);"></span>
+      <div style="width: 60%; height: 24px; border-radius: 10px; overflow: hidden; flex-shrink: 0;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div>
+      <div style="width: 40%; height: 14px; border-radius: 9999px; overflow: hidden; flex-shrink: 0;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div>
+      <div aria-busy="true" aria-label="Loading trip actions" style="border-radius: 22px; background: var(--surface-2); overflow: hidden;"><div style="display: flex; align-items: center; gap: 14px; height: 56px; padding: 0 16px;"><div style="width: 20px; height: 20px; border-radius: 6px; overflow: hidden; flex-shrink: 0;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div><div style="width: 90px; height: 14px; border-radius: 9999px; overflow: hidden; flex-shrink: 0;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div></div><div style="display: flex; align-items: center; gap: 14px; height: 56px; padding: 0 16px; border-top: 1px solid var(--border);"><div style="width: 20px; height: 20px; border-radius: 6px; overflow: hidden; flex-shrink: 0;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div><div style="width: 140px; height: 14px; border-radius: 9999px; overflow: hidden; flex-shrink: 0;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div></div><div style="display: flex; align-items: center; gap: 14px; height: 56px; padding: 0 16px; border-top: 1px solid var(--border);"><div style="width: 20px; height: 20px; border-radius: 6px; overflow: hidden; flex-shrink: 0;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div><div style="width: 120px; height: 14px; border-radius: 9999px; overflow: hidden; flex-shrink: 0;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div></div><div style="display: flex; align-items: center; gap: 14px; height: 56px; padding: 0 16px; border-top: 1px solid var(--border);"><div style="width: 20px; height: 20px; border-radius: 6px; overflow: hidden; flex-shrink: 0;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div><div style="width: 170px; height: 14px; border-radius: 9999px; overflow: hidden; flex-shrink: 0;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div></div></div>
+    </div>
+    <p style="margin: 0; font-size: 13px; line-height: 18px; color: var(--muted-foreground);">Only for the moment before the stored trip is read. Usually too quick to see.</p>
+  </section>
+  <section style="display: flex; flex-direction: column; gap: 12px;">
+    <h3 style="margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">Trip or step not on this phone yet</h3>
+    <div style="display: flex; flex-direction: column; gap: 14px; padding: 12px 20px 24px; border-radius: 26px; background: var(--card); color: var(--card-foreground); box-shadow: var(--shadow-soft); border: 1px solid var(--border);">
+      <span aria-hidden="true" style="align-self: center; width: 36px; height: 5px; border-radius: 9999px; background: rgba(120, 120, 128, 0.4);"></span>
+      <span aria-hidden="true" style="display: grid; place-items: center; width: 48px; height: 48px; border-radius: 9999px; background: var(--muted); color: var(--dawn-text);"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 13v8"></path><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path><path d="m8 17 4-4 4 4"></path></svg></span>
+      <h2 style="margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 24px; line-height: 32px; letter-spacing: -0.01em;">This trip isn't on this phone yet</h2>
+      <p style="margin: 0; font-size: 16px; line-height: 24px; color: var(--muted-foreground);">It shows up as soon as the phone syncs. Check that you have a connection.</p>
+      <div style="display: grid; gap: 6px;"><button type="button" class="inline-flex shrink-0 items-center justify-center gap-2 text-sm font-medium whitespace-nowrap transition-colors rounded-full border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-6" style="height: 48px; text-decoration: none; color: var(--foreground); border-width: 1px; font: inherit; font-size: 14px; font-weight: 500;">Close</button></div>
+    </div>
+    <p style="margin: 0; font-size: 13px; line-height: 18px; color: var(--muted-foreground);">Shown for Trip actions, Delete trip and the trip page when a link opens a trip that hasn't synced.</p>
+  </section>
+  <section style="display: flex; flex-direction: column; gap: 12px;">
+    <h3 style="margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">Item detail · loading</h3>
+    <div style="display: flex; flex-direction: column; gap: 14px; padding: 12px 20px 24px; border-radius: 26px; background: var(--card); color: var(--card-foreground); box-shadow: var(--shadow-soft); border: 1px solid var(--border);">
+      <span aria-hidden="true" style="align-self: center; width: 36px; height: 5px; border-radius: 9999px; background: rgba(120, 120, 128, 0.4);"></span>
+      <div style="display: flex; gap: 12px; align-items: flex-start;"><div style="width: 40px; height: 40px; border-radius: 12px; overflow: hidden; flex-shrink: 0;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div><div style="flex: 1; display: flex; flex-direction: column; gap: 8px;"><div style="width: 80px; height: 20px; border-radius: 9999px; overflow: hidden; flex-shrink: 0;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div><div style="width: 70%; height: 24px; border-radius: 10px; overflow: hidden; flex-shrink: 0;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div><div style="width: 50%; height: 14px; border-radius: 9999px; overflow: hidden; flex-shrink: 0;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div></div></div>
+      <div style="width: 30%; height: 14px; border-radius: 9999px; overflow: hidden; flex-shrink: 0;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div>
+      <div style="width: 100%; height: 16px; border-radius: 9999px; overflow: hidden; flex-shrink: 0;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div>
+      <div style="width: 85%; height: 16px; border-radius: 9999px; overflow: hidden; flex-shrink: 0;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div>
+      <div style="width: 100%; height: 48px; border-radius: 9999px; overflow: hidden; flex-shrink: 0;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div>
+    </div>
+  </section>
+  <section style="display: flex; flex-direction: column; gap: 12px;">
+    <h3 style="margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">Item detail · step no longer in the plan</h3>
+    <div style="display: flex; flex-direction: column; gap: 14px; padding: 12px 20px 24px; border-radius: 26px; background: var(--card); color: var(--card-foreground); box-shadow: var(--shadow-soft); border: 1px solid var(--border);">
+      <span aria-hidden="true" style="align-self: center; width: 36px; height: 5px; border-radius: 9999px; background: rgba(120, 120, 128, 0.4);"></span>
+      <span aria-hidden="true" style="display: grid; place-items: center; width: 48px; height: 48px; border-radius: 9999px; background: var(--muted); color: var(--dawn-text);"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m13.5 8.5-5 5"></path><path d="m8.5 8.5 5 5"></path><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg></span>
+      <h2 style="margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 24px; line-height: 32px; letter-spacing: -0.01em;">This step is no longer in your plan</h2>
+      <p style="margin: 0; font-size: 16px; line-height: 24px; color: var(--muted-foreground);">Your plan changed after you opened it, for example because you edited the trip. Your other check-offs are kept.</p>
+      <div style="display: grid; gap: 6px;"><a href="Today.dc.html" class="inline-flex shrink-0 items-center justify-center gap-2 text-sm font-medium whitespace-nowrap transition-colors rounded-full bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6" style="height: 48px; text-decoration: none;">See today's steps</a></div>
+    </div>
+  </section>
+  <section style="display: flex; flex-direction: column; gap: 12px;">
+    <h3 style="margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">Delete trip · failed</h3>
+    <div style="display: grid; place-items: center; padding: 24px 0; border-radius: 26px; background: rgba(0, 0, 0, 0.18);"><section role="alertdialog" class="ios ios-glass ios-alert" style="background: color-mix(in oklab, var(--card) 82%, transparent);"><h2>Couldn't delete the trip</h2><p>Nothing was deleted. Try again in a moment.</p><div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px;"><span class="ios-alert-btn">OK</span><span class="ios-alert-btn" data-role="destructive">Try again</span></div></section></div>
+    <p style="margin: 0; font-size: 13px; line-height: 18px; color: var(--muted-foreground);">A second system alert after "Delete trip". The trip stays in My trips.</p>
+  </section>
+  <section style="display: flex; flex-direction: column; gap: 12px;">
+    <h3 style="margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground);">Delete trip · offline</h3>
+    <div style="display: grid; place-items: center; padding: 24px 0; border-radius: 26px; background: rgba(0, 0, 0, 0.18);"><section role="alertdialog" class="ios ios-glass ios-alert" style="background: color-mix(in oklab, var(--card) 82%, transparent);"><h2>No connection</h2><p>Deleting a trip needs a connection. Try again when you're online.</p><div style="display: grid; gap: 8px; margin-top: 14px;"><span class="ios-alert-btn">OK</span></div></section></div>
+    <p style="margin: 0; font-size: 13px; line-height: 18px; color: var(--muted-foreground);">Shown instead of the delete confirmation when there is no connection. Deleting is a server action, like other server actions.</p>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":2300}}'>
+class Component extends DCLogic {
+  renderVals() { return { theme: this.props.theme ?? 'light' }; }
+}
+</script>
+</body>
+</html>

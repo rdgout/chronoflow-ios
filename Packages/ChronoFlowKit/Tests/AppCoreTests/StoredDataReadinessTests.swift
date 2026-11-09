@@ -10,7 +10,7 @@ private actor ReadinessValues {
     var fails = false
     private var continuations: [UUID: StoredDataReadiness.Values.Continuation] = [:]
     private(set) var reads = 0
-    init(gate: Gate = .app, stored: Bool = false) {
+    init(gate: Gate? = .app, stored: Bool = false) {
         value = StoredAccountReadiness(accountID: readinessID, gate: gate, hasStoredData: stored)
     }
     func values() throws -> StoredDataReadiness.Values {
@@ -24,7 +24,7 @@ private actor ReadinessValues {
         return stream
     }
     private func remove(_ id: UUID) { continuations.removeValue(forKey: id) }
-    func set(gate: Gate = .app, stored: Bool) {
+    func set(gate: Gate? = .app, stored: Bool) {
         value = StoredAccountReadiness(accountID: readinessID, gate: gate, hasStoredData: stored)
         for continuation in continuations.values { continuation.yield(value) }
     }
@@ -193,5 +193,54 @@ extension StoredDataReadinessTests {
         #expect(coordinator.state.isReady)
         #expect(coordinator.state.route == .verify)
         #expect(!coordinator.state.didForceReady)
+    }
+}
+
+@MainActor private final class GateNavigatorProbe: Navigator {
+    var routes: [Route] = []
+    func navigate(to route: Route) { routes.append(route) }
+}
+
+extension StoredDataReadinessTests {
+    @Test @MainActor func gatesContinueAfterAcceptanceAndCancelAtSignOut() async throws {
+        let controller = readinessController(try readinessCredentials())
+        let values = ReadinessValues(gate: .verify)
+        let readiness = StoredDataReadiness(controller: controller, values: { _ in try await values.values() })
+        _ = await readiness.session()
+        let navigator = GateNavigatorProbe()
+        let router = SessionGateRouter(controller: controller, readiness: readiness, navigator: navigator) { _ in
+            navigator.navigate(to: .verify)
+        }
+        router.start()
+        defer { router.stop() }
+        for (gate, route) in [
+            (Gate.verify, Route.verify), (.terms, .terms), (.walkthrough, .walkthrough), (.app, .today),
+        ] {
+            await values.set(gate: gate, stored: true)
+            let deadline = ContinuousClock.now + .seconds(3)
+            while navigator.routes.last != route && ContinuousClock.now < deadline { await Task.yield() }
+            #expect(navigator.routes.last == route)
+        }
+        _ = try await controller.signOut(discardPending: true)
+        let count = navigator.routes.count
+        await values.set(gate: .terms, stored: true)
+        for _ in 0..<20 { await Task.yield() }
+        #expect(navigator.routes.count == count)
+    }
+
+    @Test func missingPoliciesWaitUntilLoadedOrExplicitFirstLoadAllowance() async throws {
+        let controller = readinessController(try readinessCredentials())
+        let values = ReadinessValues(gate: nil)
+        let readiness = StoredDataReadiness(controller: controller, values: { _ in try await values.values() })
+        _ = await readiness.session()
+        var gates = await readiness.gateUpdates().makeAsyncIterator()
+        await values.set(gate: .terms, stored: true)
+        #expect(await gates.next() == .terms)
+        await values.set(gate: nil, stored: false)
+        var firstLoad = await readiness.gateUpdates().makeAsyncIterator()
+        await readiness.allowFirstLoad()
+        #expect(await firstLoad.next() == .app)
+        await values.set(gate: .terms, stored: true)
+        #expect(await firstLoad.next() == .terms)
     }
 }

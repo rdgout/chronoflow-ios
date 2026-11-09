@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Trip page, plan not on the phone</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="ds/chronoflow/components/bundle.css">
+<script src="ds/chronoflow/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Figtree';src:url("/_blob/74876cc764ebb15bf4ae98bcdbf3140c") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/741b1ce40b46479a73d934d0d5be9774") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/079d83fda74d66d1f31e35072f71201d") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/991830890debdac04981f1a27656ed5c") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Fraunces';src:url("/_blob/fc815083784d00806d267d81858d2414") format("woff2");font-weight:400 500;font-style:normal;font-display:swap}
+body{margin:0}
+</style>
+</helmet>
+<div data-theme="{{theme}}" lang="{{lang}}" style="position: relative; width: 390px; height: 844px; overflow: hidden; background: var(--background); color: var(--foreground); font-family: var(--font-sans);">
+  <div style="position: absolute; inset: 0; overflow-y: auto;">
+    <header class="ios ios-navbar">
+      <span><a href="Trips.dc.html" class="ios ios-glass ios-back"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>{{t.back}}</a></span>
+      <p class="ios-navtitle">Amsterdam → New York</p>
+      <span style="justify-self: end;"><a href="TripActions.dc.html" aria-label="{{t.actions}}" class="ios-glass ios-navbtn"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg></a></span>
+    </header>
+    <p style="margin: -4px 0 0; text-align: center; font-size: 13px; line-height: 18px; color: var(--muted-foreground); font-variant-numeric: tabular-nums;">{{t.dates}}</p>
+
+    <main style="padding: 12px 16px 120px; display: flex; flex-direction: column; gap: 16px;">
+      <!-- Known from the trip card -->
+      <section aria-label="{{t.summary}}" style="display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 26px; border: 1px solid var(--border); background: var(--card); box-shadow: var(--shadow-soft);">
+        <div>
+          <p style="margin: 0; font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dawn-text);">{{t.eyebrow}}</p>
+          <p style="margin: 2px 0 0; font-family: var(--font-display); font-size: 20px; line-height: 28px; letter-spacing: -0.01em;">{{t.shift}}</p>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <div style="display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 18px; background: var(--surface-2);">
+            <span style="font-size: 12px; line-height: 16px; color: var(--muted-foreground);">{{t.home}}</span>
+            <span style="font-size: 20px; line-height: 28px; font-weight: 600; font-variant-numeric: tabular-nums;">14:20</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 18px; background: var(--surface-2);">
+            <span style="font-size: 12px; line-height: 16px; color: var(--muted-foreground);">{{t.there}}</span>
+            <span style="font-size: 20px; line-height: 28px; font-weight: 600; font-variant-numeric: tabular-nums;">08:20</span>
+          </div>
+        </div>
+      </section>
+
+      <sc-if value="{{loading}}" hint-placeholder-val="{{ true }}">
+        <div role="status" aria-busy="true" style="display: flex; flex-direction: column; gap: 14px;">
+          <p style="margin: 0; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; line-height: 20px; color: var(--muted-foreground);"><svg aria-hidden="true" class="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>{{t.downloading}}</p>
+          <div style="display: flex; gap: 8px;"><div style="width: 88px; height: 44px; border-radius: 9999px; overflow: hidden; flex-shrink: 0;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div><div style="width: 88px; height: 44px; border-radius: 9999px; overflow: hidden; flex-shrink: 0;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div><div style="width: 88px; height: 44px; border-radius: 9999px; overflow: hidden; flex-shrink: 0;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div></div>
+          <div style="width: 100%; height: 64px; border-radius: 18px; overflow: hidden; flex-shrink: 0;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div>
+          <div style="display: grid; grid-template-columns: 44px repeat(4, minmax(0, 1fr)); gap: 4px; height: 360px;"><div></div><div style="position: relative; background: var(--surface-2);"><div style="position: absolute; left: 4px; right: 4px; top: 0px; height: 120px; border-radius: 10px; overflow: hidden;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div></div><div style="position: relative; background: var(--surface-2);"><div style="position: absolute; left: 4px; right: 4px; top: 60px; height: 90px; border-radius: 10px; overflow: hidden;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div></div><div style="position: relative; background: var(--surface-2);"><div style="position: absolute; left: 4px; right: 4px; top: 150px; height: 40px; border-radius: 10px; overflow: hidden;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div></div><div style="position: relative; background: var(--surface-2);"><div style="position: absolute; left: 4px; right: 4px; top: 200px; height: 110px; border-radius: 10px; overflow: hidden;"><x-import component-from-global-scope="ChronoFlow.Skeleton" class-name="h-full w-full"></x-import></div></div></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{offline}}" hint-placeholder-val="{{ false }}">
+        <section aria-labelledby="ro-title" style="display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 12px; padding: 28px 20px; border-radius: 26px; border: 1px dashed var(--border); text-align: center;">
+          <span aria-hidden="true" style="display: grid; place-items: center; width: 52px; height: 52px; border-radius: 9999px; background: var(--muted); color: var(--muted-foreground);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 13v8"></path><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path><path d="m8 17 4-4 4 4"></path></svg></span>
+          <h2 id="ro-title" style="margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 22px; line-height: 28px; letter-spacing: -0.01em;">{{t.offTitle}}</h2>
+          <p style="margin: 0; max-width: 420px; font-size: 15px; line-height: 22px; color: var(--muted-foreground);">{{t.offBody}}</p>
+          <button type="button" class="inline-flex shrink-0 items-center justify-center gap-2 text-sm font-medium whitespace-nowrap transition-colors rounded-full border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-6" style="height: 44px; margin-top: 4px; color: var(--foreground); font: inherit; font-size: 14px; font-weight: 500;">{{t.retry}}</button>
+          <p style="margin: 0; font-size: 13px; line-height: 18px; color: var(--muted-foreground);">{{t.rest}}</p>
+        </section>
+      </sc-if>
+    </main>
+  </div>
+  <nav aria-label="Main" class="ios ios-glass ios-tabbar">
+    <a href="Today.dc.html" class="ios-tab"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"></rect><rect width="7" height="5" x="14" y="3" rx="1"></rect><rect width="7" height="9" x="14" y="12" rx="1"></rect><rect width="7" height="5" x="3" y="16" rx="1"></rect></svg><span>Today</span></a>
+    <a href="Trips.dc.html" aria-current="page" class="ios-tab"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"></path></svg><span>My trips</span></a>
+    <a href="SetHome.dc.html" class="ios-tab"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg><span>Settings</span></a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"state":{"editor":"enum","options":["loading","offline"],"default":"loading"},"lang":{"editor":"enum","options":["en","nl"],"default":"en"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const nl = this.props.lang === 'nl';
+    const t = nl ? {
+      back: 'Mijn reizen', actions: 'Reisacties', dates: '14–20 dec · KL 641', summary: 'Samenvatting van je plan',
+      eyebrow: 'Je plan', shift: 'We zetten je klok 6 uur terug', home: 'Thuis · Amsterdam', there: 'Daar · New York',
+      downloading: 'Het plan van deze reis wordt gedownload…',
+      offTitle: 'Dit plan wordt gedownload zodra je online bent',
+      offBody: 'Plannen van actieve reizen en reizen in de komende 7 dagen staan altijd op je telefoon. Deze reis ligt verder weg, dus het plan opent zodra je verbinding hebt.',
+      retry: 'Opnieuw proberen', rest: 'Je andere reizen werken gewoon offline.'
+    } : {
+      back: 'My trips', actions: 'Trip actions', dates: '14–20 Dec · KL 641', summary: 'Plan summary',
+      eyebrow: 'Your plan', shift: 'We delay your clock 6 hours', home: 'Home · Amsterdam', there: 'There · New York',
+      downloading: "Downloading this trip's plan…",
+      offTitle: "This plan downloads when you're online",
+      offBody: "Plans for active trips and trips in the next 7 days are always on your phone. This one is further away, so its plan opens once you're connected.",
+      retry: 'Try again', rest: 'Your other trips keep working offline.'
+    };
+    const st = this.props.state ?? 'loading';
+    return { theme: this.props.theme ?? 'light', lang: nl ? 'nl' : 'en', t, loading: st === 'loading', offline: st === 'offline' };
+  }
+}
+</script>
+</body>
+</html>

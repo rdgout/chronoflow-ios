@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Day plan · list, from the top</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="ds/chronoflow/components/bundle.css">
+<script src="ds/chronoflow/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<dc-import name="Plan" view="list" from-top="{{yes}}" day="{{one}}" height="{{h}}" theme="{{theme}}" hint-size="390px,2600px"></dc-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":2600}}'>
+class Component extends DCLogic {
+  renderVals() { return { one: 1, h: 2600, yes: true, theme: this.props.theme ?? 'light' }; }
+}
+</script>
+</body>
+</html>

@@ -46,6 +46,8 @@ struct RootView: View {
                 AuthRootView(
                     model: authModel, back: { navigator.navigate(to: .welcome) },
                     guest: { navigator.navigate(to: .guestWizard) })
+            } else if route == .today {
+                AppTabs()
             } else if route == .verify, let model = authServices?.verifyModel {
                 VerifyEmailView(model: model).id(ObjectIdentifier(model))
             } else {
