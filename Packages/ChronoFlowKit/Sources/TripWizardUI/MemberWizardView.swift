@@ -17,6 +17,8 @@
         @State var closing = false
         @State var errorScrollRequest = 0
         #if DEBUG
+            @Environment(\.displayScale) var displayScale
+            @State var initialScrollSeedReady = false
             var errorScrollOverride: Int?
         #endif
         typealias Destination = MemberWizardDestination

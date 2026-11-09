@@ -113,18 +113,20 @@ nonisolated final class WizardRouteScreenTests: XCTestCase {
         let next = app.buttons["wizard.outbound.continue"]
         let footer = app.otherElements["wizard.outbound.footer"]
         XCTAssertTrue(footer.waitForExistence(timeout: 5))
-        let viewport = AuthUIFlow.viewport(in: app, scrollFrame: scroll.frame)
-        let footerTop = footer.frame.minY
         func visible(_ error: XCUIElement) -> Bool {
-            guard error.isHittable else { return false }
+            guard error.exists else { return false }
             let frame = error.frame
-            return viewport.contains(frame) && frame.maxY <= footerTop
+            let footerFrame = footer.frame
+            let viewport = AuthUIFlow.viewport(in: app, scrollFrame: scroll.frame)
+            return !frame.isEmpty && !footerFrame.isEmpty && viewport.contains(frame)
+                && frame.maxY <= footerFrame.minY
         }
         let atBottom = XCTNSPredicateExpectation(
-            predicate: NSPredicate { _, _ in visible(later) && first.frame.maxY < scroll.frame.minY }, object: nil)
+            predicate: NSPredicate { _, _ in
+                visible(later) && first.exists && first.frame.maxY < scroll.frame.minY
+            }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [atBottom], timeout: 5), .completed)
         XCTAssertEqual(later.label, "This flight leaves before the previous one lands.")
-        XCTAssertFalse(first.isHittable)
         XCTAssertLessThan(first.frame.maxY, scroll.frame.minY)
         XCTAssertTrue(next.isHittable && next.isEnabled)
         next.tap()

@@ -71,7 +71,22 @@ Verification:
 - CoreSimulator's service connection is denied (`build/wizard-scroll-simulators.log`), so the new all-size hosted regression and corrected UI check still need the 17e run below. No runtime result, snapshot comparison or matrix run is claimed.
 - The worktree's Git index is outside the writable sandbox, so `git add` is denied. A single Conventional Commit patch is prepared at `build/wizard-scroll-fix.patch`; the branch cannot be advanced here.
 
-First run the native compilation and focused hosted/UI checks:
+### Static-text visibility and bottom-seed readiness (2026-11-09)
+
+The user's subsequent 17e run passes `WizardErrorScrollTests`, `WizardFlightPickerTests`, `TripWizardTests` and `TripWizardReviewTests`. The remaining `WizardRouteScreenTests.testContinueScrollsBackToTheOffscreenFirstError` failure comes from asking XCUI for a StaticText activation point before its frame is usable.
+
+The visibility predicate now checks existence and a non-empty current frame fully inside the current viewport above the non-empty footer frame. It never asks error text for hittability; the first error's offscreen precondition uses existence and frame position, and only Continue needs hittability in this test. The five cards are built by an eager `VStack`. The UUID-gated DEBUG seed retains the native bottom initial anchor and exposes its footer identifier only after geometry confirms the padded content's bottom lies inside the scroll viewport, allowing one display pixel for rounding. Readiness stays latched when Continue scrolls back to the first error. Ordinary screens and Release builds do not install this geometry observer.
+
+Verification:
+
+- `make lint`: passed (`build/wizard-scroll-ready-lint.log`).
+- Full `make host-tests`: attempted; the known loopback-listener sandbox denial and unchanged 30-day/S3 timeline timing limits fail while iOS compilation is running (`build/wizard-scroll-ready-host-tests.log`).
+- Standalone package tests excluding only `APICookieTests.realRedirectCookieHandlingIsDisabled`: passed, including all 94 wizard host tests and every unchanged timeline performance budget (`build/wizard-scroll-ready-package-tests.log`).
+- Token/asset host tests and all resource/runner fixtures: passed (`build/wizard-scroll-ready-tooling-tests.log`).
+- Direct Swift 6/iOS 17 UI/app compilation and AppTests/AppUITests type checking: passed (`build/wizard-scroll-ready-typecheck.log`). No simulator or snapshot was run; the corrected 17e UI check remains pending.
+- `git add` is denied at the worktree's external Git index. The atomic patch is `build/wizard-scroll-ready-fix.patch`, with subject `fix(wizard): await bottom seed before polling error frames`; the real branch remains at `5e851e3`.
+
+Rerun the focused hosted/UI suites on 17e:
 
 ```sh
 make generate

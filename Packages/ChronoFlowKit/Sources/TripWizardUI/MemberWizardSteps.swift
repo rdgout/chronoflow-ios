@@ -23,26 +23,29 @@
                     .accessibilityLabel(t("Progress, {{pct}} percent", ["pct": String(Int(model.progress * 100))]))
                 ScrollViewReader { proxy in
                     ScrollView {
-                        VStack(alignment: .leading, spacing: PlanUITokens.wizardContentGap) {
-                            VStack(alignment: .leading, spacing: PlanUITokens.wizardControlGap) {
-                                if let eyebrow {
-                                    Text(eyebrow.uppercased()).font(Typography.screenEyebrow.font)
-                                        .tracking(Typography.screenEyebrow.tracking).foregroundStyle(
-                                            ColorToken.dawnText.color)
+                        initialScrollSeedContent(id: id) {
+                            VStack(alignment: .leading, spacing: PlanUITokens.wizardContentGap) {
+                                VStack(alignment: .leading, spacing: PlanUITokens.wizardControlGap) {
+                                    if let eyebrow {
+                                        Text(eyebrow.uppercased()).font(Typography.screenEyebrow.font)
+                                            .tracking(Typography.screenEyebrow.tracking).foregroundStyle(
+                                                ColorToken.dawnText.color)
+                                    }
+                                    WelcomeText(
+                                        title,
+                                        style: title.count > 80
+                                            ? Typography.wizardLongTitle : Typography.screenPageTitle,
+                                        color: .foreground
+                                    )
+                                    .accessibilityAddTraits(.isHeader).accessibilityIdentifier("wizard.title")
+                                    if let subtitle {
+                                        Text(subtitle).font(Typography.wizardSubtitle.font).foregroundStyle(
+                                            ColorToken.mutedForeground.color)
+                                    }
                                 }
-                                WelcomeText(
-                                    title,
-                                    style: title.count > 80 ? Typography.wizardLongTitle : Typography.screenPageTitle,
-                                    color: .foreground
-                                )
-                                .accessibilityAddTraits(.isHeader).accessibilityIdentifier("wizard.title")
-                                if let subtitle {
-                                    Text(subtitle).font(Typography.wizardSubtitle.font).foregroundStyle(
-                                        ColorToken.mutedForeground.color)
-                                }
-                            }
-                            content()
-                        }.frame(maxWidth: .infinity, alignment: .leading).padding(PlanUITokens.space5)
+                                content()
+                            }.frame(maxWidth: .infinity, alignment: .leading).padding(PlanUITokens.space5)
+                        }
                     }
                     .defaultScrollAnchor(initialScrollAnchor(for: id))
                     .onChange(of: requestedErrorScroll) { _, _ in
@@ -92,7 +95,7 @@
                         .accessibilityIdentifier("wizard.\(id).continue")
                     }.padding(.horizontal, PlanUITokens.space5).padding(.vertical, PlanUITokens.space3)
                         .background(ColorToken.background.color)
-                        .accessibilityElement(children: .contain).accessibilityIdentifier("wizard.\(id).footer")
+                        .accessibilityElement(children: .contain).accessibilityIdentifier(footerIdentifier(for: id))
                         .planContentBounds()
                 } else if answerHint {
                     tapHint.frame(maxWidth: .infinity).multilineTextAlignment(.center)
@@ -131,6 +134,35 @@
                 }
             #endif
             return nil
+        }
+
+        @ViewBuilder private func initialScrollSeedContent<Content: View>(
+            id: String, @ViewBuilder content: () -> Content
+        ) -> some View {
+            #if DEBUG
+                if initialScrollAnchor(for: id) != nil {
+                    content().onGeometryChange(for: Bool.self) { geometry in
+                        guard let viewport = geometry.bounds(of: .scrollView), !viewport.isEmpty,
+                            geometry.size.height > 0
+                        else { return false }
+                        return geometry.size.height > viewport.minY
+                            && geometry.size.height <= viewport.maxY + 1 / displayScale
+                    } action: { atBottom in
+                        if atBottom { initialScrollSeedReady = true }
+                    }
+                } else {
+                    content()
+                }
+            #else
+                content()
+            #endif
+        }
+
+        private func footerIdentifier(for id: String) -> String {
+            #if DEBUG
+                if initialScrollAnchor(for: id) != nil && !initialScrollSeedReady { return "" }
+            #endif
+            return "wizard.\(id).footer"
         }
 
         var returnScreen: some View {
