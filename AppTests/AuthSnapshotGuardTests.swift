@@ -5,10 +5,20 @@ import UIKit
 import XCTest
 
 nonisolated final class AuthSnapshotGuardTests: XCTestCase {
+    @MainActor func testRequiredSignInContentInBothAppearances() async throws {
+        try await authTopCapture(required: [.email, .password, .passkey, .forgot, .signup, .footer]) { measure in
+            SignInView(model: authSnapshotModel(), back: {}, guest: {}, measure: measure)
+        }
+    }
     @MainActor func testSignInControls() async throws { try await checkAuthCapture(mode: 0) }
 }
 
 nonisolated final class TwoFactorCodeSnapshotGuardTests: XCTestCase {
+    @MainActor func testRequiredTwoFactorContentInBothAppearances() async throws {
+        try await authTopCapture(required: [.code, .modeToggle]) { measure in
+            TwoFactorView(model: twoFactorSnapshotModel(), measure: measure)
+        }
+    }
     @MainActor func testCodeControls() async throws { try await checkAuthCapture(mode: 1) }
 }
 
@@ -25,6 +35,11 @@ nonisolated final class ForgotFieldSnapshotGuardTests: XCTestCase {
 }
 
 nonisolated final class ForgotThrottleSnapshotGuardTests: XCTestCase {
+    @MainActor func testRequiredForgotContentInBothAppearances() async throws {
+        try await authTopCapture(required: [.email]) { measure in
+            ForgotPasswordView(model: await forgotPasswordSnapshotModel(state: .attempts), measure: measure)
+        }
+    }
     @MainActor func testThrottleControls() async throws { try await checkAuthCapture(mode: 5) }
 }
 
@@ -121,6 +136,31 @@ nonisolated final class ForgotSentSnapshotGuardTests: XCTestCase {
                 }
             }
             XCTAssertTrue(remaining.isEmpty, "Uncaptured controls: \(remaining)")
+        }
+    }
+}
+
+nonisolated final class SignUpSnapshotGuardTests: XCTestCase {
+    @MainActor func testRequiredContentInBothAppearances() async throws {
+        try await authTopCapture(required: [.name, .email, .password, .confirmation, .consent, .footer]) { measure in
+            SignUpView(model: try signUpSnapshotModel(.throttle), measure: measure)
+        }
+    }
+}
+
+nonisolated final class ResetPasswordSnapshotGuardTests: XCTestCase {
+    @MainActor func testRequiredContentInBothAppearances() async throws {
+        try await authTopCapture(required: [.password, .confirmation]) { measure in
+            ResetPasswordView(model: try await resetSnapshotModel(.throttle), measure: measure)
+        }
+    }
+}
+
+nonisolated final class VerifyEmailSnapshotGuardTests: XCTestCase {
+    @MainActor func testRequiredContentInBothAppearances() async throws {
+        try await authTopCapture(required: [.resend]) { measure in
+            VerifyEmailView(
+                model: try await verifySnapshotModel(.failedThrottle), automaticallyChecks: false, measure: measure)
         }
     }
 }

@@ -70,6 +70,8 @@ import XCTest
                 category: .extraExtraLarge, scale: fixture.scale)
             defer { host.close() }
             try await host.settleLayout { Array(frames.values) }
+            let required: Set<AuthElement> = [.brand, .heading, .subtitle, .card, .submit]
+            XCTAssertTrue(required.isSubset(of: Set(frames.keys)), "Missing required recovery content: \(frames.keys)")
             for (element, frame) in frames {
                 XCTAssertGreaterThanOrEqual(frame.minX, insets.left + AuthTokens.gutter - 0.5, element.rawValue)
                 XCTAssertLessThanOrEqual(
@@ -92,4 +94,29 @@ import XCTest
 
 @MainActor func recoveryTextFields(_ view: UIView) -> [UITextField] {
     (view as? UITextField).map { [$0] } ?? view.subviews.flatMap(recoveryTextFields)
+}
+
+@MainActor func authTopCapture<V: View>(
+    required: Set<AuthElement>,
+    view: @MainActor (@escaping (AuthElement, CGRect) -> Void) async throws -> V
+) async throws {
+    try await AuthTestHost.registerFonts()
+    let fixture = try XCTUnwrap(AuthDeviceFixture.all().first { $0.name == "se" })
+    for style in [UIUserInterfaceStyle.light, .dark] {
+        var frames: [AuthElement: CGRect] = [:]
+        let host = try AuthTestHost(
+            try await view { frames[$0] = $1 }, size: fixture.size, insets: fixture.insets,
+            style: style, language: "nl", category: .extraExtraLarge, scale: fixture.scale)
+        defer { host.close() }
+        try await host.settle()
+        let raster = try SnapshotRaster(image: XCTUnwrap(host.image().cgImage))
+        let failure = AuthSnapshotCapture.failure(
+            raster: raster, size: fixture.size, scale: host.scale,
+            viewport: host.window.bounds.inset(by: fixture.insets),
+            frames: Dictionary(uniqueKeysWithValues: frames.map { ($0.key.rawValue, $0.value) }),
+            required: Set(Set(frames.keys).union(required).map(\.rawValue)).union([
+                "brand", "heading", "subtitle", "card", "submit",
+            ]))
+        XCTAssertNil(failure, "\(style): \(failure ?? "")")
+    }
 }

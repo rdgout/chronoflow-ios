@@ -66,6 +66,9 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
                         'AuthControlTests',
                         'AuthLayoutTests',
                         'AuthSnapshotGuardTests',
+                        'SignUpSnapshotGuardTests',
+                        'ResetPasswordSnapshotGuardTests',
+                        'VerifyEmailSnapshotGuardTests',
                         'TwoFactorCodeSnapshotGuardTests',
                         'TwoFactorRecoverySnapshotGuardTests',
                         'ForgotFormSnapshotGuardTests',
@@ -251,7 +254,7 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
                              'ReminderPermissionTests',
                              'ReminderTapTests',
                              'ReminderSignOutTests')},
- 'RenderTests': {'snapshots': ('WelcomeRenderingTests',)},
+ 'RenderTests': {'logic': ('WelcomeRenderingTests',)},
  'SettingsTests': {'host': ('SettingsHomeStateTests',
                             'SettingsHomeModelTests',
                             'SettingsStringsTests',
@@ -740,7 +743,7 @@ def selection(mode, alias, only=(), include_logic=True, include_matrix=True):
         return list(RUNTIME_SMOKE)
     if mode in ("check", "test"):
         result = [s for policy in ("logic", "matrix") for s in selectors(policy)
-                  if s.startswith(("AppTests/", "AppUITests/"))]
+                  if s.startswith(("AppTests/", "AppUITests/", "RenderTests/"))]
         result += list(IOS_METHODS)
         if alias == "17e":
             result += selectors("reference")

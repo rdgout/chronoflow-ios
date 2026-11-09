@@ -428,6 +428,18 @@ class ClassificationTests(unittest.TestCase):
         self.assertEqual(set(runner.recording_selection(list(snapshots), 'snapshots', '1')),
                          {s for s in snapshots & set(runner.SNAPSHOTS) if s.startswith('AppTests/')})
 
+    def test_reference_free_welcome_and_auth_capture_guards_stay_in_check(self):
+        expected = {'RenderTests/WelcomeRenderingTests'} | {
+            'AppTests/' + suite for suite in [
+                'AuthSnapshotGuardTests', 'TwoFactorCodeSnapshotGuardTests',
+                'ForgotThrottleSnapshotGuardTests', 'SignUpSnapshotGuardTests',
+                'ResetPasswordSnapshotGuardTests', 'VerifyEmailSnapshotGuardTests',
+            ]
+        }
+        for mode in ['check', 'test']:
+            self.assertTrue(expected <= set(runner.selection(mode, '17e')))
+        self.assertFalse(expected & set(runner.selectors('snapshots')))
+
     def test_store_and_core_logic_run_on_host_by_default(self):
         host = set(runner.selectors('host'))
         self.assertTrue(any(s.startswith('LocalStoreTests/') for s in host))

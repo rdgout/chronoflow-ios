@@ -2101,7 +2101,7 @@ User decision 2026-11-06: implement these when the named states exist; this roun
 - [x] Restore key-window and visible-content guards at layout settlement; measure contrast from committed rendered content.
 - [x] Keep Step/Legend content within asymmetric horizontal safe areas using the shared measured rail modifier; retain both SE and asymmetric Duo hosted fixtures.
 - [x] Route committed unverified sessions after request cancellation and restore; keep all gate routing and verification reads outside the cancelled request.
-- [ ] Restore cheap default Welcome self-comparisons and auth capture guards, without references; use fixed SE xxLarge fixtures and enforce required recovery elements in every layout state.
+- [x] Restore cheap default Welcome self-comparisons and auth capture guards, without references; use fixed SE xxLarge fixtures and enforce required recovery elements in every layout state.
 - [ ] Cover AppServices default file-store wiring through both factories.
 - [ ] Replace unreliable tab minimization UI observations with configuration coverage and stable native tab navigation.
 - [ ] Correct the tier map, pass lint/host and Debug/Release compile checks, and deliver atomic follow-up commits or patches.

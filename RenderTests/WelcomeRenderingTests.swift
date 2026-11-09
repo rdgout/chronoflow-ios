@@ -11,15 +11,16 @@
     @Suite(.serialized) @MainActor struct WelcomeRenderingTests {
         @Test func frozenIntroPixelsStayFixedAcrossClockAndRenderPasses() async throws {
             try await FontRegistry.register()
-            for style in [UIUserInterfaceStyle.light, .dark] {
-                for language in ["en", "nl"] {
-                    for time in try SnapshotProfile.current().introTimes {
+            for style in [UIUserInterfaceStyle.dark] {
+                for language in ["nl"] {
+                    for time in [2400] {
                         var previousMount: SnapshotRaster?
                         for _ in 0..<2 {
                             let clock = ManualLaunchClock()
                             let intro = LaunchIntro(
                                 start: .milliseconds(2300), clock: clock, frozenTime: .milliseconds(time))
-                            let host = WelcomeTestWindow(style: style, language: language, intro: intro)
+                            let host = WelcomeTestWindow(
+                                style: style, language: language, intro: intro, device: try stressDevice())
                             defer { host.close() }
                             let image = try await host.layout()
                             #expect(intro.hasPlayed)
@@ -30,7 +31,7 @@
                             previousMount = current
                             let reference = current
                             let frames = host.frames
-                            for advance in [10, 20, 30] {
+                            for advance in [30] {
                                 clock.advance(to: .seconds(advance))
                                 let image = try await host.layout()
                                 #expect(
@@ -49,19 +50,20 @@
             try await FontRegistry.register()
             let intro = LaunchIntro(
                 start: .milliseconds(2300), clock: ManualLaunchClock(), frozenTime: .milliseconds(2400))
-            let first = WelcomeTestWindow(style: .light, intro: intro)
+            let first = WelcomeTestWindow(style: .light, intro: intro, device: try stressDevice())
             try await first.layout()
             #expect(intro.hasPlayed)
             first.close()
-            let later = WelcomeTestWindow(style: .light, intro: intro)
+            let later = WelcomeTestWindow(style: .light, intro: intro, device: try stressDevice())
             defer { later.close() }
             try await later.layout()
-            let reference = WelcomeTestWindow(style: .light)
+            let reference = WelcomeTestWindow(style: .light, device: try stressDevice())
             defer { reference.close() }
             try await reference.layout()
             #expect(try pixels(later.image()) == pixels(reference.image()))
             let reducedIntro = LaunchIntro(start: .seconds(30), clock: ManualLaunchClock())
-            let reduced = WelcomeTestWindow(style: .light, intro: reducedIntro, reduceMotion: true)
+            let reduced = WelcomeTestWindow(
+                style: .light, intro: reducedIntro, reduceMotion: true, device: try stressDevice())
             defer { reduced.close() }
             try await reduced.layout()
             #expect(!reducedIntro.hasPlayed)
@@ -71,8 +73,9 @@
         @Test func trackedEyebrowKeepsItsIntrinsicWidthThroughTheCap() async throws {
             try await FontRegistry.register()
             for language in ["en", "nl"] {
-                for size in try profileSizes() {
-                    let host = WelcomeTestWindow(style: .light, language: language, typeSize: size)
+                for size in [DynamicTypeSize.xxLarge] {
+                    let host = WelcomeTestWindow(
+                        style: .light, language: language, typeSize: size, device: try stressDevice())
                     defer { host.close() }
                     try await host.layout()
                     let font = Typography.eyebrow.uiFont(
@@ -94,10 +97,11 @@
 
         @Test func positiveLeadingStylesKeepTheirExistingPixels() async throws {
             try await FontRegistry.register()
-            for appearance in [UIUserInterfaceStyle.light, .dark] {
-                for language in ["en", "nl"] {
-                    for size in [DynamicTypeSize.large, .xxLarge] {
-                        let host = WelcomeTestWindow(style: appearance, language: language, typeSize: size)
+            for appearance in [UIUserInterfaceStyle.dark] {
+                for language in ["nl"] {
+                    for size in [DynamicTypeSize.xxLarge] {
+                        let host = WelcomeTestWindow(
+                            style: appearance, language: language, typeSize: size, device: try stressDevice())
                         defer { host.close() }
                         let styles: [(String, Typography.Style, ColorToken)] = [
                             ("ChronoFlow", Typography.welcomeWordmark, .skyTitle),
@@ -145,6 +149,10 @@
                     }
                 }
             }
+        }
+
+        private func stressDevice() throws -> SnapshotDevice {
+            try #require(SnapshotDevice.all().first { $0.alias == "se" })
         }
 
         @Test func explicitLocalesResolveTheCatalog() {
