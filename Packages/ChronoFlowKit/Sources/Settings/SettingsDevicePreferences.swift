@@ -15,10 +15,14 @@ import Observation
     }
 
     public func resolvedLocale(phone: Locale = .current) -> Locale {
-        switch language {
-        case .system: Locale(identifier: phone.language.languageCode?.identifier == "nl" ? "nl" : "en")
-        case .en: Locale(identifier: "en")
-        case .nl: Locale(identifier: "nl")
-        }
+        let languageCode =
+            switch language {
+            case .system: phone.language.languageCode?.identifier == "nl" ? "nl" : "en"
+            case .en: "en"
+            case .nl: "nl"
+            }
+        var components = Locale.Components(identifier: languageCode)
+        components.hourCycle = phone.hourCycle
+        return Locale(components: components)
     }
 }

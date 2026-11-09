@@ -1,4 +1,5 @@
 import DesignSystem
+import Settings
 import SwiftUI
 import TripWizard
 import UIKit
@@ -23,6 +24,31 @@ nonisolated final class WizardFlightPickerTests: XCTestCase {
             XCTAssertEqual(picker.datePickerMode, .dateAndTime, device.name)
             XCTAssertEqual(try XCTUnwrap(picker.timeZone).secondsFromGMT(for: value), 0, device.name)
             XCTAssertEqual(WizardDateTime.string(picker.date), "2040-03-25T02:07", device.name)
+        }
+    }
+
+    @MainActor func testNativePickerKeepsTheAppLanguageAndPhoneHourCycle() async throws {
+        try await AuthTestHost.registerFonts()
+        let device = try XCTUnwrap(try AuthDeviceFixture.all().first)
+        let name = "WizardPickerClockTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: name))
+        defer { defaults.removePersistentDomain(forName: name) }
+        let preferences = SettingsDevicePreferences(defaults: defaults)
+        for language in [SettingsDevicePreferences.LanguageChoice.en, .nl] {
+            preferences.language = language
+            for phoneIdentifier in ["en_US@hours=h23", "nl_NL@hours=h12"] {
+                let phone = Locale(identifier: phoneIdentifier)
+                let locale = preferences.resolvedLocale(phone: phone)
+                let host = try AuthTestHost(
+                    WizardDateTimeSheet(title: "Departure", localTime: "Time in Amsterdam", value: Date()) { _ in },
+                    size: device.size, insets: device.insets, language: locale.identifier)
+                defer { host.close() }
+                try await host.settle()
+                let picker = try XCTUnwrap(pickers(in: host.controller.view).first)
+                let nativeLocale = try XCTUnwrap(picker.locale)
+                XCTAssertEqual(nativeLocale.language.languageCode?.identifier, language.rawValue)
+                XCTAssertEqual(nativeLocale.hourCycle, phone.hourCycle)
+            }
         }
     }
 

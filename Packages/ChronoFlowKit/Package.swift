@@ -52,7 +52,8 @@ let package = Package(
             dependencies: ["AppCore", "LocalStore", "Sync", "PlanCore", "PlanUI", "DesignSystem", "Reminders"],
             resources: [.process("Resources")], swiftSettings: [.defaultIsolation(nil)]),
         .testTarget(
-            name: "SettingsTests", dependencies: ["Settings", "DataAccess"], swiftSettings: [.defaultIsolation(nil)]),
+            name: "SettingsTests", dependencies: ["Settings", "DataAccess", "TripWizard"],
+            swiftSettings: [.defaultIsolation(nil)]),
         .target(
             name: "Reminders",
             dependencies: ["AppCore", "LocalStore", "PlanCore", .product(name: "GRDB", package: "GRDB.swift")],
