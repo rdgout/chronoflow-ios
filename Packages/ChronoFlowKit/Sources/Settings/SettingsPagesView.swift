@@ -31,6 +31,7 @@
                 .planPageRail()
             }
             .scrollDismissesKeyboard(.interactively)
+            .planPageSafeArea()
             .background(ColorToken.background.color)
             .foregroundStyle(ColorToken.cardForeground.color).tint(ColorToken.primary.color)
             .settingsFont(Typography.screenBodyLg)
