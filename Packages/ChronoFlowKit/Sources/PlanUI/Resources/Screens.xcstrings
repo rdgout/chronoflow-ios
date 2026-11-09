@@ -1851,6 +1851,38 @@
           }
         }
       }
+    },
+    "New trip": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New trip"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nieuwe reis"
+          }
+        }
+      }
+    },
+    "Plan a trip": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan a trip"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan een reis"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

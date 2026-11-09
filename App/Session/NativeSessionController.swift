@@ -16,6 +16,7 @@ final class NativeSessionController {
     }
     private var gateRouter: SessionGateRouter?
     private var subscription: Task<Void, Never>?
+    private let sourceFactory: (@Sendable (StoredSession) async -> any DataSource)?
 
     init(
         applicationSupport: URL, namespace: StorageNamespace, credentials: (any SessionStore)? = nil,
@@ -28,6 +29,7 @@ final class NativeSessionController {
         verification: @escaping @Sendable (UInt64) async -> Void = { _ in },
         signedOut: @escaping @MainActor @Sendable () -> Void = {}
     ) {
+        sourceFactory = source
         let model = AccountModel()
         self.model = model
         let accounts = SessionAccountDatabase(applicationSupport: applicationSupport, namespace: namespace) {
@@ -110,6 +112,8 @@ final class NativeSessionController {
     }
 
     func refreshNow() async throws { _ = try await sync?.refreshNow() }
+
+    func wizardDataSource(session: StoredSession) async -> (any DataSource)? { await sourceFactory?(session) }
 
     func observe() {
         guard subscription == nil else { return }

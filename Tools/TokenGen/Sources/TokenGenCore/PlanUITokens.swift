@@ -45,6 +45,34 @@ func planUITokens(root: URL) throws -> Data {
             Style(face: .figtree500, size: screenBodyLg.size, lineHeight: screenBodyLg.lineHeight,
                   tracking: screenBodyLg.tracking, relativeTo: screenBodyLg.relativeTo)
         }
+        public static var wizardAirport: Style {
+            Style(face: .figtree600, size: PlanUITokens.wizardAirportFontSize, lineHeight: PlanUITokens.wizardAirportLineHeight,
+                  tracking: screenBody.tracking, relativeTo: .headline)
+        }
+        public static var wizardAirportPlaceholder: Style {
+            Style(face: .figtree400, size: PlanUITokens.wizardAirportFontSize, lineHeight: PlanUITokens.wizardAirportLineHeight,
+                  tracking: screenBody.tracking, relativeTo: .headline)
+        }
+        public static var wizardRow: Style {
+            Style(face: .figtree400, size: PlanUITokens.wizardRowFontSize, lineHeight: PlanUITokens.wizardRowLineHeight,
+                  tracking: screenBody.tracking, relativeTo: .body)
+        }
+        public static var wizardButton: Style {
+            Style(face: .figtree600, size: PlanUITokens.wizardRowFontSize, lineHeight: PlanUITokens.wizardRowLineHeight,
+                  tracking: screenBody.tracking, relativeTo: .body)
+        }
+        public static var wizardSubtitle: Style {
+            Style(face: .figtree400, size: screenBodyLg.size, lineHeight: PlanUITokens.wizardRowLineHeight,
+                  tracking: screenBody.tracking, relativeTo: .body)
+        }
+        public static var wizardHint: Style {
+            Style(face: .figtree400, size: PlanUITokens.wizardHintFontSize, lineHeight: PlanUITokens.wizardHintLineHeight,
+                  tracking: screenBody.tracking, relativeTo: .caption)
+        }
+        public static var wizardRoute: Style {
+            Style(face: .figtree600, size: PlanUITokens.wizardRouteFontSize, lineHeight: PlanUITokens.wizardRouteLineHeight,
+                  tracking: screenBody.tracking, relativeTo: .subheadline)
+        }
         }
 
         """

@@ -1,6 +1,6 @@
 import Foundation
 
-public struct FieldMessage: Sendable, Equatable {
+public struct FieldMessage: Codable, Sendable, Equatable {
     public let key: String
     public let arguments: [String: JSONValue]
     public init(key: String, arguments: [String: JSONValue] = [:]) {

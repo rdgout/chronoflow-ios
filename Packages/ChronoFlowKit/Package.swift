@@ -16,6 +16,7 @@ let package = Package(
         .library(name: "Settings", targets: ["Settings"]),
         .library(name: "PlanCore", targets: ["PlanCore"]),
         .library(name: "TripWizard", targets: ["TripWizard"]),
+        .library(name: "TripWizardUI", targets: ["TripWizardUI"]),
         .library(name: "Launch", targets: ["Launch"]),
         .library(name: "Welcome", targets: ["Welcome"]),
         .library(name: "Auth", targets: ["Auth"]),
@@ -66,9 +67,14 @@ let package = Package(
         .testTarget(
             name: "LocalStoreTests", dependencies: ["LocalStore"], resources: [.copy("Fixtures")],
             swiftSettings: [.defaultIsolation(nil)]),
-        .target(name: "TripWizard", dependencies: ["AppCore", "DataAccess"], swiftSettings: [.defaultIsolation(nil)]),
+        .target(
+            name: "TripWizard", dependencies: ["AppCore", "DataAccess", "LocalStore"],
+            swiftSettings: [.defaultIsolation(nil)]),
+        .target(
+            name: "TripWizardUI", dependencies: ["TripWizard", "DesignSystem"],
+            resources: [.process("Resources")], swiftSettings: [.defaultIsolation(MainActor.self)]),
         .testTarget(
-            name: "TripWizardTests", dependencies: ["TripWizard", "Sync", "DataAccess", "LocalStore"],
+            name: "TripWizardTests", dependencies: ["TripWizard", "TripWizardUI", "Sync", "DataAccess", "LocalStore"],
             resources: [.copy("Fixtures")],
             swiftSettings: [.defaultIsolation(nil)]),
         .target(
