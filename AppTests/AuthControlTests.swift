@@ -6,6 +6,39 @@ import UIKit
 import XCTest
 
 nonisolated final class AuthControlTests: XCTestCase {
+    @MainActor func testRootCapMakesAX5EqualXXLarge() async throws {
+        try await AuthTestHost.registerFonts()
+        let fixture = try XCTUnwrap(AuthDeviceFixture.all().first { $0.name == "se" })
+        let host = try AuthTestHost(EmptyView(), size: fixture.size, insets: fixture.insets, scale: fixture.scale)
+        defer { host.close() }
+        var expected: SnapshotRaster?
+        var expectedFrames: [AuthElement: CGRect] = [:]
+        for category in [UIContentSizeCategory.extraExtraLarge, .accessibilityExtraExtraExtraLarge] {
+            var frames: [AuthElement: CGRect] = [:]
+            let measure: (AuthElement, CGRect) -> Void = { frames[$0] = $1 }
+            host.configure(
+                SignInView(model: authSnapshotModel(), back: {}, guest: {}, measure: measure), category: category)
+            try await host.settle()
+            let actual = try SnapshotRaster(png: XCTUnwrap(host.image().pngData()))
+            XCTAssertNil(
+                AuthSnapshotCapture.failure(
+                    raster: actual, size: fixture.size, scale: fixture.scale,
+                    viewport: CGRect(origin: .zero, size: fixture.size).inset(by: fixture.insets),
+                    frames: Dictionary(uniqueKeysWithValues: frames.map { ($0.key.rawValue, $0.value) }),
+                    required: Set(["brand", "heading", "card", "submit"])))
+            if let expected {
+                XCTAssertEqual(Set(frames.keys), Set(expectedFrames.keys))
+                for element in expectedFrames.keys.sorted(by: { $0.rawValue < $1.rawValue }) {
+                    XCTAssertEqual(frames[element], expectedFrames[element], "AX5 frame differs: \(element)")
+                }
+                XCTAssertTrue(actual == expected, "AX5 pixels differ from xxLarge: SE, en, light")
+            } else {
+                expected = actual
+                expectedFrames = frames
+            }
+        }
+    }
+
     @MainActor func testCardShadowMatchesBoardInkInAllEightSignInStates() async throws {
         try await AuthTestHost.registerFonts()
         let host = try AuthTestHost(EmptyView(), size: AuthShadowBoard.size, scale: AuthShadowBoard.scale)

@@ -334,10 +334,10 @@ class ClassificationTests(unittest.TestCase):
         logic = {'DesignSystemTests/AuthBoardContrastTests', 'AppTests/AuthControlTests', 'AppTests/AuthLayoutTests',
                  'AppUITests/SignInTests', 'AppUITests/AuthAuditTests'}
         self.assertTrue(logic <= set(runner.selectors('logic')))
-        self.assertIn('AppTests/AuthSnapshotTests', runner.selectors('profiles'))
+        self.assertIn('AppTests/AuthSnapshotTests', runner.selectors('snapshots'))
         self.assertIn('AppTests/AuthSnapshotTests', runner.SNAPSHOTS)
         selected = runner.selection('check', '17e')
-        for suite in logic | {'AppTests/AuthSnapshotTests'}:
+        for suite in logic:
             self.assertEqual(selected.count(suite), 1, suite)
         self.assertFalse(set(selected) & host)
         self.assertIn('AppUITests/AuthAuditTests', runner.SERIAL_TESTS)
@@ -371,9 +371,9 @@ class ClassificationTests(unittest.TestCase):
         self.assertIn(keyboard, runner.selectors('matrix'))
         self.assertEqual(runner.selection('check', '17e').count(keyboard), 1)
         snapshot = 'AppTests/TwoFactorSnapshotTests'
-        self.assertIn(snapshot, runner.selectors('profiles'))
+        self.assertIn(snapshot, runner.selectors('snapshots'))
         self.assertIn(snapshot, runner.SNAPSHOTS)
-        self.assertEqual(runner.selection('check', '17e').count(snapshot), 1)
+        self.assertNotIn(snapshot, runner.selection('check', '17e'))
         self.assertEqual(runner.recording_selection([snapshot], 'check', '1'), [snapshot])
         self.assertEqual(runner.recording_selection([snapshot], 'check', 'launch'), [])
         for alias in ['se', 'duo']:
@@ -388,16 +388,16 @@ class ClassificationTests(unittest.TestCase):
         self.assertIn(keyboard, runner.selectors('matrix'))
         self.assertEqual(runner.selection('check', '17e').count(keyboard), 1)
         snapshot = 'AppTests/ForgotPasswordSnapshotTests'
-        self.assertIn(snapshot, runner.selectors('profiles'))
+        self.assertIn(snapshot, runner.selectors('snapshots'))
         self.assertIn(snapshot, runner.SNAPSHOTS)
-        self.assertEqual(runner.selection('check', '17e').count(snapshot), 1)
+        self.assertNotIn(snapshot, runner.selection('check', '17e'))
         self.assertEqual(runner.recording_selection([snapshot], 'check', '1'), [snapshot])
         self.assertEqual(runner.recording_selection([snapshot], 'check', 'launch'), [])
         for alias in ['se', 'duo']:
             self.assertEqual(runner.selection('check', alias, only=[keyboard]), [keyboard])
 
     def test_auth_acceptance_tiers_include_all_suites_once_and_project_discovers_ui_sources(self):
-        for suite in AUTH_HOSTED + AUTH_UI:
+        for suite in tuple(s for s in AUTH_HOSTED if s not in AUTH_SNAPSHOTS) + AUTH_UI:
             self.assertEqual(runner.selection('check', '17e').count(suite), 1, suite)
         self.assertEqual(runner.selection('runtime', 'duo'), list(runner.RUNTIME_SMOKE))
         for suite in AUTH_UI:
@@ -414,6 +414,18 @@ class ClassificationTests(unittest.TestCase):
         self.assertNotIn('excludes:', ui)
         for suite in ['AppUITests/AuthSessionTests', 'AppUITests/AuthAuditTests']:
             self.assertIn(suite, runner.SERIAL_TESTS)
+
+    def test_unapproved_snapshot_comparison_is_opt_in_and_recording_is_preserved(self):
+        snapshots = set(runner.selectors('snapshots'))
+        self.assertTrue(snapshots)
+        for mode in ['check', 'test', 'runtime']:
+            for alias in runner.MATRIX:
+                self.assertFalse(snapshots & set(runner.selection(mode, alias)), (mode, alias))
+        self.assertTrue(snapshots <= set(runner.selection('snapshots', '17e')))
+        for suite in snapshots:
+            self.assertEqual(runner.expand([suite]), [suite])
+        self.assertEqual(set(runner.recording_selection(list(snapshots), 'snapshots', '1')),
+                         {s for s in snapshots & set(runner.SNAPSHOTS) if s.startswith('AppTests/')})
 
     def test_store_and_core_logic_run_on_host_by_default(self):
         host = set(runner.selectors('host'))
@@ -436,7 +448,7 @@ class ClassificationTests(unittest.TestCase):
             self.assertEqual(selected.count(suite), 1, suite)
             configuration = 'Release' if suite.endswith('/ReleaseReadinessTests') else 'Debug'
             self.assertIn(suite, configurations[configuration])
-            self.assertNotIn(suite, runner.selectors('profiles') + runner.selectors('reference'))
+            self.assertNotIn(suite, runner.selectors('snapshots') + runner.selectors('reference'))
         self.assertTrue(set(PHASE9_HOSTED[:8]) <= set(runner.selectors('logic')))
 
     def test_perf_configuration_is_explicit_and_ordinary_release_restores_native(self):
@@ -623,7 +635,7 @@ class RunnerTests(unittest.TestCase):
             if selector in defaults:
                 self.assertIn('-only-testing:' + selector, serial)
         self.assertEqual(serial[serial.index('-parallel-testing-enabled') + 1], 'NO')
-        self.assertTrue(any('-only-testing:AppTests/LaunchSnapshotTests' in c for c in commands))
+        self.assertFalse(any('-only-testing:' + s in c for s in runner.selectors('snapshots') for c in commands))
         self.assertFalse(any('-only-testing:AppCoreTests/LaunchCoordinatorTests' in c for c in commands))
 
     def test_settings_board_captures_are_opt_in_and_serialize_device_appearance(self):
@@ -669,12 +681,12 @@ class RunnerTests(unittest.TestCase):
     def test_auth_check_executes_all_suites_once_and_keeps_failures_visible(self):
         status, output = self.execute(mode='check')
         self.assertEqual(status, 0, output)
-        for suite in AUTH_HOSTED + AUTH_UI:
+        for suite in tuple(s for s in AUTH_HOSTED if s not in AUTH_SNAPSHOTS) + AUTH_UI:
             commands = [c for c in self.commands_for_tests() if '-only-testing:' + suite in c]
             self.assertEqual(len(commands), 1, suite)
             self.assertIn('platform=iOS Simulator,id=device-1', commands[0])
             self.assertIn(' ' + suite, output)
-        for suite in AUTH_HOSTED + AUTH_UI:
+        for suite in tuple(s for s in AUTH_HOSTED if s not in AUTH_SNAPSHOTS) + AUTH_UI:
             with self.subTest(suite=suite):
                 self.result_fail = suite
                 status, output = self.execute(mode='check')
@@ -699,7 +711,7 @@ class RunnerTests(unittest.TestCase):
             self.assertNotIn('SNAPSHOT_RECORD', environment)
 
     def test_auth_skipped_expected_failure_or_missing_execution_cannot_pass(self):
-        for suite in AUTH_HOSTED + AUTH_UI:
+        for suite in tuple(s for s in AUTH_HOSTED if s not in AUTH_SNAPSHOTS) + AUTH_UI:
             for result in ['Skipped', 'Expected Failure', 'Failed', None]:
                 with self.subTest(suite=suite, result=result):
                     self.nodes = [] if result is None else [
@@ -732,10 +744,10 @@ class RunnerTests(unittest.TestCase):
     def test_auth_record_failure_still_runs_compare_audit_and_release(self):
         self.command_failure = lambda c: c[-1] == 'test-without-building' and any('record.xcresult' in a for a in c)
         with patch.dict(os.environ, SNAPSHOT_RECORD='1'):
-            status, output = self.execute(mode='check')
+            status, output = self.execute(mode='check', only=list(AUTH_HOSTED + AUTH_UI) + ['AppTests/ReleaseReadinessTests'])
         self.assertEqual(status, 1, output)
         self.assertIn('xcodebuild exited 65', output)
-        for suite in AUTH_HOSTED + AUTH_UI:
+        for suite in tuple(s for s in AUTH_HOSTED if s not in AUTH_SNAPSHOTS) + AUTH_UI:
             self.assertTrue(any('-only-testing:' + suite in c and not any('record.xcresult' in a for a in c)
                                 for c in self.commands_for_tests()), suite)
         self.assertIn('PASS 17e Release-compare AppTests/ReleaseReadinessTests', output)
@@ -893,9 +905,11 @@ class RunnerTests(unittest.TestCase):
 
     def test_matrix_profiles_and_system_references_run_once_on_17e(self):
         selections, _ = runner.schedule('matrix', list(runner.MATRIX))
-        for suite in runner.selectors('profiles') + runner.selectors('reference'):
+        for suite in runner.selectors('reference'):
             self.assertEqual([alias for alias in selections if suite in selections[alias]], ['17e'])
-        self.assertEqual(set(runner.selectors('profiles') + runner.selectors('reference')) & set(runner.selection('runtime', 'duo')), {'AppUITests/LaunchToWelcomeTests'})
+        for suite in runner.selectors('snapshots'):
+            self.assertFalse(any(suite in selected for selected in selections.values()), suite)
+        self.assertEqual(set(runner.selectors('snapshots') + runner.selectors('reference')) & set(runner.selection('runtime', 'duo')), {'AppUITests/LaunchToWelcomeTests'})
 
     def test_lpt_is_only_used_for_an_explicit_matrix(self):
         selections, order = runner.schedule('check', ['se', '17e', 'duo'])
@@ -909,7 +923,7 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(status, 0, output)
         commands = self.commands_for_tests()
         for suite in ['DesignSystemTests/AuthBoardContrastTests', 'AppTests/AuthControlTests', 'AppTests/AuthLayoutTests',
-                      'AppTests/AuthSnapshotTests', 'AppUITests/SignInTests', 'AppUITests/AuthAuditTests']:
+                      'AppUITests/SignInTests', 'AppUITests/AuthAuditTests']:
             matches = [c for c in commands if '-only-testing:' + suite in c]
             self.assertEqual(len(matches), 1, suite)
             self.assertIn('-configuration', matches[0])
@@ -918,10 +932,10 @@ class RunnerTests(unittest.TestCase):
                 self.assertEqual(matches[0][matches[0].index('-parallel-testing-enabled') + 1], 'NO')
 
     def test_record_modes_are_isolated_and_paths_cannot_collide(self):
-        for mode, expected in [('1', set(runner.SNAPSHOTS[1:])), ('launch', set(runner.SNAPSHOTS[:1])), ('all', set(runner.SNAPSHOTS))]:
+        for mode, expected in [('1', set(runner.SNAPSHOTS)), ('launch', set(runner.SNAPSHOTS[:1])), ('all', set(runner.SNAPSHOTS))]:
             self.setUp()
             with patch.dict(os.environ, {'SNAPSHOT_RECORD': mode, 'TEST_RUNNER_SNAPSHOT_RECORD': '1'}):
-                status, output = self.execute(aliases=['17e', 'duo'])
+                status, output = self.execute(aliases=['17e', 'duo'], mode='snapshots')
             self.assertEqual(status, 0, output)
             recorded = []
             for c, e in zip(self.commands, self.environments):

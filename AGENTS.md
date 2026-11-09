@@ -15,7 +15,7 @@ ChronoFlow is a jet-lag planner. It plans sleep, light and caffeine for a trip. 
 
 - **No design, no invention.** If a screen or state has no board, stop and say so. Deferring beats inventing.
 - **Values only from generated tokens and assets**, light and dark. No hard-coded colours or 390 × 844 geometry.
-- **Every iPhone, iPhone Duo included.** Splash and Welcome geometry is computed from the window size and all four safe-area insets (Duo has a side rail). Verify device fit with the D1c device-table Mac tests and all-size snapshots inside one 17e simulator. Run the seven-simulator matrix only when asked; use `make duo` only for Duo-specific runtime changes.
+- **Every iPhone, iPhone Duo included.** Splash and Welcome geometry is computed from the window size and all four safe-area insets (Duo has a side rail). Verify device fit with the D1c device-table Mac tests and worst-case hosted layout fixtures inside one 17e simulator. Reference-comparing profile snapshots are opt-in until references are approved. Run the seven-simulator matrix only when asked; use `make duo` only for Duo-specific runtime changes.
 - Dynamic Type is capped at xxLarge at the root; never add per-view caps or bypass the cap.
 - **Minimum iOS 17.0.** No `#available` checks below 17.
 - **Liquid Glass on iOS 26+.** Never set `UIDesignRequiresCompatibility`. Use system controls so they pick up Liquid Glass automatically. Explicit glass APIs only behind `if #available(iOS 26, *)` with the plain system default as fallback, never a hand-drawn imitation. Designed surfaces stay as drawn.
@@ -31,7 +31,7 @@ ChronoFlow is a jet-lag planner. It plans sleep, light and caffeine for a trip. 
 | --- | --- |
 | `make generate` | Generate `ChronoFlow.xcodeproj` from `project.yml` (the project file is not committed) |
 | `make quick` | Inner loop: strict lint and all SwiftPM host tests plus runner/resource fixtures; target <1 min warm |
-| `make check` | Commit gate: quick + generators, then 17e hosted tests/all-size snapshots, UI smoke and isolated Release readiness; target <5 min |
+| `make check` | Commit gate: quick + generators, then 17e hosted screen tests, UI smoke and isolated Release readiness; target <5 min |
 | `make format` | Format owned Swift sources with the toolchain formatter |
 | `make lint` | Run strict Swift formatting lint on the host |
 | `make test` / `make snapshots` | Run test or hosted profile-snapshot subsets on 17e / iOS 27.2 |
@@ -43,7 +43,7 @@ ChronoFlow is a jet-lag planner. It plans sleep, light and caffeine for a trip. 
 | `make generators-check` | Verify generated outputs, fonts and raster assets and run their host tests; first run needs network (see `Docs/tooling.md`) |
 | `Scripts/ci.sh` | Run `make generate check` locally |
 
-Test-tier decision (user, 2026-11-06): “skip the 7 simulator matrix unless asked for”. Device fit stays mandatory through Mac device-table tests and hosted multi-size snapshots on 17e. Profiles keep full coverage on SE/17e/Duo/Pro Max and compact coverage on 17/Air/18 Pro. Device-appearance/system-launch tests run serially with `XCUIDevice.shared.appearance`; only post-launch app UI may use per-launch appearance. No default/CI matrix, clean or reboot. Logs and xcresults are under `build/test-results/<alias>/`; `Docs/tooling.md` has recording and timing commands.
+Test-tier decision (user, 2026-11-06): “skip the 7 simulator matrix unless asked for”. Device fit stays mandatory through Mac device-table tests and hosted worst-case layout checks on 17e. Reference-comparing snapshots are opt-in until references are approved (`make snapshots`; `SNAPSHOT_RECORD=1 make snapshots` records them). Profiles keep full coverage on SE/17e/Duo/Pro Max and compact coverage on 17/Air/18 Pro. Device-appearance/system-launch tests run serially with `XCUIDevice.shared.appearance`; only post-launch app UI may use per-launch appearance. No default/CI matrix, clean or reboot. Logs and xcresults are under `build/test-results/<alias>/`; `Docs/tooling.md` has recording and timing commands.
 
 Simulators: Xcode 27.2 with iOS 27.2 runtimes (iPhone SE 3rd gen, 17e, 17, Air, 18 Pro, 18 Pro Max, iPhone Duo). Duo runs on its own runtime (`com.apple.CoreSimulator.SimRuntime.iOS-27-2-iPhone19-4`, build 24B91016s); the regular runtime (24B8117) has no Duo device type. Use `make duo`, which resolves by device type and runtime instead of name/OS or a fixed UDID. No iOS 17 simulator runtime is downloadable for Xcode 27.
 

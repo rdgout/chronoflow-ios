@@ -94,7 +94,7 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
                          'WelcomeHandOverTests',
                          'LaunchImageMutationTests',
                          'SnapshotContainerTests'),
-              'profiles': ('TripsSnapshotTests',
+              'snapshots': ('TripsSnapshotTests',
                            'LaunchSnapshotTests',
                            'WelcomeSnapshotTests',
                            'AuthSnapshotTests',
@@ -230,7 +230,7 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
                              'ReminderPermissionTests',
                              'ReminderTapTests',
                              'ReminderSignOutTests')},
- 'RenderTests': {'profiles': ('WelcomeRenderingTests',)},
+ 'RenderTests': {'snapshots': ('WelcomeRenderingTests',)},
  'SettingsTests': {'host': ('SettingsHomeStateTests',
                             'SettingsHomeModelTests',
                             'SettingsStringsTests',
@@ -502,7 +502,7 @@ def schedule(mode, aliases, only=(), timings=None):
             alias = min(aliases, key=lambda a: (estimated_seconds(a, selections[a], timings) + suite_seconds(suite, a, timings), aliases.index(a)))
             selections[alias].append(suite)
     if "17e" in aliases:
-        selections["17e"] += selectors("profiles") + selectors("reference")
+        selections["17e"] += selectors("reference")
     order = sorted(aliases, key=lambda a: (-estimated_seconds(a, selections[a], timings), aliases.index(a)))
     return selections, order
 
@@ -689,7 +689,7 @@ def selectors(policy):
 
 
 def expand(only):
-    known = set(selectors("logic") + selectors("matrix") + selectors("release") + selectors("profiles") + selectors("reference") + selectors("perf") + selectors("capture"))
+    known = set(selectors("logic") + selectors("matrix") + selectors("release") + selectors("snapshots") + selectors("reference") + selectors("perf") + selectors("capture"))
     result = []
     for item in only:
         matches = sorted(s for s in known if s == item or s.startswith(item + "/") or item.startswith(s + "/"))
@@ -723,8 +723,6 @@ def selection(mode, alias, only=(), include_logic=True, include_matrix=True):
         result += list(IOS_METHODS)
         if alias == "17e":
             result += selectors("reference")
-        if mode == "check":
-            result += selectors("profiles")
         if mode != "test":
             result += selectors("release")
         return list(dict.fromkeys(result))
@@ -780,7 +778,7 @@ def result_nodes(value, target=None):
             target = name if name in SUITES else target
         if kind == "Test Case":
             identifier = str(value.get("nodeIdentifier", ""))
-            qualified = next((s.split("/")[0] for s in selectors("logic") + selectors("matrix") + selectors("release") + selectors("profiles") + selectors("perf")
+            qualified = next((s.split("/")[0] for s in selectors("logic") + selectors("matrix") + selectors("release") + selectors("snapshots") + selectors("perf")
                               if identifier.startswith(s + "/")), target)
             yield dict(value, target=qualified)
         for child in value.values():

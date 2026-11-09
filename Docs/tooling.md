@@ -187,9 +187,9 @@ Phase 9a–9d stack and its review records below.
 |---|---|---|---|
 | Inner loop | `make quick` | Strict lint, all SwiftPM host tests, runner/resource fixtures | <1 min warm |
 | Targeted | `make targeted DEVICES="17e" ONLY="AppTests/WelcomeSnapshotTests/frozenIntro()"` | Build once, selected suites/methods on selected aliases | <2–3 min after build |
-| Commit gate | `make check` | Quick + generators/font checks, then 17e hosted AppTests with all-size snapshots, UI smoke, UIKit-only font/asset/glyph checks, isolated Release readiness | <5 min |
+| Commit gate | `make check` | Quick + generators/font checks, then 17e hosted AppTests with fixed worst-case screen fixtures, UI smoke, UIKit-only font/asset/glyph checks, isolated Release readiness | <5 min |
 | Duo spot check | `make duo` | Opt-in runtime smoke after Duo-specific runtime changes | — |
-| Requested matrix | `make matrix` | All seven runtime destinations, LPT-balanced logic/Release once; profile/system-reference tests once on 17e | No default or CI invocation |
+| Requested matrix | `make matrix` | All seven runtime destinations, LPT-balanced logic/Release once; system-reference tests once on 17e | No default or CI invocation |
 
 Auth audit cost decision (2026-11-08, supersedes the dated five-variant default recipes below):
 `make check`, the runner default and targeted `AuthAuditTests` run **one method per distinct screen state**,
@@ -1996,7 +1996,7 @@ REUSE_BUILD=1 make targeted DEVICES="17e" ONLY="AppTests/AuthSnapshotTests"
 ```
 
 The Auth host suites run in quick; controls/layout and UI are logic suites in check, with the
-appearance-switching audit isolated serially. AuthSnapshotTests uses the profiles policy and SNAPSHOTS.
+appearance-switching audit isolated serially. AuthSnapshotTests uses the opt-in snapshots policy and SNAPSHOTS until references are approved.
 Its SnapshotContainer windows reuse the shared profile fixtures, exact four insets and CPU layer
 capture used by Welcome. Full SE/17e/Duo/Pro Max and compact 17/Air/18 Pro categories remain covered,
 alongside the zero-inset board and AX5 cap equality. No Auth reference PNGs are included.
@@ -2306,7 +2306,7 @@ acceptance on 17e/SE/Duo is settled at 9505993 (OQ 32). Task 2 adds acceptance c
 simulator and Two-factor visual results remain open in `Docs/auth-gate.md`. Phases 6–8 stay open.
 No seven-simulator matrix is required or requested.
 
-`make check` selects all Auth/TwoFactor controls/layout/guard suites, both profile-snapshot suites,
+`make check` selects all Auth/TwoFactor controls/layout/guard suites (reference-comparing snapshots are opt-in until approved),
 SignInTests, TwoFactorTests, AuthSessionTests, AuthAuditTests and both keyboard suites exactly once
 on 17e, retaining launch/Welcome/service coverage and isolated Release readiness. AuthAuditTests
 (device appearance) and AuthSessionTests (background/foreground) join the serial pass. The opt-in
@@ -2784,3 +2784,12 @@ Timeline geometry is pure PlanCore logic. `Tools/TokenGen/Plan.source.json` hold
 PlanUI contains models only. Call `start()`/`stop()` with the observation lifetime and inject `PlanClock` in tests. `TripRepository.detailValues` observes the current hash and matching plan atomically, including eviction. `PlanDecoder` performs decoding/layout off-main, caching the latest `(trip, inputHash, detailVersion)` and invalidating on changed bytes or eviction. The system clock resets its minute-boundary timer on foreground/significant-time/time-zone events. PlanUITests are host-only.
 
 Phase 14 host verification: `make plan-copy`, `make generators-check`, `make contracts-check`, strict lint and all new tests pass. `make quick` has only the known APICookie loopback `EPERM`; signing/resource/runner fixtures pass separately. Initial network resolution was denied; pinned local package/font caches allowed the checks to complete offline. No simulator run. Logs are `build/phase14-*.log`. The sandbox denies the worktree Git index; `build/commits/1.patch`–`3.patch` apply in order on `ef42d95`, with subjects in `messages.txt`.
+
+## Hosted screen tier update (2026-11-09)
+
+Reference-comparing snapshot suites use the opt-in `snapshots` policy until references are approved.
+`make check`, `make test` and `make matrix` exclude that policy. `make snapshots` compares all registered
+snapshots on 17e; `SNAPSHOT_RECORD=1 make snapshots` records them. Explicit `--only`/`make targeted`
+selectors also remain available. This supersedes earlier historical statements that check or the matrix
+runs all D1c profile snapshots. D1c Mac device-table tests and default hosted worst-case layout tests
+still check fit. Coverage transfers and render reductions are listed in `Docs/ui-test-tiers.md`.

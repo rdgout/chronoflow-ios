@@ -15,11 +15,13 @@ Codex's `workspace-write` sandbox cannot run `xcodebuild` (nested `sandbox-exec`
 `make generate` creates the ignored project. `Scripts/ci.sh` runs `make generate check`.
 Use `make quick` for fix rounds: strict lint and every SwiftPM host suite, plus runner/resource fixtures.
 The warm inner-loop target is under one minute. `make check` adds generator/font freshness and one
-17e simulator: hosted AppTests including all D1c profile snapshots, the UI smoke set and isolated
+17e simulator: hosted AppTests with fixed worst-case screen fixtures, the UI smoke set and isolated
 Release readiness. Debug and Release build once each; target under five minutes remains to be measured.
 
 User decision, 2026-11-06: **skip the seven-simulator matrix unless asked for**. Device fit is covered
-by the Mac device-table tests and explicit size/inset/scale captures of every profile inside 17e.
+by the Mac device-table tests and hosted worst-case layout checks on 17e. Reference-comparing
+snapshots are opt-in until references are approved; `make snapshots` compares and
+`SNAPSHOT_RECORD=1 make snapshots` records every registered snapshot suite.
 `make matrix` retains LPT scheduling and all seven runtimes on request only; no default/CI flow calls it.
 `make duo` is an opt-in spot check for Duo runtime behaviour changes, resolved on its separate runtime.
 Use `make targeted DEVICES="17e" ONLY="AppTests/WelcomeSnapshotTests/frozenIntro()"` for selected tests;
