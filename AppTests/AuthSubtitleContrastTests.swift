@@ -12,7 +12,7 @@ nonisolated final class AuthSubtitleContrastTests: XCTestCase {
         try await AuthTestHost.registerFonts()
         let fixture = try XCTUnwrap(AuthDeviceFixture.all().first { $0.name == "se" })
         var insets = fixture.insets
-        insets.bottom = max(insets.bottom, 218)
+        insets.bottom = max(insets.bottom, fixture.size.height / 2)
         let language = "nl"
         let category = UIContentSizeCategory.extraExtraLarge
         for style in [UIUserInterfaceStyle.light, .dark] {
@@ -24,6 +24,7 @@ nonisolated final class AuthSubtitleContrastTests: XCTestCase {
                 ForgotPasswordView(
                     model: await forgotPasswordSnapshotModel(state: mode == 5 ? .attempts : .server),
                     measure: { frames[$0] = $1 }), style: style, language: language, category: category)
+            try await host.settleLayout { Array(frames.values) }
             try await host.settle()
             let scroll = try XCTUnwrap(authScrollViews(host.controller.view).first)
             let viewport = host.window.bounds.inset(by: insets)
@@ -44,17 +45,26 @@ nonisolated final class AuthSubtitleContrastTests: XCTestCase {
                 -scroll.adjustedContentInset.top,
                 scroll.contentSize.height - scroll.bounds.height + scroll.adjustedContentInset.bottom)
             let minimum = -scroll.adjustedContentInset.top
-            let requested = scroll.contentOffset.y + initialSubtitle.minY - viewport.minY + lineHeight / 2
+            let initialOffset = scroll.contentOffset.y
+            let requested = initialOffset + initialSubtitle.minY - viewport.minY + lineHeight / 2
+            XCTAssertGreaterThanOrEqual(maximum, requested, "Fixture must allow a partial subtitle reveal")
             let offset = min(maximum, max(minimum, requested))
-            XCTAssertGreaterThan(offset, scroll.contentOffset.y, "Fixture must exercise scroll reveal")
+            XCTAssertGreaterThan(offset, initialOffset, "Fixture must exercise scroll reveal")
             scroll.setContentOffset(CGPoint(x: scroll.contentOffset.x, y: offset), animated: false)
+            try await host.settleLayout { Array(frames.values) }
             try await host.settle()
-            let image = try await host.renderedImage()
+            // Settle and measure through the same CPU capture used by the passing reveal audits.
+            let image = try host.image()
             let attachment = XCTAttachment(image: image)
             attachment.name = "forgot-contrast-\(mode)-\(style.rawValue)"
             attachment.lifetime = .keepAlways
             add(attachment)
             let subtitle = try XCTUnwrap(frames[.subtitle])
+            XCTAssertEqual(scroll.contentOffset.y, offset, accuracy: 1 / host.scale)
+            XCTAssertEqual(
+                subtitle.minY, initialSubtitle.minY - (offset - initialOffset), accuracy: 1 / host.scale,
+                "Measured subtitle must reflect the committed scroll offset")
+            XCTAssertLessThan(subtitle.minY, viewport.minY, "Fixture must partially clip the subtitle")
             let raster = try SnapshotRaster(image: XCTUnwrap(image.cgImage))
             let color = UIColor(ColorToken.skyTitle.color).resolvedColor(
                 with: host.controller.traitCollection)

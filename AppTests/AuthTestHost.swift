@@ -141,7 +141,6 @@ import XCTest
     private enum CaptureFailure: Error {
         case didNotSettle(String)
         case fontRegistrationTimedOut
-        case hierarchyNotDrawn
     }
 
     func image() throws -> UIImage {
@@ -164,25 +163,6 @@ import XCTest
         return UIGraphicsImageRenderer(size: window.bounds.size, format: format).image { context in
             window.layer.render(in: context.cgContext)
         }
-    }
-
-    func renderedImage() async throws -> UIImage {
-        window.makeKeyAndVisible()
-        await withCheckedContinuation { continuation in
-            DispatchQueue.main.async { continuation.resume() }
-        }
-        layout()
-        CATransaction.flush()
-        let format = UIGraphicsImageRendererFormat()
-        format.scale = scale
-        format.opaque = false
-        format.preferredRange = .standard
-        var drawn = false
-        let image = UIGraphicsImageRenderer(size: window.bounds.size, format: format).image { _ in
-            drawn = window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
-        }
-        guard drawn else { throw CaptureFailure.hierarchyNotDrawn }
-        return image
     }
 
     func close() { container.close() }
