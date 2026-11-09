@@ -89,6 +89,7 @@
                     }
                 }.planContentBounds().padding(PlanUITokens.space4).planPageRail()
             }
+            .planPageSafeArea()
             .refreshable { await refresh() }
             .scrollBounceBehavior(.always, axes: .vertical)
             .navigationTitle(t("My trips")).accessibilityElement(children: .contain)

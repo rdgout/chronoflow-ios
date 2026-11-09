@@ -307,6 +307,7 @@ struct AppTabs: View {
             ScrollView {
                 PlanLoadingView(label: t("Loading today")).padding(PlanUITokens.space4).planPageRail()
             }
+            .planPageSafeArea()
             .refreshable { await refreshToday() }
             .scrollBounceBehavior(.always, axes: .vertical)
             .navigationTitle(t("Today")).background(ColorToken.background.color)
@@ -335,6 +336,7 @@ struct AppTabs: View {
             ScrollView {
                 TripsLoadingView().padding(PlanUITokens.space4).planPageRail()
             }
+            .planPageSafeArea()
             .refreshable { await refreshTrips() }
             .scrollBounceBehavior(.always, axes: .vertical)
             .navigationTitle(t("My trips")).background(ColorToken.background.color)

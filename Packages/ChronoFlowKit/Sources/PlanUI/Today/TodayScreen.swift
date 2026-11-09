@@ -70,6 +70,7 @@
                     }
                 }.planContentBounds().padding(PlanUITokens.space4).planPageRail()
             }
+            .planPageSafeArea()
             .refreshable { await refresh() }
             .scrollBounceBehavior(.always, axes: .vertical)
             .background(ColorToken.background.color).foregroundStyle(ColorToken.foreground.color)
