@@ -6,7 +6,7 @@ Where edits the ordered route through `WizardForm.route` and `setRouteAirport`; 
 
 The home route has its own navigation step and persisted confirmation. Its From is locked and follows the outbound destination; its To follows the origin until explicitly edited. Old `returnFlight` drafts without that confirmation recover to `returnRoute`, retaining their times. Checking sends airport errors to the route step and time errors to Times. The specified rejected-home-origin message uses the return Times banner.
 
-Times shares one card implementation for both directions. Stops are informational there, Continue is pinned, and each failed Continue scrolls to the first card with an error. Each Departs/Arrives pill opens the same large native sheet with a graphical date-and-time picker in the fixed-zone calendar. Done commits and gives selection feedback; Cancel or interactive dismissal discards the sheet's local selection. Formatting uses the locale's hour-cycle template. Sheet titles reuse Departure/Arrival, with paired Dutch copy.
+Times shares one card implementation for both directions. Stops are informational there, Continue is pinned, and each failed Continue scrolls to the first card with an error. Each Departs/Arrives pill opens the same large native sheet with a graphical date-and-time picker in the fixed-zone calendar. Done commits and gives selection feedback; Cancel or interactive dismissal discards the sheet's local selection. The app locale preserves the phone's hour-cycle override when resolving English or Dutch, so the pill and native picker follow the phone's 12/24-hour setting. Sheet titles reuse Departure/Arrival, with paired Dutch copy.
 
 The obsolete compact picker continuity layout and assertions are removed. Host tests cover route mutation, locks/following, legacy recovery, validation and navigation. Hosted picker coverage checks native graphical date-and-time configuration, wall components and the fixed zone across device profiles. The seeded UI suite checks route states, removal/direct, home locking, scrolling/errors, Dutch next-stop search and picker commit/cancel. There is one mock journey: Where with a stop → Times → One way → Sleep → Checking, followed by the resulting Age question. The other review checks seed their screen directly. Board captures remain opt-in.
 
@@ -18,6 +18,26 @@ The obsolete compact picker continuity layout and assertions are removed. Host t
 - `make token-tests asset-tests launch-resources-check`: passed, including 79 runner fixtures.
 - iOS SDK `swiftc -frontend -parse` for the wizard UI, seeds and tests: passed. This is syntax checking, not native type checking or runtime acceptance.
 - No `xcodebuild`, simulator execution, matrix or snapshot recording was run.
+
+## Adversarial review fixes (2026-11-09)
+
+All 12 confirmed findings are addressed; rejected findings and plan checkboxes are unchanged.
+
+The pill's full 44 pt target has an explicit content shape. Empty pills announce "not set" / "niet ingesteld" while keeping "Choose" as visible copy. Only the DatePicker receives dawn tint. App-language resolution retains the phone's hour cycle, with host tests covering both languages and explicit overrides opposite to regional defaults. A hosted configuration test checks that the underlying UIDatePicker receives that language and hour cycle.
+
+Route errors cover the entire row, including the remove control, with rounded corners only at the card's outside corners. The remove circle uses the regenerated 36 pt token within a 44 pt target. The last-trip hint is hidden for equal From/To airports; its seeded screen now retains the prefill flag to exercise that condition. Search excludes adjacent airports when inserting/replacing stops or editing endpoints beside stops, and the model rejects the same choices without mutating the draft. Direct From/To choices still support the designed same-airport error.
+
+Mixed server errors select the earliest editor in journey order. Host regressions cover mixed error dictionaries and model-level return-stop insertion, replacement and No, direct, with a nonzero return boundary and outbound/time/persistence checks. Both new host suites are registered with the runner.
+
+`WizardOutboundTwoErrors` now matches its board: the first flight is valid and only the second arrival has the order error. A separate five-flight fixture tests scrolling, outside the capture list. The UI test reveals the last error and requires the first to be above the viewport and unhittable before Continue, then requires it to return fully into view. Five flights keep that precondition meaningful on larger phones too. Native compilation also caught the screen-content closure captured by ScrollViewReader; its declaration now permits escaping.
+
+Verification:
+
+- `make lint`: passed (`build/wizard-review-lint.log`).
+- Full `make host-tests`: attempted; the existing `APICookieTests.realRedirectCookieHandlingIsDisabled` fails because this sandbox denies its loopback listener (`build/wizard-review-host-tests.log`). No test source was disabled or altered to hide it.
+- `sh Scripts/swiftpm.sh test ChronoFlowKit --skip APICookieTests.realRedirectCookieHandlingIsDisabled`: passed, 611 Swift Testing tests plus the XCTest suites (`build/wizard-review-package-tests.log`).
+- Token/asset tests, resource/signing/contracts fixtures and all 79 runner fixtures: passed. The runner initially reported the two new unregistered suites; registration and its rerun pass (`build/wizard-review-tooling-tests.log`, `build/wizard-review-runner-tests.log`). TokenGen freshness also passes for all 56 outputs (`build/wizard-review-tokens-check.log`).
+- Package/test compilation for `arm64-apple-ios17.0-simulator`: passed (`build/wizard-review-ios-build.log`). Direct Swift 6 app-module compilation and all AppTests/AppUITests type checks pass (`build/wizard-review-typecheck/`). These are compile checks only; no simulator was started and no runtime tests or captures were executed.
 
 ## User-run acceptance
 
@@ -34,4 +54,4 @@ For the visual review, capture the member boards in English/Dutch and light/dark
 WIZARD_BOARD_CAPTURE=1 make targeted DEVICES="17e" ONLY="AppUITests/WizardBoardCaptureTests"
 ```
 
-The capture list now includes Where with one/two stops, both home routes, second/home stop search, three flights, two errors and empty stop times. The seeded screen suite also checks the 16-flight limit. Check empty and filled picker presentation, Done/Cancel, error scrolling and the locked home row on the device. Run `make quick` outside this sandbox for its real loopback assertion, then `make check` for the normal all-size snapshot and commit gate. The seven-simulator matrix remains opt-in; no Duo-specific runtime behavior changed.
+The capture list now includes Where with one/two stops, both home routes, second/home stop search, three flights, the second-flight error and empty stop times. The seeded screen suite also checks the 16-flight limit. Check empty and filled picker presentation, Done/Cancel, dawn tint, row error corners, remove-circle size, error scrolling and the locked home row on the device. Check both app languages with the phone set to 12-hour and 24-hour time. Run `make quick` outside this sandbox for its real loopback assertion, then `make check` for the normal all-size snapshot and commit gate. The seven-simulator matrix remains opt-in; no Duo-specific runtime behavior changed.
