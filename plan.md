@@ -2131,7 +2131,7 @@ Main restoration validation: source comparison confirms the two methods and enti
 - [x] Accept an absent lazy Release store as empty while still rejecting seeded accounts.
 - [x] Honor the exact gated UI-fixture mock delay (zero by default), bypassing MockDataSource's ordinary 300–800 ms clamp without bypassing sign-in, two-factor, full pull, account storage or readiness. Add configuration-ready timing to separate fixture preparation from session restoration.
 - [x] Restore XcodeGen generation for PackageLogic with an explicit test-only app build target; keep its three selected package suites and default manifest unchanged.
-- [ ] Run lint/quick and iOS compilation, package atomic commits and document exact runtime reruns and environment limitations.
+- [x] Run lint/quick and iOS compilation, package atomic commits and document exact runtime reruns and environment limitations. Lint, generation, all non-loopback host checks and fresh iOS 17 Debug/Release source checks pass; full quick is blocked only by the unchanged cookie-listener sandbox EPERM.
 - [ ] User-host acceptance: run Docs/ui-test-reseed-rerun-17e.txt, then the unchanged default and single-worker benchmark manifests, preserving both 17e result folders and app/runner timelines. Confirm unchanged PID across every reseed and successful Settings/Sign-in benchmark methods; measure the post-fix app-side intervals.
 
 ## Open questions for the user

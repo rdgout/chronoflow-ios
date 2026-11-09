@@ -122,9 +122,9 @@ UI waits now use an immediate check followed by 50 ms × 1.5 backoff, capped at 
 
 LaunchScene, LaunchToWelcome, Readiness, Welcome and AuthSession use the explicit `launch` profile, retaining the actual overlay, deadlines and animation behavior. System language, launch appearance and content-size changes continue to require a new process. Both profiles are Debug-only; invalid/missing UUIDs cannot activate the app shortcut.
 
-The in-process reset uses `XCUIApplication.open(_:)` with a Debug-only `chronoflow-uitest://reseed` registration. The command carries the same CF environment seeds, launch arguments, a per-request nonce and the original process's UUID authorization. The app rejects missing/foreign authorization and changed language, locale, launch appearance or content size. Release uses the original Info.plist with no test scheme; the generated Debug Info.plist adds only this registration.
+The in-process reset uses `XCUIDevice.shared.system.open(_:)` with a Debug-only `chronoflow-uitest://reseed` registration. `XCUIApplication.open(_:)` is a launch operation, so it must not be used for running-process reset delivery. The command carries the same CF environment seeds, launch arguments, a per-request nonce and the original process's UUID authorization. The app compares UUID authorization by value and rejects missing/foreign authorization and changed language, locale, launch appearance or content size. Release uses the original Info.plist with no test scheme; the generated Debug Info.plist adds only this registration.
 
-Reset serializes requests, unmounts the previous hosting tree (including navigation and sheets), ends editing, stops session observations and sync, invalidates the old session's mutation permits, closes the account database, erases the isolated fixture directory and test Keychain credential, and removes its settings domain. A fresh navigator, mock store, services, session and root then use the same cold-launch preparation and stored gate routing. `uitest.ready.<nonce>` is a window identifier emitted after the new root's first exposed layout; each test still waits for its intended screen element, including async screen loading. `uitest.failed.<nonce>` makes reset failures explicit. All CF seed reads in the app use the current fixture environment rather than the immutable process environment. Host `MockSessionSeedTests.reseedRemovesPreviousAccountQueueAndCompletionMarkerAndMatchesColdSeed` compares account identity, gates, cached trips, queue and sync marker after a dirty other-account seed. Hosted `UITestReseedTests` checks AppServices, native teardown, Keychain and route equivalence.
+Reset serializes requests, unmounts the previous hosting tree (including navigation and sheets), ends editing, stops session observations and sync, invalidates the old session's mutation permits, closes the account database, erases the isolated fixture directory and test Keychain credential, and removes its settings domain. A fresh navigator, mock store, services, session and root then use the same cold-launch preparation and stored gate routing. `uitest.ready.<nonce>` is a window identifier emitted after the new root's first exposed layout; each test still waits for its intended screen element, including async screen loading. `uitest.failed.<nonce>` makes reset failures explicit. The ready window also exposes the process ID in its Debug-only accessibility label; the runner requires it to remain unchanged across reset. All CF seed reads in the app use the current fixture environment rather than the immutable process environment. Host `MockSessionSeedTests.reseedRemovesPreviousAccountQueueAndCompletionMarkerAndMatchesColdSeed` compares account identity, gates, cached trips, queue and sync marker after a dirty other-account seed. Hosted `UITestReseedTests` checks AppServices, native teardown, Keychain and route equivalence.
 
 Eligible screen suites inherit `ScreenTestCase`. Each worker keeps one static application per active class; each test starts from an explicit CF seed. The helper compares launch-only settings, cold-launches the first compatible fixture and uses the in-app reset thereafter. It clears each requested environment/argument dictionary before applying a new seed, so offline/failure/pending/routes cannot bleed into a later test. A failed reset fails the test rather than silently falling back. Class teardown reseeds a signed-out fixture to clean the final account before terminating. Changed phone language/locale, content size, launch appearance or launch settings preference arguments deliberately cold-launch. Welcome, readiness, system launch appearance and AuthSession restoration retain per-test launches.
 
@@ -168,3 +168,90 @@ Send `build/ui-timing-summary.md`, both raw timing logs and the preserved defaul
 Implementation validation (2026-11-09): strict lint passes. The complete host gate reaches only the existing APICookieTests loopback `EPERM`; excluding that one environment-blocked test passes 599 Swift Testing tests and 19 XCTest methods. All 17 generator tests and 103 resource/runner fixtures pass. Direct iOS 17 SDK compilation/typechecking covers Debug app, all hosted/UI/Render sources, actual Release DataAccess/Sync/app modules and the entire AppTests target without DEBUG. A Release-only regression checks that valid UI seed environment keys create no mock accounts and the built Info.plist registers no test URL scheme. A generated-info host guard checks that Debug's derived plist adds only the test registration and Release retains the base plist. No sub-second launch/reset or full-tier speedup is claimed yet.
 
 `make generate` succeeds. Actual Xcode ReadinessRelease build-for-testing was attempted with isolated output/cache directories; this sandbox cannot contact CoreSimulator and Xcode reports missing package products before compilation. That build and the 17e UI/hosted runtime acceptance remain user-host work. All test control handlers, seed models, runtime environment overrides, animation modifiers and URL registration are absent from the Release path. Live gate observation is reattached after both cold seed and reset, so Terms/Walkthrough changes continue routing without relaunch; the hosted equivalence regression also checks a post-reset Terms acceptance reaches Today.
+
+### Reseed acceptance repair (2026-11-09)
+
+The user's acceptance run on `8b6819d` failed before the build/runner changes: the focused manifest took
+402 s including builds; the default UI tier took 1,244 s with two workers and reported 47 failure lines,
+43 involving missing reset acknowledgements. The single-worker benchmark took 166 s and failed
+Settings sign-out and Sign-in return-chain methods at reseed. These are diagnostic baselines, not
+successful acceptance results. The app log had 60 timeline events and no reset/seed delivery events.
+
+| Interval (failing baseline) | Samples | p50 seconds | p95 seconds |
+| --- | ---: | ---: | ---: |
+| launch begin → process entry | 5 | 1.979 | 3.735 |
+| process entry → overlay committed | 10 | 0.197 | 0.273 |
+| overlay committed → session ready | 10 | 0.671 | 0.831 |
+| session ready → exposed root | 10 | 0.075 | 0.263 |
+| launch begin → launch return | 5 | 3.223 | 5.080 |
+| launch return → first element | 5 | 0.065 | 0.172 |
+
+Apple's installed XCUIAutomation headers and [XCUIApplication documentation](https://developer.apple.com/documentation/xcuiautomation/xcuiapplication)
+describe application `open` as launching by URL, similar to `launch`. [XCUISystem.open](https://developer.apple.com/documentation/xcuiautomation/xcuisystem/open(_:))
+routes a URL to its default app. The previous launch API could deliver through scene connection rather
+than the running scene's URL callback, losing the original process authorization. This is the delivery
+cause supported by the API contract; iOS 27.2 runtime acceptance of the replacement remains pending.
+No alternate IPC or visible test controls were added.
+
+Every Debug `openURLContexts` callback now emits `url-received`, including an empty set and ungated
+launches. Initial connection URL contexts are logged too. Valid commands emit `reseed-authorized`;
+`url-rejected` names endpoint/payload/JSON/authorization/nonce/test-ID/profile/environment rejection
+without logging the payload. Reset emits `reset-begin`, `configuration-ready`, `session-ready`, and
+`reset-ready` after exposed layout, or `reset-rejected`/`reset-failed`. Accepted commands carry their
+nonce; every record has the process PID. The timing summary counts rejection events as failures.
+Acknowledgement failure retains an XCUIScreen screenshot and the app's full debugDescription in the
+xcresult, and fails instead of silently cold-launching a replacement. All app diagnostics, process labels
+and URL dispatch handlers remain Debug-only.
+
+The memory store was shared but each MockDataSource cached its own server snapshot. Requests now
+refresh an already-loaded memory snapshot, and memory mutations apply atomically against the latest
+shared state. Initial schema refresh/reseeding still executes. Host tests cover cross-source mail,
+credential invalidation, and concurrent mail writes; the hosted factory regression checks the same
+behavior with the real isolated test Keychain. File-backed factory behavior stays on its existing path.
+Release readiness now accepts an uncreated lazy state file or an empty account dictionary; it still
+rejects any seeded accounts and any registered URL types.
+
+The gated UI mock sleep now uses the exact validated CF_MOCK_DELAY, zero by default. The ordinary
+MockDataSource 300–800 ms clamp had prevented that setting from taking effect. Sign-in, two-factor,
+full pull, Keychain/SQLite and readiness continue through their existing paths, including the dedicated
+launch/auth/session suites. configuration-ready separates fixture preparation from native restoration
+in new timelines; no post-fix latency improvement is claimed without the benchmark.
+
+Generation also exposed an existing PackageLogic scheme error: XcodeGen needs an explicit build target
+when all test entries come from a package. Its app build anchor now applies only to testing. This keeps
+the same three package test bundles and leaves the default manifest unchanged.
+
+Rerun the focused fixture/transport/benchmark classes first, then the full default manifest and controlled
+single-worker benchmark. Preserve both `17e/` and `17e-isolated/` before another targeted invocation;
+the runner replaces pass outputs. Stream app events from the actual executing devices; the benchmark
+uses one worker on the primary 17e. No references, recording, Duo, or matrix are needed.
+
+```sh
+make generate
+make targeted DEVICES="17e" ONLY="$(cat Docs/ui-test-reseed-rerun-17e.txt)"
+TEST_WORKERS=2 REUSE_BUILD=1 make targeted DEVICES="17e" ONLY="$(cat Docs/ui-test-default-17e.txt)"
+# Preserve default results before the benchmark:
+mkdir -p build/ui-reseed-acceptance
+cp -R build/test-results/17e build/ui-reseed-acceptance/default-17e
+cp -R build/test-results/17e-isolated build/ui-reseed-acceptance/default-17e-isolated
+cp build/test-results/timings.json build/ui-reseed-acceptance/default-timings.json
+TEST_WORKERS=1 REUSE_BUILD=1 make targeted DEVICES="17e" ONLY="$(cat Docs/ui-test-benchmark-17e.txt)"
+python3 Scripts/summarize-ui-timing.py build/test-results/17e/Debug-compare.log build/ui-app-timeline.log > build/ui-timing-summary.md
+```
+
+Validation in this restricted workspace: `make lint` and `make generate` pass. The final
+`make -k quick` completes all targets and fails only at the unchanged
+`APICookieTests.realRedirectCookieHandlingIsDisabled` loopback socket bind (`EPERM`); no test is
+removed or skipped in the gate. All 17 generator tests and 116 resource/runner fixtures pass.
+The separate `sh Scripts/host-tests.sh --skip APICookieTests` run passes all 603 remaining Swift
+Testing methods and 19 XCTest methods. Direct iOS 17 SDK compilation passes for the Debug app, all AppTests and AppUITests, and
+fresh Release AppCore/DataAccess/Sync/app plus ReleaseReadinessTests. Release ABI inventories contain
+none of the Debug seed, authorization, transport or timeline declarations. The generated PackageLogic
+scheme's app build entry has only buildForTesting enabled.
+
+Logs are `build/reseed-final-{lint,quick}.log`, `build/reseed-supported-final.log`,
+`build/reseed-{generate,runner-fixtures}.log`, `build/reseed-ios-final.log` and
+`build/reseed-release-typecheck.log`. CoreSimulator access is denied here; no simulator acceptance,
+benchmark speedup, snapshots or device-matrix results are claimed. Git worktree metadata is outside
+the writable roots, so `build/commits/1.patch` through `6.patch` plus `messages.txt` deliver atomic
+Conventional Commits on `1e2cf4c`, without trailers.
