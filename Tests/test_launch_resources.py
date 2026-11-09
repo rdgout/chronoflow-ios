@@ -52,7 +52,7 @@ class LaunchResourcesTests(unittest.TestCase):
 
     def test_welcome_capture_is_hosted_without_duplicate_package_linkage(self):
         source = ROOT / "AppTests/WelcomeSnapshotTests.swift"
-        self.assertIn("drawHierarchy", source.read_text())
+        self.assertIn("window.layer.render(in:", (source.parent / "WelcomeTestWindow.swift").read_text())
         self.assertFalse((ROOT / "Packages/ChronoFlowKit/Tests/WelcomeTests/WelcomeSnapshotTests.swift").exists())
         self.assertTrue((source.parent / "__Snapshots__/README.md").exists())
         self.assertNotIn("SnapshotTesting", (source.parent / "WelcomeSnapshotReference.swift").read_text())
@@ -69,40 +69,36 @@ class LaunchResourcesTests(unittest.TestCase):
                 command = subprocess.check_output(["make", "-n", target], cwd=ROOT, text=True)
                 self.assertIn("--devices 17e --mode " + target, command)
 
-    def test_splash_baselines_cover_all_frames_at_each_devices_own_scale(self):
-        directory = ROOT / "Packages/ChronoFlowKit/Tests/LaunchTests/__Snapshots__/LaunchSnapshotTests"
-        frames = {
-            "ready-0", "ready-700", "ready-1400", "ready-1700", "ready-1900",
-            "slow-2600", "slow-4900", "welcome-1500", "welcome-1950", "welcome-2400", "reduceMotion-0",
-        }
-        devices = {}
-        for image in directory.glob("*.png"):
-            match = re.fullmatch(r"sampledSplashFrames\.(iPhone\d+-\d+)-(\d+)x(\d+)-([23])x-(light|dark)-(.+)\.png", image.name)
-            self.assertIsNotNone(match, image.name)
-            model, width, height, scale, style, frame = match.groups()
-            dimensions = (int(width), int(height), int(scale))
-            previous, coverage = devices.setdefault(model, (dimensions, set()))
-            self.assertEqual(previous, dimensions, model)
-            coverage.add((style, frame))
-            data = image.read_bytes()
-            self.assertEqual(data[:8], b"\x89PNG\r\n\x1a\n")
-            self.assertEqual(struct.unpack(">II", data[16:24]), (int(width) * int(scale), int(height) * int(scale)))
-        self.assertEqual(set(devices), {"iPhone14-6", "iPhone18-5", "iPhone18-3", "iPhone18-4", "iPhone19-2", "iPhone19-3", "iPhone19-4"})
+    def test_profile_baselines_use_explicit_size_scale_and_insets(self):
         catalog = json.loads((ROOT / "Packages/ChronoFlowKit/Tests/SnapshotSupport/profiles.json").read_text())
-        for model, (_, coverage) in devices.items():
-            device = catalog["devices"][model.replace("-", ",", 1)]
-            frames = catalog["profiles"][device["profile"]]["launchFrames"]
-            self.assertEqual(coverage, {(style, frame) for style in ["light", "dark"] for frame in frames}, model)
+        self.assertEqual({d['alias'] for d in catalog['devices'].values()}, {'se', '17e', '17', 'air', '18pro', '18promax', 'duo'})
+        devices = {d['alias']: d for d in catalog['devices'].values()}
+        launch = ROOT / 'AppTests/__Snapshots__/LaunchSnapshotTests'
+        welcome = ROOT / 'AppTests/__Snapshots__/WelcomeSnapshotTests'
+        for directory in [launch, welcome]:
+            for image in directory.glob('*.png'):
+                match = re.fullmatch(r'(\w+)\.([a-z0-9]+)-(\d+)x(\d+)-([23])x-(light|dark)-(en|nl)-(.+)\.png', image.name)
+                self.assertIsNotNone(match, image.name)
+                _, alias, width, height, scale, _, _, _ = match.groups()
+                device = devices[alias]
+                self.assertEqual((int(width), int(height), int(scale)), (device['width'], device['height'], device['scale']))
+                self.assertEqual(struct.unpack('>II', image.read_bytes()[16:24]), (int(width) * int(scale), int(height) * int(scale)))
+        old = ROOT / 'Packages/ChronoFlowKit/Tests/LaunchTests/__Snapshots__/LaunchSnapshotTests'
+        self.assertEqual(list(old.glob('*.png')), [])
+        for file in ['LaunchSnapshotTests.swift', 'WelcomeSnapshotTests.swift']:
+            self.assertIn('SnapshotDevice.all()', (ROOT / 'AppTests' / file).read_text())
+        self.assertFalse((ROOT / 'Packages/ChronoFlowKit/Tests/LaunchTests/LaunchSnapshotTests.swift').exists())
 
     def test_hosted_tests_reuse_the_apps_package_products(self):
         project = (ROOT / "project.yml").read_text()
-        target = re.search(r"(?ms)^  AppTests:\n(.*?)(?=^  \S|\Z)", project)
-        self.assertIsNotNone(target)
-        configuration = target.group(1)
-        self.assertIn('TEST_HOST: "$(BUILT_PRODUCTS_DIR)/ChronoFlow.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ChronoFlow"', configuration)
-        self.assertIn('BUNDLE_LOADER: "$(TEST_HOST)"', configuration)
-        dependencies = configuration.split("    dependencies:\n", 1)[1]
-        self.assertEqual(dependencies.strip(), "- target: ChronoFlow")
+        for name in ['AppTests', 'RenderTests']:
+            target = re.search(r"(?ms)^  " + name + r":\n(.*?)(?=^  \S|\Z)", project)
+            self.assertIsNotNone(target)
+            configuration = target.group(1)
+            self.assertIn('TEST_HOST: "$(BUILT_PRODUCTS_DIR)/ChronoFlow.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ChronoFlow"', configuration)
+            self.assertIn('BUNDLE_LOADER: "$(TEST_HOST)"', configuration)
+            dependencies = configuration.split("    dependencies:\n", 1)[1]
+            self.assertEqual(dependencies.strip(), "- target: ChronoFlow")
 
     def test_simulator_keychain_host_uses_adhoc_signing_without_a_team(self):
         project = (ROOT / "project.yml").read_text()

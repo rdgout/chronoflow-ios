@@ -7,13 +7,22 @@ import re
 import runpy
 import subprocess
 import threading
+import tempfile
 import time
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
+(ROOT / 'build').mkdir(exist_ok=True)
 runner = SimpleNamespace(**runpy.run_path(str(ROOT / 'Scripts/launch-simulators.py')))
+PHASE9_HOSTED = (
+    'AppTests/AccountStorageLifecycleTests', 'AppTests/SessionLifecycleTests',
+    'AppTests/KeychainSessionStoreTests', 'AppTests/DataSourceBuildSettingTests',
+    'AppTests/DataSourceFactoryHostedTests', 'AppTests/SyncLifecycleTests',
+    'AppTests/AccountWipeTests', 'AppTests/SessionReadinessTests',
+    'AppTests/LaunchConnectionTests', 'AppTests/ReleaseReadinessTests',
+)
 
 
 def discovered_suites(directory):
@@ -28,7 +37,7 @@ def discovered_suites(directory):
                 depth += (source[end] == '{') - (source[end] == '}')
                 end += 1
             body = source[start:end]
-            if 'XCTestCase' in match.group() or '@Test' in body:
+            if ('XCTestCase' in match.group() and re.search(r'func test\w+\(', body)) or '@Test' in body:
                 suites.add(match[1])
                 spans.append((start, end))
         for test in re.finditer(r'@Test\b', source):
@@ -38,7 +47,16 @@ def discovered_suites(directory):
 
 
 class ClassificationTests(unittest.TestCase):
+    def test_discovery_rejects_stale_helper_classes_as_well_as_missing_suites(self):
+        with tempfile.TemporaryDirectory(dir=ROOT / 'build') as directory:
+            path = Path(directory)
+            (path / 'Example.swift').write_text('class OldTests: XCTestCase { }\nclass NewTests: XCTestCase { func testExample() {} }')
+            self.assertEqual(discovered_suites(path), {'NewTests'})
+            self.assertNotEqual(discovered_suites(path), {'OldTests', 'NewTests'})
+            self.assertNotEqual(discovered_suites(path), set())
+
     def test_every_target_and_suite_is_classified_exactly_once(self):
+        self.assertNotRegex(Path(__file__).read_text(), r"self\.fail\s*=")
         package = (ROOT / 'Packages/ChronoFlowKit/Package.swift').read_text()
         targets = set(re.findall(r'\.testTarget\(\s*name: "(\w+)"', package))
         project = (ROOT / 'project.yml').read_text()
@@ -50,15 +68,17 @@ class ClassificationTests(unittest.TestCase):
             self.assertEqual(len(entries), len(set(entries)), target)
             self.assertEqual(set(entries), discovered_suites(directory), target)
 
-    def test_logic_runs_only_on_17e_matrix_runs_on_all_seven(self):
-        logic = set(runner.selectors('logic'))
+    def test_logic_runs_once_and_matrix_runs_on_every_requested_device(self):
+        logic = runner.selectors('logic') + runner.selectors('release')
         matrix = set(runner.selectors('matrix'))
-        for alias in runner.MATRIX:
-            actual = set(runner.selection('welcome', alias))
-            self.assertTrue(matrix <= actual)
-            self.assertEqual(actual & logic, logic if alias == '17e' else set())
-            self.assertEqual(actual & set(runner.selectors('release')), set(runner.selectors('release')) if alias == '17e' else set())
-            self.assertFalse(actual & set(runner.selectors('perf')))
+        for aliases in [list(runner.MATRIX), ['se', 'duo'], ['duo']]:
+            selections, order = runner.schedule('welcome', aliases)
+            for alias in aliases:
+                self.assertTrue(matrix <= set(selections[alias]))
+            for suite in logic:
+                self.assertEqual(sum(selections[a].count(suite) for a in aliases), 1, suite)
+            costs = [runner.estimated_seconds(a, selections[a], {}) for a in order]
+            self.assertEqual(costs, sorted(costs, reverse=True))
 
     def test_store_and_core_logic_run_on_host_by_default(self):
         host = set(runner.selectors('host'))
@@ -67,11 +87,22 @@ class ClassificationTests(unittest.TestCase):
         self.assertTrue(any(s.startswith('DataAccessTests/') for s in host))
         self.assertTrue(any(s.startswith('SyncTests/') for s in host))
         for alias in runner.MATRIX:
-            self.assertFalse(set(runner.selection('welcome', alias)) & host)
+            self.assertFalse(set(runner.selection('check', alias)) & host)
         makefile = (ROOT / 'Makefile').read_text()
-        self.assertIn('host-tests:\n\tsh Scripts/host-tests.sh', makefile)
-        for suite in ('SessionLifecycleTests', 'SyncLifecycleTests', 'AccountWipeTests', 'SessionReadinessTests', 'AccountStorageLifecycleTests', 'KeychainSessionStoreTests'):
-            self.assertIn('AppTests/' + suite, runner.selection('welcome', '17e'))
+        self.assertIn('host-tests: package-tests token-tests asset-tests launch-resources-check', makefile)
+        self.assertIn('package-tests:\n\tsh Scripts/swiftpm.sh test ChronoFlowKit', makefile)
+        self.assertIn('exec sh "$(dirname "$0")/swiftpm.sh" test ChronoFlowKit "$@"',
+                      (ROOT / 'Scripts/host-tests.sh').read_text())
+
+    def test_check_keeps_every_phase9_hosted_suite_in_its_configuration(self):
+        selected = runner.selection('check', '17e')
+        configurations = runner.configurations(selected)
+        for suite in PHASE9_HOSTED:
+            self.assertEqual(selected.count(suite), 1, suite)
+            configuration = 'Release' if suite.endswith('/ReleaseReadinessTests') else 'Debug'
+            self.assertIn(suite, configurations[configuration])
+            self.assertNotIn(suite, runner.selectors('profiles') + runner.selectors('reference'))
+        self.assertTrue(set(PHASE9_HOSTED[:8]) <= set(runner.selectors('logic')))
 
     def test_perf_configuration_is_explicit_and_ordinary_release_restores_native(self):
         project = (ROOT / 'project.yml').read_text()
@@ -100,6 +131,25 @@ class ClassificationTests(unittest.TestCase):
         ]}
         self.assertEqual([n['target'] for n in runner.result_nodes(value)], ['AppTests', 'AppUITests'])
 
+    def test_ui_suite_named_like_package_target_matches_unqualified_and_qualified_identifiers(self):
+        method = 'testDutchAX5TextCanScrollToBothActions()'
+        for identifier in ['WelcomeTests/' + method, 'AppUITests/WelcomeTests/' + method]:
+            value = {'testNodes': [
+                {'nodeType': 'UI test bundle', 'name': 'AppUITests', 'children': [
+                    {'nodeType': 'Test Case', 'nodeIdentifier': identifier, 'result': 'Passed'},
+                    {'nodeType': 'Test Case', 'nodeIdentifier': 'WelcomeLogicTests/testSignIn()', 'result': 'Passed'},
+                    {'nodeType': 'Test Case', 'nodeIdentifier': 'WelcomeEnglishAccessibilityTests/testAudit()', 'result': 'Passed'}]},
+                {'nodeType': 'Unit test bundle', 'name': 'WelcomeTests', 'children': [
+                    {'nodeType': 'Test Case', 'nodeIdentifier': 'SmokeTests/testSmoke()', 'result': 'Passed'}]},
+            ]}
+            nodes = list(runner.result_nodes(value))
+            for selector in ['AppUITests/WelcomeTests', 'AppUITests/WelcomeTests/' + method]:
+                matches = runner.matching_nodes(nodes, selector)
+                self.assertEqual(len(matches), 1, identifier)
+                self.assertEqual(matches[0]['nodeIdentifier'], identifier)
+            self.assertEqual(runner.matching_nodes(nodes, 'WelcomeTests/WelcomeTests'), [])
+            self.assertEqual(len(runner.matching_nodes(nodes, 'WelcomeTests/SmokeTests')), 1)
+
     def test_release_only_configuration_is_isolated(self):
         result = runner.configurations(['AppTests/ReleaseReadinessTests', 'AppUITests/WelcomeTests'])
         self.assertEqual(result, {'Debug': ['AppUITests/WelcomeTests'], 'Release': ['AppTests/ReleaseReadinessTests']})
@@ -108,11 +158,28 @@ class ClassificationTests(unittest.TestCase):
         self.assertIn('targets: [AppTests]', scheme)
         self.assertNotIn('ENABLE_TESTABILITY', project)
 
+    def test_tiers_never_select_the_matrix_in_any_default_flow(self):
+        for target in ['quick', 'check']:
+            command = subprocess.check_output(['make', '-n', target], cwd=ROOT, text=True)
+            self.assertNotIn('--matrix', command)
+            self.assertNotIn('--devices duo', command)
+            self.assertIn('test ChronoFlowKit', command)
+            self.assertIn('test TokenGen', command)
+            self.assertIn('test AssetGen', command)
+            self.assertEqual(command.count('test ChronoFlowKit'), 1)
+            if target == 'quick':
+                self.assertNotIn('launch-simulators.py --', command)
+                self.assertNotIn('xcodebuild', command)
+            else:
+                self.assertEqual(command.count('--devices 17e'), 1)
+        self.assertIn('--matrix', subprocess.check_output(['make', '-n', 'matrix'], cwd=ROOT, text=True))
+        self.assertEqual((ROOT / 'Scripts/ci.sh').read_text().strip().splitlines()[-1], 'exec make generate check')
+
     def test_make_check_runs_combined_pass_and_individual_targets_share_runner(self):
         makefile = (ROOT / 'Makefile').read_text()
-        self.assertIn('check: lint generators-check launch-resources-check host-tests simulator-check', makefile)
+        self.assertIn('check: quick generators-check simulator-check', makefile)
         self.assertNotIn('test snapshots', makefile.split('check:')[-1])
-        self.assertIn('--devices $(DEVICES) --only $(ONLY)', makefile)
+        self.assertIn("--devices $(DEVICES) --only $(foreach selector,$(ONLY),'$(selector)')", makefile)
         self.assertIn('--devices duo', makefile)
 
 
@@ -122,39 +189,51 @@ class RunnerTests(unittest.TestCase):
         for index, (_, device_type, runtime) in enumerate(runner.MATRIX.values()):
             self.devices[runtime].append(dict(deviceTypeIdentifier='com.apple.CoreSimulator.SimDeviceType.' + device_type,
                                               isAvailable=True, state='Booted', udid=f'device-{index}'))
+        self.temporary = tempfile.TemporaryDirectory(dir=ROOT / "build", prefix="runner-tests-")
+        self.addCleanup(self.temporary.cleanup)
+        self.scratch = Path(self.temporary.name)
         self.commands = []
         self.environments = []
         self.selected = {}
-        self.fail = lambda command: False
+        self.command_failure = lambda command: False
         self.result_fail = None
         self.nodes = None
+        self.enumerated = [runner.INTRO_ORDER_TEST]
 
     def execute(self, **kwargs):
+        if "fail" in self.__dict__:
+            raise AssertionError("Command fixture must not shadow unittest.TestCase.fail")
         def fake_run(command, **options):
-            self.assertEqual(options['cwd'], ROOT)
+            self.assertEqual(options['cwd'], self.scratch)
             self.commands.append(command)
             self.environments.append(options['env'])
-            status = 65 if self.fail(command) else 0
+            status = 65 if self.command_failure(command) else 0
             if status and options.get('check'):
                 raise subprocess.CalledProcessError(status, command)
             if command[:4] == ['xcrun', 'simctl', 'list', 'devices']:
                 return subprocess.CompletedProcess(command, status, json.dumps({'devices': self.devices}))
+            if '-enumerate-tests' in command:
+                listing = Path(command[command.index('-test-enumeration-output-path') + 1])
+                listing.parent.mkdir(parents=True, exist_ok=True)
+                listing.write_text('\n'.join(self.enumerated))
+                return subprocess.CompletedProcess(command, status, '')
             if command[-1] == 'test-without-building':
                 self.selected[command[command.index('-resultBundlePath') + 1]] = [v.split(':', 1)[1] for v in command if v.startswith('-only-testing:')]
             if command[:4] == ['xcrun', 'xcresulttool', 'get', 'test-results']:
                 bundle = command[command.index('--path') + 1]
                 nodes = self.nodes if self.nodes is not None else [
-                    {'nodeType': 'Test Case', 'nodeIdentifier': s + '/testExample()', 'result': 'Failed' if s == self.result_fail else 'Passed'}
+                    {'nodeType': 'Test Case', 'nodeIdentifier': s if s.count('/') == 2 else s + '/testExample()', 'durationInSeconds': 2.25, 'result': 'Failed' if s == self.result_fail else 'Passed'}
                     for s in self.selected[bundle]]
                 return subprocess.CompletedProcess(command, status, json.dumps({'testNodes': [{'children': nodes}]}))
             return subprocess.CompletedProcess(command, status, '')
         output = io.StringIO()
-        with patch.object(runner.subprocess, 'run', side_effect=fake_run), contextlib.redirect_stdout(output):
+        with patch.dict(runner.main.__globals__, ROOT=self.scratch, TIMINGS_PATH=self.scratch / 'build/test-results/timings.json', machine_resources=lambda: (14, 36 * 1024**3)), patch.object(runner.subprocess, 'run', side_effect=fake_run), contextlib.redirect_stdout(output):
+            kwargs.setdefault("mode", "matrix")
             result = runner.main(**kwargs)
         return result, output.getvalue()
 
     def commands_for_tests(self):
-        return [c for c in self.commands if c[-1] == 'test-without-building']
+        return [c for c in self.commands if c[-1] == 'test-without-building' and '-enumerate-tests' not in c]
 
     def test_builds_debug_and_release_once_without_clean_or_reboot(self):
         status, output = self.execute()
@@ -163,7 +242,7 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(len(builds), 2)
         self.assertEqual([c[c.index('-configuration') + 1] for c in builds], ['Debug', 'Release'])
         self.assertIn('ENABLE_TESTABILITY=YES', builds[1])
-        self.assertEqual(len(self.commands_for_tests()), 8)
+        self.assertEqual(len(self.commands_for_tests()), 9)
         self.assertFalse(any('clean' in c or 'shutdown' in c or 'erase' in c or 'boot' in c for c in self.commands))
         self.assertEqual(sum('uninstall' in c for c in self.commands), 7)
         self.assertNotIn(['make', 'check'], self.commands)
@@ -173,6 +252,47 @@ class RunnerTests(unittest.TestCase):
             self.assertEqual(c[c.index('-testLanguage') + 1], 'en')
             self.assertEqual(c[c.index('-testRegion') + 1], 'US')
             self.assertEqual(c[c.index('-maximum-concurrent-test-simulator-destinations') + 1], '1')
+
+    def test_default_gate_uses_only_17e_and_serializes_device_appearance(self):
+        status, output = self.execute(mode='check')
+        self.assertEqual(status, 0, output)
+        commands = self.commands_for_tests()
+        self.assertEqual({c[c.index('-destination') + 1] for c in commands}, {'platform=iOS Simulator,id=device-1'})
+        self.assertEqual(sum('uninstall' in c for c in self.commands), 1)
+        self.assertEqual(len(commands), 3)
+        serial = next(c for c in commands if c[c.index('-resultBundlePath') + 1].endswith('Debug-serial.xcresult'))
+        for selector in runner.SERIAL_TESTS:
+            self.assertIn('-only-testing:' + selector, serial)
+        self.assertEqual(serial[serial.index('-parallel-testing-enabled') + 1], 'NO')
+        self.assertTrue(any('-only-testing:AppTests/LaunchSnapshotTests' in c for c in commands))
+        self.assertFalse(any('-only-testing:AppCoreTests/LaunchCoordinatorTests' in c for c in commands))
+
+    def test_check_executes_all_phase9_hosted_suites_once_on_17e(self):
+        status, output = self.execute(mode='check')
+        self.assertEqual(status, 0, output)
+        for suite in PHASE9_HOSTED:
+            matches = [c for c in self.commands_for_tests() if '-only-testing:' + suite in c]
+            self.assertEqual(len(matches), 1, suite)
+            command = matches[0]
+            self.assertEqual(command[command.index('-destination') + 1],
+                             'platform=iOS Simulator,id=device-1')
+            configuration = 'Release' if suite.endswith('/ReleaseReadinessTests') else 'Debug'
+            self.assertEqual(command[command.index('-configuration') + 1], configuration)
+            self.assertNotIn('-skip-testing:' + suite, command)
+            self.assertIn('PASS 17e ', output)
+            self.assertIn(' ' + suite, output)
+
+    def test_snapshot_record_one_records_both_screens_once_on_17e(self):
+        with patch.dict(os.environ, SNAPSHOT_RECORD='1'):
+            status, output = self.execute(mode='snapshots')
+        self.assertEqual(status, 0, output)
+        recorded = [c for c,e in zip(self.commands,self.environments) if e.get('TEST_RUNNER_SNAPSHOT_RECORD')]
+        self.assertEqual(len(recorded), 1)
+        for selector in runner.SNAPSHOTS[:2]:
+            self.assertIn('-only-testing:' + selector, recorded[0])
+        self.assertEqual(recorded[0][recorded[0].index('-parallel-testing-worker-count') + 1], '1')
+        self.assertNotIn('-only-testing:RenderTests/WelcomeRenderingTests', recorded[0])
+        self.assertNotIn('-only-testing:AppTests/WelcomeSnapshotGuardTests', recorded[0])
 
     def test_resolves_aliases_by_type_and_runtime_never_name(self):
         self.devices[runner.REGULAR_RUNTIME].insert(0, dict(self.devices[runner.DUO_RUNTIME][0], udid='wrong-runtime'))
@@ -186,7 +306,7 @@ class RunnerTests(unittest.TestCase):
 
     def test_shutdown_boots_once_and_missing_app_skips_uninstall(self):
         self.devices[runner.REGULAR_RUNTIME][0]['state'] = 'Shutdown'
-        self.fail = lambda c: 'get_app_container' in c
+        self.command_failure = lambda c: 'get_app_container' in c
         status, output = self.execute(aliases=['se'])
         self.assertEqual(status, 0, output)
         self.assertEqual(sum(c[:3] == ['xcrun', 'simctl', 'boot'] for c in self.commands), 1)
@@ -200,16 +320,49 @@ class RunnerTests(unittest.TestCase):
         for alias in runner.MATRIX:
             expected = f'build/test-results/{alias}/Debug-compare.xcresult'
             self.assertTrue(any(p.endswith(expected) for p in paths))
-            self.assertIn(f'PASS {alias} Debug-compare AppTests/WelcomeSnapshotTests', output)
+            self.assertIn(f'PASS {alias} Debug-compare AppTests/DeviceGeometrySmokeTests', output)
+
+    def test_passed_ui_suite_with_package_target_name_is_reported_and_timed(self):
+        self.nodes = [{'nodeType': 'UI test bundle', 'name': 'AppUITests', 'children': [
+            {'nodeType': 'Test Case', 'nodeIdentifier': 'WelcomeTests/testDutchAX5TextCanScrollToBothActions()',
+             'nodeIdentifierURL': 'test://com.apple.xcode/ChronoFlow/AppUITests/WelcomeTests/testDutchAX5TextCanScrollToBothActions',
+             'durationInSeconds': 8.557, 'result': 'Passed'},
+            {'nodeType': 'Test Case', 'nodeIdentifier': 'WelcomeEnglishAccessibilityTests/testAudit()', 'result': 'Passed'},
+        ]}]
+        status, output = self.execute(aliases=['17e'], only=['AppUITests/WelcomeTests'])
+        self.assertEqual(status, 0, output)
+        self.assertIn('PASS 17e Debug-compare AppUITests/WelcomeTests', output)
+        timings = json.loads((self.scratch / 'build/test-results/timings.json').read_text())
+        self.assertEqual(timings['devices']['17e']['suites']['AppUITests/WelcomeTests'], 8.557)
+
+    def test_successful_run_learns_numeric_xcresult_durations(self):
+        status, output = self.execute(aliases=['se'], only=['AppUITests/WelcomeTests'])
+        self.assertEqual(status, 0, output)
+        path = self.scratch / 'build/test-results/timings.json'
+        sample = json.loads(path.read_text())['devices']['se']
+        self.assertEqual(sample['suites']['AppUITests/WelcomeTests'], 2.25)
+        self.assertEqual(sample['tests'], {'AppUITests/WelcomeTests/testExample()': 2.25})
+        self.assertGreater(sample['wall'], 0)
+        self.assertEqual(sample['selection'], ['AppUITests/WelcomeTests'])
 
     def test_failing_test_names_and_nonzero_status_continue_other_devices(self):
         self.result_fail = 'AppUITests/WelcomeTests'
-        self.fail = lambda c: c[-1] == 'test-without-building' and 'platform=iOS Simulator,id=device-0' in c
+        self.command_failure = lambda c: c[-1] == 'test-without-building' and 'platform=iOS Simulator,id=device-0' in c
         status, output = self.execute()
         self.assertEqual(status, 1)
         self.assertIn('FAIL se Debug-compare AppUITests/WelcomeTests: AppUITests/WelcomeTests/testExample()', output)
-        self.assertIn('PASS 17e Release-compare', output)
-        self.assertIn('PASS duo Debug-compare AppTests/WelcomeSnapshotTests', output)
+        self.assertRegex(output, r'PASS \w+ Release-compare AppTests/ReleaseReadinessTests')
+        self.assertIn('PASS duo Debug-compare AppTests/DeviceGeometrySmokeTests', output)
+
+    def test_failed_case_durations_are_kept_without_turning_failures_into_passes(self):
+        self.result_fail = 'AppUITests/WelcomeTests'
+        status, output = self.execute(aliases=['17e'], only=['AppUITests/WelcomeTests', 'AppUITests/WelcomeLogicTests'])
+        self.assertEqual(status, 1, output)
+        self.assertIn('FAIL 17e Debug-compare AppUITests/WelcomeTests', output)
+        timings = json.loads((self.scratch / 'build/test-results/timings.json').read_text())
+        suites = timings['devices']['17e']['suites']
+        self.assertEqual(suites['AppUITests/WelcomeTests'], 2.25)
+        self.assertEqual(suites['AppUITests/WelcomeLogicTests'], 2.25)
 
     def test_empty_results_never_report_a_pass(self):
         self.nodes = []
@@ -218,7 +371,7 @@ class RunnerTests(unittest.TestCase):
         self.assertIn('no executed test cases', output)
 
     def test_build_failure_still_attempts_other_configuration(self):
-        self.fail = lambda c: c[-1] == 'build-for-testing' and 'ChronoFlow' in c
+        self.command_failure = lambda c: c[-1] == 'build-for-testing' and 'ChronoFlow' in c
         status, output = self.execute(aliases=['17e'])
         self.assertEqual(status, 1)
         self.assertIn('Debug build unavailable', output)
@@ -233,6 +386,19 @@ class RunnerTests(unittest.TestCase):
             self.assertNotIn('SNAPSHOT_RECORD', e)
             self.assertNotIn('TEST_RUNNER_SNAPSHOT_RECORD', e)
 
+    def test_matrix_profiles_and_system_references_run_once_on_17e(self):
+        selections, _ = runner.schedule('matrix', list(runner.MATRIX))
+        for suite in runner.selectors('profiles') + runner.selectors('reference'):
+            self.assertEqual([alias for alias in selections if suite in selections[alias]], ['17e'])
+        self.assertFalse(set(runner.selectors('profiles') + runner.selectors('reference')) & set(runner.selection('runtime', 'duo')))
+
+    def test_lpt_is_only_used_for_an_explicit_matrix(self):
+        selections, order = runner.schedule('check', ['se', '17e', 'duo'])
+        self.assertEqual(order, ['se', '17e', 'duo'])
+        selections, order = runner.schedule('matrix', ['se', '17e', 'duo'], only=['AppTests/RootNavigationTests'])
+        self.assertEqual(order, ['se', '17e', 'duo'])
+        self.assertTrue(all(s == ['AppTests/RootNavigationTests'] for s in selections.values()))
+
     def test_record_modes_are_isolated_and_paths_cannot_collide(self):
         for mode, expected in [('1', set(runner.SNAPSHOTS[1:])), ('launch', set(runner.SNAPSHOTS[:1])), ('all', set(runner.SNAPSHOTS))]:
             self.setUp()
@@ -244,12 +410,16 @@ class RunnerTests(unittest.TestCase):
                 self.assertNotIn('SNAPSHOT_RECORD', e)
                 if e.get('TEST_RUNNER_SNAPSHOT_RECORD'):
                     self.assertEqual(c[-1], 'test-without-building')
+                    self.assertEqual(c[c.index('-parallel-testing-enabled') + 1], 'NO')
+                    self.assertEqual(c[c.index('-parallel-testing-worker-count') + 1], '1')
                     self.assertTrue(c[c.index('-resultBundlePath') + 1].endswith('/record.xcresult'))
                     actual = {x.split(':',1)[1] for x in c if x.startswith('-only-testing:')}
-                    self.assertEqual(actual, expected - ({'AppTests/WelcomeSnapshotGuardTests'} if 'platform=iOS Simulator,id=device-6' in c else set()))
+                    self.assertTrue(actual <= expected)
+                    self.assertIn('AppTests/LaunchSnapshotTests' if mode == 'launch' else 'AppTests/WelcomeSnapshotTests', actual)
+                    if mode == 'all': self.assertIn('AppTests/LaunchSnapshotTests', actual)
                     recorded.append(c[c.index('-destination') + 1])
-            self.assertEqual(len(recorded), 2)
-            self.assertEqual(len(set(recorded)), 2)
+            self.assertEqual(len(recorded), 1)
+            self.assertEqual(recorded, ["platform=iOS Simulator,id=device-1"])
 
     def test_targeted_reuses_builds_and_keeps_explicit_logic_on_requested_device(self):
         status, output = self.execute(aliases=['se', 'duo', 'se'], only=['AppUITests/ReadinessTests'], reuse_build=True, generate=False)
@@ -262,23 +432,38 @@ class RunnerTests(unittest.TestCase):
         active = maximum = 0
         lock = threading.Lock()
         original = runner.main.__globals__['test_device']
-        def worker(*args):
+        def worker(*args, **kwargs):
             nonlocal active, maximum
             with lock:
                 active += 1
                 maximum = max(maximum, active)
             time.sleep(0.025)
-            result = original(*args)
+            result = original(*args, **kwargs)
             with lock: active -= 1
             return result
-        for limit in [1, 2, 4]:
+        for limit in [1, 2, 4, 7]:
             maximum = 0
-            with patch.dict(runner.main.__globals__, test_device=worker), patch.dict(os.environ, SIM_CONCURRENCY=str(limit)):
+            with patch.dict(runner.main.__globals__, test_device=worker), patch.dict(os.environ, SIM_CONCURRENCY=str(limit), TEST_WORKERS="1"):
                 status, output = self.execute()
             self.assertEqual(status, 0, output)
             self.assertEqual(maximum, limit)
-        for value in [0, -1, 5, 'invalid']:
+        for value in [0, -1, 8, 'invalid']:
             with self.assertRaises(ValueError): self.execute(concurrency=value)
+
+    def test_parallel_pass_excludes_global_method_then_runs_it_serially(self):
+        original = runner.split_passes
+        method = 'AppUITests/WelcomeTests/testSystemAppearance'
+        def split(configuration, selected, workers):
+            return original(configuration, selected, workers, serial=[method])
+        with patch.dict(runner.main.__globals__, split_passes=split):
+            status, output = self.execute(aliases=['17e'], only=['AppUITests/WelcomeTests'])
+        self.assertEqual(status, 0, output)
+        commands = self.commands_for_tests()
+        self.assertEqual(len(commands), 2)
+        self.assertIn('-skip-testing:' + method, commands[0])
+        self.assertEqual(commands[0][commands[0].index('-parallel-testing-enabled') + 1], 'YES')
+        self.assertIn('-only-testing:' + method, commands[1])
+        self.assertEqual(commands[1][commands[1].index('-parallel-testing-enabled') + 1], 'NO')
 
     def test_intro_order_regression_uses_two_processes_and_separate_results(self):
         with patch.dict(os.environ, {'SNAPSHOT_RECORD': 'all', 'TEST_RUNNER_CF_INTRO_ORDER': 'invalid'}):
@@ -286,11 +471,213 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(status, 0, output)
         tests = self.commands_for_tests()
         self.assertEqual(len(tests), 2)
-        environments = [e for c, e in zip(self.commands, self.environments) if c[-1] == 'test-without-building']
+        enumeration = [c for c in self.commands if '-enumerate-tests' in c]
+        self.assertEqual(len(enumeration), 1)
+        self.assertIn('-test-enumeration-style', enumeration[0])
+        for command in tests:
+            self.assertIn('-only-testing:' + runner.INTRO_ORDER_TEST, command)
+            self.assertEqual(command[command.index('-parallel-testing-enabled') + 1], 'NO')
+        environments = [e for c, e in zip(self.commands, self.environments) if c[-1] == 'test-without-building' and '-enumerate-tests' not in c]
         self.assertEqual([e.get('TEST_RUNNER_CF_INTRO_ORDER') for e in environments], ['fresh', 'warm'])
         self.assertTrue(all('TEST_RUNNER_SNAPSHOT_RECORD' not in e for e in environments))
         paths = [c[c.index('-resultBundlePath') + 1] for c in tests]
         self.assertNotEqual(*paths)
+
+    def test_intro_enumeration_missing_identifier_stops_before_empty_execution(self):
+        self.enumerated = ['AppTests/WelcomeSnapshotTests/frozenIntroOrderIndependenceExtra()']
+        status, output = self.execute(aliases=['se'], intro_order_check=True, reuse_build=True)
+        self.assertEqual(status, 1)
+        self.assertIn('identifier absent from enumeration', output)
+        self.assertEqual(self.commands_for_tests(), [])
+
+    def test_skipped_intro_is_a_failure_and_still_attempts_warm_process(self):
+        self.nodes = [{'nodeType': 'Test Case', 'nodeIdentifier': runner.INTRO_ORDER_TEST, 'result': 'Skipped'}]
+        status, output = self.execute(aliases=['se'], intro_order_check=True, reuse_build=True)
+        self.assertEqual(status, 1)
+        self.assertIn('Diagnostic did not execute and pass', output)
+        self.assertEqual(len(self.commands_for_tests()), 2)
+
+    def test_exact_method_and_target_matching_rejects_prefix_collisions(self):
+        nodes = list(runner.result_nodes({'testNodes': [
+            {'nodeType': 'Unit test bundle', 'name': 'AppTests', 'children': [
+                {'nodeType': 'Test Case', 'nodeIdentifier': 'WelcomeSnapshotTests/frozenIntroOrderIndependence()', 'result': 'Passed'},
+                {'nodeType': 'Test Case', 'nodeIdentifier': 'WelcomeSnapshotTests/frozenIntroOrderIndependenceExtra()', 'result': 'Passed'},
+                {'nodeType': 'Test Case', 'nodeIdentifier': 'OtherWelcomeSnapshotTests/frozenIntroOrderIndependence()', 'result': 'Passed'}]},
+            {'nodeType': 'UI test bundle', 'name': 'AppUITests', 'children': [
+                {'nodeType': 'Test Case', 'nodeIdentifier': 'WelcomeSnapshotTests/frozenIntroOrderIndependence()', 'result': 'Failed'}]},
+        ]}))
+        matches = runner.matching_nodes(nodes, runner.INTRO_ORDER_TEST)
+        self.assertEqual(len(matches), 1)
+        self.assertEqual(matches[0]['target'], 'AppTests')
+
+
+
+class SchedulerTests(unittest.TestCase):
+    def test_lpt_assigns_long_logic_first_to_earliest_finish(self):
+        timings = {"devices": {a: {"matrix_wall": wall, "suites": {
+            "AppUITests/ReadinessTests": 100, "AppUITests/WelcomeLogicTests": 50,
+        }} for a, wall in [("se", 10), ("duo", 15)]}}
+        selected, order = runner.schedule('welcome', ['se', 'duo'], timings=timings)
+        self.assertIn('AppUITests/ReadinessTests', selected['se'])
+        self.assertIn('AppUITests/WelcomeLogicTests', selected['duo'])
+        self.assertEqual(order[0], 'se')
+
+    def test_measured_suite_duration_and_static_fallback(self):
+        timings = {'devices': {'se': {'suites': {'AppUITests/ReadinessTests': 25}}}}
+        self.assertEqual(runner.suite_seconds('AppUITests/ReadinessTests', 'se', timings), 25)
+        self.assertEqual(runner.suite_seconds('AppUITests/ReadinessTests', 'duo', timings), 25)
+        self.assertEqual(runner.suite_seconds('AppUITests/ReadinessTests', 'se', {}), 75)
+        self.assertEqual(runner.suite_seconds('New/Suite', 'se', {}), 1)
+        for value in ['nan', 'inf', -1, None, 'bad']:
+            self.assertIsNone(runner.positive_seconds(value))
+
+    def test_auto_concurrency_respects_cores_available_memory_and_seven_cap(self):
+        with patch.dict(os.environ, SIM_CONCURRENCY=''):
+            self.assertEqual(runner.concurrency_limit(resources=(14, 36 * 1024**3)), 7)
+            self.assertEqual(runner.concurrency_limit(resources=(8, 36 * 1024**3)), 4)
+            self.assertEqual(runner.concurrency_limit(resources=(14, 5 * 1024**3)), 3)
+            self.assertEqual(runner.concurrency_limit(resources=(1, 1)), 1)
+            self.assertEqual(runner.concurrency_limit(resources=(14, 0)), 2)
+        with patch.dict(os.environ, SIM_CONCURRENCY='6'):
+            self.assertEqual(runner.concurrency_limit(resources=(2, 1)), 6)
+
+    def test_available_memory_probe_counts_only_free_reclaimable_pages(self):
+        report = 'Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free: 2.\nPages inactive: 3.\nPages speculative: 4.\nPages wired down: 999.'
+        with patch.object(runner.subprocess, 'run', return_value=subprocess.CompletedProcess([], 0, report)):
+            self.assertEqual(runner.machine_resources()[1], 9 * 16384)
+        with patch.object(runner.subprocess, 'run', side_effect=OSError):
+            self.assertEqual(runner.machine_resources()[1], 0)
+
+    def test_clone_log_timings_resolve_exact_suites_and_include_failed_work(self):
+        content = """+ xcodebuild -only-testing:AppUITests/WelcomeTests -only-testing:AppUITests/WelcomeLogicTests -only-testing:AppTests/WelcomeSnapshotTests -only-testing:RenderTests/WelcomeRenderingTests
+Test case 'WelcomeTests.testDutchAX5TextCanScrollToBothActions()' passed on 'Clone 2 of iPhone 17e - AppUITests-Runner (23904)' (8.557 seconds)
+Test case 'WelcomeLogicTests.testSignIn()' passed on 'Clone 2 of iPhone 17e - AppUITests-Runner (23904)' (7.155 seconds)
+Test case 'WelcomeSnapshotTests/finalWelcome()' failed on 'Clone 1 of iPhone 17e - ChronoFlow (23428)' (34.192 seconds)
+Test case 'WelcomeRenderingTests/frozenIntroPixelsStayFixedAcrossClockAndRenderPasses()' passed on 'Clone 1 of iPhone 17e - ChronoFlow (23428)' (84.536 seconds)
+335.593 elapsed -- Testing started completed.
+"""
+        value = runner.log_timings(content)
+        self.assertEqual(value['suites'], {
+            'AppUITests/WelcomeTests': 8.557, 'AppUITests/WelcomeLogicTests': 7.155,
+            'AppTests/WelcomeSnapshotTests': 34.192, 'RenderTests/WelcomeRenderingTests': 84.536})
+        self.assertEqual(value['tests']['AppUITests/WelcomeTests/testDutchAX5TextCanScrollToBothActions()'], 8.557)
+        self.assertEqual(value['wall'], 335.593)
+
+    def test_bootstrap_log_durations_and_persistence(self):
+        content = """+ xcodebuild -only-testing:AppTests/WelcomeSnapshotTests -only-testing:AppUITests/WelcomeTests
+Test Suite 'AppTests.xctest' started
+✔ Suite WelcomeSnapshotTests passed after 21.3 seconds.
+Test Case '-[AppUITests.WelcomeTests testA]' passed (2.500 seconds).
+Test Case '-[AppUITests.WelcomeTests testB]' passed (3.000 seconds).
+30.5 elapsed -- Testing started completed.
+"""
+        value = runner.log_timings(content)
+        self.assertEqual(value['suites'], {'AppTests/WelcomeSnapshotTests': 21.3, 'AppUITests/WelcomeTests': 5.5})
+        self.assertEqual(value['wall'], 30.5)
+        self.assertEqual(value['tests']['AppUITests/WelcomeTests/testA'], 2.5)
+        with tempfile.TemporaryDirectory(dir=ROOT / 'build') as directory:
+            root = Path(directory)
+            (root / 'se').mkdir()
+            (root / 'se/Debug-compare.log').write_text(content)
+            data = runner.bootstrap_timings({'version': 1, 'devices': {}}, root)
+            path = root / 'timings.json'
+            runner.save_timings(data, path)
+            self.assertEqual(runner.load_timings(path), data)
+            path.write_text('{bad')
+            self.assertEqual(runner.load_timings(path), {'version': 1, 'devices': {}})
+
+    def test_modes_filter_before_balancing_and_targeting_keeps_explicit_repetition(self):
+        for mode in ['test', 'snapshots', 'launch-snapshots']:
+            selected, _ = runner.schedule(mode, ['se', 'duo'])
+            expected = {s for alias in ['se', 'duo'] for s in runner.selection(mode, alias)}
+            self.assertEqual(set(s for values in selected.values() for s in values), expected)
+        selected, _ = runner.schedule('welcome', ['se', 'duo'], ['AppUITests/ReadinessTests'])
+        self.assertEqual(selected, {a: ['AppUITests/ReadinessTests'] for a in ['se', 'duo']})
+
+
+class ParallelTests(unittest.TestCase):
+    def test_method_and_suite_serial_split_preserves_all_selectors(self):
+        selected = ['AppTests/WelcomeSnapshotTests', 'AppUITests/WelcomeTests', 'AppUITests/LaunchToWelcomeTests']
+        serial = ['AppUITests/WelcomeTests/testSystemAppearance', 'AppUITests/LaunchToWelcomeTests']
+        parts = runner.split_passes('Debug', selected, 2, serial=serial)
+        self.assertEqual(parts[0].selected, tuple(selected[:2]))
+        self.assertEqual(parts[0].skipped, (serial[0],))
+        self.assertEqual(parts[0].workers, 2)
+        self.assertEqual(parts[1].selected, tuple(serial))
+        self.assertEqual(parts[1].workers, 1)
+        self.assertEqual(parts[1].suffix, 'serial')
+        for configuration, workers in [('Release', 2), ('Debug', 1)]:
+            parts = runner.split_passes(configuration, selected, workers, serial=serial)
+            self.assertEqual(len(parts), 1)
+            self.assertEqual(parts[0].workers, 1)
+            self.assertEqual(parts[0].selected, tuple(selected))
+
+    def test_command_enables_workers_and_excludes_serial_methods(self):
+        destination = runner.Destination('duo', 'test-device', 'Booted')
+        command = runner.test_command(destination, 'Debug', ['AppTests/WelcomeSnapshotTests'], Path('result'), 2, ['AppTests/Example/testGlobal'])
+        self.assertEqual(command[command.index('-parallel-testing-enabled') + 1], 'YES')
+        self.assertEqual(command[command.index('-parallel-testing-worker-count') + 1], '2')
+        self.assertIn('-skip-testing:AppTests/Example/testGlobal', command)
+        project = (ROOT / 'project.yml').read_text()
+        for target in ['AppTests', 'AppUITests']:
+            self.assertIn('- name: ' + target + '\n          parallelizable: true', project)
+
+    def test_heavy_matrix_and_single_device_workers_can_be_disabled(self):
+        selected = ['AppUITests/WelcomeTests']
+        with patch.dict(os.environ, TEST_WORKERS='2'):
+            self.assertEqual(runner.workers_for('se', selected, {}, True), 2)
+            self.assertEqual(runner.workers_for('se', runner.selectors('matrix'), {}), 1)
+            self.assertEqual(runner.workers_for('duo', runner.selectors('matrix'), {}), 2)
+            self.assertEqual(runner.workers_for('duo', ['AppCoreTests/CubicBezierTests'], {}, True), 1)
+        with patch.dict(os.environ, TEST_WORKERS='1'):
+            self.assertEqual(runner.workers_for('duo', selected, {}, True), 1)
+        with patch.dict(os.environ, TEST_WORKERS='5'):
+            with self.assertRaises(ValueError): runner.workers_for('duo', selected, {})
+
+    def test_device_appearance_helper_is_used_only_by_registered_serial_callers(self):
+        for path in (ROOT / 'AppUITests').glob('*.swift'):
+            if 'DeviceAppearance.set' in path.read_text():
+                for suite in discovered_suites(path.parent):
+                    if re.search(r'class\s+' + suite + r'\b', path.read_text()):
+                        self.assertIn('AppUITests/' + suite, runner.SERIAL_TESTS)
+        for suite in runner.SERIAL_TESTS:
+            parts = runner.split_passes('Debug', [suite], 2)
+            self.assertEqual(len(parts), 1)
+            self.assertEqual(parts[0].workers, 1)
+            self.assertEqual(parts[0].suffix, 'serial')
+
+    def test_global_mutations_require_serial_registration(self):
+        for target in ['AppTests', 'AppUITests']:
+            for file in (ROOT / target).glob('*.swift'):
+                source = file.read_text()
+                if re.search(r'XCUIDevice\.shared|UIPasteboard\.general|setContentSizeCategory', source):
+                    for suite in discovered_suites(file.parent):
+                        if re.search(r'(?:class|struct)\s+' + suite + r'\b', source):
+                            self.assertIn(target + '/' + suite, runner.SERIAL_TESTS, file)
+        self.assertNotIn('"-AppleInterfaceStyle"', (ROOT / 'AppUITests/LaunchSceneTests.swift').read_text())
+        self.assertIn('DeviceAppearance.set', (ROOT / 'AppUITests/LaunchSceneTests.swift').read_text())
+        self.assertIn('AppUITests/LaunchToWelcomeTests', runner.SERIAL_TESTS)
+        self.assertIn('"-AppleInterfaceStyle"', (ROOT / 'AppUITests/WelcomeTests.swift').read_text())
+        self.assertIn('@Suite(.serialized)', (ROOT / 'AppTests/WelcomeSnapshotTests.swift').read_text())
+
+    def test_worker_budget_restores_slots_after_failure_and_bounds_clones(self):
+        budget = runner.WorkerBudget(3)
+        active = maximum = 0
+        lock = threading.Lock()
+        def job():
+            nonlocal active, maximum
+            with budget.claim(2):
+                with lock:
+                    active += 2
+                    maximum = max(maximum, active)
+                time.sleep(0.01)
+                with lock: active -= 2
+        with runner.ThreadPoolExecutor(max_workers=4) as pool:
+            list(pool.map(lambda _: job(), range(4)))
+        self.assertEqual(maximum, 2)
+        with self.assertRaises(RuntimeError):
+            with budget.claim(3): raise RuntimeError('test')
+        self.assertEqual(budget.available, 3)
 
 
 class ProfileTests(unittest.TestCase):
@@ -306,22 +693,27 @@ class ProfileTests(unittest.TestCase):
             self.assertTrue(profile['introTimes'])
             self.assertTrue(profile['launchFrames'])
 
-    def test_welcome_baselines_exactly_match_device_profiles(self):
+    def test_new_baseline_inventory_is_complete_after_recording(self):
         catalog = json.loads((ROOT / 'Packages/ChronoFlowKit/Tests/SnapshotSupport/profiles.json').read_text())
-        directory = ROOT / 'AppTests/__Snapshots__/WelcomeSnapshotTests'
-        expected = set()
-        for model, device in catalog['devices'].items():
-            for kind, variants in [('finalWelcome', ['large', 'xxLarge']), ('frozenIntro', catalog['profiles'][device['profile']]['introTimes'])]:
+        for screen in ['Welcome', 'Launch']:
+            expected = set()
+            for device in catalog['devices'].values():
+                profile = catalog['profiles'][device['profile']]
+                name = f"{device['alias']}-{device['width']}x{device['height']}-{device['scale']}x"
                 for style in ['light', 'dark']:
                     for language in ['en', 'nl']:
-                        for variant in variants:
-                            expected.add((kind, model, style, language, str(variant)))
-        actual = set()
-        for image in directory.glob('*.png'):
-            match = re.fullmatch(r'(finalWelcome|frozenIntro)\.(iPhone\d+,\d+)-\d+x\d+-[23]x-(light|dark)-(en|nl)-(.+)\.png', image.name)
-            self.assertIsNotNone(match, image.name)
-            actual.add(match.groups())
-        self.assertEqual(actual, expected)
+                        if screen == 'Welcome':
+                            for kind, variants in [('finalWelcome', profile['dynamicType']), ('frozenIntro', profile['introTimes'])]:
+                                expected.update(f'{kind}.{name}-{style}-{language}-{variant}.png' for variant in variants)
+                        else:
+                            expected.update(f'sampledSplashFrames.{name}-{style}-{language}-{category}-{frame}.png'
+                                            for category in ['large', 'xxLarge'] for frame in profile['launchFrames'])
+            directory = ROOT / f'AppTests/__Snapshots__/{screen}SnapshotTests'
+            actual = {p.name for p in directory.glob('*.png')}
+            # A wholly unrecorded suite is pending orchestrator work; partial recordings must fail.
+            if actual:
+                self.assertEqual(actual, expected)
+            self.assertEqual(len(expected), 472 if screen == 'Launch' else 320)
 
 
 if __name__ == '__main__':

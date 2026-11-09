@@ -1,9 +1,25 @@
 import AppCore
 import CoreGraphics
 import Launch
+import SnapshotSupport
 import Testing
 
 struct LaunchSnapshotGeometryTests {
+    @Test func onlyReady1900HasACompletelyExitedOverlay() throws {
+        var transparentReferences = 0
+        for device in try SnapshotDevice.all() {
+            for frame in LaunchSnapshotCase.all where try device.coverage.launchFrames.contains(frame.name) {
+                let opacity = try scalar(
+                    frame.timeline(size: device.size, safeInsets: device.insets), .container, "opacity",
+                    at: .milliseconds(frame.milliseconds))
+                let exited = frame.mode == .ready && frame.milliseconds == 1900
+                #expect((opacity == 0) == exited, "\(device.alias) \(frame.name)")
+                if exited { transparentReferences += 8 }
+            }
+        }
+        #expect(transparentReferences == 32)
+    }
+
     @Test func sampledSunHasSubstantialVisibleHeightOnEveryD1cSize() throws {
         for size in [
             CGSize(width: 375, height: 667), CGSize(width: 390, height: 844),

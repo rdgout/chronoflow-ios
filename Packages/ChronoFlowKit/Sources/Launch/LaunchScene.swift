@@ -22,9 +22,16 @@
             CATransaction.commit()
         }
 
-        public func prepareStatus() {
+        public func prepareStatus(locale: Locale? = nil) {
+            var bundle = Bundle.module
+            if let language = locale?.language.languageCode?.identifier,
+                let path = bundle.path(forResource: language, ofType: "lproj"),
+                let localized = Bundle(path: path)
+            {
+                bundle = localized
+            }
             statusLine.prepareText(
-                String(localized: "Getting your plan ready", bundle: .module), compatibleWith: traits)
+                String(localized: "Getting your plan ready", bundle: bundle), compatibleWith: traits)
         }
 
         public func layer(_ id: LayerID) -> CALayer { layers[id]! }

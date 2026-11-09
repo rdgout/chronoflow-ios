@@ -20,7 +20,9 @@ let package = Package(
         .package(url: "https://github.com/groue/GRDB.swift", exact: "7.8.0"),
     ],
     targets: [
-        .target(name: "SnapshotSupport", path: "Tests/SnapshotSupport", exclude: ["profiles.json"]),
+        .target(
+            name: "SnapshotSupport", dependencies: ["AppCore"], path: "Tests/SnapshotSupport",
+            exclude: ["profiles.json"]),
         .target(
             name: "DesignSystem", resources: [.process("Resources")], swiftSettings: [.defaultIsolation(MainActor.self)]
         ),
@@ -54,9 +56,10 @@ let package = Package(
         ),
         .testTarget(
             name: "DesignSystemTests",
-            dependencies: ["DesignSystem"],
+            dependencies: ["DesignSystem", "SnapshotSupport"],
             swiftSettings: [.defaultIsolation(MainActor.self)]
         ),
+        .testTarget(name: "ToolingTests", swiftSettings: [.defaultIsolation(nil)]),
         .testTarget(name: "AppCoreTests", dependencies: ["AppCore"], swiftSettings: [.defaultIsolation(nil)]),
         .testTarget(
             name: "LaunchTests",
@@ -68,7 +71,7 @@ let package = Package(
         ),
         .testTarget(
             name: "WelcomeTests",
-            dependencies: ["Welcome"],
+            dependencies: ["Welcome", "SnapshotSupport"],
             swiftSettings: [.defaultIsolation(MainActor.self)]
         ),
     ],

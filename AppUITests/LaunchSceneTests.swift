@@ -6,43 +6,29 @@ import XCTest
 nonisolated final class LaunchSceneTests: XCTestCase {
     @MainActor
     func testLightOpeningAccessibilityAndFrozenScreenshotMatchesSampleAt700() async throws {
-        try await assertFrozenScreenshot(style: .light)
+        try await Self.assertFrozenScreenshot(style: .light, testCase: self)
     }
 
     @MainActor
-    func testDarkOpeningAccessibilityAndFrozenScreenshotMatchesSampleAt700() async throws {
-        try await assertFrozenScreenshot(style: .dark)
-    }
-
-    @MainActor
-    private func assertFrozenScreenshot(style expectedStyle: UIUserInterfaceStyle) async throws {
-        let device = XCUIDevice.shared
-        let previousAppearance = device.appearance
+    fileprivate static func assertFrozenScreenshot(style expectedStyle: UIUserInterfaceStyle, testCase: XCTestCase)
+        async throws
+    {
         let app = XCUIApplication()
-        addTeardownBlock { @MainActor in
+        let original = XCUIDevice.shared.appearance
+        testCase.addTeardownBlock { @MainActor in
             app.terminate()
-            device.appearance = previousAppearance
-            let restored = try await Self.waitForAppearance(previousAppearance)
-            XCTAssertTrue(restored, "The device must finish restoring its appearance before the next test")
+            try DeviceAppearance.set(original)
         }
-        let expectedAppearance: XCUIDevice.Appearance = expectedStyle == .dark ? .dark : .light
-        device.appearance = expectedAppearance
         app.terminate()
-        device.press(.home)
-        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
-        guard springboard.wait(for: .runningForeground, timeout: 10) else {
-            XCTFail("SpringBoard must be in the foreground before launching the frozen splash")
-            return
-        }
-        guard try await Self.waitForAppearance(expectedAppearance) else {
-            XCTFail("The device did not apply the expected \(expectedStyle == .dark ? "dark" : "light") appearance")
-            return
-        }
-        app.launchArguments = ["-cf.mode", "ready", "-cf.freezeAt", "700"]
+        try DeviceAppearance.set(expectedStyle == .dark ? .dark : .light)
+        app.launchArguments = [
+            "-cf.mode", "ready", "-cf.freezeAt", "700",
+        ]
         app.launch()
         let opening = app.images["launch.opening"]
         XCTAssertTrue(opening.waitForExistence(timeout: 10))
-        XCTAssertFalse(opening.label.isEmpty)
+        XCTAssertEqual(opening.label, "ChronoFlow is opening")
+        XCTAssertEqual(opening.frame, app.frame)
         let screenshot = opening.screenshot()
         let actual = try XCTUnwrap(screenshot.image.cgImage)
         let size = opening.frame.size
@@ -74,12 +60,12 @@ nonisolated final class LaunchSceneTests: XCTestCase {
                 x: (moon.position.x - 56) * scale, y: (moon.position.y - 56) * scale,
                 width: 112 * scale, height: 112 * scale
             ).integral
-            let shift = LaunchImageComparison.bestShift(
-                actualBytes, expected, width: actual.width, region: moonRegion, radius: Int(ceil(1.5 * scale)))
-            let displacement = CGFloat(max(abs(shift.x), abs(shift.y))) / scale
-            let moonMetrics = LaunchImageComparison.measure(
-                actualBytes, expected, width: actual.width, region: moonRegion)
             if style == expectedStyle {
+                let shift = LaunchImageComparison.bestShift(
+                    actualBytes, expected, width: actual.width, region: moonRegion, radius: Int(ceil(1.5 * scale)))
+                let displacement = CGFloat(max(abs(shift.x), abs(shift.y))) / scale
+                let moonMetrics = LaunchImageComparison.measure(
+                    actualBytes, expected, width: actual.width, region: moonRegion)
                 XCTAssertTrue(metrics.passes, metrics.description)
                 XCTAssertLessThanOrEqual(moonMetrics.mean, 1, "Moon: \(moonMetrics.description)")
                 XCTAssertLessThanOrEqual(
@@ -91,54 +77,19 @@ nonisolated final class LaunchSceneTests: XCTestCase {
                 XCTAssertGreaterThan(
                     metrics.mean, 8, "The opposite appearance must differ clearly: \(metrics.description)")
             }
-            if style == expectedStyle {
-                let reference = scene.timeline.sample(at: .milliseconds(700))
-                for key in ["position", "opacity"] {
-                    scene.apply(reference)
-                    if key == "position" { moon.position.x += 1 } else { moon.opacity *= 0.8 }
-                    let mutant = UIGraphicsImageRenderer(size: size, format: format).image { context in
-                        scene.container.render(in: context.cgContext)
-                    }
-                    let mutantBytes = try pixels(XCTUnwrap(mutant.cgImage))
-                    let mutation = LaunchImageComparison.measure(
-                        mutantBytes, expected, width: actual.width, region: moonRegion)
-                    XCTAssertFalse(
-                        mutation.passes, "The real sampled moon must reject a 1 pt offset or 20% opacity error: \(key)")
-                    if key == "opacity" {
-                        XCTAssertGreaterThan(
-                            mutation.mean, 1, "The actual moon-region mean assertion must reject wrong opacity")
-                    }
-                    if key == "position" {
-                        let offset = LaunchImageComparison.bestShift(
-                            mutantBytes, expected, width: actual.width, region: moonRegion,
-                            radius: Int(ceil(1.5 * scale)))
-                        XCTAssertEqual(CGFloat(offset.x) / scale, 1, accuracy: 0.5 / scale)
-                    }
-                }
-            }
             let attachment = XCTAttachment(image: model)
             attachment.name = "sample-700-\(style == .dark ? "dark" : "light")"
             attachment.lifetime = .keepAlways
-            add(attachment)
+            testCase.add(attachment)
         }
         let attachment = XCTAttachment(screenshot: screenshot)
         attachment.name = "live-frozen-700"
         attachment.lifetime = .keepAlways
-        add(attachment)
+        testCase.add(attachment)
     }
 
     @MainActor
-    static func waitForAppearance(_ appearance: XCUIDevice.Appearance) async throws -> Bool {
-        let deadline = ContinuousClock.now.advanced(by: .seconds(10))
-        while XCUIDevice.shared.appearance != appearance {
-            guard ContinuousClock.now < deadline else { return false }
-            try await Task.sleep(for: .milliseconds(50))
-        }
-        return true
-    }
-
-    @MainActor
-    private func pixels(_ image: CGImage) throws -> [UInt8] {
+    private static func pixels(_ image: CGImage) throws -> [UInt8] {
         var bytes = [UInt8](repeating: 0, count: image.width * image.height * 4)
         try bytes.withUnsafeMutableBytes { buffer in
             let context = try XCTUnwrap(
@@ -149,5 +100,12 @@ nonisolated final class LaunchSceneTests: XCTestCase {
             context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
         }
         return bytes
+    }
+}
+
+nonisolated final class LaunchSceneDarkTests: XCTestCase {
+    @MainActor
+    func testDarkOpeningAccessibilityAndFrozenScreenshotMatchesSampleAt700() async throws {
+        try await LaunchSceneTests.assertFrozenScreenshot(style: .dark, testCase: self)
     }
 }

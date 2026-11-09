@@ -52,15 +52,17 @@
             let line = CTLineCreateWithAttributedString(attributed)
             var ascent: CGFloat = 0
             var descent: CGFloat = 0
-            let width = ceil(CTLineGetTypographicBounds(line, &ascent, &descent, nil) * contentsScale) / contentsScale
-            let left = (bounds.width - width - 6 - 18) / 2
+            let width = CTLineGetTypographicBounds(line, &ascent, &descent, nil)
+            let layout = StatusLineLayout(
+                width: bounds.width, textWidth: width, ascent: ascent, descent: descent, lineHeight: height,
+                scale: contentsScale)
             let label = CATextLayer()
             label.contentsScale = contentsScale
             label.string = attributed
-            label.frame = CGRect(x: left, y: (height - ascent - descent) / 2, width: width, height: height)
+            label.frame = layout.text
             addSublayer(label)
             text = label
-            replicator.frame = CGRect(x: left + width + 6, y: 0, width: 18, height: height)
+            replicator.frame = layout.dots
             dot.position = CGPoint(x: 2, y: height / 2)
             for (index, layer) in sampledDots.enumerated() {
                 layer.position = CGPoint(x: replicator.frame.minX + 2 + CGFloat(index) * 7, y: height / 2)
