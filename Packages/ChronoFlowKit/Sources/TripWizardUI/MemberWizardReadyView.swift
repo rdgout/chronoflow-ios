@@ -187,7 +187,7 @@
                             (model.credits == .unavailable ? ColorToken.destructive : .mutedForeground).color)
                 }
             }.font(Typography.wizardHint.font).foregroundStyle(ColorToken.mutedForeground.color)
-                .accessibilityIdentifier("wizard.ready.price")
+                .accessibilityElement(children: .contain).accessibilityIdentifier("wizard.ready.price")
         }
         private func readyRow(_ key: String, value: String, step: MemberWizardStep, sleep: Bool = false) -> some View {
             Button {

@@ -2146,6 +2146,8 @@ Verification and audit resolution: see `Docs/settings-board-fidelity.md`. `make 
 **18l: Guest screens, Fine-tune and Ready**
 - [x] WizardFineTuneGuest rows have no Late check-out, Busy or sleep switch. WizardReadyGuest and WizardReadyGuestFree get the guest rows and price lines. "Make my plan" fires medium-impact feedback and runs the 18g gate, then hands `.signUpRequested` to the host. It presents the GuestSignup sheet (18i/18j carry the claim).
   - Tests: seeded screen tests for FineTuneGuest, ReadyGuest, ReadyGuestFree (EN, plus one DarkNL), and a catalog regression. The gate logic stays in 18g's SwiftPM tests.
+- [x] Fix blank GuestSignup presentation with an identifiable item that carries the required sign-up model into the sheet content. Production and seeded boards share `GuestWizardDestination.presentSignup`; dismissal cleans up the captured model. Preserve the Ready price container's accessibility children, including `wizard.ready.guest-price`.
+  - Verification: strict lint and direct iOS 17 Debug/Release compilation of TripWizardUI and the app pass. The existing seeded `testReadyGuest` covers the presentation; simulator tests and xcodebuild were not run, as instructed.
 
   Verification for 18k–18l (2026-11-10): strict lint, focused SwiftPM guest/auth/copy/claim suites and targeted regression reruns pass; all 105 runner fixtures pass. Direct iOS 17 Debug/Release app/module compilation and UI-test compilation pass. GuestSignup ready/failed/retry/review fixtures are registered alongside the guest wizard screen suites. No simulator tests, xcodebuild, snapshots or matrix were run; runtime and visual acceptance remain pending under the user's instruction.
 

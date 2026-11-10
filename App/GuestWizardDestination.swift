@@ -9,8 +9,12 @@ struct GuestWizardDestination: View {
     let services: AuthSessionServices
     let navigator: RootNavigator
     @State private var wizard: MemberWizardModel?
-    @State private var signup: SignUpModel?
-    @State private var showingSignup = false
+    @State private var signup: SignupPresentation?
+
+    private struct SignupPresentation: Identifiable {
+        let id = UUID()
+        let model: SignUpModel
+    }
 
     var body: some View {
         Group {
@@ -27,22 +31,22 @@ struct GuestWizardDestination: View {
                 ColorToken.background.color.ignoresSafeArea()
             }
         }
-        .sheet(isPresented: $showingSignup, onDismiss: signupDismissed) {
-            if let signup {
-                GuestSignupView(
-                    model: signup,
-                    signIn: {
-                        signup.backToSignIn()
-                        services.model.clearSecrets()
-                        services.model.editEmail(signup.email)
-                        showingSignup = false
-                        navigator.navigate(to: .signIn)
-                    },
-                    review: {
-                        wizard?.guestReviewExpired()
-                        showingSignup = false
-                    })
-            }
+        .sheet(item: $signup) { presentation in
+            GuestSignupView(
+                model: presentation.model,
+                signIn: {
+                    presentation.model.backToSignIn()
+                    services.model.clearSecrets()
+                    services.model.editEmail(presentation.model.email)
+                    signup = nil
+                    navigator.navigate(to: .signIn)
+                },
+                review: {
+                    wizard?.guestReviewExpired()
+                    signup = nil
+                }
+            )
+            .onDisappear { signupDismissed(presentation.model) }
         }
         .task {
             guard wizard == nil else { return }
@@ -64,7 +68,7 @@ struct GuestWizardDestination: View {
     }
 
     private func presentSignup(_ wizard: MemberWizardModel) {
-        guard !showingSignup, !wizard.guestAuthenticationPresented else { return }
+        guard signup == nil, !wizard.guestAuthenticationPresented else { return }
         wizard.setGuestAuthenticationPresented(true)
         Task {
             await wizard.flush()
@@ -84,15 +88,13 @@ struct GuestWizardDestination: View {
                     signup.seedGuestSignupState(state)
                 }
             #endif
-            self.signup = signup
-            showingSignup = true
+            self.signup = SignupPresentation(model: signup)
         }
     }
 
-    private func signupDismissed() {
-        let needsReview = signup?.guestState == .review
-        signup?.cancel()
-        signup = nil
+    private func signupDismissed(_ signup: SignUpModel) {
+        let needsReview = signup.guestState == .review
+        signup.cancel()
         wizard?.setGuestAuthenticationPresented(false)
         guard navigator.route == .guestWizard else { return }
         if needsReview { wizard?.guestReviewExpired() }
