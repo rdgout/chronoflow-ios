@@ -49,6 +49,38 @@
         }
       }
     },
+    "ChronoFlow gives general timing guidance, not medical advice. Check with a doctor if you have a health condition, are pregnant or take prescription medicine.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChronoFlow gives general timing guidance, not medical advice. Check with a doctor if you have a health condition, are pregnant or take prescription medicine."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChronoFlow geeft algemene timingadviezen, geen medisch advies. Overleg met een arts als je een aandoening hebt, zwanger bent of medicijnen op recept gebruikt."
+          }
+        }
+      }
+    },
+    "ChronoFlow helps you plan sleep, light and caffeine around your trip.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChronoFlow helps you plan sleep, light and caffeine around your trip."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChronoFlow helpt je slaap, licht en cafeïne rond je reis te plannen."
+          }
+        }
+      }
+    },
     "Couldn't save your answer.": {
       "localizations": {
         "en": {
@@ -61,6 +93,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Je antwoord kon niet worden opgeslagen."
+          }
+        }
+      }
+    },
+    "Please take a moment to read what changed. You'll need to agree before carrying on.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please take a moment to read what changed. You'll need to agree before carrying on."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lees even wat er is veranderd. Je moet akkoord gaan om verder te gaan."
           }
         }
       }
@@ -113,22 +161,6 @@
         }
       }
     },
-    "The new terms and privacy policy apply from [effective date]. Please accept them to keep using ChronoFlow.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The new terms and privacy policy apply from [effective date]. Please accept them to keep using ChronoFlow."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "De nieuwe voorwaarden en het privacybeleid gelden vanaf [ingangsdatum]. Accepteer ze om ChronoFlow te blijven gebruiken."
-          }
-        }
-      }
-    },
     "Try again": {
       "localizations": {
         "en": {
@@ -177,6 +209,22 @@
         }
       }
     },
+    "Your account stores your trips, profile and preferences.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your account stores your trips, profile and preferences."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je account bewaart je reizen, profiel en voorkeuren."
+          }
+        }
+      }
+    },
     "Your trips stay saved if you sign out.": {
       "localizations": {
         "en": {
@@ -189,70 +237,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Je reizen blijven bewaard als je uitlogt."
-          }
-        }
-      }
-    },
-    "[Change one]": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[Change one]"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[Wijziging één]"
-          }
-        }
-      }
-    },
-    "[Change three]": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[Change three]"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[Wijziging drie]"
-          }
-        }
-      }
-    },
-    "[Change two]": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[Change two]"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[Wijziging twee]"
-          }
-        }
-      }
-    },
-    "[One sentence on what changes for the user.]": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[One sentence on what changes for the user.]"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "[Eén zin over wat er voor de gebruiker verandert.]"
           }
         }
       }

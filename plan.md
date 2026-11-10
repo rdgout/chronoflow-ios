@@ -1955,6 +1955,8 @@ User decision, 2026-11-08: “Make the walkthrough pages first. So we can safely
 
 **17g: Terms update** (`feat/phase-17g-terms`; boards: TermsUpdate, TermsFailed)
 
+Quick win (2026-11-10): replace the date/change placeholders with the web app’s paired English/Dutch terms summary.
+
 **Decision (user, 2026-11-08):** Build terms update now so a real account can always pass the `.terms` gate before walkthrough. Accept commits locally with the existing policies outbox row and proceeds without waiting for the network. This schedules the terms work deferred by OQ 39 and lifts D27’s terms seam. No simulator execution or snapshot suites in this task.
 
 - [x] Replace the terms seam with the ready/failed boards, paired en/nl copy, generated values/assets, four-inset scrolling and the root xxLarge cap. Keep the legal placeholders: the current server contract has no effective-date/summary fields. Use the system browser because PolicyReader is absent from this export.
