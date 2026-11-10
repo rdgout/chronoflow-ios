@@ -2059,7 +2059,7 @@ Verification and audit resolution: see `Docs/settings-board-fidelity.md`. `make 
 - [x] Record this scope and the decisions. Import GuestSignup, GuestSignupFailed, GuestSignupRetry, GuestSignupReview and GuestExcluded from the current canvas if they have been redrawn, and record the version in `_design/SOURCE.md`. They are listed in `canvas.json` (:195, :1025, :1045, :3040, :3050) but missing locally; RN's copies render over the superseded GuestReview and carry draft-era copy. Close OQ 44. Mark OQ 12 and OQ 17 as resolved by this phase. Tests: none (docs only).
 
 **18b: Guest review contract and API**
-- [ ] Add `ApiGuestTripReviewInput` with:
+- [x] Add `ApiGuestTripReviewInput` with:
   - the flattened journey from `WizardForm.reviewInput`, without `return` or `override`, and `trip_end_kind` `one_way`;
   - identity `draft_token` / `input_revision` / `review_revision`, `null/0/null` on the first call;
   - a required `profile` limited to the BodyClockRules keys, with retired keys stripped;

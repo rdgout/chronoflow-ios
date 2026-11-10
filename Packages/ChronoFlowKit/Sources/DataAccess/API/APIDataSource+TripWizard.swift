@@ -14,6 +14,17 @@ extension APIDataSource {
         try await review(input, path: ["trips", "review"])
     }
 
+    public func reviewGuestTrip(_ input: ApiGuestTripReviewInput) async throws -> ApiTripReview {
+        do {
+            return try await client.request(
+                APIEndpoint(
+                    method: "POST", path: ["guest", "trips", "review"], access: .publicRoute,
+                    body: JSONEncoder().encode(input), timeout: 90))
+        } catch let failure as DataFailure {
+            throw TripWizardErrors.map(failure, outboundCount: input.input.outbound.legs.count)
+        }
+    }
+
     public func reviewTripEdit(_ input: ApiTripReviewInput, id: String, sourceRevision: String) async throws
         -> ApiTripReview
     {

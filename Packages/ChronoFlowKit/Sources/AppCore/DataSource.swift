@@ -18,6 +18,7 @@ public protocol DataSource: Sendable {
     func fetchTripDetail(id: String) async throws -> TripDetailResponse
     func searchAirports(query: String, limit: Int?) async throws -> [ApiAirportSuggestion]
     func reviewTrip(_ input: ApiTripReviewInput) async throws -> ApiTripReview
+    func reviewGuestTrip(_ input: ApiGuestTripReviewInput) async throws -> ApiTripReview
     func reviewTripEdit(_ input: ApiTripReviewInput, id: String, sourceRevision: String) async throws -> ApiTripReview
     func saveTrip(identity: ApiTripSaveInput) async throws -> ApiTripSaveResult
     func updateTrip(id: String, identity: ApiTripSaveInput, sourceRevision: String) async throws -> ApiTripSaveResult
@@ -26,6 +27,10 @@ public protocol DataSource: Sendable {
 }
 
 extension DataSource {
+    public func reviewGuestTrip(_ input: ApiGuestTripReviewInput) async throws -> ApiTripReview {
+        throw DataFailure.unsupported(.profile)
+    }
+
     public func deleteAccount(password: String) async throws { throw DataFailure.unsupported(.security) }
 
     public func accountSecurity(_ change: AccountSecurityChange) async throws -> AccountSecurityResult {
