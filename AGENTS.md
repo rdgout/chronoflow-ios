@@ -53,6 +53,7 @@ Write every new or changed test this way (user, 2026-11-10). Wizard tests that i
 - **Running tests.**
   - When fixing or diagnosing a failure, run only the failing test method, e.g. `ONLY="AppTests/Suite/testMethod"`, never the whole suite. With a reused build that takes seconds to a couple of minutes.
   - Run only the suites you touched: `make targeted ... ONLY=...`.
+  - Each fix round runs only what the change touches: `make lint`, `swift test --filter <Suite>` for the changed package code, `python3 -I Tests/test_launch_simulators.py` when suites are added or renamed, and the affected screen tests. Run `make quick` once, before pushing a PR, not every round (user, 2026-11-10).
   - Before bisecting, read the suspect diff. Bisect only the failing methods, one build per step.
   - After one fix round that changes nothing, or a hang, stop. Bisect or rethink the test before another round.
 
