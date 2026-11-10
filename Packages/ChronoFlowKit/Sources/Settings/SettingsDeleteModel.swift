@@ -9,31 +9,32 @@ import Observation
     public private(set) var busy = false
     public private(set) var errorKey: String?
     public private(set) var retryAt: Date?
-    @ObservationIgnored private var active = true
+    @ObservationIgnored private var generation = 0
     @ObservationIgnored private let delete: @MainActor (String) async throws -> Void
     public init(delete: @escaping @MainActor (String) async throws -> Void) { self.delete = delete }
     public func confirmDeletion() {
-        guard active, !busy else { return }
+        guard !busy else { return }
         stage = .password
     }
     public func submit(now: Date = .now) async {
-        guard active, !busy, stage == .password, retryAt.map({ $0 <= now }) ?? true else { return }
+        guard !busy, stage == .password, retryAt.map({ $0 <= now }) ?? true else { return }
         guard !password.isEmpty else {
             errorKey = "Enter your password."
             return
         }
         let value = password
         password = ""
+        let started = generation
         busy = true
         errorKey = nil
-        defer { busy = false }
+        defer { if generation == started { busy = false } }
         do {
             try await delete(value)
-            guard active else { return }
+            guard generation == started else { return }
             stage = .deleted
         } catch is CancellationError {
         } catch {
-            guard active else { return }
+            guard generation == started else { return }
             switch error as? DataFailure {
             case .offline: errorKey = "Needs a connection."
             case .throttled(let seconds, _):
@@ -50,7 +51,10 @@ import Observation
         }
     }
     public func stop() {
-        active = false
+        generation += 1
         password = ""
+        stage = .confirmation
+        busy = false
+        errorKey = nil
     }
 }

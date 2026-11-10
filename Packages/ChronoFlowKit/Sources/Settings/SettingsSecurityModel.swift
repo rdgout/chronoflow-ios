@@ -45,7 +45,7 @@ public enum SettingsSecurityPrompt: String, Identifiable, Sendable {
     public private(set) var errors: [String: String] = [:]
     private var errorArguments: [String: [String: String]] = [:]
     public private(set) var retryAt: Date?
-    @ObservationIgnored private var active = true
+    @ObservationIgnored private var generation = 0
     @ObservationIgnored private let perform: @MainActor (AccountSecurityChange) async throws -> AccountSecurityResult
     @ObservationIgnored private let now: @Sendable () -> Date
     public init(
@@ -65,7 +65,7 @@ public enum SettingsSecurityPrompt: String, Identifiable, Sendable {
     public func remaining(at date: Date) -> Int { max(0, Int(ceil(retryAt?.timeIntervalSince(date) ?? 0))) }
 
     public func changePassword() async {
-        guard active, !busy, !locked else { return }
+        guard !busy, !locked else { return }
         errors = [:]
         guard !currentPassword.isEmpty, !newPassword.isEmpty else {
             errors["password"] = "Enter your password."
@@ -83,7 +83,7 @@ public enum SettingsSecurityPrompt: String, Identifiable, Sendable {
         if await run(change) { message = "Password updated" }
     }
     public func showPrompt(_ action: SettingsSecurityPrompt) {
-        guard active, !busy else { return }
+        guard !busy else { return }
         promptPassword = ""
         errors = [:]
         message = nil
@@ -97,13 +97,13 @@ public enum SettingsSecurityPrompt: String, Identifiable, Sendable {
         message = nil
     }
     public func submitPrompt() async {
-        guard let prompt, !promptPassword.isEmpty, active, !busy, !locked else { return }
+        guard let prompt, !promptPassword.isEmpty, !busy, !locked else { return }
         let password = promptPassword
         promptPassword = ""
         if await run(prompt.change(password: password)) { self.prompt = nil }
     }
     public func confirm() async {
-        guard active, !busy, !locked else { return }
+        guard !busy, !locked else { return }
         guard code.count == 6, code.utf8.allSatisfy({ (48...57).contains($0) }) else {
             errors["code"] = "Enter the 6-digit code from your authenticator app."
             return
@@ -113,13 +113,14 @@ public enum SettingsSecurityPrompt: String, Identifiable, Sendable {
         if await run(.confirmTwoFactor(code: value)) { message = "Two-factor is on. Save your recovery codes now." }
     }
     @discardableResult private func run(_ change: AccountSecurityChange) async -> Bool {
+        let started = generation
         busy = true
         errors = [:]
         message = nil
-        defer { busy = false }
+        defer { if generation == started { busy = false } }
         do {
             let result = try await perform(change)
-            guard active, !Task.isCancelled else { return false }
+            guard generation == started, !Task.isCancelled else { return false }
             retryAt = nil
             switch result {
             case .changed: break
@@ -135,7 +136,7 @@ public enum SettingsSecurityPrompt: String, Identifiable, Sendable {
             }
             return true
         } catch is CancellationError { return false } catch {
-            guard active else { return false }
+            guard generation == started else { return false }
             switch error as? DataFailure {
             case .offline: message = "Needs a connection."
             case .throttled(let seconds, _):
@@ -171,11 +172,15 @@ public enum SettingsSecurityPrompt: String, Identifiable, Sendable {
         }
     }
     public func sendReset(email: String) async {
-        guard active, !busy, !locked else { return }
+        guard !busy, !locked else { return }
         if await run(.requestPasswordReset(email: email)) { message = "Check your inbox." }
     }
     public func clearSecrets() {
-        active = false
+        generation += 1
+        busy = false
+        message = nil
+        errors = [:]
+        errorArguments = [:]
         currentPassword = ""
         newPassword = ""
         confirmation = ""
