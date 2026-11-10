@@ -52,7 +52,7 @@ public enum WizardChecking {
                     try await clock.sleepUntil(clock.now() + 0.3)
                     try Task.checkCancellation()
                     await receive(.complete(response))
-                } catch is CancellationError {} catch {
+                } catch {
                     guard !Task.isCancelled else { return }
                     await receive(.failed((error as? DataFailure) ?? .server(status: nil)))
                 }

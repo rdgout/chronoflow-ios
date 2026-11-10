@@ -4,7 +4,8 @@ import Foundation
 import LocalStore
 import Sync
 import Testing
-import TripWizard
+
+@testable import TripWizard
 
 @Suite struct WizardReviewFlowTests {
     @Test @MainActor func stopOneWayUnsureSleepAndScreeningReachFineTuneThenSave() async throws {
@@ -127,6 +128,82 @@ import TripWizard
         try await finishCheck(fixture, count: 2)
         #expect(fixture.model.draft.state.step == .ready)
         try await fixture.model.discard()
+        try await fixture.database.close()
+    }
+
+    @Test @MainActor func repeatedReviewExpiredShowsFailureUntilManualRetry() async throws {
+        let fixture = try await reviewFixture()
+        let model = fixture.model
+        let identity = ApiReviewIdentity(token: "expired", inputRevision: 1, reviewRevision: 1)
+        model.editForm { $0.identity = identity }
+        await fixture.source.configure(reviewFailure: .reviewExpired)
+        model.beginChecking()
+        await model.checkTask?.value
+        #expect(model.draft.state.step == .checking && model.checking.failure == .reviewExpired)
+        #expect(model.draft.fieldErrors.isEmpty && model.checking.ticks == 0)
+        #expect(model.checkTask == nil && fixture.clock.waiterCount == 0)
+        let inputs = await fixture.source.reviewInputs
+        #expect(inputs.map(\.identity) == [identity, nil])
+
+        model.resumeChecking()
+        model.resumeCompletion()
+        fixture.clock.advance(to: 1801)
+        model.readyTick(force: true)
+        model.resumeChecking()
+        #expect(model.checkTask == nil && model.checking.failure == .reviewExpired)
+        #expect(await fixture.source.count("review") == 2)
+
+        await fixture.source.configure()
+        model.beginChecking()
+        try await finishCheck(fixture, count: 3, start: 1801)
+        #expect(model.draft.state.step == .ready)
+        try await model.discard()
+        try await fixture.database.close()
+    }
+
+    @Test @MainActor func activeCheckingCannotBeRestartedByDuplicateStarts() async throws {
+        let fixture = try await reviewFixture()
+        let model = fixture.model
+        let gate = GenerationGate()
+        await fixture.source.configure(beforeReview: { await gate.wait() })
+        model.beginChecking()
+        try await eventually { await fixture.source.count("review") == 1 }
+        try await eventually { fixture.clock.deadlines.contains(0.4) }
+        fixture.clock.advance(to: 0.4)
+        try await eventually { model.checking.ticks == 1 }
+        model.beginChecking()
+        model.resumeChecking()
+        #expect(model.checking.ticks == 1)
+        await gate.open()
+        try await finishCheck(fixture)
+        #expect(model.draft.state.step == .ready)
+        #expect(await fixture.source.count("review") == 1)
+        try await model.discard()
+        try await fixture.database.close()
+    }
+
+    @Test(arguments: [false, true]) @MainActor
+    func requestCancellationShowsFailureWithoutAutomaticRestart(inline: Bool) async throws {
+        let fixture = try await reviewFixture()
+        let model = fixture.model
+        await fixture.source.configure(beforeReview: { throw CancellationError() })
+        if inline {
+            model.applyReview(
+                TripGenerationReviewResult(input: model.reviewInput, review: try generationReview()))
+            #expect(model.draft.state.step == .ready)
+            model.readyTick(force: true)
+            await model.reviewTask?.value
+        } else {
+            model.beginChecking()
+            await model.checkTask?.value
+        }
+        #expect(model.draft.state.step == .checking && model.checking.failure == .server(status: nil))
+        #expect(!model.reviewing && model.checkTask == nil && model.reviewTask == nil)
+        model.resumeChecking()
+        model.readyTick(force: true)
+        #expect(model.checkTask == nil)
+        #expect(await fixture.source.count("review") == 1)
+        try await model.discard()
         try await fixture.database.close()
     }
 

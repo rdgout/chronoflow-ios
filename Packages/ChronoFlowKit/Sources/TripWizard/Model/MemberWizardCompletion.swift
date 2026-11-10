@@ -177,8 +177,8 @@ extension MemberWizardModel {
                     return
                 }
                 self.applyReview(result)
-            } catch is CancellationError { return } catch {
-                guard let self, self.checkID == id, !self.closed else { return }
+            } catch {
+                guard let self, !Task.isCancelled, self.checkID == id, !self.closed else { return }
                 self.reviewing = false
                 self.reviewTask = nil
                 self.go(.checking)

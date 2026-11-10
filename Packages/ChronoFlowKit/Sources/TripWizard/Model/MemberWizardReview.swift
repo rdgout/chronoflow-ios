@@ -114,6 +114,7 @@ extension MemberWizardModel {
     public func beginChecking() {
         updateRetrySeconds()
         guard !closed, !persistenceFailed, !choicePending, retrySeconds == 0 else { return }
+        guard draft.state.step != .checking || checkTask == nil || checking.failure != nil else { return }
         if draft.state.sleepNeeded, draft.state.sleepCompleted != true {
             go(.sleep)
             return
