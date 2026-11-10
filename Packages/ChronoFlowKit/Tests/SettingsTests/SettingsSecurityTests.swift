@@ -187,6 +187,8 @@ import Testing
         model.code = "123456"
         await model.confirm()
         #expect(model.setup?.secretKey == "secret" && model.codes.isEmpty && model.code.isEmpty)
+        #expect(model.twoFactorActivationFailed && model.message == "Couldn't turn on two-factor.")
+        #expect(model.errors.isEmpty && !model.busy)
         stage = 2
         model.code = "123456"
         await model.confirm()
@@ -194,6 +196,18 @@ import Testing
         #expect(model.message == "Two-factor is on. Save your recovery codes now.")
         model.clearSecrets()
         #expect(model.codes.isEmpty && model.setup == nil)
+    }
+
+    @Test func failedTwoFactorSetupExplainsThatTheAccountIsUnchanged() async {
+        let model = SettingsSecurityModel { _ in throw DataFailure.server(status: 503) }
+        model.showPrompt(.enable)
+        model.promptPassword = "password"
+        await model.submitPrompt()
+        #expect(model.twoFactorActivationFailed && model.message == "Couldn't turn on two-factor.")
+        #expect(model.prompt == .enable && model.setup == nil && model.codes.isEmpty)
+        #expect(model.promptPassword.isEmpty && model.errors.isEmpty && !model.busy)
+        model.cancelPrompt()
+        #expect(!model.twoFactorActivationFailed)
     }
 
     @Test func throttlingBlocksFurtherRequestsUntilDeadline() async {

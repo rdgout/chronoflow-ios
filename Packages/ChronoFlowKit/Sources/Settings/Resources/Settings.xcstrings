@@ -4791,6 +4791,38 @@
           }
         }
       }
+    },
+    "Couldn't turn on two-factor.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't turn on two-factor."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tweestapsverificatie kon niet worden ingeschakeld."
+          }
+        }
+      }
+    },
+    "Nothing changed on your account. Try again in a moment.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing changed on your account. Try again in a moment."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er is niets veranderd aan je account. Probeer het zo opnieuw."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

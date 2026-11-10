@@ -179,7 +179,16 @@
                     submitLabel: .done, focus: $focus
                 ) { focus = nil }
             }
-            AuthButton(t("Turn on two-factor"), busy: model.busy, minimumHeight: PlanUITokens.actionMinHeight) {
+            if model.twoFactorActivationFailed {
+                AuthBanner(
+                    title: t("Couldn't turn on two-factor."),
+                    message: t("Nothing changed on your account. Try again in a moment.")
+                ).accessibilityIdentifier("settings.twoFactor.failure")
+            }
+            AuthButton(
+                t(model.twoFactorActivationFailed ? "Try again" : "Turn on two-factor"), busy: model.busy,
+                minimumHeight: PlanUITokens.actionMinHeight
+            ) {
                 focus = nil
                 Task { await model.confirm() }
             }.disabled(model.busy || model.locked).accessibilityIdentifier("settings.twoFactor.confirm")
@@ -277,7 +286,7 @@
         @Environment(\.locale) private var locale
         let model: SettingsSecurityModel
         var body: some View {
-            if let key = model.message, model.retryAt == nil {
+            if let key = model.message, model.retryAt == nil, !model.twoFactorActivationFailed {
                 SettingsToast(
                     title: SettingsStrings.text(
                         key, language: locale.language.languageCode?.identifier == "nl" ? .nl : .en),
