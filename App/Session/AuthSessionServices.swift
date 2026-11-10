@@ -99,7 +99,10 @@ final class AuthSessionServices {
             assertionProvider: assertion,
             claim: { await native.guestWizardStore.claim(secrets: native.guestSecrets) },
             guestReviewExpired: { try? await native.guestWizardStore.reviewExpired(claim: $0) },
-            accepted: { _ in await native.routeAcceptedSession(navigator: navigator, verification: verification) })
+            accepted: { result, method in
+                try await native.routeAcceptedSession(
+                    result, method: method, navigator: navigator, verification: verification)
+            })
         resetLinks = GuestResetLinkRouter(session: native.controller) { [model, navigator] input in
             navigator.navigate(to: .signIn)
             model.openReset(input)

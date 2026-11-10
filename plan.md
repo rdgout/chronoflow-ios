@@ -2130,7 +2130,7 @@ Verification and audit resolution: see `Docs/settings-board-fidelity.md`. `make 
   - Tests (SwiftPM): request bodies with and without a live guest draft, the expired-claim outcome, password fields cleared after each attempt.
 
 **18j: Accepting a session with or without a trip**
-- [ ] Pass `SessionResult` through `accepted`; it is discarded at `AuthSessionServices.swift:100`.
+- [x] Pass `SessionResult` through `accepted`; it is discarded at `AuthSessionServices.swift:100`.
   - **`tripId` set:** store a per-account guest-trip continuation that survives the verify, terms and walkthrough gates. Clear the guest draft and its secret. `AppTabs` opens the trip with `awaitingSync`, like the saved-trip path (`App/AppTabs.swift:176-179`).
   - **`tripId` null after a password or passkey login with a live guest draft:** call `MemberWizardStore.start(seed:)`. It copies the form, sets step `.checking` and `returnToReady`, empty profile, default override, and binds the row to the account. Then clear the guest draft. AppTabs' existing recovery presents it (:287-305).
   - **`tripId` null after two-factor:** clear the guest draft and secret and select My trips. Sync surfaces the trip.

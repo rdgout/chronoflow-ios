@@ -148,6 +148,27 @@ public actor MemberWizardStore: WizardDraftStore {
 
     public func start() async throws -> MemberWizardDraft {
         if let previous = try await recover() { return previous }
+        let draft = try await initialDraft()
+        try await drafts.createRecovery(record(draft), permit: permit)
+        return draft
+    }
+
+    public func start(seed: MemberWizardDraft) async throws -> MemberWizardDraft {
+        var draft = try await initialDraft()
+        draft.form = seed.form
+        draft.form.identity = nil
+        draft.form.override = WizardSleepOverride()
+        draft.airports = seed.airports
+        draft.state.entered = true
+        draft.state.fromLastTrip = false
+        draft.state.step = .checking
+        draft.state.returnToReady = true
+        draft.state.profile = JSONObject()
+        try await drafts.replaceRecovery(record(draft), permit: permit)
+        return draft
+    }
+
+    private func initialDraft() async throws -> MemberWizardDraft {
         let latest = try await trips.trips().reversed().first { $0.deletedAt == nil && !$0.deletedLocally }
         var draft = MemberWizardDraft()
         draft.state.firstTrip = latest == nil
@@ -171,7 +192,6 @@ public actor MemberWizardStore: WizardDraftStore {
                 if let value = body[key], value != .null { draft.state.profile[field] = value }
             }
         }
-        try await drafts.createRecovery(record(draft), permit: permit)
         return draft
     }
 

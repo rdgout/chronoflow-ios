@@ -8,7 +8,9 @@ import Testing
 @MainActor struct GuestClaimAuthTests {
     @Test(arguments: ["register", "password", "passkey"], [true, false])
     func requestUsesOnlyTheClaimFieldsForItsMethod(_ method: String, _ live: Bool) async throws {
-        let response = try fixtureText("auth/session.json")
+        var sessionBody = try JSONDecoder().decode(JSONObject.self, from: fixture("auth/session.json"))
+        sessionBody["tripId"] = live ? .string("guest-token") : .null
+        let response = String(decoding: try JSONEncoder().encode(sessionBody), as: UTF8.self)
         let options = try fixtureText("auth/passkey-options.json")
         let server = StubServer { request in
             if request.url?.path.hasSuffix("/options") == true { return .init(200, options) }
@@ -36,7 +38,12 @@ import Testing
                 live
                     ? GuestClaim(draftToken: "guest-token", inputRevision: 4, reviewRevision: 7, guestSecret: "secret")
                     : nil
-            }, accepted: { _ in })
+            },
+            accepted: { result, acceptedMethod in
+                #expect(result.tripId == (live ? "guest-token" : nil))
+                #expect(
+                    acceptedMethod == (method == "register" ? .signUp : method == "password" ? .password : .passkey))
+            })
         model.editEmail("demo@example.com")
         model.editPassword("Password123!")
         if method == "register" {
@@ -74,7 +81,7 @@ import Testing
                 GuestClaim(draftToken: "guest-token", inputRevision: 4, reviewRevision: 7, guestSecret: "secret")
             },
             guestReviewExpired: { _ in await expired.record() },
-            accepted: { _ in Issue.record("Failed registration accepted") })
+            accepted: { _, _ in Issue.record("Failed registration accepted") })
         let model = signIn.makeSignUpModel()
         model.editName("Traveller")
         model.editEmail("new@example.com")

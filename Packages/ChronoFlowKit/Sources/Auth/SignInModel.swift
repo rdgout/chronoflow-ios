@@ -14,7 +14,7 @@ import Observation
     private let deviceName: String
     private let claim: @Sendable () async -> GuestClaim?
     private let guestReviewExpired: @Sendable (GuestClaim) async -> Void
-    private let accepted: @MainActor (SessionResult) async -> Void
+    private let accepted: @MainActor (SessionResult, AuthenticationMethod) async throws -> Void
     private let passkey: PasskeySignIn
     public var mockMail: (@MainActor (String) async -> AuthLink?)?
     public private(set) var sessionFailure: SessionFailure?
@@ -25,7 +25,7 @@ import Observation
         assertionProvider: any PasskeyAssertionProviding = DeterministicAssertionProvider(),
         claim: @escaping @Sendable () async -> GuestClaim? = { nil },
         guestReviewExpired: @escaping @Sendable (GuestClaim) async -> Void = { _ in },
-        accepted: @escaping @MainActor (SessionResult) async -> Void
+        accepted: @escaping @MainActor (SessionResult, AuthenticationMethod) async throws -> Void
     ) {
         self.source = source
         self.session = session
@@ -50,7 +50,7 @@ import Observation
         self.init(
             source: source, session: session, deviceIdentity: deviceIdentity, deviceName: deviceName,
             assertionProvider: assertionProvider, claim: claim, guestReviewExpired: guestReviewExpired,
-            accepted: { result in await route(AuthNavigation.route(for: result.account)) })
+            accepted: { result, _ in await route(AuthNavigation.route(for: result.account)) })
     }
 
     public func editEmail(_ value: String) {
@@ -76,7 +76,7 @@ import Observation
         ) {
             [weak self] result in
             guard let self else { throw CancellationError() }
-            try await self.accept(result)
+            try await self.accept(result, method: .signUp)
         }
     }
     public func openReset(_ link: ResetPasswordLink) {
@@ -111,12 +111,12 @@ import Observation
                     draftToken: claim?.draftToken, guestSecret: claim?.guestSecret))
             try Task.checkCancellation()
             switch result {
-            case .session(let result): try await accept(result)
+            case .session(let result): try await accept(result, method: .password)
             case .twoFactor(let challenge):
                 navigation.twoFactor(challengeID: challenge)
                 twoFactor = TwoFactorModel(source: source, navigation: navigation) { [weak self] result in
                     guard let self else { throw CancellationError() }
-                    try await self.accept(result)
+                    try await self.accept(result, method: .twoFactor)
                 }
             }
         } catch { receive(error) }
@@ -130,14 +130,14 @@ import Observation
         }
         do {
             let result = try await passkey.signIn()
-            try await accept(result)
+            try await accept(result, method: .passkey)
         } catch { receive(error) }
     }
-    private func accept(_ result: SessionResult) async throws {
+    private func accept(_ result: SessionResult, method: AuthenticationMethod) async throws {
         try Task.checkCancellation()
         try await session.accept(result)
         password = ""
-        await accepted(result)
+        try await accepted(result, method)
     }
     private func receive(_ error: any Error) {
         guard !(error is CancellationError), error as? PasskeyFailure != .canceled else { return }

@@ -85,7 +85,9 @@ let package = Package(
             resources: [.process("Resources")], swiftSettings: [.defaultIsolation(MainActor.self)]),
         .testTarget(
             name: "TripWizardTests",
-            dependencies: ["TripWizard", "TripWizardUI", "Sync", "DataAccess", "LocalStore", "PlanCore", "Reminders"],
+            dependencies: [
+                "TripWizard", "TripWizardUI", "Sync", "DataAccess", "LocalStore", "PlanCore", "Reminders", "Auth",
+            ],
             resources: [.copy("Fixtures")],
             swiftSettings: [.defaultIsolation(nil)]),
         .target(

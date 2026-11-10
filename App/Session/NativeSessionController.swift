@@ -125,6 +125,16 @@ final class NativeSessionController {
     }
 
     func routeAcceptedSession(
+        _ result: SessionResult, method: AuthenticationMethod,
+        navigator: RootNavigator, verification: @escaping @MainActor (UInt64) async -> Void
+    ) async throws {
+        observeGates(navigator: navigator, verification: verification)
+        try await GuestSessionAcceptance(guest: guestWizardStore, secrets: guestSecrets).routeAcceptedSession(
+            result, method: method, controller: controller, accounts: accounts, readiness: readiness,
+            navigator: navigator, verification: verification)
+    }
+
+    func routeAcceptedSession(
         navigator: RootNavigator, verification: @escaping @MainActor (UInt64) async -> Void
     ) async {
         observeGates(navigator: navigator, verification: verification)

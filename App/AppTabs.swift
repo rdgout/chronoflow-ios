@@ -329,6 +329,36 @@ struct AppTabs: View {
             }
         }
         .task(id: locale) { await native?.reminders.setLanguage(language) }
+        .task(id: wizardStore != nil) {
+            guard let native, wizardStore != nil, let snapshot = await native.controller.activeSession(),
+                let database = await native.accounts.activeDatabase(),
+                let permit = await native.controller.mutationPermit(for: snapshot)
+            else { return }
+            let continuation = GuestContinuationRepository(database: database, permit: permit)
+            do {
+                for try await pending in try await continuation.values() {
+                    guard !Task.isCancelled, await native.controller.activeSession() == snapshot else { return }
+                    guard pending != nil else { continue }
+                    let gate = await native.readiness.gate()
+                    guard !Task.isCancelled, await native.controller.activeSession() == snapshot,
+                        let destination = try await continuation.consume(gate: gate)
+                    else { continue }
+                    switch destination {
+                    case .trip(let id):
+                        wizard = nil
+                        selection = .trips
+                        tripsPath = [TripPageRoute(tripID: id, awaitingSync: true)]
+                    case .trips:
+                        wizard = nil
+                        selection = .trips
+                        tripsPath = []
+                    case .memberWizard: openWizard()
+                    }
+                }
+            } catch is CancellationError { return } catch {
+                assertionFailure("Guest continuation failed: \(error)")
+            }
+        }
         .onChange(of: native?.reminderTaps.pending, initial: true) { _, tap in
             guard let tap, let native else { return }
             native.reminderTaps.clear()
