@@ -68,6 +68,7 @@ Write every new or changed test this way (user, 2026-11-10). Wizard tests that i
 | `make test` / `make snapshots` | Run test or hosted profile-snapshot subsets on 17e / iOS 27.2 |
 | `make duo` | Opt-in runtime smoke when Duo-specific behaviour changes; resolve by type and iPhone19-4 runtime |
 | `make matrix` | On request only: full seven-simulator runtime matrix, LPT scheduling and automatic concurrency (1–7 override) |
+| `make sim-clean` | Opt-in: shut down and erase every simulator when they grow large (iOS never prunes the wallpaper snapshot cache under test); refuses while a test run is active |
 | `make targeted DEVICES="se duo" ONLY="AppTests/DeviceGeometrySmokeTests"` | Build once and run selected suites on these aliases; REUSE_BUILD=1 skips the build after an unchanged build-for-testing |
 | `make perf` | Run the Release `Perf` scheme (launch metric scaffold until Phase 7) |
 | `make tokens` / `make fonts` / `make assets` | Regenerate the committed tokens, static fonts and generated assets (including app icons) |

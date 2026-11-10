@@ -8,7 +8,7 @@ SIM_CONCURRENCY ?=
 SIM_RUNNER := SIM_CONCURRENCY=$(SIM_CONCURRENCY) python3 -I Scripts/launch-simulators.py
 ICON_EXISTING ?=
 
-.PHONY: generate format lint test snapshots audits duo perf perf-timeline tokens fonts assets auth-board-pngs generators-check launch-resources-check check simulator-check matrix targeted quick contracts contracts-check plan-copy host-tests package-tests token-tests asset-tests icon-probe icon-audit
+.PHONY: sim-clean generate format lint test snapshots audits duo perf perf-timeline tokens fonts assets auth-board-pngs generators-check launch-resources-check check simulator-check matrix targeted quick contracts contracts-check plan-copy host-tests package-tests token-tests asset-tests icon-probe icon-audit
 
 icon-probe:
 	python3 -I Scripts/probe-app-icon.py $(if $(ICON_EXISTING),--existing "$(ICON_EXISTING)",)
@@ -41,6 +41,9 @@ simulator-check:
 
 duo:
 	TEST_RUN_TIMEOUT=$(or $(TEST_RUN_TIMEOUT),600) $(SIM_RUNNER) --no-generate --devices duo --mode runtime
+
+sim-clean:
+	sh Scripts/sim-clean.sh
 
 matrix:
 	$(SIM_RUNNER) --matrix
