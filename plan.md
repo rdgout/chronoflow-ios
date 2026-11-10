@@ -2345,3 +2345,7 @@ Shared helpers (`106e1bce`) bound the screen allowance and default waits, requir
 DEBUG seeds added: `CF_PLAN_TEST_SHEET=step:<blockID>` opens a large sheet; `CF_PLAN_TEST_ROUTE=trips` or `trip:<id>[:list]` chooses the starting route; `CF_PLAN_TEST_BLOCK=<id>` anchors the opening day and uses a large sheet for block interactions; `CF_PLAN_TEST_POSITION=summary` keeps the trip summary at the top for refresh. Existing auth seeds are reused.
 
 Validation: strict lint, SwiftPM source/test-target compilation, and direct Swift 6/iOS 17 type-checks of the app, PlanUI and UI tests. Full Xcode build-for-testing is blocked by sandbox package-graph/CoreSimulator access. The user will run tests; no tests were run during implementation.
+
+- [x] Repair the two seeded refresh smoke assertions after batch 1. Both existing 17e failure recordings show the "Up to date" capsule during the pull; the two-second capsule can dismiss before XCTest returns from its gesture/idle wait. The deleted `RefreshUITestScenario` only armed optional server changes and was disabled for these cases. Restore the opt-in `CF_REFRESH_TEST_COUNTER` seed and query `staticTexts["refresh.debug.presented"]`, which records the capsule's actual `onAppear`, as the old tests did. Keep one feedback assertion on each seeded screen.
+
+Validation: strict `make lint`, direct Swift 6/iOS 17 type-check of all UI-test sources, and `git diff --check` pass. Existing failure recordings were inspected read-only; no simulator tests were run.

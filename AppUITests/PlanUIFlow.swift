@@ -10,7 +10,8 @@ import XCTest
 @MainActor func launchPlanAccount(
     presentLegend: Bool = false, freezePlanClock: Bool = false, emptyTrips: Bool = false,
     appearance: XCUIDevice.Appearance? = nil, route: String? = nil, stepID: String? = nil,
-    blockID: String? = nil, startAtSummary: Bool = false, readyButton: String? = nil
+    blockID: String? = nil, startAtSummary: Bool = false, readyButton: String? = nil,
+    refreshCounter: Bool = false
 ) throws -> XCUIApplication {
     let app = ScreenTestApp.makeApplication()
     app.launchArguments = AuthUIFlow.arguments()
@@ -22,6 +23,7 @@ import XCTest
     if startAtSummary { app.launchEnvironment["CF_PLAN_TEST_POSITION"] = "summary" }
     if freezePlanClock { app.launchEnvironment["CF_PLAN_TEST_FREEZE_CLOCK"] = "1" }
     if emptyTrips { app.launchEnvironment["CF_REFRESH_TEST_EMPTY_TRIPS"] = "1" }
+    if refreshCounter { app.launchEnvironment["CF_REFRESH_TEST_COUNTER"] = "1" }
     AuthUIFlow.launchSignedIn(app, walkthroughSeen: true)
     let identifier =
         presentLegend
