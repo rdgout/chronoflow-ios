@@ -130,6 +130,49 @@ import TripWizard
         try await fixture.database.close()
     }
 
+    @Test @MainActor func unknownMockAirportReturnsToWhereBeforeFirstCheckingTick() async throws {
+        let now = Date(timeIntervalSince1970: 1_793_750_400)
+        let seed = try MockAppSeed.make(now: now)
+        let account = try #require(seed.accounts.values.first { $0.twoFactorCode == nil })
+        let mock = MockDataSource(seed: seed, now: { now }, sleep: { _ in })
+        _ = try await mock.signIn(
+            PasswordSignInInput(
+                email: account.snapshot.email, password: account.password, deviceID: UUID().uuidString,
+                deviceName: "Tests"))
+        let source = try GenerationSource(mock: mock)
+        let fixture = try await reviewFixture(source: source)
+        let model = fixture.model
+        model.chooseAirport(
+            wizardAirport("NRT", city: "Tokyo", zone: "Asia/Tokyo"),
+            sheet: WizardAirportSheet(index: 0, side: .to))
+        model.setDateTime("2030-10-12T14:40", index: 0, arrival: false)
+        model.setDateTime("2030-10-13T16:35", index: 0, arrival: true)
+        model.go(.outbound)
+        #expect(model.finishOutbound())
+        model.go(.returnChoice)
+        model.beginChecking()
+        #expect(model.draft.state.step == .checking)
+        let checkingPath = model.navigationPath
+        try await eventually { !model.draft.fieldErrors.isEmpty }
+        #expect(model.draft.state.step == .whereTo)
+        #expect(model.navigationPath.isEmpty)
+        #expect(
+            model.draft.fieldErrors == [
+                "legs.0.fromIata": FieldMessage(key: "Choose one of the available options.")
+            ])
+        #expect(model.checking.failure == nil && model.checking.ticks == 0)
+        #expect(fixture.clock.now == 0)
+        model.popNavigation(to: Array(checkingPath.dropLast()), from: checkingPath)
+        model.resumeChecking()
+        #expect(model.draft.state.step == .whereTo && model.navigationPath.isEmpty)
+        #expect(await source.count("review") == 1)
+        await model.flush()
+        let recovered = try #require(try await fixture.store.recover())
+        #expect(recovered.state.step == .whereTo && recovered.fieldErrors == model.draft.fieldErrors)
+        try await model.discard()
+        try await fixture.database.close()
+    }
+
     @Test(arguments: [false, true]) @MainActor
     func resumedQuestionChecksOfflineWithoutWaitingForPreviousCancellation(suspendCancellation: Bool) async throws {
         let fixture = try await reviewFixture()
@@ -392,16 +435,16 @@ private struct ReviewFixture {
     let store: MemberWizardStore
 }
 
-@MainActor private func reviewFixture(sleepNeeded: Bool = false, effects: TripGenerationEffects? = nil) async throws
-    -> ReviewFixture
-{
+@MainActor private func reviewFixture(
+    sleepNeeded: Bool = false, effects: TripGenerationEffects? = nil, source: GenerationSource? = nil
+) async throws -> ReviewFixture {
     let database = try await wizardDatabase()
     let store = MemberWizardStore(database: database)
     var draft = try await store.start()
     draft.form = try WizardForm(input: generationInput())
     draft.state.step = .returnChoice
     draft.state.sleepNeeded = sleepNeeded
-    let source = try GenerationSource()
+    let source = try source ?? GenerationSource()
     let clock = CheckingTestClock()
     let epoch = SyncEpoch(accountID: try AccountID("019a562b-8000-7000-8000-000000000001"), generation: 1)
     let effects =
