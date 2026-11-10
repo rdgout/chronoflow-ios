@@ -138,12 +138,12 @@ struct AppTabs: View {
                 today
                     .navigationDestination(for: TripPageRoute.self) { tripDestination($0) }
             }
-            .safeAreaInset(edge: .bottom, spacing: 0) { RefusedChangeFeedback() }
+            .overlay(alignment: .bottom) { RefusedChangeFeedback() }
             .tabItem { Label(t("Today"), systemImage: "square.grid.2x2") }.tag(Tab.today)
             NavigationStack(path: $tripsPath) {
                 trips.navigationDestination(for: TripPageRoute.self) { tripDestination($0) }
             }
-            .safeAreaInset(edge: .bottom, spacing: 0) { RefusedChangeFeedback() }
+            .overlay(alignment: .bottom) { RefusedChangeFeedback() }
             .tabItem { Label(t("My trips"), systemImage: "airplane") }.tag(Tab.trips)
             NavigationStack(path: $settingsPath) {
                 SettingsHomeView(model: settingsHome)
@@ -161,7 +161,7 @@ struct AppTabs: View {
                         }
                     #endif
             }
-            .safeAreaInset(edge: .bottom, spacing: 0) { RefusedChangeFeedback() }
+            .overlay(alignment: .bottom) { RefusedChangeFeedback() }
             .tabItem { Label(t("Settings"), systemImage: "gearshape") }.tag(Tab.settings)
         }
         .accessibilityIdentifier("app.tabs").tint(ColorToken.primary.color)
