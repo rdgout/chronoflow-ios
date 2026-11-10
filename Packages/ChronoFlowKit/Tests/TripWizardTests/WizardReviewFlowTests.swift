@@ -230,12 +230,12 @@ import Testing
         model.beginChecking()
         #expect(model.draft.state.step == .checking)
         let checkingPath = model.navigationPath
-        try await eventually { !model.draft.fieldErrors.isEmpty }
+        await model.checkTask?.value
         #expect(model.draft.state.step == .whereTo)
         #expect(model.navigationPath.isEmpty)
         #expect(
             model.draft.fieldErrors == [
-                "legs.0.fromIata": FieldMessage(key: "Choose one of the available options.")
+                "legs.0.toIata": FieldMessage(key: "Choose an airport from the search results.")
             ])
         #expect(model.checking.failure == nil && model.checking.ticks == 0)
         #expect(fixture.clock.now == 0)

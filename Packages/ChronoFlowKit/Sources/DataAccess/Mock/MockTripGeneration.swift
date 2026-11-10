@@ -59,11 +59,16 @@ enum MockTripGeneration {
             }
             for (index, leg) in journey.legs.enumerated() {
                 let prefix = "\(direction.rawValue).legs.\(index)"
-                guard let from = airports.first(where: { $0.iata == leg.fromIata }),
-                    let to = airports.first(where: { $0.iata == leg.toIata })
-                else {
+                guard let from = airports.first(where: { $0.iata == leg.fromIata }) else {
                     throw DataFailure.validation(
-                        fields: [prefix + ".from_iata": FieldMessage(key: "Choose one of the available options.")],
+                        fields: [
+                            prefix + ".from_iata": FieldMessage(key: "Choose an airport from the search results.")
+                        ],
+                        status: 422)
+                }
+                guard let to = airports.first(where: { $0.iata == leg.toIata }) else {
+                    throw DataFailure.validation(
+                        fields: [prefix + ".to_iata": FieldMessage(key: "Choose an airport from the search results.")],
                         status: 422)
                 }
                 let depart = try instant(leg.departLocal, airport: from)
@@ -148,6 +153,7 @@ enum MockTripGeneration {
     ) throws
         -> ApiTripReview
     {
+        let itinerary = try itinerary(input)
         let template = try template(input)
         let profile = settings.bodyClock
         let excluded = profile["ageBand"] == .string("under_18") || profile["shiftWork"] == .bool(true)
@@ -198,7 +204,7 @@ enum MockTripGeneration {
         return ApiTripReview(
             identity: identity, status: status, reasons: reasons, prompts: prompts, summary: summary, price: price,
             canSave: planned && balance >= cost,
-            saveBlockedReason: planned && balance < cost ? "Not enough credits" : nil, itinerary: try itinerary(input))
+            saveBlockedReason: planned && balance < cost ? "Not enough credits" : nil, itinerary: itinerary)
     }
 
     static func saved(_ draft: MockWizardDraft, tripID: String) throws -> (

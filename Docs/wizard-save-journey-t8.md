@@ -1,8 +1,8 @@
 # Wizard save journey seed repair (t8)
 
-`WizardSaveJourney` inherited the static board's AMS → NRT itinerary. `MockTripGeneration.airports()` includes HND, but excludes NRT. The live mock's `itinerary(_:)` rejects the unknown airport with an `outbound.legs.0.from_iata` validation error. The reported field is the mock's shared endpoint-lookup error, even though the missing airport is the destination.
+`WizardSaveJourney` inherited the static board's AMS → NRT itinerary. `MockTripGeneration.airports()` includes HND, but excludes NRT. The original explanation that validation immediately left Checking before the first tick was not established. The user's t9 regression run failed waiting for any field error, so the earlier verdict of no production stall is withdrawn.
 
-`TripWizardErrors.map` converts that field to `legs.0.fromIata`; `MemberWizardModel.applyFailure` routes it to Where through `WizardJourney.errorStep`. Leaving Checking calls `cancelCheck()` and resets `checking` to zero ticks. The UI-test mock uses zero request delay by default, so this validation path can run before the first 0.4-second tick. The captured spinner does not imply a slow review request.
+At t9, review built and rebased a plan before calling `itinerary(_:)`. An unknown departure could instead throw `reviewExpired` from `template(_:)`; an unknown destination reached validation only after rebasing. A finite yield loop was not a completion barrier. The t10 repair validates first and reports the correct endpoint. See [wizard-checking-t10.md](wizard-checking-t10.md) for the complete failure/cancellation trace and its limits; the original UI stall is not claimed to be reproduced.
 
 The seed now replaces only the journey's destination with HND and supplies its matching airport metadata, retaining the upcoming dates and Return choice start. Static design captures keep NRT. The seeded account already has completed sleep and screening answers and three credits; its saved profile is retained.
 
