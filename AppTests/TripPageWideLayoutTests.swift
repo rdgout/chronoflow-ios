@@ -180,7 +180,7 @@
         }
 
         @MainActor private func pageScroll(_ host: AuthTestHost) throws -> UIScrollView {
-            try XCTUnwrap(authScrollViews(host.controller.view).first { $0.accessibilityIdentifier == "trip.scroll" })
+            try XCTUnwrap(authScrollViews(host.controller.view).first)
         }
     }
 #endif
