@@ -51,7 +51,9 @@ Write every new or changed test this way (user, 2026-11-10). Wizard tests that i
   - Check Duo side-rail fit for those screens with one seeded screenshot on the Duo runtime: `simctl launch` with the seed env, then `simctl io --display=1 screenshot`. Don't add hosted assertions for it.
   - When a check can't fail for the real reason, don't keep fixing the app to satisfy it.
 - **Running tests.**
+  - When fixing or diagnosing a failure, run only the failing test method, e.g. `ONLY="AppTests/Suite/testMethod"`, never the whole suite. With a reused build that takes seconds to a couple of minutes.
   - Run only the suites you touched: `make targeted ... ONLY=...`.
+  - Before bisecting, read the suspect diff. Bisect only the failing methods, one build per step.
   - After one fix round that changes nothing, or a hang, stop. Bisect or rethink the test before another round.
 
 ## Commands
