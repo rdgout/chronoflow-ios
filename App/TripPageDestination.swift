@@ -7,6 +7,10 @@ import Reminders
 import SwiftUI
 import Sync
 
+#if DEBUG
+    import DataAccess
+#endif
+
 struct TripPageRoute: Hashable {
     var tripID: String
     var dayID: String? = nil
@@ -68,13 +72,26 @@ struct TripPageDestination: View {
                 let permit = await native.controller.mutationPermit(for: snapshot),
                 await native.controller.activeSession() == snapshot, !Task.isCancelled
             else { return }
+            var clock: any PlanClock = SystemPlanClock()
+            #if DEBUG
+                if UITestRuntime.environment["CF_PLAN_TEST_FREEZE_CLOCK"] == "1",
+                    (UIApplication.shared.delegate as? AppDelegate)?.authServices?.authUITestEnabled == true
+                {
+                    clock = FixedPlanClock(now: Date())
+                }
+            #endif
             let page = TripPageModel(
                 tripID: route.tripID, repository: TripRepository(database: database), retention: sync.retention,
                 dayID: route.dayID, blockID: route.blockID, awaitingSync: route.awaitingSync,
-                mutationPermit: permit,
+                clock: clock, mutationPermit: permit,
                 fetchDetail: { id in
                     try await sync.fetchDetail(tripID: id, session: snapshot.session, epoch: snapshot.epoch)
                 })
+            #if DEBUG
+                if (UIApplication.shared.delegate as? AppDelegate)?.authServices?.authUITestEnabled == true {
+                    page.timeline = UITestRuntime.environment["CF_PLAN_TEST_ROUTE"]?.hasSuffix(":list") != true
+                }
+            #endif
             model = page
             let events = Task {
                 for await event in await sync.events() {

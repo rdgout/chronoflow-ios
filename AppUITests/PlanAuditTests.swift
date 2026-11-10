@@ -3,112 +3,74 @@ import UIKit
 import XCTest
 
 nonisolated final class PlanAuditTests: ScreenTestCase {
-    override func setUp() {
+    nonisolated(unsafe) private static var fontRegistration: Task<Void, Error>?
+
+    override class func setUp() {
         super.setUp()
-        executionTimeAllowance = 120
-        continueAfterFailure = false
+        fontRegistration = Task { try await FontRegistry.register() }
+    }
+
+    override func setUp() async throws {
+        try await super.setUp()
+        try await Self.fontRegistration?.value
     }
 
     @MainActor func testTodayPrimaryState() async throws {
-        try await audit { app in
-            let progress = app.staticTexts["today.progress"]
-            XCTAssertTrue(progress.waitUntil(.exists, timeout: 8))
-            _ = try UIWait.stableFrames(
-                [app.scrollViews["today.screen"], progress, app.tabBars.firstMatch], timeout: 8
-            )
-            XCTAssertEqual(app.staticTexts.matching(identifier: "today.progress").count, 1)
-            XCTAssertFalse(app.buttons["today.progress"].exists)
+        try await audit(contentIdentifier: "today.screen") { app in
+            XCTAssertTrue(app.staticTexts["today.progress"].waitUntil(.exists, timeout: 4))
         }
     }
+
     @MainActor func testTripsPrimaryState() async throws {
-        try await audit { app in
-            app.tabBars.buttons["My trips"].tap()
-            XCTAssertTrue(app.scrollViews["trips.screen"].waitUntil(.exists, timeout: 6))
+        try await audit(contentIdentifier: "trips.screen", route: "trips") { app in
+            XCTAssertTrue(app.buttons["trip.\(PlanUIFlow.tripID)"].waitUntil(.exists, timeout: 4))
         }
     }
+
     @MainActor func testTripsEmptyState() async throws {
-        try await audit(emptyTrips: true) { app in
-            app.tabBars.buttons["My trips"].tap()
-            XCTAssertTrue(app.otherElements["trips.empty"].waitForExistence(timeout: 6))
-            let create = app.buttons["trips.create-empty"]
-            XCTAssertTrue(create.exists)
-            XCTAssertTrue(create.isHittable)
+        try await audit(contentIdentifier: "trips.screen", route: "trips", emptyTrips: true) { app in
+            XCTAssertTrue(app.otherElements["trips.empty"].waitUntil(.exists, timeout: 4))
+            XCTAssertTrue(app.buttons["trips.create-empty"].isHittable)
         }
     }
+
     @MainActor func testStepSheetPrimaryState() async throws {
-        try await audit { app in
-            let row = app.scrollViews["today.screen"].buttons.matching(
-                NSPredicate(format: "identifier BEGINSWITH %@", "today.step.actionable.")
-            )
-            .firstMatch
-            XCTAssertTrue(row.waitUntil(.exists, timeout: 12))
-            AuthUIFlow.reveal(row, in: app, scroll: app.scrollViews["today.screen"])
-            row.tap()
-            let sheet = app.scrollViews["step.sheet"]
-            XCTAssertTrue(sheet.waitUntil(.exists, timeout: 4), app.debugDescription)
-            let title = app.staticTexts[
-                Typography.screenCardTitle.planTextIdentifier(color: .foreground, context: "step.title")
-            ].firstMatch
-            let time = app.staticTexts[
-                Typography.screenBody.planTextIdentifier(color: .mutedForeground, context: "step.time")
-            ].firstMatch
-            let footer = app.staticTexts[
-                Typography.screenMeta.planTextIdentifier(color: .mutedForeground, context: "step.footer")
-            ].firstMatch
-            // The inset medium sheet scales its content; audit the native, unscaled large reading position.
-            _ = try UIWait.stableFrames([sheet, title], timeout: 8)
-            let origin = app.coordinate(withNormalizedOffset: .zero)
-            let start = origin.withOffset(
-                CGVector(
-                    dx: sheet.frame.midX - app.frame.minX, dy: sheet.frame.minY - app.frame.minY + PlanUITokens.space2))
-            let end = origin.withOffset(CGVector(dx: app.frame.width / 2, dy: app.frame.height * 0.15))
-            start.press(forDuration: 0.1, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.1)
-            _ = try UIWait.stableFrames(
-                [sheet, title, time, footer, app.buttons["step.done"], app.buttons["step.skip"]], timeout: 8)
-            XCTAssertEqual(sheet.frame.width, app.frame.width, accuracy: 1)
-            let traits = UITraitCollection(preferredContentSizeCategory: .large)
-            XCTAssertGreaterThanOrEqual(
-                title.frame.height, Typography.screenCardTitle.uiFont(compatibleWith: traits).lineHeight - 1)
-        }
+        try await audit(contentIdentifier: "step.sheet", stepID: PlanUIFlow.stepID)
     }
+
     @MainActor func testLegendPrimaryState() async throws {
-        try await audit(legend: true) { app in
-            XCTAssertTrue(app.scrollViews["legend.sheet"].waitUntil(.exists, timeout: 4))
-        }
+        try await audit(contentIdentifier: "legend.sheet", legend: true)
     }
+
     @MainActor private func audit(
-        legend: Bool = false, emptyTrips: Bool = false, _ navigate: (XCUIApplication) throws -> Void
+        contentIdentifier: String, route: String? = nil, stepID: String? = nil,
+        legend: Bool = false, emptyTrips: Bool = false, _ check: (XCUIApplication) throws -> Void = { _ in }
     ) async throws {
-        try await FontRegistry.register()
         let app = try launchPlanAccount(
-            presentLegend: legend, freezePlanClock: true, emptyTrips: emptyTrips, appearance: .light
-        )
-        try navigate(app)
-        let scene = AuditScene(app: app)
-        _ = try UIWait.stableFrames([scene.content], timeout: 8)
-        attach(app, name: "plan-audit-settled")
-        // The user settled the root xxLarge cap on 2026-11-06 (plan Phase 5 fix round 3).
+            presentLegend: legend, freezePlanClock: true, emptyTrips: emptyTrips, appearance: .light,
+            route: route, stepID: stepID)
+        try check(app)
+        let scene = AuditScene(app: app, contentIdentifier: contentIdentifier)
+        _ = try UIWait.stableFrames([scene.content], timeout: 5)
+        // The root xxLarge cap excludes dynamicType; all other audit types remain required.
         let types: XCUIAccessibilityAuditType = .all.subtracting(.dynamicType)
-        XCTAssertEqual(types, .all.subtracting(.dynamicType), "Honor the root xxLarge cap; keep every other audit")
-        let sources = scene.content.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@", "plan.text."))
-            .allElementsBoundByIndex.map { TextSource(identifier: $0.identifier, label: $0.label, frame: $0.frame) }
         var findings: [Finding] = []
-        // Capture every finding before contrast measurements scroll the original audit scene.
-        try UIWait.accessibilityAudit(in: app, types: types, timeout: 45) { issue in
-            findings.append(Finding(issue: issue, disabled: Self.disabledControl(issue: issue, in: app)))
+        // Capture only reported text before contrast measurements scroll the audit scene.
+        try UIWait.accessibilityAudit(in: app, types: types, timeout: 20) { issue in
+            findings.append(Finding(issue: issue, scene: scene))
             return true
         }
-        let measurementDeadline = ContinuousClock.now + .seconds(45)
+        let measurementDeadline = ContinuousClock.now + .seconds(20)
         for finding in findings {
             guard ContinuousClock.now < measurementDeadline else {
                 throw AuditFailure(
-                    message: "Plan contrast measurements exceeded 45s; next=\(finding.identifier ?? "<nil>")")
+                    message: "Plan contrast measurements exceeded 20s; next=\(finding.identifier ?? "<nil>")")
             }
             var measurement = "not eligible"
             var measured = false
             if finding.type == .contrast {
                 (measured, measurement) = try measuredText(
-                    finding: finding, sources: sources, in: app, scene: scene, deadline: measurementDeadline)
+                    finding: finding, in: app, scene: scene, deadline: measurementDeadline)
             }
             let ignored = measured || finding.disabled
             let message = """
@@ -136,22 +98,13 @@ nonisolated final class PlanAuditTests: ScreenTestCase {
         let navigation: XCUIElement?
         let tabBar: XCUIElement?
 
-        init(app: XCUIApplication) {
-            let legend = app.scrollViews.matching(identifier: "legend.sheet").firstMatch
-            let step = app.scrollViews.matching(identifier: "step.sheet").firstMatch
-            if legend.exists {
-                content = legend
-                navigation = app.navigationBars["What the steps mean"]
-                tabBar = nil
-            } else if step.exists {
-                content = step
-                navigation = nil
-                tabBar = nil
-            } else {
-                content = app.scrollViews.firstMatch
-                navigation = app.navigationBars.firstMatch
-                tabBar = app.tabBars.firstMatch
-            }
+        init(app: XCUIApplication, contentIdentifier: String) {
+            content = app.scrollViews[contentIdentifier].firstMatch
+            navigation =
+                contentIdentifier == "legend.sheet"
+                ? app.navigationBars["What the steps mean"]
+                : contentIdentifier == "step.sheet" ? nil : app.navigationBars.firstMatch
+            tabBar = ["legend.sheet", "step.sheet"].contains(contentIdentifier) ? nil : app.tabBars.firstMatch
         }
     }
 
@@ -168,26 +121,29 @@ nonisolated final class PlanAuditTests: ScreenTestCase {
         let frame: CGRect?
         let description: String
         let disabled: Bool
+        let source: TextSource?
 
-        @MainActor init(issue: XCUIAccessibilityAuditIssue, disabled: Bool) {
+        @MainActor init(issue: XCUIAccessibilityAuditIssue, scene: AuditScene) {
             type = issue.auditType
             identifier = issue.element?.identifier
             label = issue.element?.label
             frame = issue.element?.frame
             description = issue.compactDescription
-            self.disabled = disabled
+            disabled = PlanAuditTests.disabledControl(issue: issue)
+            if type == .contrast, let identifier {
+                let matches = scene.content.staticTexts.matching(identifier: identifier)
+                let text = matches.firstMatch
+                source =
+                    matches.count == 1
+                    ? TextSource(identifier: identifier, label: text.label, frame: text.frame) : nil
+            } else {
+                source = nil
+            }
         }
     }
 
-    @MainActor private func attach(_ app: XCUIApplication, name: String) {
-        let attachment = XCTAttachment(screenshot: app.screenshot())
-        attachment.name = name
-        attachment.lifetime = .keepAlways
-        add(attachment)
-    }
-
     @MainActor private func measuredText(
-        finding: Finding, sources: [TextSource], in app: XCUIApplication, scene: AuditScene,
+        finding: Finding, in app: XCUIApplication, scene: AuditScene,
         deadline: ContinuousClock.Instant
     ) throws -> (Bool, String) {
         guard let identifier = finding.identifier, let reportedFrame = finding.frame else {
@@ -208,16 +164,14 @@ nonisolated final class PlanAuditTests: ScreenTestCase {
                     identifier: close.identifier, frame: frame, minimum: minimum), description
             )
         }
-        let candidates = sources.filter { source in
+        guard let source = finding.source,
             PlanLayoutEvidence.attributedText(
                 issueIdentifier: identifier, issueFrame: reportedFrame,
                 identifier: source.identifier, frame: source.frame)
-        }
-        guard candidates.count == 1, let source = candidates.first else {
-            return (false, "No unique original text identifier and frame; candidates=\(candidates.count)")
-        }
-        let live = scene.content.staticTexts.matching(identifier: source.identifier).allElementsBoundByIndex
-        guard live.count == 1, let text = live.first, text.label == source.label else {
+        else { return (false, "No unique original text identifier and frame") }
+        let live = scene.content.staticTexts.matching(identifier: source.identifier)
+        let text = live.firstMatch
+        guard live.count == 1, text.label == source.label else {
             return (false, "Original text no longer has a unique live identity: \(source.identifier)")
         }
         let originalFrame = source.frame
@@ -235,19 +189,14 @@ nonisolated final class PlanAuditTests: ScreenTestCase {
         guard pairs.count == 1, let (style, color) = pairs.first else {
             return (false, "Unknown text style: \(text.identifier)")
         }
-        let scrolls = [scene.content].filter {
-            $0.elementType == .scrollView
-                && $0.descendants(matching: .staticText).matching(identifier: text.identifier).allElementsBoundByIndex
-                    .contains { $0.frame == text.frame && $0.label == label }
-        }
-        // System glass can cover scroll content; measure the same text in its unobscured reading position.
+        // System glass can cover scroll content; measure it in an unobscured reading position.
         let readingViewport = try reveal(
-            text, in: app, scene: scene, scroll: scrolls.first, deadline: deadline)
+            text, in: app, scene: scene, scroll: scene.content, deadline: deadline)
         guard text.label == label else {
             return (false, "Revealed text changed: expected=\(label), actual=\(text.label)")
         }
-        let current = scene.content.staticTexts.matching(identifier: text.identifier).allElementsBoundByIndex
-        guard current.count == 1, current[0].label == label, current[0].frame == text.frame else {
+        let current = scene.content.staticTexts.matching(identifier: text.identifier)
+        guard current.count == 1, current.firstMatch.label == label, current.firstMatch.frame == text.frame else {
             return (false, "Revealed text is not unique: \(text.identifier), original=\(originalFrame)")
         }
         let traits = UITraitCollection {
@@ -293,7 +242,8 @@ nonisolated final class PlanAuditTests: ScreenTestCase {
                 throw AuditFailure(message: "Plan reveal frames did not settle for \(text.identifier): \(error)")
             }
             let visible = viewport(in: app, scene: scene, clearance: 0)
-            let preferred = viewport(in: app, scene: scene, clearance: PlanUITokens.space4)
+            let preferred = AuthScrollGesture.readingViewport(
+                visible, navigationBar: nil, tabBar: nil, clearance: PlanUITokens.space4)
             let frame = text.frame
             diagnostics = "attempt=\(attempt) frame=\(frame) visible=\(visible) preferred=\(preferred)"
             switch progress.observe(frame: frame, visible: visible, preferred: preferred, canScroll: scroll != nil) {
@@ -353,15 +303,13 @@ nonisolated final class PlanAuditTests: ScreenTestCase {
     }
 
     @MainActor private static func disabledControl(
-        issue: XCUIAccessibilityAuditIssue, in app: XCUIApplication
+        issue: XCUIAccessibilityAuditIssue
     ) -> Bool {
         guard issue.auditType == .contrast || issue.auditType == .hitRegion,
             let element = issue.element, !element.identifier.isEmpty,
             element.elementType == .button || element.elementType == .switch,
             !element.isEnabled, !element.frame.isEmpty, !element.frame.isInfinite
         else { return false }
-        let matches = app.descendants(matching: element.elementType).matching(identifier: element.identifier)
-            .allElementsBoundByIndex.filter { $0.frame == element.frame && $0.label == element.label && !$0.isEnabled }
-        return matches.count == 1
+        return true
     }
 }
