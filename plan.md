@@ -2306,10 +2306,21 @@ compile-only checks are allowed. Sources outside this worktree stay read-only.
   components, and add audience/light-device notices. Update seeds and remove obsolete question fixtures.
 - [x] NH6 Add package regression coverage for decoding/encoding/defaults/readiness/migration/422,
   update only changed seeded screens, and refresh generated copy/contracts reproducibly.
-- [ ] NH7 Complete lint and compile-only verification, document copy provenance and limitations,
+- [x] NH7 Complete lint and compile-only verification, document copy provenance and limitations,
   and create atomic Conventional Commits (or ordered patches if index.lock blocks commits).
 
-The server working tree still has the pre-Phase-19 schema and language keys. Generators must apply
-an explicit local Phase-19 overlay to their pinned input rather than modify the server repository.
-Missing copy follows the Phase-19 spec; new translations and all source keys are recorded in
-`Docs/no-health-data.md`. No unrelated phase is started.
+The server working tree received Phase 19 schema and EN/NL copy changes while this task ran.
+Generators apply an explicit local Phase-19 overlay to their pinned input; source repositories stay
+read-only. Preferences and notices use the exact current server language values. The only missing
+key translated here is the neutral mock reason, recorded with every source key in
+`Docs/no-health-data.md`. No unrelated phase was started.
+
+Verification: strict lint, both generator consistency checks, SwiftPM host compilation including
+test executables, the iOS package build, edited App fixture typechecking and full UI-test-target
+typechecking passed. No tests, simulator sessions, device-fit checks or matrix were run, per the
+user's override. The full Xcode build is blocked by package-manifest sandboxing; package builds
+and direct typechecking provide compile-only coverage. Logs are under `build/no-health-*.log`.
+
+Git cannot create the shared worktree index lock outside the writable sandbox. Ordered patches
+`build/commits/nh1-1.patch` through `nh1-5.patch` and `nh1-messages.txt` replace commits; each task
+is ticked in its completing patch. The patch series starts at `a3a40adb6fbc09f20c7630b3e340635b6d40b185`.
