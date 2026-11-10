@@ -12,6 +12,12 @@ Codex's `workspace-write` sandbox cannot run `xcodebuild` (nested `sandbox-exec`
 
 Every Codex brief that adds or changes tests must point to the **Tests** rules in `AGENTS.md`. Reject a test that breaks them in review, before it reaches the simulator.
 
+**Clean up worktrees when the work is done** (user, 2026-11-10). On 2026-11-10, 23 worktrees and their builds were using over 150 GB.
+- Once a branch's work is finished (pushed into the PR stack, folded into another branch, or abandoned), remove its worktree in the same session with `git worktree remove`, then `git worktree prune`. A branch ref survives worktree removal.
+- A detached worktree's HEAD may not be on any ref. Check `git for-each-ref --contains <sha>` first, and create a `backup/<date>/…` branch if nothing contains it.
+- Keep only these: the main checkout, the stack top, worktrees with active work, and `chronoflow-ios-phone` (it holds the ignored device-signing `Config/Local.xcconfig`).
+- Delete a finished worktree's `build/` and `.build/` along with it, and don't keep old DerivedData or result bundles around in the worktrees you keep.
+
 ## Commands
 
 `make generate` creates the ignored project. `Scripts/ci.sh` runs `make generate check`.
