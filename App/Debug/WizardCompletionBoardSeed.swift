@@ -16,6 +16,7 @@
             ]
         }
         static func apply(_ original: MemberWizardDraft, board: String) -> MemberWizardDraft {
+            guard board != "WizardSaveJourney" else { return original }
             guard
                 board.hasPrefix("WizardFineTune") || board.hasPrefix("WizardReady") || board.hasPrefix("WizardSave")
                     || board == "WizardCalculating" || sheets[board] != nil
