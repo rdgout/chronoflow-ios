@@ -46,6 +46,7 @@ public struct MockServerState: Codable, Sendable, Equatable {
     var wizardReceipts: [String: MockWizardReceipt]?
     var wizardPaidDirections: [String: [TripDirection]]?
     var wizardInputs: [String: ApiTripInputSnapshot]?
+    var guestDrafts: [String: MockGuestDraft]?
     var signingKey: Data
     public var claims: [String: MockClaim] = [:]
     public init(accounts: [MockServerAccount] = [], signingKey: Data = Data(UUID().uuidString.utf8)) {

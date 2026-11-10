@@ -6,7 +6,8 @@ public enum MockMethod: String, Sendable, CaseIterable {
     case accountSecurity, deleteAccount
     case passkeyOptions, passkeyLogin, signIn, completeTwoFactor, signUp, requestPasswordReset, resetPassword
     case verificationStatus, resendVerificationEmail, verifyEmail, signOut, fetchIdentity, fetchAccount, fetchTrips,
-        fetchTripDetail, send, searchAirports, reviewTrip, reviewTripEdit, saveTrip, updateTrip, tripInput
+        fetchTripDetail, send, searchAirports, reviewTrip, reviewGuestTrip, reviewTripEdit, saveTrip, updateTrip,
+        tripInput
 }
 
 public actor MockDataSource: DataSource {
@@ -99,7 +100,7 @@ public actor MockDataSource: DataSource {
         try Task.checkCancellation()
         try await sleep(min(0.8, max(0.3, delay())))
         try Task.checkCancellation()
-        let token = try await bearer?()
+        let token = method == .reviewGuestTrip ? nil : try await bearer?()
         try Task.checkCancellation()
         if offline || (mutationsOffline && method == .send) { throw DataFailure.offline }
         if let failure = failures.removeValue(forKey: method) { throw failure }
@@ -594,6 +595,67 @@ public actor MockDataSource: DataSource {
 }
 
 extension MockDataSource {
+    public func reviewGuestTrip(_ input: ApiGuestTripReviewInput) async throws -> ApiTripReview {
+        try await begin(.reviewGuestTrip)
+        let device = input.deviceID.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let time = now().timeIntervalSince1970
+        try limit("guest-review:" + device)
+        guard UUID(uuidString: device) != nil else {
+            throw validation("device_id", "Choose one of the available options.")
+        }
+        let live = (state!.guestDrafts ?? [:]).filter { $0.value.draft.expiresAt > time }
+        let suppliedHash = input.guestSecret.map(MockGuestReview.hash)
+        if let identity = input.identity {
+            guard let previous = live[identity.token], previous.deviceID == device,
+                previous.secretHash == suppliedHash,
+                previous.draft.review.identity.inputRevision == identity.inputRevision,
+                previous.draft.review.identity.reviewRevision == identity.reviewRevision
+            else { throw DataFailure.reviewExpired }
+        }
+        let known =
+            suppliedHash.map { hash in
+                live.values.contains { $0.deviceID == device && $0.secretHash == hash }
+            } ?? false
+        let minted = input.identity == nil && !known ? MockGuestReview.secret() : nil
+        let secretHash = minted.map(MockGuestReview.hash) ?? suppliedHash!
+        let identity = ApiReviewIdentity(
+            token: input.identity?.token ?? id(), inputRevision: (input.identity?.inputRevision ?? 0) + 1,
+            reviewRevision: (input.identity?.reviewRevision ?? 0) + 1)
+        let journey: ApiTripInput
+        let settings: AccountSettings
+        var review: ApiTripReview
+        do {
+            (journey, settings) = try MockGuestReview.prepare(input, now: now())
+            review = try MockTripGeneration.review(
+                journey, identity: identity, settings: settings, edit: false, paidDirections: [])
+        } catch let failure as DataFailure {
+            throw TripWizardErrors.map(failure, outboundCount: input.input.outbound.legs.count)
+        }
+        review.prompts = review.prompts.filter { $0.fields == ["age_band"] || $0.fields == ["shift_work"] }
+        let storedReview = review
+        try update { state in
+            var drafts = (state.guestDrafts ?? [:]).filter { $0.value.draft.expiresAt > time }
+            if let identity = input.identity, drafts[identity.token] != live[identity.token] {
+                throw DataFailure.reviewExpired
+            }
+            drafts[identity.token] = MockGuestDraft(
+                deviceID: device, secretHash: secretHash,
+                draft: MockWizardDraft(
+                    owner: "", tripID: nil, input: journey, review: storedReview, profile: settings.bodyClock,
+                    expiresAt: time + 1800))
+            let deviceDrafts = drafts.filter { $0.value.deviceID == device }.sorted {
+                if $0.value.draft.expiresAt != $1.value.draft.expiresAt {
+                    return $0.value.draft.expiresAt < $1.value.draft.expiresAt
+                }
+                return $0.key < $1.key
+            }
+            for draft in deviceDrafts.prefix(max(0, deviceDrafts.count - 5)) { drafts[draft.key] = nil }
+            state.guestDrafts = drafts
+        }
+        review.identity.guestSecret = minted
+        return review
+    }
+
     public func searchAirports(query: String, limit: Int? = nil) async throws -> [ApiAirportSuggestion] {
         try await begin(.searchAirports)
         let rawCount = query.count

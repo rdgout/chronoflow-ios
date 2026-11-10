@@ -2069,7 +2069,7 @@ Verification and audit resolution: see `Docs/settings-board-fidelity.md`. `make 
   - Tests (SwiftPM): encoding fixtures checked against the request rules (no `return`/`override`, no retired keys, required bed/wake, first-call identity); decoding `identity.guestSecret` both present and null; a URLProtocol stub asserting the path, no `Authorization` header, and the 422/429 mapping.
 
 **18c: Mock guest review**
-- [ ] `MockDataSource` serves guest reviews without an account. Today `wizardReview` requires `accountID(verified: true)` (`DataAccess/Mock/MockDataSource.swift:633`). Mirror the backend:
+- [x] `MockDataSource` serves guest reviews without an account. Today `wizardReview` requires `accountID(verified: true)` (`DataAccess/Mock/MockDataSource.swift:633`). Mirror the backend:
   - mint a 64-hex secret on first use; for a known secret, reuse it and return a null `guestSecret`;
   - a token without a secret, or with a wrong secret, is stale (`review_expired`);
   - drafts are scoped by device and secret, with a sliding 30-minute expiry and at most 5 per device;
