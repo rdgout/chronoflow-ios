@@ -50,7 +50,7 @@
             let measurements = PlanMeasuredContent()
             let host = try makeHost(context, formatter: formatter, measurements: measurements, width: 466, height: 678)
             defer { host.close() }
-            do {
+            await host.recordFailures {
                 try await host.settle("Initial phone timeline") {
                     context.model.plan.prepared != nil && context.timelineReady
                 }
@@ -59,12 +59,15 @@
                 try await host.settle("Initial timeline measurement") { measurements.identity(for: timelineID) != nil }
                 let timelineIdentity = try XCTUnwrap(measurements.identity(for: timelineID))
                 let scroll = try pageScroll(host)
+                @MainActor func currentDayTop() -> CGFloat? {
+                    measurements.frame(for: "trip.day.\(dayID)").map {
+                        $0.minY - scroll.convert(scroll.bounds, to: host.window).minY
+                    }
+                }
                 scroll.setContentOffset(CGPoint(x: 0, y: scroll.contentOffset.y + 180), animated: false)
                 try await host.settle("Initial day scroll") { context.model.currentAnchor.offset > 0 }
                 let anchor = context.model.currentAnchor
-                let dayTop =
-                    try XCTUnwrap(measurements.frame(for: "trip.day.\(dayID)")).minY
-                    - scroll.convert(scroll.bounds, to: host.window).minY
+                let dayTop = try XCTUnwrap(currentDayTop())
                 let block = try XCTUnwrap(context.model.plan.prepared?.days.first { $0.id == dayID }?.blocks.first)
                 context.model.selectBlock(block.id, formatter: formatter)
                 try await host.settle("Step presentation completion") {
@@ -75,44 +78,38 @@
 
                 UIView.performWithoutAnimation { host.window.frame.size = CGSize(width: 669, height: 951) }
                 try await host.settle(
-                    "Phone to wide: offset \(context.model.currentAnchor.offset), expected \(anchor.offset), list \(String(describing: measurements.frame(for: "trip.wide.list.\(dayID)")))"
+                    "Phone to wide: offset \(context.model.currentAnchor.offset), expected \(anchor.offset), day top \(String(describing: currentDayTop())), expected \(dayTop), list \(String(describing: measurements.frame(for: "trip.wide.list.\(dayID)")))"
                 ) {
                     measurements.frame(for: "trip.wide.list.\(dayID)")?.width == 280
                         && abs(context.model.currentAnchor.offset - anchor.offset) < 1
+                        && abs((currentDayTop() ?? .infinity) - dayTop) < 1
                 }
                 XCTAssertEqual(context.model.anchor.dayID, dayID)
                 XCTAssertEqual(context.model.selectedStep?.id, block.id)
                 XCTAssertTrue(host.controller.presentedViewController === sheet)
                 XCTAssertTrue(try pageScroll(host) === scroll)
                 XCTAssertEqual(measurements.identity(for: timelineID), timelineIdentity)
-                let wideDayTop =
-                    try XCTUnwrap(measurements.frame(for: "trip.day.\(dayID)")).minY
-                    - scroll.convert(scroll.bounds, to: host.window).minY
+                let wideDayTop = try XCTUnwrap(currentDayTop())
                 XCTAssertEqual(wideDayTop, dayTop, accuracy: 1)
 
                 UIView.performWithoutAnimation { host.window.frame.size = CGSize(width: 466, height: 678) }
                 try await host.settle(
-                    "Wide to phone: offset \(context.model.currentAnchor.offset), expected \(anchor.offset)"
+                    "Wide to phone: offset \(context.model.currentAnchor.offset), expected \(anchor.offset), day top \(String(describing: currentDayTop())), expected \(dayTop)"
                 ) {
                     measurements.frame(for: "trip.wide.list.\(dayID)") == nil
                         && abs(context.model.currentAnchor.offset - anchor.offset) < 1
+                        && abs((currentDayTop() ?? .infinity) - dayTop) < 1
                 }
                 XCTAssertEqual(context.model.anchor.dayID, dayID)
                 XCTAssertEqual(context.model.selectedStep?.id, block.id)
                 XCTAssertTrue(host.controller.presentedViewController === sheet)
                 XCTAssertTrue(try pageScroll(host) === scroll)
                 XCTAssertEqual(measurements.identity(for: timelineID), timelineIdentity)
-                let phoneDayTop =
-                    try XCTUnwrap(measurements.frame(for: "trip.day.\(dayID)")).minY
-                    - scroll.convert(scroll.bounds, to: host.window).minY
+                let phoneDayTop = try XCTUnwrap(currentDayTop())
                 XCTAssertEqual(phoneDayTop, dayTop, accuracy: 1)
-                try await dismissStep(in: host, context: context)
-                try await context.close()
-            } catch {
-                try? await dismissStep(in: host, context: context)
-                try? await context.close()
-                throw error
             }
+            await host.recordFailures { try await dismissStep(in: host, context: context) }
+            await host.recordFailures { try await context.close() }
         }
 
         @MainActor private func captureBoard(

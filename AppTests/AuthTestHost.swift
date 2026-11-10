@@ -101,11 +101,14 @@ import XCTest
         }
     }
 
-    func settle(_ diagnostic: @autoclosure () -> String = "Predicate", until predicate: () -> Bool) async throws {
+    func settle(
+        _ diagnostic: @autoclosure () -> String = "Predicate", timeout: Duration = .seconds(5),
+        until predicate: () -> Bool
+    ) async throws {
         window.makeKeyAndVisible()
         var previous: [CGRect] = []
         var matches = 0
-        let deadline = ContinuousClock.now + .seconds(5)
+        let deadline = ContinuousClock.now + timeout
         while ContinuousClock.now < deadline {
             try await Task.sleep(for: .milliseconds(10))
             guard ContinuousClock.now < deadline else { break }
@@ -125,7 +128,18 @@ import XCTest
             previous = current
         }
         throw CaptureFailure.didNotSettle(
-            "\(diagnostic()): 5 s deadline, revision \(revision), size \(window.bounds.size)")
+            "\(diagnostic()): \(timeout) deadline, revision \(revision), size \(window.bounds.size)")
+    }
+
+    func recordFailures(
+        file: StaticString = #filePath, line: UInt = #line, operation: () async throws -> Void
+    ) async {
+        do {
+            try await operation()
+        } catch {
+            // Record before teardown can replace XCTest's last observed Swift error with a framework error.
+            XCTFail(String(reflecting: error), file: file, line: line)
+        }
     }
 
     func settle() async throws {
