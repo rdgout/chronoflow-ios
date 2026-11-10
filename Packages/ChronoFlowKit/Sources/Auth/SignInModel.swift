@@ -46,7 +46,7 @@ import Observation
     }
 
     public func editEmail(_ value: String) {
-        guard !form.busy else { return }
+        guard !form.busy, value != email else { return }
         email = value
         form.edit("email")
     }
@@ -79,7 +79,7 @@ import Observation
         ResetPasswordModel(link: link, source: source, navigation: navigation, mail: mailAction)
     }
     public func editPassword(_ value: String) {
-        guard !form.busy else { return }
+        guard !form.busy, value != password else { return }
         password = value
         form.edit("password")
     }

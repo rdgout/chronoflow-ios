@@ -173,6 +173,29 @@ import Testing
         #expect(model.email == "demo@example.com")
     }
 
+    @Test func unchangedConfirmationPreservesServerFeedbackUntilTheValueChanges() throws {
+        let model = SignUpModel(
+            source: try authTestSource(), navigation: AuthNavigation(),
+            deviceIdentity: { "0199a3c0-0000-7000-8000-000000000001" }, deviceName: "test", accept: { _ in })
+        let mismatch = FieldMessage(key: "The passwords don't match yet.")
+        let failure = DataFailure.validation(
+            fields: [
+                "email": FieldMessage(key: "This email address is already in use."),
+                "password_confirmation": mismatch,
+            ], status: 422)
+        model.form.receive(failure)
+
+        model.editConfirmation(model.confirmation)
+        #expect(model.form.banner == .emailTaken)
+        #expect(model.form.fields["password_confirmation"] == mismatch)
+        #expect(model.form.failure == failure)
+
+        model.editConfirmation("NewPassword123!")
+        #expect(model.form.banner == nil)
+        #expect(model.form.fields["password_confirmation"] == nil)
+        #expect(model.form.failure == nil)
+    }
+
     @Test func emailTakenKeepsBannerWhenOtherMessagesNeedTheFallback() {
         let mapped = AuthFailureMapping(
             .validation(

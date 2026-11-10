@@ -30,22 +30,22 @@ import Observation
         self.accept = accept
     }
     public func editName(_ value: String) {
-        guard active, !form.busy else { return }
+        guard active, !form.busy, value != name else { return }
         name = value
         form.edit("name")
     }
     public func editEmail(_ value: String) {
-        guard active, !form.busy else { return }
+        guard active, !form.busy, value != email else { return }
         email = value
         form.edit("email")
     }
     public func editPassword(_ value: String) {
-        guard active, !form.busy else { return }
+        guard active, !form.busy, value != password else { return }
         password = value
         form.edit("password")
     }
     public func editConfirmation(_ value: String) {
-        guard active, !form.busy else { return }
+        guard active, !form.busy, value != confirmation else { return }
         confirmation = value
         form.edit("password_confirmation")
     }

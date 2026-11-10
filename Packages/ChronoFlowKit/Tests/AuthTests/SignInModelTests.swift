@@ -83,6 +83,26 @@ func authTestSource(verified: Bool = true, twoFactor: Bool = false) throws -> Mo
         }
         #expect(model.form.banner == .offline)
     }
+    @Test func unchangedPasswordPreservesServerFeedbackUntilTheValueChanges() throws {
+        let model = SignInModel(
+            source: try authTestSource(), session: AuthTestSession(),
+            deviceIdentity: { "0199a3c0-0000-7000-8000-000000000001" }, deviceName: "test", route: { _ in })
+        let message = FieldMessage(key: "Please fill this in.")
+        let failure = DataFailure.validation(
+            fields: ["password": message, "device_id": message], status: 422)
+        model.form.receive(failure)
+
+        model.editPassword(model.password)
+        #expect(model.form.banner == .server)
+        #expect(model.form.fields["password"] == message)
+        #expect(model.form.failure == failure)
+
+        model.editPassword("Password123!")
+        #expect(model.form.banner == nil)
+        #expect(model.form.fields["password"] == nil)
+        #expect(model.form.failure == nil)
+    }
+
     @Test func concurrentAttemptsAndEditingWhileBusyAreIgnored() async throws {
         let gate = IdentityGate()
         let session = AuthTestSession()

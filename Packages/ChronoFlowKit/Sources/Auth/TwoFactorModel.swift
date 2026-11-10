@@ -25,7 +25,9 @@ import Observation
 
     public func editCode(_ value: String) {
         guard active, !form.busy else { return }
-        code = mode == .code ? String(value.filter { $0.isASCII && $0.isNumber }.prefix(6)) : value
+        let nextCode = mode == .code ? String(value.filter { $0.isASCII && $0.isNumber }.prefix(6)) : value
+        guard nextCode != code else { return }
+        code = nextCode
         form.edit(field)
     }
 
