@@ -112,6 +112,11 @@
                     key: "This flight leaves before the previous one lands.")
             }
             if board == "WizardSaveJourney" {
+                let destination = ApiAirportSuggestion(
+                    iata: "HND", name: "Tokyo Haneda Airport", city: airports[1].city, country: "JP",
+                    timezone: "Asia/Tokyo")
+                draft.airports[destination.iata] = destination
+                draft.form.setRouteAirport(destination, at: 1)
                 let departure = Date().addingTimeInterval(30 * 24 * 60 * 60)
                 draft.form.legs[0].departLocal = WizardDateTime.string(departure)
                 draft.form.legs[0].arriveLocal = WizardDateTime.string(departure.addingTimeInterval(18 * 60 * 60))
