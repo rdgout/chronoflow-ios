@@ -2102,7 +2102,7 @@ Verification and audit resolution: see `Docs/settings-board-fidelity.md`. `make 
   - Tests (SwiftPM): round-trip, recovery at 29 and 31 minutes, retired-key stripping, no secret in the file bytes, member store behaviour unchanged.
 
 **18g: Wizard mode logic**
-- [ ] Add `WizardMode { member, guest }`. It is Codable on the wizard state and decodes legacy rows as member.
+- [x] Add `WizardMode { member, guest }`. It is Codable on the wizard state and decodes legacy rows as member.
   - Guest navigation skips the return steps. The member path is built at `MemberWizardNavigation.swift:31-38`. Replace the `go(.returnChoice)` at `TripWizardUI/MemberWizardView.swift:140` with `model.finishOutboundStep()`.
   - `lastInputStep` is `.sleep`. Sleep is always needed. The end stays `one_way`.
   - Use the guest progress weights and the guest past-arrival copy.

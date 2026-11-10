@@ -3,6 +3,7 @@ import Foundation
 
 extension MemberWizardModel {
     public var lastInputStep: MemberWizardStep {
+        if mode == .guest { return .sleep }
         if let step = draft.state.lastInputStep { return step }
         if draft.state.sleepNeeded { return .sleep }
         return draft.form.end.kind == "return_legs" ? .returnFlight : .returnChoice
@@ -26,7 +27,8 @@ extension MemberWizardModel {
     }
     public var progress: Double { max(draft.state.progressFloor ?? 0, stepProgress) }
     private var stepProgress: Double {
-        switch draft.state.step {
+        if mode == .guest { return guestStepProgress }
+        return switch draft.state.step {
         case .whereTo: whereComplete ? 0.15 : 0.08
         case .outbound: outboundComplete ? 0.30 : 0.22
         case .returnChoice, .returnRoute, .returnFlight: 0.45
@@ -41,7 +43,7 @@ extension MemberWizardModel {
     }
 
     public func chooseReturn(_ kind: String) {
-        guard !closed, !choicePending, draft.state.step == .returnChoice else { return }
+        guard mode == .member, !closed, !choicePending, draft.state.step == .returnChoice else { return }
         if kind == "return_legs" {
             if draft.form.end.kind != kind {
                 draft.form.end.nights = nil
@@ -199,10 +201,10 @@ extension MemberWizardModel {
             draft.state.saveFailure = nil
             checking = WizardCheckingProgress()
             restartRetryCountdown()
-            if draft.state.sleepCompleted == true { draft.state.sleepNeeded = false }
+            if mode == .member, draft.state.sleepCompleted == true { draft.state.sleepNeeded = false }
             draft.fieldErrors = [:]
             let errors = WizardFlightRules.errors(
-                form: draft.form, airports: draft.airports, now: now(), checkPast: true)
+                form: draft.form, airports: draft.airports, now: now(), checkPast: true, mode: mode)
             if !errors.isEmpty {
                 draft.fieldErrors = errors
                 go(WizardJourney.errorStep(errors, form: draft.form))
@@ -295,6 +297,14 @@ extension MemberWizardModel {
     }
 
     public func changeExcludedAnswers() {
+        if mode == .guest {
+            draft.state.profile["age_band"] = .null
+            draft.state.profile["shift_work"] = .null
+            draft.state.checkingAnswers = false
+            draft.state.returnToReady = nil
+            beginChecking()
+            return
+        }
         for (field, stored) in [
             ("age_band", "ageBand"), ("shift_work", "shiftWork"),
         ] {

@@ -53,11 +53,14 @@
                     readyRow(
                         "Flight", value: WizardPresentation.flightSummary(model.draft.form, locale: locale, t: t),
                         step: .outbound)
-                    readyRow(
-                        "Return",
-                        value: WizardPresentation.returnSummary(
-                            model.draft.form, stayEnd: model.draft.state.review?.summary?.stayEnd, locale: locale, t: t),
-                        step: .returnChoice)
+                    if model.showsReturnRow {
+                        readyRow(
+                            "Return",
+                            value: WizardPresentation.returnSummary(
+                                model.draft.form, stayEnd: model.draft.state.review?.summary?.stayEnd, locale: locale,
+                                t: t),
+                            step: .returnChoice)
+                    }
                     readyRow("Sleep", value: sleepSummary, step: .fineTune, sleep: true)
                     readyRow(
                         "Extras",

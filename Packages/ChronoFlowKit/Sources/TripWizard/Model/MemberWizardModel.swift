@@ -35,6 +35,7 @@ public final class MemberWizardModel {
     public internal(set) var choicePending = false
     public internal(set) var reviewing = false
     public internal(set) var createdTripID: String?
+    public internal(set) var saveOutcome: WizardSaveOutcome?
     @ObservationIgnored var retryTask: Task<Void, Never>?
     @ObservationIgnored var retryID = UUID()
     @ObservationIgnored var saveTask: Task<Void, Never>?
@@ -61,6 +62,7 @@ public final class MemberWizardModel {
     ) {
         var draft = draft
         draft.state.discardRetiredValues()
+        draft.enforceGuestMode()
         self.draft = draft
         self.store = store
         self.search = search
@@ -225,6 +227,8 @@ public final class MemberWizardModel {
     }
 
     func changed() {
+        draft.enforceGuestMode()
+        saveOutcome = nil
         draft.state.entered = true
         draft.fieldErrors = [:]
         persist()

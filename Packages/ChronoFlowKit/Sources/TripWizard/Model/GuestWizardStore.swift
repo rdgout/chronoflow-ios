@@ -23,6 +23,8 @@ public actor GuestWizardStore: WizardDraftStore {
     public func start() throws -> MemberWizardDraft {
         if let draft = try recover() { return draft }
         var draft = MemberWizardDraft()
+        draft.state.mode = .guest
+        draft.state.lastInputStep = .sleep
         draft.state.firstTrip = false
         draft.state.profile = JSONObject(["habitual_bed": .string("23:00"), "habitual_wake": .string("07:00")])
         try write(record(draft))
@@ -78,6 +80,9 @@ public actor GuestWizardStore: WizardDraftStore {
         var state = draft.state
         form.identity?.guestSecret = nil
         state.review?.identity.guestSecret = nil
+        state.mode = .guest
+        state.lastInputStep = .sleep
+        state.sleepNeeded = true
         state.savedProfile = nil
         state.firstTrip = false
         state.discardRetiredValues()

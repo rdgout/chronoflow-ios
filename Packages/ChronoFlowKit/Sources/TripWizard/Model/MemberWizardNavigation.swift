@@ -28,15 +28,16 @@ extension MemberWizardModel {
         let step = draft.state.step
         if step == .whereTo { return [] }
         if step == .outbound { return [.outbound] }
-        var result: [MemberWizardDestination] = [.outbound, .returnChoice]
+        var result: [MemberWizardDestination] = [.outbound]
+        if mode == .member { result.append(.returnChoice) }
         if step == .returnChoice { return result }
-        if draft.form.end.kind == "return_legs" {
+        if mode == .member, draft.form.end.kind == "return_legs" {
             result.append(.returnRoute)
             if step == .returnRoute { return result }
             result.append(.returnFlight)
         }
         if step == .returnFlight { return result }
-        if draft.state.sleepNeeded || draft.state.lastInputStep == .sleep || step == .sleep {
+        if mode == .guest || draft.state.sleepNeeded || draft.state.lastInputStep == .sleep || step == .sleep {
             result.append(.sleep)
         }
         switch step {

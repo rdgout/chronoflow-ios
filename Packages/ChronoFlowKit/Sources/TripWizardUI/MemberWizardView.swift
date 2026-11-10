@@ -137,7 +137,7 @@
                         if home || model.draft.state.revisit != nil {
                             model.finishFlightInput()
                         } else {
-                            model.go(.returnChoice)
+                            model.finishOutboundStep()
                         }
                     } else {
                         UINotificationFeedbackGenerator().notificationOccurred(.warning)

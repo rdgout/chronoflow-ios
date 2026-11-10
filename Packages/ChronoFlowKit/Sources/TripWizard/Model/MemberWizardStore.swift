@@ -3,6 +3,8 @@ import Foundation
 import LocalStore
 import Reminders
 
+public enum WizardMode: String, Codable, Sendable { case member, guest }
+
 public enum MemberWizardStep: String, Codable, Sendable {
     case whereTo, outbound, returnChoice, returnRoute, returnFlight, sleep, checking, question, excluded, continuation,
         fineTune, ready, calculating
@@ -22,6 +24,19 @@ public struct WizardAirportSheet: Codable, Sendable, Equatable, Identifiable {
 }
 
 public struct MemberWizardState: Codable, Sendable, Equatable {
+    private var storedMode: WizardMode? = .member
+    public var mode: WizardMode {
+        get { storedMode ?? .member }
+        set { storedMode = newValue }
+    }
+    enum CodingKeys: String, CodingKey {
+        case storedMode = "mode"
+        case instance, revision, step, entered, fromLastTrip, firstTrip, sleepNeeded, homeChanged
+        case returnRouteConfirmed, profile, airports, sheet, lastInputStep, progressFloor, review, questions
+        case questionIndex, checkingAnswers, sleepCompleted, savedProfile, savedTripId, checkedInput, reviewedAt
+        case revisit, returnToReady, promptSheetID, saveFailure, updated
+    }
+
     public var instance = UUID().uuidString
     public var revision = 0
     public var step = MemberWizardStep.whereTo
