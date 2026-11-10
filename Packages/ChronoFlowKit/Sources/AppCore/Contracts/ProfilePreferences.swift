@@ -28,11 +28,23 @@ public enum ProfilePreferences {
     }
 
     public static func request(_ value: JSONObject) -> JSONObject {
-        var result = JSONObject(value.fields.filter { requestFields.contains($0.key) })
+        var result = JSONObject(promptAnswers(value.fields).filter { requestFields.contains($0.key) })
         for key in ["exclude_caffeine", "flight_movement_breaks"] where result[key] != nil {
             result[key] = .bool(result[key] == .bool(true))
         }
         return result
+    }
+
+    public static func promptAnswers(_ values: [String: JSONValue]) -> [String: JSONValue] {
+        cleanLegacyValue(.object(values))?.object ?? [:]
+    }
+
+    public static func reviewPrompts(_ prompts: [ApiReviewPrompt]) -> [ApiReviewPrompt] {
+        prompts.filter(isSupported).map {
+            var prompt = $0
+            prompt.answer = promptAnswers(prompt.answer)
+            return prompt
+        }
     }
 
     public static func isSupported(_ prompt: ApiReviewPrompt) -> Bool {

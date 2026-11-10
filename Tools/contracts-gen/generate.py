@@ -129,19 +129,22 @@ def generate(repo):
                 value = identifier(k)
                 if name in {'ApiTripReview', 'PlanView'} and k == 'prompts':
                     value += '.filter(ProfilePreferences.isSupported)'
+                    if name == 'ApiTripReview':
+                        value = 'ProfilePreferences.reviewPrompts(prompts)'
                 if name == 'ApiReviewPrompt' and k == 'answer':
-                    value += '.filter { fields.contains($0.key) }'
+                    value = 'ProfilePreferences.promptAnswers(answer.filter { fields.contains($0.key) })'
                 lines += [f'        self.{identifier(k)} = {value}']
             lines += ['    }']
             explicit_encoder = name in request_types and any(t.endswith('?') for _, t in fields)
-            if explicit_encoder:
+            if explicit_encoder or name == 'ApiReviewPrompt':
                 lines += ['', '    public func encode(to encoder: any Encoder) throws {',
                           '        var container = encoder.container(keyedBy: CodingKeys.self)']
-                for k, _ in fields:
-                    method = 'encodeIfPresent' if k in optional_keys else 'encode'
-                    lines += [f'        try container.{method}({identifier(k)}, forKey: .{identifier(k)})']
+                for k, t in fields:
+                    method = 'encodeIfPresent' if k in optional_keys or (name == 'ApiReviewPrompt' and t.endswith('?')) else 'encode'
+                    value = 'ProfilePreferences.promptAnswers(answer)' if name == 'ApiReviewPrompt' and k == 'answer' else identifier(k)
+                    lines += [f'        try container.{method}({value}, forKey: .{identifier(k)})']
                 lines += ['    }']
-            if name in {'ApiTripReview', 'PlanView'}:
+            if name in {'ApiTripReview', 'PlanView', 'ApiReviewPrompt'}:
                 lines += ['', '    public init(from decoder: any Decoder) throws {',
                           '        let container = try decoder.container(keyedBy: CodingKeys.self)', '        self.init(']
                 for i, (k, t) in enumerate(fields):
@@ -158,7 +161,7 @@ def generate(repo):
                         lines += [f'        {identifier(k)} = try container.{method}({t.rstrip("?")}.self, forKey: .{identifier(k)})']
                 lines += ['    }']
             coding_keys = [(k, identifier(k)) for k, _ in fields if k != identifier(k).strip('`')]
-            if coding_keys or explicit_encoder or name in {'ApiTripReview', 'PlanView'}:
+            if coding_keys or explicit_encoder or name in {'ApiTripReview', 'PlanView', 'ApiReviewPrompt'}:
                 lines += ['', '    enum CodingKeys: String, CodingKey {']
                 lines += [f'        case {identifier(k)}' + (f' = "{k}"' if (k, identifier(k)) in coding_keys else '') for k, _ in fields]
                 lines += ['    }']

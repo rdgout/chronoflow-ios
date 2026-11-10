@@ -2299,6 +2299,11 @@ compile-only checks are allowed. Sources outside this worktree stay read-only.
 - [x] NH1 Record the scope, sources, design exception and validation override.
 - [x] NH2 Remove retired contract/profile fields, filter legacy server responses, rename caffeine,
   add default-false movement preference, constrain readiness and screening, and update mock behavior.
+- [x] NH2.1 Strip retired keys recursively from retained review prompt answers during decoding,
+  encoding, draft persistence/recovery and review profile assembly using the shared retired-field list.
+  Keep `legacyReviewDecodingDiscardsRetiredPrompts()` unchanged; do not execute tests.
+  Strict lint, contracts-generator consistency and SwiftPM host `build --build-tests` passed;
+  no tests were executed. Logs: `build/nh2-lint.log` and `build/nh2-compile.log`.
 - [x] NH3 Migrate cached settings, outbox and wizard recovery values; prevent new retired values
   from being stored or sent. Preserve true legacy caffeine preference; never carry over VTE.
 - [x] NH4 Replace Settings medical questions with neutral toggles and notices, using EN/NL catalogs.

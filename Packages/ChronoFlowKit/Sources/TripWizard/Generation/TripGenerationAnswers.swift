@@ -23,7 +23,7 @@ extension TripGenerationService {
                 throw DataFailure.validation(
                     fields: ["review": FieldMessage(key: "Choose one of the available options.")], status: 422)
             }
-            for (field, value) in values {
+            for (field, value) in ProfilePreferences.promptAnswers(values) {
                 switch prompt.target {
                 case .profile:
                     if input.profile == nil { input.profile = JSONObject() }
@@ -43,6 +43,7 @@ extension TripGenerationService {
             }
         }
         input.input = try JSONDecoder().decode(ApiTripInput.self, from: JSONEncoder().encode(object))
+        input.profile = input.profile.map(ProfilePreferences.request)
         input.identity = review.identity
         return input
     }

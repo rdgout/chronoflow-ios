@@ -55,9 +55,9 @@ public struct MemberWizardState: Codable, Sendable, Equatable {
     mutating func discardRetiredValues() {
         profile = ProfilePreferences.request(profile)
         savedProfile = savedProfile.map(ProfilePreferences.bodyClock)
-        questions = questions?.filter(ProfilePreferences.isSupported)
+        questions = questions.map(ProfilePreferences.reviewPrompts)
         if var value = review {
-            value.prompts = value.prompts.filter(ProfilePreferences.isSupported)
+            value.prompts = ProfilePreferences.reviewPrompts(value.prompts)
             review = value
         }
     }

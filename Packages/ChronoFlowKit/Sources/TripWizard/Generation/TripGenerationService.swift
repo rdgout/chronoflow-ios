@@ -95,6 +95,8 @@ public actor TripGenerationService {
     {
         try Task.checkCancellation()
         guard !cancelled else { throw CancellationError() }
+        var input = input
+        input.profile = input.profile.map(ProfilePreferences.request)
         let encoder = JSONEncoder()
         encoder.outputFormatting = .sortedKeys
         var fingerprintInput = input
@@ -110,7 +112,7 @@ public actor TripGenerationService {
         let source = source
         let effects = effects
         let sleep = sleep
-        let task = Task {
+        let task = Task { [input] in
             let result = try await withThrowingTaskGroup(of: TripGenerationReviewResult.self) { group in
                 group.addTask {
                     try await Self.performReview(source: source, input: input, edit: edit)

@@ -371,10 +371,59 @@ public struct ApiReviewPrompt: Codable, Sendable, Equatable {
         self.scope = scope
         self.target = target
         self.fields = fields
-        self.answer = answer.filter { fields.contains($0.key) }
+        self.answer = ProfilePreferences.promptAnswers(answer.filter { fields.contains($0.key) })
         self.shape = shape
         self.side = side
         self.deviceMin = deviceMin
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(kind, forKey: .kind)
+        try container.encode(blocking, forKey: .blocking)
+        try container.encode(required, forKey: .required)
+        try container.encode(text, forKey: .text)
+        try container.encode(scope, forKey: .scope)
+        try container.encode(target, forKey: .target)
+        try container.encode(fields, forKey: .fields)
+        try container.encode(ProfilePreferences.promptAnswers(answer), forKey: .answer)
+        try container.encode(shape, forKey: .shape)
+        try container.encodeIfPresent(side, forKey: .side)
+        try container.encodeIfPresent(deviceMin, forKey: .deviceMin)
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            id: try container.decode(String.self, forKey: .id),
+            kind: try container.decode(PromptKind.self, forKey: .kind),
+            blocking: try container.decode(Bool.self, forKey: .blocking),
+            required: try container.decode(Bool.self, forKey: .required),
+            text: try container.decode(CopyLine.self, forKey: .text),
+            scope: try container.decode(ApiReviewPromptScope.self, forKey: .scope),
+            target: try container.decode(ReviewPromptTarget.self, forKey: .target),
+            fields: try container.decode([String].self, forKey: .fields),
+            answer: try container.decode([String: JSONValue].self, forKey: .answer),
+            shape: try container.decode(ApiReviewPromptShape.self, forKey: .shape),
+            side: try container.decodeIfPresent(WindowSide.self, forKey: .side),
+            deviceMin: try container.decodeIfPresent(Int.self, forKey: .deviceMin)
+        )
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case kind
+        case blocking
+        case required
+        case text
+        case scope
+        case target
+        case fields
+        case answer
+        case shape
+        case side
+        case deviceMin
     }
 }
 
@@ -820,7 +869,7 @@ public struct ApiTripReview: Codable, Sendable, Equatable {
         self.identity = identity
         self.status = status
         self.reasons = reasons
-        self.prompts = prompts.filter(ProfilePreferences.isSupported)
+        self.prompts = ProfilePreferences.reviewPrompts(prompts)
         self.summary = summary
         self.price = price
         self.canSave = canSave
