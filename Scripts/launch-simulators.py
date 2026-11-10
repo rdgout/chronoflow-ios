@@ -201,6 +201,7 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
                         'PasskeyEncodingTests',
                         'PasskeySignInTests')},
  'DataAccessTests': {'host': ('ContractsTests',
+                              'NoHealthDataTests',
                               'PlanDecodingTests',
                               'MockRebaseTests',
                               'MockSeedRefreshTests',
@@ -239,6 +240,7 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
                            'SmokeTests',
                            'WelcomeTimelineTests')},
  'LocalStoreTests': {'host': ('SchemaV1Tests',
+                              'NoHealthDataMigrationTests',
                               'AccountDatabaseTests',
                               'RecordsTests',
                               'RepositoryObservationTests',
@@ -306,6 +308,7 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
                            'AuthAuditPredicateTests')},
  'TripWizardTests': {'host': ('TripGenerationTests',
                               'TripGenerationRecoveryTests',
+                              'WizardRetryTests',
                               'WizardDateTimeTests',
                               'WizardValidationTests',
                               'WizardFormTests',
@@ -855,7 +858,7 @@ def selection(mode, alias, only=(), include_logic=True, include_matrix=True):
     if include_logic:
         result += selectors("logic") + selectors("release")
     if mode == "launch-snapshots":
-        return [SNAPSHOTS[0]]
+        return ["AppTests/LaunchSnapshotTests"]
     return result
 
 
@@ -1054,9 +1057,14 @@ def test_pass(destination, configuration, selected, label, record=False, intro_o
 
 
 def recording_selection(selected, mode, recording):
-    baseline = (SNAPSHOTS[0], SNAPSHOTS[1], "AppTests/AuthSnapshotTests", "AppTests/TwoFactorSnapshotTests", "AppTests/ForgotPasswordSnapshotTests", "AppTests/ResetPasswordSnapshotTests", "AppTests/SignUpSnapshotTests", "AppTests/VerifyEmailSnapshotTests")
-    baseline += tuple(s for s in selected if s.split("/")[1].endswith("SnapshotTests") and s.split("/")[:2] != SNAPSHOTS[0].split("/")[:2] and s not in baseline)
-    candidates = baseline if recording == "all" or (recording == "1" and mode == "snapshots") else baseline[:1] if recording == "launch" or mode == "launch-snapshots" else baseline[1:]
+    baseline = selectors("snapshots")
+    launch = "AppTests/LaunchSnapshotTests"
+    if recording == "all" or (recording == "1" and mode == "snapshots"):
+        candidates = baseline
+    elif recording == "launch" or mode == "launch-snapshots":
+        candidates = [launch]
+    else:
+        candidates = [s for s in baseline if s != launch]
     return [s for s in selected if any(s == c or s.startswith(c + "/") for c in candidates)]
 
 

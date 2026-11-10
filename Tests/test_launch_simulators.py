@@ -37,6 +37,26 @@ AUTH_UI = (
 )
 AUTH_SNAPSHOTS = ('AppTests/AuthSnapshotTests', 'AppTests/TwoFactorSnapshotTests', 'AppTests/ForgotPasswordSnapshotTests')
 
+WIZARD_PROFILES = {
+    'AppTests/WizardCompletionProfileTests', 'AppTests/WizardCompletionSEProfileTests',
+    'AppTests/WizardCompletion17ProfileTests', 'AppTests/WizardCompletionAirProfileTests',
+    'AppTests/WizardCompletion18ProProfileTests', 'AppTests/WizardCompletion18ProMaxProfileTests',
+    'AppTests/WizardCompletionDuoProfileTests',
+}
+BOARD_CAPTURES = {
+    'AppUITests/SettingsBoardCaptureTests', 'AppUITests/WizardBoardCaptureTests',
+    'AppUITests/WizardBoardCaptureDarkTests', 'AppUITests/WizardBoardCaptureDutchTests',
+    'AppUITests/WizardBoardCaptureDutchDarkTests',
+}
+SNAPSHOT_SUITES = WIZARD_PROFILES | {
+    'AppTests/LaunchSnapshotTests', 'AppTests/WelcomeSnapshotTests',
+    'AppTests/AuthSnapshotTests', 'AppTests/TwoFactorSnapshotTests',
+    'AppTests/ForgotPasswordSnapshotTests', 'AppTests/ResetPasswordSnapshotTests',
+    'AppTests/SignUpSnapshotTests', 'AppTests/VerifyEmailSnapshotTests',
+    'AppTests/StepSheetSnapshotTests', 'AppTests/TodaySnapshotTests',
+    'AppTests/TodayRowSnapshotTests', 'AppTests/TripsSnapshotTests', 'AppTests/TripPageSnapshotTests',
+}
+
 
 def discovered_suites(directory):
     suites = set()
@@ -64,7 +84,11 @@ def discovered_suites(directory):
         for test in re.finditer(r'@Test\b', source):
             if not any(start <= test.start() < end for start, end in spans):
                 raise AssertionError(f'{file}: top-level tests need a named, classified suite')
-    return suites
+    while True:
+        inherited = {name for name, base in declarations if base in suites and name in test_bases}
+        if inherited <= suites:
+            return suites
+        suites |= inherited
 
 
 class TimeoutTests(unittest.TestCase):
@@ -302,6 +326,8 @@ class ClassificationTests(unittest.TestCase):
             self.assertNotEqual(discovered_suites(path), set())
             (path / 'Inherited.swift').write_text('class ScreenTestCase: XCTestCase { }\nclass AuthAuditCase: ScreenTestCase { }\nclass InheritedTests: AuthAuditCase { func testExample() {} }')
             self.assertEqual(discovered_suites(path), {'NewTests', 'InheritedTests'})
+            (path / 'Variants.swift').write_text('class GrandchildTests: VariantTests { }\nclass VariantTests: InheritedTests { }\nclass StaleVariantTests: OldTests { }')
+            self.assertEqual(discovered_suites(path), {'NewTests', 'InheritedTests', 'VariantTests', 'GrandchildTests'})
 
     def test_every_target_and_suite_is_classified_exactly_once(self):
         self.assertNotRegex(Path(__file__).read_text(), r"self\.fail\s*=")
@@ -311,18 +337,19 @@ class ClassificationTests(unittest.TestCase):
         targets.update(re.findall(r'^  (\w+):\n    type: bundle\.(?:unit-test|ui-testing)', project, re.M))
         self.assertEqual(targets, set(runner.SUITES))
         for target in targets:
-            directory = ROOT / target if (ROOT / target).exists() else ROOT / 'Packages/ChronoFlowKit/Tests' / target
-            entries = [s for suites in runner.SUITES[target].values() for s in suites]
-            self.assertEqual(len(entries), len(set(entries)), target)
-            self.assertEqual(set(entries), discovered_suites(directory), target)
+            with self.subTest(target=target):
+                directory = ROOT / target if (ROOT / target).exists() else ROOT / 'Packages/ChronoFlowKit/Tests' / target
+                entries = [s for suites in runner.SUITES[target].values() for s in suites]
+                self.assertEqual(len(entries), len(set(entries)), target)
+                self.assertEqual(set(entries), discovered_suites(directory), target)
 
-    def test_wizard_board_capture_is_explicit_only(self):
-        suite = 'AppUITests/WizardBoardCaptureTests'
-        self.assertEqual(runner.selectors('capture'), [suite])
-        self.assertEqual(runner.expand([suite]), [suite])
-        for mode in ['check', 'test', 'snapshots', 'runtime', 'matrix', 'welcome']:
+    def test_board_capture_suites_are_explicit_only(self):
+        self.assertEqual(set(runner.selectors('capture')), BOARD_CAPTURES)
+        for suite in BOARD_CAPTURES:
+            self.assertEqual(runner.expand([suite]), [suite])
+        for mode in ['check', 'test', 'snapshots', 'launch-snapshots', 'runtime', 'matrix', 'welcome', 'perf']:
             for alias in runner.MATRIX:
-                self.assertNotIn(suite, runner.selection(mode, alias))
+                self.assertFalse(BOARD_CAPTURES & set(runner.selection(mode, alias)), (mode, alias))
         with patch.dict(os.environ, {'WIZARD_BOARD_CAPTURE': '1'}):
             self.assertEqual(runner.environment()['TEST_RUNNER_WIZARD_BOARD_CAPTURE'], '1')
         with patch.dict(os.environ, {'WIZARD_BOARD_CAPTURE': '0', 'TEST_RUNNER_WIZARD_BOARD_CAPTURE': '1'}):
@@ -431,7 +458,7 @@ class ClassificationTests(unittest.TestCase):
 
     def test_unapproved_snapshot_comparison_is_opt_in_and_recording_is_preserved(self):
         snapshots = set(runner.selectors('snapshots'))
-        self.assertTrue(snapshots)
+        self.assertEqual(snapshots, SNAPSHOT_SUITES)
         for mode in ['check', 'test', 'runtime']:
             for alias in runner.MATRIX:
                 self.assertFalse(snapshots & set(runner.selection(mode, alias)), (mode, alias))
@@ -440,6 +467,12 @@ class ClassificationTests(unittest.TestCase):
             self.assertEqual(runner.expand([suite]), [suite])
         self.assertEqual(set(runner.recording_selection(list(snapshots), 'snapshots', '1')),
                          {s for s in snapshots & set(runner.SNAPSHOTS) if s.startswith('AppTests/')})
+        for suite in WIZARD_PROFILES:
+            self.assertEqual(runner.recording_selection([suite], 'test', '1'), [suite])
+            method = suite + '/testReady'
+            self.assertEqual(runner.recording_selection([method], 'test', '1'), [method])
+            self.assertEqual(runner.recording_selection([suite], 'test', 'launch'), [])
+        self.assertEqual(runner.selection('launch-snapshots', '17e'), ['AppTests/LaunchSnapshotTests'])
 
     def test_reference_free_welcome_and_auth_capture_guards_stay_in_check(self):
         expected = {'RenderTests/WelcomeRenderingTests'} | {
@@ -724,11 +757,15 @@ class RunnerTests(unittest.TestCase):
         self.assertIn('ChronoFlow: [test]', sections['PackageLogic'])
         self.assertEqual(set(re.findall(r'- package: ChronoFlowKit/(\w+)', sections['PackageLogic'])),
                          {'DesignSystemTests', 'LaunchTests', 'WelcomeTests'})
-        for target in ('AppCoreTests', 'LocalStoreTests', 'DataAccessTests', 'AuthTests'):
+        host_targets = {'AppCoreTests', 'AuthTests', 'DataAccessTests', 'LocalStoreTests', 'PlanCoreTests',
+                        'PlanUITests', 'RemindersTests', 'SettingsTests', 'SyncTests', 'ToolingTests', 'TripWizardTests'}
+        self.assertEqual({selector.split('/')[0] for selector in runner.selectors('host')},
+                         host_targets | {'DesignSystemTests'})
+        for target in host_targets:
             self.assertNotIn('ChronoFlowKit/' + target, schemes)
-        for selector in runner.expand(list(runner.SUITES.keys() - {'AppCoreTests', 'AuthTests', 'DataAccessTests',
-                                                   'LocalStoreTests', 'PlanCoreTests', 'PlanUITests', 'SettingsTests',
-                                                   'SyncTests', 'ToolingTests', 'TripWizardTests'})):
+            with self.assertRaises(ValueError):
+                runner.expand([target])
+        for selector in runner.expand(list(runner.SUITES.keys() - host_targets)):
             configuration = next(iter(runner.configurations([selector])))
             command = runner.build_command(configuration)
             scheme = command[command.index('-scheme') + 1]
@@ -866,7 +903,7 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(status, 0, output)
         recorded = [c for c,e in zip(self.commands,self.environments) if e.get('TEST_RUNNER_SNAPSHOT_RECORD')]
         self.assertEqual(len(recorded), 1)
-        for selector in runner.SNAPSHOTS[:2]:
+        for selector in ('AppTests/LaunchSnapshotTests', 'AppTests/WelcomeSnapshotTests'):
             self.assertIn('-only-testing:' + selector, recorded[0])
         self.assertEqual(recorded[0][recorded[0].index('-parallel-testing-worker-count') + 1], '1')
         self.assertNotIn('-only-testing:RenderTests/WelcomeRenderingTests', recorded[0])
@@ -1351,7 +1388,7 @@ class RunnerTests(unittest.TestCase):
                 self.assertEqual(matches[0][matches[0].index('-parallel-testing-enabled') + 1], 'YES')
 
     def test_record_modes_are_isolated_and_paths_cannot_collide(self):
-        for mode, expected in [('1', set(runner.SNAPSHOTS)), ('launch', set(runner.SNAPSHOTS[:1])), ('all', set(runner.SNAPSHOTS))]:
+        for mode, expected in [('1', SNAPSHOT_SUITES), ('launch', {'AppTests/LaunchSnapshotTests'}), ('all', SNAPSHOT_SUITES)]:
             self.setUp()
             with patch.dict(os.environ, {'SNAPSHOT_RECORD': mode, 'TEST_RUNNER_SNAPSHOT_RECORD': '1'}):
                 status, output = self.execute(aliases=['17e', 'duo'], mode='snapshots')
@@ -1365,9 +1402,7 @@ class RunnerTests(unittest.TestCase):
                     self.assertEqual(c[c.index('-parallel-testing-worker-count') + 1], '1')
                     self.assertTrue(c[c.index('-resultBundlePath') + 1].endswith('/record.xcresult'))
                     actual = {x.split(':',1)[1] for x in c if x.startswith('-only-testing:')}
-                    self.assertTrue(actual <= expected)
-                    self.assertIn('AppTests/LaunchSnapshotTests' if mode == 'launch' else 'AppTests/WelcomeSnapshotTests', actual)
-                    if mode == 'all': self.assertIn('AppTests/LaunchSnapshotTests', actual)
+                    self.assertEqual(actual, expected)
                     recorded.append(c[c.index('-destination') + 1])
             self.assertEqual(len(recorded), 1)
             self.assertEqual(recorded, ["platform=iOS Simulator,id=device-1"])
