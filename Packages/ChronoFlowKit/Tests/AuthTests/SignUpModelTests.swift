@@ -5,6 +5,29 @@ import Foundation
 import Testing
 
 @MainActor struct SignUpModelTests {
+    @Test(arguments: ["name", "email", "password", "password_confirmation"])
+    func unchangedFieldCallbacksPreserveMixedFailureUntilAnEdit(_ field: String) async throws {
+        let model = SignUpModel(
+            source: try authTestSource(), navigation: AuthNavigation(), deviceIdentity: { "test" },
+            deviceName: "test", accept: { _ in })
+        var fields = ["email": FieldMessage(key: "This email address is already in use.")]
+        if field != "email" { fields[field] = FieldMessage(key: "Please fill this in.") }
+        let failure = DataFailure.validation(fields: fields, status: 422)
+        model.form.receive(failure)
+        let edit: (String) -> Void =
+            switch field {
+            case "name": model.editName
+            case "email": model.editEmail
+            case "password": model.editPassword
+            default: model.editConfirmation
+            }
+        edit("")
+        #expect(model.form.failure == failure && model.form.banner == .emailTaken)
+        if field != "email" { #expect(model.form.fields[field] != nil) }
+        edit("changed")
+        #expect(model.form.failure == nil && model.form.banner == nil && model.form.fields[field] == nil)
+    }
+
     @Test func registrationUsesDeviceLanguageAndTheExistingSessionController() async throws {
         let source = try authTestSource()
         let session = AuthTestSession()

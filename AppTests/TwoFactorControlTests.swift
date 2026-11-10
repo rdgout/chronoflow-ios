@@ -6,6 +6,11 @@ import UIKit
 import XCTest
 
 nonisolated final class TwoFactorControlTests: XCTestCase {
+    override func setUp() {
+        super.setUp()
+        executionTimeAllowance = 60
+    }
+
     @MainActor func testRootCapMakesAX5EqualXXLarge() async throws {
         try await AuthTestHost.registerFonts()
         let fixture = try XCTUnwrap(AuthDeviceFixture.all().first { $0.name == "se" })
@@ -83,16 +88,18 @@ nonisolated final class TwoFactorControlTests: XCTestCase {
                 XCTAssertFalse(field.isEnabled)
                 model.form.receive(failure)
                 model.form.finish()
+                let shouldFocus = failure != .server(status: 503)
                 try await host.settle {
-                    field.isEnabled && field.isFirstResponder && textFields(host.window).first === field
+                    field.isEnabled && field.isFirstResponder == shouldFocus && textFields(host.window).first === field
                         && model.form.failure == failure
                 }
                 XCTAssertTrue(field.isEnabled)
-                XCTAssertTrue(field.isFirstResponder)
+                XCTAssertEqual(field.isFirstResponder, shouldFocus)
                 XCTAssertTrue(textFields(host.window).first === field)
                 XCTAssertEqual(model.form.failure, failure)
                 XCTAssertEqual(model.form.banner, failure == .server(status: 503) ? .server : nil)
                 XCTAssertEqual(model.form.fields.isEmpty, failure == .server(status: 503))
+                XCTAssertTrue(field.becomeFirstResponder())
             }
         }
     }
