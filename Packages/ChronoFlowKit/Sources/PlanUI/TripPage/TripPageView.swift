@@ -16,7 +16,7 @@ public struct TripPageView: View {
     @State private var scroll = TripScrollTracker()
     @State private var headerScrolled = false
     @State private var copy: PageCopy
-    @State private var viewport = CGSize.zero
+    @State private var windowSize: CGSize?
     @ScaledMetric(relativeTo: .caption2) private var compactHeight = PlanMetrics.compactHeaderHeight
     @State private var showLegend = false
     @State private var renderer = TimelineRenderer()
@@ -71,6 +71,9 @@ public struct TripPageView: View {
         }
         .planRefreshFeedback(feedback)
         .foregroundStyle(ColorToken.foreground.color).background(ColorToken.background.color)
+        #if os(iOS)
+            .background { TripWindowSizeHost { windowSize = $0 } }
+        #endif
         .task {
             model.plan.language = locale.language.languageCode?.identifier == "nl" ? .nl : .en
             copy = PageCopy(language: model.plan.language)
@@ -103,8 +106,13 @@ public struct TripPageView: View {
     }
 
     private var page: some View {
-        ScrollViewReader { proxy in
-            GeometryReader { geometry in
+        GeometryReader { geometry in
+            let containerSize = CGSize(
+                width: geometry.size.width + geometry.safeAreaInsets.leading + geometry.safeAreaInsets.trailing,
+                height: geometry.size.height + geometry.safeAreaInsets.top + geometry.safeAreaInsets.bottom)
+            let size = windowSize ?? containerSize
+            let layout = TripPageLayout.resolve(width: size.width, height: size.height)
+            ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(spacing: PlanMetrics.sectionGap) {
                         if model.state != .ready && !model.plan.metadata.isEmpty {
@@ -121,8 +129,9 @@ public struct TripPageView: View {
                                     day: day, layout: model.plan.layouts[day.id],
                                     clock: model.plan.dayClock(for: day.id),
                                     timeline: model.timeline, copy: copy, renderer: renderer, symbols: timelineSymbols,
-                                    compact: geometry.size.width + geometry.safeAreaInsets.leading
-                                        + geometry.safeAreaInsets.trailing < PlanMetrics.timelineLabelBreakpoint,
+                                    compact: size.width < PlanMetrics.timelineLabelBreakpoint,
+                                    listWidth: layout.listWidth, selectedBlockID: model.selectedStep?.blockID,
+                                    stickyTop: compactHeight,
                                     viewportHeight: geometry.size.height, onBlock: openBlock,
                                     onFrame: onFirstTimelineFrame
                                 ).equatable().id(day.id)
@@ -136,24 +145,42 @@ public struct TripPageView: View {
                             noPlan
                         } else {
                             if model.state == .remoteLoading || model.state == .remoteOffline { remoteSummary }
-                            if model.state == .remoteOffline { remoteOffline } else { skeleton }
+                            if model.state == .remoteOffline {
+                                remoteOffline(wide: layout.isWide)
+                            } else if model.state == .remoteLoading, let listWidth = layout.listWidth {
+                                WidePlanSkeleton(copy: copy, listWidth: listWidth)
+                            } else {
+                                skeleton
+                            }
                         }
-                    }.padding(.horizontal, PlanMetrics.gutter).padding(.bottom, PlanMetrics.gutter)
+                    }
+                    .background {
+                        #if os(iOS)
+                            TripScrollHost(tracker: scroll)
+                        #endif
+                    }
+                    .padding(.horizontal, layout.gutter).padding(.bottom, PlanMetrics.gutter).planPageRail()
                 }
                 .refreshable { await refreshPlan() }
                 .scrollBounceBehavior(.always, axes: .vertical)
                 .coordinateSpace(name: "trip.scroll").accessibilityElement(children: .contain)
                 .accessibilityIdentifier("trip.scroll")
                 .onAppear {
-                    viewport = geometry.size
                     if model.plan.prepared != nil {
                         model.acceptPreparedPlan()
+                        #if DEBUG
+                            if uiTestOptions.startAtSummary { return }
+                        #endif
                         if let id = model.anchor.dayID { proxy.scrollTo(id, anchor: .top) }
                     }
                 }
-                .onChange(of: geometry.size) { _, size in viewport = size }
                 .onPreferenceChange(DayFrames.self) { value in
-                    scroll.frames = value
+                    if scroll.resize(
+                        frames: value, viewport: geometry.size, layout: layout, anchor: model.currentAnchor)
+                    {
+                        if let id = scroll.pendingDayID { proxy.scrollTo(id, anchor: .top) }
+                        return
+                    }
                     if let current = model.plan.prepared?.days.last(where: {
                         (value[$0.id]?.minY ?? .infinity) <= compactHeight
                     }), let frame = value[current.id] {
@@ -162,9 +189,10 @@ public struct TripPageView: View {
                     let id = model.anchor.dayID ?? ""
                     let scrolled = (value[id]?.minY ?? .infinity) < 0
                     if headerScrolled != scrolled { headerScrolled = scrolled }
+                    scroll.track(model.currentAnchor)
                     scroll.updateChrome(dayID: id, reduceMotion: reduceMotion)
                 }
-                .overlay(alignment: .top) { compactHeader }
+                .overlay(alignment: .top) { compactHeader(layout: layout) }
                 .onChange(of: model.plan.prepared) { old, new in
                     guard new != nil else { return }
                     let previous = model.currentAnchor
@@ -177,69 +205,76 @@ public struct TripPageView: View {
                             old == nil
                             ? model.anchor : replacementAnchor(previous, days: model.plan.detail?.plan.days ?? [])
                         if let id = anchor.dayID {
-                            let height = scroll.frames[previous.dayID ?? ""]?.height ?? viewport.height
-                            let fraction = height > viewport.height ? anchor.offset / (height - viewport.height) : 0
+                            let height = scroll.frames[previous.dayID ?? ""]?.height ?? geometry.size.height
+                            let fraction =
+                                height > geometry.size.height
+                                ? anchor.offset / (height - geometry.size.height) : 0
                             proxy.scrollTo(id, anchor: UnitPoint(x: 0, y: fraction))
                         }
                     }
                 }
-            }
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    if model.state == .ready, let prepared = model.plan.prepared {
-                        Menu {
-                            Section(copy("Go to a day")) {
-                                ForEach(Array(prepared.days.enumerated()), id: \.element.id) { index, day in
-                                    Button {
-                                        jump(day.id, proxy: proxy)
-                                    } label: {
-                                        if day.id == model.anchor.dayID {
-                                            Label(day.title + " · " + day.date, systemImage: "checkmark")
-                                        } else {
-                                            Text(verbatim: day.title + " · " + day.date)
+                .toolbar {
+                    ToolbarItem(placement: .principal) {
+                        if model.state == .ready, let prepared = model.plan.prepared {
+                            Menu {
+                                Section(copy("Go to a day")) {
+                                    ForEach(Array(prepared.days.enumerated()), id: \.element.id) { index, day in
+                                        Button {
+                                            jump(day.id, proxy: proxy)
+                                        } label: {
+                                            if day.id == model.anchor.dayID {
+                                                Label(day.title + " · " + day.date, systemImage: "checkmark")
+                                            } else {
+                                                Text(verbatim: day.title + " · " + day.date)
+                                            }
                                         }
+                                        .accessibilityIdentifier("trip.dayMenu.day.\(index)")
                                     }
-                                    .accessibilityIdentifier("trip.dayMenu.day.\(index)")
                                 }
-                            }
-                        } label: {
-                            VStack(spacing: 0) {
-                                Text(verbatim: prepared.title).font(Typography.planTitle.font).lineLimit(1)
-                                HStack(spacing: PlanMetrics.smallGap) {
-                                    Text(verbatim: subtitle).lineLimit(1)
-                                    Image(systemName: "chevron.down")
-                                }.font(Typography.planSubtitle.font).foregroundStyle(ColorToken.mutedForeground.color)
-                            }
-                        }.accessibilityLabel(dayMenuLabel).accessibilityValue(
-                            Text(
-                                verbatim: model.plan.prepared?.days.first { $0.id == model.anchor.dayID }.map {
-                                    $0.title + " · " + $0.date
-                                } ?? "")
-                        ).accessibilityIdentifier("trip.dayMenu")
-                    } else {
-                        Text(verbatim: model.plan.prepared?.title ?? cardTitle).font(Typography.planTitle.font)
-                            .lineLimit(1)
+                            } label: {
+                                VStack(spacing: 0) {
+                                    Text(verbatim: prepared.title).font(Typography.planTitle.font).lineLimit(1)
+                                    HStack(spacing: PlanMetrics.smallGap) {
+                                        Text(verbatim: subtitle).lineLimit(1)
+                                        Image(systemName: "chevron.down")
+                                    }.font(Typography.planSubtitle.font).foregroundStyle(
+                                        ColorToken.mutedForeground.color)
+                                }
+                            }.accessibilityLabel(dayMenuLabel).accessibilityValue(
+                                Text(
+                                    verbatim: model.plan.prepared?.days.first { $0.id == model.anchor.dayID }.map {
+                                        $0.title + " · " + $0.date
+                                    } ?? "")
+                            ).accessibilityIdentifier("trip.dayMenu")
+                                .planContentBounds(identifier: "trip.dayMenu")
+                        } else {
+                            Text(verbatim: model.plan.prepared?.title ?? cardTitle).font(Typography.planTitle.font)
+                                .lineLimit(1)
+                        }
                     }
-                }
-                if model.state == .ready && model.plan.prepared != nil {
+                    if !layout.isWide && model.state == .ready && model.plan.prepared != nil {
+                        ToolbarItem(placement: .primaryAction) {
+                            Button(
+                                copy(model.timeline ? "Show as list" : "Show as timeline"),
+                                systemImage: model.timeline ? "list.bullet" : "rectangle.split.3x1"
+                            ) {
+                                model.timeline.toggle()
+                                if let id = model.anchor.dayID { proxy.scrollTo(id, anchor: .top) }
+                            }.accessibilityIdentifier("trip.viewToggle")
+                                .planContentBounds(identifier: "trip.viewToggle")
+                        }
+                    }
                     ToolbarItem(placement: .primaryAction) {
-                        Button(
-                            copy(model.timeline ? "Show as list" : "Show as timeline"),
-                            systemImage: model.timeline ? "list.bullet" : "rectangle.split.3x1"
-                        ) {
-                            model.timeline.toggle()
-                            if let id = model.anchor.dayID { proxy.scrollTo(id, anchor: .top) }
-                        }.accessibilityIdentifier("trip.viewToggle")
+                        Button(copy("Trip actions"), systemImage: "ellipsis") { onActions?() }.disabled(
+                            onActions == nil
+                        )
+                        .accessibilityIdentifier("trip.actions.open")
                     }
                 }
-                ToolbarItem(placement: .primaryAction) {
-                    Button(copy("Trip actions"), systemImage: "ellipsis") { onActions?() }.disabled(onActions == nil)
-                        .accessibilityIdentifier("trip.actions.open")
-                }
+                #if os(iOS)
+                    .navigationBarTitleDisplayMode(.inline)
+                #endif
             }
-            #if os(iOS)
-                .navigationBarTitleDisplayMode(.inline)
-            #endif
         }
     }
 
@@ -264,21 +299,23 @@ public struct TripPageView: View {
         return model.plan.prepared?.subtitle ?? ""
     }
 
-    @ViewBuilder private var compactHeader: some View {
+    @ViewBuilder private func compactHeader(layout: TripPageLayout) -> some View {
         if let day = model.plan.prepared?.days.first(where: { $0.id == model.anchor.dayID }) {
             let header = Group {
-                if model.timeline {
+                if layout.isWide {
+                    VStack(spacing: PlanMetrics.smallGap) {
+                        compactDayTitle(day)
+                        HStack(spacing: PlanMetrics.wideColumnGap) {
+                            LaneHeadings(copy: copy)
+                            Color.clear.frame(width: layout.listWidth.map { CGFloat($0) })
+                        }
+                    }
+                } else if model.timeline {
                     LaneHeadings(copy: copy, day: day)
                 } else {
-                    HStack {
-                        (Text(verbatim: day.title).font(Typography.planListTitle.font)
-                            + Text(verbatim: " · " + day.date).font(Typography.planListLine.font)
-                            .foregroundColor(ColorToken.mutedForeground.color))
-                        Spacer(minLength: PlanMetrics.smallGap)
-                        Text(verbatim: day.zone).font(Typography.planSubtitle.font)
-                    }
+                    compactDayTitle(day)
                 }
-            }.padding(.horizontal, PlanMetrics.gutter).frame(minHeight: compactHeight)
+            }.padding(.horizontal, layout.gutter).frame(minHeight: compactHeight)
                 .background(ColorToken.card.color)
             #if os(iOS)
                 CompactHeaderHost(content: header, tracker: scroll)
@@ -287,6 +324,17 @@ public struct TripPageView: View {
                 header.opacity(headerScrolled ? 1 : 0).accessibilityHidden(!headerScrolled)
             #endif
         }
+    }
+
+    private func compactDayTitle(_ day: PreparedDay) -> some View {
+        HStack {
+            (Text(verbatim: day.title).font(Typography.planListTitle.font)
+                + Text(verbatim: " · " + day.date).font(Typography.planListLine.font)
+                .foregroundColor(ColorToken.mutedForeground.color))
+            Spacer(minLength: PlanMetrics.smallGap)
+            Text(verbatim: day.zone).font(Typography.planSubtitle.font)
+        }
+        .planContentBounds(identifier: "trip.compactHeader")
     }
 
     private func jump(_ id: String, proxy: ScrollViewProxy) {
@@ -375,28 +423,38 @@ public struct TripPageView: View {
             Text(verbatim: copy("Making the plan needs a connection.")).font(Typography.planListLine.font)
         }
     }
-    private var remoteOffline: some View {
+    private func remoteOffline(wide: Bool) -> some View {
         stateCard(
             icon: "icloud.and.arrow.down", title: "This plan downloads when you’re online",
             text:
-                "Plans for active trips and trips in the next 7 days are always on your phone. This one is further away, so its plan opens once you’re connected."
+                "Plans for active trips and trips in the next 7 days are always on your phone. This one is further away, so its plan opens once you’re connected.",
+            wide: wide
         ) {
             Button(copy("Try again")) { model.retry() }.buttonStyle(.bordered)
             Text(verbatim: copy("Your other trips keep working offline.")).font(Typography.planListLine.font)
         }
+        .padding(.top, wide ? PlanMetrics.sectionGap : 0)
+        .planContentBounds(identifier: "trip.remote.offline")
     }
     private func stateCard<Actions: View>(
-        icon: String, title: String, text: String, @ViewBuilder actions: () -> Actions
+        icon: String, title: String, text: String, wide: Bool = false, @ViewBuilder actions: () -> Actions
     ) -> some View {
         VStack(spacing: PlanMetrics.sectionGap) {
-            Image(systemName: icon).frame(width: PlanMetrics.touch, height: PlanMetrics.touch).background(
-                ColorToken.muted.color, in: Circle())
+            Image(systemName: icon)
+                .frame(
+                    width: wide ? PlanMetrics.wideRemoteIcon : PlanMetrics.touch,
+                    height: wide ? PlanMetrics.wideRemoteIcon : PlanMetrics.touch
+                ).background(ColorToken.muted.color, in: Circle())
             Text(verbatim: copy(title)).font(
                 title == "No plan yet" ? Typography.planCardTitle.font : Typography.planRemoteTitle.font
             ).accessibilityAddTraits(.isHeader)
             Text(verbatim: copy(text)).font(Typography.authBody.font).foregroundStyle(ColorToken.mutedForeground.color)
+                .frame(maxWidth: wide ? PlanMetrics.wideRemoteBodyWidth : .infinity)
             actions()
-        }.padding(PlanMetrics.cardPadding).frame(maxWidth: .infinity).multilineTextAlignment(.center)
+        }.padding(.horizontal, wide ? PlanMetrics.wideGutter : PlanMetrics.cardPadding)
+            .padding(.vertical, wide ? PlanMetrics.wideRemotePadding : PlanMetrics.cardPadding).frame(
+                maxWidth: .infinity
+            ).multilineTextAlignment(.center)
             .overlay(
                 RoundedRectangle(cornerRadius: PlanMetrics.cardRadius).strokeBorder(
                     ColorToken.border.color,

@@ -12,6 +12,10 @@ struct TripDayRow: View, Equatable {
     let renderer: TimelineRenderer
     let symbols: TimelineSymbols
     var compact = false
+    var listWidth: Double? = nil
+    var selectedBlockID: String? = nil
+    var stickyTop: Double = 0
+    @State private var listHeight: CGFloat? = nil
     let viewportHeight: Double
     let onBlock: (String) -> Void
     let onFrame: () -> Void
@@ -21,6 +25,8 @@ struct TripDayRow: View, Equatable {
             && lhs.timeline == rhs.timeline && lhs.copy == rhs.copy && lhs.renderer === rhs.renderer
             && lhs.symbols === rhs.symbols && lhs.viewportHeight == rhs.viewportHeight
             && lhs.compact == rhs.compact
+            && lhs.listWidth == rhs.listWidth && lhs.selectedBlockID == rhs.selectedBlockID
+            && lhs.stickyTop == rhs.stickyTop
     }
 
     var body: some View {
@@ -32,17 +38,52 @@ struct TripDayRow: View, Equatable {
                             key: DayFrames.self,
                             value: ["header." + day.id: geo.frame(in: .named("trip.scroll"))])
                     })
-            clockContent
+            if let listWidth, layout != nil {
+                HStack(alignment: .top, spacing: PlanMetrics.wideColumnGap) {
+                    VStack(spacing: 0) { clockContent }
+                        .frame(maxWidth: .infinity)
+                        .planContentBounds(identifier: "trip.wide.timeline.\(day.id)")
+                    GeometryReader { geometry in
+                        let height = min(
+                            geometry.size.height, PlanMetrics.wideListMaxHeight,
+                            max(PlanMetrics.touch, viewportHeight - stickyTop), listHeight ?? .infinity)
+                        let offset = min(
+                            max(0, stickyTop - geometry.frame(in: .named("trip.scroll")).minY),
+                            max(0, geometry.size.height - height))
+                        ScrollView {
+                            DayListView(
+                                day: day, now: clock.now, copy: copy, selectedBlockID: selectedBlockID,
+                                onBlock: onBlock
+                            )
+                            .padding(.top, PlanMetrics.rowGap)
+                            .onGeometryChange(for: CGFloat.self) {
+                                $0.size.height
+                            } action: {
+                                listHeight = $0
+                            }
+                        }
+                        .scrollBounceBehavior(.basedOnSize)
+                        .accessibilityIdentifier("trip.wide.list.scroll.\(day.id)")
+                        .frame(height: height)
+                        .offset(y: offset)
+                        .planContentBounds(identifier: "trip.wide.list.\(day.id)")
+                    }.frame(width: listWidth)
+                }
+            } else {
+                clockContent
+            }
         }
         .background(
             GeometryReader { geo in
                 Color.clear.preference(key: DayFrames.self, value: [day.id: geo.frame(in: .named("trip.scroll"))])
-            })
+            }
+        )
+        .planContentBounds(identifier: "trip.day.\(day.id)")
     }
 
     var clockContent: DayClockContent {
         DayClockContent(
-            day: day, layout: layout, clock: clock, timeline: timeline, copy: copy,
+            day: day, layout: layout, clock: clock, timeline: listWidth != nil || timeline, copy: copy,
             renderer: renderer, symbols: symbols, compact: compact, viewportHeight: viewportHeight,
             onBlock: onBlock, onFrame: onFrame)
     }

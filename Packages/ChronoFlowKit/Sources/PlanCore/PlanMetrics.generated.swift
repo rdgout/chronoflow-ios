@@ -36,6 +36,24 @@ public enum PlanMetrics {
     public static var tileRadius: Double { 14.0000000000 }
     public static var timelineLabelBreakpoint: Double { 640.0000000000 }
     public static var touch: Double { 44.0000000000 }
+    public static var wideBreakpoint: Double { 600.0000000000 }
+    public static var wideColumnGap: Double { 16.0000000000 }
+    public static var wideGutter: Double { 20.0000000000 }
+    public static var wideLargeBreakpoint: Double { 900.0000000000 }
+    public static var wideLargeListWidth: Double { 320.0000000000 }
+    public static var wideListMaxHeight: Double { 700.0000000000 }
+    public static var wideListWidth: Double { 280.0000000000 }
+    public static var wideRemoteBodyWidth: Double { 420.0000000000 }
+    public static var wideRemoteIcon: Double { 52.0000000000 }
+    public static var wideRemotePadding: Double { 28.0000000000 }
+    public static var wideSkeletonCaffeineOffset: Double { 150.0000000000 }
+    public static var wideSkeletonDayHeight: Double { 64.0000000000 }
+    public static var wideSkeletonHeight: Double { 360.0000000000 }
+    public static var wideSkeletonLightHeight: Double { 90.0000000000 }
+    public static var wideSkeletonLightOffset: Double { 60.0000000000 }
+    public static var wideSkeletonPillWidth: Double { 88.0000000000 }
+    public static var wideSkeletonTravelHeight: Double { 110.0000000000 }
+    public static var wideSkeletonTravelOffset: Double { 200.0000000000 }
     public static var zonePadding: Double { 20.0000000000 }
     public static var zonePillPadding: Double { 8.0000000000 }
     public static var zonePillVerticalPadding: Double { 2.0000000000 }

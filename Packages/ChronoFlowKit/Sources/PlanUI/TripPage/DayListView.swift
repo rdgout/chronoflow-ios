@@ -8,14 +8,16 @@ public struct DayListView: View {
     public var now: Date
     public var copy: PageCopy
     public var onBlock: (String) -> Void
+    public var selectedBlockID: String?
     public init(
         day: PreparedDay, now: Date = .distantPast, copy: PageCopy = PageCopy(language: .en),
-        onBlock: @escaping (String) -> Void = { _ in }
+        selectedBlockID: String? = nil, onBlock: @escaping (String) -> Void = { _ in }
     ) {
         self.day = day
         self.now = now
         self.copy = copy
         self.onBlock = onBlock
+        self.selectedBlockID = selectedBlockID
     }
 
     public var body: some View {
@@ -23,6 +25,12 @@ public struct DayListView: View {
             ForEach(day.blocks) { block in
                 if block.block.type == .zoneChange {
                     ZoneChangeCard(block: block, onBlock: onBlock)
+                        .overlay {
+                            if selectedBlockID == block.id {
+                                RoundedRectangle(cornerRadius: PlanMetrics.cardRadius).strokeBorder(
+                                    ColorToken.dawn.color, lineWidth: PlanMetrics.emphasisBorder)
+                            }
+                        }
                 } else {
                     Button {
                         onBlock(block.id)
@@ -68,10 +76,11 @@ public struct DayListView: View {
         .background(ColorToken.card.color, in: RoundedRectangle(cornerRadius: PlanMetrics.rowRadius))
         .overlay(
             RoundedRectangle(cornerRadius: PlanMetrics.rowRadius).strokeBorder(
-                ColorToken.border.color,
+                selectedBlockID == block.id ? ColorToken.dawn.color : ColorToken.border.color,
                 style: StrokeStyle(
-                    lineWidth: PlanMetrics.border,
-                    dash: block.block.priority == .optional ? [PlanMetrics.smallGap, PlanMetrics.smallGap] : []))
+                    lineWidth: selectedBlockID == block.id ? PlanMetrics.emphasisBorder : PlanMetrics.border,
+                    dash: block.block.priority == .optional && selectedBlockID != block.id
+                        ? [PlanMetrics.smallGap, PlanMetrics.smallGap] : []))
         )
         .opacity(block.status == nil ? 1 : PlanMetrics.markedRowOpacity)
     }
