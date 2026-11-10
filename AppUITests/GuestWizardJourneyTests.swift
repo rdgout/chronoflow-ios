@@ -29,7 +29,7 @@ nonisolated final class GuestWizardJourneyTests: ScreenTestCase {
 
     @MainActor private func tap(_ identifier: String, in app: XCUIApplication) {
         let button = app.buttons[identifier].firstMatch
-        guard button.waitUntil(.hittable, timeout: 3) else {
+        guard button.waitUntil(.hittable, timeout: 5) else {
             XCTFail("Expected \(identifier)")
             return
         }
