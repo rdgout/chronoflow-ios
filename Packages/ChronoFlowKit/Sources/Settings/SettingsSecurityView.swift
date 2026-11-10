@@ -295,10 +295,9 @@
             if model.retryAt != nil {
                 TimelineView(.periodic(from: .now, by: 1)) { context in
                     SettingsError(
-                        title: SettingsStrings.text(
-                            "Too many attempts. Try again in {{seconds}} seconds.",
-                            language: locale.language.languageCode?.identifier == "nl" ? .nl : .en,
-                            ["seconds": String(model.remaining(at: context.date))]))
+                        title: SettingsStrings.lockout(
+                            seconds: model.remaining(at: context.date),
+                            language: locale.language.languageCode?.identifier == "nl" ? .nl : .en))
                 }
             }
         }

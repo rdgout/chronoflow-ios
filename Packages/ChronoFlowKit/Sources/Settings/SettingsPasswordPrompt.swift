@@ -31,9 +31,7 @@
                     let remaining = max(0, Int(ceil(retryAt?.timeIntervalSince(context.date) ?? 0)))
                     let alert =
                         remaining > 0
-                        ? SettingsStrings.text(
-                            "Too many attempts. Try again in {{seconds}} seconds.", language: language,
-                            ["seconds": String(remaining)])
+                        ? SettingsStrings.lockout(seconds: remaining, language: language)
                         : error
                     VStack(alignment: .leading, spacing: PlanUITokens.radiusLg) {
                         Text(t(detail)).settingsFont(Typography.settingsPromptBody).foregroundStyle(

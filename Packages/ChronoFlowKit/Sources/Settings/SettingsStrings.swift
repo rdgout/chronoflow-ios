@@ -2,6 +2,11 @@ import AppCore
 import Foundation
 
 public enum SettingsStrings {
+    public static func lockout(seconds: Int, language: Language) -> String {
+        let wait = LockoutWait(seconds: seconds)
+        return text(wait.localizationKey, language: language, count: wait.count)
+    }
+
     public static func text(_ key: String, language: Language, _ values: [String: String] = [:], count: Int? = nil)
         -> String
     {

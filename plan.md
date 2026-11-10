@@ -1968,6 +1968,8 @@ Quick win (2026-11-10): replace the date/change placeholders with the web app’
 
 **17h: Settings pages** (`feat/phase-17h-settings-pages`)
 
+Quick win (2026-11-10): show lock-outs in catalog-pluralized seconds, rounded-up minutes or hours, sharing the unit choice with wizard countdowns.
+
 User decision, 2026-11-08: build the Settings destination pages in order, using RN's Set* boards and behaviour and paired RN en/nl copy. Clarification (user report, 2026-11-09): native controls apply only where the board draws a system control; designed surfaces stay as drawn, including cards, rows, fields, radio groups, notices and buttons. This lifts the destination-page and Preferences replay deferrals for this phase. Keep edits to shared plan/catalog/runner entries scoped to 17h. No simulator or snapshot execution; run `make lint` and `make quick`, and deliver atomic patches under `build/commits/`.
 
 - [x] Import the non-Wide Settings boards at RN `e24872a`, including password-prompt states needed by security/deletion, and append SHA-256 provenance to `rn-canvas.json`.

@@ -1,8 +1,25 @@
 import AppCore
+import Foundation
 import Settings
 import Testing
 
 @Suite struct SettingsStringsTests {
+    @Test func lockoutPluralUnitsInBothLanguages() {
+        for (seconds, en, nl) in [
+            (1, "1 second", "1 seconde"), (45, "45 seconds", "45 seconden"),
+            (60, "1 minute", "1 minuut"), (61, "2 minutes", "2 minuten"),
+            (2818, "47 minutes", "47 minuten"), (3600, "1 hour", "1 uur"), (3601, "2 hours", "2 uur"),
+        ] {
+            for language in [Language.en, .nl] {
+                let expected =
+                    language == .en
+                    ? "Too many attempts. Try again in \(en)."
+                    : "Te veel pogingen. Probeer het over \(nl) opnieuw."
+                #expect(SettingsStrings.lockout(seconds: seconds, language: language) == expected)
+            }
+        }
+    }
+
     @Test func pluralsAndDutchComeFromRN() {
         for (key, enOne, enMany, nlOne, nlMany) in [
             ("%lld credits left", "1 credit left", "2 credits left", "Nog 1 tegoed over", "Nog 2 tegoeden over"),

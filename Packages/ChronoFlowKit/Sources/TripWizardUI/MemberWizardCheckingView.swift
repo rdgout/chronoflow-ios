@@ -110,7 +110,7 @@
             case .offline:
                 kind = "offline"
                 title = "Checking needs a connection"
-                body = "Connect to the internet and try again."
+                body = t("Connect to the internet and try again.")
                 symbol = "icloud.slash"
             case .throttled:
                 kind = "throttle"
@@ -118,12 +118,12 @@
                 symbol = "clock"
                 body =
                     model.retrySeconds > 0
-                    ? "Too many attempts. Try again in {{count}} seconds."
-                    : "Too many attempts. Please try again later."
+                    ? WizardStrings.lockout(seconds: model.retrySeconds, locale: locale)
+                    : t("Too many attempts. Please try again later.")
             default:
                 kind = "server"
                 title = "We couldn't check your trip"
-                body = "Something went wrong on our side. Try again in a moment."
+                body = t("Something went wrong on our side. Try again in a moment.")
                 symbol = "exclamationmark.circle"
             }
             return VStack(spacing: PlanUITokens.space3) {
@@ -136,7 +136,7 @@
                 ).accessibilityHidden(true)
                 WelcomeText(t(title), style: Typography.wizardFailureTitle, color: .foreground)
                 WelcomeText(
-                    t(body, ["count": String(model.retrySeconds)]), style: Typography.wizardFailureBody,
+                    body, style: Typography.wizardFailureBody,
                     color: .mutedForeground)
             }.multilineTextAlignment(.center).frame(maxWidth: .infinity)
                 .padding(.horizontal, PlanUITokens.space5).padding(.vertical, PlanUITokens.wizardFailurePadding)

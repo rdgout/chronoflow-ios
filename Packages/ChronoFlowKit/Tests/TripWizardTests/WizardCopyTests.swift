@@ -6,6 +6,23 @@ import Testing
 import TripWizardUI
 
 @Suite struct WizardCopyTests {
+    @Test func lockoutPluralUnitsInBothLanguages() {
+        for (seconds, en, nl) in [
+            (1, "1 second", "1 seconde"), (45, "45 seconds", "45 seconden"),
+            (60, "1 minute", "1 minuut"), (61, "2 minutes", "2 minuten"),
+            (2818, "47 minutes", "47 minuten"), (3600, "1 hour", "1 uur"), (3601, "2 hours", "2 uur"),
+        ] {
+            for language in [Language.en, .nl] {
+                let expected =
+                    language == .en
+                    ? "Too many attempts. Try again in \(en)."
+                    : "Te veel pogingen. Probeer het over \(nl) opnieuw."
+                #expect(
+                    WizardStrings.lockout(seconds: seconds, locale: Locale(identifier: language.rawValue)) == expected)
+            }
+        }
+    }
+
     @Test func visibleWizardCopyHasEnglishAndDutchTogether() throws {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
             .deletingLastPathComponent()
@@ -13,12 +30,22 @@ import TripWizardUI
         let object = try #require(JSONSerialization.jsonObject(with: Data(contentsOf: catalog)) as? [String: Any])
         let strings = try #require(object["strings"] as? [String: [String: Any]])
         for (key, value) in strings {
-            let localizations = try #require(value["localizations"] as? [String: [String: [String: String]]])
-            if !key.hasSuffix("_one"), key != "wizard.room.from" {
-                #expect(localizations["en"]?["stringUnit"]?["value"] == key)
+            let localizations = try #require(value["localizations"] as? [String: [String: Any]])
+            for language in ["en", "nl"] {
+                let entry = try #require(localizations[language])
+                if let variations = entry["variations"] as? [String: [String: [String: [String: String]]]] {
+                    let plural = try #require(variations["plural"])
+                    for form in ["one", "other"] {
+                        #expect(plural[form]?["stringUnit"]?["value"]?.isEmpty == false)
+                    }
+                } else {
+                    let unit = try #require(entry["stringUnit"] as? [String: String])
+                    #expect(unit["value"]?.isEmpty == false)
+                    if language == "en", !key.hasSuffix("_one"), key != "wizard.room.from" {
+                        #expect(unit["value"] == key)
+                    }
+                }
             }
-            #expect(localizations["en"]?["stringUnit"]?["value"]?.isEmpty == false)
-            #expect(localizations["nl"]?["stringUnit"]?["value"]?.isEmpty == false)
         }
         for key in [
             "Where are you flying?", "When is your flight?", "From your last trip",

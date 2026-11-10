@@ -2369,22 +2369,6 @@
         }
       }
     },
-    "Too many attempts. Try again in {{count}} seconds.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Too many attempts. Try again in {{count}} seconds."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Te veel pogingen. Probeer het over {{count}} seconden opnieuw."
-          }
-        }
-      }
-    },
     "Try again in {{count}} s": {
       "localizations": {
         "en": {
@@ -4204,6 +4188,126 @@
           "stringUnit": {
             "state": "translated",
             "value": "Je credits van je nieuwe account blijven ongebruikt."
+          }
+        }
+      }
+    },
+    "Too many attempts. Try again in %lld seconds.": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Too many attempts. Try again in %lld second."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Too many attempts. Try again in %lld seconds."
+                }
+              }
+            }
+          }
+        },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Te veel pogingen. Probeer het over %lld seconde opnieuw."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Te veel pogingen. Probeer het over %lld seconden opnieuw."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Too many attempts. Try again in %lld minutes.": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Too many attempts. Try again in %lld minute."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Too many attempts. Try again in %lld minutes."
+                }
+              }
+            }
+          }
+        },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Te veel pogingen. Probeer het over %lld minuut opnieuw."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Te veel pogingen. Probeer het over %lld minuten opnieuw."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Too many attempts. Try again in %lld hours.": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Too many attempts. Try again in %lld hour."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Too many attempts. Try again in %lld hours."
+                }
+              }
+            }
+          }
+        },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Te veel pogingen. Probeer het over %lld uur opnieuw."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Te veel pogingen. Probeer het over %lld uur opnieuw."
+                }
+              }
+            }
           }
         }
       }
