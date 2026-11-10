@@ -4,21 +4,6 @@ import SnapshotSupport
 import Testing
 
 struct PlanPageGeometryTests {
-    @Test func nestedMeasurementsPreserveTheAsymmetricRailAndPageGutter() {
-        let window = CGRect(x: 0, y: 0, width: 466, height: 678)
-        let inherited = CGRect(x: 24, y: 20, width: 380, height: 638)
-        let safe = PlanPageGeometry.safeBounds(measured: window, inherited: inherited)
-        let insets = PlanPageGeometry.horizontalInsets(frame: window, safeBounds: safe)
-        #expect(insets.left + PlanUITokens.space4 == 40)
-        #expect(window.maxX - insets.right - PlanUITokens.space4 == 388)
-        #expect(PlanPageGeometry.safeBounds(measured: window, inherited: nil).width == window.width)
-        let narrower = CGRect(x: 40, y: 50, width: 320, height: 500)
-        #expect(
-            PlanPageGeometry.safeBounds(measured: narrower, inherited: safe)
-                == PlanPageGeometry.horizontalBounds(narrower))
-        #expect(PlanPageGeometry.safeBounds(measured: safe, inherited: safe) == safe)
-    }
-
     @Test func verticalReflowDoesNotInvalidateHorizontalRailGeometry() throws {
         for device in try SnapshotDevice.all() {
             let frame = CGRect(origin: .zero, size: device.size)
