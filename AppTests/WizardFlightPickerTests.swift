@@ -8,23 +8,36 @@ import XCTest
 @testable import TripWizardUI
 
 nonisolated final class WizardFlightPickerTests: XCTestCase {
-    @MainActor func testCombinedPickerUsesGraphicalDateAndTimeInFixedZoneAcrossProfiles() async throws {
+    override func setUp() {
+        super.setUp()
+        executionTimeAllowance = 60
+    }
+
+    @MainActor func testCombinedPickerBoard() async throws { try await checkCombinedPicker("board") }
+    @MainActor func testCombinedPickerSE() async throws { try await checkCombinedPicker("se") }
+    @MainActor func testCombinedPicker17e() async throws { try await checkCombinedPicker("17e") }
+    @MainActor func testCombinedPicker17() async throws { try await checkCombinedPicker("17") }
+    @MainActor func testCombinedPickerAir() async throws { try await checkCombinedPicker("air") }
+    @MainActor func testCombinedPicker18Pro() async throws { try await checkCombinedPicker("18pro") }
+    @MainActor func testCombinedPicker18ProMax() async throws { try await checkCombinedPicker("18promax") }
+    @MainActor func testCombinedPickerDuo() async throws { try await checkCombinedPicker("duo") }
+
+    @MainActor private func checkCombinedPicker(_ name: String) async throws {
+        let device = try WizardLayoutTestSupport.profile(name)
         try await AuthTestHost.registerFonts()
         let value = try XCTUnwrap(WizardDateTime.date("2040-03-25T02:07"))
-        for device in try AuthDeviceFixture.all() {
-            let host = try AuthTestHost(
-                WizardDateTimeSheet(title: "Departure", localTime: "Time in Amsterdam", value: value) { _ in },
-                size: device.size, insets: device.insets, category: .extraExtraLarge)
-            defer { host.close() }
-            try await host.settle()
-            let native = pickers(in: host.controller.view)
-            XCTAssertEqual(native.count, 1, device.name)
-            let picker = try XCTUnwrap(native.first)
-            XCTAssertEqual(picker.preferredDatePickerStyle, .inline, device.name)
-            XCTAssertEqual(picker.datePickerMode, .dateAndTime, device.name)
-            XCTAssertEqual(try XCTUnwrap(picker.timeZone).secondsFromGMT(for: value), 0, device.name)
-            XCTAssertEqual(WizardDateTime.string(picker.date), "2040-03-25T02:07", device.name)
-        }
+        let host = try AuthTestHost(
+            WizardDateTimeSheet(title: "Departure", localTime: "Time in Amsterdam", value: value) { _ in },
+            size: device.size, insets: device.insets, category: .extraExtraLarge)
+        defer { host.close() }
+        try await host.settle()
+        let native = pickers(in: host.controller.view)
+        XCTAssertEqual(native.count, 1, device.name)
+        let picker = try XCTUnwrap(native.first)
+        XCTAssertEqual(picker.preferredDatePickerStyle, .inline, device.name)
+        XCTAssertEqual(picker.datePickerMode, .dateAndTime, device.name)
+        XCTAssertEqual(try XCTUnwrap(picker.timeZone).secondsFromGMT(for: value), 0, device.name)
+        XCTAssertEqual(WizardDateTime.string(picker.date), "2040-03-25T02:07", device.name)
     }
 
     @MainActor func testNativePickerKeepsTheAppLanguageAndPhoneHourCycle() async throws {

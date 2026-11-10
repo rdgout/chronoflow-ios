@@ -119,6 +119,12 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
                          'LaunchImageMutationTests',
                          'SnapshotContainerTests'),
               'snapshots': ('WizardCompletionProfileTests',
+                           'WizardCompletionSEProfileTests',
+                           'WizardCompletion17ProfileTests',
+                           'WizardCompletionAirProfileTests',
+                           'WizardCompletion18ProProfileTests',
+                           'WizardCompletion18ProMaxProfileTests',
+                           'WizardCompletionDuoProfileTests',
                            'TripsSnapshotTests',
                            'LaunchSnapshotTests',
                            'WelcomeSnapshotTests',
@@ -315,7 +321,7 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
                              'WizardGenerationSessionTests',
                              'WizardCopyTests')},
  'WelcomeTests': {'logic': ('SmokeTests', 'WelcomeGeometryTests')}}
-SNAPSHOTS = ("AppTests/WizardCompletionProfileTests", "AppTests/LaunchSnapshotTests", "AppTests/WelcomeSnapshotTests", "AppTests/WelcomeSnapshotGuardTests", "RenderTests/WelcomeRenderingTests", "AppTests/AuthSnapshotTests", "AppTests/TwoFactorSnapshotTests", "AppTests/ForgotPasswordSnapshotTests", "AppTests/ResetPasswordSnapshotTests", "AppTests/SignUpSnapshotTests", "AppTests/VerifyEmailSnapshotTests", "AppTests/AuthSnapshotGuardTests", "AppTests/TwoFactorCodeSnapshotGuardTests", "AppTests/TwoFactorRecoverySnapshotGuardTests", "AppTests/ForgotFormSnapshotGuardTests", "AppTests/ForgotFieldSnapshotGuardTests", "AppTests/ForgotThrottleSnapshotGuardTests", "AppTests/ForgotServerSnapshotGuardTests", "AppTests/ForgotOfflineSnapshotGuardTests", "AppTests/ForgotSentSnapshotGuardTests", "AppTests/StepSheetSnapshotTests", "AppTests/TodaySnapshotTests", "AppTests/TodayRowSnapshotTests", "AppTests/TripsSnapshotTests", "AppTests/TripPageSnapshotTests")
+SNAPSHOTS = ("AppTests/WizardCompletionProfileTests", "AppTests/WizardCompletionSEProfileTests", "AppTests/WizardCompletion17ProfileTests", "AppTests/WizardCompletionAirProfileTests", "AppTests/WizardCompletion18ProProfileTests", "AppTests/WizardCompletion18ProMaxProfileTests", "AppTests/WizardCompletionDuoProfileTests", "AppTests/LaunchSnapshotTests", "AppTests/WelcomeSnapshotTests", "AppTests/WelcomeSnapshotGuardTests", "RenderTests/WelcomeRenderingTests", "AppTests/AuthSnapshotTests", "AppTests/TwoFactorSnapshotTests", "AppTests/ForgotPasswordSnapshotTests", "AppTests/ResetPasswordSnapshotTests", "AppTests/SignUpSnapshotTests", "AppTests/VerifyEmailSnapshotTests", "AppTests/AuthSnapshotGuardTests", "AppTests/TwoFactorCodeSnapshotGuardTests", "AppTests/TwoFactorRecoverySnapshotGuardTests", "AppTests/ForgotFormSnapshotGuardTests", "AppTests/ForgotFieldSnapshotGuardTests", "AppTests/ForgotThrottleSnapshotGuardTests", "AppTests/ForgotServerSnapshotGuardTests", "AppTests/ForgotOfflineSnapshotGuardTests", "AppTests/ForgotSentSnapshotGuardTests", "AppTests/StepSheetSnapshotTests", "AppTests/TodaySnapshotTests", "AppTests/TodayRowSnapshotTests", "AppTests/TripsSnapshotTests", "AppTests/TripPageSnapshotTests")
 XCODEBUILD_COMMON = ["xcodebuild", "-project", "ChronoFlow.xcodeproj",
                      "-clonedSourcePackagesDirPath", "build/SourcePackages",
                      "-onlyUsePackageVersionsFromResolvedFile"]

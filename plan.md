@@ -1870,6 +1870,7 @@ Source: canvas version 1794242613-8e6a, WizardSpec "Route first, then times (Ric
 
 **16c wizard test harness rework (2026-11-10)**
 - [x] Seed every wizard UI suite through signed-in `ScreenTestApp` launches and class reuse; split board/sheet/picker checks and opt-in board captures into individual screens. Keep one short live review/save journey and move its longer stop/sleep/screening flow into a SwiftPM regression. Give combined notices/errors explicit static-text traits and remove untyped descendant queries.
+- [x] Split hosted error-scroll and native picker coverage by D1c profile, completion stress coverage by stress profile, and opt-in completion captures by board/profile. Cap every wizard UI/hosted suite at 60 seconds, retain vertical footer/error checks, remove NavigationStack horizontal-inset assertions, and register the added suites. Duo rail fit uses the user's real-runtime screenshots. Lint and compile-only checks pass; no tests were run and runtime budgets remain unmeasured. Inventory and verification: `Docs/wizard-tests-t6.md`.
 
 - [ ] **Create gate (M2).** Against local Valet on trip-wizard after the user runs the four migrations (OQ 37): create a trip, land on its page and see the timeline in en and nl. Record the result. Production acceptance waits for the merge and deploy.
 
