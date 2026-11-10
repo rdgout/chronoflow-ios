@@ -12,6 +12,7 @@
         @Environment(\.locale) var locale
         @Environment(\.colorScheme) var scheme
         @Environment(\.accessibilityReduceMotion) var reduceMotion
+        @Environment(\.planContentMeasure) var planContentMeasure
         @Bindable var model: MemberWizardModel
         let dismiss: () -> Void
         let saved: (String) -> Void
@@ -63,21 +64,25 @@
                         model.popNavigation(to: $0, from: presented)
                     })
             ) {
-                whereScreen.navigationDestination(for: Destination.self) { destination in
-                    switch destination {
-                    case .outbound: outboundScreen
-                    case .returnChoice: returnScreen
-                    case .returnRoute: routeScreen(home: true)
-                    case .returnFlight: returnFlightScreen
-                    case .sleep: sleepScreen
-                    case .checking: checkingScreen
-                    case .question(let index): questionScreen(index)
-                    case .excluded: excludedScreen
-                    case .continuation, .fineTune: fineTuneScreen
-                    case .ready: readyScreen
-                    case .calculating: calculatingScreen
+                whereScreen.environment(\.planContentMeasure, presented.isEmpty ? planContentMeasure : nil)
+                    .navigationDestination(for: Destination.self) { destination in
+                        Group {
+                            switch destination {
+                            case .outbound: outboundScreen
+                            case .returnChoice: returnScreen
+                            case .returnRoute: routeScreen(home: true)
+                            case .returnFlight: returnFlightScreen
+                            case .sleep: sleepScreen
+                            case .checking: checkingScreen
+                            case .question(let index): questionScreen(index)
+                            case .excluded: excludedScreen
+                            case .continuation, .fineTune: fineTuneScreen
+                            case .ready: readyScreen
+                            case .calculating: calculatingScreen
+                            }
+                        }
+                        .environment(\.planContentMeasure, destination == presented.last ? planContentMeasure : nil)
                     }
-                }
             }
             .tint(ColorToken.primary.color)
             .interactiveDismissDisabled()

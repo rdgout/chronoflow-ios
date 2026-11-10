@@ -72,6 +72,11 @@ nonisolated final class WizardErrorScrollTests: XCTestCase {
                             animated: false)
                         try await host.settle()
                         XCTAssertEqual(content.frames.count, 4)
+                        for inactive in ["where", "return-route", "fine-tune", "ready"] {
+                            XCTAssertNil(
+                                content.frame(for: "wizard.\(inactive).footer"),
+                                "\(device.name) \(language) home=\(home) captured an inactive \(inactive) footer")
+                        }
                         let firstIndex = home ? start : 0
                         let lastIndex = firstIndex + 4
                         let footer = try XCTUnwrap(
