@@ -4,6 +4,7 @@ import DataAccess
 import Foundation
 import LocalStore
 import Observation
+import TripWizard
 import UIKit
 
 @MainActor @Observable
@@ -240,6 +241,10 @@ final class AuthSessionServices {
     #if DEBUG
         func prepareUITestRoute(_ test: AuthUITestConfiguration, navigator: RootNavigator) async throws {
             guard test.fastLaunch else { return }
+            if UITestRuntime.environment["CF_GUEST_WIZARD"] == "1" {
+                navigator.navigate(to: .guestWizard)
+                return
+            }
             switch test.auditScreen {
             case "sign-in":
                 navigator.navigate(to: .signIn)
@@ -270,4 +275,30 @@ final class AuthSessionServices {
     #endif
 
     deinit { verificationSubscription?.cancel() }
+
+    func makeGuestWizard(locale: Locale) async throws -> MemberWizardModel {
+        guard await nativeSession.controller.presence == .signedOut else { throw CancellationError() }
+        let store = nativeSession.guestWizardStore
+        var draft = try await store.start()
+        #if DEBUG
+            let board =
+                authUITestEnabled && UITestRuntime.environment["CF_GUEST_WIZARD"] == "1"
+                ? UITestRuntime.environment["CF_WIZARD_BOARD_CAPTURE"] : nil
+            if let board {
+                draft = GuestWizardBoardSeed.draft(draft, board: board, locale: locale)
+                try await store.persist(draft)
+            }
+        #endif
+        try Task.checkCancellation()
+        guard await nativeSession.controller.presence == .signedOut else { throw CancellationError() }
+        let generation = GuestWizardGeneration(
+            source: source, secrets: nativeSession.guestSecrets,
+            deviceIdentity: DeviceIdentityStore(persistence: DevicePreferences()))
+        let wizard = MemberWizardModel(
+            draft: draft, store: store, search: AirportSearchService(source: source), generation: generation)
+        #if DEBUG
+            if let board { WizardBoardCaptureSeed.freeze(wizard, board: board) }
+        #endif
+        return wizard
+    }
 }

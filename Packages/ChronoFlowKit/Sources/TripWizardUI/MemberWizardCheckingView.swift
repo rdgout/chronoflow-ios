@@ -9,7 +9,10 @@
         var checkingLines: [String] {
             model.draft.state.checkingAnswers == true
                 ? ["Your answers", "Flights and time zones", "What we can tailor"]
-                : ["Flights and time zones", "Your saved answers", "What we can tailor"]
+                : [
+                    "Flights and time zones", model.mode == .guest ? "Your answers" : "Your saved answers",
+                    "What we can tailor",
+                ]
         }
         var checkingScreen: some View {
             wizardShell(
@@ -33,7 +36,9 @@
                                     WizardCheckLine(
                                         label: t(line), done: model.checking.ticks > index,
                                         busy: model.checking.ticks == index,
-                                        accessibility: checkLineLabel(index))
+                                        accessibility: checkLineLabel(index)
+                                    )
+                                    .accessibilityIdentifier("wizard.checking.line.\(index)")
                                 }
                             }
                             if model.checking.slow {
@@ -182,6 +187,17 @@
                                     ColorToken.mutedForeground.color
                                 )
                                 .padding(.top, PlanUITokens.space1).padding(.horizontal, PlanUITokens.space1)
+                            }
+                            if model.mode == .guest, field == "age_band" {
+                                Divider().overlay(ColorToken.border.color)
+                                Text(
+                                    t(
+                                        "ChronoFlow gives timing guidance, not medical advice. If you're unsure about a question, check with your doctor."
+                                    )
+                                )
+                                .font(Typography.wizardHint.font).foregroundStyle(ColorToken.mutedForeground.color)
+                                .padding(.horizontal, PlanUITokens.space1)
+                                .accessibilityIdentifier("wizard.question.disclaimer")
                             }
                         }
                     }

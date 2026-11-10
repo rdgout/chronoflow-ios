@@ -2137,7 +2137,7 @@ Verification and audit resolution: see `Docs/settings-board-fidelity.md`. `make 
   - Tests (SwiftPM): continuation through each gate, consumed once, cleared on sign-out; the seed contents; the two-factor branch. Package routing tests for `AuthNavigation` / `NativeSessionController.routeAcceptedSession` (:119).
 
 **18k: Guest screens, Where to Questions**
-- [ ] Host the guest wizard for `.guestWizard` in `RootView` with a signed-out source. `AuthSessionServices.source` is private (:14, :36); expose a guest factory for airport search (already a public route) and the guest review.
+- [x] Host the guest wizard for `.guestWizard` in `RootView` with a signed-out source. `AuthSessionServices.source` is private (:14, :36); expose a guest factory for airport search (already a public route) and the guest review.
   - Guest text and states: no last-trip hint, Sleep sub "On a normal work day.", Checking line "Your answers", the Age disclaimer (Wizard.dc.html:403).
   - Exits: guest Excluded closes to Welcome; failure and No plan close to Welcome; the discard alert body plus Welcome exit; × on an empty Where closes at once.
   - Add en+nl to `TripWizardUI/Resources/Localizable.xcstrings` from WizardCopy/`T`.

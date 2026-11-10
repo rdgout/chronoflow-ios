@@ -115,7 +115,11 @@
                 Button(t("Keep editing"), role: .cancel) {}
                 Button(t("Discard"), role: .destructive) { close() }
             } message: {
-                Text(t("What you entered is not saved."))
+                Text(
+                    t(
+                        model.mode == .guest
+                            ? "What you entered is not saved. You go back to the welcome screen."
+                            : "What you entered is not saved."))
             }
         }
 
