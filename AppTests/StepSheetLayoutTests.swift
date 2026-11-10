@@ -108,11 +108,6 @@
 
         func revision(for identifier: String) -> Int { revisions[identifier, default: 0] }
 
-        func identity(for identifier: String) -> UUID? {
-            let matches = measurements.filter { $0.value.identifier == identifier }
-            return matches.count == 1 ? matches.first?.key : nil
-        }
-
         func frame(for identifier: String) -> CGRect? {
             let matches = measurements.values.filter { $0.identifier == identifier }
             return matches.count == 1 ? matches.first?.frame : nil

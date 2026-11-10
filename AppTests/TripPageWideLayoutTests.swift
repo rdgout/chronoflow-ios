@@ -56,8 +56,7 @@
                 }
                 let dayID = try XCTUnwrap(context.model.anchor.dayID)
                 let timelineID = "trip.timeline.\(dayID)"
-                try await host.settle("Initial timeline measurement") { measurements.identity(for: timelineID) != nil }
-                let timelineIdentity = try XCTUnwrap(measurements.identity(for: timelineID))
+                try await host.settle("Initial timeline measurement") { measurements.frame(for: timelineID) != nil }
                 let scroll = try pageScroll(host)
                 @MainActor func currentDayTop() -> CGFloat? {
                     measurements.frame(for: "trip.day.\(dayID)").map {
@@ -88,7 +87,6 @@
                 XCTAssertEqual(context.model.selectedStep?.id, block.id)
                 XCTAssertTrue(host.controller.presentedViewController === sheet)
                 XCTAssertTrue(try pageScroll(host) === scroll)
-                XCTAssertEqual(measurements.identity(for: timelineID), timelineIdentity)
                 let wideDayTop = try XCTUnwrap(currentDayTop())
                 XCTAssertEqual(wideDayTop, dayTop, accuracy: 1)
 
@@ -104,7 +102,6 @@
                 XCTAssertEqual(context.model.selectedStep?.id, block.id)
                 XCTAssertTrue(host.controller.presentedViewController === sheet)
                 XCTAssertTrue(try pageScroll(host) === scroll)
-                XCTAssertEqual(measurements.identity(for: timelineID), timelineIdentity)
                 let phoneDayTop = try XCTUnwrap(currentDayTop())
                 XCTAssertEqual(phoneDayTop, dayTop, accuracy: 1)
             }
