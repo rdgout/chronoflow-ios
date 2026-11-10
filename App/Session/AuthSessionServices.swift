@@ -293,7 +293,9 @@ final class AuthSessionServices {
         }
         #if DEBUG
             let board =
-                authUITestEnabled && UITestRuntime.environment["CF_GUEST_WIZARD"] == "1"
+                authUITestEnabled
+                    && (UITestRuntime.environment["CF_GUEST_WIZARD"] == "1"
+                        || UITestRuntime.environment["CF_GUEST_WIZARD_JOURNEY"] == "1")
                 ? UITestRuntime.environment["CF_WIZARD_BOARD_CAPTURE"] : nil
             if let board {
                 draft = GuestWizardBoardSeed.draft(draft, board: board, locale: locale)

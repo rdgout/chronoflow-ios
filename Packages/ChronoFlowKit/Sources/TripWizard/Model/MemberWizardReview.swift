@@ -219,7 +219,8 @@ extension MemberWizardModel {
                 go(.question)
             } else {
                 let destination: MemberWizardStep =
-                    draft.state.returnToReady == true || optionalPrompts.isEmpty ? .ready : .fineTune
+                    draft.state.returnToReady == true || (mode == .member && optionalPrompts.isEmpty)
+                    ? .ready : .fineTune
                 draft.state.returnToReady = nil
                 draft.state.revisit = nil
                 go(destination)

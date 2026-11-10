@@ -6,7 +6,9 @@
     enum GuestWizardBoardSeed {
         static func draft(_ original: MemberWizardDraft, board: String, locale: Locale) -> MemberWizardDraft {
             let shared =
-                [
+                board == "WizardGuestJourney"
+                ? "WizardSaveJourney"
+                : [
                     "WizardWhereGuest": "WizardWhere", "WizardWhereGuestEmpty": "WizardWhereEmpty",
                     "WizardOutboundGuest": "WizardOutbound", "WizardOutboundPastGuest": "WizardOutboundPast",
                     "WizardCheckingGuest": "WizardChecking", "WizardDiscardGuest": "WizardOutbound",
@@ -18,6 +20,10 @@
             draft.state.sleepNeeded = true
             draft.state.lastInputStep = .sleep
             draft.state.firstTrip = false
+            if board == "WizardGuestJourney" {
+                draft.state.step = .whereTo
+                draft.state.profile["shift_work"] = .bool(false)
+            }
             if [.fineTune, .ready].contains(draft.state.step) {
                 draft.state.sleepCompleted = true
                 draft.state.profile["age_band"] = .string("18_64")

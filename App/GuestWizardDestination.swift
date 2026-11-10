@@ -98,6 +98,12 @@ struct GuestWizardDestination: View {
             }
             let signup = services.model.makeSignUpModel()
             #if DEBUG
+                if services.authUITestEnabled, UITestRuntime.environment["CF_GUEST_WIZARD_JOURNEY"] == "1" {
+                    signup.editName("Traveller")
+                    signup.editEmail("guest-journey@example.com")
+                    signup.editPassword("NewPassword123!")
+                    signup.editConfirmation("NewPassword123!")
+                }
                 if services.authUITestEnabled,
                     let board = UITestRuntime.environment["CF_WIZARD_BOARD_CAPTURE"]
                 {
