@@ -1868,6 +1868,9 @@ Source: canvas version 1794242613-8e6a, WizardSpec "Route first, then times (Ric
   Repair verification: strict `make lint`, direct Swift 6/iOS 17 Debug/Release `TripWizardUI` module compilation and `AppTests`/`AppUITests` source type checks pass. No tests or simulator execution; runtime acceptance remains with the user.
   Round t2 repeats those compile-only checks successfully; logs are `build/t2-lint.log`, `build/t2-debug-compile.log`, `build/t2-release-compile.log` and `build/t2-test-source-typecheck.log`. No tests run.
 
+**16c wizard test harness rework (2026-11-10)**
+- [x] Seed every wizard UI suite through signed-in `ScreenTestApp` launches and class reuse; split board/sheet/picker checks and opt-in board captures into individual screens. Keep one short live review/save journey and move its longer stop/sleep/screening flow into a SwiftPM regression. Give combined notices/errors explicit static-text traits and remove untyped descendant queries.
+
 - [ ] **Create gate (M2).** Against local Valet on trip-wizard after the user runs the four migrations (OQ 37): create a trip, land on its page and see the timeline in en and nl. Record the result. Production acceptance waits for the merge and deploy.
 
 ### Phase 17: Day-to-day (`feat/phase-17-day-to-day`), M3

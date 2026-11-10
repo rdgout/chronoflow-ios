@@ -220,7 +220,8 @@
                 RoundedRectangle(cornerRadius: PlanUITokens.radiusXl).strokeBorder(
                     ColorToken.authErrorBorder.color, lineWidth: AuthTokens.borderWidth)
             }
-            .accessibilityElement(children: .combine).accessibilityIdentifier(identifier)
+            .accessibilityElement(children: .combine).accessibilityAddTraits(.isStaticText)
+            .accessibilityIdentifier(identifier)
         }
 
         func flightCard(index: Int, leg: WizardLeg) -> some View {
@@ -293,7 +294,8 @@
             Image(systemName: "exclamationmark.circle").accessibilityHidden(true)
         }
         .font(Typography.screenBody.font).foregroundStyle(ColorToken.destructive.color)
-        .accessibilityElement(children: .combine).accessibilityIdentifier(identifier)
+        .accessibilityElement(children: .combine).accessibilityAddTraits(.isStaticText)
+        .accessibilityIdentifier(identifier)
     }
 
     extension View {

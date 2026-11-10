@@ -111,6 +111,12 @@
                 draft.fieldErrors["legs.4.departLocal"] = FieldMessage(
                     key: "This flight leaves before the previous one lands.")
             }
+            if board == "WizardSaveJourney" {
+                let departure = Date().addingTimeInterval(30 * 24 * 60 * 60)
+                draft.form.legs[0].departLocal = WizardDateTime.string(departure)
+                draft.form.legs[0].arriveLocal = WizardDateTime.string(departure.addingTimeInterval(18 * 60 * 60))
+                draft.state.step = .returnChoice
+            }
             if board == "WizardReturn" || board == "WizardReturnWeb" {
                 draft.state.step = .returnChoice
                 if board == "WizardReturnWeb" {

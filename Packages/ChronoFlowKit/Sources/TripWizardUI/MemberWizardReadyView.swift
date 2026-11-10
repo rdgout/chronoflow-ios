@@ -200,7 +200,9 @@
                     Text(title).font(Typography.screenLabel.font)
                     Text(body).font(Typography.screenBody.font)
                 }
-            }.accessibilityElement(children: .combine).frame(maxWidth: .infinity, alignment: .leading).padding(
+            }.accessibilityElement(children: .combine).accessibilityAddTraits(.isStaticText).frame(
+                maxWidth: .infinity, alignment: .leading
+            ).padding(
                 PlanUITokens.wizardContentGap
             )
             .background(

@@ -7,6 +7,68 @@ import Testing
 import TripWizard
 
 @Suite struct WizardReviewFlowTests {
+    @Test @MainActor func stopOneWayUnsureSleepAndScreeningReachFineTuneThenSave() async throws {
+        let fixture = try await reviewFixture(sleepNeeded: true)
+        let model = fixture.model
+        model.go(.whereTo)
+        model.chooseAirport(
+            wizardAirport("AMS", city: "Amsterdam", zone: "Europe/Amsterdam"),
+            sheet: WizardAirportSheet(index: 0, side: .from))
+        model.chooseAirport(
+            wizardAirport("HND", city: "Tokyo", zone: "Asia/Tokyo"),
+            sheet: WizardAirportSheet(index: 0, side: .to))
+        model.chooseAirport(
+            wizardAirport("DXB", city: "Dubai", zone: "Asia/Dubai"),
+            sheet: WizardAirportSheet(index: 0, side: .stop))
+        #expect(model.draft.form.route().map(\.iata) == ["AMS", "DXB", "HND"])
+        model.finishRoute()
+        #expect(model.draft.state.step == .outbound)
+        model.setDateTime("2030-10-12T14:40", index: 0, arrival: false)
+        model.setDateTime("2030-10-12T23:25", index: 0, arrival: true)
+        model.setDateTime("2030-10-13T02:05", index: 1, arrival: false)
+        model.setDateTime("2030-10-13T16:35", index: 1, arrival: true)
+        #expect(model.finishOutbound())
+        model.go(.returnChoice)
+        model.chooseReturn("one_way")
+        try await eventually { fixture.clock.deadlines.contains(0.25) }
+        fixture.clock.advance(to: 0.25)
+        try await eventually { model.draft.state.step == .sleep }
+        #expect(model.draft.form.end.kind == "one_way" && model.draft.form.legs.count == 2)
+        model.setSleep("habitual_bed", value: .string("23:30"))
+        model.setSleep("habitual_wake", value: .string("07:15"))
+        model.setSleep("chronotype", value: .null)
+        var first = try generationReview()
+        first.prompts = [
+            ApiReviewPrompt(
+                id: "age_band", kind: .ageBand, blocking: true, required: true,
+                text: CopyLine(key: "Which age group are you in?", args: []), scope: ApiReviewPromptScope(),
+                target: .profile, fields: ["age_band"], answer: [:],
+                shape: ApiReviewPromptShape(kind: .options, options: ["under_18", "18_64", "65_plus"]))
+        ]
+        var final = try generationReview()
+        final.prompts = MockWizardPrompts.make(input: model.reviewInput.input, profile: JSONObject())
+        await fixture.source.queueReviews([.success(first), .success(final)])
+        #expect(model.finishSleep())
+        try await finishCheck(fixture, start: 0.25)
+        #expect(model.draft.state.step == .question)
+        model.answerQuestion(.string("18_64"))
+        try await eventually { fixture.clock.deadlines.contains(2) }
+        fixture.clock.advance(to: 2)
+        try await finishCheck(fixture, count: 2, start: 2)
+        #expect(model.draft.state.step == .fineTune && !model.optionalPrompts.isEmpty)
+        let reviewed = try #require(await fixture.source.reviewInputs.last)
+        #expect(reviewed.input.outbound.legs.count == 2 && reviewed.input.tripEndKind == "one_way")
+        #expect(reviewed.profile?["chronotype"] == .null && reviewed.profile?["age_band"] == .string("18_64"))
+        model.finishFineTune()
+        #expect(model.draft.state.step == .ready)
+        #expect(await fixture.source.count("review") == 2)
+        model.savePlan()
+        try await eventually { model.createdTripID == "created" }
+        #expect(await fixture.source.count("save") == 1)
+        #expect(try await fixture.store.recover() == nil)
+        try await fixture.database.close()
+    }
+
     @Test @MainActor func sleepIsRequiredUntilAnsweredAndNotSureCounts() async throws {
         let fixture = try await reviewFixture(sleepNeeded: true)
         let model = fixture.model

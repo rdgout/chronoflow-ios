@@ -55,6 +55,7 @@
                                     "wizard.extra.\(prompt.kind.rawValue).\(index)")
                             }
                         }.wizardCard().disabled(model.reviewing)
+                            .accessibilityElement(children: .contain).accessibilityIdentifier("wizard.extras")
                     }
                     VStack(spacing: 0) {
                         Stepper(
