@@ -1858,6 +1858,12 @@ Source: canvas version 1794242613-8e6a, WizardSpec "Route first, then times (Ric
 
   Review round 3 verification (2026-11-10): all 19 findings are addressed; package regressions are authored and source-type-checked. Strict lint, TokenGen output verification and Debug/Release iOS 17 compiler checks pass. No tests or simulators were run. Ordered fallback patches and the per-finding results are recorded in `Docs/wizard-16c-r3.md`.
 
+**16c first simulator-run repairs (2026-11-10)**
+- [x] Query combined save-failure banners across accessibility element types, matching the shared auth banner helper. Screen tests retain seeded state; no test execution in this repair.
+- [ ] Keep the no-credits Close button above the home indicator and check it as a pinned footer control.
+- [ ] Keep Fine-tune/Ready footer content inside every safe-area inset, including asymmetric Duo rails.
+- [ ] Scope layout measurements to the visible wizard screen and preserve the four flight/error/footer checks.
+
 - [ ] **Create gate (M2).** Against local Valet on trip-wizard after the user runs the four migrations (OQ 37): create a trip, land on its page and see the timeline in en and nl. Record the result. Production acceptance waits for the merge and deploy.
 
 ### Phase 17: Day-to-day (`feat/phase-17-day-to-day`), M3

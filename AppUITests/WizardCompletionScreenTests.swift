@@ -33,8 +33,12 @@ nonisolated final class WizardCompletionScreenTests: ScreenTestCase {
             XCTAssertTrue(app.otherElements["wizard.ready"].waitForExistence(timeout: 5))
             XCTAssertTrue(app.buttons["wizard.ready.continue"].isHittable)
             XCTAssertEqual(app.buttons["wizard.ready.continue"].isEnabled, board != "WizardReadyChecking")
-            if board == "WizardSaveOffline" { XCTAssertTrue(app.otherElements["wizard.save.offline"].exists) }
-            if board == "WizardSaveServer" { XCTAssertTrue(app.otherElements["wizard.save.server"].exists) }
+            if board == "WizardSaveOffline" {
+                XCTAssertTrue(app.descendants(matching: .any)["wizard.save.offline"].waitForExistence(timeout: 5))
+            }
+            if board == "WizardSaveServer" {
+                XCTAssertTrue(app.descendants(matching: .any)["wizard.save.server"].waitForExistence(timeout: 5))
+            }
         }
     }
 
