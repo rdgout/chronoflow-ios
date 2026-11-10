@@ -2307,6 +2307,10 @@ compile-only checks are allowed. Sources outside this worktree stay read-only.
 - [x] NH3 Migrate cached settings, outbox and wizard recovery values; prevent new retired values
   from being stored or sent. Preserve true legacy caffeine preference; never carry over VTE.
 - [x] NH4 Replace Settings medical questions with neutral toggles and notices, using EN/NL catalogs.
+- [x] NH4.1 Restore visible automatic-save feedback by scrolling the saved section heading into view,
+  preserving SetBodyClock's inline confirmation. Keep the UI assertions, use an exact static-text
+  query and cap the suite's test allowance at 60 seconds. Strict lint, iOS Settings compilation and
+  UI-test target typechecking passed; no tests were executed. Logs: `build/nh3-1-*.log`.
 - [x] NH5 Limit wizard screening to shift work plus age, expose neutral preferences with existing
   components, and add audience/light-device notices. Update seeds and remove obsolete question fixtures.
 - [x] NH6 Add package regression coverage for decoding/encoding/defaults/readiness/migration/422,

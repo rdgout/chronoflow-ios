@@ -56,6 +56,11 @@
                     health
                     if model.failure { SettingsError(title: t("We couldn't save your change. Please try again.")) }
                 }
+                .onChange(of: model.saved) { previous, saved in
+                    if let group = saved.subtracting(previous).first {
+                        reader.scrollTo(group, anchor: .top)
+                    }
+                }
             }.onChange(of: answers) { _, value in model.receive(value) }
                 .sheet(item: $selectedTime) { selection in
                     SettingsClockPicker(title: t(selection.title), value: selection.value) { value in
@@ -244,7 +249,7 @@
                     .accessibilityElement(children: .combine).accessibilityIdentifier(
                         "settings.bodyClock.saved." + group.rawValue)
                 }
-            }.accessibilityElement(children: .contain)
+            }.accessibilityElement(children: .contain).id(group)
         }
         private func caption(_ key: String) -> some View {
             Text(t(key)).settingsFont(Typography.screenBody).foregroundStyle(ColorToken.mutedForeground.color)
