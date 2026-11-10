@@ -2123,7 +2123,7 @@ Verification and audit resolution: see `Docs/settings-board-fidelity.md`. `make 
   - Tests (SwiftPM, fake DataSource + fake secret store): first call mints, a known secret is reused, rotation, discard during the call, one expiry retry, a second expiry surfaces, throttle/offline failures, no account effects.
 
 **18i: Claim on sign-up, sign-in and passkey**
-- [ ] Inject a `claim: @Sendable () async -> GuestClaim?` provider into `SignInModel` (`Auth/SignInModel.swift:20`). Pass it to `makeSignUpModel` and `PasskeySignIn`; it is constructed at `App/Session/AuthSessionServices.swift:95-100`.
+- [x] Inject a `claim: @Sendable () async -> GuestClaim?` provider into `SignInModel` (`Auth/SignInModel.swift:20`). Pass it to `makeSignUpModel` and `PasskeySignIn`; it is constructed at `App/Session/AuthSessionServices.swift:95-100`.
   - `SignUpModel` (`Auth/SignUpModel.swift:67-70`) sends all four claim fields. On `review_expired` it returns `.guestReviewExpired`, which sets `returnToReady`, clears `checkingAnswers` and `reviewedAt`, and sends the guest to Ready.
   - Password login (`SignInModel.swift:96-97`) and passkey login (`PasskeySignIn.swift:79-81`) send `draft_token` + `guest_secret`.
   - `TwoFactorInput` stays without claim fields.

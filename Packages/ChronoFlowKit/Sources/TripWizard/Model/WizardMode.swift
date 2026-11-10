@@ -1,6 +1,13 @@
 import Foundation
 
 extension MemberWizardDraft {
+    mutating func returnToReadyAfterExpiredClaim() {
+        state.returnToReady = true
+        state.checkingAnswers = nil
+        state.reviewedAt = nil
+        state.step = .ready
+    }
+
     mutating func enforceGuestMode() {
         guard state.mode == .guest else { return }
         if form.end.kind == "return_legs" { form.removeReturn() }
@@ -17,6 +24,13 @@ extension MemberWizardModel {
     public var mode: WizardMode { draft.state.mode }
     public var showsReturnRow: Bool { mode == .member }
     public var allowsSleepOverride: Bool { mode == .member }
+
+    public func guestReviewExpired() {
+        guard mode == .guest, !closed else { return }
+        draft.returnToReadyAfterExpiredClaim()
+        saveOutcome = nil
+        persist()
+    }
 
     public func finishOutboundStep() {
         if mode == .guest { finishFlightInput() } else { go(.returnChoice) }

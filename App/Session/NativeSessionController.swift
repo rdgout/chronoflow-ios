@@ -18,6 +18,7 @@ final class NativeSessionController {
     private let timeObservers: ReminderTimeObservers
     let wiper: AccountWiper
     let guestSecrets: any GuestSecretStore
+    let guestWizardStore: GuestWizardStore
     lazy var readiness = StoredDataReadiness(controller: controller) { [accounts] id in
         guard let database = await accounts.activeDatabase() else { throw StoreFailure.closed }
         return try await AccountReadinessRepository(database: database).values(accountID: id)
@@ -55,6 +56,7 @@ final class NativeSessionController {
         let credentials = credentials ?? KeychainSessionStore(namespace: namespace)
         let guestSecrets = guestSecrets ?? KeychainGuestSecretStore(namespace: namespace)
         self.guestSecrets = guestSecrets
+        guestWizardStore = GuestWizardStore(applicationSupport: applicationSupport, namespace: namespace)
         let reference = SessionControllerReference()
         let sync = source.map {
             SessionSync(

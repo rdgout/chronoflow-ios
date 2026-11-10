@@ -75,6 +75,28 @@ public actor GuestWizardStore: WizardDraftStore {
 
     public func didSave(instance: String, firstTrip: Bool) throws { try discard(instance: instance) }
 
+    public func claim(secrets: any GuestSecretStore) async -> GuestClaim? {
+        guard let draft = try? recover(), let identity = draft.form.identity, !identity.token.isEmpty,
+            let revision = identity.reviewRevision,
+            let secret = try? await secrets.get(for: identity.token), !secret.isEmpty,
+            let current = try? recover(), current.state.instance == draft.state.instance,
+            current.form.identity == identity
+        else { return nil }
+        return GuestClaim(
+            draftToken: identity.token, inputRevision: identity.inputRevision, reviewRevision: revision,
+            guestSecret: secret)
+    }
+
+    public func reviewExpired(claim: GuestClaim) throws {
+        guard var draft = try recover(), draft.form.identity?.token == claim.draftToken,
+            draft.form.identity?.inputRevision == claim.inputRevision,
+            draft.form.identity?.reviewRevision == claim.reviewRevision
+        else { return }
+        draft.returnToReadyAfterExpiredClaim()
+        draft.state.revision += 1
+        try persist(draft)
+    }
+
     private func record(_ draft: MemberWizardDraft, updatedAt: String? = nil) -> Record {
         var form = draft.form
         var state = draft.state

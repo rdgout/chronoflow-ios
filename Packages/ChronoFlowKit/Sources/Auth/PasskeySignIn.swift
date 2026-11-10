@@ -58,14 +58,17 @@ nonisolated public enum Base64URL {
     private let provider: any PasskeyAssertionProviding
     private let identity: @Sendable () async throws -> String
     private let deviceName: String
+    private let claim: @Sendable () async -> GuestClaim?
     public init(
         source: any DataSource, provider: any PasskeyAssertionProviding,
-        identity: @escaping @Sendable () async throws -> String, deviceName: String
+        identity: @escaping @Sendable () async throws -> String, deviceName: String,
+        claim: @escaping @Sendable () async -> GuestClaim? = { nil }
     ) {
         self.source = source
         self.provider = provider
         self.identity = identity
         self.deviceName = deviceName
+        self.claim = claim
     }
     public func signIn() async throws -> SessionResult {
         let deviceID = try await identity()
@@ -75,9 +78,11 @@ nonisolated public enum Base64URL {
         guard !challenge.options.rpId.isEmpty else { throw PasskeyFailure.unavailable }
         try Task.checkCancellation()
         let assertion = try await provider.assertion(for: challenge)
+        let claim = await claim()
         try Task.checkCancellation()
         return try await source.passkeyLogin(
             ApiPasskeyLoginInput(
-                challengeId: challenge.challengeId, credential: assertion, deviceID: deviceID, deviceName: deviceName))
+                challengeId: challenge.challengeId, credential: assertion, deviceID: deviceID, deviceName: deviceName,
+                draftToken: claim?.draftToken, guestSecret: claim?.guestSecret))
     }
 }
