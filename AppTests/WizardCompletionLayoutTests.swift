@@ -37,6 +37,11 @@
                         XCTAssertTrue(
                             safe.insetBy(dx: -1 / profile.scale, dy: -1 / profile.scale).contains(footer),
                             "\(profile.name) \(board) \(footer)")
+                        if board == "WizardReadyNoCredits" {
+                            let close = try XCTUnwrap(content.frame(for: "wizard.ready.no-credits"))
+                            XCTAssertTrue(footer.contains(close), "\(profile.name) footer=\(footer) close=\(close)")
+                            XCTAssertLessThan(close.height, footer.height)
+                        }
                         host.close()
                     }
                 }
