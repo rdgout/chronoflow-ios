@@ -1,5 +1,6 @@
 import AppCore
 import Foundation
+import Reminders
 import Sync
 import UIKit
 import XCTest
@@ -52,6 +53,11 @@ private actor SceneSyncCredentials: SessionStore {
 }
 
 nonisolated final class SyncLifecycleTests: XCTestCase {
+    override func setUp() {
+        super.setUp()
+        executionTimeAllowance = 60
+    }
+
     @MainActor
     func testSceneControlsNativeSyncAndReconnectResumesExistingSessionWithoutOverlay() async throws {
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
@@ -66,6 +72,7 @@ nonisolated final class SyncLifecycleTests: XCTestCase {
         await credentials.write(try JSONEncoder().encode(StoredSession(token: "test-token", accountId: id)))
         let native = NativeSessionController(
             applicationSupport: root, namespace: .mock, credentials: credentials,
+            reminderCenter: MockReminderCenter(permission: .blocked),
             syncScheduler: SyncScheduler(sleep: { try await clock.sleep($0) }),
             syncPath: { SceneSyncPath(probe: probe) },
             source: { session in
