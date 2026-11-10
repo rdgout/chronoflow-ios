@@ -82,7 +82,13 @@ public struct MemberWizardDraft: Sendable, Equatable {
     }
 }
 
-public actor MemberWizardStore {
+public protocol WizardDraftStore: Sendable {
+    func persist(_ draft: MemberWizardDraft) async throws
+    func discard(instance: String) async throws
+    func didSave(instance: String, firstTrip: Bool) async throws
+}
+
+public actor MemberWizardStore: WizardDraftStore {
     private let drafts: DraftRepository
     private let trips: TripRepository
     private let settings: SettingsRepository

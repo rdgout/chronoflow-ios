@@ -50,12 +50,12 @@ public final class MemberWizardModel {
     @ObservationIgnored var choiceTask: Task<Void, Never>?
     @ObservationIgnored var checkID = UUID()
     @ObservationIgnored var checkInstance: String?
-    let store: MemberWizardStore
+    let store: any WizardDraftStore
     let now: @Sendable () -> Date
     @ObservationIgnored private var pending: Task<Void, Never>?
 
     public init(
-        draft: MemberWizardDraft, store: MemberWizardStore, search: AirportSearchService,
+        draft: MemberWizardDraft, store: any WizardDraftStore, search: AirportSearchService,
         now: @escaping @Sendable () -> Date = { Date() },
         generation: (any MemberWizardGeneration)? = nil, checkingClock: WizardCheckingClock = .continuous
     ) {

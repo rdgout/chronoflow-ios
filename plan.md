@@ -2093,7 +2093,7 @@ Verification and audit resolution: see `Docs/settings-board-fidelity.md`. `make 
   - Tests: SwiftPM for rotation, discard and delete-all against the fake. One hosted `GuestSecretKeychainTests` for the real Keychain under ad-hoc signing (< 5 s).
 
 **18f: Guest recovery store**
-- [ ] Extract `protocol WizardDraftStore { persist; discard; didSave }` from `MemberWizardStore` (`TripWizard/Model/MemberWizardStore.swift:85-182`). The model only calls those three (`MemberWizardModel.swift:211-243`, `MemberWizardCompletion.swift:231-238`). Add `GuestWizardStore`:
+- [x] Extract `protocol WizardDraftStore { persist; discard; didSave }` from `MemberWizardStore` (`TripWizard/Model/MemberWizardStore.swift:85-182`). The model only calls those three (`MemberWizardModel.swift:211-243`, `MemberWizardCompletion.swift:231-238`). Add `GuestWizardStore`:
   - It is one JSON file in Application Support, excluded from backup, with file protection.
   - It uses the same 30-minute recovery, millisecond timestamps and instance/revision guards as the member store.
   - It starts at Where with a 23:00/07:00 profile, 3 preparation days and `one_way`.
