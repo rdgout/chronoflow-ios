@@ -5,10 +5,12 @@ public actor AccountWiper {
     private let applicationSupport: URL
     private let namespace: StorageNamespace
     private let credentials: any SessionStore
+    private let guestSecrets: (any GuestSecretStore)?
     private let remove: @Sendable (URL) throws -> Void
 
     public init(
         applicationSupport: URL, namespace: StorageNamespace, credentials: any SessionStore,
+        guestSecrets: (any GuestSecretStore)? = nil,
         remove: @escaping @Sendable (URL) throws -> Void = { url in
             if FileManager.default.fileExists(atPath: url.path) { try FileManager.default.removeItem(at: url) }
         }
@@ -16,6 +18,7 @@ public actor AccountWiper {
         self.applicationSupport = applicationSupport
         self.namespace = namespace
         self.credentials = credentials
+        self.guestSecrets = guestSecrets
         self.remove = remove
     }
 
@@ -40,16 +43,18 @@ public actor AccountWiper {
         assert(!Thread.isMainThread)
         guard FileManager.default.fileExists(atPath: marker.path) else { return }
         let id = try AccountID(JSONDecoder().decode(String.self, from: Data(contentsOf: marker)))
-        try erase(id)
+        try await erase(id)
         try await credentials.delete()
         try finish()
     }
 
-    public func erase(_ id: AccountID) throws {
+    public func erase(_ id: AccountID) async throws {
         assert(!Thread.isMainThread)
         let directory = root.appendingPathComponent("Accounts", isDirectory: true)
             .appendingPathComponent(id.rawValue, isDirectory: true)
         try remove(directory)
+        try await guestSecrets?.deleteAll()
+        try remove(GuestRecoveryLocation.file(applicationSupport: applicationSupport, namespace: namespace))
     }
 
     public func finish() throws {

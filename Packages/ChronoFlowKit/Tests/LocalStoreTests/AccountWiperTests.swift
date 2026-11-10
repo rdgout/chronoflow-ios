@@ -27,6 +27,69 @@ private final class FailingRemoval: @unchecked Sendable {
 }
 
 @Suite struct AccountWiperTests {
+    @Test(arguments: [false, true])
+    func memberSignOutClearsGuestSecretsAndRecovery(unauthorized: Bool) async throws {
+        let root = try temporaryStoreRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let recovery = GuestRecoveryLocation.file(applicationSupport: root, namespace: .mock)
+        try FileManager.default.createDirectory(
+            at: recovery.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data("guest recovery".utf8).write(to: recovery)
+        let preferences = root.appendingPathComponent("device-preferences.json")
+        try Data("device preferences".utf8).write(to: preferences)
+        let secrets = MemoryGuestSecretStore()
+        await secrets.set("first-secret", for: "first")
+        await secrets.set("second-secret", for: "second")
+        let credentials = WipeCredentials()
+        await credentials.write(try JSONEncoder().encode(StoredSession(token: "member-token", accountId: accountA)))
+        let accounts = SessionAccountDatabase(applicationSupport: root, namespace: .mock)
+        let wiper = AccountWiper(
+            applicationSupport: root, namespace: .mock, credentials: credentials, guestSecrets: secrets)
+        var hooks = SessionTeardown()
+        hooks.prepare = { try await wiper.recover() }
+        hooks.beginWipe = { try await wiper.begin($0) }
+        hooks.erase = { try await wiper.erase($0) }
+        hooks.finishWipe = { try await wiper.finish() }
+        let controller = SessionController(credentials: credentials, accounts: accounts, teardown: hooks)
+        #expect(try await controller.signOut(discardPending: false, unauthorized: unauthorized) == .signedOut)
+        #expect(await secrets.get(for: "first") == nil)
+        #expect(await secrets.get(for: "second") == nil)
+        #expect(!FileManager.default.fileExists(atPath: recovery.path))
+        #expect(FileManager.default.fileExists(atPath: preferences.path))
+        #expect(await credentials.data == nil)
+    }
+
+    @Test func pendingWipeRetriesGuestRecoveryDeletion() async throws {
+        let root = try temporaryStoreRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let recovery = GuestRecoveryLocation.file(applicationSupport: root, namespace: .mock)
+        try FileManager.default.createDirectory(
+            at: recovery.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data("guest recovery".utf8).write(to: recovery)
+        let secrets = MemoryGuestSecretStore()
+        await secrets.set("secret", for: "token")
+        let credentials = WipeCredentials()
+        let removal = FailingRemoval()
+        let wiper = AccountWiper(
+            applicationSupport: root, namespace: .mock, credentials: credentials, guestSecrets: secrets,
+            remove: { url in
+                if url == recovery { try removal.remove(url) }
+            })
+        let id = try AccountID(accountA)
+        try await wiper.begin(id)
+        await #expect(throws: StoreFailure.unavailable) { try await wiper.erase(id) }
+        #expect(FileManager.default.fileExists(atPath: recovery.path))
+        let restarted = AccountWiper(
+            applicationSupport: root, namespace: .mock, credentials: credentials, guestSecrets: secrets)
+        try await restarted.recover()
+        #expect(await secrets.get(for: "token") == nil)
+        #expect(!FileManager.default.fileExists(atPath: recovery.path))
+        #expect(
+            !FileManager.default.fileExists(
+                atPath: root.appendingPathComponent("ChronoFlowMock/pending-wipe.json").path))
+        #expect(await credentials.data == nil)
+    }
+
     @Test func markerSurvivesPartialFailureAndRestartRemovesDirectoryAndCredentials() async throws {
         let root = try temporaryStoreRoot()
         defer { try? FileManager.default.removeItem(at: root) }

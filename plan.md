@@ -2089,7 +2089,7 @@ Verification and audit resolution: see `Docs/settings-board-fidelity.md`. `make 
   - Tests (SwiftPM): claim success, expired claim creates nothing, replay, then a login replay reading the receipt, ported from `GuestRegistrationClaimTest.php`.
 
 **18e: Guest secret store**
-- [ ] Add an AppCore `GuestSecretStore` protocol: set/get/delete per token, rotate (store the new secret, delete the old one), and delete all. Add an in-memory fake. The app implementation uses the Keychain (`AfterFirstUnlockThisDeviceOnly`, a separate service from `App/Readiness/KeychainSessionStore.swift`). Member sign-out and account teardown delete every guest secret and the guest recovery record.
+- [x] Add an AppCore `GuestSecretStore` protocol: set/get/delete per token, rotate (store the new secret, delete the old one), and delete all. Add an in-memory fake. The app implementation uses the Keychain (`AfterFirstUnlockThisDeviceOnly`, a separate service from `App/Readiness/KeychainSessionStore.swift`). Member sign-out and account teardown delete every guest secret and the guest recovery record.
   - Tests: SwiftPM for rotation, discard and delete-all against the fake. One hosted `GuestSecretKeychainTests` for the real Keychain under ad-hoc signing (< 5 s).
 
 **18f: Guest recovery store**

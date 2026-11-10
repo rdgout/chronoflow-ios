@@ -17,6 +17,7 @@ final class NativeSessionController {
     private var reminderEvents: Task<Void, Never>?
     private let timeObservers: ReminderTimeObservers
     let wiper: AccountWiper
+    let guestSecrets: any GuestSecretStore
     lazy var readiness = StoredDataReadiness(controller: controller) { [accounts] id in
         guard let database = await accounts.activeDatabase() else { throw StoreFailure.closed }
         return try await AccountReadinessRepository(database: database).values(accountID: id)
@@ -27,6 +28,7 @@ final class NativeSessionController {
 
     init(
         applicationSupport: URL, namespace: StorageNamespace, credentials: (any SessionStore)? = nil,
+        guestSecrets: (any GuestSecretStore)? = nil,
         reminderCenter: any ReminderNotificationCenter = SystemReminderCenter(),
         accountStore: (@MainActor (SessionAccountDatabase) -> any SessionAccountStore)? = nil,
         syncScheduler: SyncScheduler = SyncScheduler(),
@@ -51,6 +53,8 @@ final class NativeSessionController {
         }
         self.accounts = accounts
         let credentials = credentials ?? KeychainSessionStore(namespace: namespace)
+        let guestSecrets = guestSecrets ?? KeychainGuestSecretStore(namespace: namespace)
+        self.guestSecrets = guestSecrets
         let reference = SessionControllerReference()
         let sync = source.map {
             SessionSync(
@@ -65,7 +69,9 @@ final class NativeSessionController {
                 }, verification: verification)
         }
         self.sync = sync
-        let wiper = AccountWiper(applicationSupport: applicationSupport, namespace: namespace, credentials: credentials)
+        let wiper = AccountWiper(
+            applicationSupport: applicationSupport, namespace: namespace, credentials: credentials,
+            guestSecrets: guestSecrets)
         self.wiper = wiper
         var teardown = SessionTeardown()
         teardown.prepare = {
