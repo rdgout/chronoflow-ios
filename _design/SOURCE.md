@@ -6,3 +6,4 @@
 - Wizard and picker boards (all Wizard*, PickerDateTime, PickerTime) and canvas.json come from canvas version 1794242613-8e6a, downloaded 2026-11-09 for the route-first redesign. theme.css, tokens.json and components/ were byte-identical to the earlier copy.
 - Design system: https://claude.ai/code/artifact/84744fe3-d191-4d38-a30d-58f39ca71092 ("ChronoFlow", version 1793466882-81bd). ds/chronoflow/README.md matches its project/README.md byte for byte, and its tokens.json is identical to the canvas copy.
 - Nothing here is taken from the React Native app's code. Some files were first copied from chronoflow-mobile/_design/canvas, the RN repo's local copy of the same canvas, and were then verified identical to the artifacts above.
+- GuestSignup, GuestSignupFailed, GuestSignupRetry and GuestSignupReview come from canvas version 1794321693-1909, downloaded 2026-11-10 for Phase 18. Their GuestReview backdrop is superseded and not imported.

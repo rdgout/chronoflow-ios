@@ -18,7 +18,7 @@ ChronoFlow plans sleep, light and caffeine for each trip. Two apps exist, both r
 
 **17f scope (user, 2026-11-08):** “Make the walkthrough pages first. So we can safely always move through them.” Build the three Walkthrough pages now; Skip/Done commit locally and enqueue the existing POST without waiting for sync. First run ends on Today; replay can reuse the screen and return to Preferences once that screen exists. No screenshots or simulator execution in this task.
 
-**It deliberately does not cover:** the guest wizard, guest-draft recovery (OQ 17), email-change Settings flow, an in-app appearance setting, RN user migration (OQ 9), or Android. Local notifications are covered by Phase 19 (user decision, 2026-11-09). **Still not shippable to TestFlight:** server AASA/team-ID setup, physical link acceptance and unbuilt destinations must be settled first. Phase 9d replaces Phase 4's historical Release signed-out-only restriction; the `Perf` scheme retains an isolated signed-out launch path.
+**It deliberately does not cover:** email-change Settings flow, an in-app appearance setting, RN user migration (OQ 9), or Android. Local notifications are covered by Phase 19 (user decision, 2026-11-09). **Still not shippable to TestFlight:** server AASA/team-ID setup, physical link acceptance and unbuilt destinations must be settled first. Phase 9d replaces Phase 4's historical Release signed-out-only restriction; the `Perf` scheme retains an isolated signed-out launch path.
 
 **Sources:** canvas boards `SplashSpec`, `SplashScreen`, `SplashSlow`, `SplashWelcome`, `Main`, `canvas.json`, `ds/chronoflow/tokens.json` (downloaded 2026-11-05; byte-identical to `chronoflow-mobile/_design/canvas/` at that time, since diverged with the auth export); `cf-sky`, `cf-press` and token variables in `chronoflow-mobile/_design/canvas/theme.css`; `pattern-dots` in `ds/chronoflow/components/bundle.css`; settled rules in RN `plan.md` Phase 21. Auth extension: committed `AuthSignIn`, `AuthSignUp`, `AuthTwoFactor` (all eight `screen` variants), wrapper `Auth*.dc.html` boards and `AuthStates`; source verification recorded under the auth/store spec below (2026-11-06).
 
@@ -2026,9 +2026,145 @@ Stack: `feat/settings-board-fidelity` on `feat/phase-19-reminders` (PR #30). The
 
 Verification and audit resolution: see `Docs/settings-board-fidelity.md`. `make lint` passes; `make quick` reaches only the expected cookie-listener sandbox EPERM. Focused Settings/Reminders host tests pass all 66 cases; the remaining quick tiers pass 17 generator tests and 101 resource/runner fixtures. Direct iOS 17 Debug compiler checks pass for changed modules, the app and all AppUITests; Release compilation passes for every package module and the app. The opt-in capture suite changes device appearance serially and attaches board-named screenshots in both locales/appearances, without references. No simulator, capture, snapshot suite or matrix was run; visual acceptance and UI execution remain pending. Atomic patches and one-line Conventional Commit messages are under `build/commits/`.
 
-### Phase 18 (later, separate decision): guest wizard and claim
+### Phase 18: Guest wizard and claim (`feat/phase-18-guest-wizard`)
 
-Boards: WizardWhereGuest, WizardOutboundGuest, WizardCheckingGuest, WizardFineTuneGuest, WizardReadyGuest and GuestSignup*. Covers `reviewGuestTrip` (5/min per device+IP, 30/min per IP), `draft_token`/`guest_secret` on register and login, and routing by `SessionResult.tripId` (`Kit/Sources/AppCore/SessionController.swift:44,52`; null after a two-factor login, a known backend gap). Depends on 11c and replaces the OQ 12/17 seams. Listed so the work is not lost, not scheduled.
+**Decisions (user, 2026-11-10; OQ 44 scheduled now).**
+- **Reuse.** Guest mode reuses the member wizard (16a–16c) through one `WizardMode` flag. There is no second set of screens. Every guest board is the shared `Wizard.dc.html` with `guest=true` (branches at :243–508).
+- **Entry.** Welcome "Plan my trip" and the sign-in footer "Plan a trip first" open `.guestWizard` → WizardWhereGuest (OQ 12). The route exists at `Kit/Sources/AppCore/Route.swift:2`. `App/RootView.swift:80-106` has no case for it yet and falls through to `RoutePlaceholder` / `EmptyView`.
+- **Path.** Guests plan one-way trips only: Where → Times → Your sleep (always shown) → Checking → [Age, Shift work] → [Fine-tune] → Ready → sign-up (WizardSpec :28). They never see Coming back? or the flight home.
+- **No health data.** The no-health-data scope applies: `age_band` and `shift_work` are the only questions that can block. The retired `profile` keys get a 422 on the guest route too (`chronoflow-new/app/Http/Requests/Api/V1/GuestReviewTripRequest.php:46` → `Settings/BodyClockRules.php:20-41`). They are never stored or sent; strip them with the shared list from NH2.1.
+- **Guest draft.** The guest draft is a quiet 30-minute recovery record outside any account, separate from the `member-wizard` row. It is never listed (WizardSpec "No drafts, quiet recovery"). `guest_secret` lives only in the Keychain, one item per token.
+- **Review call.** `POST /v1/guest/trips/review` is public. Rate limits are 5/min per IP+device and 30/min per IP (`AppServiceProvider.php:201-208`). It prohibits `return`/`override`, requires `device_id` + `profile` (`habitual_bed`/`habitual_wake`), and mints `identity.guestSecret` only on first use (`ReviewGuestTrip.php:38-64`).
+- **Claim.**
+  - Register sends `draft_token`, `input_revision`, `review_revision` and `guest_secret`. On a fresh claim the server saves the trip, and `tripId` equals the draft token (`RegisterMobile.php:27-55`).
+  - Password and passkey login send `draft_token` + `guest_secret`. They only replay a receipt from an earlier registration (`ResolveMobileGuestClaim.php:12-17`).
+  - If `tripId` comes back, open that trip with `awaitingSync` once the verify, terms and walkthrough gates pass.
+  - If `tripId` is null after a password or passkey login, seed the member wizard from the guest form at Checking with `returnToReady`. Guest answers and the sleep override are dropped (server Phase 17 D15, `docs/ui-plan/phase-17-mobile-api-trip-wizard.md:25`; RN `claim-guest-draft.ts:17-71`).
+  - If `tripId` is null after a two-factor login (`CompleteMobileTwoFactor` issues no `tripId`; backend open concern at phase-17 doc :122), open My trips and let sync surface the claimed trip (user decision, 2026-11-10). Do not port RN's `guest-claim-lookup`.
+
+**Board resolutions.**
+- **WizardSpec wins over sample board links.** Where Continue links to the member `WizardOutbound` (Wizard.dc.html:469) and Fine-tune `v=none` Done links to `WizardReady` (:481). Guests follow the guest chain instead.
+- **Retired boards.** WizardQCaffeine, WizardQEye, WizardQClot, WizardQBipolar and WizardQPregnant are retired by no-health-data. With Caffeine gone, guest progress uses the board weights: 9 / 18 / 30 / 42 / 54 / 64 / 86 / 95.
+- **Shared Wizard properties.** Its theme/language properties cover the missing Dark/NL wrappers of WhereGuest, OutboundGuest, Sleep, CheckingGuest and FineTuneGuest (same resolution as 16a). Their strings are in `T` at Wizard.dc.html:228.
+- **Failure screens.** Guests reuse the member Checking failure screens (Offline, Server, Throttle). WizardSpec moves their exit, and the No plan exit, to Welcome. CheckPractice stays unbuilt.
+- **Under 18.** WizardExcluded is the guest under-18 screen; Close → Welcome and "Change my answers" → Age (:408-410).
+- **Discard.** WizardDiscardGuest uses the native alert with the added body line and exits to Welcome. × on an empty Where closes at once (:244-245).
+- **Past arrival.** Guests use the past-arrival copy without "add your return flight" (WizardCopy :30). The string already exists at `Kit/Sources/TripWizard/Model/WizardOutboundRules.swift:129`. The server rewrites its own message the same way (`ReviewGuestTrip.php:70-76`).
+- **Ready.**
+  - Rows: Route, Flight, Sleep "times · chronotype", Questions "N answered / None needed", Extras. There is no Return row.
+  - Price lines: "Paid with {cost} of the 3 credits you get when you sign up." and, on WizardReadyGuestFree, "Your sign-up credits stay unused." The balance is always `SIGNUP_CREDITS`, so the undrawn singular form (canvas note `wiz24cCopy`) is never needed.
+- **Not built.** No backend path produces "Verified, no trip claimed" (WizardCopy :34), because registration is all-or-nothing.
+
+**18a: Scope and boards**
+- [x] Record this scope and the decisions. Import GuestSignup, GuestSignupFailed, GuestSignupRetry, GuestSignupReview and GuestExcluded from the current canvas if they have been redrawn, and record the version in `_design/SOURCE.md`. They are listed in `canvas.json` (:195, :1025, :1045, :3040, :3050) but missing locally; RN's copies render over the superseded GuestReview and carry draft-era copy. Close OQ 44. Mark OQ 12 and OQ 17 as resolved by this phase. Tests: none (docs only).
+
+**18b: Guest review contract and API**
+- [ ] Add `ApiGuestTripReviewInput` with:
+  - the flattened journey from `WizardForm.reviewInput`, without `return` or `override`, and `trip_end_kind` `one_way`;
+  - identity `draft_token` / `input_revision` / `review_revision`, `null/0/null` on the first call;
+  - a required `profile` limited to the BodyClockRules keys, with retired keys stripped;
+  - `device_id` and an optional `guest_secret`.
+
+  Do not change `ApiTripReviewInput.encode` (`Contracts/TripWizardContracts.swift:25-33`); it always writes `override`. Add `DataSource.reviewGuestTrip` with a default `unsupported` (pattern at `AppCore/DataSource.swift:29`). In `APIDataSource+TripWizard.swift`, use a public route with no bearer token, a 90 s timeout and `TripWizardErrors.map`. Map `review_expired` (also inside `validation_failed`) → `reviewExpired`, and `throttled` or a bare 429 → `throttled(retryAfter)`.
+  - Tests (SwiftPM): encoding fixtures checked against the request rules (no `return`/`override`, no retired keys, required bed/wake, first-call identity); decoding `identity.guestSecret` both present and null; a URLProtocol stub asserting the path, no `Authorization` header, and the 422/429 mapping.
+
+**18c: Mock guest review**
+- [ ] `MockDataSource` serves guest reviews without an account. Today `wizardReview` requires `accountID(verified: true)` (`DataAccess/Mock/MockDataSource.swift:633`). Mirror the backend:
+  - mint a 64-hex secret on first use; for a known secret, reuse it and return a null `guestSecret`;
+  - a token without a secret, or with a wrong secret, is stale (`review_expired`);
+  - drafts are scoped by device and secret, with a sliding 30-minute expiry and at most 5 per device;
+  - `price.balance` = 3 and `unlimited` false;
+  - prompts are only `age_band` and `shift_work`;
+  - use the guest past-arrival message;
+  - limit to 5/min per device.
+  - Tests (SwiftPM, `MockGuestReviewTests`): one per rule above, ported from `chronoflow-new/tests/Feature/Api/GuestTripReviewTest.php`.
+
+**18d: Mock registration claim**
+- [ ] Mock `signUp` currently ignores the claim fields (MockDataSource.swift:274-296). Change it:
+  - Validate token + secret + both revisions + `canSave` before creating anything. On failure return 422 `review_expired` "Review your trip again before creating your account."
+  - On success, create the account and the trip under id = draft token, write a 7-day `MockClaim`, and return `tripId`.
+  - A replay with the same token, secret, email and password returns the same `tripId`.
+
+  The existing login and passkey replay (:176-185, :218, :509) stays.
+  - Tests (SwiftPM): claim success, expired claim creates nothing, replay, then a login replay reading the receipt, ported from `GuestRegistrationClaimTest.php`.
+
+**18e: Guest secret store**
+- [ ] Add an AppCore `GuestSecretStore` protocol: set/get/delete per token, rotate (store the new secret, delete the old one), and delete all. Add an in-memory fake. The app implementation uses the Keychain (`AfterFirstUnlockThisDeviceOnly`, a separate service from `App/Readiness/KeychainSessionStore.swift`). Member sign-out and account teardown delete every guest secret and the guest recovery record.
+  - Tests: SwiftPM for rotation, discard and delete-all against the fake. One hosted `GuestSecretKeychainTests` for the real Keychain under ad-hoc signing (< 5 s).
+
+**18f: Guest recovery store**
+- [ ] Extract `protocol WizardDraftStore { persist; discard; didSave }` from `MemberWizardStore` (`TripWizard/Model/MemberWizardStore.swift:85-182`). The model only calls those three (`MemberWizardModel.swift:211-243`, `MemberWizardCompletion.swift:231-238`). Add `GuestWizardStore`:
+  - It is one JSON file in Application Support, excluded from backup, with file protection.
+  - It uses the same 30-minute recovery, millisecond timestamps and instance/revision guards as the member store.
+  - It starts at Where with a 23:00/07:00 profile, 3 preparation days and `one_way`.
+  - It has no `savedProfile`, `firstTrip` or reminders effects.
+  - It never writes the secret or retired keys, and strips them when a legacy file is decoded.
+  - Tests (SwiftPM): round-trip, recovery at 29 and 31 minutes, retired-key stripping, no secret in the file bytes, member store behaviour unchanged.
+
+**18g: Wizard mode logic**
+- [ ] Add `WizardMode { member, guest }`. It is Codable on the wizard state and decodes legacy rows as member.
+  - Guest navigation skips the return steps. The member path is built at `MemberWizardNavigation.swift:31-38`. Replace the `go(.returnChoice)` at `TripWizardUI/MemberWizardView.swift:140` with `model.finishOutboundStep()`.
+  - `lastInputStep` is `.sleep`. Sleep is always needed. The end stays `one_way`.
+  - Use the guest progress weights and the guest past-arrival copy.
+  - Ready has no Return row. Fine-tune has no sleep-times switch or override.
+  - In guest mode `savePlan` yields `.signUpRequested`, after `needsReadyReview` passes: token present, no failure, unchanged fingerprint, check under 30 minutes. Otherwise go back to Checking.
+  - "Change my answers" resets only `age_band` / `shift_work`.
+  - Tests (SwiftPM): guest path and back targets (Checking → Sleep, first question skipping Checking), progress never moving back, legacy decode, each Ready re-check trigger, the sign-up outcome, member path unchanged.
+
+**18h: Guest generation**
+- [ ] Add `GuestWizardGeneration: MemberWizardGeneration` (seam at `MemberWizardModel.swift:5-19`; no `save`). It:
+  - builds the profile from sleep (bed, wake, chronotype) and the answers, and gets `device_id` from `DeviceIdentityStore`;
+  - sends the stored secret for the current token;
+  - on a non-null `guestSecret`, stores it under the new token and deletes the old one; if the wizard was discarded mid-flight, deletes the new secret and drops the result;
+  - on `review_expired` for the same token, retries once without identity;
+  - uses the existing dedupe and the 30 s Checking timeout.
+
+  It never touches the account profile or sync. `TripGenerationService.review` merges both (`Generation/TripGenerationService.swift:113-134`), so it is not used.
+  - Tests (SwiftPM, fake DataSource + fake secret store): first call mints, a known secret is reused, rotation, discard during the call, one expiry retry, a second expiry surfaces, throttle/offline failures, no account effects.
+
+**18i: Claim on sign-up, sign-in and passkey**
+- [ ] Inject a `claim: @Sendable () async -> GuestClaim?` provider into `SignInModel` (`Auth/SignInModel.swift:20`). Pass it to `makeSignUpModel` and `PasskeySignIn`; it is constructed at `App/Session/AuthSessionServices.swift:95-100`.
+  - `SignUpModel` (`Auth/SignUpModel.swift:67-70`) sends all four claim fields. On `review_expired` it returns `.guestReviewExpired`, which sets `returnToReady`, clears `checkingAnswers` and `reviewedAt`, and sends the guest to Ready.
+  - Password login (`SignInModel.swift:96-97`) and passkey login (`PasskeySignIn.swift:79-81`) send `draft_token` + `guest_secret`.
+  - `TwoFactorInput` stays without claim fields.
+  - Tests (SwiftPM): request bodies with and without a live guest draft, the expired-claim outcome, password fields cleared after each attempt.
+
+**18j: Accepting a session with or without a trip**
+- [ ] Pass `SessionResult` through `accepted`; it is discarded at `AuthSessionServices.swift:100`.
+  - **`tripId` set:** store a per-account guest-trip continuation that survives the verify, terms and walkthrough gates. Clear the guest draft and its secret. `AppTabs` opens the trip with `awaitingSync`, like the saved-trip path (`App/AppTabs.swift:176-179`).
+  - **`tripId` null after a password or passkey login with a live guest draft:** call `MemberWizardStore.start(seed:)`. It copies the form, sets step `.checking` and `returnToReady`, empty profile, default override, and binds the row to the account. Then clear the guest draft. AppTabs' existing recovery presents it (:287-305).
+  - **`tripId` null after two-factor:** clear the guest draft and secret and select My trips. Sync surfaces the trip.
+  - Tests (SwiftPM): continuation through each gate, consumed once, cleared on sign-out; the seed contents; the two-factor branch. Package routing tests for `AuthNavigation` / `NativeSessionController.routeAcceptedSession` (:119).
+
+**18k: Guest screens, Where to Questions**
+- [ ] Host the guest wizard for `.guestWizard` in `RootView` with a signed-out source. `AuthSessionServices.source` is private (:14, :36); expose a guest factory for airport search (already a public route) and the guest review.
+  - Guest text and states: no last-trip hint, Sleep sub "On a normal work day.", Checking line "Your answers", the Age disclaimer (Wizard.dc.html:403).
+  - Exits: guest Excluded closes to Welcome; failure and No plan close to Welcome; the discard alert body plus Welcome exit; × on an empty Where closes at once.
+  - Add en+nl to `TripWizardUI/Resources/Localizable.xcstrings` from WizardCopy/`T`.
+  - Tests: one seeded screen test per guest board (WizardWhereGuest, OutboundPastGuest, Sleep, CheckingGuest, QAge, Excluded, DiscardGuest). Use a signed-out `ScreenTestApp` launch with a guest `CF_WIZARD_BOARD_CAPTURE` seed, exact queries and `executionTimeAllowance = 60`. Add a paired-catalog regression.
+
+**18l: Guest screens, Fine-tune and Ready**
+- [ ] WizardFineTuneGuest rows have no Late check-out, Busy or sleep switch. WizardReadyGuest and WizardReadyGuestFree get the guest rows and price lines. "Make my plan" fires medium-impact feedback and runs the 18g gate, then hands `.signUpRequested` to the host. It presents the GuestSignup sheet (18i/18j carry the claim).
+  - Tests: seeded screen tests for FineTuneGuest, ReadyGuest, ReadyGuestFree (EN, plus one DarkNL), and a catalog regression. The gate logic stays in 18g's SwiftPM tests.
+
+**18m: Quiet recovery from Welcome (OQ 17)**
+- [ ] On a cold launch with a live guest record under 30 minutes, open `.guestWizard` on its step after the splash hand-off and Welcome intro have finished. Use a pure package `GuestRecoveryGate`; never push away the moon flight. Expire after 30 minutes in the background; reopen sign-in when the record was left signing in. No new screen: WizardSpec quiet recovery is the spec.
+  - Tests (SwiftPM): gate decisions by time, intro state, the signing-in flag and expiry. One seeded UI check that Welcome hands over to the recovered step.
+
+**18n: Integration and acceptance**
+- [ ] One mock UI journey (`GuestWizardJourneyTests`): Welcome → Plan my trip → Where → Times → Sleep → Checking → Age → Fine-tune → Ready. It extends through sign-up to the trip page with `awaitingSync`. Take one seeded Duo screenshot of WizardWhereGuest (AGENTS Tests). Register the new suites.
+  - **Claim gate:** against local Valet, run guest review → register → verify email → land on the claimed trip in en and nl; then password sign-in instead → seeded member wizard; then two-factor sign-in → My trips shows the trip after sync. Record the results.
+
+**Open (no board; not tasks).**
+- **GuestSignup sheet and its states** (ready, failed, retry, review-expired, "account made, trip not saved"). Not in `_design/canvas`. The RN copy is stale and Retry/Review are undrawn (canvas note `wiz24cCopy`).
+- **Guest shift-work exclusion.** WizardExcludedShift's note ("You gave this answer on an earlier trip…") is member-only. `GuestExcluded` is not imported.
+- **Sign-in-instead from the sign-up sheet** (RN `GuestSignupSheet.tsx:191-202`). It depends on the sheet.
+- **Landing after claim.** No board beyond the existing trip page and My trips.
+- **Main's "Plan my trip" board link** (Main.dc.html:44) still targets the superseded `GuestFlight`. iOS already routes to `.guestWizard`; the designer still has to fix the link.
+
+**Open questions.**
+- **OQ 47 resolved (2026-11-10):** the live canvas (version 1794321693-1909) draws GuestSignup with ready, failed, retry and review states; imported in 18a. Present it as a sheet over WizardReadyGuest/Free. Its backdrop (superseded GuestReview) is not built. "Review my trip" returns to Ready and checks again. "I already have an account" opens AuthSignIn carrying the claim. Field copy and password hint follow AuthSignUp/server policy (the board's "At least 10 characters" predates the 12-character rule). GuestExcluded stays unimported; guests use WizardExcluded.
+- **Not blocking, default applied: an unregistered draft at a two-factor sign-in.** Login never claims, so a guest who signs in through two-factor without registering loses the draft; they land on My trips (user decision, 2026-11-10).
 
 ### Phase 19: Local reminders (`feat/phase-19-reminders`)
 
@@ -2209,12 +2345,12 @@ Main restoration validation: source comparison confirms the two methods and enti
 | 9 | **Session source and migration.** Is the RN app live with real users? If native later ships as `net.chronoflow.app`, should it read the RN Keychain item (`session`; there is no `app:no-auth` key) and migrate SQLite, kv-store, `api.deviceId`? | Native-only session/store now (D18/D21); decide migration at bundle switch | RN import only; does not block Phase 9 |
 | 10 | **Scaling settled by the user 2026-11-06:** maximum xxLarge; xxxLarge and accessibility sizes AX1–AX5 clamp to it. Smaller sizes scale normally. Still open: scrolling on 667 pt screens, long Dutch headline and safe-area padding (`max(safeTop+16, 64)` gives ~78 on Dynamic Island phones vs board 64). | Scroll as RN; RN padding rule | Phase 5 |
 | 11 | **Vertical composition settled by the user 2026-11-06:** keep the 844 pt board's vertical relationships at every height (`h − k` → `h/2 + (422 − k)`), stretching the band to the window bottom. The moon stays window-centred for D7/S1. This resolves SE/Duo collisions and the 874 pt status/apex crossing. Still open: Duo's other postures and path endpoint bleed vs horizontal safe areas; no redesign is provided. | RN x control points × w/390; vertical rule settled | Phase 3a (vertical unblocked) |
-| 12 | **Stale board link:** `Main` links "Plan my trip" to superseded `GuestFlight`; target is the new guest wizard (`WizardWhereGuest`)? | Yes; designer fixes the link | Phase 5 |
+| 12 | **Stale board link:** `Main` links "Plan my trip" to superseded `GuestFlight`; target is the new guest wizard (`WizardWhereGuest`)? | Yes; designer fixes the link | Phase 5 Resolved by Phase 18 (2026-11-10). |
 | 13 | **Translations source:** RN `en.json` / `nl.json` as single source generating `.xcstrings`, or iOS owns its strings? | Auth copy entered by hand; plan/review copy generated under settled OQ 34 | Later |
 | 14 | **Performance targets and reference iPhone** (ProMotion) for device runs and the RN comparison. | Budget as proposed | Phase 3b device run, 7, 8 |
 | 15 | **URL scheme:** register `chronoflow` natively (clashes with RN side by side)? | None in this slice | Phase 4 |
 | 16 | **Cold start after a background kill:** always the splash, or state restoration? | Always the splash | Phase 4 |
-| 17 | **Guest-draft recovery** pushing Welcome away during the moon flight: no board. | Out of slice; seam reserved | Later |
+| 17 | **Guest-draft recovery** pushing Welcome away during the moon flight: no board. | Quiet recovery after the Welcome intro (18m), user scheduled Phase 18 on 2026-11-10 | Later |
 | 18 | **Design settled by the user 2026-11-06:** supplied `_design/canvas/AppIcon.dc.html` and `_design/icon/**` replace the RN icon; opaque flat default/dark/tinted masters and layered `ChronoFlow.icon` with a non-glass sky/dark sky and glass moon. Transparent dark is an unselected alternative. **Second-round limitation:** Apple documents no supported dual-source primary icon configuration: Composer replaces the legacy catalog. The supported build uses the glass stack on iOS 26+ and Composer-generated flats on iOS 17–25 (17 uses default), **not the authored AppIcon PNG pixels**. Decoding the saved CAR confirms all three differ from the masters. The undocumented fallback flag is removed. The original dual-source goal is not achieved; masters remain generated as controls. | No distinguishing Debug name. See `Docs/app-icon.md` for evidence and ordered host commands. Independent Composer-only attribution, supported combined/build audits and 17e validation remain open above. | Settled design; supported legacy limitation recorded; host verification pending |
 | 19 | **Android:** does RN keep Android, and stay the shipping iOS app until native reaches parity? | Yes | Not blocking |
 | 20 | **Settled by user 2026-11-06: build native passkey sign-in in Phase 10.** Backend branch `feat/mobile-api-passkeys` at `841be4bd` provides the options/login contract (not deployed). | Retain AuthSignIn passkey button/divider; AuthenticationServices options → assertion → login; 9b builds DTOs and source methods. Registration stays out of scope. | No Phase 9 blocker; **Open device verification** requires confirmed team/bundle IDs (OQ 4), team-signed build and deployed public AASA. |
@@ -2241,7 +2377,7 @@ Main restoration validation: source comparison confirms the two methods and enti
 | 41 | **No credits.** RN opens a one-time signed-in web link from `openBillingHandOff`, and the backend has no such endpoint. | Match RN's unavailable state: show WizardReadyNoCredits with no hand-off action until a backend hand-off endpoint exists. No static billing URL. | 16c no-credits action |
 | 42 | **Add to calendar.** The TripActions board draws it, and RN ships it locally with EventKit (boards CalendarExport, Denied, None and Failed). Is it in scope? | Defer to a separate calendar phase and leave the row out of 17c until then, noted as a known deviation from the board. | 17c calendar row; calendar phase |
 | 43 | **"Turn on reminders?" sheet** after the first saved trip. | Settled by user, 2026-11-09: Phase 19 builds the reusable sheet; 16c wires it after the first saved trip. | 19 / 16c |
-| 44 | **Guest wizard and claim.** Schedule Phase 18 now or later? | Later, after M2, as its own decision. | 18 |
+| 44 | **Guest wizard and claim.** Schedule Phase 18 now or later? | Now (user, 2026-11-10), before M2. | 18 |
 | 45 | **Superseded by No health data (2026-11-10).** Screening questions and privacy. The wizard asks blocking health-type screening questions (bipolar, pregnancy, VTE, eye disease) and stores the answers. There is no `PrivacyInfo.xcprivacy`, and the App Store privacy label is undecided. | Build the screening prompts with the server's wording, give the exclusion copy its own review against the clock-shift rule, and add the privacy manifest and label decision before TestFlight. | 16b copy sign-off; TestFlight |
 | 46 | **Date and time picking on Times.** The Wizard boards draw separate date and time pills per row. SwiftUI's `DatePicker` cannot show an empty value, so an empty pill currently opens a custom wheel popover, and once filled the system compact picker takes over. | One control per Departs/Arrives row: a single pill ("Choose" / "Mon 12 Oct · 14:40") that opens the same sheet every time, holding the system graphical `DatePicker` with date and time, the airport's local-time line and Done, as on the PickerDateTime board. PickerDateTime supplies the combined sheet; implemented in 16b.2. | Settled by the user, 2026-11-09: build the recommendation now, using the PickerDateTime board. 16b.2 Times |
 
