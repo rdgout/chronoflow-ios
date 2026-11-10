@@ -2080,7 +2080,7 @@ Verification and audit resolution: see `Docs/settings-board-fidelity.md`. `make 
   - Tests (SwiftPM, `MockGuestReviewTests`): one per rule above, ported from `chronoflow-new/tests/Feature/Api/GuestTripReviewTest.php`.
 
 **18d: Mock registration claim**
-- [ ] Mock `signUp` currently ignores the claim fields (MockDataSource.swift:274-296). Change it:
+- [x] Mock `signUp` currently ignores the claim fields (MockDataSource.swift:274-296). Change it:
   - Validate token + secret + both revisions + `canSave` before creating anything. On failure return 422 `review_expired` "Review your trip again before creating your account."
   - On success, create the account and the trip under id = draft token, write a 7-day `MockClaim`, and return `tripId`.
   - A replay with the same token, secret, email and password returns the same `tripId`.

@@ -180,7 +180,8 @@ public actor MockDataSource: DataSource {
         let token = "mock-" + id()
         let account = state!.accounts[accountID]!
         var tripID: String?
-        if let draft, let secret, let claim = state!.claims[draft], claim.secret == secret, claim.accountID == accountID
+        if let draft, let secret, let claim = state!.claims[draft], claim.secretHash == MockGuestReview.hash(secret),
+            claim.isLive(at: now().timeIntervalSince1970), claim.accountID == accountID
         {
             tripID = claim.tripID
         }
@@ -285,16 +286,74 @@ public actor MockDataSource: DataSource {
         guard input.email.contains("@") else {
             throw validation("email", "Enter a valid email address, like name@example.com.")
         }
+        if let token = input.draftToken, let secret = input.guestSecret, let receipt = state!.claims[token],
+            receipt.isLive(at: now().timeIntervalSince1970), receipt.secretHash == MockGuestReview.hash(secret),
+            let account = state!.accounts[receipt.accountID], emailKey(account.snapshot.email) == emailKey(input.email)
+        {
+            guard account.password == input.password, account.twoFactorCode == nil else {
+                throw validation("email", "This email address is already in use.")
+            }
+            try password(input.password, confirmation: input.passwordConfirmation)
+            return try authenticate(
+                accountID: receipt.accountID, deviceID: input.deviceID, draft: token, secret: secret)
+        }
         guard find(email: input.email) == nil else {
             throw validation("email", "This email address is already in use.")
         }
         try password(input.password, confirmation: input.passwordConfirmation)
+        let guest = try guestClaimDraft(input, state: state!)
+        let saved = try guest.map { try MockTripGeneration.saved($0.draft, tripID: input.draftToken!) }
         let accountID = id()
-        let snapshot = AccountSnapshot.mockRegistration(
+        var snapshot = AccountSnapshot.mockRegistration(
             id: accountID, name: input.name, email: emailKey(input.email), language: input.language ?? .en, now: now())
-        try update { $0.accounts[accountID] = MockServerAccount(snapshot: snapshot, password: input.password) }
+        if let guest {
+            snapshot.settings.bodyClock = guest.draft.profile
+            snapshot.settings.sleepAnswered = true
+            snapshot.settings.planCredits["credits"] = .number(Decimal(3 - guest.draft.review.price.cost))
+            snapshot.readiness = MockSettings.readiness(guest.draft.profile)
+        }
+        let account = MockServerAccount(snapshot: snapshot, password: input.password)
+        try update { state in
+            _ = try guestClaimDraft(input, state: state)
+            guard !state.accounts.values.contains(where: { emailKey($0.snapshot.email) == emailKey(input.email) })
+            else {
+                throw validation("email", "This email address is already in use.")
+            }
+            state.accounts[accountID] = account
+            if let guest, let saved, let token = input.draftToken, let secret = input.guestSecret {
+                state.accounts[accountID]!.trips = [saved.0]
+                state.accounts[accountID]!.details[token] = saved.1
+                var inputs = state.wizardInputs ?? [:]
+                inputs[accountID + ":" + token] = saved.2
+                state.wizardInputs = inputs
+                var paid = state.wizardPaidDirections ?? [:]
+                paid[accountID + ":" + token] = guest.draft.review.price.cost > 0 ? [.outbound] : []
+                state.wizardPaidDirections = paid
+                state.claims[token] = MockClaim(
+                    accountID: accountID, tripID: token, secret: secret, deviceID: guest.deviceID,
+                    expiresAt: now().timeIntervalSince1970 + 7 * 86400)
+                state.guestDrafts?[token] = nil
+            }
+        }
         try sendVerification(accountID)
-        return try authenticate(accountID: accountID, deviceID: input.deviceID)
+        return try authenticate(
+            accountID: accountID, deviceID: input.deviceID, draft: input.draftToken, secret: input.guestSecret)
+    }
+
+    private func guestClaimDraft(_ input: RegisterInput, state: MockServerState) throws -> MockGuestDraft? {
+        guard
+            input.draftToken != nil || input.guestSecret != nil || input.inputRevision != nil
+                || input.reviewRevision != nil
+        else { return nil }
+        guard let token = input.draftToken, let secret = input.guestSecret,
+            let inputRevision = input.inputRevision, inputRevision > 0,
+            let reviewRevision = input.reviewRevision, reviewRevision > 0,
+            let guest = state.guestDrafts?[token], guest.deviceID == input.deviceID.lowercased(),
+            guest.secretHash == MockGuestReview.hash(secret), guest.draft.expiresAt > now().timeIntervalSince1970,
+            guest.draft.review.identity.inputRevision == inputRevision,
+            guest.draft.review.identity.reviewRevision == reviewRevision, guest.draft.review.canSave
+        else { throw validation("review_expired", "Review your trip again before creating your account.") }
+        return guest
     }
     public func requestPasswordReset(email: String) async throws {
         try await begin(.requestPasswordReset)
@@ -615,6 +674,9 @@ extension MockDataSource {
         let known =
             suppliedHash.map { hash in
                 live.values.contains { $0.deviceID == device && $0.secretHash == hash }
+                    || state!.claims.values.contains {
+                        $0.deviceID == device && $0.secretHash == hash && $0.isLive(at: time)
+                    }
             } ?? false
         let minted = input.identity == nil && !known ? MockGuestReview.secret() : nil
         let secretHash = minted.map(MockGuestReview.hash) ?? suppliedHash!
