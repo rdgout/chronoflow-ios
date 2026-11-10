@@ -217,6 +217,12 @@ public final class MemberWizardModel {
         saveOutcome = nil
     }
 
+    public func setGuestSigningIn(_ signingIn: Bool) {
+        guard mode == .guest, !closed else { return }
+        draft.state.signingIn = signingIn
+        persist()
+    }
+
     public func discard() async throws {
         guard !closed, draft.state.step != .calculating else { return }
         closed = true

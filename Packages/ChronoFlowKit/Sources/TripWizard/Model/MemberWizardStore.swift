@@ -34,7 +34,7 @@ public struct MemberWizardState: Codable, Sendable, Equatable {
         case instance, revision, step, entered, fromLastTrip, firstTrip, sleepNeeded, homeChanged
         case returnRouteConfirmed, profile, airports, sheet, lastInputStep, progressFloor, review, questions
         case questionIndex, checkingAnswers, sleepCompleted, savedProfile, savedTripId, checkedInput, reviewedAt
-        case revisit, returnToReady, promptSheetID, saveFailure, updated
+        case revisit, returnToReady, promptSheetID, saveFailure, updated, signingIn
     }
 
     public var instance = UUID().uuidString
@@ -65,6 +65,7 @@ public struct MemberWizardState: Codable, Sendable, Equatable {
     public var promptSheetID: String?
     public var saveFailure: WizardSaveFailure?
     public var updated: Bool?
+    public var signingIn: Bool?
     public init() {}
 
     mutating func discardRetiredValues() {

@@ -6,6 +6,7 @@ import TripWizardUI
 
 struct GuestWizardDestination: View {
     @Environment(\.locale) private var locale
+    @Environment(\.scenePhase) private var scenePhase
     let services: AuthSessionServices
     let navigator: RootNavigator
     @State private var wizard: MemberWizardModel?
@@ -35,11 +36,15 @@ struct GuestWizardDestination: View {
             GuestSignupView(
                 model: presentation.model,
                 signIn: {
-                    presentation.model.backToSignIn()
-                    services.model.clearSecrets()
-                    services.model.editEmail(presentation.model.email)
-                    signup = nil
-                    navigator.navigate(to: .signIn)
+                    Task {
+                        wizard?.setGuestSigningIn(true)
+                        await wizard?.flush()
+                        presentation.model.backToSignIn()
+                        services.model.clearSecrets()
+                        services.model.editEmail(presentation.model.email)
+                        signup = nil
+                        navigator.navigate(to: .signIn)
+                    }
                 },
                 review: {
                     wizard?.guestReviewExpired()
@@ -47,6 +52,21 @@ struct GuestWizardDestination: View {
                 }
             )
             .onDisappear { signupDismissed(presentation.model) }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            guard phase == .active else { return }
+            Task {
+                guard let wizard, !wizard.closed else { return }
+                do {
+                    guard try await services.nativeSession.guestWizardStore.recover() == nil else { return }
+                } catch { return }
+                guard navigator.route == .guestWizard else { return }
+                try? await wizard.discard()
+                if let token = wizard.draft.form.identity?.token {
+                    try? await services.nativeSession.guestSecrets.delete(for: token)
+                }
+                navigator.navigate(to: .welcome)
+            }
         }
         .task {
             guard wizard == nil else { return }

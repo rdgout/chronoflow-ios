@@ -241,6 +241,12 @@ final class AuthSessionServices {
     #if DEBUG
         func prepareUITestRoute(_ test: AuthUITestConfiguration, navigator: RootNavigator) async throws {
             guard test.fastLaunch else { return }
+            if let board = UITestRuntime.environment["CF_GUEST_RECOVERY_BOARD"] {
+                var draft = try await nativeSession.guestWizardStore.start()
+                draft = GuestWizardBoardSeed.draft(draft, board: board, locale: Locale(identifier: "en_GB"))
+                try await nativeSession.guestWizardStore.persist(draft)
+                return
+            }
             if UITestRuntime.environment["CF_GUEST_WIZARD"] == "1" {
                 navigator.navigate(to: .guestWizard)
                 return
@@ -280,6 +286,11 @@ final class AuthSessionServices {
         guard await nativeSession.controller.presence == .signedOut else { throw CancellationError() }
         let store = nativeSession.guestWizardStore
         var draft = try await store.start()
+        if draft.state.signingIn == true {
+            draft.state.signingIn = false
+            draft.state.revision += 1
+            try await store.persist(draft)
+        }
         #if DEBUG
             let board =
                 authUITestEnabled && UITestRuntime.environment["CF_GUEST_WIZARD"] == "1"

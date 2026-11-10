@@ -32,6 +32,19 @@ public actor GuestWizardStore: WizardDraftStore {
     }
 
     public func recover() throws -> MemberWizardDraft? {
+        guard let record = try recoverRecord() else { return nil }
+        return MemberWizardDraft(
+            form: record.form, state: record.state, airports: record.state.airports, fieldErrors: record.fieldErrors)
+    }
+
+    public func recoveryDecision(handoffFinished: Bool, introFinished: Bool) throws -> GuestRecoveryGate.Decision {
+        guard let record = try recoverRecord() else { return .none }
+        return GuestRecoveryGate.decision(
+            updatedAt: Self.formatter().date(from: record.updatedAt), now: now(),
+            handoffFinished: handoffFinished, introFinished: introFinished, signingIn: record.state.signingIn == true)
+    }
+
+    private func recoverRecord() throws -> Record? {
         assert(!Thread.isMainThread)
         guard FileManager.default.fileExists(atPath: url.path) else { return nil }
         let data = try Data(contentsOf: url)
@@ -43,7 +56,10 @@ public actor GuestWizardStore: WizardDraftStore {
             return nil
         }
         let formatter = Self.formatter()
-        guard let updated = formatter.date(from: record.updatedAt), now().timeIntervalSince(updated) < 1800,
+        guard let updated = formatter.date(from: record.updatedAt),
+            GuestRecoveryGate.decision(
+                updatedAt: updated, now: now(), handoffFinished: false, introFinished: false,
+                signingIn: record.state.signingIn == true) != .expire,
             !record.form.legs.isEmpty, record.form.legs.count <= WizardForm.maxFlights,
             record.form.stays.count == record.form.legs.count, record.form.end.kind == "one_way"
         else {
@@ -55,9 +71,7 @@ public actor GuestWizardStore: WizardDraftStore {
                 form: record.form, state: record.state, airports: record.state.airports,
                 fieldErrors: record.fieldErrors), updatedAt: record.updatedAt)
         try write(cleaned)
-        return MemberWizardDraft(
-            form: cleaned.form, state: cleaned.state, airports: cleaned.state.airports,
-            fieldErrors: cleaned.fieldErrors)
+        return cleaned
     }
 
     public func persist(_ draft: MemberWizardDraft) throws {

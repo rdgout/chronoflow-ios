@@ -152,6 +152,7 @@ final class NativeSessionController {
     func setActive(_ active: Bool) async {
         await sync?.setEnabled(active)
         if active {
+            _ = try? await guestWizardStore.recover()
             await reminders.reschedule()
             do { try await controller.retryUnauthorized() } catch { return }
             await readiness.retry()

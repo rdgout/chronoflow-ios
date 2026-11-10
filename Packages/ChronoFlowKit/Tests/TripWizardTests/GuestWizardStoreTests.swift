@@ -78,6 +78,27 @@ import TripWizard
         #expect(!ProfilePreferences.containsRetiredValues(String(decoding: bytes, as: UTF8.self)))
     }
 
+    @Test func recoveryRemembersSignInWithoutExtendingTheExpiry() async throws {
+        let clock = WizardTestClock()
+        let root = guestStoreTestDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = GuestWizardStore(applicationSupport: root, namespace: .mock, now: { clock.now })
+        var draft = try await store.start()
+        draft.state.step = .ready
+        draft.state.signingIn = true
+        try await store.persist(draft)
+        clock.advance(1740)
+        let reopened = GuestWizardStore(applicationSupport: root, namespace: .mock, now: { clock.now })
+        #expect(try await reopened.recoveryDecision(handoffFinished: true, introFinished: false) == .wait)
+        #expect(try await reopened.recoveryDecision(handoffFinished: true, introFinished: true) == .signIn)
+        #expect(try await reopened.recover()?.state.step == .ready)
+        clock.advance(60)
+        #expect(try await reopened.recoveryDecision(handoffFinished: true, introFinished: true) == .none)
+        #expect(
+            !FileManager.default.fileExists(
+                atPath: GuestRecoveryLocation.file(applicationSupport: root, namespace: .mock).path))
+    }
+
     @Test func guardsRevisionsInstancesDiscardAndSave() async throws {
         let root = guestStoreTestDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
