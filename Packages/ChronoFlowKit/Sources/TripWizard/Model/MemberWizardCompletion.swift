@@ -52,6 +52,8 @@ extension MemberWizardModel {
         (draft.state.review?.prompts ?? []).enumerated().filter {
             !$0.element.blocking && ProfilePreferences.isSupported($0.element)
                 && !($0.element.kind == .cups && preference("exclude_caffeine"))
+                && (mode != .guest
+                    || [.room, .latestWake, .seatSide, .cups, .lightDevice, .blueBlockers].contains($0.element.kind))
         }
         .sorted { left, right in
             left.element.required == right.element.required ? left.offset < right.offset : left.element.required
@@ -147,6 +149,7 @@ extension MemberWizardModel {
     }
 
     public func readyTick(force: Bool = false) {
+        guard !guestAuthenticationPresented else { return }
         #if DEBUG
             if boardFrozen { return }
         #endif
@@ -212,7 +215,9 @@ extension MemberWizardModel {
 
     public func savePlan(recovering: Bool = false) {
         if mode == .guest {
-            guard !closed, !persistenceFailed, !reviewing, retrySeconds == 0, draft.state.step == .ready else { return }
+            guard !closed, !persistenceFailed, !reviewing, !guestAuthenticationPresented,
+                retrySeconds == 0, draft.state.step == .ready
+            else { return }
             if needsReadyReview {
                 recheckGuestReady()
             } else if canSave {

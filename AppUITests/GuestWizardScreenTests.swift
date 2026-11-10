@@ -1,9 +1,10 @@
 import XCTest
 
 @MainActor enum GuestWizardScreenUIFlow {
-    static func launch(_ board: String, language: String = "en") -> XCUIApplication {
+    static func launch(_ board: String, language: String = "en", dark: Bool = false) -> XCUIApplication {
         let app = ScreenTestApp.makeApplication()
         app.launchArguments = AuthUIFlow.arguments(language: language)
+        if dark { app.launchArguments += ["-cf.settings.theme", "dark"] }
         app.launchEnvironment = ["CF_GUEST_WIZARD": "1", "CF_WIZARD_BOARD_CAPTURE": board]
         app.launchMeasured()
         XCTAssertTrue(app.staticTexts["wizard.title"].firstMatch.waitUntil(.exists, timeout: 5))

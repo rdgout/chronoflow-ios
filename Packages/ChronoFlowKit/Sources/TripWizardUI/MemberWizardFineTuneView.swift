@@ -97,8 +97,8 @@
                             }
                             Text(model.draft.form.preparation.days.formatted(.number.locale(locale))).monospacedDigit()
                         }.padding(PlanUITokens.space4).accessibilityIdentifier("wizard.preparation")
-                        Divider().overlay(ColorToken.border.color)
                         if model.allowsSleepOverride {
+                            Divider().overlay(ColorToken.border.color)
                             Toggle(
                                 t("Use different sleep times for this trip"),
                                 isOn: Binding(

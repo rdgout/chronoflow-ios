@@ -1,3 +1,4 @@
+import AppCore
 import Foundation
 
 extension MemberWizardDraft {
@@ -21,6 +22,38 @@ extension MemberWizardDraft {
 }
 
 extension MemberWizardModel {
+    public var guestAnsweredQuestionCount: Int {
+        ["age_band", "shift_work"].filter {
+            if let value = draft.state.profile[$0] { return value != .null }
+            return false
+        }.count
+    }
+
+    public func revisitGuestQuestions() {
+        guard mode == .guest, draft.state.step == .ready, !reviewing, !closed else { return }
+        draft.state.questions = guestScreeningQuestions
+        draft.state.questionIndex = 0
+        revisit(.question)
+    }
+
+    var guestScreeningQuestions: [ApiReviewPrompt] {
+        [
+            ApiReviewPrompt(
+                id: "age_band", kind: .ageBand, blocking: true, required: true,
+                text: CopyLine(key: "Which age group are you in?", args: []), scope: ApiReviewPromptScope(),
+                target: .profile, fields: ["age_band"], answer: [:],
+                shape: ApiReviewPromptShape(kind: .options, options: ["under_18", "18_64", "65_plus"])),
+            ApiReviewPrompt(
+                id: "shift_work", kind: .screening, blocking: true, required: true,
+                text: CopyLine(
+                    key:
+                        "In the past 14 days, have you worked night or rotating shifts, or had a very irregular sleep schedule?",
+                    args: []),
+                scope: ApiReviewPromptScope(), target: .profile, fields: ["shift_work"], answer: [:],
+                shape: ApiReviewPromptShape(kind: .boolean, options: [])),
+        ]
+    }
+
     public var mode: WizardMode { draft.state.mode }
     public var showsReturnRow: Bool { mode == .member }
     public var allowsSleepOverride: Bool { mode == .member }

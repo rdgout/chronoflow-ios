@@ -36,6 +36,7 @@ public final class MemberWizardModel {
     public internal(set) var reviewing = false
     public internal(set) var createdTripID: String?
     public internal(set) var saveOutcome: WizardSaveOutcome?
+    public private(set) var guestAuthenticationPresented = false
     @ObservationIgnored var retryTask: Task<Void, Never>?
     @ObservationIgnored var retryID = UUID()
     @ObservationIgnored var saveTask: Task<Void, Never>?
@@ -209,6 +210,12 @@ public final class MemberWizardModel {
     }
 
     public func flush() async { await pending?.value }
+
+    public func setGuestAuthenticationPresented(_ presented: Bool) {
+        guard mode == .guest else { return }
+        guestAuthenticationPresented = presented
+        saveOutcome = nil
+    }
 
     public func discard() async throws {
         guard !closed, draft.state.step != .calculating else { return }

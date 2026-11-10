@@ -2144,8 +2144,10 @@ Verification and audit resolution: see `Docs/settings-board-fidelity.md`. `make 
   - Tests: one seeded screen test per guest board (WizardWhereGuest, OutboundPastGuest, Sleep, CheckingGuest, QAge, Excluded, DiscardGuest). Use a signed-out `ScreenTestApp` launch with a guest `CF_WIZARD_BOARD_CAPTURE` seed, exact queries and `executionTimeAllowance = 60`. Add a paired-catalog regression.
 
 **18l: Guest screens, Fine-tune and Ready**
-- [ ] WizardFineTuneGuest rows have no Late check-out, Busy or sleep switch. WizardReadyGuest and WizardReadyGuestFree get the guest rows and price lines. "Make my plan" fires medium-impact feedback and runs the 18g gate, then hands `.signUpRequested` to the host. It presents the GuestSignup sheet (18i/18j carry the claim).
+- [x] WizardFineTuneGuest rows have no Late check-out, Busy or sleep switch. WizardReadyGuest and WizardReadyGuestFree get the guest rows and price lines. "Make my plan" fires medium-impact feedback and runs the 18g gate, then hands `.signUpRequested` to the host. It presents the GuestSignup sheet (18i/18j carry the claim).
   - Tests: seeded screen tests for FineTuneGuest, ReadyGuest, ReadyGuestFree (EN, plus one DarkNL), and a catalog regression. The gate logic stays in 18g's SwiftPM tests.
+
+  Verification for 18k–18l (2026-11-10): strict lint, focused SwiftPM guest/auth/copy/claim suites and targeted regression reruns pass; all 105 runner fixtures pass. Direct iOS 17 Debug/Release app/module compilation and UI-test compilation pass. GuestSignup ready/failed/retry/review fixtures are registered alongside the guest wizard screen suites. No simulator tests, xcodebuild, snapshots or matrix were run; runtime and visual acceptance remain pending under the user's instruction.
 
 **18m: Quiet recovery from Welcome (OQ 17)**
 - [ ] On a cold launch with a live guest record under 30 minutes, open `.guestWizard` on its step after the splash hand-off and Welcome intro have finished. Use a pure package `GuestRecoveryGate`; never push away the moon flight. Expire after 30 minutes in the background; reopen sign-in when the record was left signing in. No new screen: WizardSpec quiet recovery is the spec.

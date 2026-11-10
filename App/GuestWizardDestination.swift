@@ -1,3 +1,4 @@
+import Auth
 import DesignSystem
 import SwiftUI
 import TripWizard
@@ -8,11 +9,13 @@ struct GuestWizardDestination: View {
     let services: AuthSessionServices
     let navigator: RootNavigator
     @State private var wizard: MemberWizardModel?
+    @State private var signup: SignUpModel?
+    @State private var showingSignup = false
 
     var body: some View {
         Group {
             if let wizard {
-                MemberWizardView(model: wizard) {
+                MemberWizardView(model: wizard, signUpRequested: { presentSignup(wizard) }) {
                     Task {
                         if let token = wizard.draft.form.identity?.token {
                             try? await services.nativeSession.guestSecrets.delete(for: token)
@@ -24,14 +27,75 @@ struct GuestWizardDestination: View {
                 ColorToken.background.color.ignoresSafeArea()
             }
         }
+        .sheet(isPresented: $showingSignup, onDismiss: signupDismissed) {
+            if let signup {
+                GuestSignupView(
+                    model: signup,
+                    signIn: {
+                        signup.backToSignIn()
+                        services.model.clearSecrets()
+                        services.model.editEmail(signup.email)
+                        showingSignup = false
+                        navigator.navigate(to: .signIn)
+                    },
+                    review: {
+                        wizard?.guestReviewExpired()
+                        showingSignup = false
+                    })
+            }
+        }
         .task {
             guard wizard == nil else { return }
             do {
                 wizard = try await services.makeGuestWizard(locale: locale)
+                #if DEBUG
+                    if services.authUITestEnabled,
+                        UITestRuntime.environment["CF_WIZARD_BOARD_CAPTURE"]?.hasPrefix("GuestSignup") == true,
+                        let wizard
+                    {
+                        presentSignup(wizard)
+                    }
+                #endif
             } catch is CancellationError { return } catch {
                 assertionFailure("Guest wizard start failed: \(error)")
                 navigator.navigate(to: .welcome)
             }
         }
+    }
+
+    private func presentSignup(_ wizard: MemberWizardModel) {
+        guard !showingSignup, !wizard.guestAuthenticationPresented else { return }
+        wizard.setGuestAuthenticationPresented(true)
+        Task {
+            await wizard.flush()
+            guard !Task.isCancelled, !wizard.closed, !wizard.persistenceFailed else {
+                wizard.setGuestAuthenticationPresented(false)
+                return
+            }
+            let signup = services.model.makeSignUpModel()
+            #if DEBUG
+                if services.authUITestEnabled,
+                    let board = UITestRuntime.environment["CF_WIZARD_BOARD_CAPTURE"]
+                {
+                    let state: GuestSignupState =
+                        [
+                            "GuestSignupFailed": .failed, "GuestSignupRetry": .retry, "GuestSignupReview": .review,
+                        ][board] ?? .ready
+                    signup.seedGuestSignupState(state)
+                }
+            #endif
+            self.signup = signup
+            showingSignup = true
+        }
+    }
+
+    private func signupDismissed() {
+        let needsReview = signup?.guestState == .review
+        signup?.cancel()
+        signup = nil
+        wizard?.setGuestAuthenticationPresented(false)
+        guard navigator.route == .guestWizard else { return }
+        if needsReview { wizard?.guestReviewExpired() }
+        wizard?.readyTick()
     }
 }

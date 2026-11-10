@@ -1426,6 +1426,182 @@
           }
         }
       }
+    },
+    "Save your plan": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save your plan"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sla je plan op"
+          }
+        }
+      }
+    },
+    "Create an account to save it and open it on any device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create an account to save it and open it on any device."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maak een account om het te bewaren en op elk apparaat te openen."
+          }
+        }
+      }
+    },
+    "We couldn't create your account.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We couldn't create your account."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We konden je account niet aanmaken."
+          }
+        }
+      }
+    },
+    "Your account is ready.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your account is ready."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je account is klaar."
+          }
+        }
+      }
+    },
+    "Try saving again shortly.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try saving again shortly."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Probeer het opslaan zo opnieuw."
+          }
+        }
+      }
+    },
+    "Your trip needs a new check.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your trip needs a new check."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je reis moet opnieuw worden gecontroleerd."
+          }
+        }
+      }
+    },
+    "Review your trip again before creating your account.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review your trip again before creating your account."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bekijk je reis opnieuw voordat je je account maakt."
+          }
+        }
+      }
+    },
+    "Create account and save": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create account and save"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account aanmaken en opslaan"
+          }
+        }
+      }
+    },
+    "I already have an account": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I already have an account"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ik heb al een account"
+          }
+        }
+      }
+    },
+    "Review my trip": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review my trip"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mijn reis bekijken"
+          }
+        }
+      }
+    },
+    "By creating an account you accept the <terms>terms</terms> and <privacy>privacy policy</privacy>.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By creating an account you accept the <terms>terms</terms> and <privacy>privacy policy</privacy>."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Door een account aan te maken, ga je akkoord met de <terms>voorwaarden</terms> en het <privacy>privacybeleid</privacy>."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

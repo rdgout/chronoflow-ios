@@ -11,6 +11,7 @@ import Observation
     public private(set) var confirmation = ""
     public private(set) var showsPassword = false
     public private(set) var sessionFailure: SessionFailure?
+    public private(set) var guestState: GuestSignupState = .ready
     public let form = AuthFormModel(
         displayedFields: ["name", "email", "password", "password_confirmation"], context: .signUp)
     private let source: any DataSource
@@ -61,17 +62,23 @@ import Observation
         guard active, !form.busy else { return }
         showsPassword.toggle()
     }
-    @discardableResult public func submit(language: AuthLanguage) async -> Outcome? {
+    @discardableResult public func submit(language: AuthLanguage, requiresGuestClaim: Bool = false) async -> Outcome? {
         guard active, form.begin(.register) else { return nil }
         sessionFailure = nil
+        guestState = .ready
         defer {
             clearPasswords()
             form.finish()
         }
         var attemptedClaim: GuestClaim?
+        var accountCreated = false
         do {
             let id = try await deviceIdentity()
             let claim = await claim()
+            guard !requiresGuestClaim || claim != nil else {
+                guestState = .review
+                return .guestReviewExpired
+            }
             attemptedClaim = claim
             try Task.checkCancellation()
             guard active else { return nil }
@@ -83,6 +90,7 @@ import Observation
                     reviewRevision: claim?.reviewRevision, guestSecret: claim?.guestSecret))
             try Task.checkCancellation()
             guard active else { return nil }
+            accountCreated = true
             try await accept(result)
             return .accepted
         } catch {
@@ -91,12 +99,14 @@ import Observation
                 TripWizardErrors.map(failure) == .reviewExpired
             {
                 await guestReviewExpired(attemptedClaim)
+                guestState = .review
                 return .guestReviewExpired
             }
             if let failure = error as? SessionFailure {
                 sessionFailure = failure
             }
             form.receive(error as? DataFailure ?? .server(status: nil))
+            guestState = accountCreated ? .retry : form.banner == nil ? .ready : .failed
             return nil
         }
     }
@@ -104,6 +114,11 @@ import Observation
         password = ""
         confirmation = ""
     }
+    #if DEBUG
+        public func seedGuestSignupState(_ state: GuestSignupState) {
+            guestState = state
+        }
+    #endif
     public func backToSignIn() {
         cancel()
         navigation.reset()

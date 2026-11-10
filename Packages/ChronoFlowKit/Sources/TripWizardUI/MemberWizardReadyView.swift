@@ -62,6 +62,19 @@
                             step: .returnChoice)
                     }
                     readyRow("Sleep", value: sleepSummary, step: .fineTune, sleep: true)
+                    if model.mode == .guest {
+                        Button {
+                            UISelectionFeedbackGenerator().selectionChanged()
+                            model.revisitGuestQuestions()
+                        } label: {
+                            readyRowContent(
+                                "Questions",
+                                value: t(
+                                    model.guestAnsweredQuestionCount == 0 ? "None needed" : "{{count}} answered",
+                                    ["count": String(model.guestAnsweredQuestionCount)]))
+                        }.buttonStyle(.plain).accessibilityHint(t("Opens this step"))
+                            .accessibilityIdentifier("wizard.ready.questions")
+                    }
                     readyRow(
                         "Extras",
                         value: (try? WizardPresentation.extrasSummary(
@@ -126,6 +139,11 @@
                 : model.draft.state.profile["habitual_wake"]?.string
                     ?? model.draft.state.savedProfile?["habitualWake"]?.string
             let times = [bed, wake].compactMap { $0 }.joined(separator: "–")
+            if model.mode == .guest {
+                let chronotype = ["early": "Early bird", "intermediate": "In between", "late": "Night owl"]
+                let key = chronotype[model.draft.state.profile["chronotype"]?.string ?? ""] ?? "Not sure"
+                return times + " · " + t(key)
+            }
             return override.enabled ? t("This trip · {{times}}", ["times": times]) : times
         }
         private var price: String {
@@ -145,13 +163,24 @@
             VStack(alignment: .leading, spacing: PlanUITokens.wizardControlGap) {
                 Text("\(model.credits == .unlimited ? "" : t("Price") + " ")\(Text(price).fontWeight(.semibold))")
                     .font(Typography.wizardSubtitle.font)
-                if model.credits == .free {
+                if model.mode == .guest {
+                    Text(
+                        t(
+                            model.credits == .free
+                                ? "Your sign-up credits stay unused."
+                                : "Paid with {{cost}} of the 3 credits you get when you sign up.",
+                            ["cost": String(model.draft.state.review?.price.cost ?? 0)])
+                    )
+                    .accessibilityIdentifier("wizard.ready.guest-price")
+                } else if model.credits == .free {
                     Text(t("This trip is free: only a small body-clock shift is needed."))
                 }
                 if model.credits == .oneFree {
                     Text(t("Your flight home is free: only a small shift is needed that way."))
                 }
-                if let review = model.draft.state.review, !review.price.unlimited, review.price.cost > 0 {
+                if let review = model.draft.state.review, model.mode == .member, !review.price.unlimited,
+                    review.price.cost > 0
+                {
                     Text(t("You have {{count}} credits", ["count": String(review.price.balance)]))
                         .fontWeight(model.credits == .unavailable ? .semibold : .regular)
                         .foregroundStyle(

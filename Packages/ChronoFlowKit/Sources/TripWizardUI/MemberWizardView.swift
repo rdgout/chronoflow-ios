@@ -16,6 +16,7 @@
         @Bindable var model: MemberWizardModel
         let dismiss: () -> Void
         let saved: (String) -> Void
+        let signUpRequested: () -> Void
         @State var confirmingDiscard = false
         @State var continuing = false
         @State var closing = false
@@ -29,11 +30,13 @@
         @State var copyFormatter: CopyLineFormatter?
 
         public init(
-            model: MemberWizardModel, saved: @escaping (String) -> Void = { _ in }, dismiss: @escaping () -> Void
+            model: MemberWizardModel, saved: @escaping (String) -> Void = { _ in },
+            signUpRequested: @escaping () -> Void = {}, dismiss: @escaping () -> Void
         ) {
             self.model = model
             self.dismiss = dismiss
             self.saved = saved
+            self.signUpRequested = signUpRequested
         }
 
         var requestedErrorScroll: Int {
@@ -96,6 +99,9 @@
                     UINotificationFeedbackGenerator().notificationOccurred(.success)
                     saved(id)
                 }
+            }
+            .onChange(of: model.saveOutcome) { _, outcome in
+                if outcome == .signUpRequested { signUpRequested() }
             }
             .sheet(
                 isPresented: Binding(

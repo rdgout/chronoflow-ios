@@ -4143,6 +4143,70 @@
           }
         }
       }
+    },
+    "Questions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questions"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vragen"
+          }
+        }
+      }
+    },
+    "None needed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None needed"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niet nodig"
+          }
+        }
+      }
+    },
+    "Paid with {{cost}} of the 3 credits you get when you sign up.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paid with {{cost}} of the 3 credits you get when you sign up."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Betaald met {{cost}} van de 3 credits die je krijgt als je een account maakt."
+          }
+        }
+      }
+    },
+    "Your sign-up credits stay unused.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your sign-up credits stay unused."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je credits van je nieuwe account blijven ongebruikt."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

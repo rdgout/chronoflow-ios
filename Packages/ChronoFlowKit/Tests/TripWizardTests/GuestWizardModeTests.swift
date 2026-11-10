@@ -1,10 +1,60 @@
 import AppCore
+import DataAccess
 import Foundation
 import Testing
 
 @testable import TripWizard
 
 @Suite @MainActor struct GuestWizardModeTests {
+    @Test func guestFineTuneUsesOnlyTheDrawnRowsAndLeavesMemberRowsAvailable() async throws {
+        let fixture = try await guestModeFixture(ready: true)
+        let model = fixture.model
+        var input = model.reviewInput.input
+        input.return = input.outbound
+        model.draft.state.review?.prompts = MockWizardPrompts.make(input: input, profile: JSONObject())
+        #expect(
+            Set(model.optionalPrompts.map(\.kind)) == [
+                .room, .latestWake, .seatSide, .cups, .lightDevice, .blueBlockers,
+            ])
+        model.draft.state.mode = .member
+        #expect(model.optionalPrompts.contains { $0.kind == .lateCheckOut })
+        #expect(model.optionalPrompts.contains { $0.kind == .preDepartureBusyHours })
+        #expect(model.optionalPrompts.contains { $0.kind == .freeDayTimes })
+        try await fixture.close()
+    }
+
+    @Test func questionsRowReopensSupportedAnswersAndReturnsToReady() async throws {
+        let fixture = try await guestModeFixture(ready: true)
+        let model = fixture.model
+        model.draft.state.profile["age_band"] = .string("18_64")
+        model.draft.state.profile["shift_work"] = .bool(false)
+        #expect(model.guestAnsweredQuestionCount == 2)
+        model.revisitGuestQuestions()
+        #expect(model.draft.state.step == .question && model.draft.state.questionIndex == 0)
+        #expect(model.draft.state.questions?.map(\.fields) == [["age_band"], ["shift_work"]])
+        #expect(model.draft.state.profile["age_band"] == .string("18_64"))
+        #expect(model.draft.state.profile["shift_work"] == .bool(false))
+        #expect(model.draft.state.returnToReady == true)
+        try await fixture.close()
+    }
+
+    @Test func readyWaitsForTheSignupSheetAndDismissalAllowsAnotherRequest() async throws {
+        let fixture = try await guestModeFixture(ready: true)
+        let model = fixture.model
+        model.savePlan()
+        #expect(model.saveOutcome == .signUpRequested)
+        model.setGuestAuthenticationPresented(true)
+        #expect(model.saveOutcome == nil)
+        model.draft.state.reviewedAt = nil
+        model.readyTick(force: true)
+        model.savePlan()
+        #expect(model.draft.state.step == .ready && model.saveOutcome == nil)
+        model.setGuestAuthenticationPresented(false)
+        model.readyTick()
+        #expect(model.draft.state.step == .checking)
+        try await fixture.close()
+    }
+
     @Test func legacyStateDecodesAsMemberAndModeRoundTrips() throws {
         let encoder = JSONEncoder()
         var state = MemberWizardState()
@@ -117,7 +167,7 @@ import Testing
         #expect(model.draft.state.profile["age_band"] == .null && model.draft.state.profile["shift_work"] == .null)
         #expect(model.draft.state.profile["habitual_bed"] == .string("23:00"))
         #expect(model.draft.state.profile["exclude_caffeine"] == .bool(true))
-        #expect(model.draft.state.step == .checking)
+        #expect(model.draft.state.step == .question && model.currentQuestion?.fields == ["age_band"])
         try await fixture.close()
     }
 

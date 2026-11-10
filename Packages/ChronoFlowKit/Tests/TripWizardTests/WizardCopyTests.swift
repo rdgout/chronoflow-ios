@@ -131,4 +131,20 @@ import TripWizardUI
         #expect(WizardStrings.text("Continue", locale: Locale(identifier: "en_GB")) == "Continue")
         #expect(WizardStrings.text("{{count}} credits", locale: dutch, arguments: ["count": "1"]) == "1 credit")
     }
+
+    @Test func guestReadyCreditAndQuestionCopyHasDutch() {
+        let dutch = Locale(identifier: "nl_NL")
+        #expect(
+            WizardStrings.text(
+                "Paid with {{cost}} of the 3 credits you get when you sign up.",
+                locale: dutch, arguments: ["cost": "2"])
+                == "Betaald met 2 van de 3 credits die je krijgt als je een account maakt.")
+        for (key, nl) in [
+            ("Your sign-up credits stay unused.", "Je credits van je nieuwe account blijven ongebruikt."),
+            ("Questions", "Vragen"), ("None needed", "Niet nodig"),
+        ] {
+            #expect(WizardStrings.text(key, locale: dutch) == nl)
+        }
+        #expect(WizardStrings.text("{{count}} answered", locale: dutch, arguments: ["count": "2"]) == "2 beantwoord")
+    }
 }

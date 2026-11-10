@@ -302,7 +302,9 @@ extension MemberWizardModel {
             draft.state.profile["shift_work"] = .null
             draft.state.checkingAnswers = false
             draft.state.returnToReady = nil
-            beginChecking()
+            draft.state.questions = guestScreeningQuestions
+            draft.state.questionIndex = 0
+            go(.question)
             return
         }
         for (field, stored) in [
