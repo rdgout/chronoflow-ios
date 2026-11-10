@@ -567,7 +567,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     private func scheduleGuestRecovery() {
-        guard !checkedGuestRecovery, overlayWindow == nil, navigator.route == .welcome,
+        guard !checkedGuestRecovery, window != nil, overlayWindow == nil, navigator.route == .welcome,
             let nativeSession, launchIntro?.frozenTime == nil
         else { return }
         checkedGuestRecovery = true
