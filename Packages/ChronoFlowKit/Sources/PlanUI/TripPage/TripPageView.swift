@@ -73,7 +73,7 @@ public struct TripPageView: View {
         .planRefreshFeedback(feedback)
         .foregroundStyle(ColorToken.foreground.color).background(ColorToken.background.color)
         #if os(iOS)
-            .background { TripWindowSizeHost { windowSize = $0 } }
+            .background { TripWindowSizeHost(willChange: scroll.beginResize) { windowSize = $0 } }
         #endif
         .task {
             model.plan.language = locale.language.languageCode?.identifier == "nl" ? .nl : .en
@@ -133,6 +133,7 @@ public struct TripPageView: View {
                                     compact: size.width < PlanMetrics.timelineLabelBreakpoint,
                                     listWidth: layout.listWidth, selectedBlockID: model.selectedStep?.blockID,
                                     stickyTop: max(compactHeight, compactHeaderBottom),
+                                    scrollTracker: scroll,
                                     viewportHeight: geometry.size.height, onBlock: openBlock,
                                     onFrame: onFirstTimelineFrame
                                 ).equatable().id(day.id)
@@ -260,6 +261,7 @@ public struct TripPageView: View {
                                 copy(model.timeline ? "Show as list" : "Show as timeline"),
                                 systemImage: model.timeline ? "list.bullet" : "rectangle.split.3x1"
                             ) {
+                                scroll.cancelRestoration()
                                 model.timeline.toggle()
                                 if let id = model.anchor.dayID { proxy.scrollTo(id, anchor: .top) }
                             }.accessibilityIdentifier("trip.viewToggle")
@@ -345,6 +347,7 @@ public struct TripPageView: View {
     }
 
     private func jump(_ id: String, proxy: ScrollViewProxy) {
+        scroll.cancelRestoration()
         model.select(dayID: id)
         if reduceMotion { proxy.scrollTo(id, anchor: .top) } else { withAnimation { proxy.scrollTo(id, anchor: .top) } }
     }

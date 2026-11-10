@@ -15,6 +15,7 @@ struct TripDayRow: View, Equatable {
     var listWidth: Double? = nil
     var selectedBlockID: String? = nil
     var stickyTop: Double = 0
+    var scrollTracker: TripScrollTracker? = nil
     @State private var listHeight: CGFloat? = nil
     @State private var listTop: CGFloat = 0
     let viewportHeight: Double
@@ -28,6 +29,7 @@ struct TripDayRow: View, Equatable {
             && lhs.compact == rhs.compact
             && lhs.listWidth == rhs.listWidth && lhs.selectedBlockID == rhs.selectedBlockID
             && lhs.stickyTop == rhs.stickyTop
+            && lhs.scrollTracker === rhs.scrollTracker
     }
 
     var body: some View {
@@ -83,6 +85,11 @@ struct TripDayRow: View, Equatable {
                 Color.clear.preference(key: DayFrames.self, value: [day.id: geo.frame(in: .named("trip.scroll"))])
             }
         )
+        .background {
+            #if os(iOS)
+                if let scrollTracker { TripScrollHost(tracker: scrollTracker, dayID: day.id) }
+            #endif
+        }
         .planContentBounds(identifier: "trip.day.\(day.id)")
     }
 
