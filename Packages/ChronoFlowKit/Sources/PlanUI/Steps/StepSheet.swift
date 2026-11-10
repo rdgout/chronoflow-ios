@@ -74,6 +74,7 @@
                     }
                 }.planContentBounds().padding(PlanUITokens.space5).padding(.top, PlanUITokens.space4).planPageRail()
             }
+            .safeAreaInset(edge: .bottom, spacing: 0) { RefusedChangeFeedback() }
             .tint(ColorToken.primary.color).controlSize(.large)
             .font(Typography.screenBodyLg.font).foregroundStyle(ColorToken.cardForeground.color)
             .background(ColorToken.card.color).accessibilityIdentifier("step.sheet")

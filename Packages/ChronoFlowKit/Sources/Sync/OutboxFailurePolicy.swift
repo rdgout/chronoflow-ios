@@ -36,4 +36,28 @@ public struct SyncRefusal: Codable, Sendable, Equatable {
     public let status: Int?
     public let failedAt: String
     public let lastError: String
+    public let notice: SyncRefusalNotice?
+}
+
+public enum SyncRefusalNotice: Codable, Sendable, Equatable {
+    case sleepTimes
+    case stepDone(BlockType)
+
+    public init?(change: OutboxChange) {
+        switch change {
+        case .settings(.bodyClock, let patch):
+            let sleepFields: Set<String> = [
+                "habitual_bed", "habitual_wake", "free_day_bed", "free_day_wake", "free_day_status",
+            ]
+            guard !patch.fields.isEmpty, Set(patch.fields.keys).isSubset(of: sleepFields) else { return nil }
+            self = .sleepTimes
+        case .checkOff(let check) where check.status == .done:
+            guard case .unknown = check.type else {
+                self = .stepDone(check.type)
+                return
+            }
+            return nil
+        default: return nil
+        }
+    }
 }

@@ -1,10 +1,37 @@
 import AppCore
+import Foundation
 import GRDB
 import LocalStore
 import Sync
 import Testing
 
 @Suite struct OutboxFlusherTests {
+    @Test func refusalNoticesCoverOnlyDrawnChanges() throws {
+        #expect(
+            SyncRefusalNotice(
+                change: .settings(
+                    section: .bodyClock,
+                    patch: JSONObject(["habitual_bed": .string("22:00")]))) == .sleepTimes)
+        #expect(SyncRefusalNotice(change: .checkOff(check())) == .stepDone(.sleep))
+        for change in [
+            OutboxChange.settings(section: .bodyClock, patch: JSONObject(["chronotype": .string("early")])),
+            .settings(
+                section: .bodyClock,
+                patch: JSONObject([
+                    "habitual_bed": .string("22:00"), "chronotype": .string("early"),
+                ])),
+            .settings(section: .preferences, patch: JSONObject(["time_format": .string("12")])),
+            .settings(section: .reminders, patch: JSONObject(["light": .bool(false)])),
+            .checkOff(check(status: .skipped)), .checkOff(check(status: nil)),
+            .profile(ProfileChange(name: "Edited", email: "demo@example.com")), .policies(version: "1"),
+        ] {
+            #expect(SyncRefusalNotice(change: change) == nil)
+        }
+        let legacy = Data(
+            #"{"id":"old","kind":"settings","failedAt":"then","lastError":"validation"}"#.utf8)
+        #expect(try JSONDecoder().decode(SyncRefusal.self, from: legacy).notice == nil)
+    }
+
     @Test func fifoDependencyBlockingAndParkedKinds() async throws {
         let store = try await SyncStore()
         let source = ScriptedSource()

@@ -7,6 +7,7 @@ import PlanUI
 import Sync
 
 @MainActor @Observable public final class SettingsHomeModel {
+    public let refusedChanges = RefusedChangeModel()
     public private(set) var state: SettingsHomeState
     public private(set) var now: Date
     public private(set) var busy = false
@@ -100,6 +101,7 @@ import Sync
                         where id.rawValue == session.session.accountId && epoch == session.epoch:
                             self?.syncing = false
                             self?.offline = result.state == .offline
+                            self?.refusedChanges.receive(result)
                         default: break
                         }
                     }
@@ -153,6 +155,7 @@ import Sync
     }
 
     public func stop() {
+        refusedChanges.clear()
         active = false
         generation += 1
         for task in tasks { task.cancel() }

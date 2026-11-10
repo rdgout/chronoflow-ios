@@ -138,10 +138,12 @@ struct AppTabs: View {
                 today
                     .navigationDestination(for: TripPageRoute.self) { tripDestination($0) }
             }
+            .safeAreaInset(edge: .bottom, spacing: 0) { RefusedChangeFeedback() }
             .tabItem { Label(t("Today"), systemImage: "square.grid.2x2") }.tag(Tab.today)
             NavigationStack(path: $tripsPath) {
                 trips.navigationDestination(for: TripPageRoute.self) { tripDestination($0) }
             }
+            .safeAreaInset(edge: .bottom, spacing: 0) { RefusedChangeFeedback() }
             .tabItem { Label(t("My trips"), systemImage: "airplane") }.tag(Tab.trips)
             NavigationStack(path: $settingsPath) {
                 SettingsHomeView(model: settingsHome)
@@ -159,6 +161,7 @@ struct AppTabs: View {
                         }
                     #endif
             }
+            .safeAreaInset(edge: .bottom, spacing: 0) { RefusedChangeFeedback() }
             .tabItem { Label(t("Settings"), systemImage: "gearshape") }.tag(Tab.settings)
         }
         .accessibilityIdentifier("app.tabs").tint(ColorToken.primary.color)
@@ -385,6 +388,7 @@ struct AppTabs: View {
         .onChange(of: home?.trips.trips.filter { $0.status == .active }.map { $0.card.id }, initial: true) { _, ids in
             for id in ids ?? [] { _ = home?.detail(for: id) }
         }
+        .environment(\.refusedChangeFeedback, settingsHome.refusedChanges)
         .sheet(item: $step) { selection in
             if let home, let formatter = home.formatter {
                 StepSheet(
@@ -392,7 +396,7 @@ struct AppTabs: View {
                     formatter: formatter, timeFormat: home.timeFormat, busy: home.changingCheck
                 ) { status in
                     await home.setCheck(tripID: selection.tripID, blockID: selection.blockID, status: status)
-                }
+                }.environment(\.refusedChangeFeedback, settingsHome.refusedChanges)
             }
         }
 

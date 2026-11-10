@@ -2015,6 +2015,8 @@ Deferrals: Reminders and notification permissions/delivery remain excluded. Opti
 
 ### Settings board fidelity (2026-11-09)
 
+Quick win (2026-11-10): surface SetStatesMore’s refused sleep-time and step-done messages in the shared floating toast, including open step sheets.
+
 Stack: `feat/settings-board-fidelity` on `feat/phase-19-reminders` (PR #30). The verified audit is `chronoflow-ios-handoff/settings-fidelity.json`. No simulator execution; capture attachments are a manual visual aid, never reference snapshots.
 
 - [x] Scaffold + components: native system large title (user decision 2026-11-10 supersedes Settings home's navigation styler); scrolling, bordered token cards, row discs, Fields/Notices/capsule actions, visible ChoiceCards and wrapping pill groups, badges, toast and content-sized native sheets. Keep root xxLarge and all safe-area edges via the existing page rail and native scroll/navigation insets. Generate missing board metrics, warning surfaces, popover and destructive foreground tokens.
