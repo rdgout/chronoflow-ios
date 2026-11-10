@@ -2,7 +2,7 @@ import XCTest
 
 nonisolated final class ResetPasswordTests: ScreenTestCase {
     @MainActor func testMockInboxResetDoneAndSignInWithNewPassword() {
-        let app = launchForgotApp()
+        let app = AuthUIFlow.launchScreen("reset")
         openResetFromMockMail(app)
         fillReset(app, password: "NewPassword123!", confirmation: "NewPassword123!")
         XCTAssertTrue(app.buttons["reset.continue"].waitUntil(.exists, timeout: 6))
@@ -18,21 +18,7 @@ nonisolated final class ResetPasswordTests: ScreenTestCase {
 }
 
 @MainActor func openResetFromMockMail(_ app: XCUIApplication) {
-    if app.launchEnvironment["CF_UI_TEST_PROFILE"] == "screen",
-        app.launchEnvironment["CF_AUTH_TEST_AUDIT_SCREEN"] == "reset",
-        app.launchEnvironment["CF_AUTH_TEST_AUDIT_STATE"] != "expired"
-    {
-        XCTAssertTrue(app.secureTextFields["reset.password"].waitUntil(.exists, timeout: 6))
-        return
-    }
-    openForgot(app)
-    app.textFields["forgot.email"].tap()
-    app.textFields["forgot.email"].typeText(MockScenarioValues.demoEmail + "\n")
-    let mail = app.buttons["forgot.open-email"]
-    XCTAssertTrue(mail.waitUntil(.exists, timeout: 6))
-    AuthUIFlow.reveal(mail, in: app)
-    mail.tap()
-    XCTAssertTrue(app.secureTextFields["reset.password"].waitUntil(.exists, timeout: 6))
+    AuthUIFlow.requireSeededScreen("reset", in: app)
 }
 
 @MainActor func fillReset(_ app: XCUIApplication, password: String, confirmation: String) {

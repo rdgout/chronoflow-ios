@@ -4,7 +4,7 @@ nonisolated class ScreenTestCase: XCTestCase {
     override func setUp() async throws {
         try await super.setUp()
         continueAfterFailure = false
-        executionTimeAllowance = ProcessInfo.processInfo.environment["AUTH_AUDIT_FULL"] == "1" ? 600 : 120
+        executionTimeAllowance = 60
         let name = String(reflecting: type(of: self))
         await ScreenTestApp.beginClass(name)
     }
@@ -43,11 +43,6 @@ nonisolated class ScreenTestCase: XCTestCase {
     }
 
     private static func finish() {
-        if let app = application, app.state == .runningForeground, let authorization {
-            app.launchArguments = launchedSeed?.arguments ?? app.launchArguments
-            app.launchEnvironment = ["CF_AUTH_TEST_ID": UUID().uuidString, "CF_UI_TEST_PROFILE": "screen"]
-            try? UIReseed.apply(to: app, authorization: authorization)
-        }
         application?.terminate()
         application = nil
         launchedSeed = nil
@@ -89,6 +84,7 @@ nonisolated class ScreenTestCase: XCTestCase {
     }
 
     static func didLaunch(_ app: XCUIApplication) {
+        UIReseed.didLaunch(app)
         guard application === app else { return }
         authorization = app.launchEnvironment["CF_AUTH_TEST_ID"]
         launchedSeed = UITestSeedCommand(

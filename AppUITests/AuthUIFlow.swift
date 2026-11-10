@@ -3,6 +3,44 @@ import XCTest
 @MainActor enum AuthUIFlow {
     enum Account: String { case demo, twofactor }
 
+    static func launchScreen(
+        _ screen: String, state: String = "form", language: String = "en", xxLarge: Bool = false,
+        extraEnv: [String: String] = [:], extraArguments: [String] = []
+    ) -> XCUIApplication {
+        let app = ScreenTestApp.makeApplication()
+        app.launchArguments = arguments(language: language, xxLarge: xxLarge) + extraArguments
+        app.launchEnvironment = extraEnv
+        app.launchEnvironment["CF_AUTH_TEST_AUDIT_SCREEN"] = screen
+        app.launchEnvironment["CF_AUTH_TEST_AUDIT_STATE"] = state
+        app.launchMeasured()
+        requireSeededScreen(screen, in: app)
+        return app
+    }
+
+    static func requireSeededScreen(_ screen: String, in app: XCUIApplication) {
+        guard app.launchEnvironment["CF_UI_TEST_PROFILE"] == "screen",
+            app.launchEnvironment["CF_AUTH_TEST_AUDIT_SCREEN"] == screen
+        else {
+            XCTFail("Expected mandatory CF_AUTH_TEST_AUDIT_SCREEN=\(screen) seed")
+            return
+        }
+        let first: XCUIElement
+        switch screen {
+        case "sign-in": first = app.textFields["sign-in.email"]
+        case "sign-up": first = app.textFields["sign-up.name"]
+        case "forgot": first = app.textFields["forgot.email"]
+        case "reset":
+            first =
+                app.launchEnvironment["CF_AUTH_TEST_AUDIT_STATE"] == "expired"
+                ? app.textFields["forgot.email"] : app.secureTextFields["reset.password"]
+        case "two-factor": first = app.textFields["two-factor.code"]
+        default:
+            XCTFail("Unknown auth screen seed: \(screen)")
+            return
+        }
+        XCTAssertTrue(first.waitUntil(.exists, timeout: 5), "Seed did not open \(screen)")
+    }
+
     static func launchSignedIn(
         _ app: XCUIApplication, walkthroughSeen: Bool, account: Account = .demo, extraEnv: [String: String] = [:]
     ) {
@@ -33,7 +71,7 @@ import XCTest
         let enabled = { () -> Bool in
             element.exists && element.isEnabled
         }
-        XCTAssertTrue(UIWait.until(timeout: 6, condition: enabled), "Expected enabled \(element.identifier)")
+        XCTAssertTrue(UIWait.until(timeout: 5, condition: enabled), "Expected enabled \(element.identifier)")
     }
 
     static func openSignIn(_ app: XCUIApplication) {
@@ -42,7 +80,7 @@ import XCTest
             button.exists || app.textFields["sign-in.email"].exists
         }
         XCTAssertTrue(
-            UIWait.until(timeout: 12, condition: ready), "Expected Welcome Sign in or the Sign in email field")
+            UIWait.until(timeout: 5, condition: ready), "Expected Welcome Sign in or the Sign in email field")
         if app.textFields["sign-in.email"].exists { return }
         reveal(button, in: app, scroll: app.scrollViews.containing(.button, identifier: "welcome.signIn").element)
         button.tap()
@@ -65,13 +103,9 @@ import XCTest
         app.secureTextFields["sign-in.password"].typeText(MockScenarioValues.password + "\n")
     }
 
-    @discardableResult static func dismissStrongPassword(in app: XCUIApplication, wait: Bool = false) -> Bool {
+    @discardableResult static func dismissStrongPassword(in app: XCUIApplication) -> Bool {
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         let owners = [app, springboard]
-        let presented = { () -> Bool in
-            owners.contains { $0.buttons["GenerateStrongPasswordButton"].exists }
-        }
-        if wait { _ = UIWait.until(timeout: 1, condition: presented) }
         guard let owner = owners.first(where: { $0.buttons["GenerateStrongPasswordButton"].exists }) else {
             return false
         }
@@ -95,7 +129,7 @@ import XCTest
             dismissStrongPassword(in: app)
             reveal(field, in: app)
             field.tap()
-            if newPassword, dismissStrongPassword(in: app, wait: true) { continue }
+            if newPassword, dismissStrongPassword(in: app) { continue }
             let focused = { () -> Bool in
                 field.value(forKey: "hasKeyboardFocus") as? Bool == true
             }
@@ -108,9 +142,9 @@ import XCTest
         return false
     }
 
-    static func dismissKeyboard(in app: XCUIApplication) {
+    static func dismissKeyboard(in app: XCUIApplication, scrollIdentifier: String) {
         dismissStrongPassword(in: app)
-        let scroll = scroll(in: app)
+        let scroll = scroll(in: app, identifier: scrollIdentifier)
         let window = app.windows.firstMatch
         for _ in 0..<2 {
             let keyboard = app.keyboards.firstMatch
@@ -131,27 +165,16 @@ import XCTest
         XCTAssertTrue(UIWait.until(timeout: 3, condition: hidden), "Expected the software keyboard to dismiss")
     }
 
-    static func scroll(in app: XCUIApplication) -> XCUIElement {
-        for screen in [
-            "reset.scroll", "sign-up.scroll", "verify.scroll", "forgot.scroll", "two-factor.scroll", "sign-in.scroll",
-            "settings.pending",
-        ] {
-            if app.scrollViews[screen].exists { return app.scrollViews[screen] }
-        }
-        for containers in [app.scrollViews, app.collectionViews, app.tables] {
-            if containers.firstMatch.exists { return containers.firstMatch }
-        }
-        return app.scrollViews.firstMatch
+    static func scroll(in app: XCUIApplication, identifier: String) -> XCUIElement {
+        app.scrollViews[identifier].firstMatch
     }
 
     private static func scroll(containing element: XCUIElement, in app: XCUIApplication) -> XCUIElement {
-        let type = element.elementType
-        let identifier = element.identifier
         for containers in [app.scrollViews, app.collectionViews, app.tables] {
-            let container = containers.containing(type, identifier: identifier).firstMatch
+            let container = containers.containing(element.elementType, identifier: element.identifier).firstMatch
             if container.exists { return container }
         }
-        return scroll(in: app)
+        return app.scrollViews.firstMatch
     }
 
     static func control(_ identifier: String, in app: XCUIApplication) -> XCUIElement {
@@ -211,33 +234,30 @@ import XCTest
             tabBar: tabs.exists ? tabs.frame : nil, clearance: 0)
     }
 
-    static func assertBannerVisible(in app: XCUIApplication, file: StaticString = #filePath, line: UInt = #line) {
-        let banner = control("auth.banner", in: app)
-        XCTAssertTrue(banner.waitForExistence(timeout: 6), file: file, line: line)
+    static func assertBannerVisible(
+        in app: XCUIApplication, scrollIdentifier: String, file: StaticString = #filePath, line: UInt = #line
+    ) {
+        let banner = app.staticTexts["auth.banner"].firstMatch
+        guard banner.waitUntil(.exists, timeout: 5) else {
+            XCTFail("Expected auth.banner", file: file, line: line)
+            return
+        }
+        let scroll = scroll(in: app, identifier: scrollIdentifier)
         var stability = FrameStability()
-        let visible = XCTNSPredicateExpectation(
-            predicate: NSPredicate { _, _ in
-                let viewport = viewport(in: app, scrollFrame: scroll(in: app).frame)
+        XCTAssertTrue(
+            UIWait.until(timeout: 5) {
+                let viewport = viewport(in: app, scrollFrame: scroll.frame)
+                let keyboard = app.keyboards.firstMatch
                 let visible =
                     banner.isHittable && AuthScrollGesture.fullyVisible(banner.frame, in: viewport)
                     && !SoftwareKeyboardVisibility.isVisible(
-                        app.keyboards.firstMatch.exists ? app.keyboards.firstMatch.frame : .zero,
-                        in: app.windows.firstMatch.frame)
+                        keyboard.exists ? keyboard.frame : .zero, in: app.windows.firstMatch.frame)
                 return stability.observe(visible ? [banner.frame, viewport] : nil)
-            }, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [visible], timeout: 6), .completed, file: file, line: line)
-        let viewport = viewport(in: app, scrollFrame: scroll(in: app).frame)
-        let message =
-            "Banner frame=\(banner.frame), viewport=\(viewport), keyboard=\(app.keyboards.firstMatch.exists ? app.keyboards.firstMatch.frame : .zero)"
-        XCTAssertFalse(
-            SoftwareKeyboardVisibility.isVisible(
-                app.keyboards.firstMatch.exists ? app.keyboards.firstMatch.frame : .zero,
-                in: app.windows.firstMatch.frame), message, file: file, line: line)
-        XCTAssertTrue(banner.isHittable, message, file: file, line: line)
-        XCTAssertTrue(AuthScrollGesture.fullyVisible(banner.frame, in: viewport), message, file: file, line: line)
+            }, "Banner must be fully visible with the keyboard dismissed", file: file, line: line)
     }
 
     static func reveal(_ element: XCUIElement, in app: XCUIApplication, scroll: XCUIElement? = nil) {
+        if element.isHittable { return }
         let scroll = scroll ?? self.scroll(containing: element, in: app)
         for _ in 0..<12 {
             do {

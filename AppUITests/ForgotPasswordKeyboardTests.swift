@@ -18,7 +18,7 @@ nonisolated final class ForgotPasswordKeyboardTests: ScreenTestCase {
         AuthUIFlow.control("forgot.submit", in: app).tap()
         if failure != nil {
             XCTAssertTrue(AuthUIFlow.control("auth.banner", in: app).waitUntil(.exists, timeout: 5))
-            AuthUIFlow.assertBannerVisible(in: app)
+            AuthUIFlow.assertBannerVisible(in: app, scrollIdentifier: "forgot.scroll")
             AuthUIFlow.reveal(field, in: app)
             field.tap()
         } else {
@@ -30,7 +30,7 @@ nonisolated final class ForgotPasswordKeyboardTests: ScreenTestCase {
             XCTAssertFalse(AuthUIFlow.control("forgot.notice", in: app).exists)
         }
         try assertPair(field, app: app, context: "\(language), \(failure ?? "field error")")
-        let scroll = AuthUIFlow.scroll(in: app)
+        let scroll = AuthUIFlow.scroll(in: app, identifier: "forgot.scroll")
         let frames = try UIWait.keyboardFrames(in: app, including: [scroll])
         let viewport = AuthUIFlow.viewport(in: app, scrollFrame: frames[2])
         let origin = app.windows.firstMatch.coordinate(withNormalizedOffset: .zero)
@@ -58,7 +58,8 @@ nonisolated final class ForgotPasswordKeyboardTests: ScreenTestCase {
         }
         XCTAssertTrue(UIWait.until(timeout: 5, condition: focused), context)
         let submit = AuthUIFlow.control("forgot.submit", in: app)
-        let frames = try UIWait.keyboardFrames(in: app, including: [AuthUIFlow.scroll(in: app), field, submit])
+        let frames = try UIWait.keyboardFrames(
+            in: app, including: [AuthUIFlow.scroll(in: app, identifier: "forgot.scroll"), field, submit])
         let viewport = AuthUIFlow.viewport(in: app, scrollFrame: frames[2])
         let message =
             "Forgot keyboard [\(context)] window=\(frames[0]) keyboard=\(frames[1]) viewport=\(viewport) field=\(frames[3]) submit=\(frames[4])"

@@ -14,7 +14,8 @@ nonisolated final class AccountRecoveryTests: ScreenTestCase {
         XCTAssertTrue(
             app.textFields["sign-in.email"].waitUntil(.exists, timeout: 8),
             "Expected sign-in.email after discarding and wiping the unverified account")
-        openSignUp(app)
+        app.buttons["sign-in.signup"].tap()
+        XCTAssertTrue(app.textFields["sign-up.name"].waitUntil(.exists, timeout: 4))
         let email = app.textFields["sign-up.email"]
         AuthUIFlow.reveal(email, in: app)
         email.tap()

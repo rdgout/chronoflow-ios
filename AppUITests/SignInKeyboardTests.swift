@@ -32,37 +32,37 @@ nonisolated final class SignInKeyboardTests: ScreenTestCase {
         app.launchMeasured()
         let signIn = app.buttons["welcome.signIn"]
         XCTAssertTrue(signIn.waitUntil(.exists, timeout: 6))
-        reveal(signIn, in: app.scrollViews.containing(.button, identifier: "welcome.signIn").element)
+        reveal(signIn, app: app, in: app.scrollViews.containing(.button, identifier: "welcome.signIn").element)
         signIn.tap()
         XCTAssertTrue(app.staticTexts["auth.heading"].waitUntil(.exists, timeout: 3))
 
-        let scroll = AuthUIFlow.scroll(in: app)
+        let scroll = AuthUIFlow.scroll(in: app, identifier: "sign-in.scroll")
         let email = app.textFields["sign-in.email"]
         let password = app.secureTextFields["sign-in.password"]
         let submit = app.buttons["sign-in.submit"]
         switch failure {
         case .email:
-            reveal(submit, in: scroll)
+            reveal(submit, app: app, in: scroll)
             submit.tap()
         case .password:
-            reveal(email, in: scroll)
+            reveal(email, app: app, in: scroll)
             email.tap()
             email.typeText("keyboard@example.com")
-            reveal(submit, in: scroll)
+            reveal(submit, app: app, in: scroll)
             submit.tap()
         case .server:
             let passkey = app.buttons["sign-in.passkey"]
-            reveal(passkey, in: scroll)
+            reveal(passkey, app: app, in: scroll)
             passkey.tap()
             XCTAssertTrue(app.staticTexts["auth.banner"].waitUntil(.exists, timeout: 5))
-            reveal(email, in: scroll)
+            reveal(email, app: app, in: scroll)
             email.tap()
         }
 
         let context = "\(language), xxLarge, \(failure)"
         if failure == .password {
             try assertVisiblePair(field: password, app: app, context: context)
-            reveal(email, in: scroll)
+            reveal(email, app: app, in: scroll)
             email.tap()
             try assertVisiblePair(field: email, app: app, context: context)
         } else {
@@ -85,7 +85,8 @@ nonisolated final class SignInKeyboardTests: ScreenTestCase {
         }
         XCTAssertTrue(UIWait.until(timeout: 5, condition: focused), "\(context): \(field.identifier) focus")
         let submit = app.buttons["sign-in.submit"]
-        let frames = try UIWait.keyboardFrames(in: app, including: [AuthUIFlow.scroll(in: app), field, submit])
+        let frames = try UIWait.keyboardFrames(
+            in: app, including: [AuthUIFlow.scroll(in: app, identifier: "sign-in.scroll"), field, submit])
         let viewport = AuthUIFlow.viewport(in: app, scrollFrame: frames[2])
         let keyboardFrame = frames[1]
         let safeViewport = viewport.intersection(
@@ -109,7 +110,7 @@ nonisolated final class SignInKeyboardTests: ScreenTestCase {
         XCTAssertTrue(submit.isHittable, message)
     }
 
-    @MainActor private func reveal(_ element: XCUIElement, in scroll: XCUIElement) {
-        AuthUIFlow.reveal(element, in: XCUIApplication(), scroll: scroll)
+    @MainActor private func reveal(_ element: XCUIElement, app: XCUIApplication, in scroll: XCUIElement) {
+        AuthUIFlow.reveal(element, in: app, scroll: scroll)
     }
 }

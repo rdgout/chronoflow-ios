@@ -4,6 +4,19 @@ import UIKit
 import XCTest
 
 nonisolated class AuthAuditCase: ScreenTestCase {
+    nonisolated(unsafe) private static var fontRegistration: Task<Void, Error>?
+
+    override class func setUp() {
+        super.setUp()
+        fontRegistration = Task { try await FontRegistry.register() }
+    }
+
+    override func setUp() async throws {
+        try await super.setUp()
+        if ProcessInfo.processInfo.environment["AUTH_AUDIT_FULL"] == "1" { executionTimeAllowance = 600 }
+        try await Self.fontRegistration?.value
+    }
+
     @MainActor private func variants() -> [(String, XCUIDevice.Appearance, Bool)] {
         guard ProcessInfo.processInfo.environment["AUTH_AUDIT_FULL"] == "1" else {
             return [("en", .light, false)]
@@ -16,7 +29,6 @@ nonisolated class AuthAuditCase: ScreenTestCase {
     }
 
     @MainActor fileprivate func auditReset(state: String) async throws {
-        try await FontRegistry.register()
         for (language, appearance, xxLarge) in variants() {
             let context = "Reset audit [\(language), \(appearance), xxLarge=\(xxLarge), \(state)]"
             let app = ScreenTestApp.makeApplication()
@@ -69,7 +81,6 @@ nonisolated class AuthAuditCase: ScreenTestCase {
     }
 
     @MainActor fileprivate func auditSignUp(state: String) async throws {
-        try await FontRegistry.register()
         for (language, appearance, xxLarge) in variants() {
             let app = ScreenTestApp.makeApplication()
             app.launchArguments =
@@ -100,7 +111,6 @@ nonisolated class AuthAuditCase: ScreenTestCase {
     }
 
     @MainActor fileprivate func auditVerify(state: String) async throws {
-        try await FontRegistry.register()
         for (language, appearance, xxLarge) in variants() {
             let app = ScreenTestApp.makeApplication()
             app.launchArguments =
@@ -176,7 +186,6 @@ nonisolated class AuthAuditCase: ScreenTestCase {
     }
 
     @MainActor fileprivate func auditSignInOrTwoFactor(mode: Int) async throws {
-        try await FontRegistry.register()
         for (language, appearance, xxLarge) in variants() {
             let context = "Auth audit [\(language), \(appearance), xxLarge=\(xxLarge), mode=\(mode)]"
             let app = ScreenTestApp.makeApplication()
@@ -219,12 +228,11 @@ nonisolated class AuthAuditCase: ScreenTestCase {
     }
 
     @MainActor fileprivate func auditForgot(state: String) async throws {
-        try await FontRegistry.register()
         for (language, appearance, xxLarge) in variants() {
             let context = "Forgot audit [\(language), \(appearance), xxLarge=\(xxLarge), \(state)]"
             let app = launchForgotApp(
                 language: language, xxLarge: xxLarge, failure: state, offline: state == "offline",
-                appearance: appearance, seedScreen: true)
+                appearance: appearance)
             openForgot(app)
             if state != "form" {
                 let field = app.textFields["forgot.email"]
@@ -299,13 +307,19 @@ nonisolated class AuthAuditCase: ScreenTestCase {
         }
     }
 
+    private func auditScrollIdentifier(_ identifiers: [String]) -> String {
+        let screen = identifiers.first { !$0.hasPrefix("auth.") }?.components(separatedBy: ".").first
+        return "\(screen ?? "sign-in").scroll"
+    }
+
     @MainActor private func auditControls(
         _ app: XCUIApplication, identifiers: [String], language: String, appearance: XCUIDevice.Appearance,
         xxLarge: Bool, forgotBannerState: String? = nil
     ) {
-        AuthUIFlow.dismissKeyboard(in: app)
+        let scrollIdentifier = auditScrollIdentifier(identifiers)
+        AuthUIFlow.dismissKeyboard(in: app, scrollIdentifier: scrollIdentifier)
         let identifiers = ["auth.brand", "auth.heading", "auth.subtitle"] + identifiers
-        let scroll = AuthUIFlow.scroll(in: app)
+        let scroll = AuthUIFlow.scroll(in: app, identifier: scrollIdentifier)
         var controls: [String: XCUIElement] = [:]
         for identifier in identifiers {
             let matches = AuthUIFlow.query(identifier, in: scroll)
@@ -367,7 +381,10 @@ nonisolated class AuthAuditCase: ScreenTestCase {
         // The combined audit resizes text while checking clipping, invalidating contrast capture geometry.
         for types in [XCUIAccessibilityAuditType.contrast, .all.subtracting([.dynamicType, .contrast])] {
             do {
-                _ = try UIWait.stableFrames(Array(controls.values) + [AuthUIFlow.scroll(in: app)], timeout: 6)
+                _ = try UIWait.stableFrames(
+                    Array(controls.values) + [
+                        AuthUIFlow.scroll(in: app, identifier: auditScrollIdentifier(Array(controls.keys)))
+                    ], timeout: 6)
             } catch {
                 XCTFail("Audit layout did not settle [\(language), \(appearance), \(stage), \(types)]: \(error)")
                 return
@@ -522,7 +539,7 @@ nonisolated class AuthAuditCase: ScreenTestCase {
     @MainActor private func captureAudit(
         _ app: XCUIApplication, controls: [String: XCUIElement], context: String
     ) -> AuditCapture? {
-        let scroll = AuthUIFlow.scroll(in: app)
+        let scroll = AuthUIFlow.scroll(in: app, identifier: auditScrollIdentifier(Array(controls.keys)))
         let measuredControls = controls.filter {
             ["auth.brand", "auth.subtitle", "auth.banner", "sign-up.back"].contains($0.key)
         }

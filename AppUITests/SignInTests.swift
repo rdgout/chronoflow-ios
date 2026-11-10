@@ -70,7 +70,8 @@ nonisolated final class SignInTests: ScreenTestCase {
     @MainActor private func reveal(_ element: XCUIElement, _ app: XCUIApplication) {
         let scroll =
             element.identifier == "welcome.signIn"
-            ? app.scrollViews.containing(.button, identifier: "welcome.signIn").element : AuthUIFlow.scroll(in: app)
+            ? app.scrollViews.containing(.button, identifier: "welcome.signIn").element
+            : AuthUIFlow.scroll(in: app, identifier: "sign-in.scroll")
         AuthUIFlow.reveal(element, in: app, scroll: scroll)
     }
 }
