@@ -807,6 +807,8 @@ def prepare(destination):
     run(["xcrun", "simctl", "bootstatus", destination.udid, "-b"], log=log)
     run(["xcrun", "simctl", "spawn", destination.udid, "defaults", "write",
          "com.apple.keyboard.preferences", "AutomaticMinimizationEnabled", "-bool", "false"], log=log)
+    run(["xcrun", "simctl", "spawn", destination.udid, "defaults", "write",
+         "com.apple.WebUI", "AutoFillPasswords", "-bool", "false"], log=log)
     reset_appearance(destination)
     installed = run(["xcrun", "simctl", "get_app_container", destination.udid, "net.chronoflow.app.native", "app"], log=log, check=False)
     if installed.returncode == 0:
