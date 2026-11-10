@@ -21,6 +21,17 @@
                 action: { if home { model.finishRoute(home: true) } else { model.finishRoute() } },
                 content: {
                     routeCard(route, home: home)
+                    if !home {
+                        readyBanner(
+                            title: t(
+                                "ChronoFlow is intended for adults with a regular nightly sleep pattern. It does not offer a plan if you have recently done shift work, or do not usually sleep in one regular nightly episode."
+                            ),
+                            body: t(
+                                "ChronoFlow is not suitable if you have bipolar disorder or have had a manic or hypomanic episode: sleep loss, bright light and long journeys can trigger mood episodes. Talk to your doctor before you travel."
+                            )
+                        )
+                        .accessibilityIdentifier("wizard.audienceNotice")
+                    }
                     if same {
                         errorLine(
                             t("From and To are the same airport. Choose where you land."),

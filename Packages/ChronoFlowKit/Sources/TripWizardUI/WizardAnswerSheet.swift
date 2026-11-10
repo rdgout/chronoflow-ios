@@ -56,6 +56,15 @@
                             Text(route).font(Typography.wizardHint.font).foregroundStyle(
                                 ColorToken.mutedForeground.color)
                         }
+                        if prompt.kind == .lightDevice {
+                            Text(
+                                t(
+                                    "Don't use a light box or light glasses if you have an eye disease, have had recent eye surgery or take medicine that makes your eyes sensitive to light. Ask your doctor first."
+                                )
+                            )
+                            .font(Typography.wizardHint.font).foregroundStyle(ColorToken.mutedForeground.color)
+                            .accessibilityIdentifier("wizard.answer.lightNotice")
+                        }
                         if !options.isEmpty { optionRows }
                         controls
                         if let error { errorLine(error, identifier: "wizard.answer.error") }

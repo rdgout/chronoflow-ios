@@ -6,6 +6,19 @@
     import UIKit
 
     extension MemberWizardView {
+        private func preferenceToggle(_ field: String, _ title: String, hint: String) -> some View {
+            Toggle(
+                isOn: Binding(
+                    get: { model.preference(field) },
+                    set: { value in model.setPreference(field, value: value) }
+                )
+            ) {
+                VStack(alignment: .leading, spacing: PlanUITokens.wizardLabelGap) {
+                    Text(t(title)).font(Typography.wizardChronotype.font)
+                    Text(t(hint)).font(Typography.wizardHint.font).foregroundStyle(ColorToken.mutedForeground.color)
+                }
+            }.padding(PlanUITokens.space4).accessibilityIdentifier("wizard.preference." + field)
+        }
         var fineTuneScreen: some View {
             wizardShell(
                 title: t("Fine-tune your plan"),
@@ -17,6 +30,17 @@
                 button: t(model.reviewing ? "Checking…" : model.optionalPrompts.isEmpty ? "Done" : "Continue"),
                 enabled: !model.reviewing, action: { model.finishFineTune() },
                 content: {
+                    VStack(spacing: 0) {
+                        preferenceToggle(
+                            "exclude_caffeine", "Leave caffeine out of my plan",
+                            hint: "Your plan won't suggest any caffeine.")
+                        Divider().overlay(ColorToken.border.color)
+                        preferenceToggle(
+                            "flight_movement_breaks", "Add movement breaks during long-flight sleep",
+                            hint:
+                                "Your plan breaks up long sleep on long flights with short movement breaks. If you're at higher risk of blood clots, choose this and ask your doctor about compression stockings and an aisle seat."
+                        )
+                    }.wizardCard().disabled(model.reviewing)
                     if !model.optionalPrompts.isEmpty {
                         VStack(spacing: 0) {
                             ForEach(Array(model.optionalPrompts.enumerated()), id: \.element.id) { index, prompt in
