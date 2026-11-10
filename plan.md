@@ -1762,7 +1762,7 @@ Snapshot repair verification: strict lint, all PlanUI host tests (including inje
 
 Integration verification: `make lint` passes. The seven focused host tests pass; the 60-day vector maximum is 39,081 bytes, within the existing 512 KiB/day and 4 MiB/four-entry limits. Static iOS 17 module compilation and AppUITests type checking pass. `make quick` ran and reported the known `APICookieTests.realRedirectCookieHandlingIsDisabled` listener EPERM and an unrelated concurrent `PreparedPlan.swift` day-count change (`Day 2` versus the existing fixture's `Day 2.0`); that concurrent edit is preserved and excluded from these patches. The remaining quick tiers pass separately: 10 TokenGen tests, 7 AssetGen tests and 100 resource/signing/runner fixtures. Logs: `build/timeline-integration-{lint,quick,focused,support-checks,typecheck,tests-typecheck}.log`. No simulator, snapshot recording/comparison, matrix or device runtime result is claimed.
 
-**15e: Wide trip page** (blocked on OQ 35: PlanWide, PlanWideScrolled and PlanWideDayMenu HTML)
+**15e: Wide trip page** (boards: PlanWide, PlanWideDark, PlanWideScrolled, PlanWideDayMenu, PlanRemoteWide, PlanRemoteWideOffline; OQ 35 boards imported 2026-11-10)
 - [ ] From a 600 pt window width, portrait only: timeline and list side by side, a 280 pt list column growing to 320 pt from 900 pt, no view button (`reqWideTrip`). Duo folded and every iPhone keep the phone layout. Until the user re-exports the wide boards and this lands, Duo unfolded uses the phone layout at full width (settled OQ 35).
   - Tests: wide snapshots at 669 pt; a size-change test (phone → 669 pt → phone) that keeps the day, scroll position and open sheet; `make duo`.
 
