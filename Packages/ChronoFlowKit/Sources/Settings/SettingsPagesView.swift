@@ -37,7 +37,6 @@
             .settingsFont(Typography.screenBodyLg)
             .navigationTitle(SettingsStrings.text(title, language: language))
             .navigationBarTitleDisplayMode(.large)
-            .background(SettingsNavigationStyle())
             .accessibilityElement(children: .contain).accessibilityIdentifier(identifier)
         }
         private var language: Language { locale.language.languageCode?.identifier == "nl" ? .nl : .en }

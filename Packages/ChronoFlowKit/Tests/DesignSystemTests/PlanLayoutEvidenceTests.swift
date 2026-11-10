@@ -37,7 +37,7 @@ struct PlanLayoutEvidenceTests {
     @Test @MainActor func planFontsScaleThroughTheRootCap() async throws {
         try await FontRegistry.register()
         let styles: [Typography.Style] = [
-            Typography.screenHero, Typography.screenPageTitle, Typography.screenPageTitleLg, Typography.screenCardTitle,
+            Typography.screenHero, Typography.screenPageTitle, Typography.screenCardTitle,
             Typography.screenSectionTitle, Typography.screenDayTitle,
             Typography.screenBodyLg, Typography.screenBody, Typography.screenLabel, Typography.screenMeta,
             Typography.screenEyebrow, Typography.screenBlockLabel,

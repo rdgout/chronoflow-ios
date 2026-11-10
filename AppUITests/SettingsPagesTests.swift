@@ -43,6 +43,24 @@ nonisolated class SettingsPagesCase: ScreenTestCase {
 }
 
 nonisolated final class SettingsPagesTests: SettingsPagesCase {
+    @MainActor func testBodyClockLargeTitleCollapsesOnScroll() throws {
+        let app = launchSettingsPages(route: "bodyClock")
+        let scroll = app.scrollViews["settings.bodyClock.screen"]
+        let bar = app.navigationBars["Body clock"]
+        let title = bar.staticTexts["Body clock"].firstMatch
+        XCTAssertTrue(scroll.waitUntil(.hittable, timeout: 3))
+        XCTAssertTrue(title.waitUntil(.exists, timeout: 3))
+        let expanded = try UIWait.stableFrames([bar], timeout: 3)[0]
+
+        scroll.swipeUp()
+
+        XCTAssertTrue(
+            UIWait.until(timeout: 3) {
+                bar.frame.height < expanded.height && title.exists && title.isHittable
+            },
+            "Body clock should collapse into the inline navigation title after scrolling")
+    }
+
     @MainActor func testProfileSaveShowsFeedbackAndUpdatedAccountRow() {
         let app = launchSettingsPages(route: "profile")
         let name = app.textFields["settings.profile.name"]

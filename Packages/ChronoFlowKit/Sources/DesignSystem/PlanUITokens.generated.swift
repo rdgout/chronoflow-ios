@@ -126,9 +126,6 @@ extension Typography {
     public static var screenPageTitle: Style {
         Style(face: .fraunces400Opsz32, size: 30.0, lineHeight: 36.0, tracking: -0.3, relativeTo: .body)
     }
-    public static var screenPageTitleLg: Style {
-        Style(face: .fraunces400Opsz32, size: 36.0, lineHeight: 40.0, tracking: -0.36, relativeTo: .body)
-    }
     public static var screenCardTitle: Style {
         Style(face: .fraunces400Opsz20, size: 24.0, lineHeight: 32.0, tracking: -0.24, relativeTo: .body)
     }

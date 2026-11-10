@@ -1,7 +1,6 @@
 #if canImport(UIKit)
     import DesignSystem
     import SwiftUI
-    import UIKit
 
     public enum SettingsDestination: String, CaseIterable, Identifiable {
         case profile, account, security, bodyClock, preferences, plan, reminders
@@ -68,7 +67,6 @@
                         "Settings", language: locale.language.languageCode?.identifier == "nl" ? .nl : .en)
                 )
                 .navigationBarTitleDisplayMode(.large)
-                .background(SettingsNavigationStyle())
                 .sheet(isPresented: $model.showsPending) { SignOutPendingSheet(model: model) }
         }
     }
@@ -129,32 +127,6 @@
                 label()
             }
 
-        }
-    }
-
-    struct SettingsNavigationStyle: UIViewControllerRepresentable {
-        func makeUIViewController(context: Context) -> Styler { Styler() }
-        func updateUIViewController(_ controller: Styler, context: Context) { controller.style() }
-        final class Styler: UIViewController {
-            override func viewWillAppear(_ animated: Bool) {
-                super.viewWillAppear(animated)
-                style()
-            }
-            override func viewDidLayoutSubviews() {
-                super.viewDidLayoutSubviews()
-                style()
-            }
-            func style() {
-                guard let bar = navigationController?.navigationBar else { return }
-                let font = Typography.screenPageTitleLg.uiFont(compatibleWith: traitCollection)
-                guard bar.standardAppearance.largeTitleTextAttributes[.font] as? UIFont != font else { return }
-                let appearance = UINavigationBarAppearance(barAppearance: bar.standardAppearance)
-                appearance.largeTitleTextAttributes = [
-                    .font: font, .foregroundColor: UIColor(ColorToken.foreground.color),
-                ]
-                bar.standardAppearance = appearance
-                bar.scrollEdgeAppearance = appearance
-            }
         }
     }
 #endif
