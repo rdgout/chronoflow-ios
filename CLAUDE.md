@@ -10,6 +10,8 @@ Codex implements and Opus reviews; Claude orchestrates and does not hand-write f
 
 Codex's `workspace-write` sandbox cannot run `xcodebuild` (nested `sandbox-exec`), CoreSimulator or `xctrace`, and may be denied `.git/index.lock`. Running Codex with `danger-full-access` is not permitted. So Claude runs builds, tests and simulator checks (`make check`, `make duo`) outside the sandbox, feeds the exact output back to Codex, and makes the commits Codex could not, using Codex's suggested messages.
 
+Every Codex brief that adds or changes tests must point to the **Tests** rules in `AGENTS.md`. Reject a test that breaks them in review, before it reaches the simulator.
+
 ## Commands
 
 `make generate` creates the ignored project. `Scripts/ci.sh` runs `make generate check`.
