@@ -1860,7 +1860,7 @@ Source: canvas version 1794242613-8e6a, WizardSpec "Route first, then times (Ric
 
 **16c first simulator-run repairs (2026-11-10)**
 - [x] Query combined save-failure banners across accessibility element types, matching the shared auth banner helper. Screen tests retain seeded state; no test execution in this repair.
-- [ ] Keep the no-credits Close button above the home indicator and check it as a pinned footer control.
+- [x] Keep the no-credits Close button above the home indicator and check it as a pinned footer control. Give the button its own unpadded label bounds and move the extending background onto a containing footer; add a hosted Dutch xxLarge geometry check. No test execution.
 - [ ] Keep Fine-tune/Ready footer content inside every safe-area inset, including asymmetric Duo rails.
 - [ ] Scope layout measurements to the visible wizard screen and preserve the four flight/error/footer checks.
 

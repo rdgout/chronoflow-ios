@@ -47,8 +47,9 @@ nonisolated final class WizardCompletionScreenTests: ScreenTestCase {
         XCTAssertTrue(app.otherElements["wizard.ready"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.buttons["wizard.ready.continue"].exists)
         let close = app.buttons["wizard.ready.no-credits"]
-        AuthUIFlow.reveal(close, in: app, scroll: app.scrollViews.firstMatch)
+        XCTAssertTrue(close.waitForExistence(timeout: 5))
         XCTAssertTrue(close.isHittable)
+        XCTAssertTrue(app.windows.firstMatch.frame.contains(close.frame))
     }
 
     @MainActor func testAllAnswerSheetsUseNativeDoneAndCancel() {

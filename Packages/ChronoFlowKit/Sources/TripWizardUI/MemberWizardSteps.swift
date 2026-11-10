@@ -87,12 +87,19 @@
                                 )
                                 .planContentBounds(identifier: "wizard.\(id).footer")
                         } else if id == "ready", model.credits == .unavailable {
-                            Button(t("Close")) { confirmingDiscard = true }
+                            VStack(spacing: 0) {
+                                Button {
+                                    confirmingDiscard = true
+                                } label: {
+                                    Text(t("Close")).frame(maxWidth: .infinity, minHeight: AuthTokens.touch)
+                                }
                                 .buttonStyle(.plain).font(Typography.wizardSecondary.font)
-                                .frame(maxWidth: .infinity, minHeight: AuthTokens.touch)
-                                .padding(.horizontal, PlanUITokens.space5).padding(.vertical, PlanUITokens.space3)
+                                .disabled(closing).accessibilityIdentifier("wizard.ready.no-credits")
+                                .planContentBounds(identifier: "wizard.ready.no-credits")
+                            }.padding(.horizontal, PlanUITokens.space5).padding(.vertical, PlanUITokens.space3)
+                                .accessibilityElement(children: .contain).accessibilityIdentifier("wizard.ready.footer")
+                                .planContentBounds(identifier: "wizard.ready.footer")
                                 .background(ColorToken.background.color)
-                                .accessibilityIdentifier("wizard.ready.no-credits")
                         } else if answerHint {
                             tapHint.frame(maxWidth: .infinity).multilineTextAlignment(.center)
                                 .padding(.horizontal, PlanUITokens.space5).padding(

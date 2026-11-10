@@ -46,6 +46,33 @@
             }
         }
 
+        @MainActor func testNoCreditsCloseStaysInsideThePinnedFooterAboveTheHomeIndicator() async throws {
+            try await AuthTestHost.registerFonts()
+            let database = AccountDatabase(
+                applicationSupport: .temporaryDirectory.appendingPathComponent(UUID().uuidString), namespace: .mock)
+            try await database.open(accountID: UUID().uuidString)
+            do {
+                let profile = try XCTUnwrap(try AuthDeviceFixture.all().first { $0.name == "17e" })
+                let model = completionBoardModel("WizardReadyNoCredits", database: database)
+                let content = PlanMeasuredContent()
+                let host = try AuthTestHost(
+                    MemberWizardView(model: model, dismiss: {}).capturePlanContent(in: content),
+                    size: profile.size, insets: profile.insets, language: "nl", category: .extraExtraLarge,
+                    scale: profile.scale)
+                defer { host.close() }
+                try await host.settleLayout { content.frames }
+                let footer = try XCTUnwrap(content.frame(for: "wizard.ready.footer"))
+                let close = try XCTUnwrap(content.frame(for: "wizard.ready.no-credits"))
+                XCTAssertTrue(footer.contains(close), "footer=\(footer) close=\(close)")
+                XCTAssertLessThan(close.height, footer.height)
+                XCTAssertLessThanOrEqual(close.maxY, profile.size.height - profile.insets.bottom)
+                try await database.close()
+            } catch {
+                try? await database.close()
+                throw error
+            }
+        }
+
         @MainActor func testDuoResizeKeepsFineTuneAndOpenAnswer() async throws {
             let database = AccountDatabase(
                 applicationSupport: .temporaryDirectory.appendingPathComponent(UUID().uuidString), namespace: .mock)
