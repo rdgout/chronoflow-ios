@@ -9,6 +9,8 @@ actor GenerationSource: DataSource {
     var counts: [String: Int] = [:]
     var reviewFailure: DataFailure?
     var reviewInputs: [ApiTripReviewInput] = []
+    var guestInputs: [ApiGuestTripReviewInput] = []
+    var guestHandler: (@Sendable (ApiGuestTripReviewInput) async throws -> ApiTripReview)?
     var reviewResults: [Result<ApiTripReview, DataFailure>] = []
     var snapshots: [ApiTripInputSnapshot] = []
     var editRequests: [TripEditContext] = []

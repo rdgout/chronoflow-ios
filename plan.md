@@ -2112,7 +2112,7 @@ Verification and audit resolution: see `Docs/settings-board-fidelity.md`. `make 
   - Tests (SwiftPM): guest path and back targets (Checking → Sleep, first question skipping Checking), progress never moving back, legacy decode, each Ready re-check trigger, the sign-up outcome, member path unchanged.
 
 **18h: Guest generation**
-- [ ] Add `GuestWizardGeneration: MemberWizardGeneration` (seam at `MemberWizardModel.swift:5-19`; no `save`). It:
+- [x] Add `GuestWizardGeneration: MemberWizardGeneration` (seam at `MemberWizardModel.swift:5-19`; no `save`). It:
   - builds the profile from sleep (bed, wake, chronotype) and the answers, and gets `device_id` from `DeviceIdentityStore`;
   - sends the stored secret for the current token;
   - on a non-null `guestSecret`, stores it under the new token and deletes the old one; if the wizard was discarded mid-flight, deletes the new secret and drops the result;
