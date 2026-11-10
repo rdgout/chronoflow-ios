@@ -47,10 +47,13 @@ extension MemberWizardModel {
         return (try? encoder.encode(input)) ?? Data()
     }
     public var optionalPrompts: [ApiReviewPrompt] {
-        (draft.state.review?.prompts ?? []).enumerated().filter { !$0.element.blocking }
-            .sorted { left, right in
-                left.element.required == right.element.required ? left.offset < right.offset : left.element.required
-            }.map(\.element)
+        (draft.state.review?.prompts ?? []).enumerated().filter {
+            !$0.element.blocking && ProfilePreferences.isSupported($0.element)
+                && !($0.element.kind == .cups && preference("exclude_caffeine"))
+        }
+        .sorted { left, right in
+            left.element.required == right.element.required ? left.offset < right.offset : left.element.required
+        }.map(\.element)
     }
     public var credits: WizardCredits? { draft.state.review.map(WizardCredits.init) }
     public var needsReadyReview: Bool {
@@ -61,6 +64,19 @@ extension MemberWizardModel {
     public var canSave: Bool {
         !reviewing && !persistenceFailed && !closed && retrySeconds == 0
             && (draft.state.savedTripId != nil || draft.state.review?.canSave == true)
+    }
+
+    public func preference(_ field: String) -> Bool {
+        guard ["exclude_caffeine", "flight_movement_breaks"].contains(field) else { return false }
+        return (draft.state.profile[field] ?? draft.state.savedProfile?[ProfilePreferences.camel(field)]) == .bool(true)
+    }
+
+    public func setPreference(_ field: String, value: Bool) {
+        guard !closed, !reviewing, draft.state.step == .fineTune,
+            ["exclude_caffeine", "flight_movement_breaks"].contains(field)
+        else { return }
+        draft.state.profile[field] = .bool(value)
+        changed()
     }
 
     public func editForm(_ update: (inout WizardForm) -> Void) {

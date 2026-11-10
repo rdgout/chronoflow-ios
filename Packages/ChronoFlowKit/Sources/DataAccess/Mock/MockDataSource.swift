@@ -71,6 +71,7 @@ public actor MockDataSource: DataSource {
             } catch is DecodingError where seed == nil {
                 restored = nil
             }
+            if let restored { try store.save(restored) }
             if let seed {
                 state = restored ?? seed
                 return

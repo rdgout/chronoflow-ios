@@ -58,7 +58,16 @@ public enum StoreApplication {
             return
         }
         guard rows.isEmpty else { return }
-        try SettingsRecord(section: section, value: value).save(db)
+        let sanitized: JSONDocument
+        if section == "bodyClock" {
+            sanitized = try .encoding(ProfilePreferences.bodyClock(value.decode(JSONObject.self)))
+        } else if section == "readiness" {
+            let body = try SettingsRecord.fetchOne(db, key: "bodyClock")?.value.decode(JSONObject.self) ?? JSONObject()
+            sanitized = try .encoding(ProfilePreferences.readiness(value.decode(JSONObject.self), bodyClock: body))
+        } else {
+            sanitized = value
+        }
+        try SettingsRecord(section: section, value: sanitized).save(db)
     }
 
     public static func checks(_ value: CheckState, tripID: String, db: Database) throws {

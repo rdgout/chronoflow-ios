@@ -39,11 +39,6 @@ import TripWizardUI
         for key in [
             "Which age group are you in?",
             "In the past 14 days, have you worked night or rotating shifts, or had a very irregular sleep schedule?",
-            "Do you have bipolar disorder?",
-            "Do you have an eye disease, or take medicine that makes your eyes sensitive to light?",
-            "Are you pregnant or breastfeeding?",
-            "Have you been told to avoid caffeine?",
-            "Do you have a risk factor for blood clots, such as a past clot or a clotting disorder?",
             "This plan is not available for travellers under 18.",
             "This plan is not available if, in the past 14 days, you have worked night or rotating shifts or had a very irregular sleep schedule.",
         ] {

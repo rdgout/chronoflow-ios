@@ -895,19 +895,19 @@
       },
       "generatesSymbol": false
     },
-    "Answer the health questions to get your plan.": {
+    "Answer the questions to get your plan.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Answer the health questions to get your plan."
+            "value": "Answer the questions to get your plan."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Beantwoord de gezondheidsvragen om je plan te krijgen."
+            "value": "Beantwoord de vragen om je plan te krijgen."
           }
         }
       },
@@ -944,24 +944,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Naast je geplande dutje: als je niet wakker kunt blijven, doe dan een dutje van minder dan 30 minuten en sta uiterlijk om %1$@ op; blijf daarna op tot bedtijd."
-          }
-        }
-      },
-      "generatesSymbol": false
-    },
-    "Are you pregnant or breastfeeding?": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Are you pregnant or breastfeeding?"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ben je zwanger of geef je borstvoeding?"
           }
         }
       },
@@ -1759,60 +1741,6 @@
       },
       "generatesSymbol": false
     },
-    "Do you have a risk factor for blood clots, such as a past clot or a clotting disorder?": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Do you have a risk factor for blood clots, such as a past clot or a clotting disorder?"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Heb je een risicofactor voor bloedstolsels, zoals een eerdere trombose of een stollingsstoornis?"
-          }
-        }
-      },
-      "generatesSymbol": false
-    },
-    "Do you have an eye disease, or take medicine that makes your eyes sensitive to light?": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Do you have an eye disease, or take medicine that makes your eyes sensitive to light?"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Heb je een oogziekte, of gebruik je medicijnen die je ogen gevoelig maken voor licht?"
-          }
-        }
-      },
-      "generatesSymbol": false
-    },
-    "Do you have bipolar disorder?": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Do you have bipolar disorder?"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Heb je een bipolaire stoornis?"
-          }
-        }
-      },
-      "generatesSymbol": false
-    },
     "Do you have blue-blocking glasses with a rated protection? Tell us the rating if you know it.": {
       "extractionState": "manual",
       "localizations": {
@@ -2312,24 +2240,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Neem hooguit %1$@ van je gebruikelijke %2$@ drankjes, het laatste uiterlijk om %3$@."
-          }
-        }
-      },
-      "generatesSymbol": false
-    },
-    "Have you been told to avoid caffeine?": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Have you been told to avoid caffeine?"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Is je verteld dat je cafeïne moet vermijden?"
           }
         }
       },

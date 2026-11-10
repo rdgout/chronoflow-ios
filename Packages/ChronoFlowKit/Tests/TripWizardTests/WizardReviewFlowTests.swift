@@ -425,13 +425,17 @@ import Testing
         fixture.model.go(.returnChoice)
         await fixture.source.configure()
         var review = try generationReview()
-        review.prompts = [screeningPrompt("shift_work"), screeningPrompt("bipolar")]
+        var age = screeningPrompt("age_band")
+        age.kind = .ageBand
+        age.text = CopyLine(key: "Which age group are you in?", args: [])
+        age.shape = ApiReviewPromptShape(kind: .options, options: ["under_18", "18_64", "65_plus"])
+        review.prompts = [age, screeningPrompt("shift_work")]
         await fixture.source.queueReviews([.success(review)])
         fixture.model.beginChecking()
         try await finishCheck(fixture, count: 2)
         let model = fixture.model
         #expect(model.lastInputStep == .returnChoice)
-        model.answerQuestion(.bool(false))
+        model.answerQuestion(.string("18_64"))
         try await eventually { fixture.clock.deadlines.contains(1.75) }
         fixture.clock.advance(to: 1.75)
         try await eventually { model.draft.state.questionIndex == 1 }
@@ -440,10 +444,29 @@ import Testing
         await model.flush()
         let recovered = try #require(try await fixture.store.recover())
         #expect(recovered.state.review == review && recovered.state.questions == review.prompts)
-        #expect(recovered.state.profile["shift_work"] == .bool(false))
+        #expect(recovered.state.profile["age_band"] == .string("18_64"))
         model.backFromQuestion()
         #expect(model.draft.state.step == .returnChoice)
         try await model.discard()
+        try await fixture.database.close()
+    }
+
+    @Test @MainActor func neutralPreferencesPersistAndReachReviewWithoutMedicalKeys() async throws {
+        let fixture = try await reviewFixture()
+        fixture.model.go(.fineTune)
+        #expect(!fixture.model.preference("exclude_caffeine"))
+        #expect(!fixture.model.preference("flight_movement_breaks"))
+        fixture.model.setPreference("exclude_caffeine", value: true)
+        fixture.model.setPreference("flight_movement_breaks", value: true)
+        fixture.model.setPreference("pregnancy", value: true)
+        await fixture.model.flush()
+        let recovered = try #require(try await fixture.store.recover())
+        #expect(
+            recovered.state.profile.fields == ["exclude_caffeine": .bool(true), "flight_movement_breaks": .bool(true)])
+        let request = fixture.model.reviewInput
+        #expect(request.profile == recovered.state.profile)
+        #expect(fixture.model.needsReadyReview)
+        try await fixture.model.discard()
         try await fixture.database.close()
     }
 
@@ -544,6 +567,9 @@ private struct ReviewFixture {
 private func screeningPrompt(_ field: String) -> ApiReviewPrompt {
     ApiReviewPrompt(
         id: "screening:\(field)", kind: .screening, blocking: true, required: true,
-        text: CopyLine(key: "Do you have bipolar disorder?", args: []), scope: ApiReviewPromptScope(), target: .profile,
+        text: CopyLine(
+            key:
+                "In the past 14 days, have you worked night or rotating shifts, or had a very irregular sleep schedule?",
+            args: []), scope: ApiReviewPromptScope(), target: .profile,
         fields: [field], answer: [:], shape: ApiReviewPromptShape(kind: .boolean, options: []))
 }

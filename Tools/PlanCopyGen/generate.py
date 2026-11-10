@@ -75,6 +75,11 @@ def generate():
     missing = sorted(k for k in keys if not en.get(k) or not nl.get(k))
     if missing:
         raise ValueError('Missing English/Dutch keys:\n' + '\n'.join(missing))
+    overlay = json.loads((pathlib.Path(__file__).parent / 'no-health-data.json').read_text())
+    keys -= set(overlay['remove'])
+    keys |= set(overlay['strings'])
+    for key, values in overlay['strings'].items():
+        en[key], nl[key] = values['en'], values['nl']
     strings, entries = {}, []
     def unit(value): return {'stringUnit': {'state': 'translated', 'value': value}}
     for key in sorted(keys):
@@ -112,7 +117,7 @@ def generate():
     catalog = {'sourceLanguage': 'en', 'strings': strings, 'version': '1.0'}
     # Runtime table is derived from the same catalog formats: explicit language selection works on host too.
     runtime = {'entries': entries}
-    report = f'# Plan copy source\n\nBackend `{PIN}`, read with git show. {len(keys)} keys; missing Dutch: 0.\n\nScope: PHP literals in Planner, Planning, trip/review actions and requests, explicit formatter/label keys, and every CopyLine in the S1–S6 and wizard fixtures.\n\nSix duration-unit templates absent from the backend are the exact RN formatter en/nl values in `format-units.json`, preserving `intl-cases.ts`.\n\nThe runtime JSON uses the catalog positional formats and coded range cases; loading is explicit on a worker, never a static initializer.\n'
+    report = f'# Plan copy source\n\nBackend `{PIN}`, read with git show. {len(keys)} keys; missing Dutch: 0.\n\nPhase 19: `Tools/PlanCopyGen/no-health-data.json` removes retired medical questions and supplies the neutral replacement error (EN/NL); core output copy stays pinned.\n\nScope: PHP literals in Planner, Planning, trip/review actions and requests, explicit formatter/label keys, and every CopyLine in the S1–S6 and wizard fixtures.\n\nSix duration-unit templates absent from the backend are the exact RN formatter en/nl values in `format-units.json`, preserving `intl-cases.ts`.\n\nThe runtime JSON uses the catalog positional formats and coded range cases; loading is explicit on a worker, never a static initializer.\n'
     return {'Resources/PlanCopy.xcstrings': json.dumps(catalog, ensure_ascii=False, indent=2)+'\n',
             'Resources/PlanCopy.json': json.dumps(runtime, ensure_ascii=False, indent=2)+'\n',
             'Resources/SOURCE.md': report}

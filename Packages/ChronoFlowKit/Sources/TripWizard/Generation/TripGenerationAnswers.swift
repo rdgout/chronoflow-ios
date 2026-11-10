@@ -17,6 +17,7 @@ extension TripGenerationService {
         var object = try JSONDecoder().decode(JSONObject.self, from: JSONEncoder().encode(input.input))
         for (id, values) in answers {
             guard let prompt = review.prompts.first(where: { $0.id == id }),
+                ProfilePreferences.isSupported(prompt),
                 Set(values.keys).isSubset(of: Set(prompt.fields))
             else {
                 throw DataFailure.validation(

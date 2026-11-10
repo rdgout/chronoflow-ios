@@ -58,6 +58,7 @@ public actor AccountDatabase {
             }
             var migrator = DatabaseMigrator()
             migrator.registerMigration("v1", migrate: migrate)
+            migrator.registerMigration("v2-no-health-data", migrate: NoHealthDataMigration.migrate)
             try migrator.migrate(opened)
         } catch {
             try? opened.close()

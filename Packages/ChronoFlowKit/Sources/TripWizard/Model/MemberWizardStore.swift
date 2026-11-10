@@ -51,6 +51,16 @@ public struct MemberWizardState: Codable, Sendable, Equatable {
     public var saveFailure: WizardSaveFailure?
     public var updated: Bool?
     public init() {}
+
+    mutating func discardRetiredValues() {
+        profile = ProfilePreferences.request(profile)
+        savedProfile = savedProfile.map(ProfilePreferences.bodyClock)
+        questions = questions?.filter(ProfilePreferences.isSupported)
+        if var value = review {
+            value.prompts = value.prompts.filter(ProfilePreferences.isSupported)
+            review = value
+        }
+    }
 }
 
 public struct MemberWizardDraft: Sendable, Equatable {
@@ -96,6 +106,7 @@ public actor MemberWizardStore {
         guard let record = try await drafts.recovery(now: now(), permit: permit) else { return nil }
         do {
             var state = try record.wizardState!.decode(MemberWizardState.self)
+            state.discardRetiredValues()
             let form = try record.form.decode(WizardForm.self)
             guard !form.legs.isEmpty, form.legs.count <= WizardForm.maxFlights, form.stays.count == form.legs.count,
                 (1...form.legs.count).contains(form.returnBoundary)
@@ -157,6 +168,8 @@ public actor MemberWizardStore {
     }
 
     private func record(_ draft: MemberWizardDraft) throws -> DraftRecord {
+        var state = draft.state
+        state.discardRetiredValues()
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions.insert(.withFractionalSeconds)
         return DraftRecord(
@@ -164,7 +177,7 @@ public actor MemberWizardStore {
             dirty: draft.state.entered,
             token: draft.form.identity?.token, inputRevision: draft.form.identity?.inputRevision ?? 0,
             reviewRevision: draft.form.identity?.reviewRevision, furthestStep: draft.state.step.rawValue,
-            wizardState: try .encoding(draft.state), fieldErrors: try .encoding(draft.fieldErrors),
+            wizardState: try .encoding(state), fieldErrors: try .encoding(draft.fieldErrors),
             updatedAt: formatter.string(from: now()))
     }
 }

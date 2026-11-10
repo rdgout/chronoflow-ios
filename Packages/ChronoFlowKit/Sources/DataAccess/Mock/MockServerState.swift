@@ -139,14 +139,15 @@ public struct FileMockStateStore: MockStateStore {
 extension AccountSnapshot {
     static func mockRegistration(id: String, name: String, email: String, language: AuthLanguage, now: Date) -> Self {
         let bodyFields = [
-            "freeDayBed", "freeDayWake", "chronotype", "ageBand", "shiftWork", "bipolar", "eyeDisease", "pregnancy",
-            "caffeineRuledOut", "vte", "sleepPhaseDisorder", "caffeineHabit", "cupsFilterCoffee", "cupsTea", "cupsCola",
+            "freeDayBed", "freeDayWake", "chronotype", "ageBand", "shiftWork",
+            "caffeineHabit", "cupsFilterCoffee", "cupsTea", "cupsCola",
             "cupsEnergyDrink", "lightDevice", "blueBlockers", "blueBlockerMdfd",
         ]
         var body = Dictionary(uniqueKeysWithValues: bodyFields.map { ($0, JSONValue.null) })
         body.merge([
             "habitualBed": .string("23:00"), "habitualWake": .string("07:00"), "freeDayStatus": .string("unconfirmed"),
-            "caffeineSensitive": .bool(false), "caffeineNonUserOptIn": .bool(false), "oralContraception": .bool(false),
+            "caffeineSensitive": .bool(false), "caffeineNonUserOptIn": .bool(false), "excludeCaffeine": .bool(false),
+            "flightMovementBreaks": .bool(false),
             "invalidDrafts": .array([]),
         ]) { _, new in new }
         return Self(

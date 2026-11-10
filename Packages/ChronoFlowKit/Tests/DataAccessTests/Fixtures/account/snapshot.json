@@ -13,12 +13,6 @@
       "chronotype": null,
       "ageBand": null,
       "shiftWork": null,
-      "bipolar": null,
-      "eyeDisease": null,
-      "pregnancy": null,
-      "caffeineRuledOut": null,
-      "vte": null,
-      "sleepPhaseDisorder": null,
       "caffeineHabit": null,
       "cupsFilterCoffee": null,
       "cupsTea": null,
@@ -26,11 +20,12 @@
       "cupsEnergyDrink": null,
       "caffeineSensitive": false,
       "caffeineNonUserOptIn": false,
-      "oralContraception": false,
       "lightDevice": null,
       "blueBlockers": null,
       "blueBlockerMdfd": null,
-      "invalidDrafts": []
+      "invalidDrafts": [],
+      "excludeCaffeine": false,
+      "flightMovementBreaks": false
     },
     "sleepAnswered": false,
     "preferences": {
@@ -65,27 +60,11 @@
       },
       {
         "question": "shift_work"
-      },
-      {
-        "question": "bipolar"
-      },
-      {
-        "question": "eye_disease"
-      },
-      {
-        "question": "pregnancy"
-      },
-      {
-        "question": "caffeine_ruled_out"
-      },
-      {
-        "question": "vte"
       }
     ],
     "exclusions": [],
     "exclusionTarget": null,
     "adjustments": [],
-    "lightDevicesAllowed": false,
     "invalidSections": []
   },
   "billing": {

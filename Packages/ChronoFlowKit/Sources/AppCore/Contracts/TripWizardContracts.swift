@@ -29,7 +29,7 @@ public struct ApiTripReviewInput: Encodable, Sendable, Equatable {
         try container.encode(identity?.inputRevision ?? 0, forKey: .inputRevision)
         try container.encode(identity?.reviewRevision, forKey: .reviewRevision)
         try container.encodeIfPresent(identity?.sourceRevision, forKey: .sourceRevision)
-        try container.encodeIfPresent(profile, forKey: .profile)
+        try container.encodeIfPresent(profile.map(ProfilePreferences.request), forKey: .profile)
     }
 }
 

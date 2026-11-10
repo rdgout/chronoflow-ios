@@ -771,19 +771,19 @@
       }
     },
     {
-      "key": "Answer the health questions to get your plan.",
+      "key": "Answer the questions to get your plan.",
       "arguments": [],
       "languages": {
         "en": {
           "kind": "single",
           "formats": [
-            "Answer the health questions to get your plan."
+            "Answer the questions to get your plan."
           ]
         },
         "nl": {
           "kind": "single",
           "formats": [
-            "Beantwoord de gezondheidsvragen om je plan te krijgen."
+            "Beantwoord de vragen om je plan te krijgen."
           ]
         }
       }
@@ -822,24 +822,6 @@
           "kind": "single",
           "formats": [
             "Naast je geplande dutje: als je niet wakker kunt blijven, doe dan een dutje van minder dan 30 minuten en sta uiterlijk om %1$@ op; blijf daarna op tot bedtijd."
-          ]
-        }
-      }
-    },
-    {
-      "key": "Are you pregnant or breastfeeding?",
-      "arguments": [],
-      "languages": {
-        "en": {
-          "kind": "single",
-          "formats": [
-            "Are you pregnant or breastfeeding?"
-          ]
-        },
-        "nl": {
-          "kind": "single",
-          "formats": [
-            "Ben je zwanger of geef je borstvoeding?"
           ]
         }
       }
@@ -1655,60 +1637,6 @@
       }
     },
     {
-      "key": "Do you have a risk factor for blood clots, such as a past clot or a clotting disorder?",
-      "arguments": [],
-      "languages": {
-        "en": {
-          "kind": "single",
-          "formats": [
-            "Do you have a risk factor for blood clots, such as a past clot or a clotting disorder?"
-          ]
-        },
-        "nl": {
-          "kind": "single",
-          "formats": [
-            "Heb je een risicofactor voor bloedstolsels, zoals een eerdere trombose of een stollingsstoornis?"
-          ]
-        }
-      }
-    },
-    {
-      "key": "Do you have an eye disease, or take medicine that makes your eyes sensitive to light?",
-      "arguments": [],
-      "languages": {
-        "en": {
-          "kind": "single",
-          "formats": [
-            "Do you have an eye disease, or take medicine that makes your eyes sensitive to light?"
-          ]
-        },
-        "nl": {
-          "kind": "single",
-          "formats": [
-            "Heb je een oogziekte, of gebruik je medicijnen die je ogen gevoelig maken voor licht?"
-          ]
-        }
-      }
-    },
-    {
-      "key": "Do you have bipolar disorder?",
-      "arguments": [],
-      "languages": {
-        "en": {
-          "kind": "single",
-          "formats": [
-            "Do you have bipolar disorder?"
-          ]
-        },
-        "nl": {
-          "kind": "single",
-          "formats": [
-            "Heb je een bipolaire stoornis?"
-          ]
-        }
-      }
-    },
-    {
       "key": "Do you have blue-blocking glasses with a rated protection? Tell us the rating if you know it.",
       "arguments": [],
       "languages": {
@@ -2240,24 +2168,6 @@
           "kind": "single",
           "formats": [
             "Neem hooguit %1$@ van je gebruikelijke %2$@ drankjes, het laatste uiterlijk om %3$@."
-          ]
-        }
-      }
-    },
-    {
-      "key": "Have you been told to avoid caffeine?",
-      "arguments": [],
-      "languages": {
-        "en": {
-          "kind": "single",
-          "formats": [
-            "Have you been told to avoid caffeine?"
-          ]
-        },
-        "nl": {
-          "kind": "single",
-          "formats": [
-            "Is je verteld dat je cafeïne moet vermijden?"
           ]
         }
       }

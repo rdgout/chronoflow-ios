@@ -2297,9 +2297,9 @@ layer under AGENTS.md, delete retired-screen UI tests, and leave execution to th
 compile-only checks are allowed. Sources outside this worktree stay read-only.
 
 - [x] NH1 Record the scope, sources, design exception and validation override.
-- [ ] NH2 Remove retired contract/profile fields, filter legacy server responses, rename caffeine,
+- [x] NH2 Remove retired contract/profile fields, filter legacy server responses, rename caffeine,
   add default-false movement preference, constrain readiness and screening, and update mock behavior.
-- [ ] NH3 Migrate cached settings, outbox and wizard recovery values; prevent new retired values
+- [x] NH3 Migrate cached settings, outbox and wizard recovery values; prevent new retired values
   from being stored or sent. Preserve true legacy caffeine preference; never carry over VTE.
 - [ ] NH4 Replace Settings medical questions with neutral toggles and notices, using EN/NL catalogs.
 - [ ] NH5 Limit wizard screening to shift work plus age, expose neutral preferences with existing

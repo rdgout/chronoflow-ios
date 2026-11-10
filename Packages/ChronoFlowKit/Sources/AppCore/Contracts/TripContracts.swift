@@ -22,8 +22,9 @@ public struct TripDetailResponse: Sendable, Equatable {
     public let detail: TripDetail
 
     public init(data: Data) throws {
-        detail = try JSONDecoder().decode(TripDetail.self, from: data)
-        self.data = data
+        let cleaned = try ProfilePreferences.cleanLegacyJSON(data)
+        detail = try JSONDecoder().decode(TripDetail.self, from: cleaned)
+        self.data = cleaned
     }
 
     public init(encoding detail: TripDetail) throws {
