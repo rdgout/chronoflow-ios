@@ -33,16 +33,22 @@
                     account.snapshot.billing = JSONObject(["checkout": .object(["status": .string("pending")])])
                 }
                 if state == "bodyMissing" {
-                    account.snapshot.settings.bodyClock["caffeineRuledOut"] = .null
-                    account.snapshot.settings.bodyClock["vte"] = .null
+                    account.snapshot.settings.bodyClock["ageBand"] = .null
                     account.snapshot.settings.bodyClock["shiftWork"] = .null
                     account.snapshot.readiness = JSONObject([
                         "variant": .string("needs-answers"),
                         "missing": .array([
-                            .object(["question": .string("caffeine_ruled_out")]), .object(["question": .string("vte")]),
+                            .object(["question": .null]),
                             .object(["question": .string("shift_work")]),
                         ]), "invalidSections": .array([]),
                     ])
+                }
+                if state == "bodyAdjusted" {
+                    account.snapshot.settings.bodyClock["ageBand"] = .string("65_plus")
+                    account.snapshot.settings.bodyClock["excludeCaffeine"] = .bool(true)
+                    account.snapshot.settings.bodyClock["flightMovementBreaks"] = .bool(true)
+                    account.snapshot.readiness = ProfilePreferences.readiness(
+                        JSONObject(), bodyClock: account.snapshot.settings.bodyClock)
                 }
                 if state == "bodyExcluded" {
                     account.snapshot.settings.bodyClock["shiftWork"] = .bool(true)

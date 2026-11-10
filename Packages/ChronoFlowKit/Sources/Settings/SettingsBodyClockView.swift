@@ -111,12 +111,9 @@
                 yesNo(
                     .caffeine, "caffeineSensitive", "Does caffeine affect you strongly?",
                     hint: "For example, one cup keeps you awake or makes you jittery.")
-                yesNo(
-                    .health, "caffeineRuledOut", "Have you been told to avoid caffeine?",
-                    hint: "By a doctor, midwife or pharmacist.")
-                yesNo(
-                    .caffeine, "oralContraception", "Do you take oral contraception?",
-                    hint: "It slows how fast your body clears caffeine.")
+                preference(
+                    .caffeine, "excludeCaffeine", "Leave caffeine out of my plan",
+                    hint: "Your plan won't suggest any caffeine.")
             }
         }
         private var drinks: some View {
@@ -177,6 +174,10 @@
                 choice(
                     .light, "lightDevice", "Do you have a light box, light visor or light glasses?",
                     [("none", "None"), ("box", "Light box or visor"), ("glasses", "Light glasses")])
+                caption(
+                    "Don't use a light box or light glasses if you have an eye disease, have had recent eye surgery or take medicine that makes your eyes sensitive to light. Ask your doctor first."
+                )
+                .accessibilityIdentifier("settings.bodyClock.lightNotice")
                 choice(
                     .light, "blueBlockers", "Blue-blocking glasses",
                     [("no", "No"), ("unrated", "Yes, rating unknown"), ("rated", "Yes, I know the rating")])
@@ -196,20 +197,37 @@
         }
         private var health: some View {
             SettingsCard {
-                VStack(alignment: .leading, spacing: PlanUITokens.space1) {
-                    groupHeader(.health)
-                    caption("Required. Bright light and caffeine timing aren't safe for everyone, so we check first.")
-                }
-                yesNo(.health, "pregnancy", "Are you pregnant or breastfeeding?")
-                yesNo(.health, "bipolar", "Have you been diagnosed with bipolar disorder?")
+                groupHeader(.health)
                 yesNo(
-                    .health, "eyeDisease",
-                    "Do you have an eye condition, or take medicine that makes you sensitive to light?")
-                yesNo(
-                    .health, "vte", "Are you at higher risk of blood clots?",
-                    hint: "For example after recent surgery, or if you have had a clot before.")
-                yesNo(.health, "shiftWork", "Do you work shifts or have an irregular sleep pattern?")
+                    .health, "shiftWork",
+                    "In the past 14 days, have you worked night or rotating shifts, or had a very irregular sleep schedule?"
+                )
+                preference(
+                    .health, "flightMovementBreaks", "Add movement breaks during long-flight sleep",
+                    hint:
+                        "Your plan breaks up long sleep on long flights with short movement breaks. If you're at higher risk of blood clots, choose this and ask your doctor about compression stockings and an aisle seat."
+                )
+                caption(
+                    "ChronoFlow is intended for adults with a regular nightly sleep pattern. It does not offer a plan if you have recently done shift work, or do not usually sleep in one regular nightly episode."
+                )
+                caption(
+                    "ChronoFlow is not suitable if you have bipolar disorder or have had a manic or hypomanic episode: sleep loss, bright light and long journeys can trigger mood episodes. Talk to your doctor before you travel."
+                )
+                .accessibilityIdentifier("settings.bodyClock.audienceNotice")
             }
+        }
+        private func preference(_ group: BodyClockGroup, _ key: String, _ title: String, hint: String) -> some View {
+            Toggle(
+                isOn: Binding(
+                    get: { model.answers[key] == .bool(true) },
+                    set: { value in Task { await model.change(group, [key: .bool(value)]) } }
+                )
+            ) {
+                VStack(alignment: .leading, spacing: PlanUITokens.space1) {
+                    Text(t(title)).settingsFont(Typography.settingsRow)
+                    caption(hint)
+                }
+            }.tint(ColorToken.dawn.color).accessibilityIdentifier("settings.bodyClock." + key)
         }
         private func groupHeader(_ group: BodyClockGroup) -> some View {
             HStack(alignment: .firstTextBaseline) {
@@ -366,11 +384,13 @@
                 VStack(alignment: .leading, spacing: PlanUITokens.space2) {
                     Label(t("No plan available"), systemImage: "exclamationmark.triangle").settingsFont(
                         Typography.settingsStrong)
-                    Text(
-                        t(
-                            "Based on your health answers, light and caffeine timing may not be right for you, so we can't build a plan. Your doctor can tell you what's safe when you travel."
-                        )
-                    ).settingsFont(Typography.screenBody)
+                    if case .array(let lines) = value["exclusions"] {
+                        ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
+                            if let key = line.object?["key"]?.string {
+                                Text(t(key)).settingsFont(Typography.screenBody)
+                            }
+                        }
+                    }
                 }.padding(PlanUITokens.space5).frame(maxWidth: .infinity, alignment: .leading)
                     .background(
                         ColorToken.settingsWarningBackground.color,
@@ -384,7 +404,7 @@
                 SettingsCard(spacing: PlanUITokens.space3) {
                     SettingsEyebrow(title: t("Almost ready"), dawn: true)
                     let missing = count("missing") + count("invalidSections")
-                    let total = 7 + count("invalidSections")
+                    let total = 2 + count("invalidSections")
                     Text(
                         SettingsStrings.text(
                             missing == 1
@@ -414,7 +434,7 @@
                         t("Go to the first one"), kind: .secondary, minimumHeight: PlanUITokens.walkthroughDoneHeight,
                         action: firstMissing)
                 }
-            } else if ["ready", "health-adjusted"].contains(value["variant"]?.string ?? "") {
+            } else if ["ready", "adjusted"].contains(value["variant"]?.string ?? "") {
                 SettingsCard {
                     HStack(spacing: PlanUITokens.space3) {
                         Image(systemName: "checkmark").frame(
@@ -424,9 +444,23 @@
                             ColorToken.dawnForeground.color
                         ).accessibilityHidden(true)
                         VStack(alignment: .leading, spacing: 0) {
-                            Text(t("Required answers complete")).settingsFont(Typography.settingsStrong)
-                            Text(t("You can build a plan for any trip.")).settingsFont(Typography.screenBody)
+                            Text(
+                                t(
+                                    value["variant"] == .string("adjusted")
+                                        ? "Your plan is adjusted for your preferences and age range"
+                                        : "Required answers complete")
+                            ).settingsFont(Typography.settingsStrong)
+                            Text(
+                                t("Your age range and shift-work answer are saved. You can add optional details below.")
+                            ).settingsFont(Typography.screenBody)
                                 .foregroundStyle(ColorToken.mutedForeground.color)
+                        }
+                    }
+                    if value["variant"] == .string("adjusted"), case .array(let lines) = value["adjustments"] {
+                        ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
+                            if let key = line.object?["key"]?.string {
+                                Text(t(key)).settingsFont(Typography.screenBody)
+                            }
                         }
                     }
                 }

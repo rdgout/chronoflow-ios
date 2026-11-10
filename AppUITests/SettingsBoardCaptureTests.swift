@@ -62,7 +62,7 @@
                 if state == "planLoading" { wait("settings.plan.loading", app: app) }
                 try capture(board, suffix: suffix, app: app)
                 if state == "bodyMissing" {
-                    AuthUIFlow.reveal(app.buttons["settings.bodyClock.caffeineRuledOut.no"], in: app)
+                    AuthUIFlow.reveal(app.buttons["settings.bodyClock.shiftWork.no"], in: app)
                     try capture("SetBodyClock-NeedsAnAnswer", suffix: suffix, app: app)
                 }
             }
@@ -116,7 +116,7 @@
             try capture("SetBodyClock", suffix: suffix, app: app)
             for (option, part) in [
                 ("freeDayStatus.declared", "Sleep"), ("caffeineHabit.cups", "Caffeine"),
-                ("blueBlockers.rated", "Light"), ("shiftWork.no", "Health"),
+                ("blueBlockers.rated", "Light"), ("shiftWork.no", "Safety"),
             ] {
                 let target = app.buttons["settings.bodyClock." + option]
                 AuthUIFlow.reveal(target, in: app)

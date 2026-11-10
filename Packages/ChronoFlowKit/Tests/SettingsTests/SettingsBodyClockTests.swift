@@ -150,6 +150,22 @@ import Testing
         release.continuation.finish()
     }
 
+    @Test func preferencesSaveNonNullableBooleansWithoutMedicalFields() async {
+        var writes: [JSONObject] = []
+        let model = SettingsBodyClockModel(answers: JSONObject()) { writes.append($0) }
+        #expect(model.answers["excludeCaffeine"] == .bool(false))
+        #expect(model.answers["flightMovementBreaks"] == .bool(false))
+        await model.change(.caffeine, ["excludeCaffeine": .bool(true)])
+        #expect(writes.last?["exclude_caffeine"] == .bool(true))
+        await model.change(.health, ["flightMovementBreaks": .bool(true)])
+        #expect(writes.last?["flight_movement_breaks"] == .bool(true))
+        #expect(writes.last?["shift_work"] == .null)
+        let count = writes.count
+        await model.change(.health, ["pregnancy": .bool(false)])
+        #expect(writes.count == count && model.answers["pregnancy"] == nil)
+        #expect(writes.allSatisfy { Set($0.fields.keys).isSubset(of: ProfilePreferences.requestFields) })
+    }
+
     @Test func sleepDurationChecksClockBoundsAndCrossesMidnight() {
         #expect(SettingsBodyClockModel.sleepMinutes(bed: "23:00", wake: "07:00") == 480)
         #expect(SettingsBodyClockModel.sleepMinutes(bed: "24:00", wake: "07:00") == nil)
