@@ -8,7 +8,8 @@ import TripWizard
 
 @Suite struct WizardReviewFlowTests {
     @Test @MainActor func stopOneWayUnsureSleepAndScreeningReachFineTuneThenSave() async throws {
-        let fixture = try await reviewFixture(sleepNeeded: true)
+        let probe = EffectProbe()
+        let fixture = try await reviewFixture(sleepNeeded: true, effects: await probe.effects())
         let model = fixture.model
         model.go(.whereTo)
         model.chooseAirport(
@@ -65,6 +66,7 @@ import TripWizard
         model.savePlan()
         try await eventually { model.createdTripID == "created" }
         #expect(await fixture.source.count("save") == 1)
+        #expect(await probe.pulls == ["created"])
         #expect(try await fixture.store.recover() == nil)
         try await fixture.database.close()
     }
@@ -390,7 +392,9 @@ private struct ReviewFixture {
     let store: MemberWizardStore
 }
 
-@MainActor private func reviewFixture(sleepNeeded: Bool = false) async throws -> ReviewFixture {
+@MainActor private func reviewFixture(sleepNeeded: Bool = false, effects: TripGenerationEffects? = nil) async throws
+    -> ReviewFixture
+{
     let database = try await wizardDatabase()
     let store = MemberWizardStore(database: database)
     var draft = try await store.start()
@@ -400,7 +404,8 @@ private struct ReviewFixture {
     let source = try GenerationSource()
     let clock = CheckingTestClock()
     let epoch = SyncEpoch(accountID: try AccountID("019a562b-8000-7000-8000-000000000001"), generation: 1)
-    let effects = TripGenerationEffects.storing(database: database, source: source, epoch: epoch, requestSync: {})
+    let effects =
+        effects ?? TripGenerationEffects.storing(database: database, source: source, epoch: epoch, requestSync: {})
     let generation = TripGenerationService(source: source, effects: effects)
     let model = MemberWizardModel(
         draft: draft, store: store, search: noAirportSearch(), now: { .distantPast }, generation: generation,
