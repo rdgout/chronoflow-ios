@@ -55,6 +55,9 @@
                     context.model.plan.prepared != nil && context.timelineReady
                 }
                 let dayID = try XCTUnwrap(context.model.anchor.dayID)
+                let timelineID = "trip.timeline.\(dayID)"
+                try await host.settle("Initial timeline measurement") { measurements.identity(for: timelineID) != nil }
+                let timelineIdentity = try XCTUnwrap(measurements.identity(for: timelineID))
                 let scroll = try pageScroll(host)
                 scroll.setContentOffset(CGPoint(x: 0, y: scroll.contentOffset.y + 180), animated: false)
                 try await host.settle("Initial day scroll") { context.model.currentAnchor.offset > 0 }
@@ -81,6 +84,7 @@
                 XCTAssertEqual(context.model.selectedStep?.id, block.id)
                 XCTAssertTrue(host.controller.presentedViewController === sheet)
                 XCTAssertTrue(try pageScroll(host) === scroll)
+                XCTAssertEqual(measurements.identity(for: timelineID), timelineIdentity)
                 let wideDayTop =
                     try XCTUnwrap(measurements.frame(for: "trip.day.\(dayID)")).minY
                     - scroll.convert(scroll.bounds, to: host.window).minY
@@ -97,6 +101,7 @@
                 XCTAssertEqual(context.model.selectedStep?.id, block.id)
                 XCTAssertTrue(host.controller.presentedViewController === sheet)
                 XCTAssertTrue(try pageScroll(host) === scroll)
+                XCTAssertEqual(measurements.identity(for: timelineID), timelineIdentity)
                 let phoneDayTop =
                     try XCTUnwrap(measurements.frame(for: "trip.day.\(dayID)")).minY
                     - scroll.convert(scroll.bounds, to: host.window).minY
@@ -133,13 +138,27 @@
             if state == .ready {
                 let dayID = try XCTUnwrap(
                     top ? context.model.plan.prepared?.days.first?.id : context.model.anchor.dayID)
-                if scrolled {
-                    scroll.setContentOffset(CGPoint(x: 0, y: scroll.contentOffset.y + 480), animated: false)
-                    try await host.settle { context.model.currentAnchor.offset > 0 }
-                }
+                let listID = "trip.wide.list.\(dayID)"
+                let timelineID = "trip.wide.timeline.\(dayID)"
                 try await host.settle {
-                    measurements.frame(for: "trip.wide.timeline.\(dayID)") != nil
-                        && measurements.frame(for: "trip.wide.list.\(dayID)") != nil
+                    measurements.frame(for: timelineID) != nil && measurements.frame(for: listID) != nil
+                }
+                if scrolled {
+                    let revision = measurements.revision(for: listID)
+                    let timelineTop = try XCTUnwrap(measurements.frame(for: timelineID)).minY
+                    let previousOffset = scroll.contentOffset.y
+                    scroll.setContentOffset(CGPoint(x: 0, y: previousOffset + 480), animated: false)
+                    try await host.settle("Post-scroll pinned list measurement") {
+                        guard let list = measurements.frame(for: listID),
+                            let timeline = measurements.frame(for: timelineID),
+                            let header = measurements.frame(for: "trip.compactHeader")
+                        else { return false }
+                        let delta = scroll.contentOffset.y - previousOffset
+                        return context.model.currentAnchor.offset > 0
+                            && measurements.revision(for: listID) > revision
+                            && abs(timeline.minY - (timelineTop - delta)) < 0.5
+                            && list.minY >= header.maxY - 0.5
+                    }
                 }
                 let timeline = try XCTUnwrap(measurements.frame(for: "trip.wide.timeline.\(dayID)"))
                 let list = try XCTUnwrap(measurements.frame(for: "trip.wide.list.\(dayID)"))

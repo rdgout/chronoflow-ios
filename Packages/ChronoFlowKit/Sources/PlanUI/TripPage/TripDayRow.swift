@@ -39,11 +39,12 @@ struct TripDayRow: View, Equatable {
                             key: DayFrames.self,
                             value: ["header." + day.id: geo.frame(in: .named("trip.scroll"))])
                     })
-            if let listWidth, layout != nil {
-                HStack(alignment: .top, spacing: PlanMetrics.wideColumnGap) {
-                    VStack(spacing: 0) { clockContent }
-                        .frame(maxWidth: .infinity)
-                        .planContentBounds(identifier: "trip.wide.timeline.\(day.id)")
+            // Keep the timeline's gesture identity when the window crosses the wide breakpoint.
+            HStack(alignment: .top, spacing: PlanMetrics.wideColumnGap) {
+                VStack(spacing: 0) { clockContent }
+                    .frame(maxWidth: .infinity)
+                    .planContentBounds(identifier: listWidth == nil ? nil : "trip.wide.timeline.\(day.id)")
+                if let listWidth, layout != nil {
                     GeometryReader { geometry in
                         let position = TripWideListPosition(
                             dayTop: listTop, dayHeight: geometry.size.height,
@@ -64,8 +65,9 @@ struct TripDayRow: View, Equatable {
                         .scrollBounceBehavior(.basedOnSize)
                         .accessibilityIdentifier("trip.wide.list.scroll.\(day.id)")
                         .frame(height: position.height)
-                        .offset(y: position.offset)
+                        // Measure inside the transform so the frame follows the pinned viewport.
                         .planContentBounds(identifier: "trip.wide.list.\(day.id)")
+                        .offset(y: position.offset)
                     }
                     .frame(width: listWidth)
                     .onGeometryChange(for: CGFloat.self) {
@@ -74,8 +76,6 @@ struct TripDayRow: View, Equatable {
                         listTop = $0
                     }
                 }
-            } else {
-                clockContent
             }
         }
         .background(
