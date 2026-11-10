@@ -36,7 +36,7 @@ class LaunchResourcesTests(unittest.TestCase):
             "## Phase 9b: data-source contracts, API and mock", 1
         )[1].split("\n## ", 1)[0]
         commits = subprocess.check_output(
-            ["git", "log", "--format=%h", "b13fffa..c730aa3"], cwd=ROOT, text=True
+            ["git", "log", "--format=%h", "--abbrev=7", "b13fffa..c730aa3"], cwd=ROOT, text=True
         ).splitlines()
         self.assertEqual(len(commits), 3)
         for commit in commits:
