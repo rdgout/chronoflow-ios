@@ -26,4 +26,31 @@ struct TripPageLayoutTests {
         #expect(TripPageLayout.resolve(width: 669, height: 951).listWidth == 280)
         #expect(!TripPageLayout.resolve(width: 669, height: 669).isWide)
     }
+
+    @Test func listSticksBelowTheWholeHeaderAndShrinksAtTheEndOfItsDay() {
+        let position = TripWideListPosition(
+            dayTop: -398, dayHeight: 760, viewportHeight: 850, stickyTop: 48, contentHeight: 700)
+        #expect(position.offset == 446)
+        #expect(position.height == 314)
+        #expect(-398 + position.offset == 48)
+        #expect(-398 + position.offset + position.height == -398 + 760)
+    }
+
+    @Test func shortListStaysBesideItsDayAndTallListScrollsWithinTheViewport() {
+        let short = TripWideListPosition(
+            dayTop: 180, dayHeight: 1200, viewportHeight: 850, stickyTop: 48, contentHeight: 220)
+        #expect(short.offset == 0)
+        #expect(short.height == 220)
+        let tall = TripWideListPosition(
+            dayTop: -100, dayHeight: 1200, viewportHeight: 650, stickyTop: 80, contentHeight: 1500)
+        #expect(tall.offset == 180)
+        #expect(tall.height == 570)
+    }
+
+    @Test func listDisappearsWhenItsDayPassesTheHeader() {
+        let position = TripWideListPosition(
+            dayTop: -800, dayHeight: 760, viewportHeight: 850, stickyTop: 48, contentHeight: 700)
+        #expect(position.offset == 760)
+        #expect(position.height == 0)
+    }
 }

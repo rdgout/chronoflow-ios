@@ -13,3 +13,17 @@ public nonisolated struct TripPageLayout: Equatable, Sendable {
                 ? PlanMetrics.wideLargeListWidth : PlanMetrics.wideListWidth)
     }
 }
+
+nonisolated struct TripWideListPosition: Equatable, Sendable {
+    let offset: Double
+    let height: Double
+
+    init(dayTop: Double, dayHeight: Double, viewportHeight: Double, stickyTop: Double, contentHeight: Double) {
+        offset = min(max(0, stickyTop - dayTop), max(0, dayHeight))
+        height = max(
+            0,
+            min(
+                dayHeight - offset, viewportHeight - stickyTop,
+                PlanMetrics.wideListMaxHeight, contentHeight))
+    }
+}

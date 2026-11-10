@@ -18,6 +18,7 @@ public struct TripPageView: View {
     @State private var copy: PageCopy
     @State private var windowSize: CGSize?
     @ScaledMetric(relativeTo: .caption2) private var compactHeight = PlanMetrics.compactHeaderHeight
+    @State private var compactHeaderBottom: CGFloat = 0
     @State private var showLegend = false
     @State private var renderer = TimelineRenderer()
     @State private var timelineSymbols = TimelineSymbols()
@@ -131,7 +132,7 @@ public struct TripPageView: View {
                                     timeline: model.timeline, copy: copy, renderer: renderer, symbols: timelineSymbols,
                                     compact: size.width < PlanMetrics.timelineLabelBreakpoint,
                                     listWidth: layout.listWidth, selectedBlockID: model.selectedStep?.blockID,
-                                    stickyTop: compactHeight,
+                                    stickyTop: max(compactHeight, compactHeaderBottom),
                                     viewportHeight: geometry.size.height, onBlock: openBlock,
                                     onFrame: onFirstTimelineFrame
                                 ).equatable().id(day.id)
@@ -193,6 +194,7 @@ public struct TripPageView: View {
                     scroll.updateChrome(dayID: id, reduceMotion: reduceMotion)
                 }
                 .overlay(alignment: .top) { compactHeader(layout: layout) }
+                .coordinateSpace(name: "trip.viewport")
                 .onChange(of: model.plan.prepared) { old, new in
                     guard new != nil else { return }
                     let previous = model.currentAnchor
@@ -307,7 +309,7 @@ public struct TripPageView: View {
                         compactDayTitle(day)
                         HStack(spacing: PlanMetrics.wideColumnGap) {
                             LaneHeadings(copy: copy)
-                            Color.clear.frame(width: layout.listWidth.map { CGFloat($0) })
+                            Color.clear.frame(width: layout.listWidth.map { CGFloat($0) }, height: 0)
                         }
                     }
                 } else if model.timeline {
@@ -315,11 +317,17 @@ public struct TripPageView: View {
                 } else {
                     compactDayTitle(day)
                 }
-            }.padding(.horizontal, layout.gutter).frame(minHeight: compactHeight)
+            }.padding(.horizontal, layout.gutter).frame(maxWidth: .infinity, minHeight: compactHeight)
                 .background(ColorToken.card.color)
             #if os(iOS)
                 CompactHeaderHost(content: header, tracker: scroll)
-                    .frame(height: compactHeight)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .onGeometryChange(for: CGFloat.self) {
+                        $0.frame(in: .named("trip.viewport")).maxY
+                    } action: {
+                        compactHeaderBottom = $0
+                    }
+                    .planContentBounds(identifier: "trip.compactHeader")
             #else
                 header.opacity(headerScrolled ? 1 : 0).accessibilityHidden(!headerScrolled)
             #endif
@@ -334,7 +342,6 @@ public struct TripPageView: View {
             Spacer(minLength: PlanMetrics.smallGap)
             Text(verbatim: day.zone).font(Typography.planSubtitle.font)
         }
-        .planContentBounds(identifier: "trip.compactHeader")
     }
 
     private func jump(_ id: String, proxy: ScrollViewProxy) {

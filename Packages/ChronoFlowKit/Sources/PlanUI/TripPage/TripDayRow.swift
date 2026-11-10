@@ -16,6 +16,7 @@ struct TripDayRow: View, Equatable {
     var selectedBlockID: String? = nil
     var stickyTop: Double = 0
     @State private var listHeight: CGFloat? = nil
+    @State private var listTop: CGFloat = 0
     let viewportHeight: Double
     let onBlock: (String) -> Void
     let onFrame: () -> Void
@@ -44,12 +45,10 @@ struct TripDayRow: View, Equatable {
                         .frame(maxWidth: .infinity)
                         .planContentBounds(identifier: "trip.wide.timeline.\(day.id)")
                     GeometryReader { geometry in
-                        let height = min(
-                            geometry.size.height, PlanMetrics.wideListMaxHeight,
-                            max(PlanMetrics.touch, viewportHeight - stickyTop), listHeight ?? .infinity)
-                        let offset = min(
-                            max(0, stickyTop - geometry.frame(in: .named("trip.scroll")).minY),
-                            max(0, geometry.size.height - height))
+                        let position = TripWideListPosition(
+                            dayTop: listTop, dayHeight: geometry.size.height,
+                            viewportHeight: viewportHeight, stickyTop: stickyTop,
+                            contentHeight: listHeight ?? .infinity)
                         ScrollView {
                             DayListView(
                                 day: day, now: clock.now, copy: copy, selectedBlockID: selectedBlockID,
@@ -64,10 +63,16 @@ struct TripDayRow: View, Equatable {
                         }
                         .scrollBounceBehavior(.basedOnSize)
                         .accessibilityIdentifier("trip.wide.list.scroll.\(day.id)")
-                        .frame(height: height)
-                        .offset(y: offset)
+                        .frame(height: position.height)
+                        .offset(y: position.offset)
                         .planContentBounds(identifier: "trip.wide.list.\(day.id)")
-                    }.frame(width: listWidth)
+                    }
+                    .frame(width: listWidth)
+                    .onGeometryChange(for: CGFloat.self) {
+                        $0.frame(in: .named("trip.scroll")).minY
+                    } action: {
+                        listTop = $0
+                    }
                 }
             } else {
                 clockContent

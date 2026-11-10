@@ -121,11 +121,19 @@ final class TripScrollTracker {
 
         func makeUIViewController(context: Context) -> UIHostingController<Content> {
             let host = UIHostingController(rootView: content)
+            host.safeAreaRegions = []
             host.view.backgroundColor = .clear
             tracker.chrome = host.view
             host.view.alpha = tracker.opacity
             host.view.accessibilityElementsHidden = tracker.opacity < 1
             return host
+        }
+
+        func sizeThatFits(
+            _ proposal: ProposedViewSize, uiViewController: UIHostingController<Content>, context: Context
+        ) -> CGSize? {
+            uiViewController.sizeThatFits(
+                in: CGSize(width: proposal.width ?? 0, height: .greatestFiniteMagnitude))
         }
 
         func updateUIViewController(_ host: UIHostingController<Content>, context: Context) {

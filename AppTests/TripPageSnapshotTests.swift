@@ -159,7 +159,7 @@
         case freshRootsDiffer(String)
     }
 
-    @MainActor private final class TripSnapshotChrome {
+    @MainActor final class TripSnapshotChrome {
         private let background: UIColor
         private var bars: Set<ObjectIdentifier> = []
 

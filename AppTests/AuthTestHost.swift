@@ -101,7 +101,7 @@ import XCTest
         }
     }
 
-    func settle(until predicate: () -> Bool) async throws {
+    func settle(_ diagnostic: @autoclosure () -> String = "Predicate", until predicate: () -> Bool) async throws {
         window.makeKeyAndVisible()
         var previous: [CGRect] = []
         var matches = 0
@@ -124,7 +124,8 @@ import XCTest
             }
             previous = current
         }
-        throw CaptureFailure.didNotSettle("Predicate: 5 s deadline, revision \(revision), size \(window.bounds.size)")
+        throw CaptureFailure.didNotSettle(
+            "\(diagnostic()): 5 s deadline, revision \(revision), size \(window.bounds.size)")
     }
 
     func settle() async throws {

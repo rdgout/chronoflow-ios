@@ -50,47 +50,64 @@
             let measurements = PlanMeasuredContent()
             let host = try makeHost(context, formatter: formatter, measurements: measurements, width: 466, height: 678)
             defer { host.close() }
-            try await host.settle { context.model.plan.prepared != nil && context.timelineReady }
-            let dayID = try XCTUnwrap(context.model.anchor.dayID)
-            let scroll = try pageScroll(host)
-            scroll.setContentOffset(CGPoint(x: 0, y: scroll.contentOffset.y + 180), animated: false)
-            try await host.settle { context.model.currentAnchor.offset > 0 }
-            let anchor = context.model.currentAnchor
-            let dayTop =
-                try XCTUnwrap(measurements.frame(for: "trip.day.\(dayID)")).minY
-                - scroll.convert(scroll.bounds, to: host.window).minY
-            let block = try XCTUnwrap(context.model.plan.prepared?.days.first { $0.id == dayID }?.blocks.first)
-            context.model.selectBlock(block.id, formatter: formatter)
-            try await host.settle { host.controller.presentedViewController != nil }
-            let sheet = try XCTUnwrap(host.controller.presentedViewController)
+            do {
+                try await host.settle("Initial phone timeline") {
+                    context.model.plan.prepared != nil && context.timelineReady
+                }
+                let dayID = try XCTUnwrap(context.model.anchor.dayID)
+                let scroll = try pageScroll(host)
+                scroll.setContentOffset(CGPoint(x: 0, y: scroll.contentOffset.y + 180), animated: false)
+                try await host.settle("Initial day scroll") { context.model.currentAnchor.offset > 0 }
+                let anchor = context.model.currentAnchor
+                let dayTop =
+                    try XCTUnwrap(measurements.frame(for: "trip.day.\(dayID)")).minY
+                    - scroll.convert(scroll.bounds, to: host.window).minY
+                let block = try XCTUnwrap(context.model.plan.prepared?.days.first { $0.id == dayID }?.blocks.first)
+                context.model.selectBlock(block.id, formatter: formatter)
+                try await host.settle("Step presentation completion") {
+                    guard let sheet = host.controller.presentedViewController else { return false }
+                    return !sheet.isBeingPresented && sheet.transitionCoordinator == nil
+                }
+                let sheet = try XCTUnwrap(host.controller.presentedViewController)
 
-            host.window.frame.size = CGSize(width: 669, height: 951)
-            try await host.settle {
-                measurements.frame(for: "trip.wide.list.\(dayID)")?.width == 280
-                    && abs(context.model.currentAnchor.offset - anchor.offset) < 1
-            }
-            XCTAssertEqual(context.model.anchor.dayID, dayID)
-            XCTAssertEqual(context.model.selectedStep?.id, block.id)
-            XCTAssertTrue(host.controller.presentedViewController === sheet)
-            let wideDayTop =
-                try XCTUnwrap(measurements.frame(for: "trip.day.\(dayID)")).minY
-                - scroll.convert(scroll.bounds, to: host.window).minY
-            XCTAssertEqual(wideDayTop, dayTop, accuracy: 1)
+                UIView.performWithoutAnimation { host.window.frame.size = CGSize(width: 669, height: 951) }
+                try await host.settle(
+                    "Phone to wide: offset \(context.model.currentAnchor.offset), expected \(anchor.offset), list \(String(describing: measurements.frame(for: "trip.wide.list.\(dayID)")))"
+                ) {
+                    measurements.frame(for: "trip.wide.list.\(dayID)")?.width == 280
+                        && abs(context.model.currentAnchor.offset - anchor.offset) < 1
+                }
+                XCTAssertEqual(context.model.anchor.dayID, dayID)
+                XCTAssertEqual(context.model.selectedStep?.id, block.id)
+                XCTAssertTrue(host.controller.presentedViewController === sheet)
+                XCTAssertTrue(try pageScroll(host) === scroll)
+                let wideDayTop =
+                    try XCTUnwrap(measurements.frame(for: "trip.day.\(dayID)")).minY
+                    - scroll.convert(scroll.bounds, to: host.window).minY
+                XCTAssertEqual(wideDayTop, dayTop, accuracy: 1)
 
-            host.window.frame.size = CGSize(width: 466, height: 678)
-            try await host.settle {
-                measurements.frame(for: "trip.wide.list.\(dayID)") == nil
-                    && abs(context.model.currentAnchor.offset - anchor.offset) < 1
+                UIView.performWithoutAnimation { host.window.frame.size = CGSize(width: 466, height: 678) }
+                try await host.settle(
+                    "Wide to phone: offset \(context.model.currentAnchor.offset), expected \(anchor.offset)"
+                ) {
+                    measurements.frame(for: "trip.wide.list.\(dayID)") == nil
+                        && abs(context.model.currentAnchor.offset - anchor.offset) < 1
+                }
+                XCTAssertEqual(context.model.anchor.dayID, dayID)
+                XCTAssertEqual(context.model.selectedStep?.id, block.id)
+                XCTAssertTrue(host.controller.presentedViewController === sheet)
+                XCTAssertTrue(try pageScroll(host) === scroll)
+                let phoneDayTop =
+                    try XCTUnwrap(measurements.frame(for: "trip.day.\(dayID)")).minY
+                    - scroll.convert(scroll.bounds, to: host.window).minY
+                XCTAssertEqual(phoneDayTop, dayTop, accuracy: 1)
+                try await dismissStep(in: host, context: context)
+                try await context.close()
+            } catch {
+                try? await dismissStep(in: host, context: context)
+                try? await context.close()
+                throw error
             }
-            XCTAssertEqual(context.model.anchor.dayID, dayID)
-            XCTAssertEqual(context.model.selectedStep?.id, block.id)
-            XCTAssertTrue(host.controller.presentedViewController === sheet)
-            let phoneDayTop =
-                try XCTUnwrap(measurements.frame(for: "trip.day.\(dayID)")).minY
-                - scroll.convert(scroll.bounds, to: host.window).minY
-            XCTAssertEqual(phoneDayTop, dayTop, accuracy: 1)
-            sheet.dismiss(animated: false)
-            try await context.close()
         }
 
         @MainActor private func captureBoard(
@@ -112,11 +129,17 @@
                     && (state != .ready || context.timelineReady)
             }
             let scroll = try pageScroll(host)
+            if top { XCTAssertEqual(scroll.contentOffset.y, -scroll.adjustedContentInset.top, accuracy: 0.5) }
             if state == .ready {
-                let dayID = try XCTUnwrap(context.model.anchor.dayID)
+                let dayID = try XCTUnwrap(
+                    top ? context.model.plan.prepared?.days.first?.id : context.model.anchor.dayID)
                 if scrolled {
                     scroll.setContentOffset(CGPoint(x: 0, y: scroll.contentOffset.y + 480), animated: false)
                     try await host.settle { context.model.currentAnchor.offset > 0 }
+                }
+                try await host.settle {
+                    measurements.frame(for: "trip.wide.timeline.\(dayID)") != nil
+                        && measurements.frame(for: "trip.wide.list.\(dayID)") != nil
                 }
                 let timeline = try XCTUnwrap(measurements.frame(for: "trip.wide.timeline.\(dayID)"))
                 let list = try XCTUnwrap(measurements.frame(for: "trip.wide.list.\(dayID)"))
@@ -131,7 +154,11 @@
                     let header = try XCTUnwrap(measurements.frame(for: "trip.compactHeader"))
                     let viewportTop = scroll.convert(scroll.bounds, to: host.window).minY
                     XCTAssertGreaterThanOrEqual(list.minY, viewportTop - 0.5)
-                    XCTAssertLessThan(header.minY, list.minY)
+                    XCTAssertGreaterThanOrEqual(list.minY, header.maxY - 0.5)
+                    let day = try XCTUnwrap(measurements.frame(for: "trip.day.\(dayID)"))
+                    XCTAssertLessThanOrEqual(list.maxY, day.maxY + 0.5)
+                    XCTAssertGreaterThan(list.height, 0)
+                    XCTAssertGreaterThan(header.height, 0)
                 }
                 if checkMenu {
                     let menu = try XCTUnwrap(measurements.frame(for: "trip.dayMenu"))
@@ -151,6 +178,15 @@
                 XCTAssertNil(measurements.frame(for: "trip.wide.loading.timeline"))
                 XCTAssertNil(measurements.frame(for: "trip.wide.loading.list"))
             }
+            let navigation = try XCTUnwrap(navigationController(in: host.controller))
+            XCTAssertFalse(navigation.navigationBar.isHidden)
+            let menu = measurements.frame(for: "trip.dayMenu")
+            if state == .ready {
+                let menu = try XCTUnwrap(menu)
+                let bar = navigation.navigationBar.convert(navigation.navigationBar.bounds, to: host.window)
+                XCTAssertGreaterThanOrEqual(menu.minY, bar.minY - 0.5)
+                XCTAssertLessThanOrEqual(menu.maxY, bar.maxY + 0.5)
+            }
             XCTAssertLessThanOrEqual(scroll.contentSize.width, scroll.bounds.width + 0.5)
             let attachment = XCTAttachment(image: try host.image())
             attachment.name = name
@@ -167,7 +203,7 @@
         ) throws -> AuthTestHost {
             var page = TripPageView(model: context.model, formatter: formatter, refresh: { nil })
             page.onFirstTimelineFrame = { context.timelineReady = true }
-            return try AuthTestHost(
+            let host = try AuthTestHost(
                 NavigationStack { page }
                     .environment(\.planPageSafeBounds, nil)
                     .environment(\.planUITestOptions, PlanUITestOptions(startAtSummary: top))
@@ -177,6 +213,24 @@
                         $0.animation = nil
                     },
                 size: CGSize(width: width, height: height), style: style, language: language, category: category)
+            let chrome = TripSnapshotChrome(style: style)
+            host.prepareCapture = chrome.prepare
+            return host
+        }
+
+        @MainActor private func dismissStep(in host: AuthTestHost, context: TripSnapshotContext) async throws {
+            context.model.selectedStep = nil
+            if let sheet = host.controller.presentedViewController {
+                await withCheckedContinuation { continuation in
+                    sheet.dismiss(animated: false) { continuation.resume() }
+                }
+            }
+            try await host.settle("Step dismissal completion") { host.controller.presentedViewController == nil }
+        }
+
+        @MainActor private func navigationController(in controller: UIViewController) -> UINavigationController? {
+            if let navigation = controller as? UINavigationController { return navigation }
+            return controller.children.compactMap { navigationController(in: $0) }.first
         }
 
         @MainActor private func pageScroll(_ host: AuthTestHost) throws -> UIScrollView {
