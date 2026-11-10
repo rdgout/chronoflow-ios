@@ -2228,7 +2228,7 @@ Main restoration validation: source comparison confirms the two methods and enti
 | 42 | **Add to calendar.** The TripActions board draws it, and RN ships it locally with EventKit (boards CalendarExport, Denied, None and Failed). Is it in scope? | Defer to a separate calendar phase and leave the row out of 17c until then, noted as a known deviation from the board. | 17c calendar row; calendar phase |
 | 43 | **"Turn on reminders?" sheet** after the first saved trip. | Settled by user, 2026-11-09: Phase 19 builds the reusable sheet; 16c wires it after the first saved trip. | 19 / 16c |
 | 44 | **Guest wizard and claim.** Schedule Phase 18 now or later? | Later, after M2, as its own decision. | 18 |
-| 45 | **Screening questions and privacy.** The wizard asks blocking health-type screening questions (bipolar, pregnancy, VTE, eye disease) and stores the answers. There is no `PrivacyInfo.xcprivacy`, and the App Store privacy label is undecided. | Build the screening prompts with the server's wording, give the exclusion copy its own review against the clock-shift rule, and add the privacy manifest and label decision before TestFlight. | 16b copy sign-off; TestFlight |
+| 45 | **Superseded by No health data (2026-11-10).** Screening questions and privacy. The wizard asks blocking health-type screening questions (bipolar, pregnancy, VTE, eye disease) and stores the answers. There is no `PrivacyInfo.xcprivacy`, and the App Store privacy label is undecided. | Build the screening prompts with the server's wording, give the exclusion copy its own review against the clock-shift rule, and add the privacy manifest and label decision before TestFlight. | 16b copy sign-off; TestFlight |
 | 46 | **Date and time picking on Times.** The Wizard boards draw separate date and time pills per row. SwiftUI's `DatePicker` cannot show an empty value, so an empty pill currently opens a custom wheel popover, and once filled the system compact picker takes over. | One control per Departs/Arrives row: a single pill ("Choose" / "Mon 12 Oct · 14:40") that opens the same sheet every time, holding the system graphical `DatePicker` with date and time, the airport's local-time line and Done, as on the PickerDateTime board. PickerDateTime supplies the combined sheet; implemented in 16b.2. | Settled by the user, 2026-11-09: build the recommendation now, using the PickerDateTime board. 16b.2 Times |
 
 ## Build and runner speed audit (user, 2026-11-09)
@@ -2279,3 +2279,37 @@ Validation: strict `make lint` and direct Swift 6/iOS 17 UI-test compilation pas
 Validation: final strict `make lint`, direct Swift 6/iOS 17 UI-test compilation, 17 generator tests and all 125 resource/runner fixtures pass. `make quick` fails only at the unchanged `APICookieTests/realRedirectCookieHandlingIsDisabled` loopback bind (`Operation not permitted`); all other package suites pass. TripWizardTests is unchanged. No simulator execution is claimed because CoreSimulator is unavailable here. User-host evidence on `04727a2`: cold `make check` passed in 1104 seconds; the warm run reported these Forgot flakes plus the excluded wizard picker failure.
 
 Focused runtime acceptance: `make targeted DEVICES="17e" ONLY="AppUITests/ForgotPasswordTests AppUITests/ForgotAuditTests"`.
+
+
+## No health data — server Phase 19 (user, 2026-11-10)
+
+Branch `feat/no-health-data`, stacked on `feat/phase-16c-save`. Source: read-only
+`../chronoflow-new/docs/ui-plan/phase-19-no-health-data.md`, related UI plan and core plan.
+This scope supersedes OQ 45 and the medical-screening portions of Phase 16.
+Age band and recent shift work remain the only blocking answers; the planner stays on the server.
+
+**Explicit design exception (user, 2026-11-10):** build preferences and notices now with existing
+Settings body-clock and wizard toggle/row/notice components. No new board is required for this
+change only. The user reviews on device and requests a design afterwards if needed.
+
+**Validation override:** do not execute tests or simulator checks. Add/update tests at the cheapest
+layer under AGENTS.md, delete retired-screen UI tests, and leave execution to the user. Lint and
+compile-only checks are allowed. Sources outside this worktree stay read-only.
+
+- [x] NH1 Record the scope, sources, design exception and validation override.
+- [ ] NH2 Remove retired contract/profile fields, filter legacy server responses, rename caffeine,
+  add default-false movement preference, constrain readiness and screening, and update mock behavior.
+- [ ] NH3 Migrate cached settings, outbox and wizard recovery values; prevent new retired values
+  from being stored or sent. Preserve true legacy caffeine preference; never carry over VTE.
+- [ ] NH4 Replace Settings medical questions with neutral toggles and notices, using EN/NL catalogs.
+- [ ] NH5 Limit wizard screening to shift work plus age, expose neutral preferences with existing
+  components, and add audience/light-device notices. Update seeds and remove obsolete question fixtures.
+- [ ] NH6 Add package regression coverage for decoding/encoding/defaults/readiness/migration/422,
+  update only changed seeded screens, and refresh generated copy/contracts reproducibly.
+- [ ] NH7 Complete lint and compile-only verification, document copy provenance and limitations,
+  and create atomic Conventional Commits (or ordered patches if index.lock blocks commits).
+
+The server working tree still has the pre-Phase-19 schema and language keys. Generators must apply
+an explicit local Phase-19 overlay to their pinned input rather than modify the server repository.
+Missing copy follows the Phase-19 spec; new translations and all source keys are recorded in
+`Docs/no-health-data.md`. No unrelated phase is started.
