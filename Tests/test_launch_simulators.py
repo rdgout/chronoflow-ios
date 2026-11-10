@@ -944,6 +944,13 @@ class RunnerTests(unittest.TestCase):
                              ['-only-testing:' + suite])
             self.assertNotIn('SNAPSHOT_RECORD', environment)
 
+    def test_host_reporting_regression_accepts_expected_failure(self):
+        selector = 'AppTests/TestHostTests/testSettleTimeoutIsRecordedBeforeCleanupErrors'
+        self.nodes = [{'nodeType': 'Test Case', 'nodeIdentifier': selector + '()', 'result': 'Expected Failure'}]
+        status, output = self.execute(aliases=['17e'], only=[selector])
+        self.assertEqual(status, 0, output)
+        self.assertIn('PASS 17e ', output)
+
     def test_auth_skipped_expected_failure_or_missing_execution_cannot_pass(self):
         for suite in tuple(s for s in AUTH_HOSTED if s not in AUTH_SNAPSHOTS) + AUTH_UI:
             for result in ['Skipped', 'Expected Failure', 'Failed', None]:
