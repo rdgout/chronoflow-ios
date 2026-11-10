@@ -1680,6 +1680,38 @@
           }
         }
       }
+    },
+    "We could not duplicate this trip. Try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We could not duplicate this trip. Try again."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We konden deze reis niet dupliceren. Probeer het opnieuw."
+          }
+        }
+      }
+    },
+    "Something went wrong on our side. Try again in a moment.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Something went wrong on our side. Try again in a moment."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er ging iets mis bij ons. Probeer het zo opnieuw."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

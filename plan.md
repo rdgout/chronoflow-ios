@@ -1913,9 +1913,13 @@ Source: canvas version 1794242613-8e6a, WizardSpec "Route first, then times (Ric
   - Open: orchestrator — run hosted TripActionsLayoutTests and TripActionsSnapshotTests on 17e; review en/nl, light/dark and xxLarge snapshots.
 
 **17d: Edit and Duplicate** (needs trip-wizard deployed for live use)
-- [ ] Boards: WizardEdit, EditChanged, EditNoReturn, EditReturn, EditReturnNoCredits, EditWeb, CheckingEdit, CheckOfflineEdit, CheckServerEdit, ExcludedEdit, DiscardEdit and WizardDuplicate.
-- [ ] Edit starts at Checking with an immediate review. Every edit review first calls `tripInput` again and reloads the input when `sourceRevision` changed, then saves with `source_revision`. Duplicate uses `tripInput`, clears all dates, stay times, busy intervals, nights and the check-out date, starts at Outbound and reviews fresh with no token. Wire both into 17c.
-  - Tests: model tests for the source-revision reload and Duplicate clearing; UI smoke for edit and duplicate against the mock; snapshots.
+- [x] Boards: WizardEdit, EditChanged, EditNoReturn, EditReturn, EditReturnNoCredits, EditWeb, CheckingEdit, CheckOfflineEdit, CheckServerEdit, ExcludedEdit, DiscardEdit and WizardDuplicate.
+- [x] Edit starts at Checking with an immediate review. Every edit review first calls `tripInput` again and reloads the input when `sourceRevision` changed, then saves with `source_revision`. Duplicate uses `tripInput`, clears all dates, stay times, busy intervals, nights and the check-out date, starts at Outbound and reviews fresh with no token. Wire both into 17c.
+  - Implementation (2026-11-10): reuse the member wizard and its persisted recovery record for both actions; retain the edit context through every review/save, refresh the baseline and airport metadata on a source-revision change, prevent an untouched edit from saving, show the paired edit/error/discard/credit copy, and preserve mock check-offs that remain in the updated plan. All twelve boards are present locally; billing stays deferred, so the existing no-credits Close treatment is retained.
+  - Tests: TripWizardActionsTests covers immediate edit review, source reload, persisted context, save retry and fresh mock Duplicate; affected generation/recovery/review/completion/copy tests and mock generation tests run on the host. Seeded single-screen tests use CF_WIZARD_BOARD_CAPTURE, with one actions-to-wizard navigation smoke each for Edit and Duplicate.
+  - Open: orchestrator — compile app/hosted/UI targets and run TripWizardActionsLayoutTests, TripActionsScreenTests and TripWizardActionsScreenTests on 17e (no xcodebuild or simulators authorized here).
+  - Open: orchestrator — capture/review TripActions*SnapshotTests and TripWizardActions*SnapshotTests (all device profiles, en/nl, light/dark, xxLarge); references remain unapproved and opt-in.
+  - Open: orchestrator — take one seeded Duo runtime screenshot for the wizard's side-rail fit; hosted NavigationStack assertions cover vertical fit only.
 
 **17e: Settings home and sign-out** (`feat/phase-17e-settings`; boards: SetHome, SetHomeNL, SignOutPending, SignOutPendingSettings)
 

@@ -18,7 +18,7 @@ public struct TripGenerationEffects: Sendable {
     }
 }
 
-public struct TripEditContext: Sendable, Equatable, Hashable {
+public struct TripEditContext: Codable, Sendable, Equatable, Hashable {
     public let tripID: String
     public let sourceRevision: String
     public init(tripID: String, sourceRevision: String) {

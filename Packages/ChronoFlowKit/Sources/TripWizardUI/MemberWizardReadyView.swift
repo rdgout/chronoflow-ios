@@ -8,7 +8,7 @@
     extension MemberWizardView {
         var readyScreen: some View {
             wizardShell(
-                title: t("Ready to plan"), id: "ready",
+                title: t(model.isEditing ? "Edit your trip" : "Ready to plan"), id: "ready",
                 button: model.credits == .unavailable ? nil : t(readyButton, ["count": String(model.retrySeconds)]),
                 enabled: model.canSave && model.credits != .unavailable,
                 action: {
@@ -18,6 +18,13 @@
             ) {
                 if let failure = model.draft.state.saveFailure {
                     saveFailureBanner(failure)
+                } else if let change = model.draft.state.sourceChange,
+                    let summary = try? WizardPresentation.sourceChangeSummary(
+                        change, review: model.draft.state.review,
+                        stayEnd: model.draft.state.review?.summary?.stayEnd ?? model.draft.state.snapshotStayEnd,
+                        locale: locale, t: t)
+                {
+                    readyBanner(title: t("Updated"), body: summary)
                 } else if model.draft.state.review?.status == .modified {
                     readyBanner(
                         title: t("We adjusted your plan"),
@@ -57,7 +64,9 @@
                         readyRow(
                             "Return",
                             value: WizardPresentation.returnSummary(
-                                model.draft.form, stayEnd: model.draft.state.review?.summary?.stayEnd, locale: locale,
+                                model.draft.form,
+                                stayEnd: model.draft.state.review?.summary?.stayEnd
+                                    ?? model.draft.state.snapshotStayEnd, locale: locale,
                                 t: t),
                             step: .returnChoice)
                     }
@@ -120,7 +129,7 @@
             if model.draft.state.saveFailure?.kind == .throttle {
                 return model.retrySeconds > 0 ? "Try again in {{count}} s" : "Try again"
             }
-            return "Make my plan"
+            return model.isEditing ? "Update my plan" : "Make my plan"
         }
         private var routeSummary: String {
             (model.draft.form.legs.first?.fromIata ?? "") + " → "
@@ -148,6 +157,7 @@
         }
         private var price: String {
             guard let review = model.draft.state.review else { return "" }
+            if model.isEditing && review.price.cost == 0 { return t("Free") }
             if review.price.unlimited { return t("Included in your subscription.") }
             return review.price.cost == 0
                 ? t("Free")
@@ -172,7 +182,7 @@
                             ["cost": String(model.draft.state.review?.price.cost ?? 0)])
                     )
                     .accessibilityIdentifier("wizard.ready.guest-price")
-                } else if model.credits == .free {
+                } else if !model.isEditing, model.credits == .free {
                     Text(t("This trip is free: only a small body-clock shift is needed."))
                 }
                 if model.credits == .oneFree {
@@ -185,6 +195,19 @@
                         .fontWeight(model.credits == .unavailable ? .semibold : .regular)
                         .foregroundStyle(
                             (model.credits == .unavailable ? ColorToken.destructive : .mutedForeground).color)
+                }
+                if model.isEditing {
+                    if model.draft.state.originalForm?.end.kind == "return_legs",
+                        model.draft.form.end.kind != "return_legs"
+                    {
+                        Text(t("Removing a flight doesn't give a credit back."))
+                    }
+                    Text(
+                        t(
+                            model.draft.form.end.kind == "return_legs"
+                                && model.draft.state.originalForm?.end.kind != "return_legs"
+                                ? "Adding a return flight costs 1 credit, because credits are per direction. Other changes are free."
+                                : "Changes recalculate the plan. Check-offs on steps that stay in your plan are kept."))
                 }
             }.font(Typography.wizardHint.font).foregroundStyle(ColorToken.mutedForeground.color)
                 .accessibilityElement(children: .contain).accessibilityIdentifier("wizard.ready.price")
@@ -254,11 +277,16 @@
             case .offline:
                 title = "Saving needs a connection"
                 body = t(
-                    "Connect to the internet and tap Make my plan again. Keep this screen open: closing discards the trip."
+                    model.isEditing
+                        ? "Connect to the internet and try again. If you close now, your trip stays as it was."
+                        : "Connect to the internet and tap Make my plan again. Keep this screen open: closing discards the trip."
                 )
             case .server:
                 title = "We couldn't save your plan"
-                body = t("Something went wrong on our side. Tap Make my plan to try again.")
+                body = t(
+                    model.isEditing
+                        ? "Something went wrong on our side. Try again in a moment. If you close now, your trip stays as it was."
+                        : "Something went wrong on our side. Tap Make my plan to try again.")
             case .throttle:
                 title = "Wait a moment"
                 body =

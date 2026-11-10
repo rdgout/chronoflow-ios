@@ -3,7 +3,10 @@
     import Foundation
 
     extension MemberWizardModel {
-        public func freezeCompletionBoard(reviewing: Bool = false, answerError: String? = nil, retry: Int = 0) {
+        public func freezeCompletionBoard(
+            reviewing: Bool = false, answerError: String? = nil, retry: Int = 0, discardConfirmation: Bool = false
+        ) {
+            boardDiscardConfirmation = discardConfirmation
             boardFrozen = true
             resumed = true
             self.reviewing = reviewing
@@ -13,9 +16,6 @@
         }
 
         public func freezeBoardCapture(ticks: Int, slow: Bool = false, failure: DataFailure? = nil, retry: Int = 0) {
-            guard ProcessInfo.processInfo.environment["CF_WIZARD_BOARD_CAPTURE"] != nil,
-                UUID(uuidString: ProcessInfo.processInfo.environment["CF_AUTH_TEST_ID"] ?? "") != nil
-            else { return }
             cancelCheck()
             checking.ticks = ticks
             checking.slow = slow

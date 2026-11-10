@@ -152,6 +152,7 @@ extension MemberWizardModel {
     private func runCheck() {
         cancelCheck()
         checking = WizardCheckingProgress()
+        draft.state.sourceChange = nil
         restartRetryCountdown()
         let id = UUID()
         checkID = id
@@ -160,13 +161,14 @@ extension MemberWizardModel {
         let instance = "\(draft.state.instance)/\(id)"
         checkInstance = instance
         let generation = generation
+        let edit = draft.state.edit
         checkTask = Task { [weak self, checkingClock] in
             guard !Task.isCancelled else { return }
             await WizardChecking.run(
                 clock: checkingClock,
                 request: {
                     guard let generation else { throw DataFailure.server(status: nil) }
-                    return try await generation.review(instance: instance, input: input)
+                    return try await generation.review(instance: instance, input: input, edit: edit)
                 }
             ) { [weak self] event in
                 guard let self, self.checkID == id, !self.closed, self.draft.state.step == .checking else { return }
@@ -185,6 +187,8 @@ extension MemberWizardModel {
     func applyReview(_ result: TripGenerationReviewResult) {
         do {
             let unchangedInput = draft.state.checkedInput == inputFingerprint
+            if let snapshot = result.sourceSnapshot { try acceptSourceReload(snapshot, price: result.review.price) }
+            if let edit = result.edit { draft.state.edit = edit }
             draft.form = try WizardForm(reviewInput: result.input, retained: draft.form)
             draft.form.itinerary = result.review.itinerary
             draft.state.profile = ProfilePreferences.request(result.input.profile ?? JSONObject())

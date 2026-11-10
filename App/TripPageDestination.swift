@@ -6,6 +6,7 @@ import PlanUI
 import Reminders
 import SwiftUI
 import Sync
+import TripWizard
 
 #if DEBUG
     import DataAccess
@@ -26,10 +27,16 @@ struct TripPageDestination: View {
     var onTrips: (() -> Void)?
     var onToday: (() -> Void)?
     var onSettings: (() -> Void)?
+    var prepareWizard: ((String, TripWizardAction) async throws -> MemberWizardModel)?
+    var presentWizard: ((MemberWizardModel) -> Void)?
     @State private var model: TripPageModel?
     @State private var openedNotificationStep = false
     @State private var showingReminders = false
     @State private var showingActions = false
+    @State private var openingWizard = false
+    @State private var preparedWizard: MemberWizardModel?
+    @State private var actionFailure: String?
+    @Environment(\.locale) private var locale
 
     var body: some View {
         ZStack {
@@ -66,9 +73,29 @@ struct TripPageDestination: View {
                 assertionFailure("First-trip reminders offer failed: \(error)")
             }
         }
-        .sheet(isPresented: $showingActions) {
+        #if DEBUG
+            .task(id: model?.plan.card != nil) {
+                guard model?.plan.card != nil,
+                    (UIApplication.shared.delegate as? AppDelegate)?.authServices?.authUITestEnabled == true,
+                    UITestRuntime.environment["CF_WIZARD_BOARD_CAPTURE"] == "TripActions"
+                else { return }
+                showingActions = true
+            }
+        #endif
+        .sheet(isPresented: $showingActions, onDismiss: presentPreparedWizard) {
             if let model, let card = model.plan.card {
-                TripActionsSheet(card: card, detail: model.plan.detail, online: model.online)
+                TripActionsSheet(card: card, detail: model.plan.detail, online: model.online, busy: openingWizard) {
+                    action in
+                    openWizard(action, model: model)
+                }
+                .overlay(alignment: .bottom) {
+                    if let actionFailure {
+                        FeedbackToast(
+                            title: PageCopy(language: locale.language.languageCode?.identifier == "nl" ? .nl : .en)(
+                                actionFailure),
+                            identifier: "trip.actions.failure", success: false)
+                    }
+                }
             }
         }
         .sheet(isPresented: $showingReminders) { RemindersDestination(native: native, firstTrip: true) }
@@ -122,12 +149,48 @@ struct TripPageDestination: View {
         }
     }
 
+    private func presentPreparedWizard() {
+        guard let preparedWizard else { return }
+        self.preparedWizard = nil
+        presentWizard?(preparedWizard)
+    }
+
+    private func openWizard(_ action: TripAction, model: TripPageModel) {
+        guard !openingWizard, model.online, let card = model.plan.card,
+            TripActionsAvailability(
+                canEdit: card.canEdit, canDuplicate: card.canDuplicate, online: model.online, busy: false
+            ).enabled(action),
+            let prepareWizard
+        else { return }
+        openingWizard = true
+        actionFailure = nil
+        Task {
+            defer { openingWizard = false }
+            do {
+                preparedWizard = try await prepareWizard(route.tripID, action == .edit ? .edit : .duplicate)
+                showingActions = false
+            } catch is CancellationError { return } catch {
+                actionFailure =
+                    (error as? DataFailure) == .offline
+                    ? "Needs a connection."
+                    : action == .duplicate
+                        ? "We could not duplicate this trip. Try again."
+                        : "Something went wrong on our side. Try again in a moment."
+            }
+        }
+    }
+
     private func tripPage(_ model: TripPageModel) -> TripPageView {
         var page = TripPageView(model: model, refresh: { try await native?.refreshNow() })
         page.onTrips = onTrips
         page.onToday = onToday
         page.onSettings = onSettings
-        if model.plan.card != nil { page.onActions = { showingActions = true } }
+        if model.plan.card != nil {
+            page.onActions = {
+                actionFailure = nil
+                showingActions = true
+            }
+        }
         return page
     }
 }

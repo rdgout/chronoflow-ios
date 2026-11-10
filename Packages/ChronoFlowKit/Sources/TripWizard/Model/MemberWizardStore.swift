@@ -35,6 +35,7 @@ public struct MemberWizardState: Codable, Sendable, Equatable {
         case returnRouteConfirmed, profile, airports, sheet, lastInputStep, progressFloor, review, questions
         case questionIndex, checkingAnswers, sleepCompleted, savedProfile, savedTripId, checkedInput, reviewedAt
         case revisit, returnToReady, promptSheetID, saveFailure, updated, signingIn
+        case edit, originalForm, originalInput, copiedRoute, snapshotStayEnd, sourceChange
     }
 
     public var instance = UUID().uuidString
@@ -66,6 +67,12 @@ public struct MemberWizardState: Codable, Sendable, Equatable {
     public var saveFailure: WizardSaveFailure?
     public var updated: Bool?
     public var signingIn: Bool?
+    public var edit: TripEditContext?
+    public var originalForm: WizardForm?
+    public var originalInput: Data?
+    public var copiedRoute: String?
+    public var snapshotStayEnd: ApiStayEnd?
+    public var sourceChange: WizardPresentation.SourceChange?
     public init() {}
 
     mutating func discardRetiredValues() {
@@ -169,6 +176,17 @@ public actor MemberWizardStore: WizardDraftStore {
         return draft
     }
 
+    public func startTrip(id: String, action: TripWizardAction, source: any DataSource) async throws
+        -> MemberWizardDraft
+    {
+        let snapshot = try await source.tripInput(id: id)
+        try Task.checkCancellation()
+        var draft = try await initialDraft()
+        try draft.loadTrip(snapshot, id: id, action: action)
+        try await drafts.replaceRecovery(record(draft), permit: permit)
+        return draft
+    }
+
     private func initialDraft() async throws -> MemberWizardDraft {
         let latest = try await trips.trips().reversed().first { $0.deletedAt == nil && !$0.deletedLocally }
         var draft = MemberWizardDraft()
@@ -215,10 +233,11 @@ public actor MemberWizardStore: WizardDraftStore {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions.insert(.withFractionalSeconds)
         return DraftRecord(
-            id: "member-wizard", form: try .encoding(draft.form),
-            dirty: draft.state.entered,
+            id: "member-wizard", tripId: state.edit?.tripID, form: try .encoding(draft.form),
+            baseForm: try state.originalForm.map(JSONDocument.encoding), dirty: draft.hasChanges,
             token: draft.form.identity?.token, inputRevision: draft.form.identity?.inputRevision ?? 0,
-            reviewRevision: draft.form.identity?.reviewRevision, furthestStep: draft.state.step.rawValue,
+            reviewRevision: draft.form.identity?.reviewRevision, wizardSourceRevision: state.edit?.sourceRevision,
+            furthestStep: draft.state.step.rawValue,
             wizardState: try .encoding(state), fieldErrors: try .encoding(draft.fieldErrors),
             updatedAt: formatter.string(from: now()))
     }

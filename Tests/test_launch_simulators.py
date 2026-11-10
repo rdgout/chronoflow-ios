@@ -49,6 +49,7 @@ BOARD_CAPTURES = {
     'AppUITests/WizardBoardCaptureDutchDarkTests',
 }
 SNAPSHOT_SUITES = WIZARD_PROFILES | {
+    "AppTests/TripWizardActionsSnapshotTests", "AppTests/TripWizardActionsSESnapshotTests", "AppTests/TripWizardActions17SnapshotTests", "AppTests/TripWizardActionsAirSnapshotTests", "AppTests/TripWizardActions18ProSnapshotTests", "AppTests/TripWizardActions18ProMaxSnapshotTests", "AppTests/TripWizardActionsDuoSnapshotTests",
     "AppTests/TripActions17SnapshotTests", "AppTests/TripActionsAirSnapshotTests", "AppTests/TripActions18ProSnapshotTests", "AppTests/TripActions18ProMaxSnapshotTests",
     "AppTests/TripActionsSnapshotTests", "AppTests/TripActionsSESnapshotTests", "AppTests/TripActionsDuoSnapshotTests",
     'AppTests/LaunchSnapshotTests', 'AppTests/WelcomeSnapshotTests',

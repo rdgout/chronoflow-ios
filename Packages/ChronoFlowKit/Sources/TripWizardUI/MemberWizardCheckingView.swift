@@ -16,7 +16,7 @@
         }
         var checkingScreen: some View {
             wizardShell(
-                title: t(model.draft.state.checkingAnswers == true ? "Checking your answers" : "Checking your trip"),
+                title: t(model.checkingTitle),
                 subtitle: model.checking.failure == nil ? t("This takes a few seconds.") : nil, id: "checking",
                 button: model.checking.failure == nil
                     ? nil
@@ -75,7 +75,7 @@
                 UIAccessibility.post(
                     notification: .announcement,
                     argument: t(
-                        model.draft.state.checkingAnswers == true ? "Checking your answers" : "Checking your trip"))
+                        model.checkingTitle))
                 model.resumeChecking()
             }
             .onChange(of: model.checking.ticks) { previous, next in
@@ -110,7 +110,10 @@
             case .offline:
                 kind = "offline"
                 title = "Checking needs a connection"
-                body = t("Connect to the internet and try again.")
+                body = t(
+                    model.isEditing
+                        ? "Connect to the internet and try again. If you close now, your trip stays as it was."
+                        : "Connect to the internet and try again.")
                 symbol = "icloud.slash"
             case .throttled:
                 kind = "throttle"
@@ -123,7 +126,10 @@
             default:
                 kind = "server"
                 title = "We couldn't check your trip"
-                body = t("Something went wrong on our side. Try again in a moment.")
+                body = t(
+                    model.isEditing
+                        ? "Something went wrong on our side. Try again in a moment. If you close now, your trip stays as it was."
+                        : "Something went wrong on our side. Try again in a moment.")
                 symbol = "exclamationmark.circle"
             }
             return VStack(spacing: PlanUITokens.space3) {
@@ -234,9 +240,11 @@
                         }
                     Text(
                         t(
-                            model.exclusionWasSaved
-                                ? "You gave this answer on an earlier trip. Change it to plan this trip."
-                                : "If you answered by mistake, you can change your answers.")
+                            model.isEditing
+                                ? "Your trip stays as it was."
+                                : model.exclusionWasSaved
+                                    ? "You gave this answer on an earlier trip. Change it to plan this trip."
+                                    : "If you answered by mistake, you can change your answers.")
                     )
                     .font(Typography.wizardHint.font).foregroundStyle(ColorToken.mutedForeground.color)
                 })

@@ -85,6 +85,8 @@ actor GenerationSource: DataSource {
     }
     func updateTrip(id: String, identity: ApiTripSaveInput, sourceRevision: String) async throws -> ApiTripSaveResult {
         record("update")
+        try await beforeSave()
+        if let saveFailure { throw saveFailure }
         lastEdit = TripEditContext(tripID: id, sourceRevision: sourceRevision)
         return ApiTripSaveResult(tripId: id)
     }
