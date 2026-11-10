@@ -1907,8 +1907,10 @@ Source: canvas version 1794242613-8e6a, WizardSpec "Route first, then times (Ric
 - [x] Review round 1: build the future hero with departure-day metadata, route-only title and plan-start/time copy; add en/nl headings, plural preparation/departure copy and spoken progress; restore inline progress, status-pill, empty-now and hidden-category treatments. Catalog localization/plural tests run on the host.
 
 **17c: Trip actions sheet** (boards: TripActions, TripActionsNoPlan)
-- [ ] Match RN and the board: header from → to with dates · via connections · "with return". Edit trip and Duplicate trip are always shown, disabled with "Needs a connection." when offline, busy or the flag is false (on main both flags are false). Complete and Delete stay hidden (flags false, no endpoints, OQ 31). The Add to calendar row follows OQ 42.
-  - Tests: flag × online × busy matrix; snapshots.
+- [x] Match RN and the board: header from → to with dates · via connections · "with return". Edit trip and Duplicate trip are always shown, disabled with "Needs a connection." when offline, busy or the flag is false (on main both flags are false). Complete and Delete stay hidden (flags false, no endpoints, OQ 31). The Add to calendar row follows OQ 42.
+  - Decision (2026-11-10): “the flag” is the per-card `canEdit`/`canDuplicate` capability; mock fixtures and the live mobile trip-list endpoint emit both true with the existing wizard endpoints, so no RN app-wide feature-flag gate is added. Complete/Delete and the OQ 42 calendar row remain omitted.
+  - Tests: SwiftPM flag × online × busy matrix and header/copy tests.
+  - Open: orchestrator — run hosted TripActionsLayoutTests and TripActionsSnapshotTests on 17e; review en/nl, light/dark and xxLarge snapshots.
 
 **17d: Edit and Duplicate** (needs trip-wizard deployed for live use)
 - [ ] Boards: WizardEdit, EditChanged, EditNoReturn, EditReturn, EditReturnNoCredits, EditWeb, CheckingEdit, CheckOfflineEdit, CheckServerEdit, ExcludedEdit, DiscardEdit and WizardDuplicate.

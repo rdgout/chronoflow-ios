@@ -29,6 +29,7 @@ struct TripPageDestination: View {
     @State private var model: TripPageModel?
     @State private var openedNotificationStep = false
     @State private var showingReminders = false
+    @State private var showingActions = false
 
     var body: some View {
         ZStack {
@@ -63,6 +64,11 @@ struct TripPageDestination: View {
                 }
             } catch is CancellationError { return } catch {
                 assertionFailure("First-trip reminders offer failed: \(error)")
+            }
+        }
+        .sheet(isPresented: $showingActions) {
+            if let model, let card = model.plan.card {
+                TripActionsSheet(card: card, detail: model.plan.detail, online: model.online)
             }
         }
         .sheet(isPresented: $showingReminders) { RemindersDestination(native: native, firstTrip: true) }
@@ -121,6 +127,7 @@ struct TripPageDestination: View {
         page.onTrips = onTrips
         page.onToday = onToday
         page.onSettings = onSettings
+        if model.plan.card != nil { page.onActions = { showingActions = true } }
         return page
     }
 }
