@@ -87,6 +87,13 @@ nonisolated final class WizardErrorScrollTests: XCTestCase {
                         let context =
                             "\(device.name) \(language) \(category.rawValue) home=\(home) viewport=\(viewport)"
                         let tolerance: CGFloat = 0.5
+                        let safe = CGRect(
+                            x: device.insets.left, y: device.insets.top,
+                            width: device.size.width - device.insets.left - device.insets.right,
+                            height: device.size.height - device.insets.top - device.insets.bottom)
+                        XCTAssertTrue(
+                            safe.insetBy(dx: -tolerance, dy: -tolerance).contains(footer),
+                            "\(context) safe=\(safe) footer=\(footer)")
                         XCTAssertTrue(
                             lastCard.insetBy(dx: -tolerance, dy: -tolerance).contains(later),
                             "\(context) lastCard=\(lastCard) error=\(later)")

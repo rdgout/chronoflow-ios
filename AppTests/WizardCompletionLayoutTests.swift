@@ -19,6 +19,7 @@
                 for profile in try AuthDeviceFixture.layoutStressProfiles() {
                     for board in [
                         "WizardFineTuneMulti", "WizardFineTuneSleep", "WizardReadyReturn", "WizardReadyAdjusted",
+                        "WizardReadyNoCredits",
                     ] {
                         let model = completionBoardModel(board, database: database)
                         let content = PlanMeasuredContent()

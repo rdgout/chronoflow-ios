@@ -1861,7 +1861,7 @@ Source: canvas version 1794242613-8e6a, WizardSpec "Route first, then times (Ric
 **16c first simulator-run repairs (2026-11-10)**
 - [x] Query combined save-failure banners across accessibility element types, matching the shared auth banner helper. Screen tests retain seeded state; no test execution in this repair.
 - [x] Keep the no-credits Close button above the home indicator and check it as a pinned footer control. Give the button its own unpadded label bounds and move the extending background onto a containing footer; add a hosted Dutch xxLarge geometry check. No test execution.
-- [ ] Keep Fine-tune/Ready footer content inside every safe-area inset, including asymmetric Duo rails.
+- [x] Keep Fine-tune/Ready footer content inside every safe-area inset, including asymmetric Duo rails. Constrain progress, scroll content and measured footer content separately to the board column; apply the shared safe-area rail before the extending footer background. Extend hosted coverage to no credits and assert route/times footer containment too. No test execution.
 - [ ] Scope layout measurements to the visible wizard screen and preserve the four flight/error/footer checks.
 
 - [ ] **Create gate (M2).** Against local Valet on trip-wizard after the user runs the four migrations (OQ 37): create a trip, land on its page and see the timeline in en and nl. Record the result. Production acceptance waits for the merge and deploy.

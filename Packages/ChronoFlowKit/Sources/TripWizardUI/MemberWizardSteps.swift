@@ -20,6 +20,7 @@
                         }
                 }.frame(height: PlanUITokens.wizardProgressHeight)
                     .padding(.horizontal, PlanUITokens.space5)
+                    .frame(maxWidth: PlanUITokens.wizardColumnWidth).frame(maxWidth: .infinity).planPageRail()
                     .accessibilityLabel(t("Progress, {{pct}} percent", ["pct": String(Int(model.progress * 100))]))
                 ScrollViewReader { proxy in
                     ScrollView {
@@ -45,6 +46,8 @@
                                 }
                                 content()
                             }.frame(maxWidth: .infinity, alignment: .leading).padding(PlanUITokens.space5)
+                                .frame(maxWidth: PlanUITokens.wizardColumnWidth).frame(maxWidth: .infinity)
+                                .planPageRail()
                         }
                     }
                     .safeAreaInset(edge: .bottom) {
@@ -81,11 +84,12 @@
                                 .opacity(enabled ? 1 : PlanUITokens.wizardDisabledOpacity)
                                 .accessibilityIdentifier("wizard.\(id).continue")
                             }.padding(.horizontal, PlanUITokens.space5).padding(.vertical, PlanUITokens.space3)
-                                .background(ColorToken.background.color)
+                                .frame(maxWidth: PlanUITokens.wizardColumnWidth)
                                 .accessibilityElement(children: .contain).accessibilityIdentifier(
                                     footerIdentifier(for: id)
                                 )
                                 .planContentBounds(identifier: "wizard.\(id).footer")
+                                .planPageRail().frame(maxWidth: .infinity).background(ColorToken.background.color)
                         } else if id == "ready", model.credits == .unavailable {
                             VStack(spacing: 0) {
                                 Button {
@@ -97,9 +101,10 @@
                                 .disabled(closing).accessibilityIdentifier("wizard.ready.no-credits")
                                 .planContentBounds(identifier: "wizard.ready.no-credits")
                             }.padding(.horizontal, PlanUITokens.space5).padding(.vertical, PlanUITokens.space3)
+                                .frame(maxWidth: PlanUITokens.wizardColumnWidth)
                                 .accessibilityElement(children: .contain).accessibilityIdentifier("wizard.ready.footer")
                                 .planContentBounds(identifier: "wizard.ready.footer")
-                                .background(ColorToken.background.color)
+                                .planPageRail().frame(maxWidth: .infinity).background(ColorToken.background.color)
                         } else if answerHint {
                             tapHint.frame(maxWidth: .infinity).multilineTextAlignment(.center)
                                 .padding(.horizontal, PlanUITokens.space5).padding(
@@ -125,7 +130,6 @@
                     }
                 }
             }
-            .frame(maxWidth: PlanUITokens.wizardColumnWidth).frame(maxWidth: .infinity)
             .background(ColorToken.background.color).foregroundStyle(ColorToken.foreground.color)
             .navigationTitle(t("New trip")).navigationBarTitleDisplayMode(.inline)
             .toolbarRole(.editor)
