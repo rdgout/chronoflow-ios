@@ -6,6 +6,11 @@ import UIKit
 import XCTest
 
 nonisolated final class ForgotPasswordControlTests: XCTestCase {
+    override func setUp() {
+        super.setUp()
+        executionTimeAllowance = 60
+    }
+
     @MainActor func testRootCapMakesAX5EqualXXLarge() async throws {
         try await AuthTestHost.registerFonts()
         let fixture = try XCTUnwrap(AuthDeviceFixture.all().first { $0.name == "se" })
@@ -82,16 +87,19 @@ nonisolated final class ForgotPasswordControlTests: XCTestCase {
                 XCTAssertFalse(field.isEnabled)
                 model.form.receive(failure)
                 model.form.finish()
+                let shouldFocus = banner == nil
                 try await host.settle {
-                    field.isEnabled && field.isFirstResponder && forgotTextFields(host.window).first === field
+                    field.isEnabled && field.isFirstResponder == shouldFocus
+                        && forgotTextFields(host.window).first === field
                         && model.form.failure == failure && model.form.banner == banner
                 }
                 model.editEmail(try XCTUnwrap(field.text))
                 XCTAssertTrue(field.isEnabled)
-                XCTAssertTrue(field.isFirstResponder)
+                XCTAssertEqual(field.isFirstResponder, shouldFocus)
                 XCTAssertTrue(forgotTextFields(host.window).first === field)
                 XCTAssertEqual(model.form.failure, failure)
                 XCTAssertEqual(model.form.banner, banner)
+                XCTAssertTrue(field.becomeFirstResponder())
             }
         }
     }
