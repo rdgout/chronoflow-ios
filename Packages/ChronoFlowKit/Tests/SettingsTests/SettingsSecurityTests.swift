@@ -7,6 +7,62 @@ import Testing
 @testable import DataAccess
 
 @Suite @MainActor struct SettingsSecurityTests {
+    @Test func promptWorksAgainAfterLeavingAndReturning() async {
+        var calls = 0
+        let model = SettingsSecurityModel { _ in
+            calls += 1
+            return .codes(ApiRecoveryCodes(recoveryCodes: ["one"]))
+        }
+        model.showPrompt(.reveal)
+        model.promptPassword = "pw"
+        await model.submitPrompt()
+        #expect(model.codes == ["one"])
+        model.clearSecrets()
+        #expect(model.codes.isEmpty && model.prompt == nil)
+        model.showPrompt(.reveal)
+        #expect(model.prompt == .reveal)
+        model.promptPassword = "pw"
+        await model.submitPrompt()
+        #expect(calls == 2 && model.codes == ["one"])
+    }
+
+    @Test(arguments: [false, true])
+    func lateResultCannotRestoreSecretsOrFinishANewRequest(startNewRequest: Bool) async {
+        var responses: [CheckedContinuation<AccountSecurityResult, Never>] = []
+        var started: CheckedContinuation<Void, Never>?
+        let model = SettingsSecurityModel { _ in
+            await withCheckedContinuation {
+                responses.append($0)
+                started?.resume()
+                started = nil
+            }
+        }
+        model.showPrompt(.reveal)
+        model.promptPassword = "pw"
+        let previous = Task { await model.submitPrompt() }
+        await withCheckedContinuation { started = $0 }
+        #expect(model.busy)
+        model.clearSecrets()
+        #expect(model.codes.isEmpty && !model.busy && model.prompt == nil)
+
+        var current: Task<Void, Never>?
+        if startNewRequest {
+            model.showPrompt(.reveal)
+            model.promptPassword = "pw"
+            current = Task { await model.submitPrompt() }
+            await withCheckedContinuation { started = $0 }
+        }
+        responses[0].resume(returning: .codes(ApiRecoveryCodes(recoveryCodes: ["late"])))
+        await previous.value
+        #expect(model.codes.isEmpty && model.busy == startNewRequest)
+        if let current {
+            #expect(model.prompt == .reveal)
+            responses[1].resume(returning: .codes(ApiRecoveryCodes(recoveryCodes: ["current"])))
+            await current.value
+            #expect(model.codes == ["current"] && !model.busy && model.prompt == nil)
+        }
+    }
+
     @Test func disableSnapshotClearsSecretsAndObservedEnabledStateForIntroduction() async throws {
         let f = try await SettingsPageFixture.make()
         let data = try Data(
