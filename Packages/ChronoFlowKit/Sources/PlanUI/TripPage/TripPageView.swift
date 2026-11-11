@@ -8,6 +8,9 @@ import Sync
 public struct TripPageView: View {
     @State private var model: TripPageModel
     @Environment(\.locale) private var locale
+    #if DEBUG
+        @Environment(\.planUITestOptions) private var uiTestOptions
+    #endif
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var formatter: CopyLineFormatter?
     @State private var scroll = TripScrollTracker()
@@ -166,6 +169,9 @@ public struct TripPageView: View {
                     guard new != nil else { return }
                     let previous = model.currentAnchor
                     model.acceptPreparedPlan()
+                    #if DEBUG
+                        if old == nil, uiTestOptions.startAtSummary { return }
+                    #endif
                     if old == nil || old?.revision != new?.revision || old?.days.map(\.id) != new?.days.map(\.id) {
                         let anchor =
                             old == nil

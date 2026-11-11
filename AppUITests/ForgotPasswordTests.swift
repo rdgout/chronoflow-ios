@@ -38,7 +38,7 @@ nonisolated final class ForgotPasswordTests: ScreenTestCase {
         XCTAssertTrue(field.waitUntil(.enabled, timeout: 6), "Expected Forgot email to unlock after the server failure")
         XCTAssertFalse(
             AuthUIFlow.control("forgot.notice", in: app).exists, "Server failure must not show a sent notice")
-        AuthUIFlow.assertBannerVisible(in: app)
+        AuthUIFlow.assertBannerVisible(in: app, scrollIdentifier: "forgot.scroll")
         guard AuthUIFlow.type("x", into: field, in: app) else { return }
         XCTAssertTrue(banner.waitUntil(.gone, timeout: 3), "Expected the server banner to clear after editing email")
     }
@@ -49,7 +49,7 @@ nonisolated final class ForgotPasswordTests: ScreenTestCase {
         let field = app.textFields["forgot.email"]
         field.tap()
         field.typeText("offline@example.com\n")
-        AuthUIFlow.assertBannerVisible(in: app)
+        AuthUIFlow.assertBannerVisible(in: app, scrollIdentifier: "forgot.scroll")
         XCTAssertEqual(field.value as? String, "offline@example.com")
         let banner = AuthUIFlow.control("auth.banner", in: app)
         XCTAssertTrue(banner.waitUntil(.exists, timeout: 5))
@@ -64,36 +64,17 @@ nonisolated final class ForgotPasswordTests: ScreenTestCase {
 
 @MainActor func launchForgotApp(
     language: String = "en", xxLarge: Bool = false, failure: String? = nil, offline: Bool = false,
-    appearance: XCUIDevice.Appearance? = nil, seedScreen: Bool = false
+    appearance: XCUIDevice.Appearance? = nil
 ) -> XCUIApplication {
-    let app = ScreenTestApp.makeApplication()
-    app.launchArguments = AuthUIFlow.arguments(language: language, xxLarge: xxLarge)
-    if let appearance { app.launchArguments += ["-AppleInterfaceStyle", appearance == .dark ? "Dark" : "Light"] }
-    if seedScreen { app.launchEnvironment["CF_AUTH_TEST_AUDIT_SCREEN"] = "forgot" }
-    app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
-    if offline { app.launchEnvironment["CF_AUTH_TEST_OFFLINE"] = "1" }
-    if failure == "server" { app.launchArguments += ["-cf.forgotServerFailure"] }
-    if failure == "throttle" { app.launchArguments += ["-cf.forgotThrottleFailure"] }
-    app.launchMeasured()
-    return app
+    var arguments: [String] = []
+    if let appearance { arguments += ["-AppleInterfaceStyle", appearance == .dark ? "Dark" : "Light"] }
+    if failure == "server" { arguments += ["-cf.forgotServerFailure"] }
+    if failure == "throttle" { arguments += ["-cf.forgotThrottleFailure"] }
+    return AuthUIFlow.launchScreen(
+        "forgot", language: language, xxLarge: xxLarge,
+        extraEnv: offline ? ["CF_AUTH_TEST_OFFLINE": "1"] : [:], extraArguments: arguments)
 }
 
 @MainActor func openForgot(_ app: XCUIApplication) {
-    if app.launchEnvironment["CF_UI_TEST_PROFILE"] == "screen",
-        app.launchEnvironment["CF_AUTH_TEST_AUDIT_SCREEN"] == "forgot"
-    {
-        XCTAssertTrue(
-            UIWait.until(timeout: 12) {
-                app.textFields["forgot.email"].exists || app.textFields["sign-in.email"].exists
-                    || app.buttons["welcome.signIn"].exists
-            }, "Expected Forgot, Sign in or Welcome after Forgot seed readiness")
-        if app.textFields["forgot.email"].exists { return }
-    }
-    AuthUIFlow.openSignIn(app)
-    AuthUIFlow.reveal(app.buttons["sign-in.forgot"], in: app)
-    app.buttons["sign-in.forgot"].tap()
-    XCTAssertTrue(
-        app.textFields["forgot.email"].waitUntil(.exists, timeout: 4),
-        "Expected Forgot email after tapping Forgot password on Sign in")
-    AuthUIFlow.reveal(app.textFields["forgot.email"], in: app)
+    AuthUIFlow.requireSeededScreen("forgot", in: app)
 }

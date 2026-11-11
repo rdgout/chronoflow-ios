@@ -1,15 +1,26 @@
 import XCTest
 
 @MainActor enum UIReseed {
-    static func apply(to app: XCUIApplication, authorization: String, timeout: TimeInterval = 12) throws {
+    private static var readyIdentifiers: [ObjectIdentifier: String] = [:]
+
+    static func didLaunch(_ app: XCUIApplication) {
+        let id = app.launchEnvironment["CF_AUTH_TEST_ID"]?.lowercased() ?? "missing-test-id"
+        readyIdentifiers[ObjectIdentifier(app)] = "uitest.ready.\(id)"
+    }
+
+    static func apply(to app: XCUIApplication, authorization: String, timeout: TimeInterval = 5) throws {
         let command = UITestSeedCommand(
             authorization: authorization, environment: app.launchEnvironment.filter { $0.key.hasPrefix("CF_") },
             arguments: app.launchArguments)
         UITestTiming.record("reset-begin", environment: app.launchEnvironment, details: "nonce=\(command.nonce)")
         UITestTiming.awaitFirstElement(environment: app.launchEnvironment)
-        let previous = app.windows.matching(NSPredicate(format: "identifier BEGINSWITH %@", "uitest.ready."))
-            .firstMatch
-        let process = previous.exists ? previous.label : "missing-ready-window"
+        let identifier = readyIdentifiers[ObjectIdentifier(app)] ?? "uitest.ready.\(authorization.lowercased())"
+        let previous = app.windows[identifier].firstMatch
+        guard previous.waitUntil(.exists, timeout: timeout) else {
+            XCTFail("Missing seeded ready window: \(identifier)")
+            throw NSError(domain: "UIReseed", code: 2)
+        }
+        let process = previous.label
         // XCUIApplication.open launches; system.open delivers to the existing scene.
         XCUIDevice.shared.system.open(try command.url())
         let ready = app.windows["uitest.ready.\(command.nonce)"].firstMatch
@@ -31,6 +42,7 @@ import XCTest
             )
             throw NSError(domain: "UIReseed", code: 1)
         }
+        readyIdentifiers[ObjectIdentifier(app)] = "uitest.ready.\(command.nonce)"
         UITestTiming.record("reset-return", environment: app.launchEnvironment, details: "nonce=\(command.nonce)")
     }
 }

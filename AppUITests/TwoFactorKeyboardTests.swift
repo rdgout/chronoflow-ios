@@ -25,9 +25,9 @@ nonisolated final class TwoFactorKeyboardTests: ScreenTestCase {
     @MainActor private func check(language: String, recovery: Bool, server: Bool) throws {
         let app = launchTwoFactorApp(language: language, xxLarge: true, server: server)
         try openMockTwoFactor(app)
-        let scroll = AuthUIFlow.scroll(in: app)
+        let scroll = AuthUIFlow.scroll(in: app, identifier: "two-factor.scroll")
         if recovery {
-            revealTwoFactor(app.buttons["two-factor.toggle"], in: scroll)
+            revealTwoFactor(app.buttons["two-factor.toggle"], app: app, in: scroll)
             app.buttons["two-factor.toggle"].tap()
         }
         let field = app.textFields[recovery ? "two-factor.recovery_code" : "two-factor.code"]
@@ -37,7 +37,7 @@ nonisolated final class TwoFactorKeyboardTests: ScreenTestCase {
         app.buttons["two-factor.submit"].tap()
         if server {
             XCTAssertTrue(app.staticTexts["auth.banner"].waitUntil(.exists, timeout: 5))
-            AuthUIFlow.assertBannerVisible(in: app)
+            AuthUIFlow.assertBannerVisible(in: app, scrollIdentifier: "two-factor.scroll")
             AuthUIFlow.reveal(field, in: app)
             field.tap()
         } else {

@@ -68,6 +68,7 @@ Write every new or changed test this way (user, 2026-11-10). Wizard tests that i
 | `make test` / `make snapshots` | Run test or hosted profile-snapshot subsets on 17e / iOS 27.2 |
 | `make duo` | Opt-in runtime smoke when Duo-specific behaviour changes; resolve by type and iPhone19-4 runtime |
 | `make matrix` | On request only: full seven-simulator runtime matrix, LPT scheduling and automatic concurrency (1–7 override) |
+| `make sim-clean` | Opt-in: shut down and erase every simulator when they grow large (iOS never prunes the wallpaper snapshot cache under test); refuses while a test run is active |
 | `make targeted DEVICES="se duo" ONLY="AppTests/DeviceGeometrySmokeTests"` | Build once and run selected suites on these aliases; REUSE_BUILD=1 skips the build after an unchanged build-for-testing |
 | `make perf` | Run the Release `Perf` scheme (launch metric scaffold until Phase 7) |
 | `make tokens` / `make fonts` / `make assets` | Regenerate the committed tokens, static fonts and generated assets (including app icons) |
@@ -85,6 +86,7 @@ Simulators: Xcode 27.2 with iOS 27.2 runtimes (iPhone SE 3rd gen, 17e, 17, Air, 
 
 ## Traps
 
+- Never erase or delete simulators while a test run or a parallel-testing clone is booted: it invalidates the runtime's shared dyld cache, the running app crashes and relaunches fail with "no dyld cache". Use `make sim-clean`, which refuses in that case and rebuilds the cache afterwards.
 - `xcode-select` points at full Xcode (`/Applications/Xcode.app`); keep it that way.
 - Headless simulators can report an off-screen keyboard as existing; after boot, the runner sets each device's `com.apple.keyboard.preferences AutomaticMinimizationEnabled` to false via `simctl spawn`, never host-global Simulator.app preferences.
 - The launch screen is cached by iOS. After changing it: Clean Build Folder, delete the app, restart the Simulator.

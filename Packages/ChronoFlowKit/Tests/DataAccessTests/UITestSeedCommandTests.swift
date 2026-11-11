@@ -44,6 +44,25 @@
             }
         }
 
+        @Test func diagnosticRootsRequireColdLaunchButPlanRoutesCanReseed() {
+            let environment = ["CF_UI_TEST_PROFILE": "screen", "CF_AUTH_TEST_ID": UUID().uuidString]
+            let command = UITestSeedCommand(authorization: "", environment: environment, arguments: [])
+            for arguments in [["-cf.trip-page", "S1"], ["-cf.session", "out"], ["-cf.timeline-fixtures"]] {
+                #expect(command.changedLaunchSettings(arguments: arguments, environment: environment) == [arguments[0]])
+                let diagnostic = UITestSeedCommand(authorization: "", environment: environment, arguments: arguments)
+                #expect(diagnostic.changedLaunchSettings(arguments: [], environment: environment) == [arguments[0]])
+                #expect(diagnostic.changedLaunchSettings(arguments: arguments, environment: environment).isEmpty)
+            }
+            var plan = environment
+            plan["CF_PLAN_TEST_ROUTE"] = "trip:demo:list"
+            plan["CF_PLAN_TEST_SHEET"] = "step:demo"
+            plan["CF_PLAN_TEST_BLOCK"] = "demo"
+            plan["CF_PLAN_TEST_POSITION"] = "summary"
+            plan["CF_REFRESH_TEST_EMPTY_TRIPS"] = "1"
+            plan["CF_REFRESH_TEST_COUNTER"] = "1"
+            #expect(command.changedLaunchSettings(arguments: [], environment: plan).isEmpty)
+        }
+
         @Test func rejectionReasonsSeparateDeliveryFromAuthorizationAndSeedValidation() throws {
             let id = UUID().uuidString
             let environment = ["CF_AUTH_TEST_ID": UUID().uuidString, "CF_UI_TEST_PROFILE": "screen"]

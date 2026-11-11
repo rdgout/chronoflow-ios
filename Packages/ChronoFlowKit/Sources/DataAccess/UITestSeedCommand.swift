@@ -33,7 +33,7 @@
             let keys = Set((arguments + processArguments).filter { $0.hasPrefix("-Apple") || $0.hasPrefix("-UI") })
                 .union([
                     "-cf.settings.language", "-cf.settings.theme", "-cf.reduceMotion", "-cf.mode", "-cf.freezeAt",
-                    "-cf.readyAt", "-cf.mainThreadStall",
+                    "-cf.readyAt", "-cf.mainThreadStall", "-cf.trip-page", "-cf.session", "-cf.timeline-fixtures",
                 ])
             let changedArguments = keys.filter { values($0, in: arguments) != values($0, in: processArguments) }
             let environmentKeys = Set(environment.keys).union(processEnvironment.keys).filter {

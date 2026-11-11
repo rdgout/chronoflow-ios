@@ -7,6 +7,9 @@
     public struct StepSheet: View {
         @Environment(\.locale) private var locale
         @Environment(\.dismiss) private var dismiss
+        #if DEBUG
+            @Environment(\.planUITestOptions) private var uiTestOptions
+        #endif
         @ScaledMetric(relativeTo: .body) private var titleLineHeight =
             Typography.screenCardTitle.lineHeight ?? Typography.screenCardTitle.size
         private enum ActionFocus: Hashable { case done, undo }
@@ -74,7 +77,7 @@
             .tint(ColorToken.primary.color).controlSize(.large)
             .font(Typography.screenBodyLg.font).foregroundStyle(ColorToken.cardForeground.color)
             .background(ColorToken.card.color).accessibilityIdentifier("step.sheet")
-            .presentationDragIndicator(.visible).presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible).presentationDetents(detents)
             .onChange(of: markStatus) { _, status in
                 guard detail?.plan.blocks.contains(where: { $0.id == blockID }) == true else { return }
                 AccessibilityNotification.Announcement(
@@ -82,6 +85,13 @@
                 ).post()
                 actionFocus = status == nil ? .done : .undo
             }
+        }
+
+        private var detents: Set<PresentationDetent> {
+            #if DEBUG
+                if uiTestOptions.largeStepSheet { return [.large] }
+            #endif
+            return [.medium, .large]
         }
 
         @ViewBuilder private func content(_ detail: TripDetail, _ block: BlockView) -> some View {

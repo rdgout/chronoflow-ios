@@ -10,6 +10,9 @@ extension View {
 private struct PlanRefreshFeedback: ViewModifier {
     let model: RefreshFeedbackModel
     @Environment(\.locale) private var locale
+    #if DEBUG
+        @Environment(\.planUITestOptions) private var uiTestOptions
+    #endif
 
     private var text: String {
         model.feedback.map { $0.text(language: locale.language.languageCode?.identifier == "nl" ? .nl : .en) }
@@ -60,7 +63,7 @@ private struct PlanRefreshFeedback: ViewModifier {
 
     @ViewBuilder private func debugContent(_ content: Content) -> some View {
         #if DEBUG
-            if ProcessInfo.processInfo.environment["CF_REFRESH_TEST_COUNTER"] == "1" {
+            if uiTestOptions.refreshCounter {
                 content.overlay(alignment: .bottomLeading) {
                     Text(verbatim: String(model.debugRefreshCount))
                         .font(.caption2).opacity(0.01).allowsHitTesting(false)

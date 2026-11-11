@@ -50,11 +50,18 @@ struct AppTabs: View {
     var body: some View {
         #if DEBUG
             tabs.planPageSafeArea()
-                .onChange(of: home?.formatter != nil) { _, ready in
-                    if ready, UITestRuntime.environment["CF_PLAN_TEST_SHEET"] == "legend",
+                .environment(\.planUITestOptions, planUITestOptions)
+                .task(id: home?.selected?.detail != nil && home?.formatter != nil) {
+                    guard home?.formatter != nil,
                         (UIApplication.shared.delegate as? AppDelegate)?.authServices?.authUITestEnabled == true
+                    else { return }
+                    let environment = UITestRuntime.environment
+                    if environment["CF_PLAN_TEST_SHEET"] == "legend" { showingLegend = true }
+                    if let sheet = environment["CF_PLAN_TEST_SHEET"], sheet.hasPrefix("step:"),
+                        let home, let detail = home.selected?.detail,
+                        detail.plan.blocks.contains(where: { $0.id == String(sheet.dropFirst(5)) })
                     {
-                        showingLegend = true
+                        step = StepSelection(tripID: detail.trip.id, blockID: String(sheet.dropFirst(5)))
                     }
                 }
                 .onChange(of: home?.formatter != nil) { _, ready in
@@ -73,6 +80,20 @@ struct AppTabs: View {
             tabs.planPageSafeArea()
         #endif
     }
+
+    #if DEBUG
+        private var planUITestOptions: PlanUITestOptions {
+            guard (UIApplication.shared.delegate as? AppDelegate)?.authServices?.authUITestEnabled == true else {
+                return PlanUITestOptions()
+            }
+            let environment = UITestRuntime.environment
+            return PlanUITestOptions(
+                largeStepSheet: environment["CF_PLAN_TEST_SHEET"]?.hasPrefix("step:") == true
+                    || environment["CF_PLAN_TEST_BLOCK"] != nil,
+                startAtSummary: environment["CF_PLAN_TEST_POSITION"] == "summary",
+                refreshCounter: environment["CF_REFRESH_TEST_COUNTER"] == "1")
+        }
+    #endif
 
     @ViewBuilder private var tabs: some View {
         if #available(iOS 26, *) {
@@ -231,6 +252,23 @@ struct AppTabs: View {
                         settingsPath.append(route)
                     default:
                         if let destination = SettingsDestination(rawValue: route) { settingsPath.append(destination) }
+                    }
+                }
+            #endif
+            #if DEBUG
+                if (UIApplication.shared.delegate as? AppDelegate)?.authServices?.authUITestEnabled == true,
+                    let seed = UITestRuntime.environment["CF_PLAN_TEST_ROUTE"]
+                {
+                    if seed == "trips" {
+                        selection = .trips
+                    } else if seed.hasPrefix("trip:") {
+                        let parts = seed.split(separator: ":")
+                        if parts.count >= 2 {
+                            path = [
+                                TripPageRoute(
+                                    tripID: String(parts[1]), blockID: UITestRuntime.environment["CF_PLAN_TEST_BLOCK"])
+                            ]
+                        }
                     }
                 }
             #endif

@@ -19,11 +19,8 @@ nonisolated struct AppServices: Sendable {
         private let authTest: AuthUITestConfiguration?
         private let authTestSeed: MockServerState?
         private let timelineSeed: MockServerState?
-        private let refreshScenario: RefreshUITestScenario?
         var authUITestEnabled: Bool { authTest != nil }
         var fastUITestLaunch: Bool { authTest?.fastLaunch == true }
-
-        func prepareRefreshUITest() async { await refreshScenario?.arm() }
     #endif
 
     func sessionCredentials() -> KeychainSessionStore {
@@ -64,7 +61,6 @@ nonisolated struct AppServices: Sendable {
                     seed: authTestSeed,
                     offline: authTest.offline,
                     mutationsOffline: authTest.settingsPending || authTest.walkthroughPending || authTest.termsPending,
-                    remoteTripUpdate: { await refreshScenario?.consume() ?? false },
                     delay: mockDelay,
                     // MockDataSource clamps ordinary latency to 300–800 ms; UI fixtures use their exact opt-in delay.
                     sleep: { _ in
@@ -121,7 +117,6 @@ nonisolated struct AppServices: Sendable {
                 try factory.namespace == .mock && arguments.contains("-cf.timeline-fixtures")
                 ? MockAppSeed.make(now: Date(), walkthroughSeen: true, includeTimelinePerformanceTrips: true) : nil
             authTest = requestedAuthTest
-            refreshScenario = requestedAuthTest?.refreshUpdatesTrip == true ? RefreshUITestScenario() : nil
             authTestSeed = try authTest.map {
                 var seed = try MockAppSeed.make(
                     now: Date(), unverified: $0.unverified, walkthroughSeen: $0.walkthroughSeen,

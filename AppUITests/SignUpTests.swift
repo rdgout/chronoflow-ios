@@ -27,7 +27,7 @@ nonisolated final class SignUpTests: ScreenTestCase {
     }
 
     @MainActor func testRegistrationToggleConsentAndUnverifiedGate() {
-        let app = launchForgotApp()
+        let app = AuthUIFlow.launchScreen("sign-up")
         openSignUp(app)
         fillSignUp(app, email: "new@example.com", submit: false)
         let toggle = app.switches["sign-up.visibility"]
@@ -61,22 +61,7 @@ nonisolated final class SignUpTests: ScreenTestCase {
 }
 
 @MainActor func openSignUp(_ app: XCUIApplication) {
-    if app.launchEnvironment["CF_UI_TEST_PROFILE"] == "screen",
-        app.launchEnvironment["CF_AUTH_TEST_AUDIT_SCREEN"] == "sign-up"
-    {
-        XCTAssertTrue(
-            UIWait.until(timeout: 12) {
-                app.textFields["sign-up.name"].exists || app.textFields["sign-in.email"].exists
-                    || app.buttons["welcome.signIn"].exists
-            })
-        if app.textFields["sign-up.name"].exists { return }
-    }
-    AuthUIFlow.openSignIn(app)
-    AuthUIFlow.reveal(app.buttons["sign-in.signup"], in: app)
-    app.buttons["sign-in.signup"].tap()
-    XCTAssertTrue(
-        app.textFields["sign-up.name"].waitUntil(.exists, timeout: 4),
-        "Expected sign-up.name after opening Create account")
+    AuthUIFlow.requireSeededScreen("sign-up", in: app)
 }
 
 @MainActor func fillSignUp(

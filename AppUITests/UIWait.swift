@@ -44,12 +44,12 @@ import XCTest
             NSError(domain: "UIWait", code: 1, userInfo: [NSLocalizedDescriptionKey: message])
         }
 
-        static func stableFrames(_ elements: [XCUIElement], timeout: TimeInterval = 60) throws -> [CGRect] {
+        static func stableFrames(_ elements: [XCUIElement], timeout: TimeInterval = 5) throws -> [CGRect] {
             try waitForFrames(elements, timeout: timeout, isReady: { _ in true }, message: "UI frames did not settle")
         }
 
         static func keyboardFrames(
-            in app: XCUIApplication, including elements: [XCUIElement], timeout: TimeInterval = 10
+            in app: XCUIApplication, including elements: [XCUIElement], timeout: TimeInterval = 5
         ) throws -> [CGRect] {
             try waitForFrames(
                 [app.windows.firstMatch, app.keyboards.firstMatch] + elements, timeout: timeout,
