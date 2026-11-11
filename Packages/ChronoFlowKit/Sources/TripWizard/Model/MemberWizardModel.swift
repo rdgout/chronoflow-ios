@@ -2,24 +2,48 @@ import AppCore
 import Foundation
 import Observation
 
+public protocol MemberWizardGeneration: Sendable {
+    func review(instance: String, input: ApiTripReviewInput) async throws -> TripGenerationReviewResult
+    func cancelReviews(instance: String) async
+    func cancel() async
+}
+
+extension TripGenerationService: MemberWizardGeneration {
+    public func review(instance: String, input: ApiTripReviewInput) async throws -> TripGenerationReviewResult {
+        try await review(instance: instance, input: input, edit: nil)
+    }
+}
+
 @MainActor @Observable
 public final class MemberWizardModel {
-    public private(set) var draft: MemberWizardDraft
+    public internal(set) var draft: MemberWizardDraft
     public private(set) var closed = false
     public private(set) var persistenceFailed = false
     public let search: AirportSearchService
-    private let store: MemberWizardStore
-    private let now: @Sendable () -> Date
+    public internal(set) var checking = WizardCheckingProgress()
+    public internal(set) var retrySeconds = 0
+    public internal(set) var choicePending = false
+    let generation: (any MemberWizardGeneration)?
+    let checkingClock: WizardCheckingClock
+    @ObservationIgnored var checkTask: Task<Void, Never>?
+    @ObservationIgnored var choiceTask: Task<Void, Never>?
+    @ObservationIgnored var checkID = UUID()
+    @ObservationIgnored var checkInstance: String?
+    let store: MemberWizardStore
+    let now: @Sendable () -> Date
     @ObservationIgnored private var pending: Task<Void, Never>?
 
     public init(
         draft: MemberWizardDraft, store: MemberWizardStore, search: AirportSearchService,
-        now: @escaping @Sendable () -> Date = { Date() }
+        now: @escaping @Sendable () -> Date = { Date() },
+        generation: (any MemberWizardGeneration)? = nil, checkingClock: WizardCheckingClock = .continuous
     ) {
         self.draft = draft
         self.store = store
         self.search = search
         self.now = now
+        self.generation = generation
+        self.checkingClock = checkingClock
     }
 
     public var whereComplete: Bool {
@@ -36,6 +60,14 @@ public final class MemberWizardModel {
 
     public func go(_ step: MemberWizardStep) {
         guard !closed, !persistenceFailed else { return }
+        if draft.state.step == .checking, step != .checking { cancelCheck() }
+        choiceTask?.cancel()
+        choicePending = false
+        if [.checking, .question, .excluded, .continuation].contains(step) {
+            draft.state.progressFloor = progress
+        } else {
+            draft.state.progressFloor = nil
+        }
         draft.state.step = step
         persist()
     }
@@ -118,20 +150,14 @@ public final class MemberWizardModel {
         return draft.fieldErrors.isEmpty
     }
 
-    #if DEBUG
-        public func previewCheck() -> Bool {
-            draft.fieldErrors = WizardOutboundRules.errors(
-                form: draft.form, airports: draft.airports, now: now(), checkPast: true)
-            persist()
-            return draft.fieldErrors.isEmpty
-        }
-    #endif
-
     public func flush() async { await pending?.value }
 
     public func discard() async throws {
         guard !closed else { return }
         closed = true
+        cancelCheck()
+        choiceTask?.cancel()
+        await generation?.cancel()
         await flush()
         do { try await store.discard(instance: draft.state.instance) } catch {
             closed = false
@@ -139,13 +165,13 @@ public final class MemberWizardModel {
         }
     }
 
-    private func changed() {
+    func changed() {
         draft.state.entered = true
         draft.fieldErrors = [:]
         persist()
     }
 
-    private func persist() {
+    func persist() {
         draft.state.revision += 1
         let value = draft
         let previous = pending

@@ -2,7 +2,9 @@ import AppCore
 import Foundation
 import LocalStore
 
-public enum MemberWizardStep: String, Codable, Sendable { case whereTo, outbound }
+public enum MemberWizardStep: String, Codable, Sendable {
+    case whereTo, outbound, returnChoice, returnFlight, sleep, checking, question, excluded, continuation
+}
 
 public struct WizardAirportSheet: Codable, Sendable, Equatable, Identifiable {
     public enum Side: String, Codable, Sendable { case from, to, home, stop }
@@ -27,6 +29,14 @@ public struct MemberWizardState: Codable, Sendable, Equatable {
     public var profile = JSONObject()
     public var airports: [String: ApiAirportSuggestion] = [:]
     public var sheet: WizardAirportSheet?
+    public var lastInputStep: MemberWizardStep?
+    public var progressFloor: Double?
+    public var review: ApiTripReview?
+    public var questions: [ApiReviewPrompt]?
+    public var questionIndex: Int?
+    public var checkingAnswers: Bool?
+    public var sleepCompleted: Bool?
+    public var savedProfile: JSONObject?
     public var savedTripId: String?
     public init() {}
 }
@@ -104,8 +114,17 @@ public actor MemberWizardStore {
             draft.state.fromLastTrip = true
             draft.state.firstTrip = false
         }
-        let sleep = try await settings.settings().first { $0.section == "sleepAnswered" }
+        let values = try await settings.settings()
+        draft.state.savedProfile = try values.first { $0.section == "bodyClock" }?.value.decode(JSONObject.self)
+        let sleep = values.first { $0.section == "sleepAnswered" }
         draft.state.sleepNeeded = (try? sleep?.value.decode(Bool.self)) != true
+        if draft.state.sleepNeeded, let body = draft.state.savedProfile {
+            for (field, key) in [
+                ("habitual_bed", "habitualBed"), ("habitual_wake", "habitualWake"), ("chronotype", "chronotype"),
+            ] {
+                if let value = body[key], value != .null { draft.state.profile[field] = value }
+            }
+        }
         try await drafts.createRecovery(record(draft), permit: permit)
         return draft
     }

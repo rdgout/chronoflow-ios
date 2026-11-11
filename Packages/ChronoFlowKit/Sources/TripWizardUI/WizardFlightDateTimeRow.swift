@@ -24,21 +24,9 @@
         private func t(_ key: String) -> String { WizardStrings.text(key, locale: locale) }
 
         var body: some View {
-            VStack(alignment: .leading, spacing: PlanUITokens.space2) {
-                ViewThatFits(in: .horizontal) {
-                    HStack(spacing: PlanUITokens.space2) {
-                        caption
-                        Spacer(minLength: 0)
-                        controls
-                    }
-                    VStack(alignment: .leading, spacing: PlanUITokens.space2) {
-                        caption
-                        controls
-                    }
-                }
-                if let error = model.draft.fieldErrors[key] {
-                    errorLine(t(error.key), identifier: identifier + ".error")
-                }
+            WizardFlightRowLayout(spacing: PlanUITokens.space2, fillsWidth: true) {
+                caption
+                controls
             }
             .padding(.horizontal, PlanUITokens.space4).padding(.vertical, PlanUITokens.space2)
             .frame(minHeight: PlanUITokens.wizardFlightRowHeight)
@@ -75,28 +63,32 @@
         }
 
         private var controls: some View {
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: PlanUITokens.space2) {
-                    dateControl
-                    timeControl
-                }
-                VStack(alignment: .leading, spacing: PlanUITokens.space2) {
-                    dateControl
-                    timeControl
-                }
-            }.buttonStyle(.bordered).tint(ColorToken.primary.color)
+            WizardFlightRowLayout(spacing: PlanUITokens.space2) {
+                dateControl
+                timeControl
+            }.buttonStyle(.plain)
                 .environment(\.calendar, WizardDateTime.calendar).environment(
                     \.timeZone, WizardDateTime.calendar.timeZone
                 )
-                .overlay {
-                    if model.draft.fieldErrors[key] != nil {
-                        RoundedRectangle(cornerRadius: PlanUITokens.radiusSm).strokeBorder(
-                            ColorToken.destructive.color, lineWidth: AuthTokens.focusWidth)
-                    }
-                }
         }
 
-        @ViewBuilder private var dateControl: some View {
+        private var dateControl: some View {
+            ZStack {
+                datePicker
+                    .foregroundStyle(ColorToken.foreground.color)
+                    .tint(ColorToken.foreground.color)
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: PlanUITokens.radiusSm).strokeBorder(
+                    ColorToken.destructive.color, lineWidth: AuthTokens.focusWidth
+                )
+                .opacity(model.draft.fieldErrors[key] == nil ? 0 : 1)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+            }
+        }
+
+        @ViewBuilder private var datePicker: some View {
             if let date = WizardDateTime.date(value) {
                 DatePicker(
                     t(arrival ? "Arrival date" : "Departure date"), selection: binding(date, dateOnly: true),
@@ -104,7 +96,7 @@
                 )
                 .labelsHidden().datePickerStyle(.compact).accessibilityIdentifier(identifier + ".date")
             } else {
-                Button(t("Date")) { component = .date }.accessibilityIdentifier(identifier + ".date")
+                placeholder("Date") { component = .date }.accessibilityIdentifier(identifier + ".date")
                     .accessibilityLabel(t(arrival ? "Arrival date" : "Departure date"))
             }
         }
@@ -117,8 +109,17 @@
                 )
                 .labelsHidden().datePickerStyle(.compact).accessibilityIdentifier(identifier + ".time")
             } else {
-                Button(t("Time")) { component = .time }.accessibilityIdentifier(identifier + ".time")
+                placeholder("Time") { component = .time }.accessibilityIdentifier(identifier + ".time")
                     .accessibilityLabel(t(arrival ? "Arrival time" : "Departure time"))
+            }
+        }
+
+        private func placeholder(_ key: String, action: @escaping () -> Void) -> some View {
+            Button(action: action) {
+                Text(t(key)).font(Typography.wizardRow.font).monospacedDigit()
+                    .foregroundStyle(ColorToken.mutedForeground.color)
+                    .padding(.horizontal, PlanUITokens.space3).padding(.vertical, PlanUITokens.wizardControlGap)
+                    .background(Color.wizardPickerFill, in: RoundedRectangle(cornerRadius: PlanUITokens.radiusSm))
             }
         }
 

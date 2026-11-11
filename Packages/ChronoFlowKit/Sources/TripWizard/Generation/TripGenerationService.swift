@@ -76,6 +76,7 @@ public actor TripGenerationService {
     private let effects: TripGenerationEffects
     private let sleep: APIClient.Sleep
     private var reviews: [ReviewKey: Task<TripGenerationReviewResult, any Error>] = [:]
+    private var reviewIDs: [ReviewKey: UUID] = [:]
     private var saves: [SaveKey: Task<String, any Error>] = [:]
     private var cancelled = false
     private var savedTrips: [SaveKey: String] = [:]
@@ -117,7 +118,7 @@ public actor TripGenerationService {
                 group.addTask {
                     try await sleep(30)
                     try Task.checkCancellation()
-                    throw DataFailure.offline
+                    throw DataFailure.server(status: nil)
                 }
                 defer { group.cancelAll() }
                 return try await group.next()!
@@ -132,8 +133,15 @@ public actor TripGenerationService {
             }
             return result
         }
+        let reviewID = UUID()
         reviews[key] = task
-        defer { reviews[key] = nil }
+        reviewIDs[key] = reviewID
+        defer {
+            if reviewIDs[key] == reviewID {
+                reviews[key] = nil
+                reviewIDs[key] = nil
+            }
+        }
         let result = try await task.value
         try Task.checkCancellation()
         return result
@@ -198,6 +206,14 @@ public actor TripGenerationService {
                     outcome: .reReviewNeeded(failure == .reviewExpired ? .reviewExpired : .notEnoughCredits))
             default: return TripGenerationSaveResult(state: state, outcome: .failed(failure))
             }
+        }
+    }
+
+    public func cancelReviews(instance: String) {
+        for (key, task) in reviews where key.instance == instance {
+            task.cancel()
+            reviews[key] = nil
+            reviewIDs[key] = nil
         }
     }
 

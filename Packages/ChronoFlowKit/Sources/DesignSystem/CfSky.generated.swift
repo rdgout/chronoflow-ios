@@ -61,6 +61,8 @@ nonisolated public enum ColorToken: String, CaseIterable, Sendable {
     case settingsWarningBackground = "settingsWarningBackground"
     case settingsWarningBorder = "settingsWarningBorder"
     case settingsQrBackground = "settingsQrBackground"
+    case wizardNoticeBackground = "wizardNoticeBackground"
+    case wizardNoticeBorder = "wizardNoticeBorder"
     public func components(for appearance: TokenAppearance) -> TokenRGBA {
         switch (self, appearance) {
         case (.skyTop, .light):
@@ -245,6 +247,14 @@ nonisolated public enum ColorToken: String, CaseIterable, Sendable {
             TokenRGBA(red: 1.0000000000, green: 1.0000000000, blue: 1.0000000000, alpha: 1.0000000000)
         case (.settingsQrBackground, .dark):
             TokenRGBA(red: 1.0000000000, green: 1.0000000000, blue: 1.0000000000, alpha: 1.0000000000)
+        case (.wizardNoticeBackground, .light):
+            TokenRGBA(red: 0.9770795245, green: 0.9516455820, blue: 0.9357434095, alpha: 1.0000000000)
+        case (.wizardNoticeBackground, .dark):
+            TokenRGBA(red: 0.1428964315, green: 0.1429848056, blue: 0.1964233489, alpha: 1.0000000000)
+        case (.wizardNoticeBorder, .light):
+            TokenRGBA(red: 0.8542512390, green: 0.5599361895, blue: 0.3257756868, alpha: 0.4000000000)
+        case (.wizardNoticeBorder, .dark):
+            TokenRGBA(red: 0.9082625891, green: 0.6882337800, blue: 0.4860896207, alpha: 0.4000000000)
         }
     }
 }

@@ -113,7 +113,8 @@ public actor AccountDatabase {
     }
 
     public func write<Value: Sendable>(
-        epoch: SyncEpoch, _ updates: @Sendable @escaping (Database) throws -> Value
+        epoch: SyncEpoch, permit: SessionMutationPermit? = nil,
+        _ updates: @Sendable @escaping (Database) throws -> Value
     ) async throws -> Value {
         try epoch.check()
         guard accountID == epoch.accountID else { throw StoreFailure.invalidAccountID }
@@ -121,12 +122,16 @@ public actor AccountDatabase {
         return try await withTaskCancellationHandler {
             try await pool.writeWithoutTransaction { db in
                 try epoch.whileValid {
-                    var result: Value?
-                    try db.inTransaction {
-                        result = try updates(db)
-                        return .commit
+                    func transaction() throws -> Value {
+                        var result: Value?
+                        try db.inTransaction {
+                            result = try updates(db)
+                            return .commit
+                        }
+                        return result!
                     }
-                    return result!
+                    if let permit { return try permit.whileValid { try transaction() } }
+                    return try transaction()
                 }
             }
         } onCancel: {

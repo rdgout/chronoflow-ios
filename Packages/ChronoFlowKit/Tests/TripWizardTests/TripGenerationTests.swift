@@ -53,7 +53,7 @@ import TripWizard
                 #expect(seconds == 30)
                 await source.waitForReviews(1)
             })
-        await #expect(throws: DataFailure.offline) {
+        await #expect(throws: DataFailure.server(status: nil)) {
             try await service.review(instance: "one", input: ApiTripReviewInput(input: generationInput()))
         }
         #expect(await source.count("review") == 1)

@@ -5,13 +5,14 @@ import TripWizard
 
 extension TripGenerationEffects {
     public static func storing(
-        database: AccountDatabase, source: any DataSource, epoch: SyncEpoch,
+        database: AccountDatabase, source: any DataSource, epoch: SyncEpoch, permit: SessionMutationPermit? = nil,
         requestSync: @escaping @Sendable () async -> Void, now: @escaping @Sendable () -> Date = { Date() }
     ) -> Self {
         Self(
             mergeProfile: { patch in
+                let epoch = epoch.child()
                 try await database.validate(epoch: epoch)
-                try await database.write(epoch: epoch) { db in
+                try await database.write(epoch: epoch, permit: permit) { db in
                     var body =
                         try SettingsRecord.fetchOne(db, key: "bodyClock")?.value.decode(JSONObject.self) ?? JSONObject()
                     func merge(_ patch: JSONObject) {
@@ -39,14 +40,17 @@ extension TripGenerationEffects {
                 }
             },
             pullCreatedTrip: { tripID in
+                let epoch = epoch.child()
                 try await database.validate(epoch: epoch)
                 let trips = try await source.fetchTrips()
                 try epoch.check()
                 let at = now().ISO8601Format()
-                try await database.write(epoch: epoch) { db in try TripRepository.applyCards(trips, at: at, db: db) }
+                try await database.write(epoch: epoch, permit: permit) { db in
+                    try TripRepository.applyCards(trips, at: at, db: db)
+                }
                 let detail = try await source.fetchTripDetail(id: tripID)
                 try epoch.check()
-                try await database.write(epoch: epoch) { db in
+                try await database.write(epoch: epoch, permit: permit) { db in
                     try TripRepository.applyDetail(detail, tripID: tripID, at: at, db: db)
                 }
             },

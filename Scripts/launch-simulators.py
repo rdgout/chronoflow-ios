@@ -46,6 +46,7 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
                            'DeviceIdentityTests',
                            'SmokeTests')},
  'AppTests': {'logic': ('RefreshControlTests',
+                        'WizardFlightPickerIdentityTests',
                         'TripsLayoutTests',
                         'StepSheetLayoutTests',
                         'TodayControlTests',
@@ -107,7 +108,8 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
                            'TodayRowSnapshotTests'),
               'reference': ('LaunchFrameParityTests', 'LaunchStoryboardTests'),
               'release': ('ReleaseReadinessTests',)},
- 'AppUITests': {'logic': ('TermsTests',
+ 'AppUITests': {'capture': ('WizardBoardCaptureTests',),
+                'logic': ('TermsTests',
                           'WalkthroughTests',
                           'SettingsTests',
                           'TripsTests',
@@ -132,7 +134,8 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
                           'TripPageStepTests',
                           'TripWizardTests',
                           'SettingsPagesTests',
-                          'RemindersTests'),
+                          'RemindersTests',
+                          'TripWizardReviewTests'),
                 'matrix': ('SignInKeyboardTests',
                            'TwoFactorKeyboardTests',
                            'ForgotPasswordKeyboardTests',
@@ -257,12 +260,16 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
  'TripWizardTests': {'host': ('TripGenerationTests',
                               'TripGenerationRecoveryTests',
                               'WizardDateTimeTests',
+                              'WizardFlightRowLayoutTests',
                               'WizardValidationTests',
                               'WizardFormTests',
                               'WizardRecoveryTests',
                               'WizardSearchTests',
                               'WizardPresentationTests',
-                              'WizardCopyTests')},
+                              'WizardCopyTests',
+                              'WizardCheckingTests',
+                              'WizardReviewFlowTests',
+                              'WizardGenerationSessionTests')},
  'WelcomeTests': {'logic': ('SmokeTests', 'WelcomeGeometryTests')}}
 SNAPSHOTS = ("AppTests/LaunchSnapshotTests", "AppTests/WelcomeSnapshotTests", "AppTests/WelcomeSnapshotGuardTests", "RenderTests/WelcomeRenderingTests", "AppTests/AuthSnapshotTests", "AppTests/TwoFactorSnapshotTests", "AppTests/ForgotPasswordSnapshotTests", "AppTests/ResetPasswordSnapshotTests", "AppTests/SignUpSnapshotTests", "AppTests/VerifyEmailSnapshotTests", "AppTests/AuthSnapshotGuardTests", "AppTests/StepSheetSnapshotTests", "AppTests/TodaySnapshotTests", "AppTests/TodayRowSnapshotTests", "AppTests/TripsSnapshotTests", "AppTests/TripPageSnapshotTests")
 XCODEBUILD_COMMON = ["xcodebuild", "-project", "ChronoFlow.xcodeproj", "-derivedDataPath", "build/DerivedData",
@@ -519,10 +526,12 @@ class Result:
 
 def environment(record=False, intro_order=None):
     result = os.environ.copy()
-    for key in ("SNAPSHOT_RECORD", "TEST_RUNNER_SNAPSHOT_RECORD", "CF_INTRO_ORDER", "TEST_RUNNER_CF_INTRO_ORDER", "TEST_RUNNER_AUTH_AUDIT_FULL"):
+    for key in ("SNAPSHOT_RECORD", "TEST_RUNNER_SNAPSHOT_RECORD", "CF_INTRO_ORDER", "TEST_RUNNER_CF_INTRO_ORDER", "TEST_RUNNER_AUTH_AUDIT_FULL", "TEST_RUNNER_WIZARD_BOARD_CAPTURE"):
         result.pop(key, None)
     if os.environ.get("AUTH_AUDIT_FULL") == "1":
         result["TEST_RUNNER_AUTH_AUDIT_FULL"] = "1"
+    if os.environ.get("WIZARD_BOARD_CAPTURE") == "1":
+        result["TEST_RUNNER_WIZARD_BOARD_CAPTURE"] = "1"
     if record:
         result["TEST_RUNNER_SNAPSHOT_RECORD"] = "1"
     if intro_order:

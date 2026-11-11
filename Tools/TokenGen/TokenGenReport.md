@@ -52,6 +52,8 @@ Source: `_design/canvas/ds/chronoflow/tokens.json`. OKLCH → OKLab → linear D
 | settingsWarningBackground | #FBF2EE | 0.9770795245 0.9516455820 0.9357434095 | #242433 | 0.1428964315 0.1429848056 0.1964233489 |
 | settingsWarningBorder | #E78A45 α0.4 | 0.8542512390 0.5599361895 0.3257756868 | #F2AD73 α0.4 | 0.9082625891 0.6882337800 0.4860896207 |
 | settingsQrBackground | #FFFFFF | 1.0000000000 1.0000000000 1.0000000000 | #FFFFFF | 1.0000000000 1.0000000000 1.0000000000 |
+| wizardNoticeBackground | #FBF2EE | 0.9770795245 0.9516455820 0.9357434095 | #242433 | 0.1428964315 0.1429848056 0.1964233489 |
+| wizardNoticeBorder | #E78A45 α0.4 | 0.8542512390 0.5599361895 0.3257756868 | #F2AD73 α0.4 | 0.9082625891 0.6882337800 0.4860896207 |
 
 Light sky: 17 stops, including exact mid 0.55; encoded Display P3 channel interpolation checked at 1001 points to ±1/255.
 
