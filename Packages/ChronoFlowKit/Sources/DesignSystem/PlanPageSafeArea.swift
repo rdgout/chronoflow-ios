@@ -36,8 +36,9 @@ private struct PlanPageSafeArea: ViewModifier {
     func body(content: Content) -> some View {
         content.environment(\.planPageSafeBounds, bounds)
             .onGeometryChange(for: CGRect.self) {
-                PlanPageGeometry.horizontalBounds(
-                    $0.frame(in: .global), leading: $0.safeAreaInsets.leading, trailing: $0.safeAreaInsets.trailing)
+                // The frame already excludes the safe area. safeAreaInsets describe what lies outside it
+                // (on Duo they still report the tab rail column, which a page can never extend into).
+                PlanPageGeometry.horizontalBounds($0.frame(in: .global))
             } action: {
                 bounds = $0
             }

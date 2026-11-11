@@ -54,7 +54,8 @@
             let content = PlanMeasuredContent()
             let host = try AuthTestHost(
                 NavigationStack { screen }.capturePlanContent(in: content), size: fixture.size,
-                insets: fixture.insets, language: "nl", category: .extraExtraLarge, scale: fixture.scale)
+                insets: fixture.insets, language: "nl", category: .extraExtraLarge, scale: fixture.scale,
+                sideInsetsOutsideView: true)
             defer { host.close() }
             try await host.settleLayout { content.frames }
             try await assertPlanScrollFits(host, content: content, horizontalGutter: PlanUITokens.space4)
