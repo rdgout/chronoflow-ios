@@ -120,6 +120,7 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
                           'ForgotPasswordTests',
                           'ResetPasswordTests',
                           'SignUpTests',
+                          'AuthBannerVisibilityTests',
                           'VerifyEmailTests',
                           'AccountRecoveryTests',
                           'AuthSessionTests',
@@ -262,7 +263,7 @@ PARALLEL_TARGETS = {"AppTests", "AppUITests", "RenderTests"}
 RUNTIME_SMOKE = (
     "AppTests/DeviceGeometrySmokeTests", "AppTests/LaunchHandOffTests", "AppTests/WelcomeHandOverTests",
     "AppUITests/LaunchToWelcomeTests", "AppUITests/SignInKeyboardTests", "AppUITests/TwoFactorKeyboardTests",
-    "AppUITests/SignInTests", "AppUITests/TwoFactorTests", "AppUITests/ForgotPasswordTests", "AppUITests/ResetPasswordTests", "AppUITests/SignUpTests", "AppUITests/VerifyEmailTests", "AppUITests/AccountRecoveryTests", "AppUITests/ForgotPasswordKeyboardTests",
+    "AppUITests/AuthBannerVisibilityTests", "AppUITests/SignInTests", "AppUITests/TwoFactorTests", "AppUITests/ForgotPasswordTests", "AppUITests/ResetPasswordTests", "AppUITests/SignUpTests", "AppUITests/VerifyEmailTests", "AppUITests/AccountRecoveryTests", "AppUITests/ForgotPasswordKeyboardTests",
 )
 
 

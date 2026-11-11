@@ -18,7 +18,9 @@ nonisolated final class ForgotPasswordKeyboardTests: XCTestCase {
         try assertPair(field, app: app, context: "\(language), initial")
         AuthUIFlow.control("forgot.submit", in: app).tap()
         if failure != nil {
-            XCTAssertTrue(AuthUIFlow.control("auth.banner", in: app).waitForExistence(timeout: 5))
+            AuthUIFlow.assertBannerVisible(in: app)
+            AuthUIFlow.reveal(field, in: app)
+            field.tap()
         } else {
             let received = XCTNSPredicateExpectation(
                 predicate: NSPredicate { _, _ in

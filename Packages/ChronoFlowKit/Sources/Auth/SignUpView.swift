@@ -6,6 +6,7 @@
 
     public struct SignUpView: View {
         @Environment(\.locale) private var locale
+        @AccessibilityFocusState private var bannerFocused: Bool
         @Environment(\.openURL) private var openURL
         @FocusState private var focus: String?
         @State private var model: SignUpModel
@@ -33,11 +34,13 @@
             ) {
                 if let banner = model.form.banner {
                     AuthBanner(title: copy(banner.title(for: .signUp)), message: copy(banner.body(for: .signUp)))
+                        .id(AuthFeedbackTarget.banner).accessibilityFocused($bannerFocused)
                 }
                 AuthField(
                     copy("Name"), text: Binding(get: { model.name }, set: model.editName), error: error("name"),
                     identifier: "sign-up.name", contentType: .name, focus: $focus, submit: { focus = "sign-up.email" }
                 ).authMeasure(.name, report)
+                    .background { AuthKeyboardReveal(field: focusedFrame, submit: frames[.submit]) }
                 AuthField(
                     copy("Email"), text: Binding(get: { model.email }, set: model.editEmail), error: error("email"),
                     identifier: "sign-up.email", contentType: .emailAddress, keyboard: .emailAddress, focus: $focus,
@@ -88,25 +91,23 @@
                     .accessibilityIdentifier("sign-up.back")
             }
             .disabled(model.form.busy)
-            .background { AuthKeyboardReveal(field: focusedFrame, submit: frames[.submit]) }
             .onAppear { UIAccessibility.post(notification: .screenChanged, argument: nil) }
-            .onChange(of: model.form.busy) {
-                if model.form.busy {
-                    focus = nil
-                } else if automaticallyFocusesErrors, model.form.failure != nil || model.sessionFailure != nil {
-                    let field =
-                        ["name", "email", "password", "password_confirmation"].first { model.form.fields[$0] != nil }
-                        ?? "email"
-                    focus = "sign-up." + (field == "password_confirmation" ? "confirmation" : field)
-                }
-            }
             .onChange(of: model.form.announcementRevision) {
                 if let message = model.form.takeAnnouncement(locale: locale) { authAnnounce(message) }
             }
+            .authFailureFeedback(
+                form: model.form, focus: $focus, firstInvalidField: firstInvalidField, bannerFocus: $bannerFocused,
+                automaticallyFocusesErrors: automaticallyFocusesErrors
+            )
             .onDisappear {
                 request?.cancel()
                 request = nil
                 model.cancel()
+            }
+        }
+        private var firstInvalidField: String? {
+            ["name", "email", "password", "password_confirmation"].first { error($0) != nil }.map {
+                "sign-up." + ($0 == "password_confirmation" ? "confirmation" : $0)
             }
         }
         private var focusedFrame: CGRect? {

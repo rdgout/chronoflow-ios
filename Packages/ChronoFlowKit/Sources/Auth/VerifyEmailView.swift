@@ -5,6 +5,7 @@
 
     public struct VerifyEmailView: View {
         @Environment(\.locale) private var locale
+        @AccessibilityFocusState private var bannerFocused: Bool
         @Environment(\.openURL) private var openURL
         @Environment(\.scenePhase) private var scenePhase
         @State private var model: VerifyEmailModel
@@ -36,8 +37,10 @@
                 if let signOutError {
                     WelcomeText(signOutError, style: Typography.authBody, color: .destructive)
                         .accessibilityIdentifier("verify.sign-out-error")
+                        .id(AuthFeedbackTarget.banner).accessibilityFocused($bannerFocused)
                 } else if let banner = model.form.banner {
                     AuthBanner(title: copy(banner.title(for: .verify)), message: copy(banner.body(for: .verify)))
+                        .id(AuthFeedbackTarget.banner).accessibilityFocused($bannerFocused)
                 }
                 if failed {
                     AuthButton(
@@ -98,6 +101,7 @@
             .onChange(of: model.form.announcementRevision) {
                 if let message = model.form.takeAnnouncement(locale: locale) { authAnnounce(signOutError ?? message) }
             }
+            .authFailureFeedback(form: model.form, bannerFocus: $bannerFocused)
             .onDisappear {
                 request?.cancel()
                 request = nil

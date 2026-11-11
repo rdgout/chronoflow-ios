@@ -47,6 +47,9 @@ nonisolated final class ForgotPasswordTests: XCTestCase {
             XCTAssertEqual(field.value as? String, "retained@example.com")
             XCTAssertTrue(field.isEnabled)
             XCTAssertFalse(AuthUIFlow.control("forgot.notice", in: app).exists)
+            AuthUIFlow.assertBannerVisible(in: app)
+            AuthUIFlow.reveal(field, in: app)
+            field.tap()
             field.typeText("x")
             XCTAssertFalse(banner.exists)
         }
@@ -59,9 +62,7 @@ nonisolated final class ForgotPasswordTests: XCTestCase {
         let field = app.textFields["forgot.email"]
         field.tap()
         field.typeText("offline@example.com\n")
-        let finished = XCTNSPredicateExpectation(
-            predicate: NSPredicate { _, _ in field.isEnabled && app.keyboards.firstMatch.exists }, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [finished], timeout: 5), .completed)
+        AuthUIFlow.assertBannerVisible(in: app)
         XCTAssertEqual(field.value as? String, "offline@example.com")
         let banner = AuthUIFlow.control("auth.banner", in: app)
         XCTAssertTrue(banner.waitForExistence(timeout: 5))

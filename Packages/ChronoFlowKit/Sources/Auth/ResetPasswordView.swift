@@ -5,6 +5,7 @@
 
     public struct ResetPasswordView: View {
         @Environment(\.locale) private var locale
+        @AccessibilityFocusState private var bannerFocused: Bool
         @FocusState private var focus: String?
         @State private var model: ResetPasswordModel
         @State private var request: Task<Void, Never>?
@@ -46,7 +47,9 @@
                         } else {
                             if let banner = model.form.banner {
                                 AuthBanner(
-                                    title: copy(banner.title(for: .reset)), message: copy(banner.body(for: .reset)))
+                                    title: copy(banner.title(for: .reset)), message: copy(banner.body(for: .reset))
+                                )
+                                .id(AuthFeedbackTarget.banner).accessibilityFocused($bannerFocused)
                             }
                             AuthField(
                                 copy("New password"), text: Binding(get: { model.password }, set: model.editPassword),
@@ -56,6 +59,13 @@
                                 contentType: .newPassword, focus: $focus,
                                 submit: { focus = "reset.confirmation" }
                             ).authMeasure(.password, report)
+                                .background {
+                                    AuthKeyboardReveal(
+                                        field: focus == "reset.password"
+                                            ? frames[.password]
+                                            : focus == "reset.confirmation" ? frames[.confirmation] : nil,
+                                        submit: frames[.submit])
+                                }
                             AuthField(
                                 copy("Confirm new password"),
                                 text: Binding(get: { model.confirmation }, set: model.editConfirmation), secure: true,
@@ -72,25 +82,10 @@
                     } footer: {
                         EmptyView()
                     }
-                    .background {
-                        AuthKeyboardReveal(
-                            field: focus == "reset.password"
-                                ? frames[.password] : focus == "reset.confirmation" ? frames[.confirmation] : nil,
-                            submit: frames[.submit])
-                    }
                     .disabled(model.form.busy)
                 }
             }
             .onAppear { UIAccessibility.post(notification: .screenChanged, argument: nil) }
-            .onChange(of: model.form.busy) {
-                if model.form.busy {
-                    focus = nil
-                } else if automaticallyFocusesErrors, model.form.failure != nil {
-                    focus =
-                        model.form.fields["password_confirmation"] != nil && model.form.fields["password"] == nil
-                        ? "reset.confirmation" : "reset.password"
-                }
-            }
             .onChange(of: model.form.announcementRevision) {
                 if let message = model.form.takeAnnouncement(locale: locale) { authAnnounce(message) }
             }
@@ -99,6 +94,12 @@
                 UIAccessibility.post(notification: .screenChanged, argument: nil)
                 if model.state == .done { authAnnounce(copy("Password updated. Sign in with your new password.")) }
             }
+            .authFailureFeedback(
+                form: model.form, focus: $focus,
+                firstInvalidField: ["password", "password_confirmation"].first { model.form.fields[$0] != nil }.map {
+                    $0 == "password" ? "reset.password" : "reset.confirmation"
+                }, bannerFocus: $bannerFocused, automaticallyFocusesErrors: automaticallyFocusesErrors
+            )
             .onDisappear {
                 request?.cancel()
                 request = nil
