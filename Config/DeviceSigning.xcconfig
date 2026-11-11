@@ -1,0 +1,7 @@
+// Base.xcconfig is supplied by the project; including it here would override simulator team clearing.
+// xcconfig conditions cannot test team values; an empty team selects NO through this lookup.
+CHRONOFLOW_HAS_TEAM_ = NO
+CHRONOFLOW_HAS_TEAM = $(CHRONOFLOW_HAS_TEAM_$(DEVELOPMENT_TEAM):default=YES)
+CHRONOFLOW_DEVICE_ENTITLEMENTS_YES_YES = Config/Device.entitlements
+CODE_SIGN_ENTITLEMENTS =
+CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*] = $(CHRONOFLOW_DEVICE_ENTITLEMENTS_$(CHRONOFLOW_HAS_TEAM)_$(CHRONOFLOW_ASSOCIATED_DOMAINS))

@@ -1,1 +1,4 @@
 DEVELOPMENT_TEAM =
+// Personal Teams cannot use Associated Domains. Passkeys/universal links require a paid
+// Developer Program team whose ID matches the AASA before enabling this setting.
+// CHRONOFLOW_ASSOCIATED_DOMAINS = YES

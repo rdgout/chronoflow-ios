@@ -1,4 +1,2 @@
-#include "Base.xcconfig"
-CODE_SIGN_ENTITLEMENTS =
-CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*] = Config/Device.entitlements
+#include "DeviceSigning.xcconfig"
 CODE_SIGN_IDENTITY[sdk=iphoneos*] = Apple Development

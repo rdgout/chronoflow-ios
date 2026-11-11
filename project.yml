@@ -30,6 +30,7 @@ settings:
     "CODE_SIGNING_ALLOWED[sdk=iphonesimulator*]": YES
     "CODE_SIGN_IDENTITY[sdk=iphonesimulator*]": "-"
     "DEVELOPMENT_TEAM[sdk=iphonesimulator*]": ""
+    "CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]": ""
 packages:
   ChronoFlowKit:
     path: Packages/ChronoFlowKit
@@ -37,6 +38,7 @@ targets:
   ChronoFlow:
     configFiles:
       DeviceSigned: Config/DeviceSigned.xcconfig
+      Release: Config/DeviceSigning.xcconfig
     type: application
     platform: iOS
     sources:
