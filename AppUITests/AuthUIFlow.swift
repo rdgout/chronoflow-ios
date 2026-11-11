@@ -1,6 +1,23 @@
 import XCTest
 
 @MainActor enum AuthUIFlow {
+    enum Account: String { case demo, twofactor }
+
+    static func launchSignedIn(
+        _ app: XCUIApplication, walkthroughSeen: Bool, account: Account = .demo, extraEnv: [String: String] = [:]
+    ) {
+        if app.launchArguments.isEmpty { app.launchArguments = arguments() }
+        if app.launchEnvironment["CF_AUTH_TEST_ID"] == nil {
+            app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
+        }
+        if app.launchEnvironment["CF_AUTH_TEST_WALKTHROUGH_SEEN"] == nil {
+            app.launchEnvironment["CF_AUTH_TEST_WALKTHROUGH_SEEN"] = walkthroughSeen ? "1" : "0"
+        }
+        app.launchEnvironment["CF_AUTH_TEST_SIGNED_IN"] = account.rawValue
+        app.launchEnvironment.merge(extraEnv) { _, value in value }
+        app.launchMeasured()
+    }
+
     static func arguments(language: String = "en", xxLarge: Bool = false) -> [String] {
         var result = [
             "-cf.reduceMotion", "-AppleLanguages", "(\(language))", "-AppleLocale",
@@ -13,25 +30,27 @@ import XCTest
     }
 
     static func waitUntilEnabled(_ element: XCUIElement) {
-        let enabled = XCTNSPredicateExpectation(
-            predicate: NSPredicate { _, _ in element.exists && element.isEnabled }, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [enabled], timeout: 6), .completed, "Expected enabled \(element.identifier)")
+        let enabled = { () -> Bool in
+            element.exists && element.isEnabled
+        }
+        XCTAssertTrue(UIWait.until(timeout: 6, condition: enabled), "Expected enabled \(element.identifier)")
     }
 
     static func openSignIn(_ app: XCUIApplication) {
         let button = app.buttons["welcome.signIn"]
-        let ready = XCTNSPredicateExpectation(
-            predicate: NSPredicate { _, _ in
-                button.exists || app.textFields["sign-in.email"].exists
-            }, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 12), .completed)
+        let ready = { () -> Bool in
+            button.exists || app.textFields["sign-in.email"].exists
+        }
+        XCTAssertTrue(
+            UIWait.until(timeout: 12, condition: ready), "Expected Welcome Sign in or the Sign in email field")
         if app.textFields["sign-in.email"].exists { return }
         reveal(button, in: app, scroll: app.scrollViews.containing(.button, identifier: "welcome.signIn").element)
         button.tap()
         XCTAssertTrue(
-            app.textFields["sign-in.email"].waitForExistence(timeout: 4), "Expected sign-in.email after Welcome Sign in"
+            app.textFields["sign-in.email"].waitUntil(.exists, timeout: 4),
+            "Expected sign-in.email after Welcome Sign in"
         )
-        XCTAssertFalse(app.images["launch.opening"].exists)
+        XCTAssertFalse(app.images["launch.opening"].exists, "Expected the splash to be dismissed before Sign in")
     }
 
     static func signIn(_ app: XCUIApplication, email: String) {
@@ -49,23 +68,23 @@ import XCTest
     @discardableResult static func dismissStrongPassword(in app: XCUIApplication, wait: Bool = false) -> Bool {
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         let owners = [app, springboard]
-        let presented = XCTNSPredicateExpectation(
-            predicate: NSPredicate { _, _ in
-                owners.contains { $0.buttons["GenerateStrongPasswordButton"].exists }
-            }, object: nil)
-        if wait { _ = XCTWaiter.wait(for: [presented], timeout: 1) }
+        let presented = { () -> Bool in
+            owners.contains { $0.buttons["GenerateStrongPasswordButton"].exists }
+        }
+        if wait { _ = UIWait.until(timeout: 1, condition: presented) }
         guard let owner = owners.first(where: { $0.buttons["GenerateStrongPasswordButton"].exists }) else {
             return false
         }
         let close = owner.buttons["xmark"]
-        guard close.waitForExistence(timeout: 2), close.isHittable else {
+        guard close.waitUntil(.exists, timeout: 2), close.isHittable else {
             XCTFail("Strong-password sheet has no reachable close control")
             return false
         }
         close.tap()
-        let dismissed = XCTNSPredicateExpectation(
-            predicate: NSPredicate { _, _ in !owner.buttons["GenerateStrongPasswordButton"].exists }, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 3), .completed)
+        let dismissed = { () -> Bool in
+            !owner.buttons["GenerateStrongPasswordButton"].exists
+        }
+        XCTAssertTrue(UIWait.until(timeout: 3, condition: dismissed), "Expected the strong-password sheet to close")
         return true
     }
 
@@ -77,10 +96,10 @@ import XCTest
             reveal(field, in: app)
             field.tap()
             if newPassword, dismissStrongPassword(in: app, wait: true) { continue }
-            let focused = XCTNSPredicateExpectation(
-                predicate: NSPredicate { _, _ in field.value(forKey: "hasKeyboardFocus") as? Bool == true },
-                object: nil)
-            guard XCTWaiter.wait(for: [focused], timeout: 2) == .completed else { continue }
+            let focused = { () -> Bool in
+                field.value(forKey: "hasKeyboardFocus") as? Bool == true
+            }
+            guard UIWait.until(timeout: 2, condition: focused) else { continue }
             if dismissStrongPassword(in: app) { continue }
             field.typeText(text)
             return true
@@ -105,12 +124,11 @@ import XCTest
             let end = origin.withOffset(CGVector(dx: visible.midX - window.frame.minX, dy: window.frame.height - 1))
             start.press(forDuration: 0.1, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.1)
         }
-        let hidden = XCTNSPredicateExpectation(
-            predicate: NSPredicate { _, _ in
-                !app.keyboards.firstMatch.exists
-                    || !SoftwareKeyboardVisibility.isVisible(app.keyboards.firstMatch.frame, in: window.frame)
-            }, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [hidden], timeout: 3), .completed)
+        let hidden = { () -> Bool in
+            !app.keyboards.firstMatch.exists
+                || !SoftwareKeyboardVisibility.isVisible(app.keyboards.firstMatch.frame, in: window.frame)
+        }
+        XCTAssertTrue(UIWait.until(timeout: 3, condition: hidden), "Expected the software keyboard to dismiss")
     }
 
     static func scroll(in app: XCUIApplication) -> XCUIElement {
@@ -127,15 +145,35 @@ import XCTest
     }
 
     private static func scroll(containing element: XCUIElement, in app: XCUIApplication) -> XCUIElement {
+        let type = element.elementType
+        let identifier = element.identifier
         for containers in [app.scrollViews, app.collectionViews, app.tables] {
-            let container = containers.containing(.any, identifier: element.identifier).firstMatch
+            let container = containers.containing(type, identifier: identifier).firstMatch
             if container.exists { return container }
         }
         return scroll(in: app)
     }
 
     static func control(_ identifier: String, in app: XCUIApplication) -> XCUIElement {
-        scroll(in: app).descendants(matching: .any).matching(identifier: identifier).element
+        query(identifier, in: app).firstMatch
+    }
+
+    static func query(_ identifier: String, in scope: XCUIElement) -> XCUIElementQuery {
+        if [
+            "auth.brand", "auth.heading", "auth.subtitle", "auth.banner", "forgot.notice", "sign-up.consent",
+            "verify.countdown", "verify.sign-out-error",
+        ].contains(identifier) {
+            return scope.staticTexts.matching(identifier: identifier)
+        }
+        if identifier.hasSuffix(".visibility") { return scope.switches.matching(identifier: identifier) }
+        if identifier.hasSuffix(".password") || identifier.hasSuffix(".confirmation") {
+            let secure = scope.secureTextFields.matching(identifier: identifier)
+            return secure.firstMatch.exists ? secure : scope.textFields.matching(identifier: identifier)
+        }
+        if [".name", ".email", ".code", ".recovery_code"].contains(where: identifier.hasSuffix) {
+            return scope.textFields.matching(identifier: identifier)
+        }
+        return scope.buttons.matching(identifier: identifier)
     }
 
     static func viewport(

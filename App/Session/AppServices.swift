@@ -3,10 +3,16 @@ import DataAccess
 import Foundation
 import Reminders
 
+#if DEBUG
+    import LocalStore
+    import Sync
+#endif
+
 nonisolated struct AppServices: Sendable {
     enum Failure: Error { case invalidReadiness, applicationSupportUnavailable }
     let signedOutReadiness: Bool
     let factory: DataSourceFactory
+    private let mockDelay: @Sendable () -> TimeInterval
     private let isolatedMockStore: (any MockStateStore)?
     var namespace: StorageNamespace { factory.namespace }
     #if DEBUG
@@ -15,6 +21,7 @@ nonisolated struct AppServices: Sendable {
         private let timelineSeed: MockServerState?
         private let refreshScenario: RefreshUITestScenario?
         var authUITestEnabled: Bool { authTest != nil }
+        var fastUITestLaunch: Bool { authTest?.fastLaunch == true }
 
         func prepareRefreshUITest() async { await refreshScenario?.arm() }
     #endif
@@ -48,34 +55,46 @@ nonisolated struct AppServices: Sendable {
         #if DEBUG
             if let timelineSeed {
                 return MockDataSource(
-                    store: isolatedMockStore ?? MemoryMockStateStore(), seed: timelineSeed, bearer: bearer)
+                    store: isolatedMockStore ?? MemoryMockStateStore(), seed: timelineSeed, delay: mockDelay,
+                    bearer: bearer)
             }
             if let authTest {
                 return MockDataSource(
-                    store: FileMockStateStore(applicationSupport: applicationSupport),
+                    store: isolatedMockStore ?? FileMockStateStore(applicationSupport: applicationSupport),
                     seed: authTestSeed,
                     offline: authTest.offline,
                     mutationsOffline: authTest.settingsPending || authTest.walkthroughPending || authTest.termsPending,
                     remoteTripUpdate: { await refreshScenario?.consume() ?? false },
-                    bearer: bearer)
+                    delay: mockDelay,
+                    // MockDataSource clamps ordinary latency to 300–800 ms; UI fixtures use their exact opt-in delay.
+                    sleep: { _ in
+                        if authTest.mockDelay > 0 { try await Task.sleep(for: .seconds(authTest.mockDelay)) }
+                    }, bearer: bearer)
             }
         #endif
         return MockDataSource(
-            store: isolatedMockStore ?? FileMockStateStore(applicationSupport: applicationSupport), bearer: bearer)
+            store: isolatedMockStore ?? FileMockStateStore(applicationSupport: applicationSupport),
+            delay: mockDelay, bearer: bearer)
     }
 
     init(
         info: [String: Any] = Bundle.main.infoDictionary ?? [:],
         testing: Bool = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
             || NSClassFromString("XCTestCase") != nil,
-        environment: [String: String] = ProcessInfo.processInfo.environment
+        environment: [String: String] = ProcessInfo.processInfo.environment,
+        arguments: [String] = ProcessInfo.processInfo.arguments,
+        mockDelay: (@Sendable () -> TimeInterval)? = nil
     ) throws {
         #if DEBUG
+            let requestedAuthTest = AuthUITestConfiguration(environment: environment)
+            self.mockDelay = mockDelay ?? { requestedAuthTest?.mockDelay ?? Double.random(in: 0.3...0.8) }
             isolatedMockStore =
-                (ProcessInfo.processInfo.arguments.contains("-cf.isolatedMockServer")
-                    || ProcessInfo.processInfo.arguments.contains("-cf.timeline-fixtures"))
+                (requestedAuthTest?.fastLaunch == true
+                    || arguments.contains("-cf.isolatedMockServer")
+                    || arguments.contains("-cf.timeline-fixtures"))
                 ? MemoryMockStateStore() : nil
         #else
+            self.mockDelay = mockDelay ?? { Double.random(in: 0.3...0.8) }
             isolatedMockStore = nil
         #endif
         switch info["CHRONOFLOW_READINESS"] as? String ?? "native" {
@@ -89,7 +108,6 @@ nonisolated struct AppServices: Sendable {
             let release = true
         #endif
         #if DEBUG
-            let requestedAuthTest = AuthUITestConfiguration(environment: environment)
             let authTestRequested = requestedAuthTest != nil
         #else
             let authTestRequested = false
@@ -100,7 +118,7 @@ nonisolated struct AppServices: Sendable {
             release: release, testing: testing || authTestRequested)
         #if DEBUG
             timelineSeed =
-                try factory.namespace == .mock && ProcessInfo.processInfo.arguments.contains("-cf.timeline-fixtures")
+                try factory.namespace == .mock && arguments.contains("-cf.timeline-fixtures")
                 ? MockAppSeed.make(now: Date(), walkthroughSeen: true, includeTimelinePerformanceTrips: true) : nil
             authTest = requestedAuthTest
             refreshScenario = requestedAuthTest?.refreshUpdatesTrip == true ? RefreshUITestScenario() : nil
@@ -118,24 +136,69 @@ nonisolated struct AppServices: Sendable {
             }
         #endif
     }
-    static func launchConfiguration() throws -> (AppServices, URL?) {
+    static func launchConfiguration() async throws -> (AppServices, URL?) {
         assert(!Thread.isMainThread)
-        let services = try AppServices()
-        var root =
-            services.signedOutReadiness
-            ? nil
-            : FileManager.default.urls(
-                for: .applicationSupportDirectory, in: .userDomainMask
-            ).first
         #if DEBUG
+            return try await uiTestLaunchConfiguration(
+                environment: ProcessInfo.processInfo.environment, arguments: ProcessInfo.processInfo.arguments)
+        #else
+            let services = try AppServices()
+            let root =
+                services.signedOutReadiness
+                ? nil
+                : FileManager.default.urls(
+                    for: .applicationSupportDirectory, in: .userDomainMask
+                ).first
+            return (services, root)
+        #endif
+    }
+
+    #if DEBUG
+        static func uiTestLaunchConfiguration(
+            environment: [String: String], arguments: [String], reset: Bool = false,
+            applicationSupport: URL? = nil
+        ) async throws -> (AppServices, URL?) {
+            assert(!Thread.isMainThread)
+            let services = try AppServices(environment: environment, arguments: arguments)
+            var root =
+                services.signedOutReadiness
+                ? nil
+                : applicationSupport
+                    ?? FileManager.default.urls(
+                        for: .applicationSupportDirectory, in: .userDomainMask
+                    ).first
             if services.timelineSeed != nil, let support = root {
                 root = support.appending(path: "TimelineFixtures")
             } else if let test = services.authTest, let support = root {
                 root = test.applicationSupport(in: support)
             }
-        #endif
-        return (services, root)
-    }
+            if let root {
+                if reset, services.authTest != nil {
+                    try await MockSessionSeed.reset(
+                        applicationSupport: root, credentials: services.sessionCredentials())
+                }
+                try await services.seedSignedIn(applicationSupport: root)
+            }
+            return (services, root)
+        }
+    #endif
+
+    #if DEBUG
+        func seedSignedIn(applicationSupport root: URL) async throws {
+            guard let test = authTest, let account = test.signedInAccount else { return }
+            let credentials = test.credentials
+            let source = MockDataSource(
+                store: isolatedMockStore ?? FileMockStateStore(applicationSupport: root), seed: authTestSeed,
+                delay: { 0 }, sleep: { _ in }, bearer: { try await credentials.readStoredSession()?.token })
+            try await MockSessionSeed.run(
+                applicationSupport: root, namespace: namespace, credentials: credentials, source: source,
+                input: PasswordSignInInput(
+                    email: account == "demo" ? MockScenarioValues.demoEmail : MockScenarioValues.twoFactorEmail,
+                    password: MockScenarioValues.password, deviceID: test.id, deviceName: "UI test"),
+                twoFactorCode: MockScenarioValues.twoFactorCode)
+
+        }
+    #endif
 
     func makeDataSource(applicationSupport: URL, session: StoredSession) -> any DataSource {
         assert(!Thread.isMainThread)

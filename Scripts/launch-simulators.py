@@ -1,5 +1,5 @@
 import argparse
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import Future, ThreadPoolExecutor
 from contextlib import contextmanager
 from dataclasses import dataclass
 import json
@@ -49,12 +49,34 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
                         'WizardErrorScrollTests',
                         'WizardFlightPickerTests',
                         'TripsLayoutTests',
+                        'TripsEmptyLayoutTests',
+                        'TripsLoadingLayoutTests',
                         'StepSheetLayoutTests',
                         'TodayControlTests',
                         'TodayLayoutTests',
+                        'TodayEmptyLayoutTests',
+                        'TodayFutureLayoutTests',
+                        'TodayLoadingLayoutTests',
+                        'TodayCompletedLayoutTests',
+                        'TodayDoneLayoutTests',
+                        'TodaySkippedLayoutTests',
+                        'TodayHiddenLayoutTests',
+                        'TodayAllHiddenLayoutTests',
+                        'TodayNothingNowLayoutTests',
                         'AuthControlTests',
                         'AuthLayoutTests',
                         'AuthSnapshotGuardTests',
+                        'SignUpSnapshotGuardTests',
+                        'ResetPasswordSnapshotGuardTests',
+                        'VerifyEmailSnapshotGuardTests',
+                        'TwoFactorCodeSnapshotGuardTests',
+                        'TwoFactorRecoverySnapshotGuardTests',
+                        'ForgotFormSnapshotGuardTests',
+                        'ForgotFieldSnapshotGuardTests',
+                        'ForgotThrottleSnapshotGuardTests',
+                        'ForgotServerSnapshotGuardTests',
+                        'ForgotOfflineSnapshotGuardTests',
+                        'ForgotSentSnapshotGuardTests',
                         'AuthSubtitleContrastTests',
                         'TwoFactorControlTests',
                         'TwoFactorLayoutTests',
@@ -79,8 +101,9 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
                         'AccountStorageLifecycleTests',
                         'DataSourceBuildSettingTests',
                         'DataSourceFactoryHostedTests',
+                        'UITestReseedTests',
                         'SessionLifecycleTests',
-                        'SyncLifecycleTests',
+                        'SyncLifecycleTests', 'SeededSessionIntegrationTests',
                         'AccountWipeTests',
                         'SessionReadinessTests'),
               'matrix': ('ContentSizeCapTests',
@@ -94,7 +117,7 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
                          'WelcomeHandOverTests',
                          'LaunchImageMutationTests',
                          'SnapshotContainerTests'),
-              'profiles': ('TripsSnapshotTests',
+              'snapshots': ('TripsSnapshotTests',
                            'LaunchSnapshotTests',
                            'WelcomeSnapshotTests',
                            'AuthSnapshotTests',
@@ -108,7 +131,8 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
                            'TripPageSnapshotTests',
                            'TodayRowSnapshotTests'),
               'reference': ('LaunchFrameParityTests', 'LaunchStoryboardTests'),
-              'release': ('ReleaseReadinessTests',)},
+              },
+ 'ReleaseReadinessTests': {'release': ('ReleaseReadinessTests',)},
  'AppUITests': {'capture': ('WizardBoardCaptureTests',),
                 'logic': ('TermsTests',
                           'WalkthroughTests',
@@ -129,12 +153,14 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
                           'VerifyEmailTests',
                           'AccountRecoveryTests',
                           'AuthSessionTests',
-                          'AuthAuditTests',
+                          'AuthAuditTests', 'ForgotAuditTests', 'ResetAuditTests', 'SignUpAuditTests', 'VerifyAuditTests',
                           'ReadinessTests',
                           'WelcomeLogicTests',
                           'TripPageStepTests',
                           'TripWizardTests',
                           'SettingsPagesTests',
+                          'SettingsSecurityPagesTests',
+                          'UIReseedTests',
                           'RemindersTests',
                           'TripWizardReviewTests',
                           'WizardRouteScreenTests'),
@@ -149,6 +175,7 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
  'AuthTests': {'host': ('AuthFormModelTests',
                         'AuthFailureMappingTests',
                         'AuthSnapshotCaptureTests',
+                        'ScrollReachabilityTests',
                         'AuthCatalogTests',
                         'AuthLayoutTests',
                         'AuthCardShadowTests',
@@ -167,6 +194,7 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
                               'TripWizardAPITests',
                               'MockTripGenerationTests',
                               'DataSourceSelectionTests',
+                            'AuthUITestConfigurationTests', 'UITestSeedCommandTests', 'SharedMockServerTests',
                               'APIClientTests',
                               'APICookieTests',
                               'APIDataSourceTests',
@@ -176,9 +204,9 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
                               'DataSourceParityTests',
                               'AccountSecurityAPITests',
                               'SettingsDeleteAPITests')},
- 'DesignSystemTests': {'logic': ('PlanPageGeometryTests',
+ 'DesignSystemTests': {'host': ('AuthBoardContrastTests',),
+                       'logic': ('PlanPageGeometryTests',
                                  'PlanLayoutEvidenceTests',
-                                 'AuthBoardContrastTests',
                                  'ExactLineTextLayoutTests',
                                  'PrimitiveTests',
                                  'SmokeTests',
@@ -230,7 +258,7 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
                              'ReminderPermissionTests',
                              'ReminderTapTests',
                              'ReminderSignOutTests')},
- 'RenderTests': {'profiles': ('WelcomeRenderingTests',)},
+ 'RenderTests': {'logic': ('WelcomeRenderingTests',)},
  'SettingsTests': {'host': ('SettingsHomeStateTests',
                             'SettingsHomeModelTests',
                             'SettingsStringsTests',
@@ -254,35 +282,45 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
                         'DataSourceIntegrationTests',
                         'SyncTriggerTests',
                         'SessionSyncReadinessTests',
-                        'SessionWipeTests')},
+                        'SessionWipeTests',
+                        'MockSessionSeedTests')},
  'ToolingTests': {'host': ('LaunchImageComparisonTests',
                            'UIWaitTests',
+                           'BackoffPollTests',
                            'AuthScrollGestureTests',
-                           'AuthAuditPolicyTests')},
+                           'AuthAuditPolicyTests',
+                           'AuthAuditPredicateTests')},
  'TripWizardTests': {'host': ('TripGenerationTests',
                               'TripGenerationRecoveryTests',
                               'WizardDateTimeTests',
-                              'WizardFlightTimingTests',
                               'WizardValidationTests',
                               'WizardFormTests',
-                              'WizardRouteTests',
-                              'WizardAirportChoiceTests',
-                              'WizardHomeRouteTests',
                               'WizardRecoveryTests',
                               'WizardSearchTests',
                               'WizardPresentationTests',
-                              'WizardCopyTests',
-                              'WizardCheckingTests',
-                              'WizardReviewFlowTests',
-                              'WizardGenerationSessionTests')},
+                              'WizardFlightTimingTests',
+                             'WizardRouteTests',
+                             'WizardAirportChoiceTests',
+                             'WizardHomeRouteTests',
+                             'WizardCheckingTests',
+                             'WizardReviewFlowTests',
+                             'WizardGenerationSessionTests',
+                             'WizardCopyTests')},
  'WelcomeTests': {'logic': ('SmokeTests', 'WelcomeGeometryTests')}}
-SNAPSHOTS = ("AppTests/LaunchSnapshotTests", "AppTests/WelcomeSnapshotTests", "AppTests/WelcomeSnapshotGuardTests", "RenderTests/WelcomeRenderingTests", "AppTests/AuthSnapshotTests", "AppTests/TwoFactorSnapshotTests", "AppTests/ForgotPasswordSnapshotTests", "AppTests/ResetPasswordSnapshotTests", "AppTests/SignUpSnapshotTests", "AppTests/VerifyEmailSnapshotTests", "AppTests/AuthSnapshotGuardTests", "AppTests/StepSheetSnapshotTests", "AppTests/TodaySnapshotTests", "AppTests/TodayRowSnapshotTests", "AppTests/TripsSnapshotTests", "AppTests/TripPageSnapshotTests")
-XCODEBUILD_COMMON = ["xcodebuild", "-project", "ChronoFlow.xcodeproj", "-derivedDataPath", "build/DerivedData",
+SNAPSHOTS = ("AppTests/LaunchSnapshotTests", "AppTests/WelcomeSnapshotTests", "AppTests/WelcomeSnapshotGuardTests", "RenderTests/WelcomeRenderingTests", "AppTests/AuthSnapshotTests", "AppTests/TwoFactorSnapshotTests", "AppTests/ForgotPasswordSnapshotTests", "AppTests/ResetPasswordSnapshotTests", "AppTests/SignUpSnapshotTests", "AppTests/VerifyEmailSnapshotTests", "AppTests/AuthSnapshotGuardTests", "AppTests/TwoFactorCodeSnapshotGuardTests", "AppTests/TwoFactorRecoverySnapshotGuardTests", "AppTests/ForgotFormSnapshotGuardTests", "AppTests/ForgotFieldSnapshotGuardTests", "AppTests/ForgotThrottleSnapshotGuardTests", "AppTests/ForgotServerSnapshotGuardTests", "AppTests/ForgotOfflineSnapshotGuardTests", "AppTests/ForgotSentSnapshotGuardTests", "AppTests/StepSheetSnapshotTests", "AppTests/TodaySnapshotTests", "AppTests/TodayRowSnapshotTests", "AppTests/TripsSnapshotTests", "AppTests/TripPageSnapshotTests")
+XCODEBUILD_COMMON = ["xcodebuild", "-project", "ChronoFlow.xcodeproj",
+                     "-clonedSourcePackagesDirPath", "build/SourcePackages",
                      "-onlyUsePackageVersionsFromResolvedFile"]
 
 # Device-wide mutations must be registered here; launch/window-scoped traits are clone-safe.
-SERIAL_TESTS = ("AppUITests/SettingsBoardCaptureTests", "AppUITests/PlanAuditTests", "AppUITests/AuthSessionTests", "AppUITests/AuthAuditTests", "AppUITests/LaunchSceneTests", "AppUITests/LaunchSceneDarkTests", "AppUITests/LaunchToWelcomeTests")
+SERIAL_TESTS = ("AppUITests/SettingsBoardCaptureTests", "AppUITests/AuthSessionTests", "AppUITests/LaunchSceneTests", "AppUITests/LaunchSceneDarkTests", "AppUITests/LaunchToWelcomeTests")
 PARALLEL_TARGETS = {"AppTests", "AppUITests", "RenderTests"}
+PACKAGE_LOGIC_TARGETS = {"LaunchTests", "WelcomeTests"}
+CONCURRENT_SWIFT_SUITES = {
+    "AppTests/DataSourceBuildSettingTests", "AppTests/DataSourceFactoryHostedTests",
+    "AppTests/UITestReseedTests", "AppTests/WelcomeSnapshotGuardTests",
+} | {f"{target}/{suite}" for target in PACKAGE_LOGIC_TARGETS | {"DesignSystemTests"}
+     for suites in SUITES[target].values() for suite in suites}
 
 
 RUNTIME_SMOKE = (
@@ -336,9 +374,9 @@ class WorkerBudget:
                 self.condition.notify_all()
 
 
-def budgeted_device(budget, workers, *args):
+def budgeted_device(budget, workers, *args, **kwargs):
     with budget.claim(workers):
-        return test_device(*args, workers=workers)
+        return test_device(*args, workers=workers, **kwargs)
 
 
 def workers_for(alias, selected, timings, single_device=False):
@@ -417,6 +455,11 @@ def save_timings(timings, path=None):
     temporary.replace(path)
 
 
+def suite_duration(selector, durations):
+    suite = "/".join(selector.split("/")[:2])
+    return max(durations, default=0) if suite in CONCURRENT_SWIFT_SUITES else sum(durations)
+
+
 def log_timings(content):
     target = None
     suites, tests = {}, {}
@@ -429,7 +472,7 @@ def log_timings(content):
         if case:
             name = case[1] + "/" + case[2]
             duration = float(case[4])
-            suites[name] = suites.get(name, 0) + duration
+            suites[name] = suite_duration(name, [suites.get(name, 0), duration])
             tests[name + "/" + case[3]] = duration
         clone = re.search(r"Test case '([^']+)' (?:passed|failed) on '[^']+ - ([^']+?) \(\d+\)' \(([\d.]+) seconds\)", line)
         if clone:
@@ -442,7 +485,7 @@ def log_timings(content):
             if len(path) == 2 and len(candidates) == 1:
                 name = candidates.pop()
                 duration = float(clone[3])
-                suites[name] = suites.get(name, 0) + duration
+                suites[name] = suite_duration(name, [suites.get(name, 0), duration])
                 tests[name + '/' + path[1]] = duration
         swift = re.search(r"[✔✓] Suite (\w+) passed after ([\d.]+) seconds", line)
         if swift:
@@ -501,7 +544,7 @@ def schedule(mode, aliases, only=(), timings=None):
             alias = min(aliases, key=lambda a: (estimated_seconds(a, selections[a], timings) + suite_seconds(suite, a, timings), aliases.index(a)))
             selections[alias].append(suite)
     if "17e" in aliases:
-        selections["17e"] += selectors("profiles") + selectors("reference")
+        selections["17e"] += selectors("reference")
     order = sorted(aliases, key=lambda a: (-estimated_seconds(a, selections[a], timings), aliases.index(a)))
     return selections, order
 
@@ -511,6 +554,7 @@ class Destination:
     alias: str
     udid: str
     state: str
+    directory_name: str | None = None
 
     @property
     def flag(self):
@@ -518,7 +562,7 @@ class Destination:
 
     @property
     def directory(self):
-        return ROOT / "build/test-results" / self.alias
+        return ROOT / "build/test-results" / (self.directory_name or self.alias)
 
 
 @dataclass
@@ -661,24 +705,91 @@ def run(command, *, log=None, capture=False, record=False, check=True, intro_ord
             return completed
 
 
-def resolve(alias, devices):
+ISOLATED_NAME = "ChronoFlow 17e Isolated"
+
+
+def device_matches(alias, devices):
     _, device_type, runtime = MATRIX[alias]
     identifier = "com.apple.CoreSimulator.SimDeviceType." + device_type
-    matches = [d for d in devices.get(runtime, []) if d.get("isAvailable") and d.get("deviceTypeIdentifier") == identifier]
+    return [d for d in devices.get(runtime, []) if d.get("isAvailable")
+            and d.get("deviceTypeIdentifier") == identifier and not d.get("isClone")
+            and not d.get("name", "").startswith("Clone ")]
+
+
+def resolve(alias, devices):
+    matches = [d for d in device_matches(alias, devices) if d.get("name") != ISOLATED_NAME]
     if not matches:
-        raise RuntimeError("No available simulator: " + identifier + " on " + runtime)
+        _, device_type, runtime = MATRIX[alias]
+        raise RuntimeError("No available simulator: com.apple.CoreSimulator.SimDeviceType." + device_type + " on " + runtime)
     device = matches[0]
     return Destination(alias, device["udid"], device["state"])
 
 
+def resolve_isolated(primary, devices):
+    matches = [d for d in device_matches("17e", devices)
+               if d["udid"] != primary.udid and d.get("name") == ISOLATED_NAME]
+    if matches:
+        device = matches[0]
+        return Destination("17e", device["udid"], device["state"], "17e-isolated")
+    _, device_type, runtime = MATRIX["17e"]
+    identifier = "com.apple.CoreSimulator.SimDeviceType." + device_type
+    created = run(["xcrun", "simctl", "create", ISOLATED_NAME, identifier, runtime], capture=True).stdout.strip()
+    if not created or created == primary.udid:
+        raise RuntimeError("Could not create isolated 17e")
+    return Destination("17e", created, "Shutdown", "17e-isolated")
+
+
+def device_jobs(destination, selected, workers, devices, isolate):
+    groups = configurations(selected)
+    parts = {c: split_passes(c, suites, workers) for c, suites in groups.items()}
+    primary = {c: passes for c, passes in parts.items() if c not in ("Release", "Perf")}
+    isolated = {c: passes for c, passes in parts.items() if c in ("Release", "Perf")}
+    if destination.alias != "17e" or not isolate or not parts.get("Debug") or not isolated:
+        return [(destination, selected, workers, parts)]
+    secondary = resolve_isolated(destination, devices)
+    primary_selection = list(dict.fromkeys(s for passes in primary.values() for p in passes for s in p.selected))
+    secondary_selection = list(dict.fromkeys(s for passes in isolated.values() for p in passes for s in p.selected))
+    return [(destination, primary_selection, workers, primary),
+            (secondary, secondary_selection, 1, isolated)]
+
+
+def device_state(destination):
+    devices = json.loads(run(["xcrun", "simctl", "list", "devices", "-j"], capture=True).stdout)["devices"]
+    return next((d["state"] for group in devices.values() for d in group if d["udid"] == destination.udid), "Unavailable")
+
+
+def reset_appearance(destination):
+    run(["xcrun", "simctl", "ui", destination.udid, "appearance", "light"],
+        log=destination.directory / "prepare.log")
+
+
+def cleanup_appearance(destination, label):
+    try:
+        state = device_state(destination)
+        if state == "Booted":
+            reset_appearance(destination)
+            return
+        message = f"{label} appearance reset skipped: device is {state}"
+    except (subprocess.CalledProcessError, OSError, ValueError, KeyError) as error:
+        message = f"{label} appearance reset failed (ignored): {error}"
+    print(f"{destination.alias}: {message}", flush=True)
+    try:
+        destination.directory.mkdir(parents=True, exist_ok=True)
+        with (destination.directory / "prepare.log").open("a") as output:
+            output.write(message + "\n")
+    except OSError as error:
+        print(f"{destination.alias}: could not log appearance cleanup: {error}", flush=True)
+
+
 def prepare(destination):
     log = destination.directory / "prepare.log"
-    if destination.state != "Booted":
+    if device_state(destination) != "Booted":
         run(["xcrun", "simctl", "boot", destination.udid], log=log)
     run(["xcrun", "simctl", "bootstatus", destination.udid, "-b"], log=log)
     run(["xcrun", "simctl", "spawn", destination.udid, "defaults", "write",
          "com.apple.keyboard.preferences", "AutomaticMinimizationEnabled", "-bool", "false"], log=log)
-    installed = run(["xcrun", "simctl", "get_app_container", destination.udid, "net.chronoflow.app.native", "app"], capture=True, check=False)
+    reset_appearance(destination)
+    installed = run(["xcrun", "simctl", "get_app_container", destination.udid, "net.chronoflow.app.native", "app"], log=log, check=False)
     if installed.returncode == 0:
         run(["xcrun", "simctl", "uninstall", destination.udid, "net.chronoflow.app.native"], log=log)
 
@@ -688,7 +799,7 @@ def selectors(policy):
 
 
 def expand(only):
-    known = set(selectors("logic") + selectors("matrix") + selectors("release") + selectors("profiles") + selectors("reference") + selectors("perf") + selectors("capture"))
+    known = set(selectors("logic") + selectors("matrix") + selectors("release") + selectors("snapshots") + selectors("reference") + selectors("perf") + selectors("capture"))
     result = []
     for item in only:
         matches = sorted(s for s in known if s == item or s.startswith(item + "/") or item.startswith(s + "/"))
@@ -699,7 +810,6 @@ def expand(only):
 
 
 IOS_METHODS = (
-    "DesignSystemTests/AuthBoardContrastTests",
     "DesignSystemTests/LaunchImagesTests",
     "DesignSystemTests/TypographyTests/uiFontsUseTheExactFacesAndKeepTheSplashFixed()",
     "DesignSystemTests/ExactLineTextLayoutTests/scaledHeadlinePitchAndGlyphsFitNaturalLabels()",
@@ -718,12 +828,10 @@ def selection(mode, alias, only=(), include_logic=True, include_matrix=True):
         return list(RUNTIME_SMOKE)
     if mode in ("check", "test"):
         result = [s for policy in ("logic", "matrix") for s in selectors(policy)
-                  if s.startswith(("AppTests/", "AppUITests/"))]
+                  if s.startswith(("AppTests/", "AppUITests/", "RenderTests/"))]
         result += list(IOS_METHODS)
         if alias == "17e":
             result += selectors("reference")
-        if mode == "check":
-            result += selectors("profiles")
         if mode != "test":
             result += selectors("release")
         return list(dict.fromkeys(result))
@@ -738,12 +846,14 @@ def selection(mode, alias, only=(), include_logic=True, include_matrix=True):
 def configurations(selected):
     release = set(selectors("release"))
     perf = set(selectors("perf"))
-    groups = {"Debug": [], "Release": [], "Perf": []}
+    groups = {"Debug": [], "PackageLogic": [], "Release": [], "Perf": []}
     for suite in selected:
         if any(suite == s or suite.startswith(s + "/") for s in perf):
             configuration = "Perf"
         elif any(suite == s or suite.startswith(s + "/") for s in release):
             configuration = "Release"
+        elif suite.split("/")[0] in PACKAGE_LOGIC_TARGETS:
+            configuration = "PackageLogic"
         else:
             configuration = "Debug"
         groups[configuration].append(suite)
@@ -751,21 +861,41 @@ def configurations(selected):
 
 
 def build_command(configuration):
-    scheme = {"Debug": "ChronoFlow", "Release": "ReadinessRelease", "Perf": "Perf"}[configuration]
-    return XCODEBUILD_COMMON + ["-scheme", scheme, "-configuration", configuration]
+    scheme = {"Debug": "ChronoFlow", "PackageLogic": "PackageLogic", "Release": "ReadinessRelease", "Perf": "Perf"}[configuration]
+    configuration = "Debug" if configuration == "PackageLogic" else configuration
+    derived_data = "build/DerivedData" + ("-" + configuration if configuration != "Debug" else "")
+    return XCODEBUILD_COMMON + ["-derivedDataPath", derived_data, "-scheme", scheme, "-configuration", configuration]
 
 
-def build(configuration):
-    return run(build_command(configuration) + ["-destination", "generic/platform=iOS Simulator"]
+def build(configuration, background=False):
+    return run((["nice", "-n", "10"] if background else []) + build_command(configuration) + ["-destination", "generic/platform=iOS Simulator", "ARCHS=arm64", "ONLY_ACTIVE_ARCH=YES"]
                + (["ENABLE_TESTABILITY=YES"] if configuration == "Release" else []) + ["build-for-testing"],
                log=ROOT / "build/test-results/build" / (configuration + ".log"))
 
 
+def build_configuration(configuration, results, background=False):
+    started = time.monotonic()
+    try:
+        build(configuration, background=background)
+        return True
+    except (subprocess.CalledProcessError, OSError) as error:
+        results.append(Result("build", configuration, False, str(error)))
+        return False
+    finally:
+        print(f"Build {configuration} elapsed: {time.monotonic() - started:.1f}s", flush=True)
+
+
+def build_available(ready, configuration):
+    value = ready.get(configuration, False)
+    return value.result() if isinstance(value, Future) else value
+
+
 def test_command(destination, configuration, selected, bundle, workers=1, skipped=(), stream=None):
-    return build_command(configuration) + ["-destination", destination.flag, "-testLanguage", "en", "-testRegion", "US",
+    diagnostics = [] if os.environ.get("TEST_DIAGNOSTICS") == "1" else ["-collect-test-diagnostics", "never"]
+    return build_command(configuration) + diagnostics + ["-destination", destination.flag, "-testLanguage", "en", "-testRegion", "US",
         "-parallel-testing-enabled", "YES" if workers > 1 else "NO",
         "-parallel-testing-worker-count", str(workers),
-        "-test-timeouts-enabled", "YES", "-default-test-execution-time-allowance", "600",
+        "-test-timeouts-enabled", "YES", "-default-test-execution-time-allowance", "120" if all(s.startswith("AppUITests/") for s in selected) else "600",
         "-maximum-test-execution-time-allowance", "600",
         "-maximum-concurrent-test-simulator-destinations", "1", "-resultBundlePath", str(bundle)] + (["-resultStreamPath", str(stream)] if stream else []) + [
         "-only-testing:" + suite for suite in selected] + ["-skip-testing:" + suite for suite in skipped] + ["test-without-building"]
@@ -779,7 +909,7 @@ def result_nodes(value, target=None):
             target = name if name in SUITES else target
         if kind == "Test Case":
             identifier = str(value.get("nodeIdentifier", ""))
-            qualified = next((s.split("/")[0] for s in selectors("logic") + selectors("matrix") + selectors("release") + selectors("profiles") + selectors("perf")
+            qualified = next((s.split("/")[0] for s in selectors("logic") + selectors("matrix") + selectors("release") + selectors("snapshots") + selectors("perf")
                               if identifier.startswith(s + "/")), target)
             yield dict(value, target=qualified)
         for child in value.values():
@@ -835,7 +965,7 @@ def read_results(destination, label, selected, bundle, returncode, log, timing=N
                 executed = [n for n in matches if n.get("result") in ("Passed", "Failed", "Expected Failure")]
                 durations = [positive_seconds(n.get("durationInSeconds", n.get("duration"))) for n in executed]
                 if durations and all(d is not None for d in durations):
-                    timing.setdefault("suites", {})[suite] = sum(durations)
+                    timing.setdefault("suites", {})[suite] = suite_duration(suite, durations)
                     for node, duration in zip(executed, durations):
                         identifier = str(node.get("nodeIdentifier"))
                         target = suite.split("/")[0]
@@ -859,13 +989,27 @@ def read_results(destination, label, selected, bundle, returncode, log, timing=N
         return results
     except (subprocess.CalledProcessError, OSError, ValueError, RuntimeError) as error:
         detail = str(error)
-    failures = []
-    if log.exists():
-        content = log.read_text(errors="replace")
-        failures = re.findall(r"Test Case '([^']+)' failed|[✘×] Test (.+?) (?:failed|recorded an issue)", content)
-    names = [a or b for a, b in failures]
-    return [Result(destination.alias, label + " " + suite, False,
-                   "; ".join(names) or detail + "; see " + str(log.relative_to(ROOT))) for suite in selected]
+        if isinstance(error, subprocess.CalledProcessError) and error.stderr:
+            detail += ": " + error.stderr.strip()
+    results = [Result(destination.alias, label + " results", False,
+                      "Could not read executed tests: " + detail + "; bundle=" + str(bundle.relative_to(ROOT))
+                      + "; see " + str(log.relative_to(ROOT)))]
+    content = log.read_text(errors="replace") if log.exists() else ""
+    nodes = []
+    for target, suite, method in re.findall(r"Test Case '-\[(\w+)\.(\w+) ([^]]+)\]' failed", content):
+        nodes.append(dict(target=target, nodeIdentifier=f"{suite}/{method}"))
+    for suite, method, target in re.findall(
+            r"Test case '(\w+)[./]([^']+)' failed on '[^']+ - (\w+)-Runner \(\d+\)'", content):
+        nodes.append(dict(target=target, nodeIdentifier=f"{suite}/{method}"))
+    unscoped = re.findall(r"[✘×] Test (.+?) (?:failed|recorded an issue)", content)
+    if unscoped:
+        results[0].detail += "; unscoped log failures: " + "; ".join(dict.fromkeys(unscoped))
+    for suite in selected:
+        failures = [node["nodeIdentifier"] for node in matching_nodes(nodes, suite)]
+        if failures:
+            results.append(Result(destination.alias, label + " " + suite, False, "; ".join(failures)))
+    # An unreadable bundle is a pass-level error, never evidence that every selected suite failed.
+    return results
 
 
 def test_pass(destination, configuration, selected, label, record=False, intro_order=None, timing=None, workers=1, skipped=()):
@@ -900,34 +1044,53 @@ def recording_selection(selected, mode, recording):
     return [s for s in selected if any(s == c or s.startswith(c + "/") for c in candidates)]
 
 
-def test_device(destination, selected, mode, recording, ready, intro_order_check=False, timing=None, workers=1):
+def test_device(destination, selected, mode, recording, ready, intro_order_check=False, timing=None, workers=1, passes=None, preparation=None):
     started = time.monotonic()
     results = []
     try:
-        prepare(destination)
+        if preparation is None:
+            prepare(destination)
+        else:
+            preparation.result()
     except (subprocess.CalledProcessError, OSError) as error:
         return [Result(destination.alias, suite, False, "Preparation: " + str(error)) for suite in selected]
+    prepared = True
+
+    def run_pass(configuration, suites, label, **kwargs):
+        nonlocal prepared
+        try:
+            if not prepared:
+                prepare(destination)
+        except (subprocess.CalledProcessError, OSError) as error:
+            return [Result(destination.alias, label + " " + s, False, "Preparation: " + str(error)) for s in suites]
+        prepared = False
+        try:
+            outcome = test_pass(destination, configuration, suites, label, **kwargs)
+        finally:
+            cleanup_appearance(destination, label)
+        return outcome
+
     if intro_order_check:
-        if not ready.get("Debug"):
+        if not build_available(ready, "Debug"):
             return [Result(destination.alias, s, False, "Debug build unavailable") for s in selected]
         try:
             enumerate_intro_test(destination)
         except (subprocess.CalledProcessError, OSError, RuntimeError) as error:
             return [Result(destination.alias, "intro enumeration", False, str(error))]
         for order in ("fresh", "warm"):
-            results += test_pass(destination, "Debug", selected, "order-" + order, intro_order=order)
+            results += run_pass("Debug", selected, "order-" + order, intro_order=order)
         return results
     record_suites = recording_selection(selected, mode, recording) if recording and destination.alias == "17e" else []
-    if record_suites and ready.get("Debug"):
-        results += test_pass(destination, "Debug", record_suites, "record", record=True)
+    if record_suites and build_available(ready, "Debug"):
+        results += run_pass("Debug", record_suites, "record", record=True)
         if any(r.detail.startswith("Test run timed out") for r in results):
             return results + [Result(destination.alias, s, False, "Not run after timeout")
                               for s in selected if s not in record_suites]
     for configuration, suites in configurations(selected).items():
-        if ready.get(configuration):
-            for part in split_passes(configuration, suites, workers):
-                results += test_pass(destination, configuration, part.selected, configuration + "-" + part.suffix,
-                                     timing=timing, workers=part.workers, skipped=part.skipped)
+        if build_available(ready, configuration):
+            for part in (passes[configuration] if passes is not None else split_passes(configuration, suites, workers)):
+                results += run_pass(configuration, part.selected, configuration + "-" + part.suffix,
+                                    timing=timing, workers=part.workers, skipped=part.skipped)
                 if any(r.detail.startswith("Test run timed out") for r in results):
                     return results + [Result(destination.alias, s, False, "Not run after timeout")
                                       for s in selected if not any(r.suite.endswith(" " + s) for r in results)]
@@ -967,30 +1130,56 @@ def main(mode="check", aliases=None, only=(), concurrency=None, reuse_build=Fals
             destinations.append(resolve(alias, devices))
         except (RuntimeError, KeyError) as error:
             results.append(Result(alias, "destination", False, str(error)))
-    ready = {}
-    for configuration in dict.fromkeys(c for alias in aliases for c in configurations(selections[alias])):
-        try:
-            if not reuse_build:
-                build(configuration)
-            ready[configuration] = True
-        except (subprocess.CalledProcessError, OSError) as error:
-            ready[configuration] = False
-            results.append(Result("build", configuration, False, str(error)))
     recording = os.environ.get("SNAPSHOT_RECORD", "0")
     if recording not in ("0", "1", "launch", "all"):
         raise ValueError("SNAPSHOT_RECORD must be 0, 1, launch or all")
+    jobs = []
+    for destination in destinations:
+        alias = destination.alias
+        try:
+            jobs += device_jobs(destination, selections[alias], workers[alias], devices,
+                                not intro_order_check and recording == "0" and concurrency >= workers[alias] + 1)
+        except (subprocess.CalledProcessError, OSError, RuntimeError) as error:
+            results.extend(Result(alias, suite, False, "Isolated destination: " + str(error)) for suite in selections[alias])
+    required = list(dict.fromkeys(c for alias in aliases for c in configurations(selections[alias])))
+    ready = {c: True for c in required} if reuse_build else {}
     budget = WorkerBudget(max(concurrency, max(workers.values())))
-    observations = {d.alias: {} for d in destinations}
-    with ThreadPoolExecutor(max_workers=min(concurrency, len(destinations) or 1)) as pool:
-        futures = [pool.submit(budgeted_device, budget, workers[d.alias], d, selections[d.alias], mode, recording if recording != "0" else None, ready, intro_order_check, observations[d.alias]) for d in destinations]
-        for future in futures:
-            results.extend(future.result())
-    for alias, observation in observations.items():
+    observations = {}
+    with ThreadPoolExecutor(max_workers=concurrency) as preparations, ThreadPoolExecutor(max_workers=1) as builds:
+        prepared = {d: preparations.submit(prepare, d) for d, _, _, _ in jobs}
+        if not reuse_build:
+            for configuration in required:
+                if configuration in ("Debug", "PackageLogic"):
+                    ready[configuration] = build_configuration(configuration, results)
+            for configuration in required:
+                if configuration not in ("Debug", "PackageLogic"):
+                    ready[configuration] = builds.submit(build_configuration, configuration, results, True)
+        with ThreadPoolExecutor(max_workers=min(concurrency, len(jobs) or 1)) as pool:
+            futures = []
+            for destination, selected, count, passes in jobs:
+                observation = {}
+                observations[destination] = observation
+                futures.append(pool.submit(budgeted_device, budget, count, destination, selected, mode,
+                                           recording if recording != "0" else None, ready, intro_order_check,
+                                           observation, passes=passes, preparation=prepared[destination]))
+            for future in futures:
+                results.extend(future.result())
+    for destination, observation in observations.items():
         if observation:
+            alias = destination.alias
             previous = timings["devices"].setdefault(alias, {})
             for key in ("suites", "tests"):
-                previous.setdefault(key, {}).update(observation.pop(key, {}))
-            previous.update(observation)
+                previous.setdefault(key, {}).update(observation.get(key, {}))
+    for alias in aliases:
+        samples = [o for d, o in observations.items() if d.alias == alias]
+        if samples and all("wall" in o for o in samples):
+            previous = timings["devices"][alias]
+            previous["wall"] = max(o["wall"] for o in samples)
+            previous["selection"] = selections[alias]
+            if set(selectors("matrix")) <= set(selections[alias]):
+                logic = sum(previous.get("suites", {}).get(s, suite_seconds(s, alias, {}))
+                            for s in selections[alias] if s not in selectors("matrix"))
+                previous["matrix_wall"] = max(1, previous["wall"] - logic)
     save_timings(timings)
     print("\nSimulator results:", flush=True)
     for result in results:

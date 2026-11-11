@@ -3,11 +3,14 @@
     import Foundation
 
     public enum MockAppSeed {
-        struct Fixtures: Decodable {
+        struct Fixtures: Decodable, Sendable {
             let settings: AccountSettings
             var trips: [TripFixture]
         }
         typealias TripFixture = MockTripFixtures.Template
+        private static let decodedFixtures = Result {
+            try JSONDecoder().decode(Fixtures.self, from: MockTripFixtures.fixtureData())
+        }
 
         public static func make(
             now: Date, unverified: Bool = false, walkthroughSeen: Bool = false,
@@ -16,7 +19,7 @@
         ) throws
             -> MockServerState
         {
-            var fixtures = try JSONDecoder().decode(Fixtures.self, from: MockTripFixtures.fixtureData())
+            var fixtures = try decodedFixtures.get()
             fixtures.trips = try fixtures.trips.enumerated().map {
                 try rebase($0.element, index: $0.offset, now: now)
             }
@@ -82,7 +85,7 @@
         static func refresh(_ stored: MockServerState, now: Date) throws -> MockServerState {
             var state = stored
             let anchor = anchor(now: now)
-            let fixtures = try JSONDecoder().decode(Fixtures.self, from: MockTripFixtures.fixtureData())
+            let fixtures = try decodedFixtures.get()
             for accountID in [MockScenarioValues.demoID, MockScenarioValues.twoFactorID] {
                 guard var account = state.accounts[accountID] else { continue }
                 for (index, fixture) in fixtures.trips.enumerated() {

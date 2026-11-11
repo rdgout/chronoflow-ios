@@ -8,6 +8,31 @@ import Testing
 @testable import DataAccess
 
 @Suite @MainActor struct SettingsBodyClockTests {
+    @Test func reopenedEditorUsesChronotypeObservedFromLocalSave() async throws {
+        let f = try await SettingsPageFixture.make()
+        try await f.database.write { db in
+            try StoreApplication.setting(
+                "bodyClock", value: .encoding(JSONObject(["chronotype": .string("early")])), db: db)
+        }
+        let pages = f.model()
+        pages.start()
+        defer { pages.stop() }
+        try await f.waitUntil { pages.settingsLoaded && pages.settings["bodyClock"]?["chronotype"] == .string("early") }
+        let editor = SettingsBodyClockModel(answers: try #require(pages.settings["bodyClock"])) { patch in
+            try await pages.enqueue(.settings(section: .bodyClock, patch: patch))
+        }
+        await editor.change(.about, ["chronotype": .string("late")])
+        #expect(editor.saved.contains(.about))
+        try await f.waitUntil { pages.settings["bodyClock"]?["chronotype"] == .string("late") }
+        let reopened = SettingsBodyClockModel(answers: try #require(pages.settings["bodyClock"])) { _ in
+            Issue.record("Reopening must not save")
+        }
+        #expect(reopened.answers["chronotype"] == .string("late"))
+        #expect(reopened.saved.isEmpty && !pages.failure)
+        pages.stop()
+        try await f.close()
+    }
+
     @Test func chronotypeSelectionIsSavedLocallyAndQueuedBeforeShowingSaved() async throws {
         let f = try await SettingsPageFixture.make()
         let model = SettingsBodyClockModel(answers: JSONObject(["ageBand": .string("18_64")])) { patch in

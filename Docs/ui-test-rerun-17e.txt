@@ -1,0 +1,11 @@
+AppTests/UITestReseedTests
+AppTests/DataSourceBuildSettingTests
+AppTests/DataSourceFactoryHostedTests
+ReleaseReadinessTests/ReleaseReadinessTests
+AppUITests/UIReseedTests
+AppUITests/AuthSessionTests
+AppUITests/ReadinessTests
+AppUITests/LaunchSceneTests
+AppUITests/LaunchSceneDarkTests
+AppUITests/LaunchToWelcomeTests
+AppUITests/WelcomeLogicTests

@@ -2095,6 +2095,52 @@ User decision 2026-11-06: implement these when the named states exist; this roun
 - [ ] **Keep pending local edits on login upsert.** Trigger: future profile/name editing, walkthrough completion or Settings UI tasks begin writing to the outbox through Phase 9c's `OutboxRepository.enqueue(_:)` local-mutation task. Evidence: `Sources/LocalStore/SessionAccountDatabase.swift:29–45` overwrites name, walkthroughSeen and policies; RN `src/db/store-account.ts:10–23,46–64` preserves queued name/walkthrough edits and settings sections. Same-account sign-in is reachable while already signed in (`Sources/AppCore/SessionController.swift:354–359` reopens without a wipe). Fix: preserve pending local values/sections transactionally during login upsert, matching the existing Phase 9c full-pull protection; test same-account login with queued edits before enabling those producers.
 - [x] **Missing policies skip the terms gate (latent).** Trigger: the future terms screen task replaces Phase 4's `.terms` route seam and makes the Phase 10a/11d terms gate visible. Evidence: RN `src/session/gate.ts:78–79` keeps missing policies loading; `Sources/LocalStore/AccountReadinessRepository.swift:17` falls through to walkthrough/app. Fix: match RN's unresolved-policy loading behavior before choosing a destination, preserving its explicit first-load allowance; test missing → loaded policies and terms precedence with the terms screen.
 
+## Hosted test repair follow-up (user, 2026-11-09)
+
+- [x] Keep Debug plan fixtures out of the Release readiness test build without exposing app seeds.
+- [x] Restore key-window and visible-content guards at layout settlement; measure contrast from committed rendered content.
+- [x] Keep Step/Legend content within asymmetric horizontal safe areas using the shared measured rail modifier; retain both SE and asymmetric Duo hosted fixtures.
+- [x] Route committed unverified sessions after request cancellation and restore; keep all gate routing and verification reads outside the cancelled request.
+- [x] Restore cheap default Welcome self-comparisons and auth capture guards, without references; use fixed SE xxLarge fixtures and enforce required recovery elements in every layout state.
+- [x] Cover AppServices default file-store wiring through both factories, including lazy creation, the supplied root, seed content and persisted mail after source recreation.
+- [x] Replace unreliable tab minimization UI observations with a hosted assertion of the actual UIKit configuration, exact-label native tab navigation and a stable Trips screen check after scrolling.
+- [x] Correct the tier map, validate lint/host and Debug/Release compilation, and deliver atomic follow-up patches on `53ea64e` with an exact 17e rerun list. Lint, 591 Swift Testing tests + 19 XCTest methods (excluding the sandbox-blocked loopback test), generators/runner fixtures and SDK checks pass; full host execution fails only at the unchanged APICookieTests socket bind (`EPERM`). Simulator acceptance remains external.
+- [x] Attempt to restore the CPU settle/capture path for the fixed Forgot server/throttle contrast fixtures. Wait for stable geometry before and after scrolling, reserve half the SE height for the simulated keyboard so both states reach partial reveal, and assert the requested offset, measured displacement and clipping. Remove the unused hierarchy capture; retain all contrast, line-measurability and sky-ramp thresholds. Rerun `AuthSubtitleContrastTests`, `ForgotThrottleSnapshotGuardTests` and `ForgotServerSnapshotGuardTests` on 17e; the user's 17e rerun passes both snapshot guards but still fails partial-reveal contrast. Superseded by the verbatim main restoration below.
+
+Contrast follow-up validation: `make lint`, 591 Swift Testing tests and 19 XCTest methods (`sh Scripts/host-tests.sh --skip APICookieTests`), the remaining `make host-tests` targets and iOS 17 Debug/Release app/hosted compilation pass. The cold package run exceeded timeline timing budgets during concurrent compilation; those tests pass on the warm rerun. The unfiltered package run also confirms the unchanged APICookieTests loopback bind fails with sandbox `EPERM`. No simulator execution is claimed. Logs: `build/auth-contrast-{lint,host,package,host-rerun,ios}.log`.
+
+- [x] Restore `9c9267b`'s Forgot throttle/server test methods and `check(mode:)` verbatim, including the 17e fixture, all five appearance/language/size variants and every distinct audit reveal offset. Isolate main's unchanged settle/capture implementation in `ForgotBannerContrastTestHost` (type rename only), selected by a test-local alias; keep shared helpers identical to main and all other trimmed suites untouched. Replace the failed SE partial-reveal experiment without changing contrast or line-measurement thresholds.
+
+Main restoration validation: source comparison confirms the two methods and entire `check(mode:)`/scroll helper are verbatim from `9c9267b`, and the isolated host differs only in its type name. `make lint`, 591 Swift Testing tests + 19 XCTest methods (excluding only `APICookieTests`), 17 generator tests and 102 resource/runner fixtures pass. Full `make host-tests` fails only at the unchanged cookie loopback socket bind (`EPERM`). `make generate` and direct iOS 17 Debug/Release app/hosted compilation pass; no simulator execution is claimed. The user reports main's original two tests pass on this 17e simulator; acceptance of this restored copy remains pending. Focused rerun: `make targeted DEVICES="17e" ONLY="AppTests/AuthSubtitleContrastTests"`. Logs: `build/auth-main-restore-{source,lint,host,package,fixtures,generate,ios}.log`.
+
+## UI runner acceleration (user, 2026-11-09)
+
+- [x] Instrument gated Debug process entry, overlay commit, session readiness and exposed root plus runner launch return/first element; leave the measurement table in Docs/ui-test-tiers.md for user timings.
+- [x] Replace all UI expectation polling with bounded backoff, preserving timeout ceilings.
+- [x] Add a gated Debug fast launch profile, explicit slow mock opt-in and host parsing coverage.
+- [x] Share cold-launch and in-process seed setup with teardown and readiness acknowledgement; test equivalence.
+- [x] Reuse each eligible class process, reseed tests, balance classes and use typed queries.
+- [x] Validate strict lint, host tests and actual Release source compilation; deliver ordered atomic patches on `07c6ab8` and exact 17e selectors. Lint, 599 Swift Testing tests + 19 XCTest methods excluding the unchanged loopback EPERM, 17 generator tests and 103 resource/runner fixtures pass. Debug app/hosted/UI sources and actual Release DataAccess/Sync/app plus all AppTests typecheck against iOS 17. All 117 existing UI methods remain; two transport/isolation tests are added.
+- [ ] User-host acceptance: run the focused and full default UI manifests plus the single-worker launch/reset benchmark in Docs/ui-test-tiers.md, build/run ReadinessRelease, and fill the p50/p95/default-tier table. Actual Xcode build-for-testing is blocked here by unavailable CoreSimulator/package products; no simulator run or speed claim is recorded.
+
+## UI reseed acceptance repair (user, 2026-11-09)
+
+- [x] Log every Debug URL delivery (including scene connection), structured parse/authorization rejection, reset start and ready/failure with nonce and PID; attach screen and app hierarchy on runner acknowledgement failure. Compare UUID authorization by value.
+- [x] Replace launch-by-URL (`XCUIApplication.open`) with system URL dispatch (`XCUIDevice.shared.system.open`) so the existing scene receives the command; retain account/sheet replacement and the two benchmark methods as runtime acceptance.
+- [x] Refresh memory-backed mock request snapshots and serialize mutations against the shared store, retaining independent source credentials; cover cross-factory mail and session invalidation and concurrent writes.
+- [x] Accept an absent lazy Release store as empty while still rejecting seeded accounts.
+- [x] Honor the exact gated UI-fixture mock delay (zero by default), bypassing MockDataSource's ordinary 300–800 ms clamp without bypassing sign-in, two-factor, full pull, account storage or readiness. Add configuration-ready timing to separate fixture preparation from session restoration.
+- [x] Restore XcodeGen generation for PackageLogic with an explicit test-only app build target; keep its three selected package suites and default manifest unchanged.
+- [x] Run lint/quick and iOS compilation, package atomic commits and document exact runtime reruns and environment limitations. Lint, generation, all non-loopback host checks and fresh iOS 17 Debug/Release source checks pass; full quick is blocked only by the unchanged cookie-listener sandbox EPERM.
+- [ ] User-host acceptance: run Docs/ui-test-reseed-rerun-17e.txt, then the unchanged default and single-worker benchmark manifests, preserving both 17e result folders and app/runner timelines. Confirm unchanged PID across every reseed and successful Settings/Sign-in benchmark methods; measure the post-fix app-side intervals.
+
+## UI reseed remaining acceptance fixes (user, 2026-11-09)
+
+- [x] Compare requested launch-only arguments and environment against the cold process seed, including removed keys and duplicate overrides; cold-launch when they differ. Preserve caller-authored arguments for scene validation because XCTest adds argv defaults. End editing and resign first responder before reset teardown; keep the 12 s acknowledgement ceiling. Cover language/content-size cold launches and a Dutch/XXLarge in-edit reset with process/count assertions.
+- [x] Separate successful Verify resend countdown from throttle failure, wait for actual countdown/error state before auditing, and add contextual assertion messages plus host fixture coverage.
+- [x] Scope unreadable xcresult errors to their pass, retain reader diagnostics, and attribute log failures only to their own suite. Cover serial/clone logs and keep incomplete result extraction failing the gate.
+- [x] Run lint/quick and iOS source checks, deliver atomic patches on `caa72aa` if worktree metadata remains read-only, and record exact 17e reruns and acceptance limits. Strict lint, 605 Swift Testing methods + 19 XCTest methods excluding only the existing cookie-listener sandbox EPERM, 17 generator tests, 119 Python fixtures and direct iOS 17 Debug/Release compilation pass. Final quick fails only at that unchanged loopback test; simulator acceptance remains pending. Four atomic patches and messages are in `build/commits/`; the focused manifest adds the keyboard and frozen-launch suites.
+
 ## Open questions for the user
 
 | # | Question | Default | Blocks |
@@ -2145,3 +2191,52 @@ User decision 2026-11-06: implement these when the named states exist; this roun
 | 44 | **Guest wizard and claim.** Schedule Phase 18 now or later? | Later, after M2, as its own decision. | 18 |
 | 45 | **Screening questions and privacy.** The wizard asks blocking health-type screening questions (bipolar, pregnancy, VTE, eye disease) and stores the answers. There is no `PrivacyInfo.xcprivacy`, and the App Store privacy label is undecided. | Build the screening prompts with the server's wording, give the exclusion copy its own review against the clock-shift rule, and add the privacy manifest and label decision before TestFlight. | 16b copy sign-off; TestFlight |
 | 46 | **Date and time picking on Times.** The Wizard boards draw separate date and time pills per row. SwiftUI's `DatePicker` cannot show an empty value, so an empty pill currently opens a custom wheel popover, and once filled the system compact picker takes over. | One control per Departs/Arrives row: a single pill ("Choose" / "Mon 12 Oct · 14:40") that opens the same sheet every time, holding the system graphical `DatePicker` with date and time, the airport's local-time line and Done, as on the PickerDateTime board. PickerDateTime supplies the combined sheet; implemented in 16b.2. | Settled by the user, 2026-11-09: build the recommendation now, using the PickerDateTime board. 16b.2 Times |
+
+## Build and runner speed audit (user, 2026-11-09)
+
+Continue on `test/fast-ui-tests`; UI-test launch-speed acceptance runs separately. No UI-test behavior changes, release stamps, persistent shards or default matrix in this round.
+
+- [x] 1. Build simulator Debug/Release/Perf for arm64 only; assert runner flags for every configuration. Device/archive settings stay unchanged.
+- [x] 2. Overlap low-priority Release/Perf builds with Debug tests using separate DerivedData and build futures; cover waiting, reuse and failure propagation in runner fixtures.
+- [x] 3. Overlap primary 17e Debug comparison then Debug serial with Release/Perf on a second persistent regular-runtime 17e; prepare alongside builds, keep separate bundles and merge summaries/timings. Fixtures cover reuse/create, clone exclusion, overlap, ordering, budget and preparation failure. Serial placement supersedes the initial isolated-serial implementation per the repair below.
+- [x] 4. Isolate the three unchanged Release readiness tests in an iPhone-only hosted target depending only on ChronoFlow; update scheme, selectors, discovery/result mapping fixtures and commands.
+- [x] 5. Add memcmp equality fast path and pointer mismatch scan with unchanged error threshold/message; scan parity opacity/moon in one UInt32 pass. Extend existing pixel logic regression for equal/empty buffers and negative channel differences.
+- [x] 6. Add predicate/layout settling for hosted Forgot, Two-factor, Auth and Reset control checks; require two stable frame passes within 5 s, keep per-host raster/pixel coverage and assert the predicate path never captures.
+- [x] 7. Disable automatic simulator diagnostics by default with TEST_DIAGNOSTICS=1 opt-in; assert Debug/Release/Perf commands retain the switch semantics.
+- [x] 8. Keep only DesignSystemTests package tests in ChronoFlow; add PackageLogic for explicit package/matrix selectors, cache immutable decoded seeds with per-call rebasing, and report concurrent Swift Testing durations without summing overlaps. Add scheme/inventory/max-versus-sum fixtures and independent-clock/seed regression.
+- [ ] User-host acceptance: after the launch-speed run finishes, execute first/warm `make check` and Perf commands in Docs/tooling.md; collect build/pass/overall timings, both result folders, merged timings and failure details. No matrix, release stamp or persistent shards.
+
+Host verification: strict lint, 93 runner fixtures, resource/signing/contracts fixtures, 10 TokenGen
+and 7 AssetGen tests pass; XcodeGen spec validation and direct Swift 6/iOS 17 app/hosted/Release/Perf
+compiler checks pass. Final quick fails only at the known cookie-listener sandbox EPERM; all other
+package checks, including the new cache regression and timeline budgets, pass. See Docs/tooling.md
+for logs and the exact host acceptance/timing commands. UI/Perf test source files are unchanged.
+
+## Isolated simulator preparation repair (user, 2026-11-09)
+
+- [x] Repeat the shared boot-readiness, keyboard preference, appearance reset and installed-app removal before every pass on the primary and persistent isolated device. Reset appearance after every pass, including failures and timeouts; log preparation and cleanup in each destination's `prepare.log`.
+- [x] Add runner fixtures comparing the exact per-pass preparation and cleanup on both 17e destinations, with booted/shutdown devices, single/concurrent destinations and Debug/Release/Perf passes; cover preparation and cleanup failures and timeout cleanup.
+- [x] Validate `make lint` and all 99 runner fixtures on the host. Simulator acceptance remains pending.
+
+User-host result: the 324-second 15-suite rerun on `b883962` still rendered dark opening light on
+the isolated device, and post-comparison cleanup failed on the shutdown primary (simctl 149,
+CoreSimulator 405). Identical preparation did not resolve dark parity; superseded by the repair below.
+
+## Primary-device serial pass repair (user, 2026-11-09)
+
+- [x] Keep Debug comparison then Debug serial on the primary 17e; overlap only Release and selected Perf on the persistent isolated 17e. Preserve budget/recording/intro-order behavior and result/timing merging.
+- [x] Check live boot state before preparation; boot and fully prepare the primary before serial if Xcode shut it down. Skip post-pass appearance reset on nonbooted devices without booting them; log cleanup errors without reporting test failures.
+- [x] Update runner fixtures, Docs/tooling.md and CLAUDE.md/AGENTS.md placement/cleanup wording. Strict `make lint` and all 102 runner fixtures pass on the host.
+- [ ] User-host acceptance: rerun the 15 suites in `Docs/ui-test-reseed-rerun-17e.txt` with default workers and preserve both result directories. Confirm primary Debug serial dark opening parity, Release overlap and nonfailing shutdown cleanup. No simulator execution is claimed by this repair.
+
+## Forgot UI flake repairs (user, 2026-11-09)
+
+- [x] Make `ForgotPasswordTests/testServerBannerClearsOnEdit` use the shared tap/focus/backoff typing helper before submission and after the server banner appears. Wait for the field to unlock and the edited banner to disappear; describe each assertion. The view intentionally resigns focus while submitting and restores it after failure, so banner existence alone does not guarantee keyboard focus.
+
+Validation: strict `make lint` and direct Swift 6/iOS 17 UI-test compilation pass. CoreSimulator is unavailable in this sandbox; runtime acceptance remains pending.
+
+- [x] Make Forgot audits focus before typing and submit explicitly. Wait for the rendered inline-error row to expand the measured email-to-submit gap for malformed email, rather than treating keyboard focus as proof of validation; wait for the offline banner as well as server/throttle banners. Add messages to every assertion in `AuthAuditTests.swift` and the shared Forgot entry, Sign in entry and keyboard-dismiss helpers.
+
+Validation: final strict `make lint`, direct Swift 6/iOS 17 UI-test compilation, 17 generator tests and all 125 resource/runner fixtures pass. `make quick` fails only at the unchanged `APICookieTests/realRedirectCookieHandlingIsDisabled` loopback bind (`Operation not permitted`); all other package suites pass. TripWizardTests is unchanged. No simulator execution is claimed because CoreSimulator is unavailable here. User-host evidence on `04727a2`: cold `make check` passed in 1104 seconds; the warm run reported these Forgot flakes plus the excluded wizard picker failure.
+
+Focused runtime acceptance: `make targeted DEVICES="17e" ONLY="AppUITests/ForgotPasswordTests AppUITests/ForgotAuditTests"`.

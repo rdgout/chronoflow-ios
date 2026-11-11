@@ -15,11 +15,13 @@ Codex's `workspace-write` sandbox cannot run `xcodebuild` (nested `sandbox-exec`
 `make generate` creates the ignored project. `Scripts/ci.sh` runs `make generate check`.
 Use `make quick` for fix rounds: strict lint and every SwiftPM host suite, plus runner/resource fixtures.
 The warm inner-loop target is under one minute. `make check` adds generator/font freshness and one
-17e simulator: hosted AppTests including all D1c profile snapshots, the UI smoke set and isolated
-Release readiness. Debug and Release build once each; target under five minutes remains to be measured.
+17e model on primary and isolated destinations: hosted AppTests with fixed worst-case screen fixtures, the UI smoke set and isolated
+Release readiness. Debug builds first; Release builds alongside tests with isolated DerivedData; target under five minutes remains to be measured.
 
 User decision, 2026-11-06: **skip the seven-simulator matrix unless asked for**. Device fit is covered
-by the Mac device-table tests and explicit size/inset/scale captures of every profile inside 17e.
+by the Mac device-table tests and hosted worst-case layout checks on 17e. Reference-comparing
+snapshots are opt-in until references are approved; `make snapshots` compares and
+`SNAPSHOT_RECORD=1 make snapshots` records every registered snapshot suite.
 `make matrix` retains LPT scheduling and all seven runtimes on request only; no default/CI flow calls it.
 `make duo` is an opt-in spot check for Duo runtime behaviour changes, resolved on its separate runtime.
 Use `make targeted DEVICES="17e" ONLY="AppTests/WelcomeSnapshotTests/frozenIntro()"` for selected tests;
@@ -38,3 +40,36 @@ See `Docs/tooling.md` for exact commands, coverage mapping, budgets and environm
 Simulators use ad-hoc signing without a team so hosted Keychain tests can run. Device signing comes from ignored `Config/Local.xcconfig`, included
 by `Config/Base.xcconfig`; copy `Config/Local.xcconfig.example` to get started. All working rules and traps,
 including the no-trailer commit rule, are inherited from `AGENTS.md`.
+
+Simulator `build-for-testing` uses `ARCHS=arm64 ONLY_ACTIVE_ARCH=YES` in Debug, Release and Perf.
+These runner command-line settings leave device builds and archives unchanged.
+
+After the foreground Debug build, Release/Perf build in a background queue under `nice -n 10`
+while Debug tests run. Each uses `build/DerivedData-Release` / `build/DerivedData-Perf`; Debug
+keeps `build/DerivedData`. All share `build/SourcePackages`. Each pass waits for its build;
+build failures still fail the run. `REUSE_BUILD=1` requires current products in these paths.
+
+When the worker budget permits, 17e Debug comparison runs on the primary plus Xcode clones
+followed by Debug serial tests on the primary. Only Release/Perf tests run concurrently on a
+persistent `ChronoFlow 17e Isolated`.
+The runner resolves/creates it by iPhone 17e type and regular runtime, excludes clones, and
+prepares destinations in background threads during builds. Results stay under `17e/` and
+`17e-isolated/`; summaries and `timings.json` merge under 17e. `SIM_CONCURRENCY=1` keeps one
+destination; recording and intro-order diagnostics retain their existing single-device sequence.
+Before each pass, live device state is checked and the destination is booted and prepared as needed.
+Post-pass appearance cleanup skips devices that are not booted and never boots them; skips/errors
+are logged in `prepare.log` and do not fail tests.
+
+`ReadinessRelease` builds only the hosted `ReleaseReadinessTests` target from its own directory,
+with `TEST_HOST`/`BUNDLE_LOADER` and only a ChronoFlow dependency. Select it with
+`make targeted DEVICES="17e" ONLY="ReleaseReadinessTests/ReleaseReadinessTests"`.
+Regenerate the project before running; Release no longer compiles the Debug AppTests bundle.
+
+Simulator passes use `-collect-test-diagnostics never` by default. Failure results, attachments
+and session/stdout logs remain. `TEST_DIAGNOSTICS=1 make targeted DEVICES="17e" ONLY="AppUITests/SignInTests"`
+restores Xcode's on-failure logarchive/sysdiagnose collection.
+
+ChronoFlow's iOS test action includes only DesignSystemTests among package bundles. Explicit
+LaunchTests/WelcomeTests selections use `PackageLogic` (Debug); host-only bundles stay in quick.
+Build logs print elapsed time per scheme/configuration. Concurrent Swift Testing suite timings
+use max case duration; XCTest/serialized suites keep sums. See Docs/tooling.md for warm-run timing commands.

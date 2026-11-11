@@ -187,9 +187,9 @@ Phase 9a–9d stack and its review records below.
 |---|---|---|---|
 | Inner loop | `make quick` | Strict lint, all SwiftPM host tests, runner/resource fixtures | <1 min warm |
 | Targeted | `make targeted DEVICES="17e" ONLY="AppTests/WelcomeSnapshotTests/frozenIntro()"` | Build once, selected suites/methods on selected aliases | <2–3 min after build |
-| Commit gate | `make check` | Quick + generators/font checks, then 17e hosted AppTests with all-size snapshots, UI smoke, UIKit-only font/asset/glyph checks, isolated Release readiness | <5 min |
+| Commit gate | `make check` | Quick + generators/font checks, then 17e hosted AppTests with fixed worst-case screen fixtures, UI smoke, UIKit-only font/asset/glyph checks, isolated Release readiness | <5 min |
 | Duo spot check | `make duo` | Opt-in runtime smoke after Duo-specific runtime changes | — |
-| Requested matrix | `make matrix` | All seven runtime destinations, LPT-balanced logic/Release once; profile/system-reference tests once on 17e | No default or CI invocation |
+| Requested matrix | `make matrix` | All seven runtime destinations, LPT-balanced logic/Release once; system-reference tests once on 17e | No default or CI invocation |
 
 Auth audit cost decision (2026-11-08, supersedes the dated five-variant default recipes below):
 `make check`, the runner default and targeted `AuthAuditTests` run **one method per distinct screen state**,
@@ -249,8 +249,11 @@ run the commands above on 17e. No snapshot recording, `make check`, Duo or seven
 also check on 17e; only `--matrix` or explicit compatibility matrix flags request all seven.
 `make test` and `make snapshots` select subsets on 17e. No default flow calls Duo or the matrix.
 Generate the project after manifest/project changes. Debug/ChronoFlow and isolated Release/ReadinessRelease
-build once each into `build/DerivedData`, with pinned resolution, then use `test-without-building`.
-Only the Release verification build gets `ENABLE_TESTABILITY=YES`. Perf stays separate.
+build once each for arm64 with pinned resolution, then use `test-without-building`. Debug uses
+`build/DerivedData`; low-priority Release/Perf builds overlap tests using `build/DerivedData-Release`
+and `build/DerivedData-Perf`. All use `build/SourcePackages`. Only the Release verification build
+gets `ENABLE_TESTABILITY=YES`. On 17e Debug comparison and then Debug serial run on the primary;
+only Release/Perf overlap them on the persistent regular-runtime isolated 17e when the worker budget permits.
 
 Each `test-without-building` pass watches its combined stdout/stderr log for byte growth. A pass
 may run for more than the former 1,200-second limit while it keeps producing output:
@@ -290,7 +293,7 @@ accepts SwiftPM filters and configurations.
 |---|---|---|
 | AccountStorageLifecycleTests, SessionLifecycleTests, KeychainSessionStoreTests, DataSourceBuildSettingTests, DataSourceFactoryHostedTests, SyncLifecycleTests, AccountWipeTests, SessionReadinessTests | logic | Debug AppTests, once on 17e in check |
 | LaunchConnectionTests | matrix (live app lifecycle) | Debug AppTests on 17e in check; other runtimes only when requested |
-| ReleaseReadinessTests | release | Isolated Release AppTests, once on 17e in check |
+| ReleaseReadinessTests | release | Isolated hosted ReleaseReadinessTests, once on 17e in check |
 
 None of these suites uses the profile-rendering policy. Runner fixtures verify both selection and
 the resulting check commands, including configuration, destination and exactly-once execution.
@@ -1160,7 +1163,7 @@ Duo remains on its iPhone19-4 runtime. `make duo` now includes the readiness UI 
 The hosted Keychain round-trip uses a unique test service. AppTests still links only ChronoFlow
 through TEST_HOST/BUNDLE_LOADER; package host tests use an in-memory SessionStore.
 
-The dedicated `ReadinessRelease` scheme lists only AppTests. Its command enables testability for
+The dedicated `ReadinessRelease` scheme lists only the small hosted ReleaseReadinessTests target. Its command enables testability for
 the hosted `@testable import ChronoFlow`; the `Perf` scheme keeps its normal Release settings.
 Package test bundles run only in Debug, where their `@testable` imports are supported. Selecting
 a test with `-only-testing` does not remove other test targets from a scheme's build graph.
@@ -1202,7 +1205,7 @@ Validate the Release signed-out restriction separately on the pinned simulator:
 xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData \
   -onlyUsePackageVersionsFromResolvedFile -scheme ReadinessRelease -configuration Release \
   -destination 'platform=iOS Simulator,name=iPhone 17e,OS=27.2' -testLanguage en -testRegion US \
-  ENABLE_TESTABILITY=YES -only-testing:AppTests/ReleaseReadinessTests test
+  ENABLE_TESTABILITY=YES -only-testing:ReleaseReadinessTests/ReleaseReadinessTests test
 ```
 
 Direct hosted-test compilation must use `-swift-version 6 -default-isolation MainActor`, with
@@ -1577,7 +1580,7 @@ xcodebuild -project ChronoFlow.xcodeproj -derivedDataPath build/DerivedData \
   -onlyUsePackageVersionsFromResolvedFile -scheme ReadinessRelease -configuration Release \
   -destination 'platform=iOS Simulator,id=D788B715-AA0A-4B5A-882B-323E1F984769' \
   -testLanguage en -testRegion US -parallel-testing-enabled NO ENABLE_TESTABILITY=YES \
-  -only-testing:AppTests/ReleaseReadinessTests test
+  -only-testing:ReleaseReadinessTests/ReleaseReadinessTests test
 ```
 
 ## Phase 9b: data-source contracts, API and mock (6 November 2026)
@@ -1853,13 +1856,13 @@ make targeted DEVICES="17e" ONLY="AppTests/SyncLifecycleTests"
 make targeted DEVICES="17e" ONLY="AppTests/AccountWipeTests"
 make targeted DEVICES="17e" ONLY="AppTests/SessionReadinessTests"
 make targeted DEVICES="17e" ONLY="AppTests/LaunchConnectionTests"
-make targeted DEVICES="17e" ONLY="AppTests/ReleaseReadinessTests"
+make targeted DEVICES="17e" ONLY="ReleaseReadinessTests/ReleaseReadinessTests"
 ```
 
 To build each configuration once and run the selection together:
 
 ```sh
-make targeted DEVICES="17e" ONLY="AppTests/SyncLifecycleTests AppTests/AccountWipeTests AppTests/SessionReadinessTests AppTests/LaunchConnectionTests AppTests/ReleaseReadinessTests AppTests/SessionLifecycleTests"
+make targeted DEVICES="17e" ONLY="AppTests/SyncLifecycleTests AppTests/AccountWipeTests AppTests/SessionReadinessTests AppTests/LaunchConnectionTests ReleaseReadinessTests/ReleaseReadinessTests AppTests/SessionLifecycleTests"
 ```
 
 make check remains an orchestrator-only integrated check on 17e. **make duo is not needed** for 9d:
@@ -1936,7 +1939,7 @@ make targeted DEVICES="17e" ONLY="AppTests/SyncLifecycleTests"
 make targeted DEVICES="17e" ONLY="AppTests/SessionReadinessTests"
 make targeted DEVICES="17e" ONLY="AppTests/AccountWipeTests"
 make targeted DEVICES="17e" ONLY="AppTests/LaunchConnectionTests"
-make targeted DEVICES="17e" ONLY="AppTests/ReleaseReadinessTests"
+make targeted DEVICES="17e" ONLY="ReleaseReadinessTests/ReleaseReadinessTests"
 ```
 
 
@@ -1967,7 +1970,7 @@ After applying the patches and the separate reference commit, run outside the sa
 ```sh
 make generate
 make targeted DEVICES="17e" ONLY="AppTests/AccountStorageLifecycleTests AppTests/SessionLifecycleTests AppTests/KeychainSessionStoreTests AppTests/DataSourceBuildSettingTests AppTests/DataSourceFactoryHostedTests AppTests/SyncLifecycleTests AppTests/AccountWipeTests AppTests/SessionReadinessTests AppTests/LaunchConnectionTests"
-make targeted DEVICES="17e" ONLY="AppTests/ReleaseReadinessTests"
+make targeted DEVICES="17e" ONLY="ReleaseReadinessTests/ReleaseReadinessTests"
 make check
 ```
 
@@ -1996,7 +1999,7 @@ REUSE_BUILD=1 make targeted DEVICES="17e" ONLY="AppTests/AuthSnapshotTests"
 ```
 
 The Auth host suites run in quick; controls/layout and UI are logic suites in check, with the
-appearance-switching audit isolated serially. AuthSnapshotTests uses the profiles policy and SNAPSHOTS.
+appearance-switching audit isolated serially. AuthSnapshotTests uses the opt-in snapshots policy and SNAPSHOTS until references are approved.
 Its SnapshotContainer windows reuse the shared profile fixtures, exact four insets and CPU layer
 capture used by Welcome. Full SE/17e/Duo/Pro Max and compact 17/Air/18 Pro categories remain covered,
 alongside the zero-inset board and AX5 cap equality. No Auth reference PNGs are included.
@@ -2121,7 +2124,7 @@ Apply the two ordered patches in `build/commits` and commit each corresponding l
 
 ```sh
 make generate
-make targeted DEVICES="17e" ONLY="DesignSystemTests/AuthBoardContrastTests AppTests/AuthControlTests AppTests/AuthLayoutTests AppUITests/SignInTests AppUITests/AuthAuditTests"
+make targeted DEVICES="17e" ONLY="AppTests/AuthControlTests AppTests/AuthLayoutTests AppUITests/SignInTests AppUITests/AuthAuditTests"
 ```
 
 This builds once and keeps the guard, native controls and all 24 audits in one result bundle:
@@ -2140,7 +2143,7 @@ all four gates, with and without cancellation after credential commit, followed 
 Those 16 native integration scenarios are type-checked; hosted execution remains for the commands below.
 
 AuthTests suites use the host policy in quick. AuthControlTests/AuthLayoutTests are hosted logic;
-AuthBoardContrastTests remains logic and is explicitly included in check's UIKit selection.
+AuthBoardContrastTests now runs on the Mac host; check no longer repeats its token arithmetic in the UIKit selection.
 SignInTests is UI logic; AuthAuditTests is registered for the serial device-appearance pass.
 AuthSnapshotTests uses profiles and SNAPSHOTS, with SnapshotContainer windows, shared full/compact
 profile fixtures, exact safe-area insets, window reuse and CPU layer capture. The zero-inset board and
@@ -2159,7 +2162,7 @@ Run the integrated Auth selection on 17e, then record only after review:
 
 ```sh
 make generate
-make targeted DEVICES="17e" ONLY="DesignSystemTests/AuthBoardContrastTests AppTests/AuthControlTests AppTests/AuthLayoutTests AppTests/SessionReadinessTests AppUITests/SignInTests AppUITests/AuthAuditTests"
+make targeted DEVICES="17e" ONLY="AppTests/AuthControlTests AppTests/AuthLayoutTests AppTests/SessionReadinessTests AppUITests/SignInTests AppUITests/AuthAuditTests"
 SNAPSHOT_RECORD=1 make targeted DEVICES="17e" ONLY="AppTests/AuthSnapshotTests"
 REUSE_BUILD=1 make targeted DEVICES="17e" ONLY="AppTests/AuthSnapshotTests"
 ```
@@ -2306,7 +2309,7 @@ acceptance on 17e/SE/Duo is settled at 9505993 (OQ 32). Task 2 adds acceptance c
 simulator and Two-factor visual results remain open in `Docs/auth-gate.md`. Phases 6–8 stay open.
 No seven-simulator matrix is required or requested.
 
-`make check` selects all Auth/TwoFactor controls/layout/guard suites, both profile-snapshot suites,
+`make check` selects all Auth/TwoFactor controls/layout/guard suites (reference-comparing snapshots are opt-in until approved),
 SignInTests, TwoFactorTests, AuthSessionTests, AuthAuditTests and both keyboard suites exactly once
 on 17e, retaining launch/Welcome/service coverage and isolated Release readiness. AuthAuditTests
 (device appearance) and AuthSessionTests (background/foreground) join the serial pass. The opt-in
@@ -2784,3 +2787,124 @@ Timeline geometry is pure PlanCore logic. `Tools/TokenGen/Plan.source.json` hold
 PlanUI contains models only. Call `start()`/`stop()` with the observation lifetime and inject `PlanClock` in tests. `TripRepository.detailValues` observes the current hash and matching plan atomically, including eviction. `PlanDecoder` performs decoding/layout off-main, caching the latest `(trip, inputHash, detailVersion)` and invalidating on changed bytes or eviction. The system clock resets its minute-boundary timer on foreground/significant-time/time-zone events. PlanUITests are host-only.
 
 Phase 14 host verification: `make plan-copy`, `make generators-check`, `make contracts-check`, strict lint and all new tests pass. `make quick` has only the known APICookie loopback `EPERM`; signing/resource/runner fixtures pass separately. Initial network resolution was denied; pinned local package/font caches allowed the checks to complete offline. No simulator run. Logs are `build/phase14-*.log`. The sandbox denies the worktree Git index; `build/commits/1.patch`–`3.patch` apply in order on `ef42d95`, with subjects in `messages.txt`.
+
+## Hosted screen tier update (2026-11-09)
+
+Reference-comparing snapshot suites use the opt-in `snapshots` policy until references are approved.
+`make check`, `make test` and `make matrix` exclude that policy. `make snapshots` compares all registered
+snapshots on 17e; `SNAPSHOT_RECORD=1 make snapshots` records them. Explicit `--only`/`make targeted`
+selectors also remain available. This supersedes earlier historical statements that check or the matrix
+runs all D1c profile snapshots. D1c Mac device-table tests and default hosted worst-case layout tests
+still check fit. Coverage transfers and render reductions are listed in `Docs/ui-test-tiers.md`.
+
+Simulator `build-for-testing` uses `ARCHS=arm64 ONLY_ACTIVE_ARCH=YES` in Debug, Release and Perf.
+These runner command-line settings leave device builds and archives unchanged.
+
+After the foreground Debug build, Release/Perf build in a background queue under `nice -n 10`
+while Debug tests run. Each uses `build/DerivedData-Release` / `build/DerivedData-Perf`; Debug
+keeps `build/DerivedData`. All share `build/SourcePackages`. Each pass waits for its build;
+build failures still fail the run. `REUSE_BUILD=1` requires current products in these paths.
+
+When the worker budget permits, 17e Debug comparison runs on the primary plus Xcode clones
+followed by Debug serial tests on the primary. Only Release/Perf tests run concurrently on a
+persistent `ChronoFlow 17e Isolated`.
+The runner resolves/creates it by iPhone 17e type and regular runtime, excludes clones, and
+prepares destinations in background threads during builds. Results stay under `17e/` and
+`17e-isolated/`; summaries and `timings.json` merge under 17e. `SIM_CONCURRENCY=1` keeps one
+destination; recording and intro-order diagnostics retain their existing single-device sequence.
+
+Every pass on either destination uses the same preparation: check live device state, boot if needed,
+wait for boot, write the simulator's keyboard preference, reset system appearance to light,
+and uninstall an existing app so installation
+refreshes its launch-screen cache and defaults. The first preparation overlaps the build; subsequent
+passes repeat it, booting a destination that Xcode shut down after comparison before Debug serial.
+After each pass, including failed and timed-out runs, appearance resets to light only if the device
+is still booted. Cleanup never boots a device, and a state-lookup or reset error is logged without
+adding a test failure. Preparation commands, cleanup resets and skipped/failed cleanup messages
+are recorded in each device's `prepare.log`; runner fixtures check preparation on both destinations,
+shutdown cleanup and primary boot/preparation ordering before serial tests.
+UI appearance tests continue to switch and restore `XCUIDevice.shared.appearance` themselves.
+
+The orchestrator's 324-second rerun of `b883962` passed the 15-suite manifest except for a
+post-comparison reset on the shutdown primary (simctl exit 149/CoreSimulator 405), and dark opening
+parity rendering light on the isolated device. Identical preparation did not resolve the latter.
+The 2026-11-09 repair returns appearance/system-launch serial tests to the known-good primary;
+Release and selected Perf tests retain the isolated destination. Host lint and all 102 runner
+fixtures pass. Runtime acceptance remains pending; rerun the same selection without recording:
+
+```sh
+make targeted DEVICES="17e" ONLY="$(cat Docs/ui-test-reseed-rerun-17e.txt)"
+```
+
+Preserve both result folders. Verify that Debug serial uses the primary after full preparation,
+dark opening parity passes, Release still overlaps Debug, and a shutdown cleanup skip is logged
+without a `FAIL` result. No matrix or Duo run is needed.
+
+`ReadinessRelease` builds only the hosted `ReleaseReadinessTests` target from its own directory,
+with `TEST_HOST`/`BUNDLE_LOADER` and only a ChronoFlow dependency. Select it with
+`make targeted DEVICES="17e" ONLY="ReleaseReadinessTests/ReleaseReadinessTests"`.
+Regenerate the project before running; Release no longer compiles the Debug AppTests bundle.
+
+Launch hosted pixel comparisons use `memcmp` for equal buffers and a pointer scan for maximum error/first mismatch; the ≤ 2 byte threshold and report are unchanged. Whole-frame opacity/moon checks share one UInt32 pass.
+
+Hosted auth control-state checks use `AuthTestHost.settle(until:)`: cancellable 10 ms yields,
+asserted predicates and two stable view-frame/bounds passes within 5 s. They keep an initial
+raster settle per host; AX5, shadow and other pixel assertions keep raster settling. UI-test waits
+are unchanged. The native-input regression verifies focus/resignation without captures.
+
+Simulator passes use `-collect-test-diagnostics never` by default. Failure results, attachments
+and session/stdout logs remain. `TEST_DIAGNOSTICS=1 make targeted DEVICES="17e" ONLY="AppUITests/SignInTests"`
+restores Xcode's on-failure logarchive/sysdiagnose collection.
+
+## Build and runner audit acceptance (2026-11-09)
+
+ChronoFlow's test action keeps AppTests, RenderTests, AppUITests and only DesignSystemTests from
+the package. PackageLogic builds LaunchTests, WelcomeTests and DesignSystemTests in Debug for
+explicit matrix/package selections, sharing Debug DerivedData. Host-only package tests stay in
+`make quick`. ReleaseReadinessTests remains a separate hosted target. No default matrix is added.
+
+MockAppSeed caches a Sendable decoded fixture Result lazily on first use; make/refresh copy the
+value before rebasing to each call's clock. Per-seed options and signing keys remain independent.
+The hosted factory suites retain their current isolation; changing it was secondary in the audit.
+
+`timings.json` uses the maximum case duration for concurrent Swift Testing suites, while retaining
+individual case durations. XCTest and `.serialized` suites still sum serial cases; suite elapsed
+lines in logs take precedence when present. A fixture checks the concurrent-suite inventory against
+source declarations. Existing per-case timing entries remain available for comparisons.
+
+After the separate launch-speed acceptance run has finished, run from this branch:
+
+```sh
+set -o pipefail
+make generate
+make lint
+/usr/bin/time -p make quick 2>&1 | tee build/build-speed-quick-host.log
+/usr/bin/time -p make check 2>&1 | tee build/build-speed-check-first.log
+cp -R build/test-results build/build-speed-results-first
+/usr/bin/time -p make check 2>&1 | tee build/build-speed-check-warm.log
+cp -R build/test-results build/build-speed-results-warm
+/usr/bin/time -p make perf 2>&1 | tee build/build-speed-perf.log
+```
+
+The first check includes the new arm64 build settings and cold Release DerivedData; compare the
+warm check separately. Collect overall `real`/runner `Elapsed`, each printed `Build … elapsed`,
+and each pass's elapsed time from `17e/{Debug-compare,Debug-serial}.{log,jsonl,xcresult}` and
+`17e-isolated/Release-compare.{log,jsonl,xcresult}`. Retain both timing JSON files,
+per-case launch parity/control timings, failure names and Perf launch metrics. Check that build
+logs show arm64 only, Release excludes AppTests compilation, Debug serial follows comparison on the
+primary, and Release overlaps Debug. Perf products/logs use `DerivedData-Perf` and `17e/Perf-compare`
+when selected alone, or `17e-isolated/Perf-compare` when overlapping Debug with enough workers.
+Do not use REUSE_BUILD until these new products exist. No matrix, Duo or reference recording is
+needed. For failure diagnostics, opt in with `TEST_DIAGNOSTICS=1` on a focused rerun.
+
+Host verification: strict lint, all 93 runner fixtures, signing/resource/contracts fixtures, 10
+TokenGen and 7 AssetGen tests pass. XcodeGen validates the updated project spec without replacing
+the acceptance run's generated project. Direct Swift 6/iOS 17 checks pass for the app, all hosted
+AppTests, the new ReleaseReadinessTests target and Perf app/tests; these checks execute no UIKit.
+The final `make quick` run has only the existing sandbox-denied cookie listener
+`APICookieTests.realRedirectCookieHandlingIsDisabled` (`POSIXErrorCode(1)`). All other package
+checks pass, including the cache regression and timeline performance budgets. The first quick run
+under concurrent compilation also exceeded the 30-day timeline budget; the final run passes it.
+Logs: `build/build-speed-final-{quick,fixtures}.log`, `build/build-speed-6-typecheck.log` and
+`build/build-speed-release-typecheck.log`. Runtime builds, both-device overlap and timings remain
+user-host acceptance. No simulator, matrix, Duo or recording was run here.

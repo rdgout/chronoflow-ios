@@ -3,6 +3,12 @@ import XCTest
 #if os(iOS)
     @MainActor
     enum UIWait {
+        static func until(timeout: TimeInterval, recordsFirstElement: Bool = true, condition: () -> Bool) -> Bool {
+            let found = BackoffPoll.until(timeout: timeout, condition: condition)
+            if found, recordsFirstElement { UITestTiming.firstElementFound() }
+            return found
+        }
+
         static func accessibilityAudit(
             in app: XCUIApplication, types: XCUIAccessibilityAuditType, timeout: TimeInterval,
             handler: @escaping (XCUIAccessibilityAuditIssue) throws -> Bool
@@ -57,7 +63,7 @@ import XCTest
             var stability = FrameStability()
             var settled: [CGRect]?
             var latest: [CGRect] = []
-            let predicate = NSPredicate { _, _ in
+            let ready = { () -> Bool in
                 guard elements.allSatisfy({ $0.exists }) else {
                     _ = stability.observe(nil)
                     return false
@@ -74,9 +80,25 @@ import XCTest
                 }
                 return false
             }
-            let expectation = XCTNSPredicateExpectation(predicate: predicate, object: nil)
-            let result = XCTWaiter.wait(for: [expectation], timeout: timeout)
+            let result = until(timeout: timeout, condition: ready)
             return try XCTUnwrap(settled, "\(message): \(result); frames=\(latest)")
         }
     }
 #endif
+
+@MainActor extension XCUIElement {
+    enum WaitState { case exists, hittable, enabled, gone }
+
+    func waitUntil(_ state: WaitState, timeout: TimeInterval) -> Bool {
+        let found = UIWait.until(timeout: timeout, recordsFirstElement: state != .gone) {
+            switch state {
+            case .exists: self.exists
+            case .hittable: self.exists && self.isHittable
+            case .enabled: self.exists && self.isEnabled
+            case .gone: !self.exists
+            }
+        }
+        if found, state != .gone { UITestTiming.firstElementFound() }
+        return found
+    }
+}

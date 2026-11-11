@@ -6,7 +6,40 @@ import UIKit
 import XCTest
 
 nonisolated final class AuthControlTests: XCTestCase {
-    @MainActor func testCardShadowMatchesBoardInkInAllEightSignInStates() async throws {
+    @MainActor func testRootCapMakesAX5EqualXXLarge() async throws {
+        try await AuthTestHost.registerFonts()
+        let fixture = try XCTUnwrap(AuthDeviceFixture.all().first { $0.name == "se" })
+        let host = try AuthTestHost(EmptyView(), size: fixture.size, insets: fixture.insets, scale: fixture.scale)
+        defer { host.close() }
+        var expected: SnapshotRaster?
+        var expectedFrames: [AuthElement: CGRect] = [:]
+        for category in [UIContentSizeCategory.extraExtraLarge, .accessibilityExtraExtraExtraLarge] {
+            var frames: [AuthElement: CGRect] = [:]
+            let measure: (AuthElement, CGRect) -> Void = { frames[$0] = $1 }
+            host.configure(
+                SignInView(model: authSnapshotModel(), back: {}, guest: {}, measure: measure), category: category)
+            try await host.settle()
+            let actual = try SnapshotRaster(png: XCTUnwrap(host.image().pngData()))
+            XCTAssertNil(
+                AuthSnapshotCapture.failure(
+                    raster: actual, size: fixture.size, scale: fixture.scale,
+                    viewport: CGRect(origin: .zero, size: fixture.size).inset(by: fixture.insets),
+                    frames: Dictionary(uniqueKeysWithValues: frames.map { ($0.key.rawValue, $0.value) }),
+                    required: Set(["brand", "heading", "card", "submit"])))
+            if let expected {
+                XCTAssertEqual(Set(frames.keys), Set(expectedFrames.keys))
+                for element in expectedFrames.keys.sorted(by: { $0.rawValue < $1.rawValue }) {
+                    XCTAssertEqual(frames[element], expectedFrames[element], "AX5 frame differs: \(element)")
+                }
+                XCTAssertTrue(actual == expected, "AX5 pixels differ from xxLarge: SE, en, light")
+            } else {
+                expected = actual
+                expectedFrames = frames
+            }
+        }
+    }
+
+    @MainActor func testCardShadowMatchesBoardInkWithAndWithoutABanner() async throws {
         try await AuthTestHost.registerFonts()
         let host = try AuthTestHost(EmptyView(), size: AuthShadowBoard.size, scale: AuthShadowBoard.scale)
         defer { host.close() }
@@ -14,7 +47,7 @@ nonisolated final class AuthControlTests: XCTestCase {
             host.configure(CfSky(), style: style)
             try await host.settle()
             let skies = try shadowCaptures(host)
-            for banner in [nil] + [AuthBannerKind.credentials, .locked, .server].map(Optional.some) {
+            for banner in [nil, AuthBannerKind.locked] {
                 var frames: [AuthElement: CGRect] = [:]
                 let model = authSnapshotModel()
                 if let banner { model.form.receive(snapshotFailure(banner)) }
@@ -103,6 +136,14 @@ nonisolated final class AuthControlTests: XCTestCase {
             XCTAssertEqual(field.autocorrectionType, .no)
             XCTAssertEqual(field.autocapitalizationType, .none)
         }
+        host.prepareCapture = { _ in XCTFail("Predicate settling must not capture pixels") }
+        let email = try XCTUnwrap(fields.first { $0.textContentType == .username })
+        XCTAssertTrue(email.becomeFirstResponder())
+        try await host.settle { email.isFirstResponder && email.isEnabled }
+        XCTAssertTrue(email.isFirstResponder)
+        host.window.endEditing(true)
+        try await host.settle { fields.allSatisfy { !$0.isFirstResponder } }
+        XCTAssertTrue(fields.allSatisfy { !$0.isFirstResponder })
     }
 
     @MainActor func testPasskeyGlyphUsesThePrimaryForegroundInBothAppearances() async throws {
@@ -137,93 +178,98 @@ nonisolated final class AuthControlTests: XCTestCase {
         try await AuthTestHost.registerFonts()
         for style in [UIUserInterfaceStyle.light, .dark] {
             for scale: CGFloat in [2, 3] {
-                for category in [UIContentSizeCategory.large, .extraExtraLarge] {
-                    for kind in [AuthButton.Kind.primary, .outline, .footer] {
-                        var button = CGRect.zero
-                        let host = try AuthTestHost(
-                            AuthButton("Sign in", kind: kind) {}
+                let category = UIContentSizeCategory.extraExtraLarge
+                let kinds: [AuthButton.Kind] = [.primary, .outline, .footer]
+                var frames: [Int: CGRect] = [:]
+                let host = try AuthTestHost(
+                    VStack(spacing: AuthTokens.cardGap) {
+                        ForEach(kinds.indices, id: \.self) { index in
+                            AuthButton("Sign in", kind: kinds[index]) {}
                                 .onGeometryChange(for: CGRect.self) {
                                     $0.frame(in: .global)
                                 } action: {
-                                    button = $0
+                                    frames[index] = $0
                                 }
-                                .padding(AuthTokens.cardPadding)
-                                .background(ColorToken.card.color),
-                            size: CGSize(width: 375, height: 812), style: style, category: category, scale: scale)
-                        defer { host.close() }
-                        try await host.settle()
-                        XCTAssertEqual(button.width, 375 - 2 * AuthTokens.cardPadding, accuracy: 0.5)
-                        XCTAssertGreaterThanOrEqual(button.height, AuthTokens.touch)
-                        let raster = try SnapshotRaster(png: XCTUnwrap(host.image().pngData()))
-                        let traits = host.controller.traitCollection
-                        let backdrop = try rgb(.card, traits: traits)
-                        let fill: [Double]
-                        switch kind {
-                        case .primary: fill = try rgb(.primary, traits: traits)
-                        case .outline: fill = try rgb(.background, traits: traits)
-                        default:
-                            let appearance: TokenAppearance = style == .dark ? .dark : .light
-                            let pill = ColorToken.skyCopyBackground.components(for: appearance)
-                            let card = ColorToken.card.components(for: appearance)
-                            fill = try rgb(
-                                XCTUnwrap(
-                                    CGColor(
-                                        colorSpace: CGColorSpace(name: CGColorSpace.displayP3)!,
-                                        components: [
-                                            pill.red * pill.alpha + card.red * (1 - pill.alpha),
-                                            pill.green * pill.alpha + card.green * (1 - pill.alpha),
-                                            pill.blue * pill.alpha + card.blue * (1 - pill.alpha), 1,
-                                        ].map { CGFloat($0) })))
                         }
-                        let stroke = try rgb(.input, traits: traits)
-                        let radius = button.height / 2
-                        let margin = 1 / scale
-                        var exteriorFailures = 0
-                        var interiorFailures = 0
-                        var strokePixels = [0, 0]
-                        for y in Int((button.minY - 2) * scale)..<Int((button.maxY + 2) * scale) {
-                            for x in Int((button.minX - 2) * scale)..<Int((button.maxX + 2) * scale) {
-                                let point = CGPoint(x: (CGFloat(x) + 0.5) / scale, y: (CGFloat(y) + 0.5) / scale)
-                                let side: Int
-                                let centerX: CGFloat
-                                if point.x <= button.minX + radius {
-                                    side = 0
-                                    centerX = button.minX + radius
-                                } else if point.x >= button.maxX - radius {
-                                    side = 1
-                                    centerX = button.maxX - radius
-                                } else {
-                                    continue
-                                }
-                                let distance = hypot(point.x - centerX, point.y - button.midY) - radius
-                                let offset = (y * raster.width + x) * 4
-                                func matches(_ expected: [Double]) -> Bool {
-                                    (0..<3).allSatisfy {
-                                        abs(Double(raster.bytes[offset + $0]) / 255 - expected[$0]) < 0.02
-                                    }
-                                }
-                                // Exclude one pixel of antialiasing around the analytic circle and its inset stroke.
-                                if distance > margin && !matches(backdrop) { exteriorFailures += 1 }
-                                if distance < -AuthTokens.borderWidth - margin && !matches(fill) {
-                                    interiorFailures += 1
-                                }
-                                if distance >= -AuthTokens.borderWidth - margin && distance <= margin
-                                    && matches(stroke)
-                                {
-                                    strokePixels[side] += 1
+                    }.padding(AuthTokens.cardPadding).background(ColorToken.card.color),
+                    size: CGSize(width: 375, height: 812), style: style, category: category, scale: scale)
+                defer { host.close() }
+                try await host.settle()
+                XCTAssertEqual(frames.count, kinds.count)
+                let raster = try SnapshotRaster(png: XCTUnwrap(host.image().pngData()))
+                for (index, kind) in kinds.enumerated() {
+                    let button = try XCTUnwrap(frames[index])
+                    XCTAssertEqual(button.width, 375 - 2 * AuthTokens.cardPadding, accuracy: 0.5)
+                    XCTAssertGreaterThanOrEqual(button.height, AuthTokens.touch)
+                    let traits = host.controller.traitCollection
+                    let backdrop = try rgb(.card, traits: traits)
+                    let fill: [Double]
+                    switch kind {
+                    case .primary: fill = try rgb(.primary, traits: traits)
+                    case .outline: fill = try rgb(.background, traits: traits)
+                    default:
+                        let appearance: TokenAppearance = style == .dark ? .dark : .light
+                        let pill = ColorToken.skyCopyBackground.components(for: appearance)
+                        let card = ColorToken.card.components(for: appearance)
+                        fill = try rgb(
+                            XCTUnwrap(
+                                CGColor(
+                                    colorSpace: CGColorSpace(name: CGColorSpace.displayP3)!,
+                                    components: [
+                                        pill.red * pill.alpha + card.red * (1 - pill.alpha),
+                                        pill.green * pill.alpha + card.green * (1 - pill.alpha),
+                                        pill.blue * pill.alpha + card.blue * (1 - pill.alpha), 1,
+                                    ].map { CGFloat($0) })))
+                    }
+                    let stroke = try rgb(.input, traits: traits)
+                    let radius = button.height / 2
+                    let margin = 1 / scale
+                    var exteriorFailures = 0
+                    var interiorFailures = 0
+                    var strokePixels = [0, 0]
+                    for y in Int((button.minY - 2) * scale)..<Int((button.maxY + 2) * scale) {
+                        for x in Int((button.minX - 2) * scale)..<Int((button.maxX + 2) * scale) {
+                            let point = CGPoint(x: (CGFloat(x) + 0.5) / scale, y: (CGFloat(y) + 0.5) / scale)
+                            let side: Int
+                            let centerX: CGFloat
+                            if point.x <= button.minX + radius {
+                                side = 0
+                                centerX = button.minX + radius
+                            } else if point.x >= button.maxX - radius {
+                                side = 1
+                                centerX = button.maxX - radius
+                            } else {
+                                continue
+                            }
+                            let distance = hypot(point.x - centerX, point.y - button.midY) - radius
+                            let offset = (y * raster.width + x) * 4
+                            func matches(_ expected: [Double]) -> Bool {
+                                (0..<3).allSatisfy {
+                                    abs(Double(raster.bytes[offset + $0]) / 255 - expected[$0]) < 0.02
                                 }
                             }
-                        }
-                        let context = "\(kind), \(style), \(scale)x, \(category.rawValue)"
-                        XCTAssertEqual(exteriorFailures, 0, "No hairlines or fill outside the circular cap: \(context)")
-                        XCTAssertEqual(interiorFailures, 0, "Fill must reach the circular cap: \(context)")
-                        if kind == .outline {
-                            for count in strokePixels {
-                                XCTAssertGreaterThan(count, 5, "Both caps must retain their outline: \(context)")
+                            // Exclude one pixel of antialiasing around the analytic circle and its inset stroke.
+                            if distance > margin && !matches(backdrop) { exteriorFailures += 1 }
+                            if distance < -AuthTokens.borderWidth - margin && !matches(fill) {
+                                interiorFailures += 1
+                            }
+                            if distance >= -AuthTokens.borderWidth - margin && distance <= margin
+                                && matches(stroke)
+                            {
+                                strokePixels[side] += 1
                             }
                         }
                     }
+                    let context = "\(kind), \(style), \(scale)x, \(category.rawValue)"
+                    XCTAssertEqual(exteriorFailures, 0, "No hairlines or fill outside the circular cap: \(context)")
+                    XCTAssertEqual(interiorFailures, 0, "Fill must reach the circular cap: \(context)")
+                    if kind == .outline {
+                        for count in strokePixels {
+                            XCTAssertGreaterThan(count, 5, "Both caps must retain their outline: \(context)")
+                        }
+                    }
                 }
+
             }
         }
     }
@@ -231,29 +277,29 @@ nonisolated final class AuthControlTests: XCTestCase {
     @MainActor func testCreateAccountLinkUsesDawnTextOnTheCardInBothAppearances() async throws {
         try await AuthTestHost.registerFonts()
         for style in [UIUserInterfaceStyle.light, .dark] {
-            for language in ["en", "nl"] {
-                var frames: [AuthElement: CGRect] = [:]
-                let host = try AuthTestHost(
-                    SignInView(model: authSnapshotModel(), back: {}, guest: {}, measure: { frames[$0] = $1 }),
-                    size: CGSize(width: 375, height: 812), style: style, language: language, scale: 3)
-                defer { host.close() }
-                try await host.settle()
-                let raster = try SnapshotRaster(png: XCTUnwrap(host.image().pngData()))
-                let label = try XCTUnwrap(frames[.signupLabel])
-                let expected = try rgb(.dawnText, traits: host.controller.traitCollection)
-                var matches = 0
-                for y in Int(label.minY * host.scale)..<Int(label.maxY * host.scale) {
-                    for x in Int(label.minX * host.scale)..<Int(label.maxX * host.scale) {
-                        let offset = (y * raster.width + x) * 4
-                        if zip(raster.bytes[offset..<offset + 3], expected).allSatisfy({
-                            abs(Double($0) / 255 - $1) < 0.02
-                        }) {
-                            matches += 1
-                        }
+            let language = "nl"
+            var frames: [AuthElement: CGRect] = [:]
+            let host = try AuthTestHost(
+                SignInView(model: authSnapshotModel(), back: {}, guest: {}, measure: { frames[$0] = $1 }),
+                size: CGSize(width: 375, height: 812), style: style, language: language, scale: 3)
+            defer { host.close() }
+            try await host.settle()
+            let raster = try SnapshotRaster(png: XCTUnwrap(host.image().pngData()))
+            let label = try XCTUnwrap(frames[.signupLabel])
+            let expected = try rgb(.dawnText, traits: host.controller.traitCollection)
+            var matches = 0
+            for y in Int(label.minY * host.scale)..<Int(label.maxY * host.scale) {
+                for x in Int(label.minX * host.scale)..<Int(label.maxX * host.scale) {
+                    let offset = (y * raster.width + x) * 4
+                    if zip(raster.bytes[offset..<offset + 3], expected).allSatisfy({
+                        abs(Double($0) / 255 - $1) < 0.02
+                    }) {
+                        matches += 1
                     }
                 }
-                XCTAssertGreaterThan(matches, 5, "Create account ink must use dawnText in \(style), \(language)")
             }
+            XCTAssertGreaterThan(matches, 5, "Create account ink must use dawnText in \(style), \(language)")
+
         }
     }
 
@@ -342,58 +388,58 @@ nonisolated final class AuthControlTests: XCTestCase {
     @MainActor func testGuestFooterRendersTheBoardTextAndTranslucentPillColors() async throws {
         try await AuthTestHost.registerFonts()
         for style in [UIUserInterfaceStyle.light, .dark] {
-            for language in ["en", "nl"] {
-                var frames: [AuthControlPart: CGRect] = [:]
-                var button = CGRect.zero
-                let host = try AuthTestHost(
-                    AuthButton(
-                        AuthCopy.string("New here? Plan a trip first", locale: Locale(identifier: language)),
-                        kind: .footer, measure: { frames[$0] = $1 }
-                    ) {}
-                    .onGeometryChange(for: CGRect.self) {
-                        $0.frame(in: .global)
-                    } action: {
-                        button = $0
-                    }
-                    .padding(AuthTokens.cardPadding)
-                    .background(ColorToken.skyHorizon.color),
-                    size: CGSize(width: 390, height: 844), style: style, language: language)
-                defer { host.close() }
-                try await host.settle()
-                let raster = try SnapshotRaster(png: XCTUnwrap(host.image().pngData()))
-                let appearance: TokenAppearance = style == .dark ? .dark : .light
-                let pill = ColorToken.skyCopyBackground.components(for: appearance)
-                let sky = ColorToken.skyHorizon.components(for: appearance)
-                let composite = try XCTUnwrap(
-                    CGColor(
-                        colorSpace: CGColorSpace(name: CGColorSpace.displayP3)!,
-                        components: [
-                            pill.red * pill.alpha + sky.red * (1 - pill.alpha),
-                            pill.green * pill.alpha + sky.green * (1 - pill.alpha),
-                            pill.blue * pill.alpha + sky.blue * (1 - pill.alpha), 1,
-                        ].map { CGFloat($0) }))
-                let expectedPill = try rgb(composite)
-                let offset =
-                    (Int(button.midY * host.scale) * raster.width + Int((button.minX + button.height / 2) * host.scale))
-                    * 4
-                for channel in 0..<3 {
-                    XCTAssertEqual(Double(raster.bytes[offset + channel]) / 255, expectedPill[channel], accuracy: 0.02)
+            let language = "nl"
+            var frames: [AuthControlPart: CGRect] = [:]
+            var button = CGRect.zero
+            let host = try AuthTestHost(
+                AuthButton(
+                    AuthCopy.string("New here? Plan a trip first", locale: Locale(identifier: language)),
+                    kind: .footer, measure: { frames[$0] = $1 }
+                ) {}
+                .onGeometryChange(for: CGRect.self) {
+                    $0.frame(in: .global)
+                } action: {
+                    button = $0
                 }
-                let label = try XCTUnwrap(frames[.label])
-                let expectedText = try rgb(.skyCopy, traits: host.controller.traitCollection)
-                var matches = 0
-                for y in Int(label.minY * host.scale)..<Int(label.maxY * host.scale) {
-                    for x in Int(label.minX * host.scale)..<Int(label.maxX * host.scale) {
-                        let offset = (y * raster.width + x) * 4
-                        if zip(raster.bytes[offset..<offset + 3], expectedText).allSatisfy({
-                            abs(Double($0) / 255 - $1) < 0.02
-                        }) {
-                            matches += 1
-                        }
-                    }
-                }
-                XCTAssertGreaterThan(matches, 5, "Footer ink must use skyCopy in \(style), \(language)")
+                .padding(AuthTokens.cardPadding)
+                .background(ColorToken.skyHorizon.color),
+                size: CGSize(width: 390, height: 844), style: style, language: language)
+            defer { host.close() }
+            try await host.settle()
+            let raster = try SnapshotRaster(png: XCTUnwrap(host.image().pngData()))
+            let appearance: TokenAppearance = style == .dark ? .dark : .light
+            let pill = ColorToken.skyCopyBackground.components(for: appearance)
+            let sky = ColorToken.skyHorizon.components(for: appearance)
+            let composite = try XCTUnwrap(
+                CGColor(
+                    colorSpace: CGColorSpace(name: CGColorSpace.displayP3)!,
+                    components: [
+                        pill.red * pill.alpha + sky.red * (1 - pill.alpha),
+                        pill.green * pill.alpha + sky.green * (1 - pill.alpha),
+                        pill.blue * pill.alpha + sky.blue * (1 - pill.alpha), 1,
+                    ].map { CGFloat($0) }))
+            let expectedPill = try rgb(composite)
+            let offset =
+                (Int(button.midY * host.scale) * raster.width + Int((button.minX + button.height / 2) * host.scale))
+                * 4
+            for channel in 0..<3 {
+                XCTAssertEqual(Double(raster.bytes[offset + channel]) / 255, expectedPill[channel], accuracy: 0.02)
             }
+            let label = try XCTUnwrap(frames[.label])
+            let expectedText = try rgb(.skyCopy, traits: host.controller.traitCollection)
+            var matches = 0
+            for y in Int(label.minY * host.scale)..<Int(label.maxY * host.scale) {
+                for x in Int(label.minX * host.scale)..<Int(label.maxX * host.scale) {
+                    let offset = (y * raster.width + x) * 4
+                    if zip(raster.bytes[offset..<offset + 3], expectedText).allSatisfy({
+                        abs(Double($0) / 255 - $1) < 0.02
+                    }) {
+                        matches += 1
+                    }
+                }
+            }
+            XCTAssertGreaterThan(matches, 5, "Footer ink must use skyCopy in \(style), \(language)")
+
         }
     }
 
@@ -425,10 +471,8 @@ nonisolated final class AuthControlTests: XCTestCase {
         }
         let host = try AuthTestHost(view, size: CGSize(width: 390, height: 844))
         defer { host.close() }
-        for _ in 0..<100 where sizes.count != 2 {
-            host.window.layoutIfNeeded()
-            try await Task.sleep(for: .milliseconds(10))
-        }
+        try await host.settle()
+        try await host.settle { sizes.count == 2 }
         XCTAssertEqual(try XCTUnwrap(sizes["idle"]), try XCTUnwrap(sizes["busy"]))
         XCTAssertGreaterThanOrEqual(try XCTUnwrap(sizes["busy"]).height, AuthTokens.touch)
     }

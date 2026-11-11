@@ -3,7 +3,7 @@ SHELL := /bin/sh
 .NOTPARALLEL:
 
 XCODEGEN ?= /opt/homebrew/bin/xcodegen
-SWIFT_PATHS := App AppTests AppUITests RenderTests PerfUITests Packages/ChronoFlowKit/Package.swift Packages/ChronoFlowKit/Sources Packages/ChronoFlowKit/Tests $(wildcard Tools/*/Package.swift Tools/*/Sources Tools/*/Tests)
+SWIFT_PATHS := App AppTests ReleaseReadinessTests AppUITests RenderTests PerfUITests Packages/ChronoFlowKit/Package.swift Packages/ChronoFlowKit/Sources Packages/ChronoFlowKit/Tests $(wildcard Tools/*/Package.swift Tools/*/Sources Tools/*/Tests)
 SIM_CONCURRENCY ?=
 SIM_RUNNER := SIM_CONCURRENCY=$(SIM_CONCURRENCY) python3 -I Scripts/launch-simulators.py
 ICON_EXISTING ?=
@@ -34,7 +34,7 @@ snapshots:
 	$(SIM_RUNNER) --no-generate --devices 17e --mode snapshots
 
 audits:
-	AUTH_AUDIT_FULL=$(or $(AUTH_AUDIT_FULL),1) TEST_RUN_TIMEOUT=$(or $(TEST_RUN_TIMEOUT),5400) $(SIM_RUNNER) --no-generate --devices 17e --only AppUITests/AuthAuditTests $(if $(filter 1,$(REUSE_BUILD)),--reuse-build,)
+	AUTH_AUDIT_FULL=$(or $(AUTH_AUDIT_FULL),1) TEST_RUN_TIMEOUT=$(or $(TEST_RUN_TIMEOUT),5400) $(SIM_RUNNER) --no-generate --devices 17e --only AppUITests/AuthAuditTests AppUITests/ForgotAuditTests AppUITests/ResetAuditTests AppUITests/SignUpAuditTests AppUITests/VerifyAuditTests $(if $(filter 1,$(REUSE_BUILD)),--reuse-build,)
 
 simulator-check:
 	$(SIM_RUNNER) --no-generate --devices 17e

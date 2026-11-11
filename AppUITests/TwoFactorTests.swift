@@ -1,9 +1,8 @@
 import XCTest
 
-nonisolated final class TwoFactorTests: XCTestCase {
+nonisolated final class TwoFactorTests: ScreenTestCase {
     @MainActor func testNumberPadDoesNotAutoSubmitAndVerifyCompletesTheMockSession() throws {
         let app = launchTwoFactorApp()
-        defer { app.terminate() }
         try openMockTwoFactor(app)
         let code = app.textFields["two-factor.code"]
         code.tap()
@@ -14,14 +13,13 @@ nonisolated final class TwoFactorTests: XCTestCase {
         try assertTwoFactorKeyboardPair(code, app: app)
         XCTAssertFalse(app.keyboards.buttons["Go"].exists)
         submit.tap()
-        XCTAssertTrue(app.staticTexts["walkthrough.title"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["walkthrough.title"].waitUntil(.exists, timeout: 10))
         XCTAssertFalse(app.textFields["two-factor.code"].exists)
         XCTAssertFalse(app.images["launch.opening"].exists)
     }
 
     @MainActor func testModeToggleClearsCodeAndRecoveryReturnCompletesTheMockSession() throws {
         let app = launchTwoFactorApp()
-        defer { app.terminate() }
         try openMockTwoFactor(app)
         let code = app.textFields["two-factor.code"]
         code.tap()
@@ -29,7 +27,7 @@ nonisolated final class TwoFactorTests: XCTestCase {
         revealTwoFactor(app.buttons["two-factor.toggle"], in: AuthUIFlow.scroll(in: app))
         app.buttons["two-factor.toggle"].tap()
         let recovery = app.textFields["two-factor.recovery_code"]
-        XCTAssertTrue(recovery.waitForExistence(timeout: 3))
+        XCTAssertTrue(recovery.waitUntil(.exists, timeout: 3))
         XCTAssertEqual(recovery.value as? String, "")
         XCTAssertEqual(recovery.placeholderValue, "xxxx-xxxx")
         XCTAssertEqual(recovery.label, "Recovery code")
@@ -38,13 +36,12 @@ nonisolated final class TwoFactorTests: XCTestCase {
         XCTAssertEqual(recovery.value as? String, "AbCdEf1234-GhIjKl5678")
         try assertTwoFactorKeyboardPair(recovery, app: app)
         recovery.typeText("\n")
-        XCTAssertTrue(app.staticTexts["walkthrough.title"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["walkthrough.title"].waitUntil(.exists, timeout: 10))
         XCTAssertFalse(app.images["launch.opening"].exists)
     }
 
     @MainActor func testInteractiveKeyboardDismissAndBackDiscardTheChallengeAndCode() throws {
         let app = launchTwoFactorApp()
-        defer { app.terminate() }
         try openMockTwoFactor(app)
         let code = app.textFields["two-factor.code"]
         code.tap()
@@ -68,13 +65,14 @@ nonisolated final class TwoFactorTests: XCTestCase {
                 dx: contentAboveKeyboard.midX - frames[0].minX,
                 dy: max(frames[0].maxY, frames[1].maxY) - frames[0].minY - 1))
         start.press(forDuration: 0.1, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.1)
-        let dismissed = XCTNSPredicateExpectation(
-            predicate: NSPredicate { _, _ in !app.keyboards.firstMatch.exists }, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
+        let dismissed = { () -> Bool in
+            !app.keyboards.firstMatch.exists
+        }
+        XCTAssertTrue(UIWait.until(timeout: 5, condition: dismissed))
         XCTAssertEqual(code.value as? String, "123")
         revealTwoFactor(AuthUIFlow.control("auth.back", in: app), in: scroll)
         AuthUIFlow.control("auth.back", in: app).tap()
-        XCTAssertTrue(app.textFields["sign-in.email"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.textFields["sign-in.email"].waitUntil(.exists, timeout: 3))
         XCTAssertEqual(app.secureTextFields["sign-in.password"].value as? String, "")
         try openMockTwoFactor(app, fromSignIn: true)
         XCTAssertEqual(app.textFields["two-factor.code"].value as? String, "")
@@ -85,7 +83,7 @@ nonisolated final class TwoFactorTests: XCTestCase {
 @MainActor func launchTwoFactorApp(language: String = "en", xxLarge: Bool = false, server: Bool = false)
     -> XCUIApplication
 {
-    let app = XCUIApplication()
+    let app = ScreenTestApp.makeApplication()
     app.launchArguments = [
         "-cf.session", "out", "-cf.reduceMotion", "-cf.isolatedMockServer", "-AppleLanguages", "(\(language))",
         "-AppleLocale",
@@ -93,25 +91,25 @@ nonisolated final class TwoFactorTests: XCTestCase {
     ]
     if xxLarge { app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryXXL"] }
     if server { app.launchArguments += ["-cf.twoFactorServerFailure"] }
-    app.launch()
+    app.launchMeasured()
     return app
 }
 
 @MainActor func openMockTwoFactor(_ app: XCUIApplication, fromSignIn: Bool = false) throws {
     if !fromSignIn {
         let signIn = app.buttons["welcome.signIn"]
-        XCTAssertTrue(signIn.waitForExistence(timeout: 6))
+        XCTAssertTrue(signIn.waitUntil(.exists, timeout: 6))
         revealTwoFactor(signIn, in: app.scrollViews.containing(.button, identifier: "welcome.signIn").element)
         signIn.tap()
     }
     let email = app.textFields["sign-in.email"]
-    XCTAssertTrue(email.waitForExistence(timeout: 3))
+    XCTAssertTrue(email.waitUntil(.exists, timeout: 3))
     revealTwoFactor(email, in: AuthUIFlow.scroll(in: app))
     email.tap()
     if !fromSignIn { email.typeText("twofactor@example.com") }
     email.typeText("\n")
     app.secureTextFields["sign-in.password"].typeText("password\n")
-    XCTAssertTrue(app.textFields["two-factor.code"].waitForExistence(timeout: 8))
+    XCTAssertTrue(app.textFields["two-factor.code"].waitUntil(.exists, timeout: 8))
     XCTAssertFalse(app.staticTexts["walkthrough.title"].exists)
     revealTwoFactor(app.textFields["two-factor.code"], in: AuthUIFlow.scroll(in: app))
 }
@@ -130,9 +128,10 @@ nonisolated final class TwoFactorTests: XCTestCase {
         screenshot.lifetime = .keepAlways
         attach(screenshot)
     }
-    let focused = XCTNSPredicateExpectation(
-        predicate: NSPredicate { _, _ in field.value(forKey: "hasKeyboardFocus") as? Bool == true }, object: nil)
-    XCTAssertEqual(XCTWaiter.wait(for: [focused], timeout: 5), .completed, "\(context): focus")
+    let focused = { () -> Bool in
+        field.value(forKey: "hasKeyboardFocus") as? Bool == true
+    }
+    XCTAssertTrue(UIWait.until(timeout: 5, condition: focused), "\(context): focus")
     let submit = app.buttons["two-factor.submit"]
     let frames = try UIWait.keyboardFrames(in: app, including: [AuthUIFlow.scroll(in: app), field, submit])
     let viewport = AuthUIFlow.viewport(in: app, scrollFrame: frames[2])

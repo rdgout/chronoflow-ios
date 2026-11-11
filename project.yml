@@ -61,10 +61,20 @@ targets:
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_EMIT_LOC_STRINGS: YES
       configs:
+        Debug:
+          INFOPLIST_FILE: "$(DERIVED_FILE_DIR)/ChronoFlow-Debug-Info.plist"
         Perf:
           CHRONOFLOW_READINESS: signed-out
           SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) CHRONOFLOW_TIMELINE_PERF"
     preBuildScripts:
+      - name: Generate Debug URL registration
+        script: |
+          if [ "$CONFIGURATION" = Debug ]; then
+            python3 -I "$SRCROOT/Scripts/make-debug-info.py" "$SRCROOT/App/Info.plist" "$DERIVED_FILE_DIR/ChronoFlow-Debug-Info.plist"
+          fi
+        inputFiles: ["$(SRCROOT)/App/Info.plist", "$(SRCROOT)/Scripts/make-debug-info.py"]
+        outputFiles: ["$(DERIVED_FILE_DIR)/ChronoFlow-Debug-Info.plist"]
+        basedOnDependencyAnalysis: false
       - name: Require device signing for associated domains
         script: sh "$SRCROOT/Scripts/check-device-entitlements.sh"
         basedOnDependencyAnalysis: false
@@ -85,6 +95,20 @@ targets:
       TARGETED_DEVICE_FAMILY: "1"
       SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO
       PRODUCT_BUNDLE_IDENTIFIER: net.chronoflow.app.native.tests
+      GENERATE_INFOPLIST_FILE: YES
+      TEST_HOST: "$(BUILT_PRODUCTS_DIR)/ChronoFlow.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ChronoFlow"
+      BUNDLE_LOADER: "$(TEST_HOST)"
+    dependencies:
+      - target: ChronoFlow
+  ReleaseReadinessTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - ReleaseReadinessTests
+    settings:
+      TARGETED_DEVICE_FAMILY: "1"
+      SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO
+      PRODUCT_BUNDLE_IDENTIFIER: net.chronoflow.app.native.releasereadinesstests
       GENERATE_INFOPLIST_FILE: YES
       TEST_HOST: "$(BUILT_PRODUCTS_DIR)/ChronoFlow.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ChronoFlow"
       BUNDLE_LOADER: "$(TEST_HOST)"
@@ -114,6 +138,8 @@ targets:
     platform: iOS
     sources:
       - path: AppUITests
+      - path: Packages/ChronoFlowKit/Tests/ToolingTests/BackoffPoll.swift
+      - path: Packages/ChronoFlowKit/Sources/DataAccess/UITestSeedCommand.swift
       - path: Packages/ChronoFlowKit/Tests/ToolingTests/LaunchImageComparison.swift
       - path: Packages/ChronoFlowKit/Tests/ToolingTests/FrameStability.swift
       - path: Packages/ChronoFlowKit/Tests/ToolingTests/AuthScrollGesture.swift
@@ -163,19 +189,23 @@ schemes:
         - name: AppUITests
           parallelizable: true
         - package: ChronoFlowKit/DesignSystemTests
-        - package: ChronoFlowKit/AppCoreTests
-        - package: ChronoFlowKit/LocalStoreTests
-        - package: ChronoFlowKit/DataAccessTests
+  PackageLogic:
+    build:
+      targets:
+        ChronoFlow: [test]
+    test:
+      config: Debug
+      targets:
+        - package: ChronoFlowKit/DesignSystemTests
         - package: ChronoFlowKit/LaunchTests
         - package: ChronoFlowKit/WelcomeTests
-        - package: ChronoFlowKit/AuthTests
   ReadinessRelease:
     build:
       targets:
         ChronoFlow: all
     test:
       config: Release
-      targets: [AppTests]
+      targets: [ReleaseReadinessTests]
   Perf:
     build:
       targets:

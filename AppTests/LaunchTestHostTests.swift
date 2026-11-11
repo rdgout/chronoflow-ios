@@ -41,6 +41,12 @@ nonisolated final class RasterPixelLogicTests: XCTestCase {
     func testPixelDifferenceReportsFirstMismatchCoordinatesAndWorstChannel() {
         let expected = [UInt8](repeating: 0, count: 2 * 2 * 4)
         var actual = expected
+        let equal = LaunchTestHost.pixelDifference(actual, expected, width: 2)
+        XCTAssertEqual(equal.maximum, 0)
+        XCTAssertNil(equal.firstMismatch)
+        let empty = LaunchTestHost.pixelDifference([], [], width: 2)
+        XCTAssertEqual(empty.maximum, 0)
+        XCTAssertNil(empty.firstMismatch)
         actual[0] = 2
         let tolerated = LaunchTestHost.pixelDifference(actual, expected, width: 2)
         XCTAssertEqual(tolerated.maximum, 2)
@@ -51,5 +57,9 @@ nonisolated final class RasterPixelLogicTests: XCTestCase {
         let difference = LaunchTestHost.pixelDifference(actual, expected, width: 2)
         XCTAssertEqual(difference.maximum, 41)
         XCTAssertEqual(difference.firstMismatch, "(x: 0, y: 1), channel B, actual 3, expected 0")
+        let reverse = LaunchTestHost.pixelDifference(expected, actual, width: 2)
+        XCTAssertEqual(reverse.maximum, 41)
+        XCTAssertEqual(reverse.firstMismatch, "(x: 0, y: 1), channel B, actual 0, expected 3")
+
     }
 }

@@ -1,0 +1,327 @@
+# UI test tiers
+
+UI tests seed a fixed Debug state and check rendering, native controls and navigation. SwiftPM host tests own validation, persistence, account isolation, selection and computed values. System appearance, launch and auth-session suites stay serial. The tables below state the default coverage and the reference comparisons that remain opt-in.
+
+`AuthUIFlow.launchSignedIn` sets `CF_AUTH_TEST_SIGNED_IN=demo|twofactor`, a UUID `CF_AUTH_TEST_ID`, and requires an explicit `walkthroughSeen` argument. An unset app environment key still means not seen. Override other gates with `extraEnv`. The app only reads these seeds in Debug with a valid auth-test ID. Launch configuration runs after the splash commit on a detached task: mock sign-in → optional mock two-factor completion → `SessionController.accept` → `FullPull`. This persists the real mock-server token, isolated Keychain session, account database and synced marker. A separate completion marker prevents relaunch from undoing sign-out. Offline tests start with that cache and then use an offline data source.
+
+`CF_SETTINGS_ROUTE` opens `account`, `profile`, `language`, `bodyClock`, `preferences`, `security`, `password`, `twoFactor`, `twoFactorSetup`, `plan` or `delete` through the same gated Debug path. The two-factor enabled fixture uses the twofactor account; setup uses the real security model/mock request. `CF_AUTH_TEST_AUDIT_SCREEN=two-factor` prepares a challenge through `SignInModel` without accepting a session. Registration checks reuse the existing sign-up audit prefill.
+
+The following maps the removed/thinned UI work to existing host coverage. Exact old method names and additional covering tests are also recorded in the ordered patch messages. `ModelTests` below is the actual suite containing `StepCheckTests.swift`.
+
+| UI test / removed work | Covering host / hosted test | UI still checks |
+| --- | --- | --- |
+| AuthSession two-factor code/recovery variants | `TwoFactorModelTests.latestCodeAcceptsThroughPasswordSessionPath`, `recoveryIsSingleUseAndModeToggleClearsFeedback`, `onlySessionAcceptancePersistsATokenAndNeverTheChallengeOrProof`; `SignInModelTests.twoFactorNeverAcceptsSessionAndBackDiscardsChallenge` | Code-entry screens remain in TwoFactorTests/TwoFactorKeyboardTests. One typed verified sign-in → relaunch → foreground remains in AuthSessionTests. |
+| AuthSession unverified restore | `SignInModelTests.verifiedAndUnverifiedAcceptOnceAndClearSecrets`, `accountGatePrecedenceUsesAvailableAccountRecord` | Seeded Verify renders without Today/Walkthrough. |
+| AuthSession offline/sign-out loops | hosted `SeededSessionIntegrationTests.testRestoredSessionRefreshesOfflineAndKeepsSyncedCache` (real seeded credentials → native restore → attached sync → `.offline`, unchanged synced cache); `SettingsHomeModelTests.stayPreservesQueueDiscardWipesAndNextAccountHasNoOldRows` | Cached Today renders; sign-out and one relaunch show Welcome. |
+| Settings profile saves | `SettingsProfileTests.validatesTrimsAndPreservesEditedDraftDuringPulls`, `sessionUpsertPreservesPendingProfileAcrossRelaunch` | Edit/save feedback and updated Account row. |
+| Settings body-clock reopen | `SettingsBodyClockTests.reopenedEditorUsesChronotypeObservedFromLocalSave`, `chronotypeSelectionIsSavedLocallyAndQueuedBeforeShowingSaved` | Picker selection and saved feedback. |
+| Settings repeated preference/replay cycles | `SettingsPreferencesTests.groupsPreserveUnrelatedAndFutureCategoriesAndOnlySendChangedSetting`, `replaySkipAndDoneReturnToPreferencesWithoutAnotherCompletionWrite`, `replayTwiceStartsFreshAfterSkipOrDone` | Time-format and category controls; Replay/Skip returns to Preferences. |
+| Settings language/plan seeded routes | `SettingsPreferencesTests.localLanguageAndThemePersistAndUnsupportedPhoneLanguageFallsBackToEnglish`; `SettingsPlanTests.cachedCreditsRemainAvailableOfflineAndCancellationUsesServerState` | Dutch selection changes copy and returns to Account; stored balance/no-link state renders. |
+| Settings long password/setup/disable workflow | `SettingsSecurityTests.passwordValidationAndSubmissionClearCredentialsAndReportOffline`, `wrongPasswordKeepsPromptOpenAndSetupSurvivesConfirmationFailure`, `passwordSuccessAndCancelPromptClearSecrets`, `disableSnapshotClearsSecretsAndObservedEnabledStateForIntroduction` (snapshot persistence, observed enabled=false, setup/codes cleared); `AccountSecurityAPITests.mockRunsSetupCodesManageAndPasswordAndRejectsOffline` | Password form submission; seeded setup confirms to codes; enabled two-factor cancels/reopens its native password prompt, submits disable and returns to the intro’s Turn on button. |
+| Settings deletion password retries/submission | `SettingsDeleteTests.exactConfirmationAndPasswordAreRequiredAndCredentialsClearAfterRequest`, `failurePreservesAccountAndConfirmationForRetry`; `SettingsDeleteAPITests.mockDeletionRequiresPasswordAndActuallyRemovesAccount`; hosted `SeededSessionIntegrationTests.testSuccessfulDeletionSignsOutWipesCacheAndRoutesToSignInAfterPasswordRetry` (Settings editor → native delete → sync; wrong-password text/retry, credentials/cache erased, Sign in route) | Keep dismisses confirmation; Confirm opens password stage; Cancel returns to Account. |
+| Settings pending sign-out second account | `SettingsHomeModelTests.stayPreservesQueueDiscardWipesAndNextAccountHasNoOldRows` | One queued change; sign-out sheet, Stay dismissal, Discard → Sign in. |
+| Terms acceptance relaunches | `TermsAcceptanceTests.offlineAcceptanceOpensNextGateAndCanSyncLater`, `relaunchSessionUpsertAndStaleFullPullKeepPendingAcceptance` | Accept → Walkthrough; Dutch xxLarge accepted account → Today. |
+| Terms pending sheet Stay/Discard repetition | `TermsAcceptanceTests.signOutFromTermsUsesExistingPendingConfirmationStayAndDiscard` | Sheet opens from Terms; SettingsTests owns the button checks. No-pending Terms sign-out remains. |
+| Walkthrough Skip/relaunch | PlanUI `WalkthroughTests.skipFromEveryPage`, `relaunchPendingOverlaySurvivesSessionUpsertAndStaleFullPull` | First-page copy and Skip → Today. |
+| Walkthrough second-account two-factor/relaunch | PlanUI `WalkthroughTests.nextNextDoneCommitsOnceAndGateMovesWithoutAnyNetworkRequest`; `MockSeedRefreshTests.walkthroughOverrideCoversBothSeededAccounts` | Dutch xxLarge page copy and Next/Next/Done → Today. |
+| TripPageStep duplicate Today/My trips entry routes and mutations | `TripPageSelectionTests.selectionKeepsTheTappedBlockAndLiveChecksThroughReplacementAndRemoval`; `ModelTests.localCheckUndoAndReplanAreObservedThroughTheOutbox` | Fixed S1 diagnostic root checks matching timeline/list content. One seeded Today → real `TripPageDestination` check taps Done/Undo/Skip, reopens from the list and undoes again with hittable controls. TodayTests/TripsTests retain native entry/back navigation. |
+| Today step-sheet reopen | Same selection/check tests above | Done/Undo/Skip change visible buttons. |
+| AppTabs/PlanAudit computed progress label | `ModelTests.localProgressCountsStartsAndKeepsSkippedSeparate` | AppTabsTests keeps the exact `0 of 3 done` accessibility label assertion on its seeded Today screen. Progress is one non-button text element. Exact-label system tab navigation and a Trips screen check after scrolling remain; XCUI no longer asserts system minimize/re-expand geometry. Hosted `RootNavigationTests.testAppTabsConfigureNativeScrollMinimization` mounts the actual AppTabs and checks its UIKit tab controller has `.onScrollDown` and three items. Accessibility audits remain. |
+| Recovery malformed/unbound link test | `AuthLinkTests.exactSignedVerificationShapeAndMalformedInputs`; `VerificationLinkInboxTests.liveForeignAndMalformedInputsDoNotReplaceAMatchingPendingLink`; hosted `SeededSessionIntegrationTests.testSignedOutTamperedLinkWaitsForSignInThenFailsVerification` (`AuthSessionServices.receiveVerificationLink` → Sign in with no Verify model → real sign-in / `AppDelegate.verificationRequired` → failed pending link) | One seeded tampered link opens failed Verify. |
+| Recovery/Verify full-form typing and relaunches | `VerifyEmailModelTests.signedMockMailPersistsOnceAndRoutesOnlyForMatchingAccountEmailEpoch`, `serverOfflineUnverifiedFailureDoesNotLoopAndBackExplicitlyDiscards`; `VerificationLinkInboxTests.signOutAndSessionReplacementClearPendingInput`; `SessionControllerTests.restoreRetriesUnavailableCredentialsWithoutDeletionAndOpensTheMatchingDatabase` | Prefilled registration, matching second-account mail, Different email → Sign in, mail → Walkthrough. Only the second email is edited. |
+| SignUp taken-email extra sign-in | `SignUpModelTests.createdAccountAfterSessionFailureCanRecoverThroughSignIn` | Taken banner and its Sign in navigation. |
+| Forgot existing/unknown and server/throttle loops, form reopen | `ForgotPasswordModelTests.existingAndUnknownAddressesHaveIdenticalSuccessWithoutASession`, `fieldServerThrottleOfflineAndHiddenFailuresKeepTheFormAndEmail`, `emailAppMissingHandlerPreservesTheSentNoticeAndBackReturnsToSignIn` | One sent notice/back, one server-banner/edit and one offline launch. Throttle accessibility audit remains. |
+| Readiness unknown stored/session eight-second waits and slow-test elapsed-time assertions | `LaunchReadinessTests.lateStoredFalseStartsStatusNowAndNeverForUnknown`, `timeoutForcesCurrentSessionOnceAndIgnoresLateFacts` (unknown stored data: no status and Today at 8s); `StoredDataReadinessTests.unknownSessionUsesExistingEightSecondFallbackWithoutDeletingData` (unknown session: Welcome) | Ready handoff; slow status while root is hidden, then handoff. |
+| AuthAudit seven predicate-only methods | `AuthAuditPredicateTests` (same seven method names, now next to shared `AuthAuditPolicy`) | All screen audits and variants stay; Verify and two-factor use fixed launch state. |
+
+TripWizard keeps its one native-picker/error/past-arrival test because this branch has no `CF_WIZARD_BOARD_CAPTURE` seed. It benefits from signed-in launch through the shared plan helper. No new UI classes were introduced; the host predicate class and the new hosted session integration class are registered in `Scripts/launch-simulators.py`.
+
+New coverage: `SettingsSecurityTests.passwordSuccessAndCancelPromptClearSecrets`; the seven moved `AuthAuditPredicateTests`; hosted `DataSourceFactoryHostedTests.signedInSeedUsesRestorableCredentialsAndAccountGates` (both accounts × four gates, token validation, cache and one-shot behavior), `signedInSeedRequiresAuthTestGateAndKnownAccount`, and `auditChallengeSeedRequiresExplicitScreenAndNeverAcceptsSession`.
+
+Estimated successful full-suite change, excluding already-skipped tests: **15 fewer app launches**, **42 fewer typed sign-ins** with the default one-variant auth audit (**66 fewer** with `AUTH_AUDIT_FULL=1`), seven predicate methods removed from the UI runner, four full registration forms replaced with prefill, and two eight-second deadline waits removed. Settings security adds two short seeded launches while removing its long multi-stage typing workflow; that increase is included in the 15-launch net reduction. Dedicated Sign in and two-factor entry tests are excluded from the savings because they are unchanged. These are source-count estimates, not simulator timings.
+
+Review follow-up: each fix is exported with the commit that introduced the helper or removed the corresponding coverage. The helper is introduced in patch 2 with explicit walkthrough state at every caller, including Terms' unseen default. The hosted offline test arrives in patch 3, Settings coverage in patch 7, real trip actions and the progress assertion in patch 8, and signed-out link gating in patch 9. The final documentation patch cites the actual unknown-stored reducer tests. `build/commits/messages.txt` separates all 13 complete commit messages with `---`.
+
+Validation on 2026-11-09: strict lint and the 14 Settings body-clock/security host tests pass. The app, UI tests and hosted session tests are statically typechecked against the iOS 17 minimum without running a simulator. Full host results and patch replay evidence are recorded in `build/commits/README.md`. Hosted and UI runtime execution remain external acceptance checks. The sandbox denies writes to this worktree's external Git metadata; the rewritten commits and patches are built in a writable Git store, with a guarded branch replacement script in `build/commits/replace-series.py`.
+
+## Hosted AppTests
+
+The earlier UI-round patch numbers above belong to the completed series already included in `ed6082e`. The current `build/commits/` delivery contains only the hosted follow-up on top of that commit.
+
+User decision, 2026-11-09: package tests own logic. Hosted screen tests render fixed states and assert only native rendering, measured layout, scrolling or App-target wiring. Device geometry stays exhaustive in the Mac D1c table tests. The root xxLarge cap makes xxLarge the layout stress case; appearance changes pixels, not geometry. Snapshot references have no visual approval: comparisons are opt-in until approved, including on an explicitly requested matrix. `make snapshots` compares; `SNAPSHOT_RECORD=1 make snapshots` still records all suites on 17e. No references or comparison suites are deleted.
+
+| Hosted test / removed work | Covering unit test | Hosted test still checks |
+| --- | --- | --- |
+| `LaunchSnapshotTests`, `WelcomeSnapshotTests`, `AuthSnapshotTests`, `TwoFactorSnapshotTests`, `ForgotPasswordSnapshotTests`, `ResetPasswordSnapshotTests`, `SignUpSnapshotTests`, `VerifyEmailSnapshotTests`, `TripsSnapshotTests`, `TodaySnapshotTests`, `StepSheetSnapshotTests`, `TripPageSnapshotTests`, `TodayRowSnapshotTests`: remove from default check/matrix | `Tests/test_launch_simulators.py::test_unapproved_snapshot_comparison_is_opt_in_and_recording_is_preserved` verifies default exclusion, explicit selection and recording. Existing D1c `DeviceGeometryTests`, `SnapshotProfileTests`, `AuthLayoutTests` and `PlanPageGeometryTests` retain geometry coverage. | Reference comparisons remain in the opt-in `snapshots` tier. Reference-free guards are listed separately below; those guards render fixed stress fixtures rather than the full reference product. No visual approval is claimed. |
+| `RenderTests/WelcomeRenderingTests` | Existing Welcome geometry/token units retain arithmetic. The runner fixture requires this suite in default check/test. | This suite has no reference comparisons and runs by default: SE xxLarge eyebrow intrinsic width/insets in en+nl; one Dutch/dark frozen intro at 2400 ms across two mounts and a clock advance; later appearance and Reduce Motion versus the final screen; Dutch/dark xxLarge legacy-versus-WelcomeText pixels; explicit en/nl catalog resolution including `JETLAGPLANNER`. Broader time/appearance/type products are not claimed. |
+| Reference-free auth top captures | `AuthSnapshotCaptureTests` exercises missing/transparent/blank/clipped capture rejection; all recovery layout states now require brand, heading, subtitle, card and submit before checking measured frames. | `AuthSnapshotGuardTests`, `TwoFactorCodeSnapshotGuardTests`, `ForgotThrottleSnapshotGuardTests`, `SignUpSnapshotGuardTests`, `ResetPasswordSnapshotGuardTests`, `VerifyEmailSnapshotGuardTests` render one SE/nl/xxLarge shape per screen in light+dark. Each requires the screen's controls plus brand/heading/subtitle/card/submit, opaque full-size pixels, horizontal fit of all measured elements and visible brand/heading ink. These guards need no reference files. Existing per-control reachability/ink guards remain separate. |
+| `AuthSnapshotTests`, `TwoFactorSnapshotTests`, `ForgotPasswordSnapshotTests.testRootCapMakesAX5EqualXXLarge` | `ContentSizeCapLogicTests`, `AuthSnapshotCaptureTests` keep cap/pixel-policy arithmetic. | Self-comparing root-cap guards moved unchanged to their default `*ControlTests` suites; AX5 versus xxLarge native input geometry and pixels still execute in check. |
+| `AuthSnapshotGuardTests.testEveryControlCanBeCapturedWithoutClippingAfterScrolling` (648 roots including the added asymmetric fixture, plus per-control settling) → nine independent XCTest classes, one per screen/mode (36 roots), so Xcode can distribute them across workers | New `AuthTests/ScrollReachabilityTests` checks clamping, current offset, oversized content, invalid geometry and horizontal rails without rendering. `AuthTests/AuthLayoutTests.zeroInsetBoardAndEveryDeviceRespectFourInsets` keeps every device/inset calculation; `AuthSnapshotCaptureTests` owns ink/pixel policy. | SE and asymmetric Duo, en+nl, light, xxLarge. Both languages remain because different controls have different longest copy. Measure actual frames once and check computed reachability; capture top/bottom together and interior positions only for controls not yet covered. Every required control still gets a fully visible ink assertion. Largest-device wide-link behavior remains in `AuthLayoutTests.testEnglishLinksReachBothCardEdgesAtWideDeviceSizes`. |
+| `AuthSubtitleContrastTests` nine modes → Forgot throttle/server only (10 roots), with main's complete reveal audit restored for these two modes | New `DesignSystemTests/AuthBoardContrastTests.subtitleAndBannerTokenPairsPassAAInBothAppearances` checks skyTitle/skyTop, skyTitle/skyMid, cardForeground/card and cardForeground/authErrorBackground in light+dark, including 1,001 samples of the upper sky interpolation. Existing `AuthAuditPolicyTests` and `PlanLayoutEvidenceTests` verify measured contrast policy. | Restore `9c9267b`'s two Forgot banner test methods and `check(mode:)` verbatim: 17e fixture, all five appearance/language/size variants, and every distinct `.brand`/`.email`/`.submit` reveal offset. A private test alias selects `ForgotBannerContrastTestHost`, copied from main with only its type name changed, so settle, layout/display, CPU capture and PNG decoding match the passing path. Shared fixture variants, model factories, scroll discovery, SnapshotContainer, raster and line-measurement helpers are unchanged from main. Visible subtitle/banner lines still require ≥4.5:1, complete line measurement when fully visible, and the board sky ramp. Other modes and trimmed suites remain unchanged. Runtime acceptance of this restoration is pending. |
+| `TodayLayoutTests` device × language × state loop → one XCTest class per state | `ModelTests.todaySelectionUsesActiveEndThenUpcomingStartAndStableIdentity`, `todaySeparatesCurrentAndFourUpcomingAndDoesNotHideTheNextImportantStep`, `calendarDaysUseThePlanZoneAcrossDaylightSaving`, `localProgressCountsStartsAndKeepsSkippedSeparate`; `DesignSystemTests/PlanPageGeometryTests` and `PlanLayoutEvidenceTests.viewportUsesEveryProfileInsetWithoutClippingAwayAnUnsafeRail` retain device/inset arithmetic. | Every state at SE/nl/xxLarge, plus asymmetric Duo for the active state to exercise rail wiring. Actual SwiftUI content stays inside safe bounds and scrolls at both endpoints. Dutch is the stress fixture for plan date/body copy; no 17e duplicate. |
+| `TripsLayoutTests` device × language × state loop → one XCTest class per state | `ModelTests` in `TripsTests.swift` (split/order/progress/missing detail), `PlanStringsTests` (paired catalog copy); `DesignSystemTests/PlanPageGeometryTests` and `PlanLayoutEvidenceTests.viewportUsesEveryProfileInsetWithoutClippingAwayAnUnsafeRail` retain device/inset arithmetic. | Every state at SE/nl/xxLarge, plus asymmetric Duo for the list state to exercise rail wiring. Actual SwiftUI content stays inside safe bounds and scrolls at both endpoints. Dutch is the stress fixture for plan date/body copy; no 17e duplicate. |
+| Layout-only suites (`AuthLayoutTests`, `TwoFactorLayoutTests`, `ForgotPasswordLayoutTests`, recovery layout helper, `TodayLayoutTests`, `TripsLayoutTests`, `StepSheetLayoutTests` including `assertPlanScrollFits`) | Existing `AuthLayoutTests` and `PlanLayoutEvidenceTests` keep arithmetic. The initial raster-free change lost visible-content and key-window assertions; the repair restores both. | Wait for three identical, nonempty measured frame sets. Make the window key/visible before layout and assert it remains key at every settle. Capture and check visible variation once per mounted/configured root, rather than three rasters at every scroll offset. Bounds/traits/targets/scroll assertions remain. Pixel suites and per-control ink guards retain raster stabilization. |
+| `AuthLayoutTests`, `TwoFactorLayoutTests`, `ForgotPasswordLayoutTests`, `SignUpLayoutTests`, `ResetPasswordLayoutTests`, `VerifyEmailLayoutTests` full/lean device × language × category loops | `AuthTests/AuthLayoutTests.zeroInsetBoardAndEveryDeviceRespectFourInsets` and `measuredKeyboardViewportRevealsPairOrReportsOverflow`; `TwoFactorModelTests.emptyProofShowsOnlyTheActiveFieldError`, `throttleServerOfflineAndHiddenFieldsUseKeptDefaults`; `ForgotPasswordModelTests.fieldServerThrottleOfflineAndHiddenFailuresKeepTheFormAndEmail`; `SignUpModelTests.serverAloneValidatesAllFieldsAndTakenEmailUsesTheBanner`; `ResetPasswordModelTests.missingInvalidAndServerFieldMessagesUseDesignedStates`; `VerifyEmailModelTests.serverOfflineUnverifiedFailureDoesNotLoopAndBackExplicitlyDiscards`. | Preserve every existing state and both languages; use SE + asymmetric Duo at xxLarge instead of 8/3 fixtures × two sizes. Keyboard-only SE/Duo cases keep their measured keyboard heights with xxLarge only. Wide English links, narrow wrapped Dutch links and AX5 cap comparisons remain separate distinct tests. |
+| `TodayControlTests.testEachRowStateKeepsOneLargeTapTargetAtXXLarge` six identical row stacks → one SE/nl/xxLarge stack | `ModelTests.localProgressCountsStartsAndKeepsSkippedSeparate`, `localCheckUndoAndReplanAreObservedThroughTheOutbox`; `TimelineAccessibilityTests` keep row labels/state semantics. | All three native row states remain together in one render; each measured row retains the minimum tap height and horizontal gutter checks. Today layout tests own rail integration. |
+| `StepSheetLayoutTests.testStepTitleKeepsItsFullColumnAndScaledBoardLineHeight`, `testStepActionsAndLegendScrollWithinEveryLeanProfile` | `PlanLayoutEvidenceTests.planFontsScaleThroughTheRootCap`, `PlanPageGeometryTests`, `TimelineAccessibilityTests`, `ModelTests.localCheckUndoAndReplanAreObservedThroughTheOutbox` retain scaling/geometry/state logic. | Both languages at xxLarge on SE + asymmetric Duo (4 title roots + 8 step/legend roots). Full title column, actual text bounding height, targets/scroll gutters and native field absence remain. The collector overflow/reconfiguration diagnostic remains unchanged. |
+| `DataSourceBuildSettingTests.explicitAPIRemainsMockUnderTests`, `DataSourceFactoryHostedTests.defaultAppMockUsesRNSeed`, signed-in account × gate matrix | `DataSourceSelectionTests.defaultsAndIsolation`, `rejectInvalidSettings`, `defaultAppMockSignsInDemoWithRNSettingsAndTrips`, `defaultAppMockChallengesTwoFactorAndAcceptsRNProof`; new `AuthUITestConfigurationTests` owns UUID/account/flag/path parsing. New `SyncTests/MockSessionSeedTests.signedInSeedUsesRestorableCredentialsAndAccountGates` keeps all 8 account × gate combinations through the extracted `MockSessionSeed` workflow, restore, server identity and the no-resurrection completion marker using memory credentials and zero delay. | Bundle settings, AppServices dispatch/laziness/namespace, gated audit prefills/challenge and offline propagation through both App factories. `DataSourceFactoryHostedTests.defaultMockFactoriesUseLazyPersistentStore` covers the non-fixture `AppServices(info: [:], testing: false, environment: [:])` branch through both factory overloads: no file before use, file at the supplied root, default seed identities/trips/verification/challenge configuration, and reset mail surviving source recreation. The package seed tests alone do not cover this AppServices wiring. One two-factor/unverified seed asserts app configuration → Keychain → real restore/account record. Invalid seed gating remains an App wiring check. `AppServices.mockDelay` defaults to the original 0.3–0.8 s; hosted factory calls inject zero. |
+| `ReadinessTests` stale `route.today` expectations | `LaunchReadinessTests`, `StoredDataReadinessTests` retain gate/readiness/timing logic. | Keep ready hand-off and delayed status/root concealment checks; assert the real native tab bar becomes accessible after hand-off. Injected readiness has no accepted native account, so Today content may still be loading; each launch now isolates its mock/preferences store. Static finding: `RootView` routes Today to `AppTabs`, whose native-session loading branch no longer emits `route.today`. The user reports this suite passed on 17e on 2026-11-09. |
+| `SignInTests.testWelcomeBackGuestAndAuthLinkSeams` stale `route.signUp` and system Back expectations | `SignUpModelTests`, `SignInModelTests.twoFactorNeverAcceptsSessionAndBackDiscardsChallenge` keep model navigation/secrets logic. | The existing Welcome/back/Forgot/guest checks remain; Create account opens the real `sign-up.name` native field and the designed `auth.back` returns to `sign-in.email`. Static finding: `AuthRootView` hosts SignUpView with its navigation bar hidden, so neither a signUp seam nor system navigation Back is valid. The user reports this suite passed on 17e on 2026-11-09. |
+| `SessionReadinessTests.testAuthReusesNativeSessionAndStoredGateThroughRestoreAndSignOut` 24 native matrix iterations → five representative wiring fixtures | `SignInModelTests.committedSessionUsesStoredGateWithAndWithoutCancellation` now covers **password + passkey + two-factor × every gate × cancellation**, including no early credentials/session and cleared proof. `SessionControllerTests`, `StoredDataReadinessTests`, `AccountReadinessTests` retain restore/gate/sign-out logic. | Password → Verify with and without cancellation after commit, passkey → Terms, password → Walkthrough, canceled-after-commit two-factor → Today each reuse the native controller/SQLite record, restore and sign out; stale verification cannot reroute. Static fix: install `app.authServices = auth` before acceptance, as production does, so `AppDelegate.verificationRequired` can prepare and check the active Verify model. The user reported nil Verify routing on 17e; the cancellation repair is described below. |
+| `AuthControlTests` shadow banner repetitions, end-cap size cross-product and locale repetitions in fixed token-binding tests | `AuthCardShadowTests.cardShadowBitmapFallsBelowTheCardAtBothDisplayScales`, `cardShadowMatchesBoardInkBelowAndBesideTheCard`; `AuthBoardContrastTests` pins color/alpha/ratios; `TypographyTests` and `PlanLayoutEvidenceTests.planFontsScaleThroughTheRootCap` keep scaling. Existing en/nl layout and catalog tests remain. | Shadow keeps no-banner + locked-banner in both appearances, through CPU and hierarchy capture. End caps stack all three button kinds into the same raster at 2×/3×, light/dark, xxLarge (4 roots instead of 24); every kind still receives the full analytic circle/fill/stroke pixel assertions. Create-account and guest-footer native color/alpha bindings render Dutch in both appearances (2 roots each instead of 4). |
+| `VerifyEmailControlTests.testNoInputsAndResendIsLockedUntilTheDeadline` all ten states and model-only deadline/state assertions → three fixed shapes | `VerifyEmailModelTests.resendDeadlineSurvivesIdentityRefreshActivationAndBackgroundTime`, `invalidExpiredForeignAndTamperedLinksUseFailedAndRetryChecksStatus`, `sessionFailuresAreVisibleOnCheckActivationResendAndSignOut` retain deadline/state/failure logic. | Waiting, countdown and failed forms contain no native text fields; failed actions keep the large board height. All ten state layouts still run in `VerifyEmailLayoutTests`; state models and opt-in snapshots retain error variants. |
+
+The largest remaining default state/layout loops are SignUp and Verify (40 roots each), Two-factor (32 state roots + 8 keyboard roots), Forgot (24 state roots + 8 keyboard roots + 4 AX5 cap roots), and Reset (32 roots). These preserve distinct error placement, form/sent/expired/done shape, keyboard reachability and both languages at SE/asymmetric Duo; geometry-only waits no longer rasterize. The previous broad products were 60/60/256/192/48 roots respectively before their extra keyboard/cap checks. Further grouping needs measured text-height equivalence rather than assuming all errors wrap alike. The largest broad image products (Welcome intro/final, splash frames, TripPage, auth and plan snapshots) now live in the opt-in snapshots tier. Live launch hand-off, storyboard parity, root-cap and mutation guards retain their distinct timing/trait checks.
+
+Validation for this hosted round: `make lint` passes. Full `make host-tests` reports only the existing `APICookieTests.realRedirectCookieHandlingIsDisabled` loopback-server `Operation not permitted` failure in this sandbox. The full package rerun excluding **only** `APICookieTests` passes (590 Swift Testing tests + 19 XCTest methods); TokenGen (10), AssetGen (7) and the resource/runner fixtures (101) pass separately. Direct iOS 17 typechecking passes for the Debug/Release app, all hosted AppTests and all UI tests. No simulator, snapshot recording, matrix or xcodebuild was run; runtime and visual approval remain with the user. Patch replay evidence and exact run commands are in `build/commits/README.md`.
+
+Run the default 17e hosted selector list in `build/commits/README.md` and `AppUITests/ReadinessTests AppUITests/SignInTests` first. That includes every new Auth guard and per-state Today/Trips class, all thinned layout/control suites, both DataSource wiring suites, SeededSessionIntegrationTests and SessionReadinessTests. Explicitly selecting the whole AppTests target also includes the opt-in snapshots; to keep references deferred, use the generated default hosted selector list in `build/commits/README.md`, or run `make test` (default hosted + UI, no snapshot comparisons). No matrix or visual reference recording is needed for this acceptance round.
+
+### Simulator repair follow-up (2026-11-09)
+
+The 17e run reported 470 s including Debug and Release builds for the selected hosted suites and Readiness/SignIn/AppTabs UI tests. Readiness and SignIn passed. This is the user's measurement, not a timing of these follow-up changes.
+
+Release readiness now compiles the entire AppTests target without DEBUG. Debug-only plan fixture helpers and their consumers are gated together; app seed gating is unchanged. StepSheet and LegendSheet use the same measured horizontal rail as Today/Trips. The asymmetric Duo fixture exposed the missing rail through Legend's NavigationStack; SE and both languages remain in the hosted layout suite. No fixed runtime geometry was added.
+
+Committed session routing runs its gate and verification callback in an uncancelled task, with the existing session/epoch checks. The package regression cancels the requesting task before routing and repeats after restore; the hosted session fixture checks that the restored Verify model has the current epoch.
+
+AppTabsTests selects exact system button labels so nested SF Symbol buttons are excluded. The system owns minimize/re-expand animation; both former geometry-observation tests are replaced by the configuration assertion and stable Trips screen check described above. No iOS 27.2 animation success is claimed from static SDK checks.
+
+Validation for this repair: `make lint` passes. The full `make host-tests` run fails only at the existing `APICookieTests.realRedirectCookieHandlingIsDisabled` because this sandbox denies its loopback socket (`EPERM`). Without that environment-blocked test, all 591 Swift Testing tests and 19 XCTest methods pass; the test and default host selection are unchanged. TokenGen (10), AssetGen (7) and Python resource/runner fixtures (102, including 80 runner tests) pass. Direct iOS 17 SDK checks pass for the Debug app, all AppTests, AppUITests and RenderTests, then the app and all AppTests with DEBUG absent and a genuinely Release DataAccess module. The final native tab fixture also typechecks after registering its own fonts.
+
+CoreSimulator is inaccessible in this sandbox, so the changed rendered contrast, safe-rail, session and native-tab checks still require 17e runtime acceptance. No runtime pass or speedup is claimed for this repair. Git metadata is outside the writable workspace; the delivery is an ordered, exact-replay patch series on `53ea64e`, with messages and an explicit 33-suite rerun manifest under `build/commits/`. The branch itself is not changed or rewritten. Run:
+
+```sh
+make targeted DEVICES="17e" ONLY="$(cat build/commits/rerun-17e.txt)"
+```
+
+The manifest includes the failing suites, restored guards and every layout suite affected by the shared host change. The runner builds Debug and isolated ReadinessRelease once each. It selects no reference-comparing suite and no matrix. ReadinessTests and SignInTests need no focused rerun because the user already reports both passing and this repair does not change them.
+
+### UI launch timing (2026-11-09)
+
+Debug launches with a valid `CF_AUTH_TEST_ID` emit unified-log `CF_UI_TIMELINE` events in subsystem `net.chronoflow.app.native`, category `UITestTimeline`. `process-entry` is the AppDelegate initializer, the earliest instrumented app entry, not dyld or the kernel process creation time. Each line includes wall-clock seconds, monotonic uptime, test ID and app PID. Runner logs use the same clock fields and ID around `launch()` and the first successful element wait. Correlate by ID and PID; use uptime differences on the same simulator host. `seeded-screen-visible` means the root has laid out and its accessibility is exposed after overlay removal; the runner's first-element marker independently confirms accessibility availability.
+
+Pending user measurements on 17e (same selectors before and after the fast profile):
+
+| Interval | Baseline | Fast profile | Source |
+| --- | --- | --- | --- |
+| launch begin → app process entry | pending | pending | runner + app |
+| process entry → overlay committed | pending | pending | app |
+| overlay committed → session ready | pending | pending | app |
+| session ready → seeded screen visible | pending | pending | app |
+| launch begin → launch return | pending | pending | runner |
+| launch return → first element found | pending | pending | runner |
+| per-test reset begin → first element found (p50/p95) | n/a | pending | runner |
+| default UI tier wall time / test count / worker count | pending | pending | xcresult + runner |
+
+Capture app events while the test runs with `xcrun simctl spawn <17e-udid> log stream --level info --style compact --predicate 'subsystem == "net.chronoflow.app.native" AND category == "UITestTimeline"' > build/ui-timeline.log`. Preserve the test runner log and xcresult as well. No timing improvement is claimed until these cells are filled from a successful run.
+
+UI waits now use an immediate check followed by 50 ms × 1.5 backoff, capped at 1 s. Snapshot time counts toward the existing timeout. The runner sleeps between snapshots; it never spins on the app's main actor. Frame stability, keyboard/focus, disappearance and appearance waits share this policy. Host tests cover immediate success, delayed success, backoff/cap and timeout accounting.
+
+`launchMeasured()` selects `CF_UI_TEST_PROFILE=screen` and supplies a UUID gate. The app commits the overlay before loading services, restores the seeded account and reads its real stored gate, then removes the overlay without scheduling the splash/readiness deadlines. The screen profile shares an in-memory mock server across both factories and the signed-in seed; per-account SQLite and isolated test Keychain remain real. UIKit animations are disabled, the root SwiftUI transaction disables animations and the screen window runs at speed 20. `CF_MOCK_DELAY` opts into a fixed 0–60 second mock delay; valid UI fixtures default to zero, while ungated launches retain 0.3–0.8 seconds. No existing UI case asserts a transient network loading state; readiness's explicit 3.5 s delay remains unchanged.
+
+LaunchScene, LaunchToWelcome, Readiness, Welcome and AuthSession use the explicit `launch` profile, retaining the actual overlay, deadlines and animation behavior. System language, launch appearance and content-size changes continue to require a new process. Both profiles are Debug-only; invalid/missing UUIDs cannot activate the app shortcut.
+
+The in-process reset uses `XCUIDevice.shared.system.open(_:)` with a Debug-only `chronoflow-uitest://reseed` registration. `XCUIApplication.open(_:)` is a launch operation, so it must not be used for running-process reset delivery. The command carries the same CF environment seeds, launch arguments, a per-request nonce and the original process's UUID authorization. The app compares UUID authorization by value and rejects missing/foreign authorization and changed language, locale, launch appearance or content size. Release uses the original Info.plist with no test scheme; the generated Debug Info.plist adds only this registration.
+
+Reset serializes requests, unmounts the previous hosting tree (including navigation and sheets), ends editing, stops session observations and sync, invalidates the old session's mutation permits, closes the account database, erases the isolated fixture directory and test Keychain credential, and removes its settings domain. A fresh navigator, mock store, services, session and root then use the same cold-launch preparation and stored gate routing. `uitest.ready.<nonce>` is a window identifier emitted after the new root's first exposed layout; each test still waits for its intended screen element, including async screen loading. `uitest.failed.<nonce>` makes reset failures explicit. The ready window also exposes the process ID in its Debug-only accessibility label; the runner requires it to remain unchanged across reset. All CF seed reads in the app use the current fixture environment rather than the immutable process environment. Host `MockSessionSeedTests.reseedRemovesPreviousAccountQueueAndCompletionMarkerAndMatchesColdSeed` compares account identity, gates, cached trips, queue and sync marker after a dirty other-account seed. Hosted `UITestReseedTests` checks AppServices, native teardown, Keychain and route equivalence.
+
+Eligible screen suites inherit `ScreenTestCase`. Each worker keeps one static application per active class; each test starts from an explicit CF seed. The helper compares launch-only settings, cold-launches the first compatible fixture and uses the in-app reset thereafter. It clears each requested environment/argument dictionary before applying a new seed, so offline/failure/pending/routes cannot bleed into a later test. A failed reset fails the test rather than silently falling back. Class teardown reseeds a signed-out fixture to clean the final account before terminating. Changed phone language/locale, content size, launch appearance or launch settings preference arguments deliberately cold-launch. Welcome, readiness, system launch appearance and AuthSession restoration retain per-test launches.
+
+The former 37-method AuthAuditTests is now AuthAuditTests (Sign in/two-factor), ForgotAuditTests, ResetAuditTests, SignUpAuditTests and VerifyAuditTests. The nine SettingsPages methods are split between SettingsPagesTests and SettingsSecurityPagesTests. No previous test method or assertion was removed. `UIReseedTests` adds a fresh-profile check and real transport coverage: present a step sheet, replace the account, then reseed signed out, while asserting the class's cold-launch count does not change. Run all five audit classes; `make audits` selects them together.
+
+Auth/Plan audits check app UI after launch and now set app-scoped `-AppleInterfaceStyle`, preserving every existing light/dark variant without changing simulator appearance. They can run on parallel clones. LaunchScene/LaunchSceneDark/LaunchToWelcome still mutate device appearance serially on the real launch profile; AuthSession remains serial. Home/activate in the Verify countdown case is local to its worker clone and does not persist a simulator preference. Default screen cases have a 120 s execution allowance (wizard 180 s; explicit full audit variants 600 s). Existing upper-bound element waits are unchanged.
+
+Every query has an explicit native role. Settings home uses its native collection view and profile link button; banners/notices use combined static text; timeline containers use otherElements; sheet queries use scrollViews. Step title/time/footer identifiers come from the same generated typography styles as the views. Prefix searches remain only inside a typed screen/button subset when the mock's current-day actionable block or trip ID is variable, and inside the Plan audit's static-text subset to enumerate all token-bearing text. The exact-label native tab predicate remains necessary to exclude nested system symbol buttons.
+
+Fixed Auth audit seeds also prepare their real model navigation before mounting: Sign in, Sign up, Forgot and Reset open directly; Reset issues real mock reset mail and opens that token. The existing audit prefill still supplies the form values. Audit screen checks no longer traverse Welcome/Sign in/Forgot or type an email merely to reach a fixed Reset state. Dedicated navigation and mock-mail journeys in SignInTests, ForgotPasswordTests and ResetPasswordTests remain. Hosted `UITestReseedTests.auditRoutesPrepareActualNavigationAndResetMailWithoutAcceptingASession` covers this wiring. The real `launch` profile retains the original route behavior.
+
+### Fast UI acceptance on 17e
+
+The committed selector manifests are exact: `Docs/ui-test-rerun-17e.txt` selects native fixture/route/factory wiring, ReleaseReadiness, the reseed transport and the suites that retain real launch behavior; `Docs/ui-test-default-17e.txt` selects every default UI class (including all five audit classes and the new Settings security class). No selector uses another simulator or reference snapshot suite.
+
+```sh
+make generate
+make targeted DEVICES="17e" ONLY="$(cat Docs/ui-test-rerun-17e.txt)"
+TEST_WORKERS=2 REUSE_BUILD=1 make targeted DEVICES="17e" ONLY="$(cat Docs/ui-test-default-17e.txt)"
+mkdir -p build/ui-fast/acceptance
+cp -R build/test-results/17e build/ui-fast/acceptance/default-17e
+cp build/test-results/timings.json build/ui-fast/acceptance/default-timings.json
+```
+
+Keep the console's `Elapsed` line, `Host`/worker-count lines, `build/test-results/timings.json`, and `build/test-results/17e/Debug-compare.{log,jsonl,xcresult}` plus `Debug-serial.{log,jsonl,xcresult}`. Preserve/copy those files before the next targeted run; the runner replaces per-pass results. The focused run also produces `Release-compare` and `build/test-results/build/Release.log`; keep these as the actual Release build/runtime evidence. Report failing test identifiers with their log/xcresult; do not fill the timing table from a failing run.
+
+For a controlled launch/reset breakdown, use one worker and the common benchmark selectors (unchanged method names on the instrumentation-only patch and the final series):
+
+```sh
+TEST_WORKERS=1 REUSE_BUILD=1 make targeted DEVICES="17e" ONLY="$(cat Docs/ui-test-benchmark-17e.txt)"
+```
+
+Collect the app's `UITestTimeline` unified log from the executing 17e (single-worker runs do not use parallel clones), using the stream command above or `log show --last 30m --info --style compact` with the same predicate after completion. Save that as `build/ui-app-timeline.log`, then run:
+
+```sh
+python3 Scripts/summarize-ui-timing.py build/test-results/17e/Debug-compare.log build/ui-app-timeline.log > build/ui-timing-summary.md
+```
+
+Send `build/ui-timing-summary.md`, both raw timing logs and the preserved default-tier results/timings JSON. The summary filters app events to runner IDs in the selected run, deduplicates records and reports p50/p95 with sample counts. The reset-to-first-screen-element row excludes cleanup resets that have no screen assertion. `reset-return` acknowledges the new root layout; actual seeded content may finish asynchronously, so the first-screen-element row is the per-test overhead acceptance metric (target under roughly 1 s). First class launches remain visible separately. Run the same benchmark after patch 1 to collect the baseline; its polling/profile behavior is unchanged. Do not compare different worker counts or include builds in the UI tier wall time. No clean, reboot or matrix is needed.
+
+Implementation validation (2026-11-09): strict lint passes. The complete host gate reaches only the existing APICookieTests loopback `EPERM`; excluding that one environment-blocked test passes 599 Swift Testing tests and 19 XCTest methods. All 17 generator tests and 103 resource/runner fixtures pass. Direct iOS 17 SDK compilation/typechecking covers Debug app, all hosted/UI/Render sources, actual Release DataAccess/Sync/app modules and the entire AppTests target without DEBUG. A Release-only regression checks that valid UI seed environment keys create no mock accounts and the built Info.plist registers no test URL scheme. A generated-info host guard checks that Debug's derived plist adds only the test registration and Release retains the base plist. No sub-second launch/reset or full-tier speedup is claimed yet.
+
+`make generate` succeeds. Actual Xcode ReadinessRelease build-for-testing was attempted with isolated output/cache directories; this sandbox cannot contact CoreSimulator and Xcode reports missing package products before compilation. That build and the 17e UI/hosted runtime acceptance remain user-host work. All test control handlers, seed models, runtime environment overrides, animation modifiers and URL registration are absent from the Release path. Live gate observation is reattached after both cold seed and reset, so Terms/Walkthrough changes continue routing without relaunch; the hosted equivalence regression also checks a post-reset Terms acceptance reaches Today.
+
+### Reseed acceptance repair (2026-11-09)
+
+The user's acceptance run on `8b6819d` failed before the build/runner changes: the focused manifest took
+402 s including builds; the default UI tier took 1,244 s with two workers and reported 47 failure lines,
+43 involving missing reset acknowledgements. The single-worker benchmark took 166 s and failed
+Settings sign-out and Sign-in return-chain methods at reseed. These are diagnostic baselines, not
+successful acceptance results. The app log had 60 timeline events and no reset/seed delivery events.
+
+| Interval (failing baseline) | Samples | p50 seconds | p95 seconds |
+| --- | ---: | ---: | ---: |
+| launch begin → process entry | 5 | 1.979 | 3.735 |
+| process entry → overlay committed | 10 | 0.197 | 0.273 |
+| overlay committed → session ready | 10 | 0.671 | 0.831 |
+| session ready → exposed root | 10 | 0.075 | 0.263 |
+| launch begin → launch return | 5 | 3.223 | 5.080 |
+| launch return → first element | 5 | 0.065 | 0.172 |
+
+Apple's installed XCUIAutomation headers and [XCUIApplication documentation](https://developer.apple.com/documentation/xcuiautomation/xcuiapplication)
+describe application `open` as launching by URL, similar to `launch`. [XCUISystem.open](https://developer.apple.com/documentation/xcuiautomation/xcuisystem/open(_:))
+routes a URL to its default app. The previous launch API could deliver through scene connection rather
+than the running scene's URL callback, losing the original process authorization. This is the delivery
+cause supported by the API contract; iOS 27.2 runtime acceptance of the replacement remains pending.
+No alternate IPC or visible test controls were added.
+
+Every Debug `openURLContexts` callback now emits `url-received`, including an empty set and ungated
+launches. Initial connection URL contexts are logged too. Valid commands emit `reseed-authorized`;
+`url-rejected` names endpoint/payload/JSON/authorization/nonce/test-ID/profile/environment rejection
+without logging the payload. Reset emits `reset-begin`, `configuration-ready`, `session-ready`, and
+`reset-ready` after exposed layout, or `reset-rejected`/`reset-failed`. Accepted commands carry their
+nonce; every record has the process PID. The timing summary counts rejection events as failures.
+Acknowledgement failure retains an XCUIScreen screenshot and the app's full debugDescription in the
+xcresult, and fails instead of silently cold-launching a replacement. All app diagnostics, process labels
+and URL dispatch handlers remain Debug-only.
+
+The memory store was shared but each MockDataSource cached its own server snapshot. Requests now
+refresh an already-loaded memory snapshot, and memory mutations apply atomically against the latest
+shared state. Initial schema refresh/reseeding still executes. Host tests cover cross-source mail,
+credential invalidation, and concurrent mail writes; the hosted factory regression checks the same
+behavior with the real isolated test Keychain. File-backed factory behavior stays on its existing path.
+Release readiness now accepts an uncreated lazy state file or an empty account dictionary; it still
+rejects any seeded accounts and any registered URL types.
+
+The gated UI mock sleep now uses the exact validated CF_MOCK_DELAY, zero by default. The ordinary
+MockDataSource 300–800 ms clamp had prevented that setting from taking effect. Sign-in, two-factor,
+full pull, Keychain/SQLite and readiness continue through their existing paths, including the dedicated
+launch/auth/session suites. configuration-ready separates fixture preparation from native restoration
+in new timelines; no post-fix latency improvement is claimed without the benchmark.
+
+Generation also exposed an existing PackageLogic scheme error: XcodeGen needs an explicit build target
+when all test entries come from a package. Its app build anchor now applies only to testing. This keeps
+the same three package test bundles and leaves the default manifest unchanged.
+
+Rerun the focused fixture/transport/benchmark classes first, then the full default manifest and controlled
+single-worker benchmark. Preserve both `17e/` and `17e-isolated/` before another targeted invocation;
+the runner replaces pass outputs. Stream app events from the actual executing devices; the benchmark
+uses one worker on the primary 17e. No references, recording, Duo, or matrix are needed.
+
+```sh
+make generate
+make targeted DEVICES="17e" ONLY="$(cat Docs/ui-test-reseed-rerun-17e.txt)"
+TEST_WORKERS=2 REUSE_BUILD=1 make targeted DEVICES="17e" ONLY="$(cat Docs/ui-test-default-17e.txt)"
+# Preserve default results before the benchmark:
+mkdir -p build/ui-reseed-acceptance
+cp -R build/test-results/17e build/ui-reseed-acceptance/default-17e
+cp -R build/test-results/17e-isolated build/ui-reseed-acceptance/default-17e-isolated
+cp build/test-results/timings.json build/ui-reseed-acceptance/default-timings.json
+TEST_WORKERS=1 REUSE_BUILD=1 make targeted DEVICES="17e" ONLY="$(cat Docs/ui-test-benchmark-17e.txt)"
+python3 Scripts/summarize-ui-timing.py build/test-results/17e/Debug-compare.log build/ui-app-timeline.log > build/ui-timing-summary.md
+```
+
+Validation in this restricted workspace: `make lint` and `make generate` pass. The final
+`make -k quick` completes all targets and fails only at the unchanged
+`APICookieTests.realRedirectCookieHandlingIsDisabled` loopback socket bind (`EPERM`); no test is
+removed or skipped in the gate. All 17 generator tests and 116 resource/runner fixtures pass.
+The separate `sh Scripts/host-tests.sh --skip APICookieTests` run passes all 603 remaining Swift
+Testing methods and 19 XCTest methods. Direct iOS 17 SDK compilation passes for the Debug app, all AppTests and AppUITests, and
+fresh Release AppCore/DataAccess/Sync/app plus ReleaseReadinessTests. Release ABI inventories contain
+none of the Debug seed, authorization, transport or timeline declarations. The generated PackageLogic
+scheme's app build entry has only buildForTesting enabled.
+
+Logs are `build/reseed-final-{lint,quick}.log`, `build/reseed-supported-final.log`,
+`build/reseed-{generate,runner-fixtures}.log`, `build/reseed-ios-final.log` and
+`build/reseed-release-typecheck.log`. CoreSimulator access is denied here; no simulator acceptance,
+benchmark speedup, snapshots or device-matrix results are claimed. Git worktree metadata is outside
+the writable roots, so `build/commits/1.patch` through `6.patch` plus `messages.txt` deliver atomic
+Conventional Commits on `1e2cf4c`, without trailers.
+
+### Remaining reseed acceptance fixes (2026-11-09)
+
+User-host results on `caa72aa`: focused manifest 336 s; default UI tier with two workers and reused
+build 840 s wall (previously 1,244 s), with 43 suites passing; single-worker benchmark 114 s.
+Failures remain in Verify countdown/throttle, SignIn return-chain, and Dutch/XXLarge keyboard cases.
+These are measured failing runs, not acceptance of the fixes below.
+
+| Interval on caa72aa | Samples | p50 seconds | p95 seconds |
+| --- | ---: | ---: | ---: |
+| launch begin → process entry | 5 | 2.070 | 3.438 |
+| process entry → overlay committed | 5 | 0.212 | 0.250 |
+| overlay committed → session ready | 5 | 0.717 | 1.161 |
+| session ready → exposed root | 9 | 0.077 | 0.212 |
+| launch begin → launch return | 5 | 3.330 | 4.752 |
+| launch return → first element | 5 | 0.112 | 0.505 |
+| reset begin → reset return | 4 | 0.816 | 1.293 |
+| reset begin → first screen element | 1 | 0.828 | 0.828 |
+
+The supplied timeline summary has 87 events, four reset/seed failures, six URL deliveries and zero
+rejected commands. Its counts describe captured events filtered to runner IDs, rather than all
+failures in every xcresult.
+
+ScreenTestApp now compares the requested seed with the immutable cold-launch seed. Changing or
+removing an Apple/UI launch argument, settings language/theme, splash/motion argument, profile,
+or explicit non-CF environment key forces a cold launch. The diagnostic lists changed key names.
+Changes to ordinary CF fixture keys still reseed. The runner also passes its original launch arguments
+through a gated Debug environment value: scene validation uses that snapshot rather than argv
+augmented by XCTest. Repeated argument overrides are compared, too. Cleanup uses the same launch
+settings rather than sending an empty argument list to a process with language/size overrides.
+
+Reset ends window editing and resigns the first responder before awaiting service teardown, then
+ends editing again before removing the root. `reset-editing-ended` records the nonce and endEditing
+result. Runner reset begin/return records now include the nonce. The existing 12 s ceiling and PID
+acknowledgement remain. New UIReseedTests cover editing a Dutch/XXLarge email during reset and
+language/content-size transitions requiring cold launches.
+
+The two Verify failures have concrete fixture causes: successful resend has no error banner, while
+the throttle scenario previously never injected a throttle response. Countdown now waits for the
+countdown element and disabled resend, checks the banner is absent, and verifies the countdown
+survives foreground refresh. Throttle injects the real mock request failure and waits for both banner
+and countdown. Verify setup assertions now identify language, appearance, size, state and missing
+condition; the host fixture regression distinguishes all successful/error resend scenarios.
+
+The runner's unreadable-xcresult fallback previously attached every log failure to every selected
+suite. It now reports one pass-level extraction failure, retaining the reader error/stderr and the
+bundle/log paths. Only qualified XCTest or clone log failures are attributed to a suite; unqualified
+Swift Testing failures stay in pass diagnostics. Missing results still fail the gate. Separate isolated
+device bundles and timing merges were already covered and remain unchanged. The local historical
+Debug-compare bundle lacks Info.plist and the serial log contains only invocation text, so the user's
+Dark test result cannot be adjudicated from these local artifacts. Valid xcresult failures remain
+authoritative; a passing log alone never converts missing result evidence into a pass.
+
+The focused manifest now includes all three keyboard suites and both frozen launch suites. Run it
+with a fresh build, preserve both result directories, then run the unchanged default and benchmark
+manifests using the commands in the previous section. Preserve focused results before the default
+run as well. The exact focused suites are in [ui-test-reseed-rerun-17e.txt](ui-test-reseed-rerun-17e.txt).
+
+Validation: `make lint` passes. Final `make -k quick` runs every target and fails only at the unchanged
+`APICookieTests.realRedirectCookieHandlingIsDisabled` loopback bind (`EPERM`). All 17 generator tests
+and 119 Python fixtures, including 96 runner fixtures, pass. The separate host run excluding only
+APICookieTests passes 605 Swift Testing methods and 19 XCTest methods with unchanged timing limits.
+Direct iOS 17 SDK checks pass for Debug DataAccess/app/all hosted/UI tests and fresh Release
+AppCore/DataAccess/Sync/app/ReleaseReadinessTests. Final UI edits were rechecked separately.
+
+Logs: `build/reseed-round2-{lint-final,quick-final,supported,runner,ios,ui-final,release}.log`.
+CoreSimulator remains unavailable in this sandbox; runtime acknowledgement/keyboard behavior and
+post-fix audit results are pending. Git index writes are denied because worktree metadata is outside
+the writable roots. Four atomic patches based on `caa72aa` are in `build/commits/1.patch`–`4.patch`,
+with Conventional Commit messages separated by `---` in `messages.txt`; no trailers are added.

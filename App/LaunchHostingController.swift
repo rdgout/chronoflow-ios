@@ -8,6 +8,23 @@ final class LaunchHostingController<Content: View>: UIHostingController<Content>
     }
     private let signposts: LaunchSignposts
     private var recordedLayout = false
+    #if DEBUG
+        var uiTestReadinessID: String?
+        var uiTestIsReseed = false
+        private var recordedVisibleScreen = false
+        func recordVisibleScreen() {
+            guard !recordedVisibleScreen, !launchIsVisible, view.window != nil else { return }
+            recordedVisibleScreen = true
+            if let uiTestReadinessID {
+                view.window?.accessibilityIdentifier = "uitest.ready.\(uiTestReadinessID)"
+                view.window?.accessibilityLabel = "uitest.process.\(ProcessInfo.processInfo.processIdentifier)"
+            }
+            UITestTimeline.record("seeded-screen-visible", details: "nonce=\(uiTestReadinessID ?? "none")")
+            if uiTestIsReseed, let uiTestReadinessID {
+                UITestTimeline.record("reset-ready", details: "nonce=\(uiTestReadinessID)")
+            }
+        }
+    #endif
 
     init(rootView: Content, signposts: LaunchSignposts) {
         self.signposts = signposts
@@ -22,6 +39,7 @@ final class LaunchHostingController<Content: View>: UIHostingController<Content>
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         #if DEBUG
+            recordVisibleScreen()
             if let window = view.window {
                 let frame = window.safeAreaLayoutGuide.layoutFrame
                 if let data = try? JSONEncoder().encode([frame.minX, frame.minY, frame.width, frame.height]) {

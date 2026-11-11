@@ -60,16 +60,18 @@ import XCTest
     view: @MainActor (@escaping (AuthElement, CGRect) -> Void) async throws -> V
 ) async throws {
     try await AuthTestHost.registerFonts()
-    for fixture in try AuthDeviceFixture.all() where ["se", "duo", "17e"].contains(fixture.name) {
+    for fixture in try AuthDeviceFixture.layoutStressProfiles() {
         for language in ["en", "nl"] {
             var frames: [AuthElement: CGRect] = [:]
             var insets = fixture.insets
-            insets.bottom = max(insets.bottom, fixture.name == "duo" ? 264 : 218)
+            insets.bottom = max(insets.bottom, fixture.name.hasPrefix("duo") ? 264 : 218)
             let host = try AuthTestHost(
                 try await view { frames[$0] = $1 }, size: fixture.size, insets: insets, language: language,
                 category: .extraExtraLarge, scale: fixture.scale)
             defer { host.close() }
-            try await host.settle()
+            try await host.settleLayout { Array(frames.values) }
+            let required: Set<AuthElement> = [.brand, .heading, .subtitle, .card, .submit]
+            XCTAssertTrue(required.isSubset(of: Set(frames.keys)), "Missing required recovery content: \(frames.keys)")
             for (element, frame) in frames {
                 XCTAssertGreaterThanOrEqual(frame.minX, insets.left + AuthTokens.gutter - 0.5, element.rawValue)
                 XCTAssertLessThanOrEqual(
@@ -81,7 +83,7 @@ import XCTest
                     x: 0,
                     y: max(0, scroll.contentSize.height - scroll.bounds.height + scroll.adjustedContentInset.bottom)),
                 animated: false)
-            try await host.settle()
+            try await host.settleLayout { Array(frames.values) }
             let viewport = scroll.convert(scroll.bounds, to: host.window).intersection(
                 host.window.bounds.inset(by: insets))
             let last = frames[.footer] ?? frames[.backToSignIn] ?? frames[.submit]
@@ -92,4 +94,29 @@ import XCTest
 
 @MainActor func recoveryTextFields(_ view: UIView) -> [UITextField] {
     (view as? UITextField).map { [$0] } ?? view.subviews.flatMap(recoveryTextFields)
+}
+
+@MainActor func authTopCapture<V: View>(
+    required: Set<AuthElement>,
+    view: @MainActor (@escaping (AuthElement, CGRect) -> Void) async throws -> V
+) async throws {
+    try await AuthTestHost.registerFonts()
+    let fixture = try XCTUnwrap(AuthDeviceFixture.all().first { $0.name == "se" })
+    for style in [UIUserInterfaceStyle.light, .dark] {
+        var frames: [AuthElement: CGRect] = [:]
+        let host = try AuthTestHost(
+            try await view { frames[$0] = $1 }, size: fixture.size, insets: fixture.insets,
+            style: style, language: "nl", category: .extraExtraLarge, scale: fixture.scale)
+        defer { host.close() }
+        try await host.settle()
+        let raster = try SnapshotRaster(image: XCTUnwrap(host.image().cgImage))
+        let failure = AuthSnapshotCapture.failure(
+            raster: raster, size: fixture.size, scale: host.scale,
+            viewport: host.window.bounds.inset(by: fixture.insets),
+            frames: Dictionary(uniqueKeysWithValues: frames.map { ($0.key.rawValue, $0.value) }),
+            required: Set(Set(frames.keys).union(required).map(\.rawValue)).union([
+                "brand", "heading", "subtitle", "card", "submit",
+            ]))
+        XCTAssertNil(failure, "\(style): \(failure ?? "")")
+    }
 }

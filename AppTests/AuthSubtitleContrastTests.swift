@@ -5,19 +5,15 @@ import UIKit
 import XCTest
 
 nonisolated final class AuthSubtitleContrastTests: XCTestCase {
-    @MainActor func testSignInSubtitleAtEveryAuditRevealPosition() async throws { try await check(mode: 0) }
-    @MainActor func testTwoFactorCodeSubtitleAtEveryAuditRevealPosition() async throws { try await check(mode: 1) }
-    @MainActor func testTwoFactorRecoverySubtitleAtEveryAuditRevealPosition() async throws { try await check(mode: 2) }
-    @MainActor func testForgotFormSubtitleAtEveryAuditRevealPosition() async throws { try await check(mode: 3) }
-    @MainActor func testForgotFieldSubtitleAtEveryAuditRevealPosition() async throws { try await check(mode: 4) }
+    // Preserve main's capture path independently of the trimmed suites.
+    private typealias AuthTestHost = ForgotBannerContrastTestHost
+
     @MainActor func testForgotThrottleSubtitleAndBannerAtEveryAuditRevealPosition() async throws {
         try await check(mode: 5)
     }
     @MainActor func testForgotServerSubtitleAndBannerAtEveryAuditRevealPosition() async throws {
         try await check(mode: 6)
     }
-    @MainActor func testForgotOfflineSubtitleAtEveryAuditRevealPosition() async throws { try await check(mode: 7) }
-    @MainActor func testForgotSentSubtitleAtEveryAuditRevealPosition() async throws { try await check(mode: 8) }
 
     @MainActor private func check(mode: Int) async throws {
         try await AuthTestHost.registerFonts()

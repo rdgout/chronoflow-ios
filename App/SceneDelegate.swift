@@ -1,9 +1,14 @@
 import AppCore
+import DataAccess
 import DesignSystem
 import Launch
 import SwiftUI
 import UIKit
 import UserNotifications
+
+#if DEBUG
+    import Sync
+#endif
 
 final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
@@ -32,6 +37,13 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     private var unlockObserver: NSObjectProtocol?
     private var rootScheduled = false
     private var connectionGeneration = 0
+    #if DEBUG
+        private var recordedSessionReady = false
+        private var uiTestAuthorization: String?
+        private var uiTestNonce: String?
+        private var uiTestResetTask: Task<Void, Never>?
+        private var uiTestLaunchArguments: [String]?
+    #endif
 
     func scene(
         _ scene: UIScene,
@@ -53,10 +65,25 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             })
         navigator = app.navigator
         connect(to: windowScene, firstConnection: app.launchProcess.claimOverlay())
+        #if DEBUG
+            if !connectionOptions.urlContexts.isEmpty {
+                receiveUITestURLs(connectionOptions.urlContexts.map(\.url), delivery: "connection")
+            }
+        #endif
     }
 
     func connect(to windowScene: UIWindowScene, firstConnection: Bool, arguments: LaunchArguments = LaunchArguments()) {
         connectionGeneration += 1
+        #if DEBUG
+            if let test = AuthUITestConfiguration(environment: UITestRuntime.environment), test.fastLaunch {
+                uiTestAuthorization = UITestRuntime.environment["CF_AUTH_TEST_ID"]
+                uiTestNonce = test.id
+                uiTestLaunchArguments =
+                    UITestRuntime.environment["CF_UI_TEST_LAUNCH_ARGUMENTS"]
+                    .flatMap { try? JSONDecoder().decode([String].self, from: Data($0.utf8)) }
+                    ?? UITestRuntime.arguments
+            }
+        #endif
         signposts.event(.sceneConnect)
         let diagnostic = arguments.mode != nil || arguments.freezeAt != nil
         allowsIntro = firstConnection && !(arguments.reduceMotion || UIAccessibility.isReduceMotionEnabled)
@@ -101,6 +128,9 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             scene.play(timeline, at: CACurrentMediaTime())
             CATransaction.commit()
             CATransaction.flush()
+            #if DEBUG
+                UITestTimeline.record("overlay-committed")
+            #endif
             signposts.event(.overlayFirstCommit)
             signposts.end(.firstCommit)
             controller.prepareAccessibilityLabel()
@@ -119,6 +149,12 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 } catch { self?.signposts.event(.fontRegistrationFailed) }
             }
         }
+        #if DEBUG
+            if AuthUITestConfiguration(environment: UITestRuntime.environment)?.fastLaunch == true {
+                allowsIntro = false
+                UIView.setAnimationsEnabled(false)
+            }
+        #endif
         if diagnostic || (!firstConnection && navigator.route != nil) {
             if arguments.mode == .welcome {
                 navigator.navigate(to: .welcome)
@@ -143,7 +179,152 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
     }
 
+    #if DEBUG
+        private var usesFastUITestLaunch: Bool {
+            AuthUITestConfiguration(environment: UITestRuntime.environment)?.fastLaunch == true
+        }
+    #endif
+
+    private func configurationLoader() -> @Sendable () async throws -> (AppServices, URL?) {
+        if let serviceConfigurationFactory { return serviceConfigurationFactory }
+        #if DEBUG
+            let environment = UITestRuntime.environment
+            let arguments = UITestRuntime.arguments
+            return { try await AppServices.uiTestLaunchConfiguration(environment: environment, arguments: arguments) }
+        #else
+            return { try await AppServices.launchConfiguration() }
+        #endif
+    }
+
+    #if DEBUG
+        func scene(_ scene: UIScene, openURLContexts contexts: Set<UIOpenURLContext>) {
+            receiveUITestURLs(contexts.map(\.url), delivery: "openURLContexts")
+        }
+
+        func receiveUITestURLs(_ urls: [URL], delivery: String) {
+            UITestTimeline.record(
+                "url-received", details: "delivery=\(delivery) count=\(urls.count)", allowUngated: true)
+            for url in urls {
+                do {
+                    let command = try UITestSeedCommand(validating: url, authorizedID: uiTestAuthorization)
+                    UITestTimeline.record(
+                        "reseed-authorized", environment: command.environment,
+                        details: "nonce=\(command.nonce) delivery=\(delivery)")
+                    enqueueUITestReseed(command)
+                } catch {
+                    UITestTimeline.record(
+                        "url-rejected", details: "delivery=\(delivery) reason=\(error)", allowUngated: true)
+                }
+            }
+        }
+
+        func enqueueUITestReseed(_ command: UITestSeedCommand) {
+            let previous = uiTestResetTask
+            uiTestResetTask = Task { [weak self] in
+                await previous?.value
+                await self?.reseedUITest(command)
+            }
+        }
+
+        private func reseedUITest(_ command: UITestSeedCommand) async {
+            let changed = command.changedLaunchSettings(
+                arguments: uiTestLaunchArguments ?? UITestRuntime.arguments, environment: command.environment)
+            guard usesFastUITestLaunch, changed.isEmpty else {
+                UITestTimeline.record(
+                    "reset-rejected", environment: command.environment,
+                    details:
+                        "nonce=\(command.nonce) reason=launch-settings-or-profile changed=\(changed.joined(separator: ","))"
+                )
+                return
+            }
+            guard let app = UIApplication.shared.delegate as? AppDelegate, let windowScene = window?.windowScene else {
+                UITestTimeline.record(
+                    "reset-rejected", environment: command.environment,
+                    details: "nonce=\(command.nonce) reason=no-connected-window")
+                return
+            }
+            UITestTimeline.record("reset-begin", environment: command.environment, details: "nonce=\(command.nonce)")
+            do {
+                let endedEditing = window?.endEditing(true) ?? true
+                UIApplication.shared.sendAction(
+                    #selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                UITestTimeline.record(
+                    "reset-editing-ended", environment: command.environment,
+                    details: "nonce=\(command.nonce) ended=\(endedEditing)")
+                connectionGeneration += 1
+                let loading = servicesTask
+                servicesTask?.cancel()
+                await loading?.value
+                servicesTask = nil
+                activityTask?.cancel()
+                await activityTask?.value
+                activityTask = nil
+                coordinator?.stop()
+                coordinator = nil
+                if let unlockObserver { NotificationCenter.default.removeObserver(unlockObserver) }
+                unlockObserver = nil
+                window?.endEditing(true)
+                window?.rootViewController?.dismiss(animated: false)
+                window?.rootViewController = nil
+                window?.isHidden = true
+                window = nil
+                rootScheduled = false
+                pendingAuthLink = nil
+                pendingIntent = PendingLaunchIntent()
+                authLinkHandler = nil
+                try await UITestSessionFixture.tearDown(native: nativeSession, auth: app.authServices)
+                if let (services, root) = serviceConfiguration, let root {
+                    try await MockSessionSeed.reset(
+                        applicationSupport: root, credentials: services.sessionCredentials())
+                }
+                if let oldID = UITestRuntime.environment["CF_AUTH_TEST_ID"], let uuid = UUID(uuidString: oldID) {
+                    UserDefaults().removePersistentDomain(forName: "ChronoFlow.Settings.UITest.\(uuid.uuidString)")
+                }
+                nativeSession = nil
+                app.authServices = nil
+                app.nativeSession = nil
+                app.authWindow = nil
+                app.uiTestEnvironment = command.environment
+                app.uiTestArguments = [ProcessInfo.processInfo.arguments[0]] + command.arguments
+                app.navigator = RootNavigator()
+                navigator = app.navigator
+                serviceFailure = nil
+                serviceConfiguration = try await Task.detached {
+                    try await AppServices.uiTestLaunchConfiguration(
+                        environment: command.environment, arguments: command.arguments, reset: true)
+                }.value
+                UITestTimeline.record("configuration-ready", details: "nonce=\(command.nonce)")
+                if let (services, root) = serviceConfiguration, let root {
+                    let native = configureSession(services: services, root: root)
+                    native.observe()
+                    await native.setActive(isActive)
+                }
+                uiTestNonce = command.nonce
+                moonAnchorStore = MoonAnchorStore()
+                await UITestSessionFixture.route(native: nativeSession, navigator: navigator) { epoch in
+                    await (UIApplication.shared.delegate as? AppDelegate)?.verificationRequired(epoch: epoch)
+                }
+                UITestTimeline.record("session-ready")
+                mountRoot(on: windowScene)
+            } catch {
+                serviceFailure = error
+                let failed = UIWindow(windowScene: windowScene)
+                failed.rootViewController = UIViewController()
+                failed.accessibilityIdentifier = "uitest.failed.\(command.nonce)"
+                window = failed
+                failed.makeKeyAndVisible()
+                UITestTimeline.record(
+                    "reset-failed", environment: command.environment, details: "nonce=\(command.nonce) error=\(error)")
+            }
+        }
+    #endif
+
     private func startReadiness(on windowScene: UIWindowScene, arguments: LaunchArguments) {
+        #if DEBUG
+            let injectedReadiness = arguments.usesInjectedReadiness && !usesFastUITestLaunch
+        #else
+            let injectedReadiness = arguments.usesInjectedReadiness
+        #endif
         let clock = MediaLaunchClock(t0: overlayController?.launchScene.t0 ?? CACurrentMediaTime())
         let safe = overlayController?.view.safeAreaInsets ?? windowScene.keyWindow?.safeAreaInsets ?? .zero
         let size = overlayController?.launchScene.size ?? windowScene.coordinateSpace.bounds.size
@@ -152,7 +333,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             rowHeight: LaunchArguments.fallbackRowHeight(compatibleWith: windowScene.traitCollection))
         if let source = readinessFactory?(arguments, clock) {
             runReadiness(source, on: windowScene, clock: clock, fallback: fallback)
-        } else if arguments.usesInjectedReadiness {
+        } else if injectedReadiness {
             runReadiness(
                 StubReadiness(configuration: arguments.readiness, store: KeychainSessionStore(), clock: clock),
                 on: windowScene, clock: clock, fallback: fallback)
@@ -160,15 +341,18 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             let generation = connectionGeneration
             servicesTask = Task { [weak self, weak windowScene] in
                 do {
-                    let load = self?.serviceConfigurationFactory
+                    let load = self?.configurationLoader()
                     let configuration = try await Task.detached {
                         if let load { return try await load() }
-                        return try AppServices.launchConfiguration()
+                        return try await AppServices.launchConfiguration()
                     }.value
                     guard let self, let windowScene, !Task.isCancelled, connectionGeneration == generation else {
                         return
                     }
                     serviceConfiguration = configuration
+                    #if DEBUG
+                        UITestTimeline.record("configuration-ready")
+                    #endif
                     let source: any LaunchReadiness
                     if configuration.0.signedOutReadiness {
                         source = SignedOutReadiness()
@@ -188,6 +372,18 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                             Task { @MainActor in await native?.readiness.retry() }
                         }
                     }
+                    #if DEBUG
+                        if configuration.0.fastUITestLaunch {
+                            await UITestSessionFixture.route(native: nativeSession, navigator: navigator) { epoch in
+                                await (UIApplication.shared.delegate as? AppDelegate)?.verificationRequired(
+                                    epoch: epoch)
+                            }
+                            UITestTimeline.record("session-ready")
+                            finishLaunch()
+                            mountRoot(on: windowScene)
+                            return
+                        }
+                    #endif
                     runReadiness(source, on: windowScene, clock: clock, fallback: fallback)
                 } catch {
                     guard let self, let windowScene, !Task.isCancelled, connectionGeneration == generation else {
@@ -236,7 +432,15 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             state: .init(fallbackTarget: fallback, pendingIntent: pendingIntent)
         ) { [weak self, weak windowScene] state, effects in
             guard let self, let windowScene else { return }
-            if state.session != nil { signposts.end(.session) }
+            if state.session != nil {
+                signposts.end(.session)
+                #if DEBUG
+                    if !recordedSessionReady {
+                        recordedSessionReady = true
+                        UITestTimeline.record("session-ready")
+                    }
+                #endif
+            }
             if state.isReady { signposts.end(.ready) }
             if let route = state.route {
                 if route == .welcome, allowsIntro, launchIntro == nil, let start = state.exitStart {
@@ -275,13 +479,15 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 guard let self, self.connectionGeneration == generation else { return }
                 let window = UIWindow(windowScene: windowScene)
                 window.maximumContentSizeCategory = ContentSizeCap.maximumCategory
+                #if DEBUG
+                    if usesFastUITestLaunch { window.layer.speed = 20 }
+                #endif
                 let app = UIApplication.shared.delegate as? AppDelegate
                 if serviceConfiguration == nil {
-                    let load = serviceConfigurationFactory
+                    let load = configurationLoader()
                     do {
                         serviceConfiguration = try await Task.detached {
-                            if let load { return try await load() }
-                            return try AppServices.launchConfiguration()
+                            return try await load()
                         }.value
                     } catch { serviceFailure = error }
                 }
@@ -298,8 +504,21 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                     }
                 }
                 #if DEBUG
+                    if let test = AuthUITestConfiguration(environment: UITestRuntime.environment),
+                        let auth = app?.authServices
+                    {
+                        if test.auditScreen == "two-factor" {
+                            navigator.navigate(to: .signIn)
+                            await test.prepareChallenge(auth.model)
+                        } else {
+                            do { try await auth.prepareUITestRoute(test, navigator: navigator) } catch {
+                                serviceFailure = error
+                                UITestTimeline.record("seed-route-failed")
+                            }
+                        }
+                    }
                     if app?.authServices?.authUITestEnabled == true,
-                        let value = ProcessInfo.processInfo.environment["CF_AUTH_TEST_LINK"],
+                        let value = UITestRuntime.environment["CF_AUTH_TEST_LINK"],
                         let url = URL(string: value)
                     {
                         let activity = NSUserActivity(activityType: NSUserActivityTypeBrowsingWeb)
@@ -316,6 +535,11 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                         launchIntro: launchIntro,
                         forcesReduceMotion: overlayController?.launchScene.timeline.reduceMotion ?? false),
                     signposts: signposts)
+                #if DEBUG
+                    controller.uiTestReadinessID = uiTestNonce
+                    controller.uiTestIsReseed =
+                        uiTestNonce != AuthUITestConfiguration(environment: UITestRuntime.environment)?.id
+                #endif
                 controller.launchIsVisible = overlayWindow != nil
                 window.rootViewController = controller
                 ContentSizeCap.apply(to: controller, in: window)
@@ -380,6 +604,12 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             await (UIApplication.shared.delegate as? AppDelegate)?.verificationRequired(epoch: epoch)
         }
         consumePendingReminderIntent()
+        #if DEBUG
+            if let window, window.rootViewController?.viewIfLoaded != nil {
+                window.layoutIfNeeded()
+                (window.rootViewController as? LaunchHostingController<RootView>)?.recordVisibleScreen()
+            }
+        #endif
         signposts.event(.overlayRemoved)
         signposts.end(.exit)
         signposts.end(.launch)

@@ -5,86 +5,162 @@ import UIKit
 import XCTest
 
 nonisolated final class AuthSnapshotGuardTests: XCTestCase {
-    @MainActor func testEveryControlCanBeCapturedWithoutClippingAfterScrolling() async throws {
-        try await AuthTestHost.registerFonts()
-        let duo = try XCTUnwrap(AuthDeviceFixture.all().first { $0.name == "duo" })
-        let asymmetric = AuthDeviceFixture(
-            name: "duo-asymmetric", size: duo.size,
-            insets: UIEdgeInsets(top: 20, left: 24, bottom: 20, right: 62), scale: duo.scale)
-        for fixture in try AuthDeviceFixture.all() + [asymmetric] {
-            print("Auth capture guards: \(fixture.snapshotName)")
-            for language in ["en", "nl"] {
-                for style in [UIUserInterfaceStyle.light, .dark] {
-                    for category in [UIContentSizeCategory.large, .extraExtraLarge] {
-                        for mode in 0..<9 {
-                            var frames: [AuthElement: CGRect] = [:]
-                            let host = try AuthTestHost(
-                                EmptyView(), size: fixture.size, insets: fixture.insets, scale: fixture.scale)
-                            defer { host.close() }
-                            if mode == 0 {
-                                host.configure(
-                                    SignInView(
-                                        model: authSnapshotModel(), back: {}, guest: {}, measure: { frames[$0] = $1 }),
-                                    style: style, language: language, category: category)
-                            } else if mode < 3 {
-                                host.configure(
-                                    TwoFactorView(
-                                        model: twoFactorSnapshotModel(recovery: mode == 2), measure: { frames[$0] = $1 }
-                                    ),
-                                    style: style, language: language, category: category)
-                            }
-                            if mode >= 3 {
-                                host.configure(
-                                    ForgotPasswordView(
-                                        model: await forgotPasswordSnapshotModel(
-                                            sent: mode == 8,
-                                            state: mode == 8 ? .none : ForgotPasswordSnapshotState.allCases[mode - 3]),
-                                        measure: { frames[$0] = $1 }),
-                                    style: style, language: language, category: category)
-                            }
-                            try await host.settle()
-                            let scroll = try XCTUnwrap(scrollViews(host.controller.view).first)
-                            let elements: [AuthElement] =
-                                mode == 0
-                                ? [.brand, .passkey, .email, .password, .submit, .forgot, .signup, .footer]
-                                : mode < 3
-                                    ? [.brand, .code, .submit, .modeToggle]
-                                    : mode < 8
-                                        ? [.brand, .email, .submit] : [.brand, .notice, .openEmail, .backToSignIn]
-                            for element in elements {
-                                let frame = try XCTUnwrap(frames[element])
-                                let viewport = scroll.convert(scroll.bounds, to: host.window).intersection(
-                                    host.window.bounds.inset(by: fixture.insets))
-                                let delta =
-                                    frame.minY < viewport.minY
-                                    ? frame.minY - viewport.minY : max(0, frame.maxY - viewport.maxY)
-                                let maximum = max(
-                                    -scroll.adjustedContentInset.top,
-                                    scroll.contentSize.height - scroll.bounds.height
-                                        + scroll.adjustedContentInset.bottom)
-                                let offset = min(
-                                    maximum, max(-scroll.adjustedContentInset.top, scroll.contentOffset.y + delta))
-                                scroll.setContentOffset(CGPoint(x: scroll.contentOffset.x, y: offset), animated: false)
-                                try await host.settle()
-                                let actual = try XCTUnwrap(frames[element])
-                                XCTAssertTrue(
-                                    viewport.insetBy(dx: -1 / host.scale, dy: -1 / host.scale).contains(actual),
-                                    "\(fixture.name), \(language), \(style), \(category), mode \(mode), \(element): \(actual) outside \(viewport)"
-                                )
-                                let raster = try SnapshotRaster(png: XCTUnwrap(host.image().pngData()))
-                                XCTAssertTrue(
-                                    AuthSnapshotCapture.hasInk(raster, in: actual, scale: host.scale),
-                                    "Blank \(element) in \(actual), \(fixture.name), \(language), \(style), \(category)"
-                                )
-                            }
-                        }
-                    }
-                }
-            }
+    @MainActor func testRequiredSignInContentInBothAppearances() async throws {
+        try await authTopCapture(required: [.email, .password, .passkey, .forgot, .signup, .footer]) { measure in
+            SignInView(model: authSnapshotModel(), back: {}, guest: {}, measure: measure)
         }
     }
+    @MainActor func testSignInControls() async throws { try await checkAuthCapture(mode: 0) }
+}
 
-    @MainActor private func scrollViews(_ view: UIView) -> [UIScrollView] {
-        (view as? UIScrollView).map { [$0] } ?? view.subviews.flatMap(scrollViews)
+nonisolated final class TwoFactorCodeSnapshotGuardTests: XCTestCase {
+    @MainActor func testRequiredTwoFactorContentInBothAppearances() async throws {
+        try await authTopCapture(required: [.code, .modeToggle]) { measure in
+            TwoFactorView(model: twoFactorSnapshotModel(), measure: measure)
+        }
+    }
+    @MainActor func testCodeControls() async throws { try await checkAuthCapture(mode: 1) }
+}
+
+nonisolated final class TwoFactorRecoverySnapshotGuardTests: XCTestCase {
+    @MainActor func testRecoveryControls() async throws { try await checkAuthCapture(mode: 2) }
+}
+
+nonisolated final class ForgotFormSnapshotGuardTests: XCTestCase {
+    @MainActor func testFormControls() async throws { try await checkAuthCapture(mode: 3) }
+}
+
+nonisolated final class ForgotFieldSnapshotGuardTests: XCTestCase {
+    @MainActor func testFieldErrorControls() async throws { try await checkAuthCapture(mode: 4) }
+}
+
+nonisolated final class ForgotThrottleSnapshotGuardTests: XCTestCase {
+    @MainActor func testRequiredForgotContentInBothAppearances() async throws {
+        try await authTopCapture(required: [.email]) { measure in
+            ForgotPasswordView(model: await forgotPasswordSnapshotModel(state: .attempts), measure: measure)
+        }
+    }
+    @MainActor func testThrottleControls() async throws { try await checkAuthCapture(mode: 5) }
+}
+
+nonisolated final class ForgotServerSnapshotGuardTests: XCTestCase {
+    @MainActor func testServerControls() async throws { try await checkAuthCapture(mode: 6) }
+}
+
+nonisolated final class ForgotOfflineSnapshotGuardTests: XCTestCase {
+    @MainActor func testOfflineControls() async throws { try await checkAuthCapture(mode: 7) }
+}
+
+nonisolated final class ForgotSentSnapshotGuardTests: XCTestCase {
+    @MainActor func testSentControls() async throws { try await checkAuthCapture(mode: 8) }
+}
+
+@MainActor private func checkAuthCapture(mode: Int) async throws {
+    try await AuthTestHost.registerFonts()
+    for fixture in try AuthDeviceFixture.layoutStressProfiles() {
+        for language in ["en", "nl"] {
+            var frames: [AuthElement: CGRect] = [:]
+            let host = try AuthTestHost(
+                EmptyView(), size: fixture.size, insets: fixture.insets, scale: fixture.scale)
+            defer { host.close() }
+            let measure: (AuthElement, CGRect) -> Void = { frames[$0] = $1 }
+            if mode == 0 {
+                host.configure(
+                    SignInView(model: authSnapshotModel(), back: {}, guest: {}, measure: measure),
+                    language: language, category: .extraExtraLarge)
+            } else if mode < 3 {
+                host.configure(
+                    TwoFactorView(model: twoFactorSnapshotModel(recovery: mode == 2), measure: measure),
+                    language: language, category: .extraExtraLarge)
+            } else {
+                host.configure(
+                    ForgotPasswordView(
+                        model: await forgotPasswordSnapshotModel(
+                            sent: mode == 8,
+                            state: mode == 8 ? .none : ForgotPasswordSnapshotState.allCases[mode - 3]),
+                        measure: measure), language: language, category: .extraExtraLarge)
+            }
+            try await host.settle()
+            let scroll = try XCTUnwrap(authScrollViews(host.controller.view).first)
+            let viewport = scroll.convert(scroll.bounds, to: host.window).intersection(
+                host.window.bounds.inset(by: fixture.insets))
+            let minimum = -scroll.adjustedContentInset.top
+            let maximum = max(
+                minimum, scroll.contentSize.height - scroll.bounds.height + scroll.adjustedContentInset.bottom)
+            let elements: [AuthElement] =
+                mode == 0
+                ? [.brand, .passkey, .email, .password, .submit, .forgot, .signup, .footer]
+                : mode < 3
+                    ? [.brand, .code, .submit, .modeToggle]
+                    : mode < 8 ? [.brand, .email, .submit] : [.brand, .notice, .openEmail, .backToSignIn]
+            let initialOffset = scroll.contentOffset.y
+            let initialFrames = frames
+            let tolerance = viewport.insetBy(dx: -1 / host.scale, dy: -1 / host.scale)
+            for element in elements {
+                let frame = try XCTUnwrap(initialFrames[element])
+                XCTAssertTrue(
+                    ScrollReachability.reveal(
+                        frame, viewport: tolerance, currentOffset: initialOffset,
+                        minimumOffset: minimum, maximumOffset: maximum
+                    ).fits,
+                    "Unreachable \(element): \(frame), \(fixture.name), \(language)")
+            }
+            var remaining = Set(elements)
+            // Endpoints cover most controls together; capture an interior position only if needed.
+            var offsets = maximum == initialOffset ? [initialOffset] : [initialOffset, maximum]
+            while let offset = offsets.first {
+                offsets.removeFirst()
+                if scroll.contentOffset.y != offset {
+                    scroll.setContentOffset(CGPoint(x: scroll.contentOffset.x, y: offset), animated: false)
+                    try await host.settle()
+                }
+                let raster = try SnapshotRaster(image: XCTUnwrap(host.image().cgImage))
+                for element in remaining {
+                    let actual = try XCTUnwrap(frames[element])
+                    if tolerance.contains(actual) {
+                        XCTAssertTrue(
+                            AuthSnapshotCapture.hasInk(raster, in: actual, scale: host.scale),
+                            "Blank \(element): \(actual), \(fixture.name), \(language)")
+                        remaining.remove(element)
+                    }
+                }
+                if offsets.isEmpty, let element = remaining.sorted(by: { $0.rawValue < $1.rawValue }).first {
+                    let result = ScrollReachability.reveal(
+                        try XCTUnwrap(frames[element]), viewport: viewport,
+                        currentOffset: scroll.contentOffset.y, minimumOffset: minimum, maximumOffset: maximum)
+                    guard result.fits, result.offset != scroll.contentOffset.y else {
+                        XCTFail("Cannot capture \(element): \(fixture.name), \(language)")
+                        break
+                    }
+                    offsets.append(result.offset)
+                }
+            }
+            XCTAssertTrue(remaining.isEmpty, "Uncaptured controls: \(remaining)")
+        }
+    }
+}
+
+nonisolated final class SignUpSnapshotGuardTests: XCTestCase {
+    @MainActor func testRequiredContentInBothAppearances() async throws {
+        try await authTopCapture(required: [.name, .email, .password, .confirmation, .consent, .footer]) { measure in
+            SignUpView(model: try signUpSnapshotModel(.throttle), measure: measure)
+        }
+    }
+}
+
+nonisolated final class ResetPasswordSnapshotGuardTests: XCTestCase {
+    @MainActor func testRequiredContentInBothAppearances() async throws {
+        try await authTopCapture(required: [.password, .confirmation]) { measure in
+            ResetPasswordView(model: try await resetSnapshotModel(.throttle), measure: measure)
+        }
+    }
+}
+
+nonisolated final class VerifyEmailSnapshotGuardTests: XCTestCase {
+    @MainActor func testRequiredContentInBothAppearances() async throws {
+        try await authTopCapture(required: [.resend]) { measure in
+            VerifyEmailView(
+                model: try await verifySnapshotModel(.failedThrottle), automaticallyChecks: false, measure: measure)
+        }
     }
 }

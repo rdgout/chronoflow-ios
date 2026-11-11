@@ -5,6 +5,8 @@ import re
 import runpy
 import struct
 import subprocess
+import sys
+import tempfile
 import unittest
 import xml.etree.ElementTree as ET
 
@@ -13,6 +15,22 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class LaunchResourcesTests(unittest.TestCase):
+    def test_test_scheme_is_added_only_to_the_derived_debug_info(self):
+        source = ROOT / "App/Info.plist"
+        base = plistlib.loads(source.read_bytes())
+        self.assertNotIn("CFBundleURLTypes", base)
+        with tempfile.TemporaryDirectory(dir=ROOT / "build") as directory:
+            output = Path(directory) / "Debug-Info.plist"
+            subprocess.run([sys.executable, "-I", str(ROOT / "Scripts/make-debug-info.py"), str(source), str(output)], check=True)
+            debug = plistlib.loads(output.read_bytes())
+        registration = debug.pop("CFBundleURLTypes")
+        self.assertEqual(registration[0]["CFBundleURLSchemes"], ["chronoflow-uitest"])
+        self.assertEqual(debug, base)
+        target = (ROOT / "project.yml").read_text().split("  ChronoFlow:\n", 1)[1].split("  AppTests:\n", 1)[0]
+        self.assertIn('INFOPLIST_FILE: App/Info.plist', target)
+        debug_config = target.split('        Debug:\n', 1)[1].split('        Perf:\n', 1)[0]
+        self.assertIn('INFOPLIST_FILE: "$(DERIVED_FILE_DIR)/ChronoFlow-Debug-Info.plist"', debug_config)
+
     def test_phase9b_tooling_records_the_committed_implementation(self):
         section = (ROOT / "Docs/tooling.md").read_text().split(
             "## Phase 9b: data-source contracts, API and mock", 1

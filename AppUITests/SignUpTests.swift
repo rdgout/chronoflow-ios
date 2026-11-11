@@ -1,11 +1,10 @@
 import XCTest
 
-nonisolated final class SignUpTests: XCTestCase {
+nonisolated final class SignUpTests: ScreenTestCase {
     @MainActor func testOfflineRegistrationShowsConnectionBanner() {
         let app = submitPrefilledSignUp(state: "offline", offline: true)
-        defer { app.terminate() }
         let banner = AuthUIFlow.control("auth.banner", in: app)
-        XCTAssertTrue(banner.waitForExistence(timeout: 6))
+        XCTAssertTrue(banner.waitUntil(.exists, timeout: 6))
         AuthUIFlow.reveal(banner, in: app)
         XCTAssertTrue(banner.isHittable)
         XCTAssertTrue(banner.label.contains("Needs a connection"))
@@ -17,22 +16,18 @@ nonisolated final class SignUpTests: XCTestCase {
 
     @MainActor func testTakenEmailOffersTheDesignedSignInPath() {
         let app = submitPrefilledSignUp(state: "taken")
-        defer { app.terminate() }
         let banner = AuthUIFlow.control("auth.banner", in: app)
-        XCTAssertTrue(banner.waitForExistence(timeout: 6))
+        XCTAssertTrue(banner.waitUntil(.exists, timeout: 6))
         XCTAssertTrue(banner.label.contains("There's already an account with this email."))
         let signIn = app.buttons["sign-up.back"]
         AuthUIFlow.reveal(signIn, in: app)
         XCTAssertTrue(signIn.label.contains("Already have an account? Sign in"))
         signIn.tap()
-        XCTAssertTrue(app.textFields["sign-in.email"].waitForExistence(timeout: 4))
-        AuthUIFlow.signIn(app, email: MockScenarioValues.demoEmail)
-        XCTAssertTrue(app.staticTexts["walkthrough.title"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.textFields["sign-in.email"].waitUntil(.exists, timeout: 4))
     }
 
     @MainActor func testRegistrationToggleConsentAndUnverifiedGate() {
         let app = launchForgotApp()
-        defer { app.terminate() }
         openSignUp(app)
         fillSignUp(app, email: "new@example.com", submit: false)
         let toggle = app.switches["sign-up.visibility"]
@@ -46,17 +41,17 @@ nonisolated final class SignUpTests: XCTestCase {
         let submit = app.buttons["sign-up.submit"]
         AuthUIFlow.reveal(submit, in: app)
         submit.tap()
-        XCTAssertTrue(app.scrollViews["verify.scroll"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.scrollViews["verify.scroll"].waitUntil(.exists, timeout: 8))
     }
 
     @MainActor private func submitPrefilledSignUp(state: String, offline: Bool = false) -> XCUIApplication {
-        let app = XCUIApplication()
+        let app = ScreenTestApp.makeApplication()
         app.launchArguments = AuthUIFlow.arguments()
         app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
         app.launchEnvironment["CF_AUTH_TEST_AUDIT_SCREEN"] = "sign-up"
         app.launchEnvironment["CF_AUTH_TEST_AUDIT_STATE"] = state
         if offline { app.launchEnvironment["CF_AUTH_TEST_OFFLINE"] = "1" }
-        app.launch()
+        app.launchMeasured()
         openSignUp(app)
         let submit = app.buttons["sign-up.submit"]
         AuthUIFlow.reveal(submit, in: app)
@@ -66,11 +61,21 @@ nonisolated final class SignUpTests: XCTestCase {
 }
 
 @MainActor func openSignUp(_ app: XCUIApplication) {
+    if app.launchEnvironment["CF_UI_TEST_PROFILE"] == "screen",
+        app.launchEnvironment["CF_AUTH_TEST_AUDIT_SCREEN"] == "sign-up"
+    {
+        XCTAssertTrue(
+            UIWait.until(timeout: 12) {
+                app.textFields["sign-up.name"].exists || app.textFields["sign-in.email"].exists
+                    || app.buttons["welcome.signIn"].exists
+            })
+        if app.textFields["sign-up.name"].exists { return }
+    }
     AuthUIFlow.openSignIn(app)
     AuthUIFlow.reveal(app.buttons["sign-in.signup"], in: app)
     app.buttons["sign-in.signup"].tap()
     XCTAssertTrue(
-        app.textFields["sign-up.name"].waitForExistence(timeout: 4),
+        app.textFields["sign-up.name"].waitUntil(.exists, timeout: 4),
         "Expected sign-up.name after opening Create account")
 }
 

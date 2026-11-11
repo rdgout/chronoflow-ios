@@ -69,7 +69,7 @@
                         ).foregroundStyle(ColorToken.mutedForeground.color)
                         AuthButton(t("See today's steps"), minimumHeight: PlanUITokens.actionMinHeight) { dismiss() }
                     }
-                }.planContentBounds().padding(PlanUITokens.space5).padding(.top, PlanUITokens.space4)
+                }.planContentBounds().padding(PlanUITokens.space5).padding(.top, PlanUITokens.space4).planPageRail()
             }
             .tint(ColorToken.primary.color).controlSize(.large)
             .font(Typography.screenBodyLg.font).foregroundStyle(ColorToken.cardForeground.color)

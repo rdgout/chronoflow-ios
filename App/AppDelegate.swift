@@ -5,11 +5,22 @@ import UserNotifications
 
 @main
 final class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+    override init() {
+        super.init()
+        #if DEBUG
+            UITestTimeline.record("process-entry")
+        #endif
+    }
+
     var launchProcess = LaunchProcessState()
     var nativeSession: NativeSessionController?
     var authServices: AuthSessionServices?
     weak var authWindow: UIWindow?
-    let navigator = RootNavigator()
+    var navigator = RootNavigator()
+    #if DEBUG
+        var uiTestEnvironment: [String: String]?
+        var uiTestArguments: [String]?
+    #endif
 
     func userNotificationCenter(
         _ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse,

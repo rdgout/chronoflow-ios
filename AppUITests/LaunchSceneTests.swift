@@ -24,9 +24,9 @@ nonisolated final class LaunchSceneTests: XCTestCase {
         app.launchArguments = [
             "-cf.mode", "ready", "-cf.freezeAt", "700",
         ]
-        app.launch()
+        app.launchMeasured(profile: .launch)
         let opening = app.images["launch.opening"]
-        XCTAssertTrue(opening.waitForExistence(timeout: 10))
+        XCTAssertTrue(opening.waitUntil(.exists, timeout: 10))
         XCTAssertEqual(opening.label, "ChronoFlow is opening")
         XCTAssertEqual(opening.frame, app.frame)
         let screenshot = opening.screenshot()

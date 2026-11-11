@@ -1,6 +1,6 @@
 import XCTest
 
-nonisolated final class TwoFactorKeyboardTests: XCTestCase {
+nonisolated final class TwoFactorKeyboardTests: ScreenTestCase {
     @MainActor func testEnglishCodeFieldErrorAtXXLarge() throws {
         try check(language: "en", recovery: false, server: false)
     }
@@ -24,7 +24,6 @@ nonisolated final class TwoFactorKeyboardTests: XCTestCase {
 
     @MainActor private func check(language: String, recovery: Bool, server: Bool) throws {
         let app = launchTwoFactorApp(language: language, xxLarge: true, server: server)
-        defer { app.terminate() }
         try openMockTwoFactor(app)
         let scroll = AuthUIFlow.scroll(in: app)
         if recovery {
@@ -37,14 +36,16 @@ nonisolated final class TwoFactorKeyboardTests: XCTestCase {
         try assertTwoFactorKeyboardPair(field, app: app, context: "\(language), xxLarge, initial", attach: add)
         app.buttons["two-factor.submit"].tap()
         if server {
+            XCTAssertTrue(app.staticTexts["auth.banner"].waitUntil(.exists, timeout: 5))
             AuthUIFlow.assertBannerVisible(in: app)
             AuthUIFlow.reveal(field, in: app)
             field.tap()
         } else {
-            let received = XCTNSPredicateExpectation(
-                predicate: NSPredicate { _, _ in field.value as? String == "" && field.isEnabled }, object: nil)
-            XCTAssertEqual(XCTWaiter.wait(for: [received], timeout: 5), .completed)
-            XCTAssertFalse(app.descendants(matching: .any)["auth.banner"].exists)
+            let received = { () -> Bool in
+                field.value as? String == "" && field.isEnabled
+            }
+            XCTAssertTrue(UIWait.until(timeout: 5, condition: received))
+            XCTAssertFalse(app.staticTexts["auth.banner"].exists)
         }
         try assertTwoFactorKeyboardPair(
             field, app: app,
@@ -52,6 +53,6 @@ nonisolated final class TwoFactorKeyboardTests: XCTestCase {
             attach: add)
         XCTAssertEqual(field.value as? String, "")
         XCTAssertTrue(field.isEnabled)
-        XCTAssertEqual(app.descendants(matching: .any)["auth.banner"].exists, server)
+        XCTAssertEqual(app.staticTexts["auth.banner"].exists, server)
     }
 }

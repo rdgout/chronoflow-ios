@@ -151,6 +151,29 @@ private func readinessCredentials() throws -> ControllerMemoryStore {
 }
 
 extension StoredDataReadinessTests {
+    @Test @MainActor func committedVerificationRoutingSurvivesRequestCancellationAndRestore() async throws {
+        let controller = readinessController(try readinessCredentials())
+        let values = ReadinessValues(gate: .verify)
+        let readiness = StoredDataReadiness(controller: controller, values: { _ in try await values.values() })
+        _ = try await controller.restore()
+        let navigator = GateNavigatorProbe()
+        for _ in 0..<2 {
+            let snapshot = try #require(await controller.activeSession())
+            let request = Task {
+                withUnsafeCurrentTask { $0?.cancel() }
+                await readiness.routeAcceptedSession(navigator: navigator) { epoch in
+                    #expect(!Task.isCancelled)
+                    #expect(epoch == snapshot.epoch)
+                    navigator.navigate(to: .verify)
+                }
+            }
+            await request.value
+            #expect(navigator.routes.last == .verify)
+            _ = try await controller.restore()
+        }
+        #expect(navigator.routes == [.verify, .verify])
+    }
+
     @Test @MainActor func unknownSessionUsesExistingEightSecondFallbackWithoutDeletingData() async throws {
         let credentials = try readinessCredentials()
         await credentials.configure(readFails: true)

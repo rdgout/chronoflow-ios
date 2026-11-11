@@ -24,6 +24,11 @@ struct SettingsPageFixture {
     @MainActor func model() -> SettingsPagesModel {
         SettingsPagesModel(database: database, permit: permit, isCurrent: { true })
     }
+    @MainActor func waitUntil(_ condition: () -> Bool) async throws {
+        let deadline = ContinuousClock.now + .seconds(5)
+        while !condition(), ContinuousClock.now < deadline { try await Task.sleep(for: .milliseconds(10)) }
+        try #require(condition())
+    }
     func close() async throws {
         try await database.close()
         try FileManager.default.removeItem(at: root)

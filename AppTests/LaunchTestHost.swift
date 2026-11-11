@@ -71,20 +71,31 @@ final class LaunchTestHost {
     static func pixelDifference(_ actual: [UInt8], _ expected: [UInt8], width: Int) -> (
         maximum: Int, firstMismatch: String?
     ) {
-        var maximum = 0
-        var firstMismatch: String?
-        for (index, values) in zip(actual, expected).enumerated() {
-            let difference = abs(Int(values.0) - Int(values.1))
-            maximum = max(maximum, difference)
-            if difference > 2 && firstMismatch == nil {
-                let pixel = index / 4
-                let channel = ["R", "G", "B", "A"][index % 4]
-                firstMismatch =
-                    "(x: \(pixel % width), y: \(pixel / width)), channel \(channel), "
-                    + "actual \(values.0), expected \(values.1)"
+        let count = min(actual.count, expected.count)
+        guard count > 0 else { return (0, nil) }
+        return actual.withUnsafeBufferPointer { actual in
+            expected.withUnsafeBufferPointer { expected in
+                let actual = actual.baseAddress!
+                let expected = expected.baseAddress!
+                guard memcmp(actual, expected, count) != 0 else { return (0, nil) }
+                var maximum = 0
+                var firstIndex: Int?
+                var index = 0
+                while index < count {
+                    let difference = abs(Int(actual[index]) - Int(expected[index]))
+                    if difference > maximum { maximum = difference }
+                    if difference > 2 && firstIndex == nil { firstIndex = index }
+                    index += 1
+                }
+                let firstMismatch = firstIndex.map { index in
+                    let pixel = index / 4
+                    let channel = ["R", "G", "B", "A"][index % 4]
+                    return "(x: \(pixel % width), y: \(pixel / width)), channel \(channel), "
+                        + "actual \(actual[index]), expected \(expected[index])"
+                }
+                return (maximum, firstMismatch)
             }
         }
-        return (maximum, firstMismatch)
     }
 
     static func assertPixelsEqual(

@@ -11,6 +11,7 @@ import XCTest
     let scale: CGFloat
     var prepareCapture: (UIWindow) -> Void = { _ in }
     private var revision = 0
+    private var checkedRenderRevision: Int?
     var window: UIWindow { container.window }
 
     init<V: View>(
@@ -59,6 +60,73 @@ import XCTest
                 .id(revision))
     }
 
+    func settleLayout(measuring frames: () -> [CGRect]) async throws {
+        window.makeKeyAndVisible()
+        var previous: [CGRect] = []
+        var matches = 0
+        let deadline = ContinuousClock.now + .seconds(5)
+        for _ in 1...12 {
+            try await Task.sleep(for: .milliseconds(10))
+            guard ContinuousClock.now < deadline else { break }
+            layout()
+            let current = frames().sorted {
+                [$0.minX, $0.minY, $0.width, $0.height].lexicographicallyPrecedes(
+                    [$1.minX, $1.minY, $1.width, $1.height])
+            }
+            matches = !current.isEmpty && current == previous ? matches + 1 : 0
+            if matches == 2 {
+                if checkedRenderRevision != revision {
+                    let raster = try SnapshotRaster(image: XCTUnwrap(image().cgImage))
+                    XCTAssertTrue(WelcomeSnapshotPixels.hasVisibleVariation(raster.bytes))
+                    checkedRenderRevision = revision
+                }
+                XCTAssertTrue(window.isKeyWindow)
+                XCTAssertEqual(controller.view.bounds.size, window.bounds.size)
+                XCTAssertTrue(controller.safeAreaRegions.isEmpty)
+                XCTAssertEqual(controller.traitCollection.displayScale, scale)
+                return
+            }
+            previous = current
+        }
+        throw CaptureFailure.didNotSettle("Layout: revision \(revision), size \(window.bounds.size)")
+    }
+
+    private func layout() {
+        UIView.performWithoutAnimation {
+            @MainActor func visit(_ view: UIView) {
+                view.layoutIfNeeded()
+                view.subviews.forEach(visit)
+            }
+            visit(window)
+        }
+    }
+
+    func settle(until predicate: () -> Bool) async throws {
+        window.makeKeyAndVisible()
+        var previous: [CGRect] = []
+        var matches = 0
+        let deadline = ContinuousClock.now + .seconds(5)
+        while ContinuousClock.now < deadline {
+            try await Task.sleep(for: .milliseconds(10))
+            guard ContinuousClock.now < deadline else { break }
+            layout()
+            func frames(_ view: UIView) -> [CGRect] {
+                [view.frame, view.bounds] + view.subviews.flatMap(frames)
+            }
+            let current = frames(window)
+            matches = predicate() && current == previous ? matches + 1 : 0
+            if matches == 2 {
+                XCTAssertTrue(window.isKeyWindow)
+                XCTAssertEqual(controller.view.bounds.size, window.bounds.size)
+                XCTAssertTrue(controller.safeAreaRegions.isEmpty)
+                XCTAssertEqual(controller.traitCollection.displayScale, scale)
+                return
+            }
+            previous = current
+        }
+        throw CaptureFailure.didNotSettle("Predicate: 5 s deadline, revision \(revision), size \(window.bounds.size)")
+    }
+
     func settle() async throws {
         var previous: SnapshotRaster?
         var matches = 0
@@ -104,15 +172,11 @@ import XCTest
     func image() throws -> UIImage {
         window.makeKeyAndVisible()
         UIView.performWithoutAnimation {
-            @MainActor func layout(_ view: UIView) {
-                view.layoutIfNeeded()
-                view.subviews.forEach(layout)
-            }
             func display(_ layer: CALayer) {
                 layer.displayIfNeeded()
                 layer.sublayers?.forEach(display)
             }
-            layout(window)
+            layout()
             prepareCapture(window)
             display(window.layer)
             CATransaction.flush()
@@ -143,6 +207,18 @@ nonisolated struct AuthDeviceFixture {
             guard let device else { return [.large, .extraExtraLarge] }
             return try profileSizes(device.coverage).map(UIContentSizeCategory.init)
         }
+    }
+
+    static func layoutStressProfiles() throws -> [Self] {
+        let fixtures = try all()
+        let se = try XCTUnwrap(fixtures.first { $0.name == "se" })
+        let duo = try XCTUnwrap(fixtures.first { $0.name == "duo" })
+        return [
+            se,
+            .init(
+                name: "duo-asymmetric", size: duo.size,
+                insets: UIEdgeInsets(top: 20, left: 24, bottom: 20, right: 62), scale: duo.scale),
+        ]
     }
 
     static func authSnapshotProfiles() throws -> [Self] {
