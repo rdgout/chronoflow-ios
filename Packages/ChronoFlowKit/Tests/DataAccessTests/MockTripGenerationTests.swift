@@ -5,6 +5,25 @@ import Testing
 @testable import DataAccess
 
 @Suite struct MockTripGenerationTests {
+    @Test(arguments: [false, true])
+    func unknownAirportIsAFieldErrorBeforePlanGeneration(destination: Bool) async throws {
+        let source = try wizardMockSource()
+        _ = try await login(source)
+        var input = try wizardInput()
+        if destination {
+            input.outbound.legs[0].toIata = "NRT"
+        } else {
+            input.outbound.legs[0].fromIata = "NRT"
+        }
+        let field = destination ? "legs.0.toIata" : "legs.0.fromIata"
+        await #expect(
+            throws: DataFailure.validation(
+                fields: [field: FieldMessage(key: "Choose an airport from the search results.")], status: 422)
+        ) {
+            try await source.reviewTrip(ApiTripReviewInput(input: input))
+        }
+    }
+
     @Test func routeChoiceCreditsAndIdempotentReceiptSurviveRestoration() async throws {
         let store = MemoryMockStateStore()
         let source = try wizardMockSource(store: store)

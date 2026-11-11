@@ -1,4 +1,5 @@
 import AppCore
+import DataAccess
 import Foundation
 import PlanCore
 import Testing
@@ -13,7 +14,9 @@ import TripWizardUI
         let strings = try #require(object["strings"] as? [String: [String: Any]])
         for (key, value) in strings {
             let localizations = try #require(value["localizations"] as? [String: [String: [String: String]]])
-            if !key.hasSuffix("_one") { #expect(localizations["en"]?["stringUnit"]?["value"] == key) }
+            if !key.hasSuffix("_one"), key != "wizard.room.from" {
+                #expect(localizations["en"]?["stringUnit"]?["value"] == key)
+            }
             #expect(localizations["en"]?["stringUnit"]?["value"]?.isEmpty == false)
             #expect(localizations["nl"]?["stringUnit"]?["value"]?.isEmpty == false)
         }
@@ -51,11 +54,64 @@ import TripWizardUI
         }
     }
 
+    @Test func optionalPromptCopyAndNewControlsHaveDutch() async throws {
+        let catalog = try await CopyCatalog.load()
+        let formatter = CopyLineFormatter(catalog: catalog)
+        for prompt in MockWizardPrompts.make(input: try generationInput(), profile: JSONObject()) {
+            #expect(catalog.contains(prompt.text.key))
+            #expect(
+                formatter.format(prompt.text, options: CopyFormat(language: .en))
+                    != formatter.format(prompt.text, options: CopyFormat(language: .nl)))
+        }
+        for key in [
+            "Fine-tune your plan", "Ready to plan", "Make my plan", "Calculating your plan…", "Helps a lot",
+            "Use different sleep times for this trip", "We couldn't save your plan", "Saving needs a connection",
+            "{{count}} days of steps",
+        ] {
+            #expect(WizardStrings.text(key, locale: Locale(identifier: "nl_NL")) != key)
+        }
+        #expect(
+            WizardStrings.text("{{count}} credits", locale: Locale(identifier: "nl_NL"), arguments: ["count": "2"])
+                == "2 credits")
+    }
+
+    @Test func reviewedSheetAndReadyCopyMatchesWizardBoards() {
+        let dutch = Locale(identifier: "nl_NL")
+        let english = Locale(identifier: "en_GB")
+        for (key, nl) in [
+            (
+                "Add at least one drink to save this answer.",
+                "Voeg minstens één drankje toe om dit antwoord te bewaren."
+            ),
+            ("Enter a rating between 0.1 and 9.9.", "Vul een waarde tussen 0,1 en 9,9 in."),
+            ("Dark room", "Donkere kamer"), ("From", "Van"), ("wizard.room.from", "Vanaf"),
+        ] {
+            #expect(WizardStrings.text(key, locale: dutch) == nl)
+        }
+        #expect(WizardStrings.text("wizard.room.from", locale: english) == "From")
+        for count in [0, 1, 3] {
+            let arguments = ["count": String(count)]
+            let unit = count == 1 ? "credit" : "credits"
+            #expect(
+                WizardStrings.text("You have {{count}} credits", locale: english, arguments: arguments)
+                    == "You have \(count) \(unit)")
+            #expect(
+                WizardStrings.text("You have {{count}} credits", locale: dutch, arguments: arguments)
+                    == "Je hebt \(count) \(unit)")
+        }
+        #expect(
+            WizardStrings.text("{{time}} · assumed", locale: dutch, arguments: ["time": "08:00"])
+                == "08:00 · aangenomen")
+        #expect(
+            WizardStrings.text("{{time}} · assumed", locale: english, arguments: ["time": "08:00"])
+                == "08:00 · assumed")
+    }
+
     @Test func runtimeUsesTheSelectedLanguageAndInterpolation() {
         let dutch = Locale(identifier: "nl_NL")
         #expect(WizardStrings.text("Where are you flying?", locale: dutch) == "Waar vlieg je heen?")
         #expect(WizardStrings.text("Time in {{city}}", locale: dutch, arguments: ["city": "Tokio"]) == "Tijd in Tokio")
         #expect(WizardStrings.text("Continue", locale: Locale(identifier: "en_GB")) == "Continue")
-        #expect(WizardStrings.text("{{count}} credits", locale: dutch, arguments: ["count": "1"]) == "1 tegoed")
+        #expect(WizardStrings.text("{{count}} credits", locale: dutch, arguments: ["count": "1"]) == "1 credit")
     }
 }

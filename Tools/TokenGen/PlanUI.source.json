@@ -91,5 +91,11 @@
   "wizardSecondaryFontSize": 16,
   "wizardSecondaryLineHeight": 22,
   "wizardFailureDashLength": 3,
-  "wizardSheetRadius": 38
+  "wizardSheetRadius": 38,
+  "wizardReadyLabelWidth": 92,
+  "wizardReadySummaryPadding": 18,
+  "wizardReadySummaryFontSize": 20,
+  "wizardReadySummaryLineHeight": 27,
+  "wizardColumnWidth": 520,
+  "wizardTimeWheelHeight": 180
 }

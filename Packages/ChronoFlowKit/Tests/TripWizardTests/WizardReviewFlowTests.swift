@@ -4,9 +4,74 @@ import Foundation
 import LocalStore
 import Sync
 import Testing
-import TripWizard
+
+@testable import TripWizard
 
 @Suite struct WizardReviewFlowTests {
+    @Test @MainActor func stopOneWayUnsureSleepAndScreeningReachFineTuneThenSave() async throws {
+        let probe = EffectProbe()
+        let fixture = try await reviewFixture(sleepNeeded: true, effects: await probe.effects())
+        let model = fixture.model
+        model.go(.whereTo)
+        model.chooseAirport(
+            wizardAirport("AMS", city: "Amsterdam", zone: "Europe/Amsterdam"),
+            sheet: WizardAirportSheet(index: 0, side: .from))
+        model.chooseAirport(
+            wizardAirport("HND", city: "Tokyo", zone: "Asia/Tokyo"),
+            sheet: WizardAirportSheet(index: 0, side: .to))
+        model.chooseAirport(
+            wizardAirport("DXB", city: "Dubai", zone: "Asia/Dubai"),
+            sheet: WizardAirportSheet(index: 0, side: .stop))
+        #expect(model.draft.form.route().map(\.iata) == ["AMS", "DXB", "HND"])
+        model.finishRoute()
+        #expect(model.draft.state.step == .outbound)
+        model.setDateTime("2030-10-12T14:40", index: 0, arrival: false)
+        model.setDateTime("2030-10-12T23:25", index: 0, arrival: true)
+        model.setDateTime("2030-10-13T02:05", index: 1, arrival: false)
+        model.setDateTime("2030-10-13T16:35", index: 1, arrival: true)
+        #expect(model.finishOutbound())
+        model.go(.returnChoice)
+        model.chooseReturn("one_way")
+        try await eventually { fixture.clock.deadlines.contains(0.25) }
+        fixture.clock.advance(to: 0.25)
+        try await eventually { model.draft.state.step == .sleep }
+        #expect(model.draft.form.end.kind == "one_way" && model.draft.form.legs.count == 2)
+        model.setSleep("habitual_bed", value: .string("23:30"))
+        model.setSleep("habitual_wake", value: .string("07:15"))
+        model.setSleep("chronotype", value: .null)
+        var first = try generationReview()
+        first.prompts = [
+            ApiReviewPrompt(
+                id: "age_band", kind: .ageBand, blocking: true, required: true,
+                text: CopyLine(key: "Which age group are you in?", args: []), scope: ApiReviewPromptScope(),
+                target: .profile, fields: ["age_band"], answer: [:],
+                shape: ApiReviewPromptShape(kind: .options, options: ["under_18", "18_64", "65_plus"]))
+        ]
+        var final = try generationReview()
+        final.prompts = MockWizardPrompts.make(input: model.reviewInput.input, profile: JSONObject())
+        await fixture.source.queueReviews([.success(first), .success(final)])
+        #expect(model.finishSleep())
+        try await finishCheck(fixture, start: 0.25)
+        #expect(model.draft.state.step == .question)
+        model.answerQuestion(.string("18_64"))
+        try await eventually { fixture.clock.deadlines.contains(2) }
+        fixture.clock.advance(to: 2)
+        try await finishCheck(fixture, count: 2, start: 2)
+        #expect(model.draft.state.step == .fineTune && !model.optionalPrompts.isEmpty)
+        let reviewed = try #require(await fixture.source.reviewInputs.last)
+        #expect(reviewed.input.outbound.legs.count == 2 && reviewed.input.tripEndKind == "one_way")
+        #expect(reviewed.profile?["chronotype"] == .null && reviewed.profile?["age_band"] == .string("18_64"))
+        model.finishFineTune()
+        #expect(model.draft.state.step == .ready)
+        #expect(await fixture.source.count("review") == 2)
+        model.savePlan()
+        try await eventually { model.createdTripID == "created" }
+        #expect(await fixture.source.count("save") == 1)
+        #expect(await probe.pulls == ["created"])
+        #expect(try await fixture.store.recover() == nil)
+        try await fixture.database.close()
+    }
+
     @Test @MainActor func sleepIsRequiredUntilAnsweredAndNotSureCounts() async throws {
         let fixture = try await reviewFixture(sleepNeeded: true)
         let model = fixture.model
@@ -23,7 +88,7 @@ import TripWizard
         #expect(model.sleepComplete)
         #expect(model.finishSleep())
         try await finishCheck(fixture)
-        #expect(model.draft.state.step == .continuation && !model.draft.state.sleepNeeded)
+        #expect(model.draft.state.step == .ready && !model.draft.state.sleepNeeded)
         #expect(model.lastInputStep == .sleep)
         #expect(await fixture.source.reviewInputs.last?.profile?["chronotype"] == .null)
         #expect(
@@ -61,8 +126,127 @@ import TripWizard
         await fixture.source.configure()
         fixture.model.beginChecking()
         try await finishCheck(fixture, count: 2)
-        #expect(fixture.model.draft.state.step == .continuation)
+        #expect(fixture.model.draft.state.step == .ready)
         try await fixture.model.discard()
+        try await fixture.database.close()
+    }
+
+    @Test @MainActor func repeatedReviewExpiredShowsFailureUntilManualRetry() async throws {
+        let fixture = try await reviewFixture()
+        let model = fixture.model
+        let identity = ApiReviewIdentity(token: "expired", inputRevision: 1, reviewRevision: 1)
+        model.editForm { $0.identity = identity }
+        await fixture.source.configure(reviewFailure: .reviewExpired)
+        model.beginChecking()
+        await model.checkTask?.value
+        #expect(model.draft.state.step == .checking && model.checking.failure == .reviewExpired)
+        #expect(model.draft.fieldErrors.isEmpty && model.checking.ticks == 0)
+        #expect(model.checkTask == nil && fixture.clock.waiterCount == 0)
+        let inputs = await fixture.source.reviewInputs
+        #expect(inputs.map(\.identity) == [identity, nil])
+
+        model.resumeChecking()
+        model.resumeCompletion()
+        fixture.clock.advance(to: 1801)
+        model.readyTick(force: true)
+        model.resumeChecking()
+        #expect(model.checkTask == nil && model.checking.failure == .reviewExpired)
+        #expect(await fixture.source.count("review") == 2)
+
+        await fixture.source.configure()
+        model.beginChecking()
+        try await finishCheck(fixture, count: 3, start: 1801)
+        #expect(model.draft.state.step == .ready)
+        try await model.discard()
+        try await fixture.database.close()
+    }
+
+    @Test @MainActor func activeCheckingCannotBeRestartedByDuplicateStarts() async throws {
+        let fixture = try await reviewFixture()
+        let model = fixture.model
+        let gate = GenerationGate()
+        await fixture.source.configure(beforeReview: { await gate.wait() })
+        model.beginChecking()
+        try await eventually { await fixture.source.count("review") == 1 }
+        try await eventually { fixture.clock.deadlines.contains(0.4) }
+        fixture.clock.advance(to: 0.4)
+        try await eventually { model.checking.ticks == 1 }
+        model.beginChecking()
+        model.resumeChecking()
+        #expect(model.checking.ticks == 1)
+        await gate.open()
+        try await finishCheck(fixture)
+        #expect(model.draft.state.step == .ready)
+        #expect(await fixture.source.count("review") == 1)
+        try await model.discard()
+        try await fixture.database.close()
+    }
+
+    @Test(arguments: [false, true]) @MainActor
+    func requestCancellationShowsFailureWithoutAutomaticRestart(inline: Bool) async throws {
+        let fixture = try await reviewFixture()
+        let model = fixture.model
+        await fixture.source.configure(beforeReview: { throw CancellationError() })
+        if inline {
+            model.applyReview(
+                TripGenerationReviewResult(input: model.reviewInput, review: try generationReview()))
+            #expect(model.draft.state.step == .ready)
+            model.readyTick(force: true)
+            await model.reviewTask?.value
+        } else {
+            model.beginChecking()
+            await model.checkTask?.value
+        }
+        #expect(model.draft.state.step == .checking && model.checking.failure == .server(status: nil))
+        #expect(!model.reviewing && model.checkTask == nil && model.reviewTask == nil)
+        model.resumeChecking()
+        model.readyTick(force: true)
+        #expect(model.checkTask == nil)
+        #expect(await fixture.source.count("review") == 1)
+        try await model.discard()
+        try await fixture.database.close()
+    }
+
+    @Test @MainActor func unknownMockAirportReturnsToWhereBeforeFirstCheckingTick() async throws {
+        let now = Date(timeIntervalSince1970: 1_793_750_400)
+        let seed = try MockAppSeed.make(now: now)
+        let account = try #require(seed.accounts.values.first { $0.twoFactorCode == nil })
+        let mock = MockDataSource(seed: seed, now: { now }, sleep: { _ in })
+        _ = try await mock.signIn(
+            PasswordSignInInput(
+                email: account.snapshot.email, password: account.password, deviceID: UUID().uuidString,
+                deviceName: "Tests"))
+        let source = try GenerationSource(mock: mock)
+        let fixture = try await reviewFixture(source: source)
+        let model = fixture.model
+        model.chooseAirport(
+            wizardAirport("NRT", city: "Tokyo", zone: "Asia/Tokyo"),
+            sheet: WizardAirportSheet(index: 0, side: .to))
+        model.setDateTime("2030-10-12T14:40", index: 0, arrival: false)
+        model.setDateTime("2030-10-13T16:35", index: 0, arrival: true)
+        model.go(.outbound)
+        #expect(model.finishOutbound())
+        model.go(.returnChoice)
+        model.beginChecking()
+        #expect(model.draft.state.step == .checking)
+        let checkingPath = model.navigationPath
+        await model.checkTask?.value
+        #expect(model.draft.state.step == .whereTo)
+        #expect(model.navigationPath.isEmpty)
+        #expect(
+            model.draft.fieldErrors == [
+                "legs.0.toIata": FieldMessage(key: "Choose an airport from the search results.")
+            ])
+        #expect(model.checking.failure == nil && model.checking.ticks == 0)
+        #expect(fixture.clock.now == 0)
+        model.popNavigation(to: Array(checkingPath.dropLast()), from: checkingPath)
+        model.resumeChecking()
+        #expect(model.draft.state.step == .whereTo && model.navigationPath.isEmpty)
+        #expect(await source.count("review") == 1)
+        await model.flush()
+        let recovered = try #require(try await fixture.store.recover())
+        #expect(recovered.state.step == .whereTo && recovered.fieldErrors == model.draft.fieldErrors)
+        try await model.discard()
         try await fixture.database.close()
     }
 
@@ -181,7 +365,7 @@ import TripWizard
         try await eventually { fixture.model.draft.state.step == .checking }
         #expect(fixture.model.progress >= progress)
         try await finishCheck(fixture, count: 2, start: 1.75)
-        #expect(fixture.model.draft.state.step == .continuation)
+        #expect(fixture.model.draft.state.step == .ready)
         let input = try #require(await fixture.source.reviewInputs.last)
         #expect(input.profile?["shift_work"] == .bool(false) && input.identity == first.identity)
         try await fixture.model.discard()
@@ -328,17 +512,20 @@ private struct ReviewFixture {
     let store: MemberWizardStore
 }
 
-@MainActor private func reviewFixture(sleepNeeded: Bool = false) async throws -> ReviewFixture {
+@MainActor private func reviewFixture(
+    sleepNeeded: Bool = false, effects: TripGenerationEffects? = nil, source: GenerationSource? = nil
+) async throws -> ReviewFixture {
     let database = try await wizardDatabase()
     let store = MemberWizardStore(database: database)
     var draft = try await store.start()
     draft.form = try WizardForm(input: generationInput())
     draft.state.step = .returnChoice
     draft.state.sleepNeeded = sleepNeeded
-    let source = try GenerationSource()
+    let source = try source ?? GenerationSource()
     let clock = CheckingTestClock()
     let epoch = SyncEpoch(accountID: try AccountID("019a562b-8000-7000-8000-000000000001"), generation: 1)
-    let effects = TripGenerationEffects.storing(database: database, source: source, epoch: epoch, requestSync: {})
+    let effects =
+        effects ?? TripGenerationEffects.storing(database: database, source: source, epoch: epoch, requestSync: {})
     let generation = TripGenerationService(source: source, effects: effects)
     let model = MemberWizardModel(
         draft: draft, store: store, search: noAirportSearch(), now: { .distantPast }, generation: generation,

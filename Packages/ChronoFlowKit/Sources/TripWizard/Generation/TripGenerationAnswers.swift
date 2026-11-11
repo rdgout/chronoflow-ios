@@ -6,6 +6,13 @@ extension TripGenerationService {
         instance: String, input: ApiTripReviewInput, review: ApiTripReview, answers: [String: [String: JSONValue]],
         edit: TripEditContext? = nil
     ) async throws -> TripGenerationReviewResult {
+        let answered = try Self.applyingAnswers(input: input, review: review, answers: answers)
+        return try await self.review(instance: instance, input: answered, edit: edit)
+    }
+
+    public nonisolated static func applyingAnswers(
+        input: ApiTripReviewInput, review: ApiTripReview, answers: [String: [String: JSONValue]]
+    ) throws -> ApiTripReviewInput {
         var input = input
         var object = try JSONDecoder().decode(JSONObject.self, from: JSONEncoder().encode(input.input))
         for (id, values) in answers {
@@ -36,7 +43,7 @@ extension TripGenerationService {
         }
         input.input = try JSONDecoder().decode(ApiTripInput.self, from: JSONEncoder().encode(object))
         input.identity = review.identity
-        return try await self.review(instance: instance, input: input, edit: edit)
+        return input
     }
 
     private static func set(_ value: JSONValue, path: ArraySlice<String>, in root: inout JSONValue) throws {

@@ -150,6 +150,12 @@ public actor TripGenerationService {
     public func save(_ initial: TripGenerationState) async throws
         -> TripGenerationSaveResult
     {
+        try await save(initial, didCreate: { _ in })
+    }
+
+    public func save(
+        _ initial: TripGenerationState, didCreate: @escaping @Sendable (String) async throws -> Void
+    ) async throws -> TripGenerationSaveResult {
         try Task.checkCancellation()
         guard !cancelled else { throw CancellationError() }
         var state = initial
@@ -191,21 +197,28 @@ public actor TripGenerationService {
                 }
             }
             state.savedTripId = tripID
+            try await didCreate(tripID)
             try? await effects.pullCreatedTrip(tripID)
             await effects.requestSync()
             return TripGenerationSaveResult(state: state, outcome: .saved(tripId: tripID))
         } catch is CancellationError {
             throw CancellationError()
         } catch let failure as DataFailure {
+            if state.savedTripId != nil {
+                return TripGenerationSaveResult(state: state, outcome: .failed(failure))
+            }
             switch failure {
             case .reviewExpired, .notEnoughCredits:
                 state.review = nil
                 state.input.identity = nil
+                state.savedTripId = nil
                 return TripGenerationSaveResult(
                     state: state,
                     outcome: .reReviewNeeded(failure == .reviewExpired ? .reviewExpired : .notEnoughCredits))
             default: return TripGenerationSaveResult(state: state, outcome: .failed(failure))
             }
+        } catch {
+            return TripGenerationSaveResult(state: state, outcome: .failed(.server(status: nil)))
         }
     }
 

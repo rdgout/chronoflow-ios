@@ -18,12 +18,13 @@
         public var settings: () -> Void
         public var pastTrips: () -> Void
         public var refresh: () async -> Void
+        public var create: (() -> Void)?
         public init(
             trips: [TripListValue], detail: TripDetail?, now: Date, loading: Bool, formatter: CopyLineFormatter,
             hidden: [BlockType] = [], timeFormat: TimeFormat = .value24,
             openTrip: @escaping (String) -> Void, openStep: @escaping (String) -> Void,
             settings: @escaping () -> Void, pastTrips: @escaping () -> Void,
-            refresh: @escaping () async -> Void
+            refresh: @escaping () async -> Void, create: (() -> Void)? = nil
         ) {
             self.trips = trips
             self.detail = detail
@@ -37,6 +38,7 @@
             self.settings = settings
             self.pastTrips = pastTrips
             self.refresh = refresh
+            self.create = create
         }
         private var language: Language { locale.language.languageCode?.identifier == "nl" ? .nl : .en }
         private func t(_ key: String, _ values: [String: String] = [:]) -> String {
@@ -86,6 +88,10 @@
                 Text(t("No trips yet")).planTextStyle(Typography.screenCardTitle).accessibilityAddTraits(.isHeader)
                 Text(t("Add your flights and you get a day-by-day plan for sleep, light and caffeine."))
                     .foregroundStyle(ColorToken.mutedForeground.color)
+                if let create {
+                    AuthButton(t("Plan a trip"), minimumHeight: PlanUITokens.actionMinHeight, action: create)
+                        .accessibilityIdentifier("today.create")
+                }
             }.font(Typography.screenBodyLg.font).multilineTextAlignment(.center).frame(maxWidth: .infinity)
                 .padding(.vertical, PlanUITokens.space8).planEmptyCard().accessibilityElement(children: .contain)
                 .accessibilityIdentifier("today.empty")
@@ -112,8 +118,17 @@
                                 ? formatter.formatDayMonth(endDate, language: language)
                                 : formatter.formatDate(endDate, language: language),
                         ]))
-                Button(t("See past trips"), action: pastTrips).buttonStyle(.bordered)
+                VStack(spacing: PlanUITokens.space1) {
+                    if let create {
+                        AuthButton(t("Plan a trip"), minimumHeight: PlanUITokens.actionMinHeight, action: create)
+                            .accessibilityIdentifier("today.create")
+                    }
+                    AuthButton(
+                        t("See past trips"), kind: .ghost, minimumHeight: PlanUITokens.actionMinHeight,
+                        action: pastTrips
+                    )
                     .accessibilityIdentifier("today.past")
+                }
             }.font(Typography.screenBodyLg.font).multilineTextAlignment(.center).frame(maxWidth: .infinity)
                 .planCard().accessibilityIdentifier("today.completed")
         }

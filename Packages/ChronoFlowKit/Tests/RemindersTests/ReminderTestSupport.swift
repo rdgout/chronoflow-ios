@@ -100,11 +100,11 @@ actor FakeReminderCenter: ReminderNotificationCenter {
 struct ReminderTestStore {
     let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     let database: AccountDatabase
-    init() async throws {
+    init(accountID: String = reminderAccount) async throws {
         database = AccountDatabase(applicationSupport: root)
-        try await database.open(accountID: reminderAccount)
+        try await database.open(accountID: accountID)
         try await AccountRepository(database: database).upsert(
-            AccountRecord(id: reminderAccount, name: "Demo", email: "demo@example.com"))
+            AccountRecord(id: accountID, name: "Demo", email: "demo@example.com"))
         try await SettingsRepository(database: database).upsert(
             SettingsRecord(section: "reminders", value: .encoding(ReminderSettings())))
     }

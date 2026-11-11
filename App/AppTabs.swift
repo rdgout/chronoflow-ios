@@ -26,6 +26,7 @@ struct AppTabs: View {
     @State private var tripsPath: [TripPageRoute] = []
     @State private var path: [TripPageRoute] = []
     @State private var wizard: MemberWizardModel?
+    @State private var savedTrip: TripPageRoute?
     @State private var wizardStore: MemberWizardStore?
     @State private var airportSearch: AirportSearchService?
     @State private var openingWizard = false
@@ -141,8 +142,24 @@ struct AppTabs: View {
         }
         .accessibilityIdentifier("app.tabs").tint(ColorToken.primary.color)
         .accessibilityElement(children: .contain)
-        .fullScreenCover(isPresented: Binding(get: { wizard != nil }, set: { if !$0 { wizard = nil } })) {
-            if let wizard { MemberWizardView(model: wizard) { self.wizard = nil } }
+        .fullScreenCover(
+            isPresented: Binding(get: { wizard != nil }, set: { if !$0 { wizard = nil } }),
+            onDismiss: {
+                guard let savedTrip else { return }
+                self.savedTrip = nil
+                selection = .trips
+                tripsPath = [savedTrip]
+            }
+        ) {
+            if let wizard {
+                MemberWizardView(
+                    model: wizard,
+                    saved: { id in
+                        savedTrip = TripPageRoute(tripID: id, awaitingSync: true)
+                        self.wizard = nil
+                    }
+                ) { self.wizard = nil }
+            }
         }
         .task {
             guard let native, let snapshot = await native.controller.activeSession(),
@@ -246,6 +263,13 @@ struct AppTabs: View {
                             draft: recovered, store: recovery, search: search, generation: generation)
                     }
                 } catch { assertionFailure("Wizard recovery failed: \(error)") }
+                #if DEBUG
+                    if UITestRuntime.environment["CF_WIZARD_AUTO_OPEN"] == "1",
+                        (UIApplication.shared.delegate as? AppDelegate)?.authServices?.authUITestEnabled == true
+                    {
+                        openWizard()
+                    }
+                #endif
             }
             for await update in await native.controller.updates() {
                 guard !Task.isCancelled, update.epoch == snapshot.epoch,
@@ -259,6 +283,7 @@ struct AppTabs: View {
                     await wizardGeneration?.cancel()
                     wizardGeneration = nil
                     wizard = nil
+                    savedTrip = nil
                     wizardStore = nil
                     airportSearch = nil
                     return
@@ -341,7 +366,7 @@ struct AppTabs: View {
                         step = StepSelection(tripID: tripID, blockID: $0)
                     }
                 }, settings: { selection = .settings },
-                pastTrips: { selection = .trips }, refresh: refreshToday
+                pastTrips: { selection = .trips }, refresh: refreshToday, create: { openWizard() }
             )
         } else if native != nil {
             ScrollView {
@@ -398,7 +423,7 @@ struct AppTabs: View {
                 #if DEBUG
                     let capture =
                         (UIApplication.shared.delegate as? AppDelegate)?.authServices?.authUITestEnabled == true
-                        ? ProcessInfo.processInfo.environment["CF_WIZARD_BOARD_CAPTURE"] : nil
+                        ? UITestRuntime.environment["CF_WIZARD_BOARD_CAPTURE"] : nil
                     if let capture { draft = WizardBoardCaptureSeed.draft(draft, board: capture, locale: locale) }
                 #endif
                 guard !Task.isCancelled, self.wizardStore === wizardStore else { return }

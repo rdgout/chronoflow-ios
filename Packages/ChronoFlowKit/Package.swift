@@ -78,14 +78,14 @@ let package = Package(
             name: "LocalStoreTests", dependencies: ["LocalStore"], resources: [.copy("Fixtures")],
             swiftSettings: [.defaultIsolation(nil)]),
         .target(
-            name: "TripWizard", dependencies: ["AppCore", "DataAccess", "LocalStore"],
+            name: "TripWizard", dependencies: ["AppCore", "DataAccess", "LocalStore", "Reminders"],
             swiftSettings: [.defaultIsolation(nil)]),
         .target(
             name: "TripWizardUI", dependencies: ["TripWizard", "DesignSystem", "PlanCore"],
             resources: [.process("Resources")], swiftSettings: [.defaultIsolation(MainActor.self)]),
         .testTarget(
             name: "TripWizardTests",
-            dependencies: ["TripWizard", "TripWizardUI", "Sync", "DataAccess", "LocalStore", "PlanCore"],
+            dependencies: ["TripWizard", "TripWizardUI", "Sync", "DataAccess", "LocalStore", "PlanCore", "Reminders"],
             resources: [.copy("Fixtures")],
             swiftSettings: [.defaultIsolation(nil)]),
         .target(

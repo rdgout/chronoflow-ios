@@ -1,15 +1,13 @@
 import XCTest
 
-nonisolated final class WizardRouteScreenTests: XCTestCase {
-    override func setUp() {
-        super.setUp()
-        continueAfterFailure = false
-        executionTimeAllowance = 180
+nonisolated final class WizardRouteScreenTests: ScreenTestCase {
+    override func setUp() async throws {
+        try await super.setUp()
+        executionTimeAllowance = 60
     }
 
     @MainActor func testStopRowsRemoveAndDirectClearsTheRoute() {
         let app = WizardScreenUIFlow.launch("WizardWhereStops")
-        defer { app.terminate() }
         XCTAssertTrue(app.buttons["wizard.from"].exists)
         XCTAssertTrue(app.buttons["wizard.to"].exists)
         XCTAssertTrue(app.buttons["wizard.stop.1"].label.contains("Stop 1"))
@@ -23,64 +21,52 @@ nonisolated final class WizardRouteScreenTests: XCTestCase {
         XCTAssertTrue(app.buttons["wizard.swap"].exists)
         XCTAssertTrue(app.buttons["wizard.where.continue"].isEnabled)
         app.segmentedControls["wizard.route.stops"].buttons["Yes"].tap()
-        XCTAssertTrue(app.otherElements["wizard.airport-search"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.otherElements["wizard.airport-search"].waitUntil(.exists, timeout: 5))
         app.buttons["Cancel"].tap()
         XCTAssertTrue(app.segmentedControls["wizard.route.stops"].buttons["No, direct"].isSelected)
     }
 
-    @MainActor func testDirectSameAndLimitScreens() {
-        for board in ["WizardWhere", "WizardWhereSame", "WizardWhereLimit"] {
-            let app = WizardScreenUIFlow.launch(board)
-            defer { app.terminate() }
-            let next = app.buttons["wizard.where.continue"]
-            if board == "WizardWhereSame" {
-                XCTAssertFalse(next.isEnabled)
-                XCTAssertTrue(app.staticTexts["wizard.where.same"].exists)
-                XCTAssertFalse(app.segmentedControls["wizard.route.stops"].exists)
-                XCTAssertFalse(app.staticTexts["From your last trip"].exists)
-            } else if board == "WizardWhereLimit" {
-                let limit = app.staticTexts["wizard.route.limit"]
-                AuthUIFlow.reveal(limit, in: app, scroll: app.scrollViews.firstMatch)
-                XCTAssertTrue(limit.isHittable)
-                XCTAssertFalse(app.buttons["wizard.add-stop"].exists)
-                XCTAssertTrue(next.isHittable && next.isEnabled)
-            } else {
-                XCTAssertTrue(next.isEnabled)
-                XCTAssertTrue(app.buttons["wizard.swap"].exists)
-            }
-        }
+    @MainActor func testDirectRouteShowsSwapAndContinue() {
+        let app = WizardScreenUIFlow.launch("WizardWhere")
+        XCTAssertTrue(app.buttons["wizard.where.continue"].isEnabled)
+        XCTAssertTrue(app.buttons["wizard.swap"].exists)
     }
 
-    @MainActor func testOneStopUsesDutchCopyAndTheNextSearchNamesItsEndpoints() {
-        let app = WizardScreenUIFlow.launch("WizardWhereStop", language: "nl")
-        defer { app.terminate() }
-        XCTAssertTrue(app.buttons["wizard.stop.1"].label.hasPrefix("Tussenstop,"))
-        XCTAssertTrue(app.segmentedControls["wizard.route.stops"].buttons["Ja"].isSelected)
-        let add = app.buttons["wizard.add-stop"]
-        XCTAssertEqual(add.label, "Nog een tussenstop toevoegen")
-        add.tap()
-        XCTAssertTrue(app.otherElements["wizard.airport-search"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["Tussen Dubai en Tokio"].exists)
+    @MainActor func testSameAirportShowsErrorAndDisablesContinue() {
+        let app = WizardScreenUIFlow.launch("WizardWhereSame")
+        XCTAssertFalse(app.buttons["wizard.where.continue"].isEnabled)
+        XCTAssertTrue(app.staticTexts["wizard.where.same"].exists)
+        XCTAssertFalse(app.segmentedControls["wizard.route.stops"].exists)
+        XCTAssertFalse(app.staticTexts["From your last trip"].exists)
     }
 
-    @MainActor func testHomeRouteLocksFromAndShowsItsStops() {
-        for board in ["WizardHomeRoute", "WizardHomeRouteStop"] {
-            let app = WizardScreenUIFlow.launch(board)
-            defer { app.terminate() }
-            XCTAssertTrue(app.otherElements["wizard.return-route"].waitForExistence(timeout: 5))
-            let origin = app.buttons["wizard.from"]
-            XCTAssertFalse(origin.isEnabled)
-            XCTAssertTrue(origin.label.contains("where you landed"))
-            XCTAssertTrue(app.buttons["wizard.to"].label.contains("AMS"))
-            XCTAssertFalse(app.buttons["wizard.swap"].exists)
-            XCTAssertEqual(app.buttons["wizard.stop.1"].exists, board == "WizardHomeRouteStop")
-            XCTAssertTrue(app.buttons["wizard.return-route.continue"].isEnabled)
-        }
+    @MainActor func testRouteLimitReplacesAddStop() {
+        let app = WizardScreenUIFlow.launch("WizardWhereLimit")
+        let limit = app.staticTexts["wizard.route.limit"]
+        AuthUIFlow.reveal(limit, in: app, scroll: app.scrollViews.firstMatch)
+        XCTAssertTrue(limit.isHittable)
+        XCTAssertFalse(app.buttons["wizard.add-stop"].exists)
+        XCTAssertTrue(app.buttons["wizard.where.continue"].isHittable)
+        XCTAssertTrue(app.buttons["wizard.where.continue"].isEnabled)
+    }
+
+    @MainActor func testDirectHomeRouteLocksFrom() { assertHomeRoute("WizardHomeRoute") }
+    @MainActor func testHomeRouteWithStopLocksFrom() { assertHomeRoute("WizardHomeRouteStop") }
+
+    @MainActor private func assertHomeRoute(_ board: String) {
+        let app = WizardScreenUIFlow.launch(board)
+        XCTAssertTrue(app.otherElements["wizard.return-route"].waitUntil(.exists, timeout: 3))
+        let origin = app.buttons["wizard.from"]
+        XCTAssertFalse(origin.isEnabled)
+        XCTAssertTrue(origin.label.contains("where you landed"))
+        XCTAssertTrue(app.buttons["wizard.to"].label.contains("AMS"))
+        XCTAssertFalse(app.buttons["wizard.swap"].exists)
+        XCTAssertEqual(app.buttons["wizard.stop.1"].exists, board == "WizardHomeRouteStop")
+        XCTAssertTrue(app.buttons["wizard.return-route.continue"].isEnabled)
     }
 
     @MainActor func testThreeFlightsScrollWithContinuePinned() {
         let app = WizardScreenUIFlow.launch("WizardOutboundThree")
-        defer { app.terminate() }
         let next = app.buttons["wizard.outbound.continue"]
         XCTAssertTrue(next.isHittable)
         XCTAssertFalse(next.isEnabled)
@@ -95,52 +81,32 @@ nonisolated final class WizardRouteScreenTests: XCTestCase {
 
     @MainActor func testBoardErrorAppearsOnlyUnderTheSecondFlight() {
         let app = WizardScreenUIFlow.launch("WizardOutboundTwoErrors")
-        defer { app.terminate() }
         let error = app.staticTexts["wizard.1.arrival.error"]
         AuthUIFlow.reveal(error, in: app, scroll: app.scrollViews.firstMatch)
         XCTAssertEqual(error.label, "Check the departure and arrival times.")
-        for identifier in ["wizard.0.departure.error", "wizard.0.arrival.error", "wizard.1.departure.error"] {
-            XCTAssertFalse(app.staticTexts[identifier].exists)
-        }
+        XCTAssertFalse(app.staticTexts["wizard.0.departure.error"].exists)
+        XCTAssertFalse(app.staticTexts["wizard.0.arrival.error"].exists)
+        XCTAssertFalse(app.staticTexts["wizard.1.departure.error"].exists)
     }
 
     @MainActor func testContinueScrollsBackToTheOffscreenFirstError() {
         let app = WizardScreenUIFlow.launch("WizardOutboundScrollErrors")
-        defer { app.terminate() }
         let first = app.staticTexts["wizard.0.arrival.error"]
         let later = app.staticTexts["wizard.4.departure.error"]
         let next = app.buttons["wizard.outbound.continue"]
-        let atBottom = XCTNSPredicateExpectation(
-            predicate: NSPredicate { _, _ in
+        AuthUIFlow.reveal(later, in: app, scroll: app.scrollViews.firstMatch)
+        XCTAssertTrue(
+            UIWait.until(timeout: 3) {
                 later.exists && first.exists && !first.frame.isEmpty && !first.isHittable
                     && next.exists && next.isHittable && next.isEnabled
-            }, object: nil)
-        XCTAssertEqual(
-            XCTWaiter.wait(for: [atBottom], timeout: 5), .completed,
-            "Expected the last error to exist, the first error to be offscreen, and Continue to be hittable and enabled"
-        )
+            })
         XCTAssertEqual(later.label, "This flight leaves before the previous one lands.")
         next.tap()
-        let returned = XCTNSPredicateExpectation(
-            predicate: NSPredicate { _, _ in
-                first.exists && !first.frame.isEmpty && first.isHittable
-            }, object: nil)
-        XCTAssertEqual(
-            XCTWaiter.wait(for: [returned], timeout: 5), .completed,
-            "Expected the first arrival error to become hittable after Continue")
-    }
-
-    @MainActor func testEmptyPillsAnnounceNotSetInDutch() {
-        let app = WizardScreenUIFlow.launch("WizardOutboundEmpty", language: "nl")
-        defer { app.terminate() }
-        for side in ["departure", "arrival"] {
-            XCTAssertEqual(app.buttons["wizard.0.\(side).date-time"].value as? String, "niet ingesteld")
-        }
+        XCTAssertTrue(first.waitUntil(.hittable, timeout: 3))
     }
 
     @MainActor func testEmptyArrivalPickerStartsOnTheSetDepartureDate() {
         let app = WizardScreenUIFlow.launch("WizardOutboundStopNew")
-        defer { app.terminate() }
         let arrival = app.buttons["wizard.0.arrival.date-time"]
         XCTAssertEqual(arrival.value as? String, "not set")
         _ = WizardPickerUIFlow.open("arrival", in: app)
@@ -150,31 +116,50 @@ nonisolated final class WizardRouteScreenTests: XCTestCase {
         XCTAssertTrue(value.contains("16:40") || value.contains("4:40"), value)
     }
 
-    @MainActor func testEmptyAndFilledPickerShareTheSheetAndOnlyDoneWrites() {
-        let app = WizardScreenUIFlow.launch("WizardOutboundEmpty")
-        defer { app.terminate() }
+    @MainActor func testEmptyPickerCancelKeepsThePillUnset() { assertPicker(board: "WizardOutboundEmpty", save: false) }
+    @MainActor func testEmptyPickerDoneSetsThePill() { assertPicker(board: "WizardOutboundEmpty", save: true) }
+    @MainActor func testFilledPickerCancelKeepsThePill() { assertPicker(board: "WizardOutbound", save: false) }
+    @MainActor func testFilledPickerDoneUpdatesThePill() { assertPicker(board: "WizardOutbound", save: true) }
+
+    @MainActor private func assertPicker(board: String, save: Bool) {
+        let app = WizardScreenUIFlow.launch(board)
         let pill = app.buttons["wizard.0.departure.date-time"]
-        XCTAssertEqual(pill.value as? String, "not set")
+        let original = pill.value as? String
         let picker = WizardPickerUIFlow.open("departure", in: app)
-        let title = app.navigationBars["Departure"]
-        XCTAssertTrue(title.exists)
-        let tomorrow = WizardPickerUIFlow.date(days: 1, from: Date())
-        WizardPickerUIFlow.selectDate(tomorrow, picker: picker)
-        app.buttons["wizard.picker.cancel"].tap()
-        XCTAssertEqual(pill.value as? String, "not set")
-        _ = WizardPickerUIFlow.open("departure", in: app)
-        XCTAssertTrue(title.exists)
-        app.buttons["wizard.picker.done"].tap()
-        let committed = pill.value as? String
-        XCTAssertNotEqual(committed, "not set")
-        let filled = WizardPickerUIFlow.open("departure", in: app)
-        XCTAssertTrue(title.exists)
-        WizardPickerUIFlow.selectDate(tomorrow, picker: filled)
-        app.buttons["wizard.picker.cancel"].tap()
-        XCTAssertEqual(pill.value as? String, committed)
-        let reopened = WizardPickerUIFlow.open("departure", in: app)
-        WizardPickerUIFlow.selectDate(tomorrow, picker: reopened)
-        app.buttons["wizard.picker.done"].tap()
-        XCTAssertNotEqual(pill.value as? String, committed)
+        XCTAssertTrue(app.navigationBars["Departure"].exists)
+        let displayed = board == "WizardOutboundEmpty" ? Date() : WizardPickerUIFlow.seededDeparture
+        let tomorrow = WizardPickerUIFlow.date(days: 1, from: displayed)
+        WizardPickerUIFlow.selectDate(tomorrow, from: displayed, picker: picker)
+        app.buttons[save ? "wizard.picker.done" : "wizard.picker.cancel"].tap()
+        if save {
+            XCTAssertNotEqual(pill.value as? String, original)
+        } else {
+            XCTAssertEqual(pill.value as? String, original)
+        }
     }
+}
+
+nonisolated final class WizardRouteDutchScreenTests: ScreenTestCase {
+    override func setUp() async throws {
+        try await super.setUp()
+        executionTimeAllowance = 60
+    }
+
+    @MainActor func testOneStopUsesDutchCopyAndTheNextSearchNamesItsEndpoints() {
+        let app = WizardScreenUIFlow.launch("WizardWhereStop", language: "nl")
+        XCTAssertTrue(app.buttons["wizard.stop.1"].label.hasPrefix("Tussenstop,"))
+        XCTAssertTrue(app.segmentedControls["wizard.route.stops"].buttons["Ja"].isSelected)
+        let add = app.buttons["wizard.add-stop"]
+        XCTAssertEqual(add.label, "Nog een tussenstop toevoegen")
+        add.tap()
+        XCTAssertTrue(app.otherElements["wizard.airport-search"].waitUntil(.exists, timeout: 5))
+        XCTAssertTrue(app.staticTexts["Tussen Dubai en Tokio"].exists)
+    }
+
+    @MainActor func testEmptyPillsAnnounceNotSetInDutch() {
+        let app = WizardScreenUIFlow.launch("WizardOutboundEmpty", language: "nl")
+        XCTAssertEqual(app.buttons["wizard.0.departure.date-time"].value as? String, "niet ingesteld")
+        XCTAssertEqual(app.buttons["wizard.0.arrival.date-time"].value as? String, "niet ingesteld")
+    }
+
 }

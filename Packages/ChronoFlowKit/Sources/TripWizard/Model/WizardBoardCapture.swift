@@ -3,6 +3,15 @@
     import Foundation
 
     extension MemberWizardModel {
+        public func freezeCompletionBoard(reviewing: Bool = false, answerError: String? = nil, retry: Int = 0) {
+            boardFrozen = true
+            resumed = true
+            self.reviewing = reviewing
+            boardAnswerError = answerError
+            retrySeconds = retry
+            draft.state.checkedInput = inputFingerprint
+        }
+
         public func freezeBoardCapture(ticks: Int, slow: Bool = false, failure: DataFailure? = nil, retry: Int = 0) {
             guard ProcessInfo.processInfo.environment["CF_WIZARD_BOARD_CAPTURE"] != nil,
                 UUID(uuidString: ProcessInfo.processInfo.environment["CF_AUTH_TEST_ID"] ?? "") != nil

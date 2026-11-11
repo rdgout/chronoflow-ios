@@ -7,11 +7,15 @@
     import UIKit
 
     public struct MemberWizardView: View {
+        @Environment(\.dynamicTypeSize) var dynamicTypeSize
+        @Environment(\.scenePhase) var scenePhase
         @Environment(\.locale) var locale
         @Environment(\.colorScheme) var scheme
         @Environment(\.accessibilityReduceMotion) var reduceMotion
+        @Environment(\.planContentMeasure) var planContentMeasure
         @Bindable var model: MemberWizardModel
         let dismiss: () -> Void
+        let saved: (String) -> Void
         @State var confirmingDiscard = false
         @State var continuing = false
         @State var closing = false
@@ -24,9 +28,12 @@
         typealias Destination = MemberWizardDestination
         @State var copyFormatter: CopyLineFormatter?
 
-        public init(model: MemberWizardModel, dismiss: @escaping () -> Void) {
+        public init(
+            model: MemberWizardModel, saved: @escaping (String) -> Void = { _ in }, dismiss: @escaping () -> Void
+        ) {
             self.model = model
             self.dismiss = dismiss
+            self.saved = saved
         }
 
         var requestedErrorScroll: Int {
@@ -57,30 +64,48 @@
                         model.popNavigation(to: $0, from: presented)
                     })
             ) {
-                whereScreen.navigationDestination(for: Destination.self) { destination in
-                    switch destination {
-                    case .outbound: outboundScreen
-                    case .returnChoice: returnScreen
-                    case .returnRoute: routeScreen(home: true)
-                    case .returnFlight: returnFlightScreen
-                    case .sleep: sleepScreen
-                    case .checking: checkingScreen
-                    case .question(let index): questionScreen(index)
-                    case .excluded: excludedScreen
-                    case .continuation:
-                        #if DEBUG
-                            continuation
-                        #else
-                            ColorToken.background.color
-                        #endif
+                whereScreen.environment(\.planContentMeasure, presented.isEmpty ? planContentMeasure : nil)
+                    .navigationDestination(for: Destination.self) { destination in
+                        Group {
+                            switch destination {
+                            case .outbound: outboundScreen
+                            case .returnChoice: returnScreen
+                            case .returnRoute: routeScreen(home: true)
+                            case .returnFlight: returnFlightScreen
+                            case .sleep: sleepScreen
+                            case .checking: checkingScreen
+                            case .question(let index): questionScreen(index)
+                            case .excluded: excludedScreen
+                            case .continuation, .fineTune: fineTuneScreen
+                            case .ready: readyScreen
+                            case .calculating: calculatingScreen
+                            }
+                        }
+                        .environment(\.planContentMeasure, destination == presented.last ? planContentMeasure : nil)
                     }
-                }
             }
             .tint(ColorToken.primary.color)
             .interactiveDismissDisabled()
             .task {
                 if copyFormatter == nil { copyFormatter = try? await CopyLineFormatter(catalog: CopyCatalog.load()) }
                 model.resumeChecking()
+                model.resumeCompletion()
+            }
+            .onChange(of: model.createdTripID) { _, id in
+                if let id {
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                    saved(id)
+                }
+            }
+            .sheet(
+                isPresented: Binding(
+                    get: { model.draft.state.promptSheetID != nil }, set: { if !$0 { model.openPrompt(nil) } })
+            ) {
+                if let prompt = model.optionalPrompts.first(where: { $0.id == model.draft.state.promptSheetID }) {
+                    WizardAnswerSheet(
+                        model: model, prompt: prompt, question: serverCopy(prompt.text), title: optionalLabel(prompt),
+                        fieldCopy: fieldCopy)
+                }
             }
             .onChange(of: model.navigationPath) { _, _ in continuing = false }
             .sheet(item: Binding(get: { model.draft.state.sheet }, set: { model.openAirport($0) })) { sheet in
@@ -109,7 +134,11 @@
                 button: t("Continue"), enabled: home ? model.returnComplete : model.outboundComplete,
                 action: {
                     if home ? model.finishReturn() : model.finishOutbound() {
-                        if home { model.finishFlightInput() } else { model.go(.returnChoice) }
+                        if home || model.draft.state.revisit != nil {
+                            model.finishFlightInput()
+                        } else {
+                            model.go(.returnChoice)
+                        }
                     } else {
                         UINotificationFeedbackGenerator().notificationOccurred(.warning)
                     }
@@ -191,7 +220,8 @@
                 RoundedRectangle(cornerRadius: PlanUITokens.radiusXl).strokeBorder(
                     ColorToken.authErrorBorder.color, lineWidth: AuthTokens.borderWidth)
             }
-            .accessibilityElement(children: .combine).accessibilityIdentifier(identifier)
+            .accessibilityElement(children: .combine).accessibilityAddTraits(.isStaticText)
+            .accessibilityIdentifier(identifier)
         }
 
         func flightCard(index: Int, leg: WizardLeg) -> some View {
@@ -242,17 +272,6 @@
                 ["hours": String(minutes / 60), "minutes": String(minutes % 60)])
         }
 
-        #if DEBUG
-            private var continuation: some View {
-                VStack(spacing: PlanUITokens.space4) {
-                    Text(t("The next wizard steps are being built in Phase 16c."))
-                    Text(t("Continue · Phase 16c (temporary)"))
-                }.frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(ColorToken.background.color)
-                    .accessibilityElement(children: .contain).accessibilityIdentifier("wizard.debug.continue")
-            }
-        #endif
-
         func close() {
             guard !closing else { return }
             closing = true
@@ -275,7 +294,8 @@
             Image(systemName: "exclamationmark.circle").accessibilityHidden(true)
         }
         .font(Typography.screenBody.font).foregroundStyle(ColorToken.destructive.color)
-        .accessibilityElement(children: .combine).accessibilityIdentifier(identifier)
+        .accessibilityElement(children: .combine).accessibilityAddTraits(.isStaticText)
+        .accessibilityIdentifier(identifier)
     }
 
     extension View {

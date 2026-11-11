@@ -4,8 +4,18 @@ import Observation
 
 public protocol MemberWizardGeneration: Sendable {
     func review(instance: String, input: ApiTripReviewInput) async throws -> TripGenerationReviewResult
+    func save(_ state: TripGenerationState, didCreate: @escaping @Sendable (String) async throws -> Void) async throws
+        -> TripGenerationSaveResult
     func cancelReviews(instance: String) async
     func cancel() async
+}
+
+extension MemberWizardGeneration {
+    public func save(_ state: TripGenerationState, didCreate: @escaping @Sendable (String) async throws -> Void)
+        async throws -> TripGenerationSaveResult
+    {
+        throw DataFailure.server(status: nil)
+    }
 }
 
 extension TripGenerationService: MemberWizardGeneration {
@@ -17,12 +27,23 @@ extension TripGenerationService: MemberWizardGeneration {
 @MainActor @Observable
 public final class MemberWizardModel {
     public internal(set) var draft: MemberWizardDraft
-    public private(set) var closed = false
+    public internal(set) var closed = false
     public private(set) var persistenceFailed = false
     public let search: AirportSearchService
     public internal(set) var checking = WizardCheckingProgress()
     public internal(set) var retrySeconds = 0
     public internal(set) var choicePending = false
+    public internal(set) var reviewing = false
+    public internal(set) var createdTripID: String?
+    @ObservationIgnored var retryTask: Task<Void, Never>?
+    @ObservationIgnored var retryID = UUID()
+    @ObservationIgnored var saveTask: Task<Void, Never>?
+    @ObservationIgnored var reviewTask: Task<Void, Never>?
+    @ObservationIgnored var resumed = false
+    #if DEBUG
+        public internal(set) var boardAnswerError: String?
+        @ObservationIgnored var boardFrozen = false
+    #endif
     let generation: (any MemberWizardGeneration)?
     let checkingClock: WizardCheckingClock
     @ObservationIgnored var checkTask: Task<Void, Never>?
@@ -44,6 +65,7 @@ public final class MemberWizardModel {
         self.now = now
         self.generation = generation
         self.checkingClock = checkingClock
+        restartRetryCountdown()
     }
 
     public var whereComplete: Bool {
@@ -59,16 +81,21 @@ public final class MemberWizardModel {
     }
 
     public func go(_ step: MemberWizardStep) {
-        guard !closed, !persistenceFailed else { return }
-        if draft.state.step == .checking, step != .checking { cancelCheck() }
+        guard !closed, !persistenceFailed, draft.state.step != .calculating else { return }
+        if reviewing { cancelInlineReview() }
+        if draft.state.step == .checking, step != .checking {
+            cancelCheck()
+            checking = WizardCheckingProgress()
+        }
         choiceTask?.cancel()
         choicePending = false
-        if [.checking, .question, .excluded, .continuation].contains(step) {
+        if [.checking, .question, .excluded, .continuation, .fineTune, .ready, .calculating].contains(step) {
             draft.state.progressFloor = progress
         } else {
             draft.state.progressFloor = nil
         }
         draft.state.step = step
+        restartRetryCountdown()
         persist()
     }
 
@@ -180,14 +207,17 @@ public final class MemberWizardModel {
     public func flush() async { await pending?.value }
 
     public func discard() async throws {
-        guard !closed else { return }
+        guard !closed, draft.state.step != .calculating else { return }
         closed = true
+        restartRetryCountdown()
+        cancelInlineReview()
         cancelCheck()
         choiceTask?.cancel()
         await generation?.cancel()
         await flush()
         do { try await store.discard(instance: draft.state.instance) } catch {
             closed = false
+            restartRetryCountdown()
             throw error
         }
     }

@@ -47,48 +47,6 @@
                             }.frame(maxWidth: .infinity, alignment: .leading).padding(PlanUITokens.space5)
                         }
                     }
-                    .safeAreaInset(edge: .bottom) {
-                        if let button {
-                            VStack(spacing: PlanUITokens.wizardControlGap) {
-                                if id == "excluded" || (id == "checking" && model.checking.failure != nil) {
-                                    Button(t("Close")) {
-                                        if id == "excluded" { close() } else { confirmingDiscard = true }
-                                    }
-                                    .buttonStyle(.plain).font(Typography.wizardSecondary.font)
-                                    .foregroundStyle(ColorToken.foreground.color).frame(minHeight: AuthTokens.touch)
-                                    .disabled(closing).accessibilityIdentifier("wizard.\(id).secondary-close")
-                                }
-                                Button {
-                                    guard !continuing, !closing, enabled else { return }
-                                    continuing = true
-                                    action()
-                                    if id == "outbound" || id == "return-flight" { errorScrollRequest += 1 }
-                                    continuing = false
-                                } label: {
-                                    Text(button).font(Typography.wizardButton.font)
-                                        .frame(maxWidth: .infinity, minHeight: PlanUITokens.wizardButtonHeight)
-                                }
-                                .buttonStyle(.plain).foregroundStyle(
-                                    (id == "excluded" ? ColorToken.foreground : .primaryForeground).color
-                                )
-                                .background((id == "excluded" ? ColorToken.surface2 : .primary).color, in: Capsule())
-                                .disabled(!enabled || closing || continuing || model.persistenceFailed)
-                                .opacity(enabled ? 1 : PlanUITokens.wizardDisabledOpacity)
-                                .accessibilityIdentifier("wizard.\(id).continue")
-                            }.padding(.horizontal, PlanUITokens.space5).padding(.vertical, PlanUITokens.space3)
-                                .background(ColorToken.background.color)
-                                .accessibilityElement(children: .contain).accessibilityIdentifier(
-                                    footerIdentifier(for: id)
-                                )
-                                .planContentBounds(identifier: "wizard.\(id).footer")
-                        } else if answerHint {
-                            tapHint.frame(maxWidth: .infinity).multilineTextAlignment(.center)
-                                .padding(.horizontal, PlanUITokens.space5).padding(
-                                    .bottom, PlanUITokens.wizardHintBottom
-                                )
-                                .background(ColorToken.background.color)
-                        }
-                    }
                     .defaultScrollAnchor(initialScrollAnchor(for: id))
                     .onChange(of: requestedErrorScroll) { _, _ in
                         let start = id == "return-flight" ? model.draft.form.returnBoundary : 0
@@ -105,24 +63,85 @@
                         }
                     }
                 }
+                // A scroll-view safe-area inset can outgrow the column on asymmetric rails.
+                if let button {
+                    VStack(spacing: PlanUITokens.wizardControlGap) {
+                        if id == "excluded" || (id == "checking" && model.checking.failure != nil) {
+                            Button(t("Close")) {
+                                if id == "excluded" { close() } else { confirmingDiscard = true }
+                            }
+                            .buttonStyle(.plain).font(Typography.wizardSecondary.font)
+                            .foregroundStyle(ColorToken.foreground.color).frame(minHeight: AuthTokens.touch)
+                            .disabled(closing).accessibilityIdentifier("wizard.\(id).secondary-close")
+                        }
+                        Button {
+                            guard !continuing, !closing, enabled else { return }
+                            continuing = true
+                            action()
+                            if id == "outbound" || id == "return-flight" { errorScrollRequest += 1 }
+                            continuing = false
+                        } label: {
+                            HStack(spacing: PlanUITokens.space2) {
+                                if model.reviewing { ProgressView().tint(ColorToken.primaryForeground.color) }
+                                Text(button)
+                            }.font(Typography.wizardButton.font)
+                                .frame(maxWidth: .infinity, minHeight: PlanUITokens.wizardButtonHeight)
+                        }
+                        .buttonStyle(.plain).foregroundStyle(
+                            (id == "excluded" ? ColorToken.foreground : .primaryForeground).color
+                        )
+                        .background((id == "excluded" ? ColorToken.surface2 : .primary).color, in: Capsule())
+                        .disabled(
+                            !enabled || closing || continuing || model.persistenceFailed || model.reviewing
+                        )
+                        .opacity(enabled ? 1 : PlanUITokens.wizardDisabledOpacity)
+                        .accessibilityIdentifier("wizard.\(id).continue")
+                    }.padding(.horizontal, PlanUITokens.space5).padding(.vertical, PlanUITokens.space3)
+                        .accessibilityElement(children: .contain).accessibilityIdentifier(
+                            footerIdentifier(for: id)
+                        )
+                        .planContentBounds(identifier: "wizard.\(id).footer")
+                } else if id == "ready", model.credits == .unavailable {
+                    VStack(spacing: 0) {
+                        Button {
+                            confirmingDiscard = true
+                        } label: {
+                            Text(t("Close")).frame(maxWidth: .infinity, minHeight: AuthTokens.touch)
+                        }
+                        .buttonStyle(.plain).font(Typography.wizardSecondary.font)
+                        .disabled(closing).accessibilityIdentifier("wizard.ready.no-credits")
+                        .planContentBounds(identifier: "wizard.ready.no-credits")
+                    }.padding(.horizontal, PlanUITokens.space5).padding(.vertical, PlanUITokens.space3)
+                        .accessibilityElement(children: .contain).accessibilityIdentifier("wizard.ready.footer")
+                        .planContentBounds(identifier: "wizard.ready.footer")
+                } else if answerHint {
+                    tapHint.frame(maxWidth: .infinity).multilineTextAlignment(.center)
+                        .padding(.horizontal, PlanUITokens.space5).padding(
+                            .bottom, PlanUITokens.wizardHintBottom
+                        )
+                }
             }
-            .background(ColorToken.background.color).foregroundStyle(ColorToken.foreground.color)
+            .frame(maxWidth: PlanUITokens.wizardColumnWidth).frame(maxWidth: .infinity)
+            .background { ColorToken.background.color.ignoresSafeArea() }
+            .foregroundStyle(ColorToken.foreground.color)
             .navigationTitle(t("New trip")).navigationBarTitleDisplayMode(.inline)
             .toolbarRole(.editor)
-            .navigationBarBackButtonHidden(id == "checking" && model.checking.failure == nil)
+            .navigationBarBackButtonHidden(id == "calculating" || (id == "checking" && model.checking.failure == nil))
             .background { if id == "checking" { WizardSwipeBack() } }
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text(t("New trip")).font(Typography.wizardNavTitle.font)
                         .foregroundStyle(ColorToken.mutedForeground.color)
                 }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        if model.draft.state.entered { confirmingDiscard = true } else { close() }
-                    } label: {
-                        Image(systemName: "xmark")
+                if id != "calculating" {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            if model.draft.state.entered { confirmingDiscard = true } else { close() }
+                        } label: {
+                            Image(systemName: "xmark")
+                        }
+                        .accessibilityLabel(t("Close")).accessibilityIdentifier("wizard.close").disabled(closing)
                     }
-                    .accessibilityLabel(t("Close")).accessibilityIdentifier("wizard.close").disabled(closing)
                 }
             }
             .accessibilityElement(children: .contain).accessibilityIdentifier("wizard.\(id)")

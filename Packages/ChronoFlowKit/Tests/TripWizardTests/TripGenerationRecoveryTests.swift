@@ -1,10 +1,43 @@
 import AppCore
 import DataAccess
 import Foundation
+import LocalStore
 import Testing
 import TripWizard
 
 @Suite struct TripGenerationRecoveryTests {
+    @Test func localSavedIDWriteFailureRetainsIdentityAcrossServiceRecreation() async throws {
+        let source = try GenerationSource()
+        let probe = EffectProbe()
+        let service = TripGenerationService(source: source, effects: await probe.effects())
+        let initial = TripGenerationState(
+            instance: "write-failure", input: ApiTripReviewInput(input: try generationInput()),
+            review: try generationReview())
+        let failed = try await service.save(initial) { _ in throw StoreFailure.unavailable }
+        #expect(failed.outcome == .failed(.server(status: nil)))
+        #expect(failed.state.savedTripId == "created" && failed.state.identity == initial.identity)
+        #expect(await probe.pulls.isEmpty)
+        let restarted = TripGenerationService(source: source, effects: await probe.effects())
+        let saved = try await restarted.save(failed.state)
+        #expect(saved.outcome == .saved(tripId: "created"))
+        #expect(await source.count("save") == 1)
+        #expect(await probe.pulls == ["created"])
+    }
+
+    @Test(arguments: [DataFailure.reviewExpired, .notEnoughCredits])
+    func localCleanupFailureCannotInvalidateCreatedTrip(failure: DataFailure) async throws {
+        let source = try GenerationSource()
+        let probe = EffectProbe()
+        let service = TripGenerationService(source: source, effects: await probe.effects())
+        let result = try await service.save(
+            TripGenerationState(
+                instance: "write-failure", input: ApiTripReviewInput(input: generationInput()),
+                review: generationReview())
+        ) { _ in throw failure }
+        #expect(result.state.savedTripId == "created" && result.state.identity != nil)
+        #expect(result.outcome == .failed(failure))
+    }
+
     @Test func expiredReviewRetriesOnceWithoutIdentity() async throws {
         let source = try GenerationSource()
         let fresh = try generationReview()

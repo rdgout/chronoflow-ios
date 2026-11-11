@@ -25,6 +25,37 @@ ChronoFlow is a jet-lag planner. It plans sleep, light and caffeine for a trip. 
 - **No unneeded comments.** Write only the comment that records a *why* the code cannot show.
 - **Performance.** No synchronous I/O on the main thread before the splash overlay is committed. No `+load` or static initialisers. No `mask`, `filters` or shadows in the splash layer tree.
 
+## Tests
+
+Write every new or changed test this way (user, 2026-11-10). Wizard tests that ignored these rules cost a morning of 3–10 minute hangs and five fix rounds aimed at a harness artifact.
+
+- **Pick the cheapest layer that can fail.**
+  - **Logic** (validation, timing, retries, offline, persistence, computed values, multi-step flows): SwiftPM unit tests.
+  - **Layout and geometry:** hosted AppTests.
+  - **XCUITest:** only for what needs the real app — native controls, navigation, system UI and appearance. Never test logic through a screen.
+- **One UI journey per feature, at most,** as a smoke test. Every other UI test seeds a state and checks one screen.
+- **UI tests launch seeded.**
+  - Use `ScreenTestApp`, with `AuthUIFlow.launchSignedIn` plus a board or fixture env such as `CF_WIZARD_BOARD_CAPTURE`. The app launches once per class and reseeds between tests.
+  - Never sign in through the form or click through earlier steps to reach the screen under test. Only the auth tests drive sign-in.
+- **Queries and waits.**
+  - Query exactly: `app.buttons["id"]`, adding `.firstMatch` when needed.
+  - No `descendants(matching: .any)`, no whole-tree predicates, and no loops over element properties.
+  - Wait with `UIWait` (backoff polling), never fixed sleeps.
+- **Budgets.**
+  - A UI test should finish in under 10 s and a hosted test in under 5 s.
+  - Set `executionTimeAllowance = 60`, XCTest's minimum, so a hang fails in a minute rather than 10.
+  - Split a test that loops over many profiles × languages × sizes into one test per profile.
+  - A test that needs more time is a design smell: fix the test, don't raise the allowance.
+- **Know what the harness can show.**
+  - `AuthTestHost` simulates insets with SwiftUI `safeAreaInset` outside the view. Horizontal insets do not reach screens inside a `NavigationStack`.
+  - Check Duo side-rail fit for those screens with one seeded screenshot on the Duo runtime: `simctl launch` with the seed env, then `simctl io --display=1 screenshot`. Don't add hosted assertions for it.
+  - When a check can't fail for the real reason, don't keep fixing the app to satisfy it.
+- **Running tests.**
+  - When fixing or diagnosing a failure, run only the failing test method, e.g. `ONLY="AppTests/Suite/testMethod"`, never the whole suite. With a reused build that takes seconds to a couple of minutes.
+  - Run only the suites you touched: `make targeted ... ONLY=...`.
+  - Before bisecting, read the suspect diff. Bisect only the failing methods, one build per step.
+  - After one fix round that changes nothing, or a hang, stop. Bisect or rethink the test before another round.
+
 ## Commands
 
 | Command | What it does |

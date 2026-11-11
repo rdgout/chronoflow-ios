@@ -82,6 +82,19 @@ import TripWizard
         clock.advance(to: 100)
         #expect(events == 0 && clock.waiterCount == 0)
     }
+
+    @Test @MainActor func requestCancellationWhileCheckingIsActiveShowsServerFailure() async {
+        let clock = CheckingTestClock()
+        var failure: DataFailure?
+        await WizardChecking.run(
+            clock: clock.clock,
+            request: { throw CancellationError() },
+            receive: { event in
+                if case .failed(let value) = event { failure = value }
+            })
+        #expect(failure == .server(status: nil))
+        #expect(clock.now == 0 && clock.waiterCount == 0)
+    }
 }
 
 final class CheckingTestClock: Sendable {

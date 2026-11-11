@@ -18,7 +18,7 @@
                         : "Pick the airports from your booking."),
                 id: home ? "return-route" : "where", button: t("Continue"),
                 enabled: model.draft.form.routeComplete(home: home),
-                action: { if home { model.finishReturnRoute() } else { model.go(.outbound) } },
+                action: { if home { model.finishRoute(home: true) } else { model.finishRoute() } },
                 content: {
                     routeCard(route, home: home)
                     if same {
