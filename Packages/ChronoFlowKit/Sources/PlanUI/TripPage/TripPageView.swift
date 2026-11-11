@@ -251,8 +251,12 @@ public struct TripPageView: View {
                             ).accessibilityIdentifier("trip.dayMenu")
                                 .planContentBounds(identifier: "trip.dayMenu")
                         } else {
-                            Text(verbatim: model.plan.prepared?.title ?? cardTitle).font(Typography.planTitle.font)
-                                .lineLimit(1)
+                            Text(
+                                verbatim: model.plan.prepared?.title
+                                    ?? (cardTitle.isEmpty ? copy("Loading your plan") : cardTitle)
+                            )
+                            .font(Typography.planTitle.font)
+                            .lineLimit(1)
                         }
                     }
                     if !layout.isWide && model.state == .ready && model.plan.prepared != nil {

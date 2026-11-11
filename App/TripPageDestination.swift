@@ -43,6 +43,8 @@ struct TripPageDestination: View {
             ColorToken.background.color.ignoresSafeArea()
             if let model {
                 tripPage(model)
+            } else {
+                Color.clear.tripPageLoadingBar()
             }
         }
         .task(id: model?.plan.detail?.plan.meta.inputHash) {
