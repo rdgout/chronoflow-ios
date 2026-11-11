@@ -20,7 +20,8 @@
         public init(
             trips: [TripListValue], details: [String: TripDetail], now: Date, loading: Bool,
             formatter: CopyLineFormatter, timeFormat: TimeFormat = .value24, hidden: [BlockType] = [],
-            open: @escaping (String) -> Void, create: (() -> Void)? = nil, refresh: @escaping () async -> Void
+            open: @escaping (String) -> Void, create: (() -> Void)? = nil,
+            refresh: @escaping () async -> Void
         ) {
             self.trips = trips
             self.details = details
@@ -51,10 +52,14 @@
                                 .planTextStyle(Typography.screenBodyLg, color: .mutedForeground)
                             if let create {
                                 Button(t("Plan a trip"), action: create).buttonStyle(.borderedProminent)
+                                    .foregroundStyle(ColorToken.primaryForeground.color)
                                     .buttonBorderShape(.capsule).accessibilityIdentifier("trips.create-empty")
                             }
                         }.multilineTextAlignment(.center).frame(maxWidth: .infinity)
-                            .padding(.vertical, PlanUITokens.space8).planEmptyCard().accessibilityIdentifier(
+                            .padding(.vertical, PlanUITokens.space8).planEmptyCard().accessibilityElement(
+                                children: .contain
+                            )
+                            .accessibilityIdentifier(
                                 "trips.empty")
                     } else {
                         ForEach(tripSections(trips), id: \.status.rawValue) { section in
@@ -83,17 +88,21 @@
                         }
                     }
                 }.planContentBounds().padding(PlanUITokens.space4).planPageRail()
-            }.refreshable { await refresh() }
-                .navigationTitle(t("My trips")).accessibilityIdentifier("trips.screen")
-                .toolbar {
-                    if let create {
-                        ToolbarItem(placement: .topBarTrailing) {
-                            Button(action: create) { Image(systemName: "plus") }
-                                .accessibilityLabel(t("New trip")).accessibilityIdentifier("trips.create")
-                        }
+            }
+            .planPageSafeArea()
+            .refreshable { await refresh() }
+            .scrollBounceBehavior(.always, axes: .vertical)
+            .navigationTitle(t("My trips")).accessibilityElement(children: .contain)
+            .accessibilityIdentifier("trips.screen")
+            .toolbar {
+                if let create {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button(action: create) { Image(systemName: "plus") }
+                            .accessibilityLabel(t("New trip")).accessibilityIdentifier("trips.create")
                     }
                 }
-                .background(ColorToken.background.color).foregroundStyle(ColorToken.foreground.color)
+            }
+            .background(ColorToken.background.color).foregroundStyle(ColorToken.foreground.color)
         }
     }
 #endif

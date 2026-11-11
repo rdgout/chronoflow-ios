@@ -18,6 +18,8 @@ public struct TripPageView: View {
     @State private var showLegend = false
     @State private var renderer = TimelineRenderer()
     @State private var timelineSymbols = TimelineSymbols()
+    @State private var feedback = RefreshFeedbackModel()
+    public var refresh: () async throws -> SyncResult?
     public var onActions: (() -> Void)?
     public var onSettings: (() -> Void)?
     public var onMakePlan: (() -> Void)?
@@ -25,29 +27,46 @@ public struct TripPageView: View {
     public var onToday: (() -> Void)?
     public var onFirstTimelineFrame: () -> Void = {}
 
-    public init(model: TripPageModel, formatter: CopyLineFormatter? = nil) {
+    public init(
+        model: TripPageModel, formatter: CopyLineFormatter? = nil,
+        refresh: @escaping () async throws -> SyncResult?
+    ) {
         _model = State(initialValue: model)
         _copy = State(initialValue: PageCopy(language: model.plan.language))
         _formatter = State(initialValue: formatter)
+        self.refresh = refresh
     }
     public init(
         tripID: String, repository: TripRepository, retention: PlanRetention,
         dayID: String? = nil, blockID: String? = nil, keptDay: String? = nil, awaitingSync: Bool = false,
         timeFormat: TimeFormat = .value24, hiddenCategories: [BlockType] = [],
-        fetchDetail: @escaping @Sendable (String) async throws -> Void = { _ in }
+        fetchDetail: @escaping @Sendable (String) async throws -> Void = { _ in },
+        refresh: @escaping () async throws -> SyncResult?
     ) {
         self.init(
             model: TripPageModel(
                 tripID: tripID, repository: repository, retention: retention,
                 dayID: dayID, blockID: blockID, keptDay: keptDay, awaitingSync: awaitingSync,
-                timeFormat: timeFormat, hiddenCategories: hiddenCategories, fetchDetail: fetchDetail))
+                timeFormat: timeFormat, hiddenCategories: hiddenCategories, fetchDetail: fetchDetail), refresh: refresh)
     }
 
     public var body: some View {
         @Bindable var model = model
-        Group {
-            if model.state == .notFound || model.state == .server { errorPage } else { page }
+        ZStack {
+            if model.state == .notFound || model.state == .server {
+                GeometryReader { geometry in
+                    ScrollView {
+                        errorPage.frame(minHeight: geometry.size.height)
+                    }
+                    .refreshable { await refreshPlan() }
+                    .scrollBounceBehavior(.always, axes: .vertical)
+                    .accessibilityElement(children: .contain).accessibilityIdentifier("trip.scroll")
+                }
+            } else {
+                page
+            }
         }
+        .planRefreshFeedback(feedback)
         .foregroundStyle(ColorToken.foreground.color).background(ColorToken.background.color)
         .task {
             model.plan.language = locale.language.languageCode?.identifier == "nl" ? .nl : .en
@@ -74,6 +93,10 @@ public struct TripPageView: View {
                     }
             }.presentationDetents([.medium, .large])
         }
+    }
+
+    private func refreshPlan() async {
+        await feedback.refresh(action: refresh)
     }
 
     private var page: some View {
@@ -113,43 +136,47 @@ public struct TripPageView: View {
                             if model.state == .remoteOffline { remoteOffline } else { skeleton }
                         }
                     }.padding(.horizontal, PlanMetrics.gutter).padding(.bottom, PlanMetrics.gutter)
-                }.coordinateSpace(name: "trip.scroll").accessibilityIdentifier("trip.scroll")
-                    .onAppear {
-                        viewport = geometry.size
-                        if model.plan.prepared != nil {
-                            model.acceptPreparedPlan()
-                            if let id = model.anchor.dayID { proxy.scrollTo(id, anchor: .top) }
-                        }
-                    }
-                    .onChange(of: geometry.size) { _, size in viewport = size }
-                    .onPreferenceChange(DayFrames.self) { value in
-                        scroll.frames = value
-                        if let current = model.plan.prepared?.days.last(where: {
-                            (value[$0.id]?.minY ?? .infinity) <= compactHeight
-                        }), let frame = value[current.id] {
-                            model.select(dayID: current.id, offset: max(0, -frame.minY))
-                        }
-                        let id = model.anchor.dayID ?? ""
-                        let scrolled = (value[id]?.minY ?? .infinity) < 0
-                        if headerScrolled != scrolled { headerScrolled = scrolled }
-                        scroll.updateChrome(dayID: id, reduceMotion: reduceMotion)
-                    }
-                    .overlay(alignment: .top) { compactHeader }
-                    .onChange(of: model.plan.prepared) { old, new in
-                        guard new != nil else { return }
-                        let previous = model.currentAnchor
+                }
+                .refreshable { await refreshPlan() }
+                .scrollBounceBehavior(.always, axes: .vertical)
+                .coordinateSpace(name: "trip.scroll").accessibilityElement(children: .contain)
+                .accessibilityIdentifier("trip.scroll")
+                .onAppear {
+                    viewport = geometry.size
+                    if model.plan.prepared != nil {
                         model.acceptPreparedPlan()
-                        if old == nil || old?.revision != new?.revision || old?.days.map(\.id) != new?.days.map(\.id) {
-                            let anchor =
-                                old == nil
-                                ? model.anchor : replacementAnchor(previous, days: model.plan.detail?.plan.days ?? [])
-                            if let id = anchor.dayID {
-                                let height = scroll.frames[previous.dayID ?? ""]?.height ?? viewport.height
-                                let fraction = height > viewport.height ? anchor.offset / (height - viewport.height) : 0
-                                proxy.scrollTo(id, anchor: UnitPoint(x: 0, y: fraction))
-                            }
+                        if let id = model.anchor.dayID { proxy.scrollTo(id, anchor: .top) }
+                    }
+                }
+                .onChange(of: geometry.size) { _, size in viewport = size }
+                .onPreferenceChange(DayFrames.self) { value in
+                    scroll.frames = value
+                    if let current = model.plan.prepared?.days.last(where: {
+                        (value[$0.id]?.minY ?? .infinity) <= compactHeight
+                    }), let frame = value[current.id] {
+                        model.select(dayID: current.id, offset: max(0, -frame.minY))
+                    }
+                    let id = model.anchor.dayID ?? ""
+                    let scrolled = (value[id]?.minY ?? .infinity) < 0
+                    if headerScrolled != scrolled { headerScrolled = scrolled }
+                    scroll.updateChrome(dayID: id, reduceMotion: reduceMotion)
+                }
+                .overlay(alignment: .top) { compactHeader }
+                .onChange(of: model.plan.prepared) { old, new in
+                    guard new != nil else { return }
+                    let previous = model.currentAnchor
+                    model.acceptPreparedPlan()
+                    if old == nil || old?.revision != new?.revision || old?.days.map(\.id) != new?.days.map(\.id) {
+                        let anchor =
+                            old == nil
+                            ? model.anchor : replacementAnchor(previous, days: model.plan.detail?.plan.days ?? [])
+                        if let id = anchor.dayID {
+                            let height = scroll.frames[previous.dayID ?? ""]?.height ?? viewport.height
+                            let fraction = height > viewport.height ? anchor.offset / (height - viewport.height) : 0
+                            proxy.scrollTo(id, anchor: UnitPoint(x: 0, y: fraction))
                         }
                     }
+                }
             }
             .toolbar {
                 ToolbarItem(placement: .principal) {
@@ -281,6 +308,7 @@ public struct TripPageView: View {
                         showLegend = true
                     }
                     .labelStyle(.iconOnly).frame(minWidth: PlanMetrics.touch, minHeight: PlanMetrics.touch)
+                    .accessibilityIdentifier("trip.legend")
                 }
                 Text(verbatim: prepared.summary).font(Typography.planListLine.font).foregroundStyle(
                     ColorToken.mutedForeground.color)
@@ -293,7 +321,8 @@ public struct TripPageView: View {
                         }?.tz)
                 }
             }
-        }.accessibilityLabel(copy("Plan summary"))
+        }.accessibilityElement(children: .contain).accessibilityLabel(copy("Plan summary"))
+            .accessibilityIdentifier("trip.summary")
     }
 
     private var remoteSummary: some View {

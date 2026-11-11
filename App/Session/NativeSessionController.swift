@@ -23,6 +23,9 @@ final class NativeSessionController {
     private var gateRouter: SessionGateRouter?
     private var subscription: Task<Void, Never>?
     private let sourceFactory: (@Sendable (StoredSession) async -> any DataSource)?
+    #if DEBUG
+        var prepareRefreshUITest: (@Sendable () async -> Void)?
+    #endif
 
     init(
         applicationSupport: URL, namespace: StorageNamespace, credentials: (any SessionStore)? = nil,
@@ -142,7 +145,13 @@ final class NativeSessionController {
         }
     }
 
-    func refreshNow() async throws { _ = try await sync?.refreshNow() }
+    @discardableResult
+    func refreshNow() async throws -> SyncResult? {
+        #if DEBUG
+            await prepareRefreshUITest?()
+        #endif
+        return try await sync?.refreshNow()
+    }
 
     func wizardDataSource(session: StoredSession) async -> (any DataSource)? { await sourceFactory?(session) }
 

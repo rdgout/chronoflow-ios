@@ -8,7 +8,9 @@ nonisolated enum TodaySnapshotState: String, CaseIterable {
     case active, empty, future, loading, completed, done, skipped, hidden, allHidden, nothingNow
 }
 
-@MainActor func todayFixture(_ state: TodaySnapshotState, formatter: CopyLineFormatter) throws -> TodayScreen {
+@MainActor func todayFixture(
+    _ state: TodaySnapshotState, formatter: CopyLineFormatter, refresh: @escaping () async -> Void = {}
+) throws -> TodayScreen {
     let account = try PlanScreenFixture.account()
     var detail = try PlanScreenFixture.detail()
     let now = PlanScreenFixture.now
@@ -42,7 +44,7 @@ nonisolated enum TodaySnapshotState: String, CaseIterable {
     }
     return TodayScreen(
         trips: trips, detail: detail, now: now, loading: state == .loading, formatter: formatter,
-        hidden: hidden, openTrip: { _ in }, openStep: { _ in }, settings: {}, pastTrips: {})
+        hidden: hidden, openTrip: { _ in }, openStep: { _ in }, settings: {}, pastTrips: {}, refresh: refresh)
 }
 
 nonisolated final class TodaySnapshotTests: XCTestCase {

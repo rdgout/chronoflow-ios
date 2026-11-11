@@ -170,6 +170,8 @@ public actor SyncEngine {
             rerun = false
         }
         var result: SyncResult
+        let before = try await SyncSnapshot.read(database)
+        var after = before
         var retryAfter: TimeInterval?
         var serverRetryAfter: TimeInterval?
         var refusals: [SyncRefusal] = []
@@ -179,6 +181,7 @@ public actor SyncEngine {
             rerun = false
             try runEpoch.check()
             result = try await runOnce(epoch: runEpoch)
+            after = try await SyncSnapshot.read(database)
             try runEpoch.check()
             if let delay = result.retryAfter { retryAfter = max(retryAfter ?? 0, delay) }
             if let delay = result.serverRetryAfter { serverRetryAfter = max(serverRetryAfter ?? 0, delay) }
@@ -187,7 +190,9 @@ public actor SyncEngine {
         } while rerun
         let merged = SyncResult(
             state: result.state, pendingCount: result.pendingCount, retryAfter: retryAfter,
-            serverRetryAfter: serverRetryAfter, refusals: refusals)
+            serverRetryAfter: serverRetryAfter, refusals: refusals,
+            changes: before.changes(to: after))
+        try runEpoch.check()
         emit(.finished(accountID: epoch.accountID, epoch: epoch.generation, result: merged))
         return merged
     }
@@ -195,6 +200,7 @@ public actor SyncEngine {
     private func runOnce(epoch: SyncEpoch) async throws -> SyncResult {
         guard let source else { throw CancellationError() }
         var state: SyncState = .idle
+        var changes = SyncChanges()
         var retryAfter: TimeInterval?
         var serverRetryAfter: TimeInterval?
         var refusals: [SyncRefusal] = []
@@ -229,6 +235,7 @@ public actor SyncEngine {
                         database: database, source: source, retention: retention, now: scheduler.now
                     ).run(epoch: epoch)
                     try epoch.check()
+                    changes = pull.changes
                     if pull.verificationRequired { state = .verificationRequired }
                     if let delay = pull.retryAfter { retryAfter = max(retryAfter ?? 0, delay) }
                 }
@@ -261,7 +268,7 @@ public actor SyncEngine {
         try epoch.check()
         return SyncResult(
             state: state, pendingCount: pending, retryAfter: retryAfter, serverRetryAfter: serverRetryAfter,
-            refusals: refusals)
+            refusals: refusals, changes: changes)
     }
 
     private func emit(_ event: SyncEvent) {

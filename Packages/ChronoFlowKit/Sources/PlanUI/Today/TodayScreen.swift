@@ -17,11 +17,13 @@
         public var openStep: (String) -> Void
         public var settings: () -> Void
         public var pastTrips: () -> Void
+        public var refresh: () async -> Void
         public init(
             trips: [TripListValue], detail: TripDetail?, now: Date, loading: Bool, formatter: CopyLineFormatter,
             hidden: [BlockType] = [], timeFormat: TimeFormat = .value24,
             openTrip: @escaping (String) -> Void, openStep: @escaping (String) -> Void,
-            settings: @escaping () -> Void, pastTrips: @escaping () -> Void
+            settings: @escaping () -> Void, pastTrips: @escaping () -> Void,
+            refresh: @escaping () async -> Void
         ) {
             self.trips = trips
             self.detail = detail
@@ -34,6 +36,7 @@
             self.openStep = openStep
             self.settings = settings
             self.pastTrips = pastTrips
+            self.refresh = refresh
         }
         private var language: Language { locale.language.languageCode?.identifier == "nl" ? .nl : .en }
         private func t(_ key: String, _ values: [String: String] = [:]) -> String {
@@ -67,8 +70,12 @@
                     }
                 }.planContentBounds().padding(PlanUITokens.space4).planPageRail()
             }
+            .planPageSafeArea()
+            .refreshable { await refresh() }
+            .scrollBounceBehavior(.always, axes: .vertical)
             .background(ColorToken.background.color).foregroundStyle(ColorToken.foreground.color)
-            .navigationTitle(t("Today")).accessibilityIdentifier("today.screen")
+            .navigationTitle(t("Today")).accessibilityElement(children: .contain)
+            .accessibilityIdentifier("today.screen")
         }
         private var empty: some View {
             VStack(spacing: PlanUITokens.space3) {
@@ -80,7 +87,8 @@
                 Text(t("Add your flights and you get a day-by-day plan for sleep, light and caffeine."))
                     .foregroundStyle(ColorToken.mutedForeground.color)
             }.font(Typography.screenBodyLg.font).multilineTextAlignment(.center).frame(maxWidth: .infinity)
-                .padding(.vertical, PlanUITokens.space8).planEmptyCard().accessibilityIdentifier("today.empty")
+                .padding(.vertical, PlanUITokens.space8).planEmptyCard().accessibilityElement(children: .contain)
+                .accessibilityIdentifier("today.empty")
         }
         private func completed(_ trip: TripListValue) -> some View {
             let endDate = min(

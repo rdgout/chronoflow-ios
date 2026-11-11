@@ -1,13 +1,18 @@
 import XCTest
 
-@MainActor func launchPlanAccount(presentLegend: Bool = false, freezePlanClock: Bool = false) throws -> XCUIApplication
-{
+@MainActor func launchPlanAccount(
+    presentLegend: Bool = false, freezePlanClock: Bool = false,
+    updateTripOnRefresh: Bool = false, emptyTrips: Bool = false, refreshCounter: Bool = false
+) throws -> XCUIApplication {
     let app = XCUIApplication()
     app.launchArguments = AuthUIFlow.arguments()
     app.launchEnvironment["CF_AUTH_TEST_ID"] = UUID().uuidString
     app.launchEnvironment["CF_AUTH_TEST_WALKTHROUGH_SEEN"] = "1"
     if presentLegend { app.launchEnvironment["CF_PLAN_TEST_SHEET"] = "legend" }
     if freezePlanClock { app.launchEnvironment["CF_PLAN_TEST_FREEZE_CLOCK"] = "1" }
+    if updateTripOnRefresh { app.launchEnvironment["CF_REFRESH_TEST_UPDATE_TRIP"] = "1" }
+    if emptyTrips { app.launchEnvironment["CF_REFRESH_TEST_EMPTY_TRIPS"] = "1" }
+    if refreshCounter { app.launchEnvironment["CF_REFRESH_TEST_COUNTER"] = "1" }
     app.launch()
     AuthUIFlow.openSignIn(app)
     AuthUIFlow.signIn(app, email: MockScenarioValues.demoEmail)
@@ -16,7 +21,7 @@ import XCTest
         _ = try XCTUnwrap(
             screen.waitForExistence(timeout: 15) ? screen : nil,
             "Expected seeded plan account to bypass Walkthrough and open \(screen.identifier)")
-        if !presentLegend {
+        if !presentLegend && !emptyTrips {
             let trip = app.buttons["today.trip"]
             _ = try XCTUnwrap(trip.waitForExistence(timeout: 15) ? trip : nil, "Expected seeded Today trip")
         }

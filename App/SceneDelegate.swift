@@ -219,6 +219,9 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
         nativeSession = native
         UNUserNotificationCenter.current().delegate = app
+        #if DEBUG
+            native.prepareRefreshUITest = { await services.prepareRefreshUITest() }
+        #endif
         return native
     }
 

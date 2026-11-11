@@ -6,7 +6,9 @@ import XCTest
 
 nonisolated enum TripsSnapshotState: String, CaseIterable { case list, empty, loading }
 
-@MainActor func tripsFixture(_ state: TripsSnapshotState, formatter: CopyLineFormatter) throws -> TripsScreen {
+@MainActor func tripsFixture(
+    _ state: TripsSnapshotState, formatter: CopyLineFormatter, refresh: @escaping () async -> Void = {}
+) throws -> TripsScreen {
     let account = try PlanScreenFixture.account()
     let trips = account.trips.map { item in
         TripListValue(
@@ -16,7 +18,7 @@ nonisolated enum TripsSnapshotState: String, CaseIterable { case list, empty, lo
     }
     return TripsScreen(
         trips: state == .empty ? [] : trips, details: account.details, now: PlanScreenFixture.now,
-        loading: state == .loading, formatter: formatter, open: { _ in }, refresh: {})
+        loading: state == .loading, formatter: formatter, open: { _ in }, refresh: refresh)
 }
 
 nonisolated final class TripsSnapshotTests: XCTestCase {

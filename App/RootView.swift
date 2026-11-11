@@ -32,7 +32,12 @@ struct RootView: View {
     var launchIntro: LaunchIntro?
     var forcesReduceMotion = false
 
+    private static let refreshTint: Void = {
+        UIRefreshControl.appearance().tintColor = ColorToken.primary.uiColor
+    }()
+
     var body: some View {
+        let _ = Self.refreshTint
         content.environment(devicePreferences)
             .environment(\.locale, devicePreferences.resolvedLocale(phone: phoneLocale))
             .preferredColorScheme(

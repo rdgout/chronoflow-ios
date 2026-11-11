@@ -3,6 +3,7 @@ import Foundation
 import LocalStore
 
 public struct FullPullResult: Sendable, Equatable {
+    public var changes = SyncChanges()
     public var verificationRequired = false
     public var retryAfter: TimeInterval?
     public init() {}
@@ -27,6 +28,7 @@ public struct FullPull: Sendable {
     public func run(epoch: SyncEpoch) async throws -> FullPullResult {
         try await database.validate(epoch: epoch)
         try epoch.check()
+        let before = try await SyncSnapshot.read(database)
         let identity = try await source.fetchIdentity()
         try epoch.check()
         try await database.write(epoch: epoch) { db in
@@ -81,6 +83,9 @@ public struct FullPull: Sendable {
                 result.retryAfter = 1
             }
         }
+        try epoch.check()
+        let after = try await SyncSnapshot.read(database)
+        result.changes = before.changes(to: after)
         try epoch.check()
         return result
     }

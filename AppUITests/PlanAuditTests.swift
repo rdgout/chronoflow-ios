@@ -27,6 +27,15 @@ nonisolated final class PlanAuditTests: XCTestCase {
             XCTAssertTrue(app.scrollViews["trips.screen"].waitForExistence(timeout: 6))
         }
     }
+    @MainActor func testTripsEmptyState() async throws {
+        try await audit(emptyTrips: true) { app in
+            app.tabBars.buttons["My trips"].tap()
+            XCTAssertTrue(app.otherElements["trips.empty"].waitForExistence(timeout: 6))
+            let create = app.buttons["trips.create-empty"]
+            XCTAssertTrue(create.exists)
+            XCTAssertTrue(create.isHittable)
+        }
+    }
     @MainActor func testStepSheetPrimaryState() async throws {
         try await audit { app in
             let row = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "today.step.actionable."))
@@ -62,12 +71,14 @@ nonisolated final class PlanAuditTests: XCTestCase {
             XCTAssertTrue(app.scrollViews["legend.sheet"].waitForExistence(timeout: 4))
         }
     }
-    @MainActor private func audit(legend: Bool = false, _ navigate: (XCUIApplication) throws -> Void) async throws {
+    @MainActor private func audit(
+        legend: Bool = false, emptyTrips: Bool = false, _ navigate: (XCUIApplication) throws -> Void
+    ) async throws {
         try await FontRegistry.register()
         let appearance = XCUIDevice.shared.appearance
         defer { XCUIDevice.shared.appearance = appearance }
         try DeviceAppearance.set(.light)
-        let app = try launchPlanAccount(presentLegend: legend, freezePlanClock: true)
+        let app = try launchPlanAccount(presentLegend: legend, freezePlanClock: true, emptyTrips: emptyTrips)
         defer { app.terminate() }
         try navigate(app)
         let scene = AuditScene(app: app)
