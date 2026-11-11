@@ -111,6 +111,10 @@ import Testing
     @Test func nonStaleValidationRefusesCheckOff() async throws {
         let store = try await SyncStore()
         let source = ScriptedSource()
+        try await TripRepository(database: store.database).store(
+            plan: PlanVersionRecord(
+                tripId: syncTrip, inputHash: "hash", detail: .encoding(detail()),
+                receivedAt: syncDate.ISO8601Format(), detailVersion: "v1"), checks: [])
         let row = try await store.enqueue(.checkOff(check()))
         await source.configure(failures: [
             .validation(fields: ["status": FieldMessage(key: "invalid status")], status: 422)
@@ -119,6 +123,13 @@ import Testing
         #expect(await source.calls == ["send"])
         #expect(result.refusals.map(\.id) == [row.id])
         #expect(result.refusals.first?.status == 422)
+        #expect(result.refusals.first?.notice == .stepDone(.sleep))
+        #expect(
+            try await TripRepository(database: store.database).plan(tripID: syncTrip, inputHash: "hash")?.detailVersion
+                == nil)
+        _ = try await FullPull(database: store.database, source: source).run(epoch: store.epoch)
+        #expect(try await TripRepository(database: store.database).checks(tripID: syncTrip, inputHash: "hash").isEmpty)
+        #expect(await source.calls.contains("detail"))
         #expect(result.retryAfter == nil)
         #expect(try await OutboxRepository(database: store.database).pending().isEmpty)
         #expect(

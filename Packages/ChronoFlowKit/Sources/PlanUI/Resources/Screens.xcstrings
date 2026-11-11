@@ -2057,6 +2057,38 @@
           }
         }
       }
+    },
+    "Couldn't save your sleep times, so we undid the change.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't save your sleep times, so we undid the change."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je slaaptijden konden niet worden opgeslagen, dus hebben we de wijziging teruggedraaid."
+          }
+        }
+      }
+    },
+    "Couldn't save \"{{step}}\" as done, so we undid it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't save \"{{step}}\" as done, so we undid it."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"{{step}}\" kon niet als gedaan worden opgeslagen, dus hebben we dat teruggedraaid."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

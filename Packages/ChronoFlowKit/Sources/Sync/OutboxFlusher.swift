@@ -95,10 +95,16 @@ public struct OutboxFlusher: Sendable {
                 {
                     let refusal = SyncRefusal(
                         id: row.id, kind: row.kind, status: failure.status,
-                        failedAt: now().ISO8601Format(), lastError: OutboxFailurePolicy.sanitized(failure))
+                        failedAt: now().ISO8601Format(), lastError: OutboxFailurePolicy.sanitized(failure),
+                        notice: SyncRefusalNotice(change: try row.change))
                     try await database.write(epoch: epoch) { db in
                         try StoreApplication.setting("syncFailure", value: .encoding(refusal), db: db)
                         try StoreApplication.refuse(sent, accountID: epoch.accountID, db: db)
+                        if sent.kind == "check-off", refusal.notice != nil, let tripID = sent.referencedTripID {
+                            try db.execute(
+                                sql: "UPDATE plan_versions SET detail_version=NULL WHERE trip_id=?",
+                                arguments: [tripID])
+                        }
                     }
                     result.refusals.append(refusal)
                 } else {

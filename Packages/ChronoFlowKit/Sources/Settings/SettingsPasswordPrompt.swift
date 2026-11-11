@@ -31,9 +31,7 @@
                     let remaining = max(0, Int(ceil(retryAt?.timeIntervalSince(context.date) ?? 0)))
                     let alert =
                         remaining > 0
-                        ? SettingsStrings.text(
-                            "Too many attempts. Try again in {{seconds}} seconds.", language: language,
-                            ["seconds": String(remaining)])
+                        ? SettingsStrings.lockout(seconds: remaining, language: language)
                         : error
                     VStack(alignment: .leading, spacing: PlanUITokens.radiusLg) {
                         Text(t(detail)).settingsFont(Typography.settingsPromptBody).foregroundStyle(
@@ -74,10 +72,17 @@
                                 .accessibilityIdentifier(identifier + ".forgot")
                         }
                         if let message, remaining == 0 {
-                            Text(t(message)).settingsFont(Typography.screenBody).foregroundStyle(
-                                ColorToken.mutedForeground.color
-                            )
-                            .accessibilityIdentifier(identifier + ".feedback")
+                            if message == "Couldn't turn on two-factor." {
+                                AuthBanner(
+                                    title: t(message),
+                                    message: t("Nothing changed on your account. Try again in a moment.")
+                                ).accessibilityIdentifier(identifier + ".feedback")
+                            } else {
+                                Text(t(message)).settingsFont(Typography.screenBody).foregroundStyle(
+                                    ColorToken.mutedForeground.color
+                                )
+                                .accessibilityIdentifier(identifier + ".feedback")
+                            }
                         }
                         AuthButton(
                             t(busy ? "Checking…" : button), kind: destructive ? .destructive : .primary, busy: busy,

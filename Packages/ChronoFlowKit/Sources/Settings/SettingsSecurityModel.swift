@@ -42,6 +42,7 @@ public enum SettingsSecurityPrompt: String, Identifiable, Sendable {
     public private(set) var codes: [String] = []
     public private(set) var busy = false
     public private(set) var message: String?
+    public var twoFactorActivationFailed: Bool { message == "Couldn't turn on two-factor." }
     public private(set) var errors: [String: String] = [:]
     private var errorArguments: [String: [String: String]] = [:]
     public private(set) var retryAt: Date?
@@ -165,10 +166,16 @@ public enum SettingsSecurityPrompt: String, Identifiable, Sendable {
                     default: errors[field] = "Check the highlighted field."
                     }
                 }
-                if fields.isEmpty { message = "Something went wrong" }
-            default: message = "Something went wrong"
+                if fields.isEmpty { message = failureMessage(for: change) }
+            default: message = failureMessage(for: change)
             }
             return false
+        }
+    }
+    private func failureMessage(for change: AccountSecurityChange) -> String {
+        switch change {
+        case .enableTwoFactor, .confirmTwoFactor: "Couldn't turn on two-factor."
+        default: "Something went wrong"
         }
     }
     public func sendReset(email: String) async {

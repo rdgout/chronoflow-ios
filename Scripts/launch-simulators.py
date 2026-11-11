@@ -29,7 +29,7 @@ MATRIX = {
     "duo": ("iPhone Duo", "iPhone-Duo", DUO_RUNTIME),
 }
 # Each suite has one scheduling policy. Fixed geometry fixtures are logic; running-window/scale assertions are matrix.
-SUITES = {'AppCoreTests': {'host': ('GuestSecretStoreTests', 'AuthLinkTests',
+SUITES = {'AppCoreTests': {'host': ('GuestSecretStoreTests', 'LockoutWaitTests', 'AuthLinkTests',
                            'CatalogTests',
                            'CubicBezierTests',
                            'LaunchCoordinatorTests',
@@ -254,7 +254,7 @@ SUITES = {'AppCoreTests': {'host': ('GuestSecretStoreTests', 'AuthLinkTests',
                               'AccountReadinessTests')},
  'PerfUITests': {'perf': ('LaunchPerfTests', 'TimelinePerfTests')},
  'PlanCoreTests': {'host': ('CopyTests', 'TimelineTests', 'LabelTests', 'TimelineGeometryTests')},
- 'PlanUITests': {'host': ('WalkthroughModelTests',
+ 'PlanUITests': {'host': ('WalkthroughModelTests', 'RefusedChangeTests',
                           'WalkthroughGeometryTests',
                           'WalkthroughCopyTests',
                           'ModelTests',

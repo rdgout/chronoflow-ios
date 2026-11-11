@@ -68,7 +68,7 @@
                     .accessibilityAddTraits(.isHeader).accessibilityIdentifier("terms.title")
                 WelcomeText(
                     t(
-                        "The new terms and privacy policy apply from [effective date]. Please accept them to keep using ChronoFlow."
+                        "Please take a moment to read what changed. You'll need to agree before carrying on."
                     ),
                     style: Typography.screenBodyLg, color: .mutedForeground)
             }
@@ -80,16 +80,19 @@
                     t("What changed").uppercased(with: locale), style: Typography.screenLabel, color: .mutedForeground
                 )
                 .accessibilityAddTraits(.isHeader)
-                ForEach(["[Change one]", "[Change two]", "[Change three]"], id: \.self) { title in
+                ForEach(
+                    [
+                        "ChronoFlow helps you plan sleep, light and caffeine around your trip.",
+                        "ChronoFlow gives general timing guidance, not medical advice. Check with a doctor if you have a health condition, are pregnant or take prescription medicine.",
+                        "Your account stores your trips, profile and preferences.",
+                    ], id: \.self
+                ) { title in
                     HStack(alignment: .top, spacing: PlanUITokens.space3) {
                         Circle().fill(ColorToken.dawn.color)
                             .frame(width: TermsTokens.bulletSize, height: TermsTokens.bulletSize)
                             .padding(.top, PlanUITokens.space2).accessibilityHidden(true)
-                        (Text(verbatim: t(title)).font(Typography.termsStrong.font).foregroundColor(
-                            ColorToken.foreground.color)
-                            + Text(verbatim: " " + t("[One sentence on what changes for the user.]"))
-                            .font(Typography.termsBody.font).foregroundColor(ColorToken.mutedForeground.color)).frame(
-                                maxWidth: .infinity, alignment: .leading)
+                        WelcomeText(t(title), style: Typography.termsStrong, color: .foreground)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
                 Link(destination: URL(string: "https://chronoflow.net/terms")!) {

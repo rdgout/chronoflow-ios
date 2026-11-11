@@ -253,19 +253,20 @@
             switch failure.kind {
             case .offline:
                 title = "Saving needs a connection"
-                body =
+                body = t(
                     "Connect to the internet and tap Make my plan again. Keep this screen open: closing discards the trip."
+                )
             case .server:
                 title = "We couldn't save your plan"
-                body = "Something went wrong on our side. Tap Make my plan to try again."
+                body = t("Something went wrong on our side. Tap Make my plan to try again.")
             case .throttle:
                 title = "Wait a moment"
                 body =
                     model.retrySeconds > 0
-                    ? "Too many attempts. Try again in {{count}} seconds."
-                    : "Too many attempts. Please try again later."
+                    ? WizardStrings.lockout(seconds: model.retrySeconds, locale: locale)
+                    : t("Too many attempts. Please try again later.")
             }
-            return readyBanner(title: t(title), body: t(body, ["count": String(model.retrySeconds)]), failure: true)
+            return readyBanner(title: t(title), body: body, failure: true)
                 .accessibilityIdentifier("wizard.save.\(failure.kind.rawValue)")
         }
         var calculatingScreen: some View {

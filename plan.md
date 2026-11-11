@@ -1955,6 +1955,8 @@ User decision, 2026-11-08: “Make the walkthrough pages first. So we can safely
 
 **17g: Terms update** (`feat/phase-17g-terms`; boards: TermsUpdate, TermsFailed)
 
+Quick win (2026-11-10): replace the date/change placeholders with the web app’s paired English/Dutch terms summary.
+
 **Decision (user, 2026-11-08):** Build terms update now so a real account can always pass the `.terms` gate before walkthrough. Accept commits locally with the existing policies outbox row and proceeds without waiting for the network. This schedules the terms work deferred by OQ 39 and lifts D27’s terms seam. No simulator execution or snapshot suites in this task.
 
 - [x] Replace the terms seam with the ready/failed boards, paired en/nl copy, generated values/assets, four-inset scrolling and the root xxLarge cap. Keep the legal placeholders: the current server contract has no effective-date/summary fields. Use the system browser because PolicyReader is absent from this export.
@@ -1965,6 +1967,10 @@ User decision, 2026-11-08: “Make the walkthrough pages first. So we can safely
 **Verification (2026-11-08):** `make lint`, all eight new Terms host tests, iOS 17 package/app/UI compiler checks, 17 generator tests and 100 resource/runner fixtures pass. `make quick` reports the existing cookie-listener EPERM and timeline timing limits under parallel load; all three timeline cases pass in isolation. No simulator or snapshots. One atomic patch and message are delivered under `build/commits/`; see `Docs/phase-17g-terms.md` for board decisions and deferred legal metadata/runtime acceptance.
 
 **17h: Settings pages** (`feat/phase-17h-settings-pages`)
+
+Quick win (2026-11-10): explain failed two-factor activation with SetStatesMore’s banner, retaining the setup secret and QR for retry.
+
+Quick win (2026-11-10): show lock-outs in catalog-pluralized seconds, rounded-up minutes or hours, sharing the unit choice with wizard countdowns.
 
 User decision, 2026-11-08: build the Settings destination pages in order, using RN's Set* boards and behaviour and paired RN en/nl copy. Clarification (user report, 2026-11-09): native controls apply only where the board draws a system control; designed surfaces stay as drawn, including cards, rows, fields, radio groups, notices and buttons. This lifts the destination-page and Preferences replay deferrals for this phase. Keep edits to shared plan/catalog/runner entries scoped to 17h. No simulator or snapshot execution; run `make lint` and `make quick`, and deliver atomic patches under `build/commits/`.
 
@@ -2008,6 +2014,8 @@ Verification (2026-11-08): strict `make lint` passes. `make quick` reaches only 
 Deferrals: Reminders and notification permissions/delivery remain excluded. Optional timeline items remain excluded by the 5 Nov compact-timeline decision. Purchases, paywall checkout and cancellation remain excluded. Unbuilt destinations stay hidden in Release. Register host/UI suites in the 17h runner entries; no snapshot suites.
 
 ### Settings board fidelity (2026-11-09)
+
+Quick win (2026-11-10): surface SetStatesMore’s refused sleep-time and step-done messages in the shared floating toast, including open step sheets.
 
 Stack: `feat/settings-board-fidelity` on `feat/phase-19-reminders` (PR #30). The verified audit is `chronoflow-ios-handoff/settings-fidelity.json`. No simulator execution; capture attachments are a manual visual aid, never reference snapshots.
 

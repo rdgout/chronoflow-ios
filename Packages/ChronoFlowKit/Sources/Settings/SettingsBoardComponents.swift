@@ -123,38 +123,7 @@
         }
     }
 
-    struct SettingsToast: View {
-        let title: String
-        let identifier: String
-        var success = true
-        var body: some View {
-            HStack(spacing: PlanUITokens.space3) {
-                if success {
-                    Image(systemName: "checkmark").settingsFont(Typography.screenLabel)
-                        .frame(width: PlanUITokens.space6, height: PlanUITokens.space6)
-                        .background(ColorToken.dawn.color, in: Circle()).foregroundStyle(
-                            ColorToken.dawnForeground.color
-                        )
-                        .accessibilityHidden(true)
-                } else {
-                    Image(systemName: "exclamationmark.circle").settingsFont(Typography.screenBodyLg)
-                        .foregroundStyle(ColorToken.destructive.color).accessibilityHidden(true)
-                }
-                Text(title).settingsFont(Typography.screenBody).accessibilityIdentifier(identifier)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .padding(.horizontal, PlanUITokens.space4).padding(.vertical, PlanUITokens.space3)
-            .frame(minHeight: SettingsTokens.toastHeight)
-            .background(ColorToken.popover.color, in: RoundedRectangle(cornerRadius: PlanUITokens.radius2Xl))
-            .foregroundStyle(ColorToken.popoverForeground.color)
-            .overlay {
-                RoundedRectangle(cornerRadius: PlanUITokens.radius2Xl)
-                    .strokeBorder(ColorToken.border.color, lineWidth: AuthTokens.borderWidth)
-            }.settingsSoftShadow()
-            .padding(.horizontal, PlanUITokens.space4).padding(.bottom, PlanUITokens.space6).planPageRail()
-            .frame(maxWidth: .infinity).planPageSafeArea()
-        }
-    }
+    typealias SettingsToast = FeedbackToast
 
     struct SettingsOption: Identifiable {
         let id: String
