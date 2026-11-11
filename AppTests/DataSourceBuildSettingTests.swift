@@ -1,6 +1,7 @@
 import AppCore
 import Auth
 import Foundation
+import Reminders
 import Testing
 
 @testable import ChronoFlow
@@ -8,6 +9,33 @@ import Testing
 
 @MainActor @Suite struct DataSourceBuildSettingTests {
     #if DEBUG
+        @Test(arguments: [
+            ([], ReminderPermission.undetermined),
+            (["-cf.notificationAuthorization"], .undetermined),
+            (["-cf.notificationAuthorization", "invalid"], .undetermined),
+            (["-cf.notificationAuthorization", "undetermined"], .undetermined),
+            (["-cf.notificationAuthorization", "blocked"], .blocked),
+            (["-cf.notificationAuthorization", "granted"], .granted),
+        ])
+        func isolatedUIFixturesAlwaysUseFakeNotifications(arguments: [String], permission: ReminderPermission)
+            async throws
+        {
+            let services = try AppServices(
+                info: ["CHRONOFLOW_DATA_SOURCE": "api"], testing: false,
+                environment: ["CF_AUTH_TEST_ID": UUID().uuidString])
+            let center = try #require(services.reminderCenter(arguments: arguments) as? MockReminderCenter)
+            #expect(await center.permission() == permission)
+            #expect(await center.permissionRequestCount == 0)
+            #expect(await center.requestPermission() == (permission == .undetermined ? .granted : permission))
+        }
+
+        @Test func normalLaunchUsesSystemNotificationsEvenWithTestArguments() throws {
+            let services = try AppServices(info: [:], testing: false, environment: [:])
+            #expect(
+                services.reminderCenter(arguments: ["-cf.notificationAuthorization", "granted"]) is SystemReminderCenter
+            )
+        }
+
         @Test func auditPrefillsRequireAnIsolatedMockFixtureAndRetainFailureInputs() throws {
             let audit = ["CF_AUTH_TEST_AUDIT_SCREEN": "sign-up", "CF_AUTH_TEST_AUDIT_STATE": "confirmation"]
             #expect(AuthUITestConfiguration(environment: audit) == nil)

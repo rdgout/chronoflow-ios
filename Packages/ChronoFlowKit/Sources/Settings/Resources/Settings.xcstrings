@@ -3934,6 +3934,40 @@
           }
         }
       }
+    },
+    "On, {{minutes}} min ahead · works offline": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On, {{minutes}} min ahead · works offline"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aan, {{minutes}} minuten van tevoren · werkt ook offline"
+          }
+        }
+      }
+    },
+    "Off · works offline": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off · works offline"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uit · werkt ook offline"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

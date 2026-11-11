@@ -14,6 +14,7 @@ let package = Package(
         .library(name: "Sync", targets: ["Sync"]),
         .library(name: "PlanUI", targets: ["PlanUI"]),
         .library(name: "Settings", targets: ["Settings"]),
+        .library(name: "Reminders", targets: ["Reminders"]),
         .library(name: "PlanCore", targets: ["PlanCore"]),
         .library(name: "TripWizard", targets: ["TripWizard"]),
         .library(name: "TripWizardUI", targets: ["TripWizardUI"]),
@@ -47,10 +48,18 @@ let package = Package(
             resources: [.copy("Fixtures")],
             swiftSettings: [.defaultIsolation(nil)]),
         .target(
-            name: "Settings", dependencies: ["AppCore", "LocalStore", "Sync", "PlanCore", "PlanUI", "DesignSystem"],
+            name: "Settings",
+            dependencies: ["AppCore", "LocalStore", "Sync", "PlanCore", "PlanUI", "DesignSystem", "Reminders"],
             resources: [.process("Resources")], swiftSettings: [.defaultIsolation(nil)]),
         .testTarget(
             name: "SettingsTests", dependencies: ["Settings", "DataAccess"], swiftSettings: [.defaultIsolation(nil)]),
+        .target(
+            name: "Reminders",
+            dependencies: ["AppCore", "LocalStore", "PlanCore", .product(name: "GRDB", package: "GRDB.swift")],
+            resources: [.process("Resources")], swiftSettings: [.defaultIsolation(nil)]),
+        .testTarget(
+            name: "RemindersTests", dependencies: ["Reminders", "DataAccess"], resources: [.copy("Fixtures")],
+            swiftSettings: [.defaultIsolation(nil)]),
         .target(name: "AppCore", swiftSettings: [.defaultIsolation(nil)]),
         .target(name: "DataAccess", dependencies: ["AppCore"], swiftSettings: [.defaultIsolation(nil)]),
         .testTarget(

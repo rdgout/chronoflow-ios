@@ -1,0 +1,466 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Seek bright light from {{time}}.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seek bright light from {{time}}."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zoek vanaf {{time}} fel licht."
+          }
+        }
+      }
+    },
+    "Avoid bright light from {{time}}.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avoid bright light from {{time}}."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vermijd vanaf {{time}} fel licht."
+          }
+        }
+      }
+    },
+    "Last caffeine before {{time}}.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last caffeine before {{time}}."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neem vóór {{time}} je laatste cafeïne."
+          }
+        }
+      }
+    },
+    "Wind down for bed: sleep from {{time}}.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wind down for bed: sleep from {{time}}."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kom tot rust: slapen vanaf {{time}}."
+          }
+        }
+      }
+    },
+    "Reminders": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminders"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herinneringen"
+          }
+        }
+      }
+    },
+    "Connectivity & reminders": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connectivity & reminders"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbinding en herinneringen"
+          }
+        }
+      }
+    },
+    "Reminders on this phone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminders on this phone"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herinneringen op deze telefoon"
+          }
+        }
+      }
+    },
+    "A nudge before each step in your plan. Reminders are scheduled on this phone, so they arrive without a connection. Each device has its own setting.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A nudge before each step in your plan. Reminders are scheduled on this phone, so they arrive without a connection. Each device has its own setting."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een seintje voor elke stap in je plan. Herinneringen worden op deze telefoon ingepland, dus ze komen ook zonder verbinding aan. Elk apparaat heeft een eigen instelling."
+          }
+        }
+      }
+    },
+    "Reminders are off. When you turn them on, your phone asks once whether ChronoFlow may send notifications.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminders are off. When you turn them on, your phone asks once whether ChronoFlow may send notifications."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herinneringen staan uit. Als je ze aanzet, vraagt je telefoon één keer of ChronoFlow meldingen mag sturen."
+          }
+        }
+      }
+    },
+    "Turn on reminders": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn on reminders"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herinneringen aanzetten"
+          }
+        }
+      }
+    },
+    "This device can't show reminders.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This device can't show reminders."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dit apparaat kan geen herinneringen tonen."
+          }
+        }
+      }
+    },
+    "You can still follow every step in your plan.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can still follow every step in your plan."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je kunt nog steeds elke stap in je plan volgen."
+          }
+        }
+      }
+    },
+    "Push reminders": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Push reminders"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pushherinneringen"
+          }
+        }
+      }
+    },
+    "Notifications are blocked for ChronoFlow.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications are blocked for ChronoFlow."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meldingen voor ChronoFlow zijn geblokkeerd."
+          }
+        }
+      }
+    },
+    "Allow them in your phone's settings to get reminders.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow them in your phone's settings to get reminders."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sta ze toe in de instellingen van je telefoon om herinneringen te ontvangen."
+          }
+        }
+      }
+    },
+    "Open your phone's Settings.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open your phone's Settings."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open de Instellingen van je telefoon."
+          }
+        }
+      }
+    },
+    "Tap Notifications, then ChronoFlow.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap Notifications, then ChronoFlow."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tik op Meldingen en daarna op ChronoFlow."
+          }
+        }
+      }
+    },
+    "Turn on Allow notifications.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn on Allow notifications."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zet Sta meldingen toe aan."
+          }
+        }
+      }
+    },
+    "Come back here. Reminders switch on by themselves.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Come back here. Reminders switch on by themselves."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kom hier terug. Herinneringen gaan vanzelf aan."
+          }
+        }
+      }
+    },
+    "Open phone settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open phone settings"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefooninstellingen openen"
+          }
+        }
+      }
+    },
+    "Remind me ahead by": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remind me ahead by"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herinner mij van tevoren"
+          }
+        }
+      }
+    },
+    "15 min": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "15 min"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "15 min"
+          }
+        }
+      }
+    },
+    "30 min": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 min"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 min"
+          }
+        }
+      }
+    },
+    "1 hour": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 hour"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 uur"
+          }
+        }
+      }
+    },
+    "Turn on reminders?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn on reminders?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herinneringen aanzetten?"
+          }
+        }
+      },
+      "generatesSymbol": false
+    },
+    "Not now": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not now"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu niet"
+          }
+        }
+      }
+    },
+    "{{count}}": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{count}}"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "{{count}}"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

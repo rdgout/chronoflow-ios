@@ -211,12 +211,14 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         } else {
             native = NativeSessionController(
                 applicationSupport: root, namespace: services.namespace, credentials: services.sessionCredentials(),
+                reminderCenter: services.reminderCenter(),
                 source: { session in services.makeDataSource(applicationSupport: root, session: session) },
                 verification: { [weak app] epoch in await app?.verificationRequired(epoch: epoch) },
                 signedOut: { [navigator] in navigator.navigate(to: .signIn) })
             app?.nativeSession = native
         }
         nativeSession = native
+        UNUserNotificationCenter.current().delegate = app
         return native
     }
 
@@ -318,6 +320,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 self.window = window
                 app?.authWindow = window
                 window.makeKeyAndVisible()
+                consumePendingReminderIntent()
             }
         }
     }
@@ -373,10 +376,22 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         nativeSession?.observeGates(navigator: navigator) { epoch in
             await (UIApplication.shared.delegate as? AppDelegate)?.verificationRequired(epoch: epoch)
         }
+        consumePendingReminderIntent()
         signposts.event(.overlayRemoved)
         signposts.end(.exit)
         signposts.end(.launch)
         UIAccessibility.post(notification: .screenChanged, argument: nil)
+    }
+
+    func receiveReminderIntent(_ intent: PendingLaunchIntent) {
+        pendingIntent = intent
+        consumePendingReminderIntent()
+    }
+
+    private func consumePendingReminderIntent() {
+        guard overlayWindow == nil, let nativeSession else { return }
+        nativeSession.reminderTaps.receive(pendingIntent)
+        pendingIntent = PendingLaunchIntent()
     }
 
     func captureAuthActivities(_ activities: Set<NSUserActivity>) {

@@ -1,4 +1,5 @@
 import AppCore
+import DesignSystem
 import LocalStore
 import PlanCore
 import PlanUI
@@ -10,6 +11,8 @@ struct TripPageRoute: Hashable {
     var dayID: String? = nil
     var blockID: String? = nil
     var awaitingSync = false
+    var notificationInputHash: String? = nil
+    var notificationToken: UUID? = nil
 }
 
 struct TripPageDestination: View {
@@ -19,12 +22,23 @@ struct TripPageDestination: View {
     var onToday: (() -> Void)?
     var onSettings: (() -> Void)?
     @State private var model: TripPageModel?
+    @State private var openedNotificationStep = false
 
     var body: some View {
-        Group {
+        ZStack {
+            ColorToken.background.color.ignoresSafeArea()
             if let model {
                 tripPage(model)
             }
+        }
+        .task(id: model?.plan.detail?.plan.meta.inputHash) {
+            guard !openedNotificationStep, let model, let detail = model.plan.detail, let blockID = route.blockID,
+                let hash = route.notificationInputHash, hash == detail.plan.meta.inputHash,
+                detail.plan.blocks.contains(where: { $0.id == blockID }),
+                let catalog = try? await CopyCatalog.load(), !Task.isCancelled
+            else { return }
+            openedNotificationStep = true
+            model.selectBlock(blockID, formatter: CopyLineFormatter(catalog: catalog))
         }
         .task {
             guard let native, let snapshot = await native.controller.activeSession(),
