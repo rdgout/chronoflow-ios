@@ -26,7 +26,7 @@ func planUITokens(root: URL) throws -> Data {
     }
     code += "}\nextension Typography {\n"
     for group in (json["type"] as! [String: Any])["groups"] as! [[String: Any]] {
-        for style in group["styles"] as! [[String: Any]] {
+        for style in group["styles"] as! [[String: Any]] where style["name"] as? String != "page-title-lg" {
             let size = Double((style["fontSize"] as! String).dropLast(2))!
             let line =
                 (style["lineHeight"] as? String).flatMap { Double($0.dropLast(2)) }

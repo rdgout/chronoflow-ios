@@ -56,6 +56,15 @@ ChronoFlow plans sleep, light and caffeine for each trip. Two apps exist, both r
 | D26 | **I/O ordering extends D3/D11/D12:** the overlay is shown and `CATransaction.flush()` completes **before** constructing services that touch disk/Keychain, registering fonts, opening SQLite, migrations, preference/mock-state loads or URL cache work. Run all these on non-MainActor workers/actors; GRDB uses async reads/writes and background fetching for observation. MainActor receives immutable values and navigation only. | An `async` declaration alone does not move synchronous work off-main. No eager singleton/static initializer performs I/O. Add ordering and executor assertions with a suspended store to retain the 500 ms stall proof and first-commit budget. The DB opens after the overlay commits, not after overlay teardown. |
 | D27 | **Auth follows D1c and the 6 Nov plain-sky decision.** One native Auth shell and controls from the boards; no dot pattern. All four insets, scrolling, root xxLarge cap, en/nl and both appearances are required. Today is built in 17b and walkthrough in 17f; terms retain the D17 seam. Email-update (`changed`) is designed but out of scope. | No invented loading, offline, sync-failure, confirmation or inbox screen. Defaults in new OQs are proposals unless explicitly described as authorized decisions; a blocking OQ must be settled before its sub-phase begins. |
 
+### Navigation titles (user decision 2026-11-10)
+
+Every tab title (Today, My trips, Settings) and every Settings subpage title uses the plain system iOS large title: system font, bold, standard size. This supersedes the boards' Fraunces large title for those titles. Keep native navigation titles and large-title display mode so scrolling collapses the title into the navigation bar.
+
+- [x] Remove Settings' navigation appearance styler and its unused Fraunces large-title token and audit entries. SettingsPage keeps the same root ScrollView and safe-area helpers as TodayScreen/TripsScreen; no intervening layout container needs changing.
+- [x] Add one seeded Body clock navigation-collapse regression to the existing SettingsPagesTests suite, using exact queries, UIWait and the inherited 60-second allowance. Simulator execution is deferred by the user's instruction.
+
+Verification: strict lint, TokenGen output verification and direct iOS 17 type-checking of SettingsPagesTests with its shared helpers pass. No simulator tests were run.
+
 ### Test tiers (user decision 2026-11-06)
 
 The user: **“I want you to skip the 7 simulator matrix unless asked for”.** This supersedes earlier
@@ -2002,7 +2011,7 @@ Deferrals: Reminders and notification permissions/delivery remain excluded. Opti
 
 Stack: `feat/settings-board-fidelity` on `feat/phase-19-reminders` (PR #30). The verified audit is `chronoflow-ios-handoff/settings-fidelity.json`. No simulator execution; capture attachments are a manual visual aid, never reference snapshots.
 
-- [x] Scaffold + components: large title using Settings home's navigation styler; scrolling, bordered token cards, row discs, Fields/Notices/capsule actions, visible ChoiceCards and wrapping pill groups, badges, toast and content-sized native sheets. Keep root xxLarge and all safe-area edges via the existing page rail and native scroll/navigation insets. Generate missing board metrics, warning surfaces, popover and destructive foreground tokens.
+- [x] Scaffold + components: native system large title (user decision 2026-11-10 supersedes Settings home's navigation styler); scrolling, bordered token cards, row discs, Fields/Notices/capsule actions, visible ChoiceCards and wrapping pill groups, badges, toast and content-sized native sheets. Keep root xxLarge and all safe-area edges via the existing page rail and native scroll/navigation insets. Generate missing board metrics, warning surfaces, popover and destructive foreground tokens.
 - [x] Account: rebuild rows, Profile fields and missing-account state; retain email/data deferrals.
   - Account uses the board’s separate destructive row and the actual SetDelete compact-sheet presentation (the audit’s suggestion of a pushed delete page conflicts with SetDelete). Profile retains the name-only “Save changes” action because “Save and send link” would promise the deferred email flow; email stays read-only. Email verification/prompt and data/policies remain omitted as recorded in 17h. Missing-account retry restarts observation and requests sync.
 - [x] Body clock: rebuild cards, choice groups, time tiles, readiness, counters and hint/validation layout; record backend/board conflicts.

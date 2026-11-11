@@ -177,7 +177,7 @@ nonisolated final class PlanAuditTests: ScreenTestCase {
         let originalFrame = source.frame
         let label = source.label
         let styles: [Typography.Style] = [
-            Typography.screenHero, Typography.screenPageTitle, Typography.screenPageTitleLg,
+            Typography.screenHero, Typography.screenPageTitle,
             Typography.screenCardTitle, Typography.screenSectionTitle, Typography.screenDayTitle,
             Typography.screenBodyLg, Typography.screenBody, Typography.screenLabel, Typography.screenMeta,
             Typography.screenEyebrow, Typography.screenBlockLabel, Typography.screenPriorityTag,
