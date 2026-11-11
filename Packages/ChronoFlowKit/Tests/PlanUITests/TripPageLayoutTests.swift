@@ -4,27 +4,21 @@ import Testing
 @testable import PlanUI
 
 struct TripPageLayoutTests {
-    @Test(arguments: [599.0, 600, 899, 900])
-    func portraitBreakpoints(width: Double) {
-        let layout = TripPageLayout.resolve(width: width, height: 1200)
+    @Test(arguments: [599.0, 600, 899, 900, 1200])
+    func breakpoints(width: Double) {
+        let layout = TripPageLayout.resolve(width: width)
         #expect(layout.isWide == (width >= 600))
         #expect(layout.listWidth == (width < 600 ? nil : width < 900 ? 280 : 320))
     }
 
-    @Test(arguments: [599.0, 600, 669, 899, 900, 1200])
-    func landscapeStaysPhone(width: Double) {
-        #expect(!TripPageLayout.resolve(width: width, height: 466).isWide)
-        #expect(TripPageLayout.resolve(width: width, height: 466).listWidth == nil)
-    }
-
     @Test(arguments: [320.0, 375, 390, 393, 402, 420, 430, 440, 466])
     func phoneWidthsStayPhone(width: Double) {
-        #expect(!TripPageLayout.resolve(width: width, height: 951).isWide)
+        #expect(!TripPageLayout.resolve(width: width).isWide)
     }
 
-    @Test func unfoldedPortraitUsesWideAndSquareStaysPhone() {
-        #expect(TripPageLayout.resolve(width: 669, height: 951).listWidth == 280)
-        #expect(!TripPageLayout.resolve(width: 669, height: 669).isWide)
+    @Test func unfoldedDuoIsWideInBothOrientations() {
+        #expect(TripPageLayout.resolve(width: 669).listWidth == 280)
+        #expect(TripPageLayout.resolve(width: 951).listWidth == 320)
     }
 
     @Test func listSticksBelowTheWholeHeaderAndShrinksAtTheEndOfItsDay() {
@@ -96,6 +90,14 @@ struct TripPageLayoutTests {
             viewport: first.viewport, lower: 0, upper: 5186, scale: 3)
         #expect(restoration.observe(reestimated) == false)
         #expect(restoration.observe(reestimated) == true)
+    }
+
+    @Test func resizeMeasuresTheAnchorBelowTheTopInset() {
+        let restoration = TripScrollRestoration(anchor: TripPageAnchor(dayID: "day", offset: 0))
+        let sample = TripScrollRestoration.Sample(
+            dayOrigin: 1337, contentOffset: 1337, contentSize: CGSize(width: 951, height: 11070),
+            viewport: CGSize(width: 951, height: 669), lower: -82, upper: 10483, scale: 3)
+        #expect(restoration.target(for: sample) == 1255)
     }
 
     @Test func resizeClampsToTheAvailableScrollRange() {

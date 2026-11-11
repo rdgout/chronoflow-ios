@@ -114,7 +114,7 @@ public struct TripPageView: View {
                     width: geometry.size.width + geometry.safeAreaInsets.leading + geometry.safeAreaInsets.trailing,
                     height: geometry.size.height + geometry.safeAreaInsets.top + geometry.safeAreaInsets.bottom)
                 let size = windowSize ?? containerSize
-                let layout = TripPageLayout.resolve(width: size.width, height: size.height)
+                let layout = TripPageLayout.resolve(width: size.width)
                 ScrollView {
                     LazyVStack(spacing: PlanMetrics.sectionGap) {
                         if model.state != .ready && !model.plan.metadata.isEmpty {
@@ -199,6 +199,7 @@ public struct TripPageView: View {
                 .coordinateSpace(name: "trip.viewport")
                 .onChange(of: model.plan.prepared) { old, new in
                     guard new != nil else { return }
+                    scroll.cancelRestoration()
                     let previous = model.currentAnchor
                     model.acceptPreparedPlan()
                     #if DEBUG

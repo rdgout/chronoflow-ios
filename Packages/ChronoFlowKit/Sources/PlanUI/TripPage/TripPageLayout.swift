@@ -6,8 +6,9 @@ public nonisolated struct TripPageLayout: Equatable, Sendable {
     public var isWide: Bool { listWidth != nil }
     public var gutter: Double { isWide ? PlanMetrics.wideGutter : PlanMetrics.gutter }
 
-    public static func resolve(width: Double, height: Double) -> Self {
-        guard width >= PlanMetrics.wideBreakpoint, height > width else { return Self(listWidth: nil) }
+    // Width only: the unfolded Duo held flat is landscape (951 pt) and is the widest case, not a phone.
+    public static func resolve(width: Double) -> Self {
+        guard width >= PlanMetrics.wideBreakpoint else { return Self(listWidth: nil) }
         return Self(
             listWidth: width >= PlanMetrics.wideLargeBreakpoint
                 ? PlanMetrics.wideLargeListWidth : PlanMetrics.wideListWidth)
