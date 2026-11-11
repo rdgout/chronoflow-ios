@@ -29,29 +29,28 @@ nonisolated final class SettingsPagesTests: XCTestCase {
         let app = launchSettingsPages()
         defer { app.terminate() }
         open("settings.bodyClock", app: app)
-        let chronotype = app.buttons["settings.bodyClock.chronotype"]
+        let chronotype = app.buttons["settings.bodyClock.chronotype.late"]
         XCTAssertTrue(chronotype.waitForExistence(timeout: 8))
+        AuthUIFlow.reveal(chronotype, in: app)
         chronotype.tap()
-        app.buttons["Night owl"].tap()
         let saved = app.descendants(matching: .any)["settings.bodyClock.saved.about"]
         XCTAssertTrue(saved.waitForExistence(timeout: 8))
         XCTAssertTrue(saved.isHittable)
-        XCTAssertTrue(chronotype.label.contains("Night owl"))
+        XCTAssertTrue(chronotype.isSelected)
         app.navigationBars.buttons.element(boundBy: 0).tap()
         open("settings.bodyClock", app: app)
-        XCTAssertTrue(app.buttons["settings.bodyClock.chronotype"].waitForExistence(timeout: 8))
-        XCTAssertTrue(app.buttons["settings.bodyClock.chronotype"].label.contains("Night owl"))
+        XCTAssertTrue(app.buttons["settings.bodyClock.chronotype.late"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["settings.bodyClock.chronotype.late"].isSelected)
     }
 
     @MainActor func testPreferencesSavesAndReplaySkipAndDoneReturnHere() {
         let app = launchSettingsPages()
         defer { app.terminate() }
         open("settings.preferences", app: app)
-        let format = app.buttons["settings.preferences.timeFormat"]
+        let format = app.buttons["settings.preferences.timeFormat.12"]
         XCTAssertTrue(format.waitForExistence(timeout: 8))
         format.tap()
-        app.buttons["12-hour (2:30 PM)"].tap()
-        XCTAssertTrue(app.staticTexts["settings.preferences.saved"].waitForExistence(timeout: 8))
+        assertSelected(format)
         let sleep = app.switches["settings.preferences.Sleep"]
         AuthUIFlow.reveal(sleep, in: app)
         sleep.tap()
@@ -70,9 +69,16 @@ nonisolated final class SettingsPagesTests: XCTestCase {
             next.tap()
         }
         XCTAssertTrue(app.buttons["settings.preferences.replay"].waitForExistence(timeout: 8))
-        format.tap()
-        app.buttons["24-hour (14:30)"].tap()
-        XCTAssertTrue(app.staticTexts["settings.preferences.saved"].waitForExistence(timeout: 8))
+        let twentyFour = app.buttons["settings.preferences.timeFormat.24"]
+        AuthUIFlow.reveal(twentyFour, in: app)
+        twentyFour.tap()
+        assertSelected(twentyFour)
+    }
+
+    @MainActor private func assertSelected(_ element: XCUIElement) {
+        let selected = XCTNSPredicateExpectation(
+            predicate: NSPredicate { _, _ in element.exists && element.isSelected }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [selected], timeout: 6), .completed)
     }
 
     @MainActor private func assertReplayPage(_ number: Int, app: XCUIApplication) {
@@ -91,7 +97,7 @@ nonisolated final class SettingsPagesTests: XCTestCase {
         defer { app.terminate() }
         open("settings.account", app: app)
         open("settings.account.language", app: app)
-        let dutch = app.buttons["Dutch"]
+        let dutch = app.buttons["settings.language.choice.nl"]
         XCTAssertTrue(dutch.waitForExistence(timeout: 8))
         dutch.tap()
         XCTAssertTrue(app.staticTexts["settings.language.saved"].waitForExistence(timeout: 6))

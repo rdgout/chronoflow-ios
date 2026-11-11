@@ -137,7 +137,8 @@ SUITES = {'AppCoreTests': {'host': ('AuthLinkTests',
                            'WelcomeTests',
                            'WelcomeEnglishAccessibilityTests',
                            'WelcomeDutchAccessibilityTests'),
-                'reference': ('LaunchToWelcomeTests', 'LaunchSceneTests', 'LaunchSceneDarkTests')},
+                'reference': ('LaunchToWelcomeTests', 'LaunchSceneTests', 'LaunchSceneDarkTests'),
+                'capture': ('SettingsBoardCaptureTests',)},
  'AuthTests': {'host': ('AuthFormModelTests',
                         'AuthFailureMappingTests',
                         'AuthSnapshotCaptureTests',
@@ -264,7 +265,7 @@ XCODEBUILD_COMMON = ["xcodebuild", "-project", "ChronoFlow.xcodeproj", "-derived
                      "-onlyUsePackageVersionsFromResolvedFile"]
 
 # Device-wide mutations must be registered here; launch/window-scoped traits are clone-safe.
-SERIAL_TESTS = ("AppUITests/PlanAuditTests", "AppUITests/AuthSessionTests", "AppUITests/AuthAuditTests", "AppUITests/LaunchSceneTests", "AppUITests/LaunchSceneDarkTests", "AppUITests/LaunchToWelcomeTests")
+SERIAL_TESTS = ("AppUITests/SettingsBoardCaptureTests", "AppUITests/PlanAuditTests", "AppUITests/AuthSessionTests", "AppUITests/AuthAuditTests", "AppUITests/LaunchSceneTests", "AppUITests/LaunchSceneDarkTests", "AppUITests/LaunchToWelcomeTests")
 PARALLEL_TARGETS = {"AppTests", "AppUITests", "RenderTests"}
 
 
@@ -669,7 +670,7 @@ def selectors(policy):
 
 
 def expand(only):
-    known = set(selectors("logic") + selectors("matrix") + selectors("release") + selectors("profiles") + selectors("reference") + selectors("perf"))
+    known = set(selectors("logic") + selectors("matrix") + selectors("release") + selectors("profiles") + selectors("reference") + selectors("perf") + selectors("capture"))
     result = []
     for item in only:
         matches = sorted(s for s in known if s == item or s.startswith(item + "/") or item.startswith(s + "/"))

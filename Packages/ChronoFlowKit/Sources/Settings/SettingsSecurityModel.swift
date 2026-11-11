@@ -72,7 +72,7 @@ public enum SettingsSecurityPrompt: String, Identifiable, Sendable {
             return
         }
         guard newPassword == confirmation else {
-            errors["password_confirmation"] = "The passwords don't match yet."
+            errors["password_confirmation"] = "The passwords don't match."
             return
         }
         let change = AccountSecurityChange.password(
@@ -152,7 +152,8 @@ public enum SettingsSecurityPrompt: String, Identifiable, Sendable {
                         }
                     case "Use both uppercase and lowercase letters.", "Use at least one number.",
                         "Use at least one symbol.", "The passwords don't match yet.":
-                        errors[field] = value.key
+                        errors[field] =
+                            value.key == "The passwords don't match yet." ? "The passwords don't match." : value.key
                     case "Two-factor authentication is already on.", "Two-factor authentication is off.",
                         "Start two-factor setup again.":
                         message = value.key

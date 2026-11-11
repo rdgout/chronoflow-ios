@@ -63,6 +63,30 @@ import Observation
         ]
     }
 
+    #if DEBUG
+        public func prepareBoardCapture(loading: Bool) {
+            for task in tasks { task.cancel() }
+            tasks.removeAll()
+            if loading {
+                settings = [:]
+                settingsLoaded = false
+            } else {
+                account = nil
+                loaded = true
+                failure = true
+            }
+        }
+    #endif
+
+    public func retry() async {
+        guard active else { return }
+        for task in tasks { task.cancel() }
+        tasks.removeAll()
+        failure = false
+        start()
+        await requestSync()
+    }
+
     public func saveProfile(name: String) async throws {
         guard let account else { throw LocalMutationFailure.missingAccount }
         try await enqueue(.profile(ProfileChange(name: name, email: account.email)))

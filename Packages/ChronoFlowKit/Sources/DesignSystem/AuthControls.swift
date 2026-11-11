@@ -34,17 +34,20 @@ import SwiftUI
 
     public struct AuthButton: View {
         @Environment(\.isEnabled) private var isEnabled
-        public enum Kind { case primary, outline, ghost, footer }
+        public enum Kind { case primary, destructive, secondary, outline, ghost, footer }
         let title: String
         let kind: Kind
         let busy: Bool
         let glyph: AuthGlyph?
         let minimumHeight: CGFloat
+        let labelStyle: Typography.Style
+        let disabledOpacity: Double
         let measure: ((AuthControlPart, CGRect) -> Void)?
         let action: () -> Void
         public init(
             _ title: String, kind: Kind = .primary, busy: Bool = false, glyph: AuthGlyph? = nil,
-            minimumHeight: CGFloat = AuthTokens.touch,
+            minimumHeight: CGFloat = AuthTokens.touch, labelStyle: Typography.Style = Typography.authLabel,
+            disabledOpacity: Double = AuthTokens.disabledOpacity,
             measure: ((AuthControlPart, CGRect) -> Void)? = nil,
             action: @escaping () -> Void
         ) {
@@ -53,12 +56,16 @@ import SwiftUI
             self.busy = busy
             self.glyph = glyph
             self.minimumHeight = minimumHeight
+            self.labelStyle = labelStyle
+            self.disabledOpacity = disabledOpacity
             self.measure = measure
             self.action = action
         }
         private var foreground: ColorToken {
             switch kind {
             case .primary: .primaryForeground
+            case .destructive: .destructiveForeground
+            case .secondary: .secondaryForeground
             case .footer: .skyCopy
             default: .foreground
             }
@@ -76,7 +83,7 @@ import SwiftUI
                             .foregroundStyle(foreground.color).authControlMeasure(.glyph, measure)
                             .accessibilityHidden(true)
                     }
-                    WelcomeText(title, style: Typography.authLabel, color: foreground).multilineTextAlignment(.center)
+                    WelcomeText(title, style: labelStyle, color: foreground).multilineTextAlignment(.center)
                         .authControlMeasure(.label, measure)
                 }
                 .authControlMeasure(.content, measure)
@@ -89,6 +96,8 @@ import SwiftUI
                 .background {
                     switch kind {
                     case .primary: Capsule(style: .circular).fill(ColorToken.primary.color)
+                    case .destructive: Capsule(style: .circular).fill(ColorToken.destructive.color)
+                    case .secondary: Capsule(style: .circular).fill(ColorToken.secondary.color)
                     case .outline: Capsule(style: .circular).fill(ColorToken.background.color)
                     case .footer: Capsule(style: .circular).fill(ColorToken.skyCopyBackground.color)
                     case .ghost: EmptyView()
@@ -101,7 +110,7 @@ import SwiftUI
                     }
                 }
                 .contentShape(Capsule(style: .circular))
-                .opacity(isEnabled && !busy ? 1 : AuthTokens.disabledOpacity)
+                .opacity(isEnabled && !busy ? 1 : disabledOpacity)
             }
             .buttonStyle(PressStyle())
             .disabled(busy)
@@ -243,12 +252,15 @@ import SwiftUI
     }
 
     public struct AuthNotice: View {
+        public enum Tone { case info, warning }
+        let tone: Tone
         @Environment(\.dynamicTypeSize) private var typeSize
         let title: String
         let message: String
-        public init(title: String, message: String) {
+        public init(title: String, message: String, tone: Tone = .info) {
             self.title = title
             self.message = message
+            self.tone = tone
         }
         private var text: AttributedString {
             var text = AttributedString(title + " " + message)
@@ -262,17 +274,25 @@ import SwiftUI
                 compatibleWith: UITraitCollection(preferredContentSizeCategory: UIContentSizeCategory(typeSize)))
             let leading = max(0, (style.lineHeight ?? style.size) * font.pointSize / style.size - font.lineHeight)
             HStack(alignment: .top, spacing: AuthTokens.inset) {
-                AuthGlyph.info.image.resizable().frame(width: AuthTokens.icon, height: AuthTokens.icon)
-                    .foregroundStyle(ColorToken.mutedForeground.color).padding(.top, AuthTokens.noticeIconTop)
-                    .accessibilityHidden(true)
+                (tone == .warning ? AuthGlyph.alert : .info).image.resizable().frame(
+                    width: AuthTokens.icon, height: AuthTokens.icon
+                )
+                .foregroundStyle((tone == .warning ? ColorToken.dawn : .mutedForeground).color).padding(
+                    .top, AuthTokens.noticeIconTop
+                )
+                .accessibilityHidden(true)
                 Text(text).foregroundStyle(ColorToken.cardForeground.color)
                     .lineSpacing(leading).padding(.vertical, leading / 2)
                     .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
             }.padding(AuthTokens.inset)
-                .background(ColorToken.card.color, in: RoundedRectangle(cornerRadius: AuthTokens.noticeRadius))
+                .background(
+                    (tone == .warning ? ColorToken.settingsWarningBackground : .card).color,
+                    in: RoundedRectangle(cornerRadius: AuthTokens.noticeRadius)
+                )
                 .overlay {
                     RoundedRectangle(cornerRadius: AuthTokens.noticeRadius).strokeBorder(
-                        ColorToken.border.color, lineWidth: AuthTokens.borderWidth)
+                        (tone == .warning ? ColorToken.settingsWarningBorder : .border).color,
+                        lineWidth: AuthTokens.borderWidth)
                 }
                 .accessibilityElement(children: .combine)
         }

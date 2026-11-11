@@ -100,9 +100,10 @@ nonisolated struct AppServices: Sendable {
                 ? MockAppSeed.make(now: Date(), walkthroughSeen: true, includeTimelinePerformanceTrips: true) : nil
             authTest = requestedAuthTest
             authTestSeed = try authTest.map {
-                try MockAppSeed.make(
-                    now: Date(), unverified: $0.unverified, walkthroughSeen: $0.walkthroughSeen,
-                    termsPending: $0.termsPending)
+                SettingsBoardCaptureFixture.seed(
+                    try MockAppSeed.make(
+                        now: Date(), unverified: $0.unverified, walkthroughSeen: $0.walkthroughSeen,
+                        termsPending: $0.termsPending))
             }
         #endif
     }

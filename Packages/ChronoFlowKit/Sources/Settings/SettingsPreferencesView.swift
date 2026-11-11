@@ -2,6 +2,7 @@
     import AppCore
     import DesignSystem
     import LocalStore
+    import PlanCore
     import PlanUI
     import Reminders
     import SwiftUI
@@ -28,7 +29,9 @@
                 }
             } else {
                 SettingsPage("Preferences", identifier: "settings.preferences.screen") {
-                    SettingsStoredState(loaded: store.settingsLoaded, failed: store.failure)
+                    SettingsStoredState(loaded: store.settingsLoaded, failed: store.failure) {
+                        Task { await store.retry() }
+                    }
                 }
             }
         }
@@ -58,78 +61,73 @@
         var body: some View {
             @Bindable var device = device
             SettingsPage("Preferences", identifier: "settings.preferences.screen") {
-                Section(t("Appearance")) {
-                    Picker(t("Theme"), selection: $device.theme) {
-                        Text(t("System")).tag(SettingsDevicePreferences.Theme.system)
-                        Text(t("Light")).tag(SettingsDevicePreferences.Theme.light)
-                        Text(t("Dark")).tag(SettingsDevicePreferences.Theme.dark)
-                    }.pickerStyle(.menu).accessibilityIdentifier("settings.preferences.theme")
-                    Picker(
-                        t("Time format"),
+                SettingsCard {
+                    SettingsEyebrow(title: t("Appearance"))
+                    SettingsRadioGroup(
+                        title: t("Theme"),
+                        options: [
+                            SettingsOption(id: "system", title: t("System")),
+                            SettingsOption(id: "light", title: t("Light")),
+                            SettingsOption(id: "dark", title: t("Dark")),
+                        ],
+                        selection: Binding(
+                            get: { device.theme.rawValue },
+                            set: {
+                                if let value = SettingsDevicePreferences.Theme(rawValue: $0) { device.theme = value }
+                            }), identifier: "settings.preferences.theme")
+                    SettingsRadioGroup(
+                        title: t("Time format"),
+                        options: [
+                            SettingsOption(id: "24", title: t("24-hour (14:30)")),
+                            SettingsOption(id: "12", title: t("12-hour (2:30 PM)")),
+                        ],
                         selection: Binding(
                             get: { model.value["timeFormat"]?.string ?? "24" },
-                            set: { value in
-                                Task { await model.setTimeFormat(value) }
-                            })
-                    ) {
-                        Text(t("24-hour (14:30)")).tag("24")
-                        Text(t("12-hour (2:30 PM)")).tag("12")
-                    }.pickerStyle(.menu).accessibilityIdentifier("settings.preferences.timeFormat")
+                            set: { value in Task { await model.setTimeFormat(value) } }),
+                        identifier: "settings.preferences.timeFormat")
                 }
-                Section {
-                    ForEach(SettingsTimelineGroup.all, id: \.title) { group in
-                        Toggle(
-                            t(group.title),
-                            isOn: Binding(
-                                get: { model.shown(group) },
-                                set: { shown in
-                                    Task { await model.setShown(shown, group: group) }
-                                })
-                        ).accessibilityIdentifier("settings.preferences.\(group.title)")
+                VStack(alignment: .leading, spacing: PlanUITokens.space3) {
+                    VStack(alignment: .leading, spacing: PlanUITokens.space1) {
+                        SettingsEyebrow(title: t("Timeline categories"))
+                        Text(t("Hide a category to keep your timeline calmer. Its steps stay in your plan."))
+                            .settingsFont(Typography.screenBody).foregroundStyle(ColorToken.mutedForeground.color)
                     }
-                } header: {
-                    Text(t("Timeline categories"))
-                } footer: {
-                    Text(t("Hide a category to keep your timeline calmer. Its steps stay in your plan."))
-                }
-                Section {
-                    NavigationLink(value: SettingsDestination.reminders) {
-                        VStack(alignment: .leading, spacing: PlanUITokens.space1) {
-                            Label(
-                                ReminderStrings.text(
-                                    "Connectivity & reminders",
-                                    language: locale.language.languageCode?.identifier == "nl" ? .nl : .en),
-                                systemImage: "bell")
-                            if let reminders, let permission {
-                                Text(
-                                    permission.remindersActive(reminders)
-                                        ? SettingsStrings.text(
-                                            "On, {{minutes}} min ahead · works offline",
-                                            language: locale.language.languageCode?.identifier == "nl" ? .nl : .en,
-                                            ["minutes": String(reminders.leadMin)])
-                                        : t("Off · works offline")
-                                ).font(Typography.screenBody.font).foregroundStyle(ColorToken.mutedForeground.color)
-                            }
+                    SettingsCard(rows: true) {
+                        ForEach(Array(SettingsTimelineGroup.all.enumerated()), id: \.element.title) { index, group in
+                            if index > 0 { SettingsDivider() }
+                            Toggle(
+                                isOn: Binding(
+                                    get: { model.shown(group) },
+                                    set: { shown in Task { await model.setShown(shown, group: group) } })
+                            ) {
+                                HStack(spacing: PlanUITokens.space3) {
+                                    CategorySwatch(swatch(group), size: .small)
+                                    Text(t(group.title)).settingsFont(Typography.screenBodyLg)
+                                }
+                            }.padding(.horizontal, PlanUITokens.space4).padding(.vertical, PlanUITokens.space2)
+                                .frame(minHeight: SettingsTokens.counterHeight)
+                                .accessibilityIdentifier("settings.preferences.\(group.title)")
                         }
-                    }.accessibilityIdentifier("settings.preferences.reminders")
+                    }
+                }
+                SettingsCard(rows: true) {
+                    NavigationLink(value: SettingsDestination.reminders) {
+                        SettingsRow(
+                            title: ReminderStrings.text(
+                                "Connectivity & reminders",
+                                language: locale.language.languageCode?.identifier == "nl" ? .nl : .en),
+                            subtitle: remindersSubtitle, symbol: "bell")
+                    }.buttonStyle(.plain).accessibilityIdentifier("settings.preferences.reminders")
+                    SettingsDivider()
                     Button {
                         model.startWalkthroughReplay()
                     } label: {
-                        VStack(alignment: .leading, spacing: PlanUITokens.space1) {
-                            Label(t("Replay walkthrough"), systemImage: "arrow.counterclockwise")
-                            Text(t("The short tour from your first trip")).font(Typography.screenBody.font)
-                                .foregroundStyle(ColorToken.mutedForeground.color)
-                        }
-                    }.accessibilityIdentifier("settings.preferences.replay")
+                        SettingsRow(
+                            title: t("Replay walkthrough"), subtitle: t("The short tour from your first trip"),
+                            symbol: "arrow.counterclockwise", chevron: false)
+                    }.buttonStyle(.plain).accessibilityIdentifier("settings.preferences.replay")
                 }
-                if model.failure {
-                    Text(t("We couldn't save your change. Please try again.")).foregroundStyle(
-                        ColorToken.destructive.color)
-                }
-                if model.saved {
-                    Text(t("Saved on this phone · syncs when you're online")).accessibilityIdentifier(
-                        "settings.preferences.saved")
-                }
+                if model.failure { SettingsError(title: t("We couldn't save your change. Please try again.")) }
             }.onChange(of: value) { _, value in model.receive(value) }
                 .task { permission = await reminderPermission() }
                 .onChange(of: scenePhase) { _, phase in
@@ -147,6 +145,24 @@
                     }
                 }
         }
+        private var remindersSubtitle: String? {
+            guard let reminders, let permission else { return nil }
+            return permission.remindersActive(reminders)
+                ? SettingsStrings.text(
+                    "On, {{minutes}} min ahead · works offline",
+                    language: locale.language.languageCode?.identifier == "nl" ? .nl : .en,
+                    ["minutes": String(reminders.leadMin)])
+                : t("Off · works offline")
+        }
+        private func swatch(_ group: SettingsTimelineGroup) -> BlockType {
+            switch group.title {
+            case "Sleep": .sleep
+            case "Light": .seekLight
+            case "Caffeine": .caffeineServing
+            default: .flight
+            }
+        }
+
     }
 
     @MainActor public struct SettingsLanguageView: View {
@@ -163,23 +179,43 @@
                 Text(
                     t(
                         "ChronoFlow follows your phone's language, and uses English if your phone is set to a language we don't offer yet. Pick a language here only if you want something different."
-                    ))
-                Picker(t("Language"), selection: $device.language) {
-                    Text(t("Phone language")).tag(SettingsDevicePreferences.LanguageChoice.system)
-                    Text(t("English")).tag(SettingsDevicePreferences.LanguageChoice.en)
-                    Text(t("Dutch")).tag(SettingsDevicePreferences.LanguageChoice.nl)
-                }.pickerStyle(.inline).accessibilityIdentifier("settings.language.choice")
-                if saved {
-                    Text(
-                        t(
-                            device.language == .system
-                                ? "Saved. ChronoFlow follows your phone."
-                                : device.language == .en
-                                    ? "Saved. The app is in English." : "Saved. The app is in Dutch.")
                     )
-                    .accessibilityIdentifier("settings.language.saved")
-                }
+                )
+                .settingsFont(Typography.screenBodyLg).foregroundStyle(ColorToken.mutedForeground.color)
+                SettingsRadioGroup(
+                    options: [
+                        SettingsOption(
+                            id: "system", title: t("Phone language"),
+                            hint: SettingsStrings.text(
+                                "Now {{language}} · changes with your phone",
+                                language: locale.language.languageCode?.identifier == "nl" ? .nl : .en,
+                                [
+                                    "language": t(
+                                        Locale.current.language.languageCode?.identifier == "nl"
+                                            ? "Nederlands" : "English")
+                                ])),
+                        SettingsOption(id: "en", title: t("English"), hint: t("Always English")),
+                        SettingsOption(id: "nl", title: t("Nederlands"), hint: t("Always Dutch")),
+                    ],
+                    selection: Binding(
+                        get: { device.language.rawValue },
+                        set: {
+                            if let choice = SettingsDevicePreferences.LanguageChoice(rawValue: $0) {
+                                device.language = choice
+                            }
+                        }), cards: true, identifier: "settings.language.choice")
             }.onChange(of: device.language) { _, _ in saved = true }
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    if saved {
+                        SettingsToast(
+                            title: t(
+                                device.language == .system
+                                    ? "Saved. ChronoFlow follows your phone."
+                                    : device.language == .en
+                                        ? "Saved. The app is in English." : "Saved. The app is in Dutch."),
+                            identifier: "settings.language.saved")
+                    }
+                }
         }
     }
 #endif

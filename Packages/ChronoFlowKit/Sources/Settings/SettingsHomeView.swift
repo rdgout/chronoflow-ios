@@ -19,8 +19,8 @@
         }
         var subtitle: String? {
             switch self {
-            case .account: "Profile, language, your data"
-            case .security: "Password, passkeys, two-factor"
+            case .account: "Profile, language"
+            case .security: "Password, two-factor"
             case .bodyClock: "The answers every plan is built from"
             case .preferences: "Appearance, timeline, reminders"
             default: nil
@@ -114,7 +114,7 @@
                     SettingsSignOutButton(model: model)
                 }.listRowBackground(Color.clear).listRowSeparator(.hidden)
             }
-            .listStyle(.insetGrouped).scrollContentBackground(.hidden)
+            .listStyle(.insetGrouped).listSectionSpacing(PlanUITokens.space4).scrollContentBackground(.hidden)
             .background(ColorToken.background.color).foregroundStyle(ColorToken.cardForeground.color)
             .tint(ColorToken.primary.color)
             .accessibilityElement(children: .contain).accessibilityIdentifier("settings.screen")
@@ -132,7 +132,7 @@
         }
     }
 
-    private struct SettingsNavigationStyle: UIViewControllerRepresentable {
+    struct SettingsNavigationStyle: UIViewControllerRepresentable {
         func makeUIViewController(context: Context) -> Styler { Styler() }
         func updateUIViewController(_ controller: Styler, context: Context) { controller.style() }
         final class Styler: UIViewController {

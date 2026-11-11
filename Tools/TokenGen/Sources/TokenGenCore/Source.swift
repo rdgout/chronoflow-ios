@@ -3,7 +3,8 @@ import Foundation
 public struct DesignSource {
     public static let names = [
         "sky-top", "sky-mid", "sky-horizon", "sky-title", "sky-copy", "sky-copy-background", "dawn", "dawn-foreground",
-        "background", "foreground", "card", "card-foreground", "input", "border", "ring",
+        "background", "foreground", "card", "card-foreground", "popover", "popover-foreground",
+        "destructive-foreground", "input", "border", "ring",
         "surface-2", "muted", "secondary", "secondary-foreground", "now",
         "cat-sleep", "cat-sleep-fg", "cat-light", "cat-light-fg", "cat-moderate", "cat-moderate-fg",
         "cat-dark", "cat-dark-fg", "cat-caffeine", "cat-caffeine-fg", "cat-travel", "cat-travel-fg",
@@ -53,9 +54,26 @@ public struct DesignSource {
         }
     }
 
-    public static var authDerivedNames: [String] { ["auth-error-background", "auth-error-border", "auth-shadow"] }
+    public static var authDerivedNames: [String] {
+        [
+            "auth-error-background", "auth-error-border", "auth-shadow", "settings-warning-background",
+            "settings-warning-border", "settings-qr-background",
+        ]
+    }
 
     public func color(_ name: String, _ appearance: String) throws -> OKLab {
+        if name == "settings-warning-background" {
+            return try color("card", appearance).mixed(with: color("dawn", appearance), fraction: 0.1)
+        }
+        if name == "settings-warning-border" {
+            let value = try color("dawn", appearance)
+            return OKLab(lightness: value.lightness, a: value.a, b: value.b, alpha: 0.4)
+        }
+        if name == "settings-qr-background" {
+            let board = try String(
+                contentsOf: root.appending(path: "_design/canvas/Set2FASetup.dc.html"), encoding: .utf8)
+            return try OKLab(css: captures(#"background: (oklch\(1 0 0\))"#, in: board)[0])
+        }
         if name == "auth-error-background" {
             return try color("card", appearance).mixed(with: color("destructive", appearance), fraction: 0.1)
         }

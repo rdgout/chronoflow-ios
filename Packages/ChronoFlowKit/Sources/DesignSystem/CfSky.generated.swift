@@ -25,6 +25,9 @@ nonisolated public enum ColorToken: String, CaseIterable, Sendable {
     case foreground = "foreground"
     case card = "card"
     case cardForeground = "cardForeground"
+    case popover = "popover"
+    case popoverForeground = "popoverForeground"
+    case destructiveForeground = "destructiveForeground"
     case input = "input"
     case border = "border"
     case ring = "ring"
@@ -55,6 +58,9 @@ nonisolated public enum ColorToken: String, CaseIterable, Sendable {
     case authErrorBackground = "authErrorBackground"
     case authErrorBorder = "authErrorBorder"
     case authShadow = "authShadow"
+    case settingsWarningBackground = "settingsWarningBackground"
+    case settingsWarningBorder = "settingsWarningBorder"
+    case settingsQrBackground = "settingsQrBackground"
     public func components(for appearance: TokenAppearance) -> TokenRGBA {
         switch (self, appearance) {
         case (.skyTop, .light):
@@ -101,6 +107,18 @@ nonisolated public enum ColorToken: String, CaseIterable, Sendable {
             TokenRGBA(red: 0.0746269467, green: 0.0960047157, blue: 0.1879246112, alpha: 1.0000000000)
         case (.cardForeground, .dark):
             TokenRGBA(red: 0.9039299719, green: 0.9230007624, blue: 0.9590599670, alpha: 1.0000000000)
+        case (.popover, .light):
+            TokenRGBA(red: 0.9875284642, green: 0.9944507892, blue: 1.0000000000, alpha: 1.0000000000)
+        case (.popover, .dark):
+            TokenRGBA(red: 0.0887723157, green: 0.1058436428, blue: 0.1895447736, alpha: 1.0000000000)
+        case (.popoverForeground, .light):
+            TokenRGBA(red: 0.0746269467, green: 0.0960047157, blue: 0.1879246112, alpha: 1.0000000000)
+        case (.popoverForeground, .dark):
+            TokenRGBA(red: 0.9039299719, green: 0.9230007624, blue: 0.9590599670, alpha: 1.0000000000)
+        case (.destructiveForeground, .light):
+            TokenRGBA(red: 0.9736912701, green: 0.9736912701, blue: 0.9736912701, alpha: 1.0000000000)
+        case (.destructiveForeground, .dark):
+            TokenRGBA(red: 0.0297285257, green: 0.0390852698, blue: 0.0892932566, alpha: 1.0000000000)
         case (.input, .light):
             TokenRGBA(red: 0.7957949595, green: 0.8205984472, blue: 0.8676110093, alpha: 1.0000000000)
         case (.input, .dark): TokenRGBA(red: 0.1948903555, green: 0.2140156383, blue: 0.2948370182, alpha: 1.0000000000)
@@ -215,6 +233,18 @@ nonisolated public enum ColorToken: String, CaseIterable, Sendable {
             TokenRGBA(red: 0.1337445013, green: 0.1612771621, blue: 0.3235156231, alpha: 0.2500000000)
         case (.authShadow, .dark):
             TokenRGBA(red: 0.0000000000, green: 0.0000000000, blue: 0.0000000000, alpha: 0.6000000000)
+        case (.settingsWarningBackground, .light):
+            TokenRGBA(red: 0.9770795245, green: 0.9516455820, blue: 0.9357434095, alpha: 1.0000000000)
+        case (.settingsWarningBackground, .dark):
+            TokenRGBA(red: 0.1428964315, green: 0.1429848056, blue: 0.1964233489, alpha: 1.0000000000)
+        case (.settingsWarningBorder, .light):
+            TokenRGBA(red: 0.8542512390, green: 0.5599361895, blue: 0.3257756868, alpha: 0.4000000000)
+        case (.settingsWarningBorder, .dark):
+            TokenRGBA(red: 0.9082625891, green: 0.6882337800, blue: 0.4860896207, alpha: 0.4000000000)
+        case (.settingsQrBackground, .light):
+            TokenRGBA(red: 1.0000000000, green: 1.0000000000, blue: 1.0000000000, alpha: 1.0000000000)
+        case (.settingsQrBackground, .dark):
+            TokenRGBA(red: 1.0000000000, green: 1.0000000000, blue: 1.0000000000, alpha: 1.0000000000)
         }
     }
 }
