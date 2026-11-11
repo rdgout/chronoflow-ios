@@ -3,6 +3,8 @@ import Foundation
 import LocalStore
 import Reminders
 
+public enum WizardMode: String, Codable, Sendable { case member, guest }
+
 public enum MemberWizardStep: String, Codable, Sendable {
     case whereTo, outbound, returnChoice, returnRoute, returnFlight, sleep, checking, question, excluded, continuation,
         fineTune, ready, calculating
@@ -22,6 +24,19 @@ public struct WizardAirportSheet: Codable, Sendable, Equatable, Identifiable {
 }
 
 public struct MemberWizardState: Codable, Sendable, Equatable {
+    private var storedMode: WizardMode? = .member
+    public var mode: WizardMode {
+        get { storedMode ?? .member }
+        set { storedMode = newValue }
+    }
+    enum CodingKeys: String, CodingKey {
+        case storedMode = "mode"
+        case instance, revision, step, entered, fromLastTrip, firstTrip, sleepNeeded, homeChanged
+        case returnRouteConfirmed, profile, airports, sheet, lastInputStep, progressFloor, review, questions
+        case questionIndex, checkingAnswers, sleepCompleted, savedProfile, savedTripId, checkedInput, reviewedAt
+        case revisit, returnToReady, promptSheetID, saveFailure, updated, signingIn
+    }
+
     public var instance = UUID().uuidString
     public var revision = 0
     public var step = MemberWizardStep.whereTo
@@ -50,6 +65,7 @@ public struct MemberWizardState: Codable, Sendable, Equatable {
     public var promptSheetID: String?
     public var saveFailure: WizardSaveFailure?
     public var updated: Bool?
+    public var signingIn: Bool?
     public init() {}
 
     mutating func discardRetiredValues() {
@@ -82,7 +98,13 @@ public struct MemberWizardDraft: Sendable, Equatable {
     }
 }
 
-public actor MemberWizardStore {
+public protocol WizardDraftStore: Sendable {
+    func persist(_ draft: MemberWizardDraft) async throws
+    func discard(instance: String) async throws
+    func didSave(instance: String, firstTrip: Bool) async throws
+}
+
+public actor MemberWizardStore: WizardDraftStore {
     private let drafts: DraftRepository
     private let trips: TripRepository
     private let settings: SettingsRepository
@@ -127,6 +149,27 @@ public actor MemberWizardStore {
 
     public func start() async throws -> MemberWizardDraft {
         if let previous = try await recover() { return previous }
+        let draft = try await initialDraft()
+        try await drafts.createRecovery(record(draft), permit: permit)
+        return draft
+    }
+
+    public func start(seed: MemberWizardDraft) async throws -> MemberWizardDraft {
+        var draft = try await initialDraft()
+        draft.form = seed.form
+        draft.form.identity = nil
+        draft.form.override = WizardSleepOverride()
+        draft.airports = seed.airports
+        draft.state.entered = true
+        draft.state.fromLastTrip = false
+        draft.state.step = .checking
+        draft.state.returnToReady = true
+        draft.state.profile = JSONObject()
+        try await drafts.replaceRecovery(record(draft), permit: permit)
+        return draft
+    }
+
+    private func initialDraft() async throws -> MemberWizardDraft {
         let latest = try await trips.trips().reversed().first { $0.deletedAt == nil && !$0.deletedLocally }
         var draft = MemberWizardDraft()
         draft.state.firstTrip = latest == nil
@@ -150,7 +193,6 @@ public actor MemberWizardStore {
                 if let value = body[key], value != .null { draft.state.profile[field] = value }
             }
         }
-        try await drafts.createRecovery(record(draft), permit: permit)
         return draft
     }
 

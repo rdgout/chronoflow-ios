@@ -17,6 +17,8 @@ public struct WizardSaveFailure: Codable, Sendable, Equatable {
     }
 }
 
+public enum WizardSaveOutcome: Sendable, Equatable { case signUpRequested }
+
 public enum WizardCredits: Sendable, Equatable {
     case unlimited, free, oneFree, credits, unavailable
     public init(_ review: ApiTripReview) {
@@ -50,6 +52,8 @@ extension MemberWizardModel {
         (draft.state.review?.prompts ?? []).enumerated().filter {
             !$0.element.blocking && ProfilePreferences.isSupported($0.element)
                 && !($0.element.kind == .cups && preference("exclude_caffeine"))
+                && (mode != .guest
+                    || [.room, .latestWake, .seatSide, .cups, .lightDevice, .blueBlockers].contains($0.element.kind))
         }
         .sorted { left, right in
             left.element.required == right.element.required ? left.offset < right.offset : left.element.required
@@ -57,6 +61,11 @@ extension MemberWizardModel {
     }
     public var credits: WizardCredits? { draft.state.review.map(WizardCredits.init) }
     public var needsReadyReview: Bool {
+        if mode == .guest {
+            return draft.form.identity?.token.isEmpty != false || checking.failure != nil
+                || draft.state.saveFailure != nil || draft.state.checkedInput != inputFingerprint
+                || draft.state.reviewedAt.map { now().timeIntervalSince($0) >= 1800 } != false
+        }
         guard draft.state.savedTripId == nil else { return false }
         return draft.form.identity == nil || draft.state.checkedInput != inputFingerprint
             || draft.state.reviewedAt.map { now().timeIntervalSince($0) >= 1800 } != false
@@ -106,7 +115,7 @@ extension MemberWizardModel {
         draft.state.updated = false
         draft.state.revisit = inputFingerprint
         draft.state.returnToReady = true
-        if sleep, !draft.form.override.enabled {
+        if mode == .member, sleep, !draft.form.override.enabled {
             draft.form.override.enabled = true
             draft.form.override.habitualBed =
                 draft.form.override.habitualBed
@@ -115,7 +124,7 @@ extension MemberWizardModel {
                 draft.form.override.habitualWake
                 ?? draft.state.profile["habitual_wake"]?.string ?? draft.state.savedProfile?["habitualWake"]?.string
         }
-        go(step)
+        go(mode == .guest && sleep ? .sleep : step)
     }
 
     public func finishRoute(home: Bool = false) {
@@ -140,6 +149,7 @@ extension MemberWizardModel {
     }
 
     public func readyTick(force: Bool = false) {
+        guard !guestAuthenticationPresented else { return }
         #if DEBUG
             if boardFrozen { return }
         #endif
@@ -147,7 +157,7 @@ extension MemberWizardModel {
         guard draft.state.step == .ready, !reviewing, draft.state.savedTripId == nil,
             force || needsReadyReview
         else { return }
-        reviewInPlace()
+        if mode == .guest { recheckGuestReady() } else { reviewInPlace() }
     }
 
     public func resumeCompletion() {
@@ -204,6 +214,17 @@ extension MemberWizardModel {
     }
 
     public func savePlan(recovering: Bool = false) {
+        if mode == .guest {
+            guard !closed, !persistenceFailed, !reviewing, !guestAuthenticationPresented,
+                retrySeconds == 0, draft.state.step == .ready
+            else { return }
+            if needsReadyReview {
+                recheckGuestReady()
+            } else if canSave {
+                saveOutcome = .signUpRequested
+            }
+            return
+        }
         guard !closed, saveTask == nil, recovering || (draft.state.step == .ready && canSave) else { return }
         if !recovering, needsReadyReview {
             reviewInPlace()

@@ -64,7 +64,7 @@ let package = Package(
         .target(name: "AppCore", swiftSettings: [.defaultIsolation(nil)]),
         .target(name: "DataAccess", dependencies: ["AppCore"], swiftSettings: [.defaultIsolation(nil)]),
         .testTarget(
-            name: "DataAccessTests", dependencies: ["DataAccess", "LocalStore", "Sync"],
+            name: "DataAccessTests", dependencies: ["DataAccess", "LocalStore", "Sync", "Auth"],
             exclude: ["Fixtures/README.md"],
             resources: [
                 .copy("Fixtures/auth"), .copy("Fixtures/account"), .copy("Fixtures/trips"), .copy("Fixtures/errors"),
@@ -85,7 +85,9 @@ let package = Package(
             resources: [.process("Resources")], swiftSettings: [.defaultIsolation(MainActor.self)]),
         .testTarget(
             name: "TripWizardTests",
-            dependencies: ["TripWizard", "TripWizardUI", "Sync", "DataAccess", "LocalStore", "PlanCore", "Reminders"],
+            dependencies: [
+                "TripWizard", "TripWizardUI", "Sync", "DataAccess", "LocalStore", "PlanCore", "Reminders", "Auth",
+            ],
             resources: [.copy("Fixtures")],
             swiftSettings: [.defaultIsolation(nil)]),
         .target(
@@ -105,7 +107,7 @@ let package = Package(
             swiftSettings: [.defaultIsolation(MainActor.self)]
         ),
         .target(
-            name: "Auth", dependencies: ["DesignSystem", "AppCore"], resources: [.process("Resources")],
+            name: "Auth", dependencies: ["DesignSystem", "AppCore", "DataAccess"], resources: [.process("Resources")],
             swiftSettings: [.defaultIsolation(MainActor.self)]),
         .testTarget(
             name: "AuthTests", dependencies: ["Auth", "DataAccess", "SnapshotSupport"],

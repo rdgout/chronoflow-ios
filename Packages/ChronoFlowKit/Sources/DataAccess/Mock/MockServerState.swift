@@ -46,6 +46,7 @@ public struct MockServerState: Codable, Sendable, Equatable {
     var wizardReceipts: [String: MockWizardReceipt]?
     var wizardPaidDirections: [String: [TripDirection]]?
     var wizardInputs: [String: ApiTripInputSnapshot]?
+    var guestDrafts: [String: MockGuestDraft]?
     var signingKey: Data
     public var claims: [String: MockClaim] = [:]
     public init(accounts: [MockServerAccount] = [], signingKey: Data = Data(UUID().uuidString.utf8)) {
@@ -57,11 +58,41 @@ public struct MockServerState: Codable, Sendable, Equatable {
 public struct MockClaim: Codable, Sendable, Equatable {
     public let accountID: String
     public let tripID: String
-    public let secret: String
-    public init(accountID: String, tripID: String, secret: String) {
+    public let secretHash: String
+    public let deviceID: String?
+    public let expiresAt: TimeInterval?
+    public init(
+        accountID: String, tripID: String, secret: String, deviceID: String? = nil, expiresAt: TimeInterval? = nil
+    ) {
         self.accountID = accountID
         self.tripID = tripID
-        self.secret = secret
+        self.secretHash = MockGuestReview.hash(secret)
+        self.deviceID = deviceID
+        self.expiresAt = expiresAt
+    }
+
+    func isLive(at time: TimeInterval) -> Bool { (expiresAt ?? .greatestFiniteMagnitude) > time }
+
+    enum CodingKeys: String, CodingKey { case accountID, tripID, secretHash, deviceID, expiresAt, secret }
+
+    public init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        accountID = try c.decode(String.self, forKey: .accountID)
+        tripID = try c.decode(String.self, forKey: .tripID)
+        secretHash =
+            try c.decodeIfPresent(String.self, forKey: .secretHash)
+            ?? MockGuestReview.hash(c.decode(String.self, forKey: .secret))
+        deviceID = try c.decodeIfPresent(String.self, forKey: .deviceID)
+        expiresAt = try c.decodeIfPresent(TimeInterval.self, forKey: .expiresAt)
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(accountID, forKey: .accountID)
+        try c.encode(tripID, forKey: .tripID)
+        try c.encode(secretHash, forKey: .secretHash)
+        try c.encodeIfPresent(deviceID, forKey: .deviceID)
+        try c.encodeIfPresent(expiresAt, forKey: .expiresAt)
     }
 }
 struct MockSession: Codable, Sendable, Equatable {
@@ -162,7 +193,7 @@ extension AccountSnapshot {
                     "light": .bool(true), "avoid": .bool(true), "caffeine": .bool(true), "winddown": .bool(false),
                     "leadMin": .number(30),
                 ]),
-                planCredits: JSONObject(["credits": .number(1), "unlimited": .bool(false)]),
+                planCredits: JSONObject(["credits": .number(3), "unlimited": .bool(false)]),
                 policies: AccountPolicies(
                     termsVersion: "1.0", privacyVersion: "1.0", acceptedTermsVersion: "1.0",
                     acceptedTermsAt: now.ISO8601Format())),

@@ -68,7 +68,11 @@
                     VStack(spacing: PlanUITokens.wizardControlGap) {
                         if id == "excluded" || (id == "checking" && model.checking.failure != nil) {
                             Button(t("Close")) {
-                                if id == "excluded" { close() } else { confirmingDiscard = true }
+                                if id == "excluded" || model.mode == .guest {
+                                    close()
+                                } else {
+                                    confirmingDiscard = true
+                                }
                             }
                             .buttonStyle(.plain).font(Typography.wizardSecondary.font)
                             .foregroundStyle(ColorToken.foreground.color).frame(minHeight: AuthTokens.touch)
@@ -104,7 +108,7 @@
                 } else if id == "ready", model.credits == .unavailable {
                     VStack(spacing: 0) {
                         Button {
-                            confirmingDiscard = true
+                            if model.mode == .guest { close() } else { confirmingDiscard = true }
                         } label: {
                             Text(t("Close")).frame(maxWidth: .infinity, minHeight: AuthTokens.touch)
                         }
@@ -136,7 +140,13 @@
                 if id != "calculating" {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button {
-                            if model.draft.state.entered { confirmingDiscard = true } else { close() }
+                            if model.mode == .guest && id == "excluded" {
+                                close()
+                            } else if model.draft.state.entered {
+                                confirmingDiscard = true
+                            } else {
+                                close()
+                            }
                         } label: {
                             Image(systemName: "xmark")
                         }
@@ -225,7 +235,10 @@
 
         var sleepScreen: some View {
             wizardShell(
-                title: t("How do you usually sleep?"), subtitle: t("On a work day. We save it for next time."),
+                title: t("How do you usually sleep?"),
+                subtitle: t(
+                    model.mode == .guest
+                        ? "On a normal work day." : "On a work day. We save it for next time."),
                 id: "sleep",
                 button: t("Continue"), enabled: model.sleepComplete,
                 action: {

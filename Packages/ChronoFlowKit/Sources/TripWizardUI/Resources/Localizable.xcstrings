@@ -4095,6 +4095,118 @@
           }
         }
       }
+    },
+    "ChronoFlow gives timing guidance, not medical advice. If you're unsure about a question, check with your doctor.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChronoFlow gives timing guidance, not medical advice. If you're unsure about a question, check with your doctor."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChronoFlow geeft advies over timing, geen medisch advies. Twijfel je over een vraag, overleg dan met je arts."
+          }
+        }
+      }
+    },
+    "On a normal work day.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On a normal work day."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Op een normale werkdag."
+          }
+        }
+      }
+    },
+    "What you entered is not saved. You go back to the welcome screen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What you entered is not saved. You go back to the welcome screen."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wat je hebt ingevuld, wordt niet bewaard. Je gaat terug naar het welkomstscherm."
+          }
+        }
+      }
+    },
+    "Questions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questions"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vragen"
+          }
+        }
+      }
+    },
+    "None needed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None needed"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niet nodig"
+          }
+        }
+      }
+    },
+    "Paid with {{cost}} of the 3 credits you get when you sign up.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paid with {{cost}} of the 3 credits you get when you sign up."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Betaald met {{cost}} van de 3 credits die je krijgt als je een account maakt."
+          }
+        }
+      }
+    },
+    "Your sign-up credits stay unused.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your sign-up credits stay unused."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je credits van je nieuwe account blijven ongebruikt."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

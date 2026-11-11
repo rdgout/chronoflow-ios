@@ -102,11 +102,49 @@ import TripWizardUI
                 == "08:00 · assumed")
     }
 
+    @Test func guestInputAndDisclaimerCopyHasDutch() {
+        let dutch = Locale(identifier: "nl_NL")
+        for (key, nl) in [
+            ("On a normal work day.", "Op een normale werkdag."),
+            (
+                "What you entered is not saved. You go back to the welcome screen.",
+                "Wat je hebt ingevuld, wordt niet bewaard. Je gaat terug naar het welkomstscherm."
+            ),
+            (
+                "ChronoFlow gives timing guidance, not medical advice. If you're unsure about a question, check with your doctor.",
+                "ChronoFlow geeft advies over timing, geen medisch advies. Twijfel je over een vraag, overleg dan met je arts."
+            ),
+            (
+                "A new plan needs an upcoming arrival. Check your flight dates.",
+                "Voor een nieuw plan is een aankomst nodig die nog moet plaatsvinden. Controleer je vluchtdata."
+            ),
+        ] {
+            #expect(WizardStrings.text(key, locale: dutch) == nl)
+            #expect(WizardStrings.text(key, locale: Locale(identifier: "en_GB")) == key)
+        }
+    }
+
     @Test func runtimeUsesTheSelectedLanguageAndInterpolation() {
         let dutch = Locale(identifier: "nl_NL")
         #expect(WizardStrings.text("Where are you flying?", locale: dutch) == "Waar vlieg je heen?")
         #expect(WizardStrings.text("Time in {{city}}", locale: dutch, arguments: ["city": "Tokio"]) == "Tijd in Tokio")
         #expect(WizardStrings.text("Continue", locale: Locale(identifier: "en_GB")) == "Continue")
         #expect(WizardStrings.text("{{count}} credits", locale: dutch, arguments: ["count": "1"]) == "1 credit")
+    }
+
+    @Test func guestReadyCreditAndQuestionCopyHasDutch() {
+        let dutch = Locale(identifier: "nl_NL")
+        #expect(
+            WizardStrings.text(
+                "Paid with {{cost}} of the 3 credits you get when you sign up.",
+                locale: dutch, arguments: ["cost": "2"])
+                == "Betaald met 2 van de 3 credits die je krijgt als je een account maakt.")
+        for (key, nl) in [
+            ("Your sign-up credits stay unused.", "Je credits van je nieuwe account blijven ongebruikt."),
+            ("Questions", "Vragen"), ("None needed", "Niet nodig"),
+        ] {
+            #expect(WizardStrings.text(key, locale: dutch) == nl)
+        }
+        #expect(WizardStrings.text("{{count}} answered", locale: dutch, arguments: ["count": "2"]) == "2 beantwoord")
     }
 }

@@ -1,0 +1,45 @@
+{
+  "outbound": {
+    "legs": [
+      {
+        "from_iata": "AMS",
+        "to_iata": "HND",
+        "depart_local": "2026-11-10T11:00",
+        "arrive_local": "2026-11-11T06:00",
+        "flight_number": null,
+        "seat_lie_flat": false,
+        "seat_window": null,
+        "leave_for_airport_local": null,
+        "airport_transfer_min": null,
+        "stay": {
+          "bed_available_mode": null,
+          "bed_available_from_local": null,
+          "check_out_local": null,
+          "late_check_out_or_day_room": false,
+          "arrival_transfer_min": null,
+          "transfer_mode": null,
+          "busy_intervals": []
+        }
+      }
+    ]
+  },
+  "trip_end_kind": "one_way",
+  "preparation_days": 3,
+  "fast_delay_opt_in": false,
+  "latest_wake": null,
+  "feasible_night_bed": null,
+  "feasible_night_wake": null,
+  "pre_departure_busy_answered": false,
+  "pre_departure_busy_intervals": [],
+  "draft_token": null,
+  "input_revision": 0,
+  "review_revision": null,
+  "profile": {
+    "habitual_bed": "23:00",
+    "habitual_wake": "07:00",
+    "chronotype": "intermediate",
+    "age_band": "18_64",
+    "shift_work": false
+  },
+  "device_id": "00000000-0000-4000-8000-000000000018"
+}

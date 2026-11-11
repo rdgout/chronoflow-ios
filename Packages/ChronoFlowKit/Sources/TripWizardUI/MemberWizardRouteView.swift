@@ -92,7 +92,8 @@
             return HStack(spacing: PlanUITokens.space2) {
                 routeAirportRow(
                     label, airport: airport, locked: home && position == 0,
-                    lastTrip: !home && position == 0 && model.draft.state.fromLastTrip && !same,
+                    lastTrip: model.mode == .member && !home && position == 0 && model.draft.state.fromLastTrip
+                        && !same,
                     reserveSwap: !home && route.count == 2,
                     identifier: position == 0 ? "wizard.from" : isStop ? "wizard.stop.\(position)" : "wizard.to"
                 ) {

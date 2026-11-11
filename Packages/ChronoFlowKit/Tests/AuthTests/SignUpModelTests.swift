@@ -5,6 +5,56 @@ import Foundation
 import Testing
 
 @MainActor struct SignUpModelTests {
+    @Test func guestSignupRequiresALiveClaimBeforeCreatingAnAccount() async throws {
+        let source = try authTestSource()
+        let model = SignUpModel(
+            source: source, navigation: AuthNavigation(), deviceIdentity: { "test" },
+            deviceName: "test", accept: { _ in Issue.record("Expired guest created an account") })
+        model.editName("Traveller")
+        model.editEmail("new@example.com")
+        model.editPassword("NewPassword123!")
+        model.editConfirmation("NewPassword123!")
+        #expect(await model.submit(language: .en, requiresGuestClaim: true) == .guestReviewExpired)
+        #expect(model.guestState == .review && model.password.isEmpty && model.confirmation.isEmpty)
+        #expect(try await source.inbox().isEmpty)
+    }
+
+    @Test func guestSignupDistinguishesARequestFailureFromAnAccountAwaitingAcceptance() async throws {
+        let source = try authTestSource()
+        let model = SignUpModel(
+            source: source, navigation: AuthNavigation(),
+            deviceIdentity: { "0199a3c0-0000-7000-8000-000000000001" },
+            deviceName: "test", accept: { _ in throw SessionFailure.credentialWrite })
+        #expect(model.guestState == .ready)
+        model.editName("Traveller")
+        model.editEmail("new@example.com")
+        model.editPassword("NewPassword123!")
+        model.editConfirmation("NewPassword123!")
+        await source.failNext(method: .signUp, error: .server(status: 503))
+        await model.submit(language: .en)
+        #expect(model.guestState == .failed)
+        model.editPassword("NewPassword123!")
+        model.editConfirmation("NewPassword123!")
+        await model.submit(language: .en)
+        #expect(model.guestState == .retry && model.sessionFailure == .credentialWrite)
+        #expect(model.password.isEmpty && model.confirmation.isEmpty)
+    }
+
+    @Test func expiredGuestClaimShowsReviewAndClearsPasswords() async throws {
+        let source = try authTestSource()
+        let model = SignUpModel(
+            source: source, navigation: AuthNavigation(), deviceIdentity: { "test" },
+            deviceName: "test",
+            claim: {
+                GuestClaim(draftToken: "trip", inputRevision: 1, reviewRevision: 1, guestSecret: "secret")
+            }, accept: { _ in Issue.record("Expired claim accepted") })
+        await source.failNext(method: .signUp, error: .reviewExpired)
+        model.editPassword("NewPassword123!")
+        model.editConfirmation("NewPassword123!")
+        #expect(await model.submit(language: .en, requiresGuestClaim: true) == .guestReviewExpired)
+        #expect(model.guestState == .review && model.password.isEmpty && model.confirmation.isEmpty)
+    }
+
     @Test(arguments: ["name", "email", "password", "password_confirmation"])
     func unchangedFieldCallbacksPreserveMixedFailureUntilAnEdit(_ field: String) async throws {
         let model = SignUpModel(

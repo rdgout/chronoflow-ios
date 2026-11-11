@@ -90,7 +90,7 @@ import Testing
             let source = MockDataSource(seed: try MockAppSeed.make(now: Date()), delay: { 0 }, sleep: { _ in })
             let model = SignInModel(
                 source: source, session: controller, deviceIdentity: { UUID().uuidString }, deviceName: "test",
-                accepted: { _ in Issue.record("Challenge seed accepted a session") })
+                accepted: { _, _ in Issue.record("Challenge seed accepted a session") })
             var environment = ["CF_AUTH_TEST_ID": UUID().uuidString]
             await AuthUITestConfiguration(environment: environment)?.prepareChallenge(model)
             #expect(model.email.isEmpty && model.navigation.challengeID == nil)

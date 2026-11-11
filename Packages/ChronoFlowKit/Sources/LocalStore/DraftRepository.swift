@@ -53,6 +53,13 @@ extension DraftRepository {
         }
     }
 
+    public func replaceRecovery(_ record: DraftRecord, permit: SessionMutationPermit? = nil) async throws {
+        try await database.write(permit: permit) { db in
+            guard record.id == "member-wizard" else { throw CancellationError() }
+            try record.save(db)
+        }
+    }
+
     public func updateRecovery(
         _ record: DraftRecord, instance: String, revision: Int, permit: SessionMutationPermit? = nil
     ) async throws {

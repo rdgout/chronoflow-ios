@@ -224,9 +224,13 @@ import SwiftUI
     public struct AuthBanner: View {
         let title: String
         let message: String
-        public init(title: String, message: String) {
+        let actionTitle: String?
+        let action: (() -> Void)?
+        public init(title: String, message: String, actionTitle: String? = nil, action: (() -> Void)? = nil) {
             self.title = title
             self.message = message
+            self.actionTitle = actionTitle
+            self.action = action
         }
         public var body: some View {
             HStack(alignment: .top, spacing: AuthTokens.bannerGap) {
@@ -236,6 +240,13 @@ import SwiftUI
                 VStack(alignment: .leading, spacing: 0) {
                     WelcomeText(title, style: Typography.authStrong, color: .cardForeground)
                     if !message.isEmpty { WelcomeText(message, style: Typography.authHint, color: .cardForeground) }
+                    if let actionTitle, let action {
+                        Button(action: action) {
+                            Text(actionTitle).font(Typography.authStrong.font).underline()
+                                .foregroundStyle(ColorToken.foreground.color)
+                                .frame(minHeight: AuthTokens.touch, alignment: .leading)
+                        }.buttonStyle(.plain).accessibilityIdentifier("auth.banner.action")
+                    }
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(.vertical, AuthTokens.bannerVertical).padding(.horizontal, AuthTokens.bannerHorizontal)
@@ -246,7 +257,7 @@ import SwiftUI
                 RoundedRectangle(cornerRadius: AuthTokens.bannerRadius).strokeBorder(
                     ColorToken.authErrorBorder.color, lineWidth: AuthTokens.borderWidth)
             }
-            .accessibilityElement(children: .combine)
+            .accessibilityElement(children: action == nil ? .combine : .contain)
             .accessibilityIdentifier("auth.banner")
         }
     }

@@ -35,6 +35,8 @@ public final class MemberWizardModel {
     public internal(set) var choicePending = false
     public internal(set) var reviewing = false
     public internal(set) var createdTripID: String?
+    public internal(set) var saveOutcome: WizardSaveOutcome?
+    public private(set) var guestAuthenticationPresented = false
     @ObservationIgnored var retryTask: Task<Void, Never>?
     @ObservationIgnored var retryID = UUID()
     @ObservationIgnored var saveTask: Task<Void, Never>?
@@ -50,17 +52,18 @@ public final class MemberWizardModel {
     @ObservationIgnored var choiceTask: Task<Void, Never>?
     @ObservationIgnored var checkID = UUID()
     @ObservationIgnored var checkInstance: String?
-    let store: MemberWizardStore
+    let store: any WizardDraftStore
     let now: @Sendable () -> Date
     @ObservationIgnored private var pending: Task<Void, Never>?
 
     public init(
-        draft: MemberWizardDraft, store: MemberWizardStore, search: AirportSearchService,
+        draft: MemberWizardDraft, store: any WizardDraftStore, search: AirportSearchService,
         now: @escaping @Sendable () -> Date = { Date() },
         generation: (any MemberWizardGeneration)? = nil, checkingClock: WizardCheckingClock = .continuous
     ) {
         var draft = draft
         draft.state.discardRetiredValues()
+        draft.enforceGuestMode()
         self.draft = draft
         self.store = store
         self.search = search
@@ -208,6 +211,18 @@ public final class MemberWizardModel {
 
     public func flush() async { await pending?.value }
 
+    public func setGuestAuthenticationPresented(_ presented: Bool) {
+        guard mode == .guest else { return }
+        guestAuthenticationPresented = presented
+        saveOutcome = nil
+    }
+
+    public func setGuestSigningIn(_ signingIn: Bool) {
+        guard mode == .guest, !closed else { return }
+        draft.state.signingIn = signingIn
+        persist()
+    }
+
     public func discard() async throws {
         guard !closed, draft.state.step != .calculating else { return }
         closed = true
@@ -225,6 +240,8 @@ public final class MemberWizardModel {
     }
 
     func changed() {
+        draft.enforceGuestMode()
+        saveOutcome = nil
         draft.state.entered = true
         draft.fieldErrors = [:]
         persist()

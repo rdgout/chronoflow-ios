@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Create an account to save your plan</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="ds/chronoflow/components/bundle.css">
+<script src="ds/chronoflow/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Figtree';src:url("/_blob/74876cc764ebb15bf4ae98bcdbf3140c") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/741b1ce40b46479a73d934d0d5be9774") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/079d83fda74d66d1f31e35072f71201d") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Figtree';src:url("/_blob/991830890debdac04981f1a27656ed5c") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Fraunces';src:url("/_blob/fc815083784d00806d267d81858d2414") format("woff2");font-weight:400 500;font-style:normal;font-display:swap}
+body{margin:0}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="position: relative; width: 375px; height: 812px; overflow: hidden; background: var(--background); color: var(--foreground); font-family: var(--font-sans);">
+  <div aria-hidden="true" style="position: absolute; inset: 0;">
+    <dc-import name="GuestReview" theme="{{theme}}" hint-size="375px,812px"></dc-import>
+  </div>
+  <a href="GuestReview.dc.html" aria-label="Close" style="position: absolute; inset: 0; background: oklch(0.15 0.03 272 / 0.5);"></a>
+
+  <section role="dialog" aria-modal="true" aria-labelledby="signup-title" style="position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; gap: 16px; padding: 12px 20px 32px; border-radius: 38px 38px 0 0; background: var(--card); color: var(--card-foreground); box-shadow: var(--shadow-soft);">
+    <span aria-hidden="true" style="align-self: center; width: 36px; height: 5px; border-radius: 9999px; background: rgba(120, 120, 128, 0.4);"></span>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <h2 id="signup-title" style="margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 24px; line-height: 32px; letter-spacing: -0.01em;">Save your plan</h2>
+      <p style="margin: 0; font-size: 16px; line-height: 24px; color: var(--muted-foreground);">Create an account to save it and open it on any device.</p>
+    </div>
+    <sc-if value="{{failed}}" hint-placeholder-val="{{ false }}"><div role="alert" style="display: flex; gap: 10px; padding: 12px 14px; border-radius: 18px; background: color-mix(in oklab, var(--destructive) 10%, var(--card)); border: 1px solid color-mix(in oklab, var(--destructive) 35%, transparent); color: var(--card-foreground);"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px; color: var(--destructive);"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="8" y2="12"></line><line x1="12" x2="12.01" y1="16" y2="16"></line></svg><span style="flex: 1; font-size: 14px; line-height: 20px;"><span style="display: block; font-weight: 600;">{{ban.title}}</span>{{ban.body}}<sc-if value="{{ban.review}}" hint-placeholder-val="{{ false }}"><a href="WizardReadyChecking.dc.html" style="display: block; margin-top: 6px; font-weight: 600; color: var(--foreground); text-decoration: underline; text-underline-offset: 0.2em;">Review my trip</a></sc-if></span></div></sc-if>
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <x-import component-from-global-scope="ChronoFlow.Field" id="su-name" label="Name" autocomplete="name"></x-import>
+      <x-import component-from-global-scope="ChronoFlow.Field" id="su-email" label="Email" type="email" autocomplete="email"></x-import>
+      <x-import component-from-global-scope="ChronoFlow.Field" id="su-pw" label="Password" hint="At least 10 characters." type="password" autocomplete="new-password"></x-import>
+      <x-import component-from-global-scope="ChronoFlow.Field" id="su-pw2" label="Confirm password" type="password" autocomplete="new-password"></x-import>
+    </div>
+    <div style="display: grid; gap: 8px;">
+      <a href="AuthVerify.dc.html" class="inline-flex shrink-0 items-center justify-center gap-2 text-sm font-medium whitespace-nowrap transition-colors rounded-full bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6" style="text-decoration: none;">Create account and save</a>
+      <a href="AuthSignIn.dc.html" class="inline-flex shrink-0 items-center justify-center gap-2 text-sm font-medium whitespace-nowrap transition-colors rounded-full hover:bg-accent hover:text-accent-foreground h-10 px-6" style="color: var(--foreground); text-decoration: none;">I already have an account</a>
+    </div>
+    <p style="margin: 0; font-size: 12px; line-height: 16px; color: var(--muted-foreground); text-align: center;">By creating an account you accept the <a href="https://example.com/terms" style="color: var(--foreground); text-decoration: underline; text-underline-offset: 0.2em;">terms</a> and <a href="https://example.com/privacy" style="color: var(--foreground); text-decoration: underline; text-underline-offset: 0.2em;">privacy policy</a>.</p>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"state":{"editor":"enum","options":["ready","failed","retry","review"],"default":"ready"},"$preview":{"width":375,"height":812}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.props.state ?? 'ready';
+    const B = {
+      failed: { title: "We couldn't create your account.", body: 'Try again in a moment.', review: false },
+      retry: { title: 'Your account is ready.', body: 'Try saving again shortly.', review: false },
+      review: { title: 'Your trip needs a new check.', body: 'Review your trip again before creating your account.', review: true }
+    };
+    return { h: 812, theme: this.props.theme ?? 'light', failed: !!B[st], ban: B[st] || { title: '', body: '', review: false } };
+  }
+}
+</script>
+</body>
+</html>

@@ -109,7 +109,10 @@ public enum WizardOutboundRules {
 }
 
 public enum WizardFlightRules {
-    public static func errors(form: WizardForm, airports: [String: ApiAirportSuggestion], now: Date, checkPast: Bool)
+    public static func errors(
+        form: WizardForm, airports: [String: ApiAirportSuggestion], now: Date, checkPast: Bool,
+        mode: WizardMode = .member
+    )
         -> [String: FieldMessage]
     {
         var errors = WizardValidation.validate(form, airports: airports).filter { $0.key.hasPrefix("legs.") }
@@ -125,7 +128,7 @@ public enum WizardFlightRules {
             let arrival = WizardDateTime.instant(last.arriveLocal, zone: airport.timezone), arrival <= now
         {
             errors["review"] = FieldMessage(
-                key: form.end.kind == "return_legs"
+                key: mode == .guest || form.end.kind == "return_legs"
                     ? "A new plan needs an upcoming arrival. Check your flight dates."
                     : "A new plan needs an upcoming arrival. Check your flight dates or add your return flight.")
         }

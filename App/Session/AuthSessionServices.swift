@@ -4,6 +4,7 @@ import DataAccess
 import Foundation
 import LocalStore
 import Observation
+import TripWizard
 import UIKit
 
 @MainActor @Observable
@@ -97,7 +98,12 @@ final class AuthSessionServices {
             deviceIdentity: { try await identity.identity() },
             deviceName: DeviceIdentityStore.deviceName(UIDevice.current.name, model: UIDevice.current.model),
             assertionProvider: assertion,
-            accepted: { _ in await native.routeAcceptedSession(navigator: navigator, verification: verification) })
+            claim: { await native.guestWizardStore.claim(secrets: native.guestSecrets) },
+            guestReviewExpired: { try? await native.guestWizardStore.reviewExpired(claim: $0) },
+            accepted: { result, method in
+                try await native.routeAcceptedSession(
+                    result, method: method, navigator: navigator, verification: verification)
+            })
         resetLinks = GuestResetLinkRouter(session: native.controller) { [model, navigator] input in
             navigator.navigate(to: .signIn)
             model.openReset(input)
@@ -235,6 +241,16 @@ final class AuthSessionServices {
     #if DEBUG
         func prepareUITestRoute(_ test: AuthUITestConfiguration, navigator: RootNavigator) async throws {
             guard test.fastLaunch else { return }
+            if let board = UITestRuntime.environment["CF_GUEST_RECOVERY_BOARD"] {
+                var draft = try await nativeSession.guestWizardStore.start()
+                draft = GuestWizardBoardSeed.draft(draft, board: board, locale: Locale(identifier: "en_GB"))
+                try await nativeSession.guestWizardStore.persist(draft)
+                return
+            }
+            if UITestRuntime.environment["CF_GUEST_WIZARD"] == "1" {
+                navigator.navigate(to: .guestWizard)
+                return
+            }
             switch test.auditScreen {
             case "sign-in":
                 navigator.navigate(to: .signIn)
@@ -265,4 +281,37 @@ final class AuthSessionServices {
     #endif
 
     deinit { verificationSubscription?.cancel() }
+
+    func makeGuestWizard(locale: Locale) async throws -> MemberWizardModel {
+        guard await nativeSession.controller.presence == .signedOut else { throw CancellationError() }
+        let store = nativeSession.guestWizardStore
+        var draft = try await store.start()
+        if draft.state.signingIn == true {
+            draft.state.signingIn = false
+            draft.state.revision += 1
+            try await store.persist(draft)
+        }
+        #if DEBUG
+            let board =
+                authUITestEnabled
+                    && (UITestRuntime.environment["CF_GUEST_WIZARD"] == "1"
+                        || UITestRuntime.environment["CF_GUEST_WIZARD_JOURNEY"] == "1")
+                ? UITestRuntime.environment["CF_WIZARD_BOARD_CAPTURE"] : nil
+            if let board {
+                draft = GuestWizardBoardSeed.draft(draft, board: board, locale: locale)
+                try await store.persist(draft)
+            }
+        #endif
+        try Task.checkCancellation()
+        guard await nativeSession.controller.presence == .signedOut else { throw CancellationError() }
+        let generation = GuestWizardGeneration(
+            source: source, secrets: nativeSession.guestSecrets,
+            deviceIdentity: DeviceIdentityStore(persistence: DevicePreferences()))
+        let wizard = MemberWizardModel(
+            draft: draft, store: store, search: AirportSearchService(source: source), generation: generation)
+        #if DEBUG
+            if let board { WizardBoardCaptureSeed.freeze(wizard, board: board) }
+        #endif
+        return wizard
+    }
 }

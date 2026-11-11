@@ -7,7 +7,6 @@
     public struct SignUpView: View {
         @Environment(\.locale) private var locale
         @AccessibilityFocusState private var bannerFocused: Bool
-        @Environment(\.openURL) private var openURL
         @FocusState private var focus: String?
         @State private var model: SignUpModel
         @State private var request: Task<Void, Never>?
@@ -72,20 +71,12 @@
                 AuthButton(copy("Create account"), busy: model.form.busy, action: submit).accessibilityIdentifier(
                     "sign-up.submit"
                 ).authMeasure(.submit, report)
-                Text(consent).font(Typography.authMeta.font).foregroundStyle(ColorToken.mutedForeground.color)
-                    .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true).frame(
-                        maxWidth: .infinity
+                AuthConsent(
+                    text: copy(
+                        "By creating an account you agree to the <terms>terms</terms> and <privacy>privacy policy</privacy>."
                     )
-                    .environment(
-                        \.openURL,
-                        OpenURLAction { url in
-                            guard [AuthPolicy.terms.url, AuthPolicy.privacy.url].contains(url) else {
-                                return .discarded
-                            }
-                            openURL(url)
-                            return .handled
-                        }
-                    ).accessibilityIdentifier("sign-up.consent").authMeasure(.consent, report)
+                )
+                .accessibilityIdentifier("sign-up.consent").authMeasure(.consent, report)
             } footer: {
                 AuthButton(copy("Already have an account? Sign in"), kind: .footer, action: back)
                     .accessibilityIdentifier("sign-up.back")
@@ -118,27 +109,6 @@
             case "sign-up.confirmation": frames[.confirmation]
             default: nil
             }
-        }
-        private var consent: AttributedString {
-            let template = copy(
-                "By creating an account you agree to the <terms>terms</terms> and <privacy>privacy policy</privacy>.")
-            var result = AttributedString()
-            var remaining = template[...]
-            while let opening = remaining.firstIndex(of: "<"), let end = remaining[opening...].firstIndex(of: ">") {
-                result += AttributedString(String(remaining[..<opening]))
-                let tag = String(remaining[remaining.index(after: opening)..<end])
-                guard let policy = AuthPolicy(rawValue: tag), let closing = remaining.range(of: "</" + tag + ">") else {
-                    break
-                }
-                var link = AttributedString(String(remaining[remaining.index(after: end)..<closing.lowerBound]))
-                link.link = policy.url
-                link.foregroundColor = ColorToken.foreground.color
-                link.underlineStyle = .single
-                result += link
-                remaining = remaining[closing.upperBound...]
-            }
-            result += AttributedString(String(remaining))
-            return result
         }
         private func report(_ element: AuthElement, _ rect: CGRect) {
             if frames[element] != rect { frames[element] = rect }

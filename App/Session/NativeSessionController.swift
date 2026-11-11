@@ -17,6 +17,8 @@ final class NativeSessionController {
     private var reminderEvents: Task<Void, Never>?
     private let timeObservers: ReminderTimeObservers
     let wiper: AccountWiper
+    let guestSecrets: any GuestSecretStore
+    let guestWizardStore: GuestWizardStore
     lazy var readiness = StoredDataReadiness(controller: controller) { [accounts] id in
         guard let database = await accounts.activeDatabase() else { throw StoreFailure.closed }
         return try await AccountReadinessRepository(database: database).values(accountID: id)
@@ -27,6 +29,7 @@ final class NativeSessionController {
 
     init(
         applicationSupport: URL, namespace: StorageNamespace, credentials: (any SessionStore)? = nil,
+        guestSecrets: (any GuestSecretStore)? = nil,
         reminderCenter: any ReminderNotificationCenter = SystemReminderCenter(),
         accountStore: (@MainActor (SessionAccountDatabase) -> any SessionAccountStore)? = nil,
         syncScheduler: SyncScheduler = SyncScheduler(),
@@ -51,6 +54,9 @@ final class NativeSessionController {
         }
         self.accounts = accounts
         let credentials = credentials ?? KeychainSessionStore(namespace: namespace)
+        let guestSecrets = guestSecrets ?? KeychainGuestSecretStore(namespace: namespace)
+        self.guestSecrets = guestSecrets
+        guestWizardStore = GuestWizardStore(applicationSupport: applicationSupport, namespace: namespace)
         let reference = SessionControllerReference()
         let sync = source.map {
             SessionSync(
@@ -65,7 +71,9 @@ final class NativeSessionController {
                 }, verification: verification)
         }
         self.sync = sync
-        let wiper = AccountWiper(applicationSupport: applicationSupport, namespace: namespace, credentials: credentials)
+        let wiper = AccountWiper(
+            applicationSupport: applicationSupport, namespace: namespace, credentials: credentials,
+            guestSecrets: guestSecrets)
         self.wiper = wiper
         var teardown = SessionTeardown()
         teardown.prepare = {
@@ -117,6 +125,16 @@ final class NativeSessionController {
     }
 
     func routeAcceptedSession(
+        _ result: SessionResult, method: AuthenticationMethod,
+        navigator: RootNavigator, verification: @escaping @MainActor (UInt64) async -> Void
+    ) async throws {
+        observeGates(navigator: navigator, verification: verification)
+        try await GuestSessionAcceptance(guest: guestWizardStore, secrets: guestSecrets).routeAcceptedSession(
+            result, method: method, controller: controller, accounts: accounts, readiness: readiness,
+            navigator: navigator, verification: verification)
+    }
+
+    func routeAcceptedSession(
         navigator: RootNavigator, verification: @escaping @MainActor (UInt64) async -> Void
     ) async {
         observeGates(navigator: navigator, verification: verification)
@@ -134,6 +152,7 @@ final class NativeSessionController {
     func setActive(_ active: Bool) async {
         await sync?.setEnabled(active)
         if active {
+            _ = try? await guestWizardStore.recover()
             await reminders.reschedule()
             do { try await controller.retryUnauthorized() } catch { return }
             await readiness.retry()

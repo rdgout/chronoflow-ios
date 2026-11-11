@@ -16,6 +16,7 @@
         @Bindable var model: MemberWizardModel
         let dismiss: () -> Void
         let saved: (String) -> Void
+        let signUpRequested: () -> Void
         @State var confirmingDiscard = false
         @State var continuing = false
         @State var closing = false
@@ -29,11 +30,13 @@
         @State var copyFormatter: CopyLineFormatter?
 
         public init(
-            model: MemberWizardModel, saved: @escaping (String) -> Void = { _ in }, dismiss: @escaping () -> Void
+            model: MemberWizardModel, saved: @escaping (String) -> Void = { _ in },
+            signUpRequested: @escaping () -> Void = {}, dismiss: @escaping () -> Void
         ) {
             self.model = model
             self.dismiss = dismiss
             self.saved = saved
+            self.signUpRequested = signUpRequested
         }
 
         var requestedErrorScroll: Int {
@@ -97,6 +100,9 @@
                     saved(id)
                 }
             }
+            .onChange(of: model.saveOutcome) { _, outcome in
+                if outcome == .signUpRequested { signUpRequested() }
+            }
             .sheet(
                 isPresented: Binding(
                     get: { model.draft.state.promptSheetID != nil }, set: { if !$0 { model.openPrompt(nil) } })
@@ -115,7 +121,11 @@
                 Button(t("Keep editing"), role: .cancel) {}
                 Button(t("Discard"), role: .destructive) { close() }
             } message: {
-                Text(t("What you entered is not saved."))
+                Text(
+                    t(
+                        model.mode == .guest
+                            ? "What you entered is not saved. You go back to the welcome screen."
+                            : "What you entered is not saved."))
             }
         }
 
@@ -137,7 +147,7 @@
                         if home || model.draft.state.revisit != nil {
                             model.finishFlightInput()
                         } else {
-                            model.go(.returnChoice)
+                            model.finishOutboundStep()
                         }
                     } else {
                         UINotificationFeedbackGenerator().notificationOccurred(.warning)

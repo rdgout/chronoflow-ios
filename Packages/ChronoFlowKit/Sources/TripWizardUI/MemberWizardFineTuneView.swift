@@ -97,29 +97,32 @@
                             }
                             Text(model.draft.form.preparation.days.formatted(.number.locale(locale))).monospacedDigit()
                         }.padding(PlanUITokens.space4).accessibilityIdentifier("wizard.preparation")
-                        Divider().overlay(ColorToken.border.color)
-                        Toggle(
-                            t("Use different sleep times for this trip"),
-                            isOn: Binding(
-                                get: { model.draft.form.override.enabled },
-                                set: { enabled in
-                                    UISelectionFeedbackGenerator().selectionChanged()
-                                    model.editForm { form in
-                                        form.override.enabled = enabled
-                                        if enabled {
-                                            form.override.habitualBed =
-                                                form.override.habitualBed ?? model.draft.state.profile["habitual_bed"]?
-                                                .string ?? model.draft.state.savedProfile?["habitualBed"]?.string
-                                            form.override.habitualWake =
-                                                form.override.habitualWake ?? model.draft.state.profile[
-                                                    "habitual_wake"]?
-                                                .string ?? model.draft.state.savedProfile?["habitualWake"]?.string
+                        if model.allowsSleepOverride {
+                            Divider().overlay(ColorToken.border.color)
+                            Toggle(
+                                t("Use different sleep times for this trip"),
+                                isOn: Binding(
+                                    get: { model.draft.form.override.enabled },
+                                    set: { enabled in
+                                        UISelectionFeedbackGenerator().selectionChanged()
+                                        model.editForm { form in
+                                            form.override.enabled = enabled
+                                            if enabled {
+                                                form.override.habitualBed =
+                                                    form.override.habitualBed ?? model.draft.state.profile[
+                                                        "habitual_bed"]?
+                                                    .string ?? model.draft.state.savedProfile?["habitualBed"]?.string
+                                                form.override.habitualWake =
+                                                    form.override.habitualWake ?? model.draft.state.profile[
+                                                        "habitual_wake"]?
+                                                    .string ?? model.draft.state.savedProfile?["habitualWake"]?.string
+                                            }
                                         }
-                                    }
-                                })
-                        ).padding(PlanUITokens.space4).tint(ColorToken.dawn.color).accessibilityIdentifier(
-                            "wizard.sleep-override")
-                        if model.draft.form.override.enabled {
+                                    })
+                            ).padding(PlanUITokens.space4).tint(ColorToken.dawn.color).accessibilityIdentifier(
+                                "wizard.sleep-override")
+                        }
+                        if model.allowsSleepOverride, model.draft.form.override.enabled {
                             overrideTime("Bedtime on this trip", wake: false)
                             overrideTime("Wake-up on this trip", wake: true)
                             Text(t("Only for this trip. Your usual sleep stays saved."))

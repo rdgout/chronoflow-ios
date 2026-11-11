@@ -3,6 +3,7 @@ import DataAccess
 import DesignSystem
 import Launch
 import SwiftUI
+import TripWizard
 import UIKit
 import UserNotifications
 
@@ -23,6 +24,8 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     let signposts = LaunchSignposts()
     private var exitSignpostTask: Task<Void, Never>?
     private var introSignpostTask: Task<Void, Never>?
+    private var guestRecoveryTask: Task<Void, Never>?
+    private var checkedGuestRecovery = false
     private(set) var launchIntro: LaunchIntro?
     private var allowsIntro = false
     var serviceConfigurationFactory: (@Sendable () async throws -> (AppServices, URL?))?
@@ -288,6 +291,8 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 app.uiTestArguments = [ProcessInfo.processInfo.arguments[0]] + command.arguments
                 app.navigator = RootNavigator()
                 navigator = app.navigator
+                guestRecoveryTask?.cancel()
+                checkedGuestRecovery = false
                 serviceFailure = nil
                 serviceConfiguration = try await Task.detached {
                     try await AppServices.uiTestLaunchConfiguration(
@@ -545,6 +550,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 app?.authWindow = window
                 window.makeKeyAndVisible()
                 consumePendingReminderIntent()
+                scheduleGuestRecovery()
             }
         }
     }
@@ -557,6 +563,35 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 try await clock.sleep(until: start + .milliseconds(900))
                 self?.signposts.end(.intro)
             } catch { self?.signposts.end(.intro) }
+        }
+    }
+
+    private func scheduleGuestRecovery() {
+        guard !checkedGuestRecovery, window != nil, overlayWindow == nil, navigator.route == .welcome,
+            let nativeSession, launchIntro?.frozenTime == nil
+        else { return }
+        checkedGuestRecovery = true
+        let revision = navigator.revision
+        let generation = connectionGeneration
+        let intro = launchIntro
+        guestRecoveryTask = Task { [weak self] in
+            do {
+                if let intro { try await intro.clock.sleep(until: intro.start + .milliseconds(900)) }
+                guard let self, !Task.isCancelled, connectionGeneration == generation,
+                    navigator.revision == revision, navigator.route == .welcome,
+                    await nativeSession.controller.presence == .signedOut
+                else { return }
+                let decision = try await nativeSession.guestWizardStore.recoveryDecision(
+                    handoffFinished: true, introFinished: true)
+                guard !Task.isCancelled, connectionGeneration == generation, navigator.revision == revision else {
+                    return
+                }
+                switch decision {
+                case .wizard: navigator.navigate(to: .guestWizard)
+                case .signIn: navigator.navigate(to: .signIn)
+                case .none, .wait, .expire: break
+                }
+            } catch { return }
         }
     }
 
@@ -601,6 +636,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             await (UIApplication.shared.delegate as? AppDelegate)?.verificationRequired(epoch: epoch)
         }
         consumePendingReminderIntent()
+        scheduleGuestRecovery()
         #if DEBUG
             if let window, window.rootViewController?.viewIfLoaded != nil {
                 window.layoutIfNeeded()
@@ -686,6 +722,8 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         exitSignpostTask = nil
         introSignpostTask?.cancel()
         introSignpostTask = nil
+        guestRecoveryTask?.cancel()
+        guestRecoveryTask = nil
         launchIntro = nil
         window?.isHidden = true
         window = nil
