@@ -70,7 +70,7 @@ public struct TripPageView: View {
                 page
             }
         }
-        .planRefreshFeedback(feedback)
+        .planRefreshFeedback(feedback).planPageSafeArea()
         .foregroundStyle(ColorToken.foreground.color).background(ColorToken.background.color)
         #if os(iOS)
             .background { TripWindowSizeHost(willChange: scroll.beginResize) { windowSize = $0 } }

@@ -12,12 +12,6 @@ extension EnvironmentValues {
 }
 
 public nonisolated enum PlanPageGeometry {
-    public static func safeBounds(measured: CGRect, inherited: CGRect?) -> CGRect {
-        let measured = horizontalBounds(measured)
-        guard let inherited else { return measured }
-        return measured.intersection(horizontalBounds(inherited))
-    }
-
     public static func horizontalBounds(_ frame: CGRect, leading: CGFloat = 0, trailing: CGFloat = 0) -> CGRect {
         CGRect(x: frame.minX + leading, y: 0, width: max(0, frame.width - leading - trailing), height: 1)
     }
@@ -37,20 +31,16 @@ extension View {
 }
 
 private struct PlanPageSafeArea: ViewModifier {
-    @Environment(\.planPageSafeBounds) private var inheritedBounds
     @State private var bounds: CGRect?
 
     func body(content: Content) -> some View {
-        content.environment(
-            \.planPageSafeBounds,
-            bounds.map { PlanPageGeometry.safeBounds(measured: $0, inherited: inheritedBounds) } ?? inheritedBounds
-        )
-        .onGeometryChange(for: CGRect.self) {
-            PlanPageGeometry.horizontalBounds(
-                $0.frame(in: .global), leading: $0.safeAreaInsets.leading, trailing: $0.safeAreaInsets.trailing)
-        } action: {
-            bounds = $0
-        }
+        content.environment(\.planPageSafeBounds, bounds)
+            .onGeometryChange(for: CGRect.self) {
+                PlanPageGeometry.horizontalBounds(
+                    $0.frame(in: .global), leading: $0.safeAreaInsets.leading, trailing: $0.safeAreaInsets.trailing)
+            } action: {
+                bounds = $0
+            }
     }
 }
 
