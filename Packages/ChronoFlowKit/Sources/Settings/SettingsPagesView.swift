@@ -24,6 +24,9 @@
                 VStack(alignment: .leading, spacing: spacing) {
                     content
                 }
+                // On the content, not the ScrollView: its vertical padding would detach the scroll view from the
+                // navigation bar, which then never fades the large title in after a push.
+                .settingsFont(Typography.screenBodyLg)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, PlanUITokens.space4)
                 .padding(.top, PlanUITokens.space1)
@@ -34,7 +37,6 @@
             .planPageSafeArea()
             .background(ColorToken.background.color)
             .foregroundStyle(ColorToken.cardForeground.color).tint(ColorToken.primary.color)
-            .settingsFont(Typography.screenBodyLg)
             .navigationTitle(SettingsStrings.text(title, language: language))
             .navigationBarTitleDisplayMode(.large)
             .accessibilityElement(children: .contain).accessibilityIdentifier(identifier)
