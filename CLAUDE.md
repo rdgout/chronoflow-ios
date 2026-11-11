@@ -18,6 +18,12 @@ Every Codex brief that adds or changes tests must point to the **Tests** rules i
 - Keep only these: the main checkout, the stack top, worktrees with active work, and `chronoflow-ios-phone` (it holds the ignored device-signing `Config/Local.xcconfig`).
 - Delete a finished worktree's `build/` and `.build/` along with it, and don't keep old DerivedData or result bundles around in the worktrees you keep.
 
+**Remove stale simulators after each branch** (user, 2026-11-11). On 2026-11-11, Xcode's parallel-testing clones in `~/Library/Developer/XCTestDevices` had grown to 203 GB; Xcode never deletes them.
+- When a branch's tests are done, and before ending the session, check that no test run is active (`pgrep -fl 'xcodebuild|launch-simulators'`), then run `xcrun simctl --set ~/Library/Developer/XCTestDevices delete all` (Xcode recreates the clones on the next parallel run).
+- Also delete any simulator created for that branch only (`xcrun simctl delete <udid>`), and run `xcrun simctl delete unavailable`.
+- Keep the regular iOS 27.2 devices, the Duo device and `ChronoFlow 17e Isolated`; the runner needs them. Use `make sim-clean` only when those grow large.
+- Check `du -sh ~/Library/Developer/XCTestDevices ~/Library/Developer/CoreSimulator/Devices` and report it with the cleanup.
+
 ## Commands
 
 `make generate` creates the ignored project. `Scripts/ci.sh` runs `make generate check`.
