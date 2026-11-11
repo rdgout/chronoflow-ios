@@ -103,7 +103,10 @@
 
     @MainActor final class PlanMeasuredContent {
         private var measurements: [UUID: (identifier: String?, frame: CGRect)] = [:]
+        private var revisions: [String: Int] = [:]
         var frames: [CGRect] { measurements.values.map(\.frame) }
+
+        func revision(for identifier: String) -> Int { revisions[identifier, default: 0] }
 
         func frame(for identifier: String) -> CGRect? {
             let matches = measurements.values.filter { $0.identifier == identifier }
@@ -113,6 +116,7 @@
         func record(_ identity: UUID, _ identifier: String?, _ frame: CGRect?) {
             if let frame, !frame.isEmpty, !frame.isNull, !frame.isInfinite {
                 measurements[identity] = (identifier, frame)
+                if let identifier { revisions[identifier, default: 0] += 1 }
             } else {
                 measurements[identity] = nil
             }

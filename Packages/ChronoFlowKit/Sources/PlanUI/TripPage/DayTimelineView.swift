@@ -111,6 +111,7 @@ public struct DayTimelineView: View {
                 onBlock(zone.block.id)
             }
         }
+        .planContentBounds(identifier: "trip.timeline.\(day.id)")
         .accessibilityElement(children: .contain).accessibilityLabel(copy("Plan timeline"))
         .accessibilityIdentifier(drawing == nil ? "trip.timeline.preparing" : "trip.timeline.ready")
         .accessibilityChildren {

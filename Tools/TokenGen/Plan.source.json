@@ -1,5 +1,5 @@
 {
-  "source": "plan.md Phase 14b and fix round 1; Plan board compact/tile styles; RN DayTimeline compact window threshold space(160), tileModel and Notice spacing references",
+  "source": "plan.md Phase 14b and fix round 1; Plan board compact/tile styles; RN DayTimeline compact window threshold space(160), tileModel and Notice spacing references; reqWideTrip (canvas.json, 2 Nov), PlanWide and PlanRemoteWide (10 Nov export)",
   "type": {
     "planTitle": {
       "size": 17,
@@ -106,7 +106,25 @@
     "blockIcon": 3.5,
     "detailsThreshold": 19,
     "zonePillPadding": 2,
-    "zonePillVerticalPadding": 0.5
+    "zonePillVerticalPadding": 0.5,
+    "wideBreakpoint": 150,
+    "wideLargeBreakpoint": 225,
+    "wideListWidth": 70,
+    "wideLargeListWidth": 80,
+    "wideColumnGap": 4,
+    "wideGutter": 5,
+    "wideListMaxHeight": 175,
+    "wideSkeletonHeight": 90,
+    "wideSkeletonDayHeight": 16,
+    "wideSkeletonPillWidth": 22,
+    "wideRemoteBodyWidth": 105,
+    "wideRemotePadding": 7,
+    "wideSkeletonLightHeight": 22.5,
+    "wideSkeletonTravelHeight": 27.5,
+    "wideSkeletonLightOffset": 15,
+    "wideSkeletonCaffeineOffset": 37.5,
+    "wideSkeletonTravelOffset": 50,
+    "wideRemoteIcon": 13
   },
   "spacingTokens": {
     "minTileHeight": "space-6",
