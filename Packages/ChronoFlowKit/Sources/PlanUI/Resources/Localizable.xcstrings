@@ -1552,6 +1552,166 @@
           }
         }
       }
+    },
+    "%@ → %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ → %@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ → %@"
+          }
+        }
+      }
+    },
+    "via %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "via %@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "via %@"
+          }
+        }
+      }
+    },
+    "with return": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "with return"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "met terugreis"
+          }
+        }
+      }
+    },
+    "Edit trip": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit trip"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reis bewerken"
+          }
+        }
+      }
+    },
+    "Duplicate trip": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duplicate trip"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reis dupliceren"
+          }
+        }
+      }
+    },
+    "Same flights and answers, new dates": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Same flights and answers, new dates"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dezelfde vluchten en antwoorden, nieuwe datums"
+          }
+        }
+      }
+    },
+    "Needs a connection.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs a connection."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbinding nodig."
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuleren"
+          }
+        }
+      }
+    },
+    "We could not duplicate this trip. Try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We could not duplicate this trip. Try again."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We konden deze reis niet dupliceren. Probeer het opnieuw."
+          }
+        }
+      }
+    },
+    "Something went wrong on our side. Try again in a moment.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Something went wrong on our side. Try again in a moment."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er ging iets mis bij ons. Probeer het zo opnieuw."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

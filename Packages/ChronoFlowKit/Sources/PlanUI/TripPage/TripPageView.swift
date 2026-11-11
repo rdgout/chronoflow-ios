@@ -234,6 +234,7 @@ public struct TripPageView: View {
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button(copy("Trip actions"), systemImage: "ellipsis") { onActions?() }.disabled(onActions == nil)
+                        .accessibilityIdentifier("trip.actions.open")
                 }
             }
             #if os(iOS)

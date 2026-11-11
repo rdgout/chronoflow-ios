@@ -4,6 +4,8 @@ import Observation
 
 public protocol MemberWizardGeneration: Sendable {
     func review(instance: String, input: ApiTripReviewInput) async throws -> TripGenerationReviewResult
+    func review(instance: String, input: ApiTripReviewInput, edit: TripEditContext?) async throws
+        -> TripGenerationReviewResult
     func save(_ state: TripGenerationState, didCreate: @escaping @Sendable (String) async throws -> Void) async throws
         -> TripGenerationSaveResult
     func cancelReviews(instance: String) async
@@ -11,6 +13,13 @@ public protocol MemberWizardGeneration: Sendable {
 }
 
 extension MemberWizardGeneration {
+    public func review(instance: String, input: ApiTripReviewInput, edit: TripEditContext?) async throws
+        -> TripGenerationReviewResult
+    {
+        guard edit == nil else { throw DataFailure.server(status: nil) }
+        return try await review(instance: instance, input: input)
+    }
+
     public func save(_ state: TripGenerationState, didCreate: @escaping @Sendable (String) async throws -> Void)
         async throws -> TripGenerationSaveResult
     {
@@ -44,6 +53,7 @@ public final class MemberWizardModel {
     @ObservationIgnored var resumed = false
     #if DEBUG
         public internal(set) var boardAnswerError: String?
+        public internal(set) var boardDiscardConfirmation = false
         @ObservationIgnored var boardFrozen = false
     #endif
     let generation: (any MemberWizardGeneration)?

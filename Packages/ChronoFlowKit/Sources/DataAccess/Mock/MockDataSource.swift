@@ -870,7 +870,13 @@ extension MockDataSource {
         guard currentReview.canSave else { throw DataFailure.notEnoughCredits }
         try limit("trip-save:" + owner, count: 10)
         let id = tripID ?? identity.draftToken
-        let (item, detail, input) = try MockTripGeneration.saved(draft, tripID: id)
+        var (item, detail, input) = try MockTripGeneration.saved(draft, tripID: id)
+        if let tripID, let previous = state!.accounts[owner]!.details[tripID] {
+            detail.checkState.marks = previous.checkState.marks.filter { mark in
+                detail.plan.blocks.contains { $0.actionable && $0.checkKey == mark.key }
+            }
+            item.checkState = detail.checkState
+        }
         let previousPaid = wizardPaidDirections(owner: owner, tripID: tripID)
         try update { state in
             state.accounts[owner]!.trips.removeAll { $0.card.id == id }

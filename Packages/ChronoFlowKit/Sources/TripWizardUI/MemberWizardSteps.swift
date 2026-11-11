@@ -68,7 +68,7 @@
                     VStack(spacing: PlanUITokens.wizardControlGap) {
                         if id == "excluded" || (id == "checking" && model.checking.failure != nil) {
                             Button(t("Close")) {
-                                if id == "excluded" || model.mode == .guest {
+                                if id == "excluded" || model.mode == .guest || !model.hasChanges {
                                     close()
                                 } else {
                                     confirmingDiscard = true
@@ -108,7 +108,7 @@
                 } else if id == "ready", model.credits == .unavailable {
                     VStack(spacing: 0) {
                         Button {
-                            if model.mode == .guest { close() } else { confirmingDiscard = true }
+                            if model.mode == .guest || !model.hasChanges { close() } else { confirmingDiscard = true }
                         } label: {
                             Text(t("Close")).frame(maxWidth: .infinity, minHeight: AuthTokens.touch)
                         }
@@ -128,13 +128,13 @@
             .frame(maxWidth: PlanUITokens.wizardColumnWidth).frame(maxWidth: .infinity)
             .background { ColorToken.background.color.ignoresSafeArea() }
             .foregroundStyle(ColorToken.foreground.color)
-            .navigationTitle(t("New trip")).navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(t(model.isEditing ? "Edit trip" : "New trip")).navigationBarTitleDisplayMode(.inline)
             .toolbarRole(.editor)
             .navigationBarBackButtonHidden(id == "calculating" || (id == "checking" && model.checking.failure == nil))
             .background { if id == "checking" { WizardSwipeBack() } }
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Text(t("New trip")).font(Typography.wizardNavTitle.font)
+                    Text(t(model.isEditing ? "Edit trip" : "New trip")).font(Typography.wizardNavTitle.font)
                         .foregroundStyle(ColorToken.mutedForeground.color)
                 }
                 if id != "calculating" {
@@ -142,7 +142,7 @@
                         Button {
                             if model.mode == .guest && id == "excluded" {
                                 close()
-                            } else if model.draft.state.entered {
+                            } else if model.hasChanges {
                                 confirmingDiscard = true
                             } else {
                                 close()
@@ -206,7 +206,9 @@
                             model.draft.form.end.kind == "nights"
                             ? t("Ends after {{count}} nights", ["count": String(model.draft.form.end.nights ?? 0)])
                             : WizardPresentation.returnSummary(
-                                model.draft.form, stayEnd: model.draft.state.review?.summary?.stayEnd, locale: locale,
+                                model.draft.form,
+                                stayEnd: model.draft.state.review?.summary?.stayEnd
+                                    ?? model.draft.state.snapshotStayEnd, locale: locale,
                                 t: t)
                         choice(
                             title, hint: "Set on the website. Keep it, or add your flight home.", selected: true,
@@ -222,7 +224,9 @@
                         model.chooseReturn("one_way")
                     }
                     choice(
-                        "Add my return flight", hint: "We plan the shift back home too",
+                        "Add my return flight",
+                        hint: model.isEditing && model.draft.state.originalForm?.end.kind != "return_legs"
+                            ? "We plan the shift back home too · 1 credit" : "We plan the shift back home too",
                         selected: model.choicePending && model.draft.form.end.kind == "return_legs", id: "add-return",
                         enabled: model.draft.form.end.kind == "return_legs"
                             || model.draft.form.legs.count < WizardForm.maxFlights

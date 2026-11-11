@@ -5,10 +5,15 @@ public struct TripGenerationReviewResult: Sendable, Equatable {
     public let input: ApiTripReviewInput
     public let review: ApiTripReview
     public let edit: TripEditContext?
-    public init(input: ApiTripReviewInput, review: ApiTripReview, edit: TripEditContext? = nil) {
+    public let sourceSnapshot: ApiTripInputSnapshot?
+    public init(
+        input: ApiTripReviewInput, review: ApiTripReview, edit: TripEditContext? = nil,
+        sourceSnapshot: ApiTripInputSnapshot? = nil
+    ) {
         self.input = input
         self.review = review
         self.edit = edit
+        self.sourceSnapshot = sourceSnapshot
     }
 }
 
@@ -16,6 +21,7 @@ extension TripGenerationService {
     private struct ReviewRequest {
         var input: ApiTripReviewInput
         var edit: TripEditContext?
+        var snapshot: ApiTripInputSnapshot?
     }
 
     nonisolated static func performReview(
@@ -38,7 +44,8 @@ extension TripGenerationService {
             }
         }
         request.input.identity = review.identity
-        return TripGenerationReviewResult(input: request.input, review: review, edit: request.edit)
+        return TripGenerationReviewResult(
+            input: request.input, review: review, edit: request.edit, sourceSnapshot: request.snapshot)
     }
 
     private nonisolated static func refreshSource(_ original: ReviewRequest, source: any DataSource) async throws
@@ -50,6 +57,7 @@ extension TripGenerationService {
         try Task.checkCancellation()
         guard snapshot.sourceRevision != edit.sourceRevision else { return original }
         var request = original
+        request.snapshot = snapshot
         request.input.input = snapshot.input
         request.input.identity = nil
         request.input.profile = nil

@@ -205,7 +205,7 @@
                     canSave: false,
                     itinerary: ApiReviewItinerary(legs: [], layovers: []))
             }
-            return WizardCompletionBoardSeed.apply(draft, board: board)
+            return TripWizardActionsBoardSeed.apply(WizardCompletionBoardSeed.apply(draft, board: board), board: board)
         }
 
         static func freeze(_ model: MemberWizardModel, board: String) {
@@ -215,12 +215,12 @@
                     answerError: board == "WizardSheetBlueError"
                         ? "Enter a rating between 0.1 and 9.9."
                         : board == "WizardSheetDrinksError" ? "Add at least one drink to save this answer." : nil,
-                    retry: board == "WizardSaveThrottle" ? 42 : 0)
+                    retry: board == "WizardSaveThrottle" ? 42 : 0, discardConfirmation: board == "WizardDiscardEdit")
             }
             let failure: DataFailure? =
-                board == "WizardCheckOffline"
+                (board == "WizardCheckOffline" || board == "WizardCheckOfflineEdit")
                 ? .offline
-                : board == "WizardCheckServer"
+                : (board == "WizardCheckServer" || board == "WizardCheckServerEdit")
                     ? .server(status: 500)
                     : board == "WizardCheckThrottle" ? .throttled(retryAfterSeconds: 42, status: 429) : nil
             if model.draft.state.step == .checking {

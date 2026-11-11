@@ -415,7 +415,9 @@ struct AppTabs: View {
                 tripsPath.removeAll()
                 selection = .today
             },
-            onSettings: { selection = .settings })
+            onSettings: { selection = .settings },
+            prepareWizard: { id, action in try await prepareTripWizard(id: id, action: action) },
+            presentWizard: { wizard = $0 })
     }
 
     private var today: some View {
@@ -480,6 +482,27 @@ struct AppTabs: View {
             .accessibilityElement(children: .contain).accessibilityIdentifier("trips.screen")
         } else {
             seam(.trips)
+        }
+    }
+
+    private func prepareTripWizard(id: String, action: TripWizardAction) async throws -> MemberWizardModel {
+        guard !openingWizard, wizard == nil, let wizardStore, let airportSearch,
+            let native, let snapshot = await native.controller.activeSession(),
+            let source = await native.wizardDataSource(session: snapshot.session)
+        else { throw CancellationError() }
+        openingWizard = true
+        defer { openingWizard = false }
+        let generation = try await native.wizardGenerationService(snapshot: snapshot)
+        do {
+            let draft = try await wizardStore.startTrip(id: id, action: action, source: source)
+            guard !Task.isCancelled, self.wizardStore === wizardStore,
+                await native.controller.activeSession() == snapshot
+            else { throw CancellationError() }
+            wizardGeneration = generation
+            return MemberWizardModel(draft: draft, store: wizardStore, search: airportSearch, generation: generation)
+        } catch {
+            await generation.cancel()
+            throw error
         }
     }
 

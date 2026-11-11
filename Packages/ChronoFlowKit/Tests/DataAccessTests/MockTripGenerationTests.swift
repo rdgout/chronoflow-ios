@@ -87,6 +87,13 @@ import Testing
         #expect(try await source.searchAirports(query: "zz").isEmpty)
         let review = try await source.reviewTrip(ApiTripReviewInput(input: wizardInput(), profile: wizardProfile()))
         let saved = try await source.saveTrip(identity: ApiTripSaveInput(identity: review.identity))
+        let detail = try await source.fetchTripDetail(id: saved.tripId)
+        let key = try #require(detail.plan.blocks.first { $0.actionable && $0.checkKey != nil }?.checkKey)
+        _ = try await source.send(
+            .checkOff(
+                CheckOffChange(
+                    tripID: saved.tripId, planInputHash: detail.plan.meta.inputHash, type: key.type,
+                    localDate: key.localDate, ordinal: key.ordinal, status: .done)))
         let snapshot = try await source.tripInput(id: saved.tripId)
         var input = snapshot.input
         input.preparationDays = 1
@@ -105,6 +112,10 @@ import Testing
                 == saved)
         #expect(try await source.tripInput(id: saved.tripId).input.preparationDays == 1)
         #expect(try await source.tripInput(id: saved.tripId).sourceRevision != snapshot.sourceRevision)
+        #expect(
+            try await source.fetchTripDetail(id: saved.tripId).checkState.marks.contains {
+                $0.key == key && $0.status == .done
+            })
     }
 
     @Test func seededTripInputsAndExpiredDrafts() async throws {

@@ -322,15 +322,25 @@ extension MockTripGeneration {
                 seatLieFlat: false, stay: ApiTripInputStay(lateCheckOutOrDayRoom: false, busyIntervals: []))
             if leg.returnLeg { returning.append(input) } else { outbound.append(input) }
         }
-        let input = ApiTripInput(
+        var input = ApiTripInput(
             outbound: ApiTripInputJourney(legs: outbound),
             return: returning.isEmpty ? nil : ApiTripInputJourney(legs: returning),
             tripEndKind: returning.isEmpty ? "one_way" : "return_legs",
-            preparationDays: detail.plan.summary?.preparation.emitted ?? 0, fastDelayOptIn: false,
+            preparationDays: detail.plan.summary?.preparation.days ?? 0, fastDelayOptIn: false,
             override: ApiTripInputOverride(use: false), preDepartureBusyAnswered: false, preDepartureBusyIntervals: [])
+        if returning.isEmpty, let end = detail.plan.meta.assumedReturn {
+            if end.basis == .nights {
+                input.tripEndKind = "nights"
+                input.tripEndNights = end.nights
+            } else if end.basis == .checkOut {
+                input.tripEndKind = "check_out"
+                input.tripEndCheckOutDate = String(local(end.leaveUtc, zone: detail.trip.to.zone).prefix(10))
+            }
+        }
         let used = Set(detail.trip.legs.flatMap { [$0.from.iata, $0.to.iata] })
         return ApiTripInputSnapshot(
-            input: input, sourceRevision: detail.plan.meta.inputHash, airports: lookup.filter { used.contains($0.key) })
+            input: input, sourceRevision: detail.plan.meta.inputHash, airports: lookup.filter { used.contains($0.key) },
+            stayEnd: try stayEnd(input))
     }
 }
 

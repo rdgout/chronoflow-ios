@@ -42,11 +42,7 @@ extension MemberWizardModel {
             identity: draft.form.identity, profile: draft.state.profile.fields.isEmpty ? nil : draft.state.profile)
     }
     public var inputFingerprint: Data {
-        var input = reviewInput
-        input.identity = nil
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = .sortedKeys
-        return (try? encoder.encode(input)) ?? Data()
+        draft.inputFingerprint
     }
     public var optionalPrompts: [ApiReviewPrompt] {
         (draft.state.review?.prompts ?? []).enumerated().filter {
@@ -71,7 +67,7 @@ extension MemberWizardModel {
             || draft.state.reviewedAt.map { now().timeIntervalSince($0) >= 1800 } != false
     }
     public var canSave: Bool {
-        !reviewing && !persistenceFailed && !closed && retrySeconds == 0
+        !reviewing && !persistenceFailed && !closed && retrySeconds == 0 && (!isEditing || hasChanges)
             && (draft.state.savedTripId != nil || draft.state.review?.canSave == true)
     }
 
@@ -113,6 +109,7 @@ extension MemberWizardModel {
     public func revisit(_ step: MemberWizardStep, sleep: Bool = false) {
         guard !reviewing, draft.state.step == .ready else { return }
         draft.state.updated = false
+        draft.state.sourceChange = nil
         draft.state.revisit = inputFingerprint
         draft.state.returnToReady = true
         if mode == .member, sleep, !draft.form.override.enabled {
@@ -183,8 +180,10 @@ extension MemberWizardModel {
     private func reviewInPlace() {
         guard !reviewing, !closed else { return }
         reviewing = true
+        draft.state.sourceChange = nil
         draft.state.returnToReady = true
         let input = reviewInput
+        let edit = draft.state.edit
         let fingerprint = inputFingerprint
         let id = UUID()
         checkID = id
@@ -194,7 +193,7 @@ extension MemberWizardModel {
         reviewTask = Task { [weak self, generation] in
             do {
                 guard let generation else { throw DataFailure.server(status: nil) }
-                let result = try await generation.review(instance: instance, input: input)
+                let result = try await generation.review(instance: instance, input: input, edit: edit)
                 guard let self, !Task.isCancelled, self.checkID == id, !self.closed else { return }
                 self.reviewing = false
                 self.reviewTask = nil
@@ -238,7 +237,7 @@ extension MemberWizardModel {
         let snapshot = draft
         let state = TripGenerationState(
             instance: snapshot.state.instance, input: reviewInput,
-            review: snapshot.state.review, savedTripId: snapshot.state.savedTripId)
+            review: snapshot.state.review, edit: snapshot.state.edit, savedTripId: snapshot.state.savedTripId)
         saveTask = Task { [weak self, generation, store] in
             guard let self else { return }
             await self.flush()

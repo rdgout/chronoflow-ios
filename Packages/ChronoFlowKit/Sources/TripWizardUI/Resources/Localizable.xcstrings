@@ -4311,6 +4311,230 @@
           }
         }
       }
+    },
+    "Edit trip": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit trip"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reis bewerken"
+          }
+        }
+      }
+    },
+    "Edit your trip": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit your trip"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je reis bewerken"
+          }
+        }
+      }
+    },
+    "Update my plan": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update my plan"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mijn plan bijwerken"
+          }
+        }
+      }
+    },
+    "Checking your changes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking your changes"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We bekijken je wijzigingen"
+          }
+        }
+      }
+    },
+    "Your trip stays as it was.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your trip stays as it was."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je reis blijft zoals hij was."
+          }
+        }
+      }
+    },
+    "Discard your changes?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard your changes?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je wijzigingen weggooien?"
+          }
+        }
+      }
+    },
+    "Discard changes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard changes"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wijzigingen verwijderen"
+          }
+        }
+      }
+    },
+    "Copied from {{route}}. Choose the new dates.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copied from {{route}}. Choose the new dates."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gekopieerd van {{route}}. Kies de nieuwe data."
+          }
+        }
+      }
+    },
+    "We plan the shift back home too · 1 credit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We plan the shift back home too · 1 credit"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We plannen ook de verschuiving terug naar huis · 1 credit"
+          }
+        }
+      }
+    },
+    "Removing a flight doesn't give a credit back.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removing a flight doesn't give a credit back."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een vlucht verwijderen levert geen credit op."
+          }
+        }
+      }
+    },
+    "Adding a return flight costs 1 credit, because credits are per direction. Other changes are free.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adding a return flight costs 1 credit, because credits are per direction. Other changes are free."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een terugvlucht toevoegen kost 1 credit, want credits gelden per richting. Andere wijzigingen zijn gratis."
+          }
+        }
+      }
+    },
+    "Changes recalculate the plan. Check-offs on steps that stay in your plan are kept.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changes recalculate the plan. Check-offs on steps that stay in your plan are kept."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wijzigingen berekenen het plan opnieuw. Afgevinkte stappen die in je plan blijven, blijven bewaard."
+          }
+        }
+      }
+    },
+    "Connect to the internet and try again. If you close now, your trip stays as it was.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect to the internet and try again. If you close now, your trip stays as it was."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maak verbinding met internet en probeer het opnieuw. Sluit je nu, dan blijft je reis zoals hij was."
+          }
+        }
+      }
+    },
+    "Something went wrong on our side. Try again in a moment. If you close now, your trip stays as it was.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Something went wrong on our side. Try again in a moment. If you close now, your trip stays as it was."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er ging iets mis bij ons. Probeer het zo opnieuw. Sluit je nu, dan blijft je reis zoals hij was."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

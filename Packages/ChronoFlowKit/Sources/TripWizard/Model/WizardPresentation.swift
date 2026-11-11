@@ -4,8 +4,8 @@ import Foundation
 public enum WizardPresentation {
     public typealias Translate = (String, [String: String]) -> String
 
-    public struct SourceChange: Sendable {
-        public enum Field: Sendable { case route, flight, returnFlight, sleep, extras }
+    public struct SourceChange: Codable, Sendable, Equatable {
+        public enum Field: String, Codable, Sendable { case route, flight, returnFlight, sleep, extras }
         public var form: WizardForm
         public var fields: [Field]
         public var price: ApiReviewPrice?

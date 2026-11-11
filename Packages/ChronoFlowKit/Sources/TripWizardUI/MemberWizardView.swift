@@ -93,6 +93,11 @@
                 if copyFormatter == nil { copyFormatter = try? await CopyLineFormatter(catalog: CopyCatalog.load()) }
                 model.resumeChecking()
                 model.resumeCompletion()
+                #if DEBUG
+                    if model.boardDiscardConfirmation {
+                        confirmingDiscard = true
+                    }
+                #endif
             }
             .onChange(of: model.createdTripID) { _, id in
                 if let id {
@@ -117,15 +122,18 @@
             .sheet(item: Binding(get: { model.draft.state.sheet }, set: { model.openAirport($0) })) { sheet in
                 WizardAirportSearchView(sheet: sheet, model: model)
             }
-            .alert(t("Discard this trip?"), isPresented: $confirmingDiscard) {
+            .alert(t(model.isEditing ? "Discard your changes?" : "Discard this trip?"), isPresented: $confirmingDiscard)
+            {
                 Button(t("Keep editing"), role: .cancel) {}
-                Button(t("Discard"), role: .destructive) { close() }
+                Button(t(model.isEditing ? "Discard changes" : "Discard"), role: .destructive) { close() }
             } message: {
                 Text(
                     t(
-                        model.mode == .guest
-                            ? "What you entered is not saved. You go back to the welcome screen."
-                            : "What you entered is not saved."))
+                        model.isEditing
+                            ? "Your trip stays as it was."
+                            : model.mode == .guest
+                                ? "What you entered is not saved. You go back to the welcome screen."
+                                : "What you entered is not saved."))
             }
         }
 
@@ -140,7 +148,9 @@
                 title: t(
                     home ? "When do you fly home?" : end - start > 1 ? "When are your flights?" : "When is your flight?"
                 ),
-                subtitle: t("Times are local at each airport."), id: home ? "return-flight" : "outbound",
+                subtitle: !home && model.draft.state.copiedRoute != nil && !model.isEditing
+                    ? t("Copied from {{route}}. Choose the new dates.", ["route": model.draft.state.copiedRoute ?? ""])
+                    : t("Times are local at each airport."), id: home ? "return-flight" : "outbound",
                 button: t("Continue"), enabled: home ? model.returnComplete : model.outboundComplete,
                 action: {
                     if home ? model.finishReturn() : model.finishOutbound() {
