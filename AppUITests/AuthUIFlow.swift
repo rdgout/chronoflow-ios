@@ -94,7 +94,8 @@ import XCTest
     static func signIn(_ app: XCUIApplication, email: String) {
         let field = app.textFields["sign-in.email"]
         reveal(field, in: app)
-        field.tap()
+        // A centre tap on a filled field lands on a word boundary; deleting from there leaves the tail.
+        field.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
         if let previous = field.value as? String, previous != field.placeholderValue, !previous.isEmpty {
             field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: previous.count))
         }
@@ -257,7 +258,8 @@ import XCTest
     }
 
     static func reveal(_ element: XCUIElement, in app: XCUIApplication, scroll: XCUIElement? = nil) {
-        if element.isHittable { return }
+        // A partly visible element is hittable; callers that pass their scroll view need it fully visible.
+        if scroll == nil && element.isHittable { return }
         let scroll = scroll ?? self.scroll(containing: element, in: app)
         for _ in 0..<12 {
             do {
