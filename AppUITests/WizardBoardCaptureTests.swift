@@ -41,18 +41,26 @@
                             title.exists && !title.label.isEmpty
                         }, object: nil)
                     XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 5), .completed)
-                    if ["WizardAirportFrom", "WizardAirportHome", "WizardStopSearch"].contains(board) {
-                        app.buttons[
-                            board == "WizardAirportFrom"
-                                ? "wizard.from" : board == "WizardAirportHome" ? "wizard.to" : "wizard.add-stop"
-                        ].tap()
+                    if [
+                        "WizardAirportFrom", "WizardAirportHome", "WizardStopSearch", "WizardStopSearchSecond",
+                        "WizardStopSearchHome",
+                    ].contains(board) {
+                        if board == "WizardStopSearch" || board == "WizardStopSearchHome" {
+                            app.segmentedControls["wizard.route.stops"].buttons[language == "nl" ? "Ja" : "Yes"].tap()
+                        } else {
+                            app.buttons[
+                                board == "WizardAirportFrom"
+                                    ? "wizard.from" : board == "WizardAirportHome" ? "wizard.to" : "wizard.add-stop"
+                            ].tap()
+                        }
                         let search = app.descendants(matching: .any)["wizard.airport.query"].firstMatch
                         XCTAssertTrue(search.waitForExistence(timeout: 5))
                         search.tap()
-                        search.typeText(board == "WizardStopSearch" ? "Du" : "Am")
+                        let stop = board.hasPrefix("WizardStopSearch")
+                        search.typeText(stop ? "Du" : "Am")
                         XCTAssertTrue(
-                            app.buttons[board == "WizardStopSearch" ? "wizard.airport.DXB" : "wizard.airport.AMS"]
-                                .waitForExistence(timeout: 8))
+                            app.buttons[stop ? "wizard.airport.DXB" : "wizard.airport.AMS"].waitForExistence(timeout: 8)
+                        )
                     }
                     if board == "WizardDiscard" {
                         app.buttons["wizard.close"].tap()
@@ -82,9 +90,16 @@
         }
 
         private static func screen(_ board: String) -> String {
-            if board.hasPrefix("WizardWhere") || board == "WizardAirportFrom" { return "wizard.where" }
+            if board.hasPrefix("WizardWhere") || board == "WizardAirportFrom" || board == "WizardStopSearch"
+                || board == "WizardStopSearchSecond"
+            {
+                return "wizard.where"
+            }
+            if board.hasPrefix("WizardHomeRoute") || board == "WizardAirportHome" || board == "WizardStopSearchHome" {
+                return "wizard.return-route"
+            }
             if board == "WizardReturn" || board == "WizardReturnWeb" { return "wizard.return" }
-            if board.hasPrefix("WizardReturnFlight") || board == "WizardAirportHome" { return "wizard.return-flight" }
+            if board.hasPrefix("WizardReturnFlight") { return "wizard.return-flight" }
             if board == "WizardSleep" { return "wizard.sleep" }
             if board.hasPrefix("WizardCheck") { return "wizard.checking" }
             if board.hasPrefix("WizardQ") { return "wizard.question.0" }
@@ -95,7 +110,9 @@
         private static var boards: [String] {
             [
                 "WizardWhereEmpty", "WizardWhere", "WizardWhereSame", "WizardAirportFrom", "WizardAirportHome",
-                "WizardStopSearch",
+                "WizardStopSearch", "WizardStopSearchSecond", "WizardStopSearchHome",
+                "WizardWhereStop", "WizardWhereStops", "WizardHomeRoute", "WizardHomeRouteStop",
+                "WizardOutboundThree", "WizardOutboundTwoErrors", "WizardOutboundStopEmpty",
                 "WizardOutboundEmpty", "WizardOutbound", "WizardOutboundErrors", "WizardOutboundPast",
                 "WizardOutboundStopNew", "WizardOutboundStop", "WizardOutboundOvernight",
                 "WizardReturn", "WizardReturnWeb", "WizardReturnFlight", "WizardReturnFlightPast", "WizardSleep",

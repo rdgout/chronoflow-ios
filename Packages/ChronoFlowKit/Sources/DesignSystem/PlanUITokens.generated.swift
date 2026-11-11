@@ -109,7 +109,7 @@ nonisolated public enum PlanUITokens {
     public static var wizardStopDotGap: CGFloat { 4 }
     public static var wizardStopDotWidth: CGFloat { 2 }
     public static var wizardStopGlyphSize: CGFloat { 14 }
-    public static var wizardStopRemoveSize: CGFloat { 28 }
+    public static var wizardStopRemoveSize: CGFloat { 36 }
     public static var wizardSwapInset: CGFloat { 14 }
     public static var wizardSwapSize: CGFloat { 40 }
 }

@@ -228,7 +228,7 @@ import TripWizard
         #expect(model.draft.form.legs.last?.toIata == model.draft.form.legs[0].fromIata)
         try await eventually { fixture.clock.deadlines.contains(0.25) }
         fixture.clock.advance(to: 0.25)
-        try await eventually { model.draft.state.step == .returnFlight }
+        try await eventually { model.draft.state.step == .returnRoute }
         try await model.discard()
         try await fixture.database.close()
     }

@@ -16,6 +16,8 @@
                     timezone: "Asia/Tokyo"),
                 ApiAirportSuggestion(
                     iata: "DXB", name: "Dubai International", city: "Dubai", country: "AE", timezone: "Asia/Dubai"),
+                ApiAirportSuggestion(
+                    iata: "BKK", name: "Suvarnabhumi", city: "Bangkok", country: "TH", timezone: "Asia/Bangkok"),
             ]
             draft.airports = Dictionary(uniqueKeysWithValues: airports.map { ($0.iata, $0) })
             draft.form = WizardForm()
@@ -35,7 +37,7 @@
             draft.state.step = .outbound
             if board.hasPrefix("WizardWhere") || board == "WizardAirportFrom" {
                 draft.state.step = .whereTo
-                draft.state.fromLastTrip = board == "WizardWhere"
+                draft.state.fromLastTrip = board == "WizardWhere" || board == "WizardWhereSame"
                 if board == "WizardWhereEmpty" || board == "WizardAirportFrom" {
                     draft.form = WizardForm()
                     draft.state.entered = false
@@ -44,6 +46,24 @@
                     draft.form.legs[0].toCity = "Amsterdam"
                 }
             }
+            if ["WizardWhereStop", "WizardWhereStops", "WizardWhereLimit", "WizardStopSearchSecond"].contains(board) {
+                draft.state.step = .whereTo
+                draft.state.fromLastTrip = true
+                draft.form.insertStop(airports[2], beforeDestinationOf: 0)
+                if board == "WizardWhereStops" { draft.form.insertStop(airports[3], beforeDestinationOf: 1) }
+                if board == "WizardWhereLimit" {
+                    while draft.form.legs.count < WizardForm.maxFlights {
+                        draft.form.insertStop(
+                            airports[draft.form.legs.count.isMultiple(of: 2) ? 3 : 2],
+                            beforeDestinationOf: draft.form.returnBoundary - 1)
+                    }
+                }
+                for index in draft.form.legs.indices {
+                    draft.form.legs[index].departLocal = ""
+                    draft.form.legs[index].arriveLocal = ""
+                }
+            }
+            if board == "WizardStopSearch" { draft.state.step = .whereTo }
             if board == "WizardOutboundEmpty" {
                 draft.form.legs[0].departLocal = ""
                 draft.form.legs[0].arriveLocal = ""
@@ -52,9 +72,12 @@
                 draft.form.legs[0].arriveLocal = "2026-10-11T09:15"
                 draft.fieldErrors["legs.0.arriveLocal"] = FieldMessage(key: "Check the departure and arrival times.")
             }
-            if ["WizardOutboundStop", "WizardOutboundStopNew", "WizardOutboundOvernight"].contains(board) {
+            if [
+                "WizardOutboundStop", "WizardOutboundStopNew", "WizardOutboundStopEmpty", "WizardOutboundOvernight",
+                "WizardOutboundThree", "WizardOutboundTwoErrors", "WizardOutboundScrollErrors",
+            ].contains(board) {
                 draft.form.insertStop(airports[2], beforeDestinationOf: 0)
-                if board != "WizardOutboundStopNew" {
+                if board != "WizardOutboundStopNew" && board != "WizardOutboundStopEmpty" {
                     draft.form.legs[0].arriveLocal =
                         board == "WizardOutboundOvernight" ? "2026-10-12T22:25" : "2026-10-12T23:25"
                     draft.form.legs[1].departLocal =
@@ -63,6 +86,31 @@
                         board == "WizardOutboundOvernight" ? "2026-10-14T16:35" : "2026-10-13T16:35"
                 }
             }
+            if board == "WizardOutboundStopEmpty" { draft.form.legs[0].departLocal = "" }
+            if board == "WizardOutboundThree" {
+                draft.form.insertStop(airports[3], beforeDestinationOf: 1)
+                draft.form.legs[1].arriveLocal = "2026-10-13T11:20"
+            }
+            if board == "WizardOutboundTwoErrors" {
+                draft.form.legs[1].arriveLocal = "2026-10-12T16:35"
+                draft.fieldErrors["legs.1.arriveLocal"] = FieldMessage(key: "Check the departure and arrival times.")
+            }
+            if board == "WizardOutboundScrollErrors" {
+                draft.form.insertStop(airports[3], beforeDestinationOf: 1)
+                draft.form.insertStop(airports[2], beforeDestinationOf: 2)
+                draft.form.insertStop(airports[3], beforeDestinationOf: 3)
+                draft.form.legs[0].arriveLocal = "2026-10-11T23:25"
+                draft.form.legs[1].arriveLocal = "2026-10-13T11:20"
+                draft.form.legs[2].departLocal = "2026-10-13T13:00"
+                draft.form.legs[2].arriveLocal = "2026-10-13T17:00"
+                draft.form.legs[3].departLocal = "2026-10-13T19:00"
+                draft.form.legs[3].arriveLocal = "2026-10-14T04:00"
+                draft.form.legs[4].departLocal = "2026-10-14T03:00"
+                draft.form.legs[4].arriveLocal = "2026-10-14T14:30"
+                draft.fieldErrors["legs.0.arriveLocal"] = FieldMessage(key: "Check the departure and arrival times.")
+                draft.fieldErrors["legs.4.departLocal"] = FieldMessage(
+                    key: "This flight leaves before the previous one lands.")
+            }
             if board == "WizardReturn" || board == "WizardReturnWeb" {
                 draft.state.step = .returnChoice
                 if board == "WizardReturnWeb" {
@@ -70,11 +118,20 @@
                     draft.form.end.nights = 9
                 }
             }
-            if board.hasPrefix("WizardReturnFlight") || board == "WizardAirportHome" {
+            if board.hasPrefix("WizardReturnFlight") || board == "WizardAirportHome"
+                || board.hasPrefix("WizardHomeRoute") || board == "WizardStopSearchHome"
+            {
                 draft.form.addReturn()
                 draft.form.legs[1].toIata = "AMS"
                 draft.form.legs[1].toCity = "Amsterdam"
                 draft.state.step = .returnFlight
+                draft.state.returnRouteConfirmed = true
+                if board.hasPrefix("WizardHomeRoute") || board == "WizardAirportHome" || board == "WizardStopSearchHome"
+                {
+                    draft.state.step = .returnRoute
+                    draft.state.returnRouteConfirmed = false
+                    if board == "WizardHomeRouteStop" { draft.form.insertStop(airports[2], beforeDestinationOf: 1) }
+                }
                 if board == "WizardReturnFlightPast" {
                     draft.form.legs[1].departLocal = "2026-10-22T10:25"
                     draft.form.legs[1].arriveLocal = "2026-10-22T15:30"

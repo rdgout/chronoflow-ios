@@ -5,6 +5,7 @@ import PlanUI
 import Settings
 import Sync
 import Testing
+import TripWizard
 
 @testable import DataAccess
 
@@ -78,6 +79,36 @@ import Testing
         let restored = SettingsDevicePreferences(defaults: defaults)
         #expect(restored.theme == .dark && restored.language == .nl)
         #expect(restored.resolvedLocale(phone: Locale(identifier: "en_US")).language.languageCode?.identifier == "nl")
+    }
+
+    @Test(
+        arguments: SettingsDevicePreferences.LanguageChoice.allCases,
+        [
+            "en_US", "en_GB", "nl_NL", "en_US@hours=h23", "nl_NL@hours=h12", "fr_FR@hours=h12",
+        ])
+    func appLanguagePreservesThePhonesHourOverrideForPillsAndPickers(
+        _ language: SettingsDevicePreferences.LanguageChoice, _ phoneIdentifier: String
+    ) throws {
+        let name = "SettingsClockTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: name))
+        defer { defaults.removePersistentDomain(forName: name) }
+        let model = SettingsDevicePreferences(defaults: defaults)
+        model.language = language
+        let phone = Locale(identifier: phoneIdentifier)
+        let locale = model.resolvedLocale(phone: phone)
+        let expectedLanguage = language == .system ? (phoneIdentifier.hasPrefix("nl") ? "nl" : "en") : language.rawValue
+        #expect(locale.language.languageCode?.identifier == expectedLanguage)
+        #expect(locale.hourCycle == phone.hourCycle)
+        let format = try #require(DateFormatter.dateFormat(fromTemplate: "jmm", options: 0, locale: locale))
+        let pill = try #require(WizardDateTime.formatLocal("2027-03-28T14:40", locale: locale))
+        if phone.hourCycle == .oneToTwelve {
+            #expect(format.contains("h") && format.contains("a"))
+            #expect(pill.contains("2:40") && !pill.contains("14:40"))
+        } else {
+            #expect(format.contains("H") && !format.contains("a"))
+            #expect(pill.contains("14:40"))
+        }
+        #expect(pill.lowercased().contains(expectedLanguage == "nl" ? "mrt" : "mar"))
     }
 
     @Test func replaySkipAndDoneReturnToPreferencesWithoutAnotherCompletionWrite() async {

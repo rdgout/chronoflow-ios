@@ -1,7 +1,7 @@
 import Foundation
 
 public enum MemberWizardDestination: Hashable, Sendable {
-    case outbound, returnChoice, returnFlight, sleep, checking
+    case outbound, returnChoice, returnRoute, returnFlight, sleep, checking
     case question(Int)
     case excluded, continuation
 
@@ -9,6 +9,7 @@ public enum MemberWizardDestination: Hashable, Sendable {
         switch self {
         case .outbound: .outbound
         case .returnChoice: .returnChoice
+        case .returnRoute: .returnRoute
         case .returnFlight: .returnFlight
         case .sleep: .sleep
         case .checking: .checking
@@ -26,7 +27,11 @@ extension MemberWizardModel {
         if step == .outbound { return [.outbound] }
         var result: [MemberWizardDestination] = [.outbound, .returnChoice]
         if step == .returnChoice { return result }
-        if draft.form.end.kind == "return_legs" { result.append(.returnFlight) }
+        if draft.form.end.kind == "return_legs" {
+            result.append(.returnRoute)
+            if step == .returnRoute { return result }
+            result.append(.returnFlight)
+        }
         if step == .returnFlight { return result }
         if draft.state.sleepNeeded || draft.state.lastInputStep == .sleep || step == .sleep {
             result.append(.sleep)

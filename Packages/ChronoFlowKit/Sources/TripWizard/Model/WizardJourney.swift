@@ -109,6 +109,19 @@ extension WizardForm {
 }
 
 public enum WizardJourney {
+    public static func errorStep(_ errors: [String: FieldMessage], form: WizardForm) -> MemberWizardStep {
+        let routeErrors = form.legs.indices.filter { index in
+            errors.keys.contains { $0 == "legs.\(index).fromIata" || $0 == "legs.\(index).toIata" }
+        }
+        if routeErrors.contains(where: { $0 < form.returnBoundary }) { return .whereTo }
+        let outbound = errors.keys.contains { key in
+            (0..<form.returnBoundary).contains { key.hasPrefix("legs.\($0).") }
+        }
+        if outbound { return .outbound }
+        if !routeErrors.isEmpty { return .returnRoute }
+        return form.end.kind == "return_legs" ? .returnFlight : .outbound
+    }
+
     static var topFields: [String: String] {
         [
             "trip_end_kind": "end.kind", "trip_end_nights": "end.nights", "trip_end_check_out_date": "end.checkOutDate",
@@ -145,6 +158,12 @@ public enum WizardJourney {
     }
 
     public static func errors(_ fields: [String: FieldMessage], form: WizardForm) -> [String: FieldMessage] {
-        Dictionary(fields.map { (errorPath($0.key, form: form), $0.value) }, uniquingKeysWith: { _, last in last })
+        Dictionary(
+            fields.map { path, message in
+                (
+                    message.key == "Your flight home must leave from the airport you landed at."
+                        ? "review" : errorPath(path, form: form), message
+                )
+            }, uniquingKeysWith: { _, last in last })
     }
 }

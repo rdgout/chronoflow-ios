@@ -12,6 +12,16 @@ import TripWizard
                 == true)
     }
 
+    @Test func combinedPillUsesAirportWallComponentsAndTheLocalesClock() throws {
+        let value = "2027-03-28T23:07"
+        let british = try #require(WizardDateTime.formatLocal(value, locale: Locale(identifier: "en_GB")))
+        let american = try #require(WizardDateTime.formatLocal(value, locale: Locale(identifier: "en_US")))
+        let dutch = try #require(WizardDateTime.formatLocal(value, locale: Locale(identifier: "nl_NL")))
+        #expect(british.contains("28 Mar") && british.contains("23:07"))
+        #expect(american.contains("11:07") && american.contains("PM"))
+        #expect(dutch.contains("23:07"))
+    }
+
     @Test(arguments: [
         "2026-02-30T12:00", "2026-11-01T24:00", "2026-11-01T12:60", "2026-11-01", "", "invalid", "0000-01-01T12:00",
     ])
@@ -144,7 +154,8 @@ import TripWizard
         form.legs[1].toIata = "SIN"
         form.legs[1].departLocal = form.legs[0].arriveLocal
         form.legs[1].arriveLocal = "2026-11-15T12:00"
-        #expect(WizardValidation.validate(form)["legs.1.departLocal"] != nil)
+        let airport = wizardAirport(form.legs[1].fromIata, city: "Tokyo", zone: "Asia/Tokyo")
+        #expect(WizardValidation.validate(form, airports: [airport.iata: airport])["legs.1.departLocal"] != nil)
         form.legs[1].fromIata = "DXB"
         #expect(
             WizardValidation.validate(form)["legs.1.fromIata"]?.key
@@ -280,7 +291,8 @@ import TripWizard
         form.insertStop(wizardAirport("DXB", city: "Dubai", zone: "Asia/Dubai"), beforeDestinationOf: 0)
         #expect(form.legs.count == 2 && form.stays.count == 2)
         #expect(form.legs[0].departLocal == before.legs[0].departLocal && form.legs[0].arriveLocal.isEmpty)
-        #expect(form.legs[1].departLocal.isEmpty && form.legs[1].arriveLocal == before.legs[0].arriveLocal)
+        #expect(form.legs[1].departLocal.isEmpty && form.legs[1].arriveLocal.isEmpty)
+        form.legs[1].arriveLocal = before.legs[0].arriveLocal
         form.removeStop(at: 1)
         #expect(form == before)
     }

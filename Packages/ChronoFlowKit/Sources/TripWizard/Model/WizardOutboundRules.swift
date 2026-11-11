@@ -5,7 +5,7 @@ public enum WizardOutboundRules {
     public static func errors(form: WizardForm, airports: [String: ApiAirportSuggestion], now: Date, checkPast: Bool)
         -> [String: FieldMessage]
     {
-        var errors = WizardValidation.validate(form).filter { entry in
+        var errors = WizardValidation.validate(form, airports: airports).filter { entry in
             (0..<form.returnBoundary).contains { entry.key.hasPrefix("legs.\($0).") }
         }
         for (index, leg) in form.legs.prefix(form.returnBoundary).enumerated() {
@@ -112,7 +112,7 @@ public enum WizardFlightRules {
     public static func errors(form: WizardForm, airports: [String: ApiAirportSuggestion], now: Date, checkPast: Bool)
         -> [String: FieldMessage]
     {
-        var errors = WizardValidation.validate(form).filter { $0.key.hasPrefix("legs.") }
+        var errors = WizardValidation.validate(form, airports: airports).filter { $0.key.hasPrefix("legs.") }
         for (index, leg) in form.legs.enumerated() {
             if let from = airports[leg.fromIata], let to = airports[leg.toIata],
                 let departure = WizardDateTime.instant(leg.departLocal, zone: from.timezone),

@@ -31,10 +31,16 @@
                 VStack(alignment: .leading, spacing: PlanUITokens.wizardContentGap) {
                     if sheet.side == .stop {
                         let leg = model.draft.form.legs[sheet.index]
+                        let destination =
+                            sheet.replacingStop == true
+                            ? model.draft.form.legs[sheet.index + 1] : leg
                         Text(
                             t(
                                 "Between {{from}} and {{to}}",
-                                arguments: ["from": leg.fromCity ?? leg.fromIata, "to": leg.toCity ?? leg.toIata])
+                                arguments: [
+                                    "from": leg.fromCity ?? leg.fromIata,
+                                    "to": destination.toCity ?? destination.toIata,
+                                ])
                         )
                         .font(Typography.wizardHint.font).foregroundStyle(ColorToken.mutedForeground.color)
                     }
@@ -71,7 +77,7 @@
                     do {
                         let values = try await model.search.results(for: query)
                         guard !Task.isCancelled else { return }
-                        results = values
+                        results = values.filter { model.airportIsAllowed($0.iata, sheet: sheet) }
                     } catch is CancellationError { return } catch { results = [] }
                 }
                 .accessibilityElement(children: .contain).accessibilityIdentifier("wizard.airport-search")
