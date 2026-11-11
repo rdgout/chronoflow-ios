@@ -8,8 +8,10 @@ nonisolated final class WizardPrivacyScreenTests: ScreenTestCase {
 
     @MainActor func testScreeningShowsOnlyTheShiftWorkQuestion() {
         let app = WizardScreenUIFlow.launch("WizardQShift")
+        let title = app.staticTexts["wizard.title"]
+        XCTAssertTrue(UIWait.until(timeout: 3) { !title.label.isEmpty }, "Expected the server copy to load")
         XCTAssertEqual(
-            app.staticTexts["wizard.title"].label,
+            title.label,
             "In the past 14 days, have you worked night or rotating shifts, or had a very irregular sleep schedule?")
         XCTAssertTrue(app.buttons["wizard.choice.question.false"].isHittable)
         XCTAssertTrue(app.buttons["wizard.choice.question.true"].isHittable)
