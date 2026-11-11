@@ -43,6 +43,10 @@ def generate(repo):
             definitions[name] = body.strip()
     # Phase 19 leaves the planner enum unchanged; the mobile contract only asks shift work.
     definitions['ScreeningQuestion'] = "'shift_work'"
+    # web fix/review-price-without-plan (08cc7cc2): price is null until a plan exists.
+    review = definitions['ApiTripReview']
+    if 'readonly price: ApiReviewPrice,' in review:
+        definitions['ApiTripReview'] = review.replace('readonly price: ApiReviewPrice,', 'readonly price: ApiReviewPrice | null,')
     definitions['ProfileReadinessBanner'] = "'ready' | 'needs-answers' | 'excluded' | 'adjusted'"
     selected = set()
 
