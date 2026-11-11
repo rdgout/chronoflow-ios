@@ -30,7 +30,9 @@ nonisolated final class SignUpControlTests: XCTestCase {
                     else { return false }
                     var viewport = scroll.convert(scroll.bounds, to: host.window).intersection(host.window.bounds)
                     let keyboard = host.window.keyboardLayoutGuide.layoutFrame
-                    viewport.size.height = max(0, min(viewport.maxY, keyboard.minY) - viewport.minY)
+                    if keyboard.height > 0 {
+                        viewport.size.height = max(0, min(viewport.maxY, keyboard.minY) - viewport.minY)
+                    }
                     return viewport.contains(confirmation)
                 }, object: nil)
             await fulfillment(of: [revealed], timeout: 6)
