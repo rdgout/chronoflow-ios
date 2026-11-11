@@ -155,7 +155,7 @@
                 ) {
                     VStack(alignment: .leading, spacing: PlanUITokens.wizardChoiceGap) {
                         if let field = prompt.fields.first {
-                            if prompt.kind == .screening, prompt.shape.kind == .boolean {
+                            if prompt.kind == .screening, field == "shift_work", prompt.shape.kind == .boolean {
                                 ForEach([false, true], id: \.self) { value in
                                     choice(
                                         value ? "Yes" : "No",
@@ -193,11 +193,7 @@
             [
                 "age_band": "Light and sleep advice differs by age.",
                 "shift_work": "Shift work changes how we can plan your clock.",
-                "caffeine_ruled_out": "If so, we leave coffee and tea out of your plan.",
-                "eye_disease": "Some light advice isn't safe for sensitive eyes.",
-                "vte": "Then we add more movement on long flights.",
-                "bipolar": "Shifting sleep and light can affect mood, so we check first.",
-                "pregnancy": "Some advice, like caffeine timing, changes when you're pregnant or breastfeeding.",
+
             ]
         }
 

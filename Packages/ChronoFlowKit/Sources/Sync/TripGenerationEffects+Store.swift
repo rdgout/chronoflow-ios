@@ -16,7 +16,7 @@ extension TripGenerationEffects {
                     var body =
                         try SettingsRecord.fetchOne(db, key: "bodyClock")?.value.decode(JSONObject.self) ?? JSONObject()
                     func merge(_ patch: JSONObject) {
-                        for (key, value) in patch.fields {
+                        for (key, value) in ProfilePreferences.request(patch).fields {
                             let parts = key.split(separator: "_")
                             let camel =
                                 String(parts[0])
@@ -28,7 +28,8 @@ extension TripGenerationEffects {
                     for row in try StoreApplication.pending(db) {
                         if case .settings(.bodyClock, let pending) = try row.change { merge(pending) }
                     }
-                    try SettingsRecord(section: "bodyClock", value: .encoding(body)).save(db)
+                    try SettingsRecord(section: "bodyClock", value: .encoding(ProfilePreferences.bodyClock(body))).save(
+                        db)
                     try SettingsRecord.deleteOne(db, key: "readiness")
                     let sleepFields: Set<String> = [
                         "habitual_bed", "habitual_wake", "free_day_status", "free_day_bed", "free_day_wake",

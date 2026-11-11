@@ -4,7 +4,7 @@ nonisolated class SettingsPagesCase: ScreenTestCase {
     override func setUp() {
         super.setUp()
         continueAfterFailure = false
-        executionTimeAllowance = 120
+        executionTimeAllowance = 60
     }
 
     @MainActor fileprivate func assertReplayPage(_ number: Int, app: XCUIApplication) {
@@ -63,7 +63,7 @@ nonisolated final class SettingsPagesTests: SettingsPagesCase {
         XCTAssertTrue(chronotype.waitUntil(.exists, timeout: 8))
         AuthUIFlow.reveal(chronotype, in: app)
         chronotype.tap()
-        let saved = app.descendants(matching: .any)["settings.bodyClock.saved.about"]
+        let saved = app.staticTexts["settings.bodyClock.saved.about"]
         XCTAssertTrue(saved.waitUntil(.exists, timeout: 8))
         XCTAssertTrue(saved.isHittable)
         XCTAssertTrue(chronotype.isSelected)

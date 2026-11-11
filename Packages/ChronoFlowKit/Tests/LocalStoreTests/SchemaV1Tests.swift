@@ -37,7 +37,7 @@ struct SchemaV1Tests {
             }
             #expect(
                 try await store.read { try String.fetchAll($0, sql: "SELECT identifier FROM grdb_migrations") } == [
-                    "v1"
+                    "v1", "v2-no-health-data",
                 ])
             let tables = try await store.read {
                 try String.fetchAll($0, sql: "SELECT name FROM sqlite_master WHERE type='table'")

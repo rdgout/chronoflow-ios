@@ -2545,86 +2545,6 @@
         }
       }
     },
-    "If so, we leave coffee and tea out of your plan.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "If so, we leave coffee and tea out of your plan."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dan laten we koffie en thee uit je plan."
-          }
-        }
-      }
-    },
-    "Some light advice isn't safe for sensitive eyes.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Some light advice isn't safe for sensitive eyes."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sommig lichtadvies is niet veilig voor gevoelige ogen."
-          }
-        }
-      }
-    },
-    "Then we add more movement on long flights.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Then we add more movement on long flights."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dan voegen we meer beweging toe op lange vluchten."
-          }
-        }
-      }
-    },
-    "Shifting sleep and light can affect mood, so we check first.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Shifting sleep and light can affect mood, so we check first."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Slaap en licht verschuiven kan je stemming beïnvloeden, dus we checken dit eerst."
-          }
-        }
-      }
-    },
-    "Some advice, like caffeine timing, changes when you're pregnant or breastfeeding.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Some advice, like caffeine timing, changes when you're pregnant or breastfeeding."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sommig advies, zoals wanneer je cafeïne neemt, verandert als je zwanger bent of borstvoeding geeft."
-          }
-        }
-      }
-    },
     "No plan available": {
       "localizations": {
         "en": {
@@ -4046,6 +3966,132 @@
           "stringUnit": {
             "state": "translated",
             "value": "Verwijder {{range}}"
+          }
+        }
+      }
+    },
+    "Leave caffeine out of my plan": {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave caffeine out of my plan"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laat cafeïne weg uit mijn plan"
+          }
+        }
+      }
+    },
+    "Your plan won't suggest any caffeine.": {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your plan won't suggest any caffeine."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je plan stelt geen cafeïne voor."
+          }
+        }
+      }
+    },
+    "Add movement breaks during long-flight sleep": {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add movement breaks during long-flight sleep"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voeg beweegpauzes toe tijdens slaap op lange vluchten"
+          }
+        }
+      }
+    },
+    "Your plan breaks up long sleep on long flights with short movement breaks. If you're at higher risk of blood clots, choose this and ask your doctor about compression stockings and an aisle seat.": {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your plan breaks up long sleep on long flights with short movement breaks. If you're at higher risk of blood clots, choose this and ask your doctor about compression stockings and an aisle seat."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je plan onderbreekt lange slaap op lange vluchten met korte beweegpauzes. Heb je een verhoogd risico op trombose, kies dit dan en vraag je arts naar steunkousen en een plek aan het gangpad."
+          }
+        }
+      }
+    },
+    "ChronoFlow is intended for adults with a regular nightly sleep pattern. It does not offer a plan if you have recently done shift work, or do not usually sleep in one regular nightly episode.": {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChronoFlow is intended for adults with a regular nightly sleep pattern. It does not offer a plan if you have recently done shift work, or do not usually sleep in one regular nightly episode."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChronoFlow is bedoeld voor volwassenen met een regelmatig nachtelijk slaappatroon. Het biedt geen plan aan als je onlangs ploegendienst hebt gedraaid, of als je niet gewoonlijk in één regelmatige nachtelijke periode slaapt."
+          }
+        }
+      }
+    },
+    "ChronoFlow is not suitable if you have bipolar disorder or have had a manic or hypomanic episode: sleep loss, bright light and long journeys can trigger mood episodes. Talk to your doctor before you travel.": {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChronoFlow is not suitable if you have bipolar disorder or have had a manic or hypomanic episode: sleep loss, bright light and long journeys can trigger mood episodes. Talk to your doctor before you travel."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChronoFlow is niet geschikt als je een bipolaire stoornis hebt of een manische of hypomane episode hebt gehad: slaaptekort, fel licht en lange reizen kunnen een stemmingsepisode uitlokken. Overleg vóór je reis met je arts."
+          }
+        }
+      }
+    },
+    "Don't use a light box or light glasses if you have an eye disease, have had recent eye surgery or take medicine that makes your eyes sensitive to light. Ask your doctor first.": {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Don't use a light box or light glasses if you have an eye disease, have had recent eye surgery or take medicine that makes your eyes sensitive to light. Ask your doctor first."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gebruik geen lichtlamp of lichtbril als je een oogziekte hebt, onlangs een oogoperatie hebt gehad of medicijnen gebruikt die je ogen gevoelig maken voor licht. Vraag het eerst aan je arts."
           }
         }
       }

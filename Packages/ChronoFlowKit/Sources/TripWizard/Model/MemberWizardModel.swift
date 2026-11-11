@@ -59,6 +59,8 @@ public final class MemberWizardModel {
         now: @escaping @Sendable () -> Date = { Date() },
         generation: (any MemberWizardGeneration)? = nil, checkingClock: WizardCheckingClock = .continuous
     ) {
+        var draft = draft
+        draft.state.discardRetiredValues()
         self.draft = draft
         self.store = store
         self.search = search

@@ -10,7 +10,7 @@ public enum BodyClockGroup: String, CaseIterable, Sendable {
         case .sleep: "Sleep schedule"
         case .caffeine: "Caffeine"
         case .light: "Light equipment"
-        case .health: "Health checks"
+        case .health: "Safety checks"
         }
     }
     public var fields: [String] {
@@ -20,11 +20,11 @@ public enum BodyClockGroup: String, CaseIterable, Sendable {
         case .caffeine:
             [
                 "caffeineHabit", "cupsFilterCoffee", "cupsTea", "cupsCola", "cupsEnergyDrink", "caffeineSensitive",
-                "caffeineNonUserOptIn", "oralContraception",
+                "caffeineNonUserOptIn", "excludeCaffeine",
             ]
         case .light: ["lightDevice", "blueBlockers", "blueBlockerMdfd"]
         case .health:
-            ["shiftWork", "bipolar", "eyeDisease", "pregnancy", "caffeineRuledOut", "vte", "sleepPhaseDisorder"]
+            ["shiftWork", "flightMovementBreaks"]
         }
     }
     public static func requestKey(_ field: String) -> String {
@@ -46,13 +46,13 @@ public enum BodyClockGroup: String, CaseIterable, Sendable {
     @ObservationIgnored private var tail: Task<Void, Never>?
 
     public init(answers: JSONObject, save: @escaping @MainActor (JSONObject) async throws -> Void) {
-        self.answers = answers
+        self.answers = ProfilePreferences.bodyClock(answers)
         self.save = save
     }
 
     public func receive(_ value: JSONObject) {
         for (key, entry) in edits where value[key] == entry { edits[key] = nil }
-        answers = value
+        answers = ProfilePreferences.bodyClock(value)
         for (key, entry) in edits { answers[key] = entry }
     }
 

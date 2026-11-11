@@ -58,18 +58,16 @@ public enum MockWizardPrompts {
             .freeDayTimes, "What time do you go to bed and wake up on free days?",
             ["free_day_status", "free_day_bed", "free_day_wake"], profileTarget: true,
             options: ["same_as_workdays", "declared"])
-        if profile["caffeineRuledOut"] != .bool(true) {
+        if profile["excludeCaffeine"] != .bool(true) {
             add(
                 .cups, "How many caffeinated drinks do you usually have in a day?",
                 ["caffeine_habit", "cups_filter_coffee", "cups_tea", "cups_cola", "cups_energy_drink"],
                 profileTarget: true, shape: .options)
         }
-        if profile["eyeDisease"] != .bool(true), profile["bipolar"] != .bool(true) {
-            add(
-                .lightDevice,
-                "Do you have a light box or light glasses? One gives the plan more room on days when daylight is hard to get.",
-                ["light_device"], profileTarget: true, options: ["none", "box", "glasses"])
-        }
+        add(
+            .lightDevice,
+            "Do you have a light box or light glasses? One gives the plan more room on days when daylight is hard to get.",
+            ["light_device"], profileTarget: true, options: ["none", "box", "glasses"])
         add(
             .blueBlockers,
             "Do you have blue-blocking glasses with a rated protection? Tell us the rating if you know it.",

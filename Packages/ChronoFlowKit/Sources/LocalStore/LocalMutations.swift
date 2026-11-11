@@ -90,6 +90,7 @@ extension OutboxRepository {
                 }
                 if section == .bodyClock {
                     value["invalidDrafts"] = .object(invalidDrafts)
+                    value = ProfilePreferences.bodyClock(value)
                     if patch["habitual_bed"] != nil || patch["habitual_wake"] != nil {
                         try SettingsRecord(section: "sleepAnswered", value: .encoding(true)).save(db)
                     }
@@ -162,16 +163,14 @@ extension OutboxRepository {
         case .preferences: allowed = ["time_format", "hidden_categories", "show_optional_items"]
         case .reminders: allowed = ["light", "avoid", "caffeine", "winddown", "lead_min"]
         case .bodyClock:
-            allowed = [
-                "habitual_bed", "habitual_wake", "free_day_status", "free_day_bed", "free_day_wake", "chronotype",
-                "age_band", "shift_work", "bipolar", "eye_disease", "pregnancy", "caffeine_ruled_out", "vte",
-                "sleep_phase_disorder", "caffeine_habit", "cups_filter_coffee", "cups_tea", "cups_cola",
-                "cups_energy_drink", "caffeine_sensitive", "caffeine_non_user_opt_in", "oral_contraception",
-                "light_device", "blue_blockers", "blue_blocker_mdfd",
-            ]
+            allowed = ProfilePreferences.requestFields
         }
         return patch.fields.allSatisfy { key, value in
             guard allowed.contains(key) else { return false }
+            if ["exclude_caffeine", "flight_movement_breaks"].contains(key) {
+                if case .bool = value { return true }
+                return false
+            }
             if case .object = value { return false }
             if case .array(let entries) = value {
                 return entries.allSatisfy { if case .string = $0 { true } else { false } }

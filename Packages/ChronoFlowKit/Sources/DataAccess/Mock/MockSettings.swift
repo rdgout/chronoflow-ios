@@ -130,7 +130,8 @@ enum MockSettings {
         }
         if case .bool = value { return true }
         return value == .null
-            && !["caffeine_sensitive", "caffeine_non_user_opt_in", "oral_contraception"].contains(key)
+            && !["caffeine_sensitive", "caffeine_non_user_opt_in", "exclude_caffeine", "flight_movement_breaks"]
+                .contains(key)
     }
     static func apply(_ patch: JSONObject, section: SettingsSection, to settings: inout AccountSettings) {
         for (key, value) in patch.fields {
@@ -159,25 +160,6 @@ enum MockSettings {
         }
     }
     static func readiness(_ body: JSONObject) -> JSONObject {
-        let screening = ["shiftWork", "bipolar", "eyeDisease", "pregnancy", "caffeineRuledOut", "vte"]
-        let fields = ["shift_work", "bipolar", "eye_disease", "pregnancy", "caffeine_ruled_out", "vte"]
-        var missing: [JSONValue] = body["ageBand"] == .null ? [.object(["question": .null])] : []
-        for (key, field) in zip(screening, fields) where body[key] == .null {
-            missing.append(.object(["question": .string(field)]))
-        }
-        let excluded = body["ageBand"] == .string("under_18") || body["shiftWork"] == .bool(true)
-        let adjusted =
-            body["ageBand"] == .string("65_plus") || screening.dropFirst().contains { body[$0] == .bool(true) }
-            || body["sleepPhaseDisorder"] == .bool(true)
-        return JSONObject([
-            "variant": .string(
-                excluded ? "excluded" : !missing.isEmpty ? "needs-answers" : adjusted ? "health-adjusted" : "ready"),
-            "missing": .array(excluded ? [] : missing), "exclusions": .array([]),
-            "exclusionTarget": excluded
-                ? .object(["question": body["shiftWork"] == .bool(true) ? .string("shift_work") : .null]) : .null,
-            "adjustments": .array([]),
-            "lightDevicesAllowed": .bool(body["bipolar"] == .bool(false) && body["eyeDisease"] == .bool(false)),
-            "invalidSections": .array([]),
-        ])
+        ProfilePreferences.readiness(JSONObject(["invalidSections": .array([])]), bodyClock: body)
     }
 }

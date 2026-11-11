@@ -44,12 +44,7 @@
         @MainActor func testCheckServer() throws { try capture("WizardCheckServer") }
         @MainActor func testCheckThrottle() throws { try capture("WizardCheckThrottle") }
         @MainActor func testQAge() throws { try capture("WizardQAge") }
-        @MainActor func testQBipolar() throws { try capture("WizardQBipolar") }
-        @MainActor func testQPregnant() throws { try capture("WizardQPregnant") }
         @MainActor func testQShift() throws { try capture("WizardQShift") }
-        @MainActor func testQCaffeine() throws { try capture("WizardQCaffeine") }
-        @MainActor func testQEye() throws { try capture("WizardQEye") }
-        @MainActor func testQClot() throws { try capture("WizardQClot") }
         @MainActor func testExcluded() throws { try capture("WizardExcluded") }
         @MainActor func testExcludedShift() throws { try capture("WizardExcludedShift") }
         @MainActor func testDiscard() throws { try capture("WizardDiscard") }

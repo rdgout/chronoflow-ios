@@ -929,24 +929,6 @@
         }
       }
     },
-    "Health checks": {
-      "comment": "17h · RN settings copy",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Health checks"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gezondheidsvragen"
-          }
-        }
-      }
-    },
     "When do you naturally feel most awake?": {
       "comment": "17h · RN settings copy",
       "extractionState": "manual",
@@ -1397,42 +1379,6 @@
         }
       }
     },
-    "Have you been told to avoid caffeine?": {
-      "comment": "17h · RN settings copy",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Have you been told to avoid caffeine?"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Is je verteld dat je cafeïne moet vermijden?"
-          }
-        }
-      }
-    },
-    "Do you use oral contraception?": {
-      "comment": "17h · RN settings copy",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Do you use oral contraception?"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gebruik je de anticonceptiepil?"
-          }
-        }
-      }
-    },
     "Optional. If you have any of these, your plan can use them.": {
       "comment": "17h · RN settings copy",
       "extractionState": "manual",
@@ -1613,78 +1559,6 @@
         }
       }
     },
-    "Are you pregnant or breastfeeding?": {
-      "comment": "17h · RN settings copy",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Are you pregnant or breastfeeding?"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ben je zwanger of geef je borstvoeding?"
-          }
-        }
-      }
-    },
-    "Do you have bipolar disorder?": {
-      "comment": "17h · RN settings copy",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Do you have bipolar disorder?"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Heb je een bipolaire stoornis?"
-          }
-        }
-      }
-    },
-    "Do you have an eye disease, or take medicine that makes your eyes sensitive to light?": {
-      "comment": "17h · RN settings copy",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Do you have an eye disease, or take medicine that makes your eyes sensitive to light?"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Heb je een oogziekte, of gebruik je medicijnen die je ogen gevoelig maken voor licht?"
-          }
-        }
-      }
-    },
-    "Do you have a risk factor for blood clots, such as a past clot or a clotting disorder?": {
-      "comment": "17h · RN settings copy",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Do you have a risk factor for blood clots, such as a past clot or a clotting disorder?"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Heb je een risicofactor voor bloedstolsels, zoals een eerdere trombose of een stollingsstoornis?"
-          }
-        }
-      }
-    },
     "In the past 14 days, have you worked night or rotating shifts, or had a very irregular sleep schedule?": {
       "comment": "17h · RN settings copy",
       "extractionState": "manual",
@@ -1789,24 +1663,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Geen plan beschikbaar"
-          }
-        }
-      }
-    },
-    "Based on your health answers, light and caffeine timing may not be right for you, so we can't build a plan. Your doctor can tell you what's safe when you travel.": {
-      "comment": "17h · RN settings copy",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Based on your health answers, light and caffeine timing may not be right for you, so we can't build a plan. Your doctor can tell you what's safe when you travel."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Op basis van je gezondheidsantwoorden is het timen van licht en cafeïne mogelijk niet geschikt voor je. Daarom kunnen we geen plan maken. Je arts kan je vertellen wat veilig is als je reist."
           }
         }
       }
@@ -4173,23 +4029,6 @@
         }
       }
     },
-    "Required. Bright light and caffeine timing aren't safe for everyone, so we check first.": {
-      "comment": "Settings board copy; RN nl.json checked first.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Required. Bright light and caffeine timing aren't safe for everyone, so we check first."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verplicht. De timing van fel licht en cafeïne is niet voor iedereen veilig, dus dat controleren we eerst."
-          }
-        }
-      }
-    },
     "Required answers": {
       "comment": "Settings board copy; RN nl.json checked first.",
       "localizations": {
@@ -4339,23 +4178,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bijvoorbeeld als één kop je wakker houdt of onrustig maakt."
-          }
-        }
-      }
-    },
-    "By a doctor, midwife or pharmacist.": {
-      "comment": "Settings board copy; RN nl.json checked first.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "By a doctor, midwife or pharmacist."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Door een arts, verloskundige of apotheker."
           }
         }
       }
@@ -4598,74 +4420,6 @@
         }
       }
     },
-    "Do you take oral contraception?": {
-      "comment": "Settings board copy; RN nl.json checked first.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Do you take oral contraception?"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gebruik je orale anticonceptie?"
-          }
-        }
-      }
-    },
-    "Have you been diagnosed with bipolar disorder?": {
-      "comment": "Settings board copy; RN nl.json checked first.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Have you been diagnosed with bipolar disorder?"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Is er bij jou een bipolaire stoornis vastgesteld?"
-          }
-        }
-      }
-    },
-    "Do you have an eye condition, or take medicine that makes you sensitive to light?": {
-      "comment": "Settings board copy; RN nl.json checked first.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Do you have an eye condition, or take medicine that makes you sensitive to light?"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Heb je een oogaandoening, of gebruik je medicijnen die je gevoelig maken voor licht?"
-          }
-        }
-      }
-    },
-    "Are you at higher risk of blood clots?": {
-      "comment": "Settings board copy; RN nl.json checked first.",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Are you at higher risk of blood clots?"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Heb je een verhoogd risico op bloedstolsels?"
-          }
-        }
-      }
-    },
     "Do you work shifts or have an irregular sleep pattern?": {
       "comment": "Settings board copy; RN nl.json checked first.",
       "localizations": {
@@ -4679,6 +4433,276 @@
           "stringUnit": {
             "state": "translated",
             "value": "Werk je in ploegendienst of heb je een onregelmatig slaappatroon?"
+          }
+        }
+      }
+    },
+    "Leave caffeine out of my plan": {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave caffeine out of my plan"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laat cafeïne weg uit mijn plan"
+          }
+        }
+      }
+    },
+    "Your plan won't suggest any caffeine.": {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your plan won't suggest any caffeine."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je plan stelt geen cafeïne voor."
+          }
+        }
+      }
+    },
+    "Add movement breaks during long-flight sleep": {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add movement breaks during long-flight sleep"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voeg beweegpauzes toe tijdens slaap op lange vluchten"
+          }
+        }
+      }
+    },
+    "Your plan breaks up long sleep on long flights with short movement breaks. If you're at higher risk of blood clots, choose this and ask your doctor about compression stockings and an aisle seat.": {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your plan breaks up long sleep on long flights with short movement breaks. If you're at higher risk of blood clots, choose this and ask your doctor about compression stockings and an aisle seat."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je plan onderbreekt lange slaap op lange vluchten met korte beweegpauzes. Heb je een verhoogd risico op trombose, kies dit dan en vraag je arts naar steunkousen en een plek aan het gangpad."
+          }
+        }
+      }
+    },
+    "ChronoFlow is intended for adults with a regular nightly sleep pattern. It does not offer a plan if you have recently done shift work, or do not usually sleep in one regular nightly episode.": {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChronoFlow is intended for adults with a regular nightly sleep pattern. It does not offer a plan if you have recently done shift work, or do not usually sleep in one regular nightly episode."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChronoFlow is bedoeld voor volwassenen met een regelmatig nachtelijk slaappatroon. Het biedt geen plan aan als je onlangs ploegendienst hebt gedraaid, of als je niet gewoonlijk in één regelmatige nachtelijke periode slaapt."
+          }
+        }
+      }
+    },
+    "ChronoFlow is not suitable if you have bipolar disorder or have had a manic or hypomanic episode: sleep loss, bright light and long journeys can trigger mood episodes. Talk to your doctor before you travel.": {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChronoFlow is not suitable if you have bipolar disorder or have had a manic or hypomanic episode: sleep loss, bright light and long journeys can trigger mood episodes. Talk to your doctor before you travel."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChronoFlow is niet geschikt als je een bipolaire stoornis hebt of een manische of hypomane episode hebt gehad: slaaptekort, fel licht en lange reizen kunnen een stemmingsepisode uitlokken. Overleg vóór je reis met je arts."
+          }
+        }
+      }
+    },
+    "Don't use a light box or light glasses if you have an eye disease, have had recent eye surgery or take medicine that makes your eyes sensitive to light. Ask your doctor first.": {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Don't use a light box or light glasses if you have an eye disease, have had recent eye surgery or take medicine that makes your eyes sensitive to light. Ask your doctor first."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gebruik geen lichtlamp of lichtbril als je een oogziekte hebt, onlangs een oogoperatie hebt gehad of medicijnen gebruikt die je ogen gevoelig maken voor licht. Vraag het eerst aan je arts."
+          }
+        }
+      }
+    },
+    "Safety checks": {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Safety checks"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Veiligheidsvragen"
+          }
+        }
+      }
+    },
+    "Your plan is adjusted for your preferences and age range": {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your plan is adjusted for your preferences and age range"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je plan wordt afgestemd op je voorkeuren en leeftijdsgroep"
+          }
+        }
+      }
+    },
+    "Your age range and shift-work answer are saved. You can add optional details below.": {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your age range and shift-work answer are saved. You can add optional details below."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je leeftijdsgroep en antwoord over ploegendienst zijn opgeslagen. Hieronder kun je optionele gegevens toevoegen."
+          }
+        }
+      }
+    },
+    "This plan is not available for travellers under 18.": {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This plan is not available for travellers under 18."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dit plan is niet beschikbaar voor reizigers onder de 18."
+          }
+        }
+      }
+    },
+    "This plan is not available if, in the past 14 days, you have worked night or rotating shifts or had a very irregular sleep schedule.": {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This plan is not available if, in the past 14 days, you have worked night or rotating shifts or had a very irregular sleep schedule."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dit plan is niet beschikbaar als je de afgelopen 14 dagen in nacht- of wisseldiensten hebt gewerkt of een heel onregelmatig slaapritme had."
+          }
+        }
+      }
+    },
+    "No caffeine anywhere in your plan.": {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No caffeine anywhere in your plan."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nergens cafeïne in je plan."
+          }
+        }
+      }
+    },
+    "Regular movement breaks on long flights, with shorter in-flight sleep stretches.": {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regular movement breaks on long flights, with shorter in-flight sleep stretches."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regelmatig bewegen op lange vluchten, met kortere slaapblokken aan boord."
+          }
+        }
+      }
+    },
+    "Your plan takes your age range into account in its timing.": {
+      "extractionState": "manual",
+      "generatesSymbol": false,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your plan takes your age range into account in its timing."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je plan houdt bij de timing rekening met je leeftijdsgroep."
           }
         }
       }

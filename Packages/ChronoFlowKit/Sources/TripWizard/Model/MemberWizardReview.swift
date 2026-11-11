@@ -185,7 +185,7 @@ extension MemberWizardModel {
             let unchangedInput = draft.state.checkedInput == inputFingerprint
             draft.form = try WizardForm(reviewInput: result.input, retained: draft.form)
             draft.form.itinerary = result.review.itinerary
-            draft.state.profile = result.input.profile ?? JSONObject()
+            draft.state.profile = ProfilePreferences.request(result.input.profile ?? JSONObject())
             let previous = draft.state.review
             draft.state.review = result.review
             draft.state.updated =
@@ -208,7 +208,7 @@ extension MemberWizardModel {
                 go(WizardJourney.errorStep(errors, form: draft.form))
                 return
             }
-            let questions = result.review.prompts.filter(\.blocking)
+            let questions = result.review.prompts.filter { $0.blocking && ProfilePreferences.isSupported($0) }
             draft.state.questions = questions
             draft.state.questionIndex = 0
             if result.review.status == .noPlan {
@@ -254,9 +254,9 @@ extension MemberWizardModel {
     public func answerQuestion(_ value: JSONValue) {
         guard !closed, !choicePending, let prompt = currentQuestion,
             let field = prompt.fields.first, prompt.fields.count == 1, prompt.target == .profile,
-            (prompt.kind == .screening && prompt.shape.kind == .boolean
+            (prompt.kind == .screening && field == "shift_work" && prompt.shape.kind == .boolean
                 && (value == .bool(true) || value == .bool(false)))
-                || (prompt.kind == .ageBand && prompt.shape.options.contains(value.string ?? ""))
+                || (prompt.kind == .ageBand && field == "age_band" && prompt.shape.options.contains(value.string ?? ""))
         else { return }
         draft.state.profile[field] = value
         changed()
@@ -296,7 +296,7 @@ extension MemberWizardModel {
 
     public func changeExcludedAnswers() {
         for (field, stored) in [
-            ("age_band", "ageBand"), ("shift_work", "shiftWork"), ("bipolar", "bipolar"), ("pregnancy", "pregnancy"),
+            ("age_band", "ageBand"), ("shift_work", "shiftWork"),
         ] {
             let value = draft.state.profile[field] ?? draft.state.savedProfile?[stored]
             if value == .bool(true) || (field == "age_band" && value == .string("under_18")) {

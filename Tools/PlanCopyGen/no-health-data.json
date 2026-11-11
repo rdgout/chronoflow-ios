@@ -1,0 +1,16 @@
+{
+  "remove": [
+    "Answer the health questions to get your plan.",
+    "Are you pregnant or breastfeeding?",
+    "Do you have a risk factor for blood clots, such as a past clot or a clotting disorder?",
+    "Do you have an eye disease, or take medicine that makes your eyes sensitive to light?",
+    "Do you have bipolar disorder?",
+    "Have you been told to avoid caffeine?"
+  ],
+  "strings": {
+    "Answer the questions to get your plan.": {
+      "en": "Answer the questions to get your plan.",
+      "nl": "Beantwoord de vragen om je plan te krijgen."
+    }
+  }
+}

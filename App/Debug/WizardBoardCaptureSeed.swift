@@ -167,21 +167,11 @@
             }
             let questions = [
                 ("WizardQAge", "age_band", "Which age group are you in?"),
-                ("WizardQBipolar", "bipolar", "Do you have bipolar disorder?"),
-                ("WizardQPregnant", "pregnancy", "Are you pregnant or breastfeeding?"),
                 (
                     "WizardQShift", "shift_work",
                     "In the past 14 days, have you worked night or rotating shifts, or had a very irregular sleep schedule?"
                 ),
-                ("WizardQCaffeine", "caffeine_ruled_out", "Have you been told to avoid caffeine?"),
-                (
-                    "WizardQEye", "eye_disease",
-                    "Do you have an eye disease, or take medicine that makes your eyes sensitive to light?"
-                ),
-                (
-                    "WizardQClot", "vte",
-                    "Do you have a risk factor for blood clots, such as a past clot or a clotting disorder?"
-                ),
+
             ]
             if let (_, field, key) = questions.first(where: { $0.0 == board }) {
                 let age = field == "age_band"

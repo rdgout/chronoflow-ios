@@ -12,7 +12,7 @@
             seed.accounts[id]?.snapshot.settings.bodyClock["habitualWake"] = .string("07:15")
             seed.accounts[id]?.snapshot.settings.bodyClock["chronotype"] = .null
             seed.accounts[id]?.snapshot.settings.bodyClock["ageBand"] = .null
-            for field in ["shiftWork", "bipolar", "eyeDisease", "pregnancy", "caffeineRuledOut", "vte"] {
+            for field in ["shiftWork", "excludeCaffeine", "flightMovementBreaks"] {
                 seed.accounts[id]?.snapshot.settings.bodyClock[field] = .bool(false)
             }
         }

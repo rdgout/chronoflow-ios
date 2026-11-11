@@ -9,6 +9,41 @@ struct MockWizardDraft: Codable, Sendable, Equatable {
     var review: ApiTripReview
     var profile: JSONObject
     var expiresAt: TimeInterval
+    init(
+        owner: String, tripID: String?, input: ApiTripInput, review: ApiTripReview, profile: JSONObject,
+        expiresAt: TimeInterval
+    ) {
+        self.owner = owner
+        self.tripID = tripID
+        self.input = input
+        self.review = review
+        self.profile = ProfilePreferences.bodyClock(profile)
+        self.expiresAt = expiresAt
+    }
+
+    enum CodingKeys: String, CodingKey { case owner, tripID, input, review, profile, expiresAt }
+
+    init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            owner: try c.decode(String.self, forKey: .owner),
+            tripID: try c.decodeIfPresent(String.self, forKey: .tripID),
+            input: try c.decode(ApiTripInput.self, forKey: .input),
+            review: try c.decode(ApiTripReview.self, forKey: .review),
+            profile: try c.decode(JSONObject.self, forKey: .profile),
+            expiresAt: try c.decode(TimeInterval.self, forKey: .expiresAt))
+    }
+
+    func encode(to encoder: any Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(owner, forKey: .owner)
+        try c.encodeIfPresent(tripID, forKey: .tripID)
+        try c.encode(input, forKey: .input)
+        try c.encode(review, forKey: .review)
+        try c.encode(ProfilePreferences.bodyClock(profile), forKey: .profile)
+        try c.encode(expiresAt, forKey: .expiresAt)
+    }
+
 }
 
 struct MockWizardReceipt: Codable, Sendable, Equatable {
@@ -128,11 +163,7 @@ enum MockTripGeneration {
                 "shift_work",
                 "In the past 14 days, have you worked night or rotating shifts, or had a very irregular sleep schedule?"
             ),
-            ("bipolar", "Do you have bipolar disorder?"),
-            ("eye_disease", "Do you have an eye disease, or take medicine that makes your eyes sensitive to light?"),
-            ("pregnancy", "Are you pregnant or breastfeeding?"),
-            ("caffeine_ruled_out", "Have you been told to avoid caffeine?"),
-            ("vte", "Do you have a risk factor for blood clots, such as a past clot or a clotting disorder?"),
+
         ]
         return fields.compactMap { field, text in
             let value = profile[TripWizardErrors.camel(field)] ?? .null
@@ -197,7 +228,7 @@ enum MockTripGeneration {
                     args: [])
             ]
         } else if !blocking.isEmpty {
-            reasons = [CopyLine(key: "Answer the health questions to get your plan.", args: [])]
+            reasons = [CopyLine(key: "Answer the questions to get your plan.", args: [])]
         } else {
             reasons = plan.reasons
         }

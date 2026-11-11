@@ -60,11 +60,10 @@ import Testing
         let source = try wizardMockSource()
         _ = try await login(source)
         let missing = JSONObject([
-            "age_band": .null, "shift_work": .null, "bipolar": .null, "eye_disease": .null, "pregnancy": .null,
-            "caffeine_ruled_out": .null, "vte": .null,
+            "age_band": .null, "shift_work": .null,
         ])
         let first = try await source.reviewTrip(ApiTripReviewInput(input: wizardInput(), profile: missing))
-        #expect(first.status == .needsAnswers && first.prompts.count == 7 && !first.canSave)
+        #expect(first.status == .needsAnswers && first.prompts.count == 2 && !first.canSave)
         #expect(first.prompts.first?.kind == .ageBand && first.prompts[1].kind == .screening)
         let answered = try await source.reviewTrip(
             ApiTripReviewInput(input: wizardInput(), identity: first.identity, profile: wizardProfile()))
@@ -146,8 +145,8 @@ import Testing
 
 func wizardProfile() -> JSONObject {
     JSONObject([
-        "age_band": .string("18_64"), "shift_work": .bool(false), "bipolar": .bool(false), "eye_disease": .bool(false),
-        "pregnancy": .bool(false), "caffeine_ruled_out": .bool(false), "vte": .bool(false),
+        "age_band": .string("18_64"), "shift_work": .bool(false),
+        "exclude_caffeine": .bool(false), "flight_movement_breaks": .bool(false),
     ])
 }
 

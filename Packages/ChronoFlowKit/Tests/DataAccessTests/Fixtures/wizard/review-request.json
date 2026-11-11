@@ -46,10 +46,7 @@
   "profile": {
     "age_band": "18_64",
     "shift_work": false,
-    "bipolar": false,
-    "eye_disease": false,
-    "pregnancy": false,
-    "caffeine_ruled_out": false,
-    "vte": false
+    "exclude_caffeine": false,
+    "flight_movement_breaks": false
   }
 }
