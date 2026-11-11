@@ -14,6 +14,7 @@ public struct TripPageView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var formatter: CopyLineFormatter?
     @State private var scroll = TripScrollTracker()
+    @State private var isWide = false
     @State private var headerScrolled = false
     @State private var copy: PageCopy
     @State private var windowSize: CGSize?
@@ -107,13 +108,13 @@ public struct TripPageView: View {
     }
 
     private var page: some View {
-        GeometryReader { geometry in
-            let containerSize = CGSize(
-                width: geometry.size.width + geometry.safeAreaInsets.leading + geometry.safeAreaInsets.trailing,
-                height: geometry.size.height + geometry.safeAreaInsets.top + geometry.safeAreaInsets.bottom)
-            let size = windowSize ?? containerSize
-            let layout = TripPageLayout.resolve(width: size.width, height: size.height)
-            ScrollViewReader { proxy in
+        ScrollViewReader { proxy in
+            GeometryReader { geometry in
+                let containerSize = CGSize(
+                    width: geometry.size.width + geometry.safeAreaInsets.leading + geometry.safeAreaInsets.trailing,
+                    height: geometry.size.height + geometry.safeAreaInsets.top + geometry.safeAreaInsets.bottom)
+                let size = windowSize ?? containerSize
+                let layout = TripPageLayout.resolve(width: size.width, height: size.height)
                 ScrollView {
                     LazyVStack(spacing: PlanMetrics.sectionGap) {
                         if model.state != .ready && !model.plan.metadata.isEmpty {
@@ -216,73 +217,112 @@ public struct TripPageView: View {
                         }
                     }
                 }
-                .toolbar {
-                    ToolbarItem(placement: .principal) {
-                        if model.state == .ready, let prepared = model.plan.prepared {
-                            Menu {
-                                Section(copy("Go to a day")) {
-                                    ForEach(Array(prepared.days.enumerated()), id: \.element.id) { index, day in
-                                        Button {
-                                            jump(day.id, proxy: proxy)
-                                        } label: {
-                                            if day.id == model.anchor.dayID {
-                                                Label(day.title + " · " + day.date, systemImage: "checkmark")
-                                            } else {
-                                                Text(verbatim: day.title + " · " + day.date)
-                                            }
-                                        }
-                                        .accessibilityIdentifier("trip.dayMenu.day.\(index)")
-                                    }
-                                }
-                            } label: {
-                                VStack(spacing: 0) {
-                                    Text(verbatim: prepared.title).font(Typography.planTitle.font).lineLimit(1)
-                                    HStack(spacing: PlanMetrics.smallGap) {
-                                        Text(verbatim: subtitle).lineLimit(1)
-                                        Image(systemName: "chevron.down")
-                                    }.font(Typography.planSubtitle.font).foregroundStyle(
-                                        ColorToken.mutedForeground.color)
-                                }
-                            }.accessibilityLabel(dayMenuLabel).accessibilityValue(
-                                Text(
-                                    verbatim: model.plan.prepared?.days.first { $0.id == model.anchor.dayID }.map {
-                                        $0.title + " · " + $0.date
-                                    } ?? "")
-                            ).accessibilityIdentifier("trip.dayMenu")
-                                .planContentBounds(identifier: "trip.dayMenu")
-                        } else {
-                            Text(
-                                verbatim: model.plan.prepared?.title
-                                    ?? (cardTitle.isEmpty ? copy("Loading your plan") : cardTitle)
-                            )
-                            .font(Typography.planTitle.font)
-                            .lineLimit(1)
-                        }
-                    }
-                    if !layout.isWide && model.state == .ready && model.plan.prepared != nil {
-                        ToolbarItem(placement: .primaryAction) {
-                            Button(
-                                copy(model.timeline ? "Show as list" : "Show as timeline"),
-                                systemImage: model.timeline ? "list.bullet" : "rectangle.split.3x1"
-                            ) {
-                                scroll.cancelRestoration()
-                                model.timeline.toggle()
-                                if let id = model.anchor.dayID { proxy.scrollTo(id, anchor: .top) }
-                            }.accessibilityIdentifier("trip.viewToggle")
-                                .planContentBounds(identifier: "trip.viewToggle")
-                        }
-                    }
+                .onChange(of: layout.isWide, initial: true) { _, wide in isWide = wide }
+            }
+            // Declared outside the GeometryReader so the bar's items exist on the push's first frame.
+            .toolbar {
+                // A hosted title view is placed before the bar buttons are measured during an iOS 26 push
+                // and jumps sideways once they are; the bar lays out its native title correctly.
+                if #available(iOS 26, macOS 26, *) {
+                    ToolbarTitleMenu { dayMenu(proxy: proxy) }
+                } else {
+                    titleItem(proxy: proxy)
+                }
+                // Present while the plan loads too: adding it later rebuilds the bar's buttons mid-push.
+                if !isWide && (model.state == .ready || model.state == .loading || model.state == .remoteLoading) {
                     ToolbarItem(placement: .primaryAction) {
-                        Button(copy("Trip actions"), systemImage: "ellipsis") { onActions?() }.disabled(
-                            onActions == nil
-                        )
-                        .accessibilityIdentifier("trip.actions.open")
+                        Button(
+                            copy(model.timeline ? "Show as list" : "Show as timeline"),
+                            systemImage: model.timeline ? "list.bullet" : "rectangle.split.3x1"
+                        ) {
+                            scroll.cancelRestoration()
+                            model.timeline.toggle()
+                            if let id = model.anchor.dayID { proxy.scrollTo(id, anchor: .top) }
+                        }.disabled(model.state != .ready || model.plan.prepared == nil)
+                            .accessibilityIdentifier("trip.viewToggle")
+                            .planContentBounds(identifier: "trip.viewToggle")
                     }
                 }
-                #if os(iOS)
-                    .navigationBarTitleDisplayMode(.inline)
-                #endif
+                ToolbarItem(placement: .primaryAction) {
+                    Button(copy("Trip actions"), systemImage: "ellipsis") { onActions?() }.disabled(
+                        onActions == nil
+                    )
+                    .accessibilityIdentifier("trip.actions.open")
+                }
             }
+            .modifier(
+                TripNativeTitle(
+                    title: codeTitle ?? copy("Loading your plan"),
+                    subtitle: model.state == .ready && model.plan.prepared != nil ? subtitle : ""
+                )
+            )
+            #if os(iOS)
+                .navigationBarTitleDisplayMode(.inline)
+            #endif
+        }
+    }
+
+    @ViewBuilder private func dayMenu(proxy: ScrollViewProxy) -> some View {
+        if model.state == .ready, let ready = model.plan.prepared {
+            Section(copy("Go to a day")) {
+                ForEach(Array(ready.days.enumerated()), id: \.element.id) { index, day in
+                    Button {
+                        jump(day.id, proxy: proxy)
+                    } label: {
+                        if day.id == model.anchor.dayID {
+                            Label(day.title + " · " + day.date, systemImage: "checkmark")
+                        } else {
+                            Text(verbatim: day.title + " · " + day.date)
+                        }
+                    }
+                    .accessibilityIdentifier("trip.dayMenu.day.\(index)")
+                }
+            }
+        }
+    }
+
+    // Airport codes: a native title menu never truncates, so a city-name title pushes the bar buttons
+    // into an overflow menu on narrow phones.
+    private var codeTitle: String? {
+        if let trip = model.plan.detail?.trip { return "\(trip.from.iata) → \(trip.to.iata)" }
+        if let card = model.plan.card { return "\(card.from.iata) → \(card.to.iata)" }
+        return nil
+    }
+
+    private var navigationTitle: String {
+        model.plan.prepared?.title ?? (cardTitle.isEmpty ? copy("Loading your plan") : cardTitle)
+    }
+
+    @ToolbarContentBuilder private func titleItem(proxy: ScrollViewProxy) -> some ToolbarContent {
+        ToolbarItem(placement: .principal) {
+            // One Menu in every state: swapping the title view after the push starts fades it in late.
+            let ready = model.state == .ready ? model.plan.prepared : nil
+            let title = navigationTitle
+            Menu {
+                dayMenu(proxy: proxy)
+            } label: {
+                VStack(spacing: 0) {
+                    Text(verbatim: title).font(Typography.planTitle.font).lineLimit(1)
+                    if ready != nil {
+                        HStack(spacing: PlanMetrics.smallGap) {
+                            Text(verbatim: subtitle).lineLimit(1)
+                            Image(systemName: "chevron.down")
+                        }.font(Typography.planSubtitle.font).foregroundStyle(
+                            ColorToken.mutedForeground.color)
+                    }
+                }
+            }
+            .allowsHitTesting(ready != nil)
+            .accessibilityRemoveTraits(ready == nil ? .isButton : [])
+            .accessibilityLabel(ready == nil ? title : dayMenuLabel)
+            .accessibilityValue(
+                Text(
+                    verbatim: ready?.days.first { $0.id == model.anchor.dayID }.map {
+                        $0.title + " · " + $0.date
+                    } ?? "")
+            )
+            .accessibilityIdentifier(ready == nil ? "trip.title" : "trip.dayMenu")
+            .planContentBounds(identifier: "trip.dayMenu")
         }
     }
 
@@ -505,4 +545,17 @@ struct DayFrames: PreferenceKey {
 
 extension CopyCatalog {
     nonisolated fileprivate func mapFormatter() -> CopyLineFormatter { CopyLineFormatter(catalog: self) }
+}
+
+private struct TripNativeTitle: ViewModifier {
+    let title: String
+    let subtitle: String
+
+    func body(content: Content) -> some View {
+        if #available(iOS 26, macOS 26, *) {
+            content.navigationTitle(Text(verbatim: title)).navigationSubtitle(Text(verbatim: subtitle))
+        } else {
+            content
+        }
+    }
 }
