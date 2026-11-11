@@ -75,13 +75,7 @@
     }
   ],
   "summary": null,
-  "price": {
-    "state": "create",
-    "cost": 1,
-    "balance": 1,
-    "unlimited": false,
-    "freeDirections": []
-  },
+  "price": null,
   "canSave": false,
   "saveBlockedReason": null,
   "itinerary": {

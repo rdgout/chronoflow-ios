@@ -69,9 +69,9 @@
             if board == "WizardEditWeb" { draft.state.review?.summary?.stayEnd = draft.state.snapshotStayEnd }
             draft.state.review?.identity.sourceRevision = "capture-source"
             draft.form.identity = draft.state.review?.identity
-            draft.state.review?.price.state = returning ? .edit : .paid
-            draft.state.review?.price.cost = returning ? 1 : 0
-            draft.state.review?.price.balance = board == "WizardEditReturnNoCredits" ? 0 : 3
+            draft.state.review?.price?.state = returning ? .edit : .paid
+            draft.state.review?.price?.cost = returning ? 1 : 0
+            draft.state.review?.price?.balance = board == "WizardEditReturnNoCredits" ? 0 : 3
             draft.state.review?.canSave = board != "WizardEditReturnNoCredits"
             draft.state.review?.saveBlockedReason = board == "WizardEditReturnNoCredits" ? "Not enough credits" : nil
             draft.state.progressFloor = 0.95
@@ -86,6 +86,7 @@
                 draft.state.step = .excluded
                 draft.state.review?.status = .noPlan
                 draft.state.review?.summary = nil
+                draft.state.review?.price = nil
                 draft.state.review?.reasons = [
                     CopyLine(key: "This plan is not available for travellers under 18.", args: [])
                 ]

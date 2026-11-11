@@ -207,6 +207,37 @@ import Testing
         try await fixture.database.close()
     }
 
+    @Test @MainActor func needsAnswersWithoutSupportedPromptsIsAServerFailure() async throws {
+        let fixture = try await reviewFixture()
+        let model = fixture.model
+        var review = try generationReview()
+        review.status = .needsAnswers
+        review.price = nil
+        review.summary = nil
+        review.canSave = false
+        review.prompts = []
+        model.applyReview(TripGenerationReviewResult(input: model.reviewInput, review: review))
+        #expect(model.checking.failure == .server(status: nil))
+        #expect(model.draft.state.step != .excluded && model.draft.state.step != .ready)
+        try await model.discard()
+        try await fixture.database.close()
+    }
+
+    @Test @MainActor func needsAnswersWithSupportedPromptsAsksThem() async throws {
+        let fixture = try await reviewFixture()
+        let model = fixture.model
+        var review = try generationReview()
+        review.status = .needsAnswers
+        review.price = nil
+        review.summary = nil
+        review.canSave = false
+        review.prompts = [screeningPrompt("shift_work")]
+        model.applyReview(TripGenerationReviewResult(input: model.reviewInput, review: review))
+        #expect(model.draft.state.step == .question && model.draft.state.questions?.count == 1)
+        try await model.discard()
+        try await fixture.database.close()
+    }
+
     @Test @MainActor func unknownMockAirportReturnsToWhereBeforeFirstCheckingTick() async throws {
         let now = Date(timeIntervalSince1970: 1_793_750_400)
         let seed = try MockAppSeed.make(now: now)

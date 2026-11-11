@@ -156,7 +156,7 @@ import TripWizard
         let fixture = try await completionFixture()
         var review = fixture.review
         review.canSave = false
-        review.price.balance = 0
+        review.price?.balance = 0
         review.saveBlockedReason = "Not enough credits"
         await fixture.source.queueReviews([.success(review)])
         fixture.model.readyTick(force: true)
@@ -193,11 +193,11 @@ import TripWizard
     @Test func creditsCoverEveryReadyVariant() throws {
         var review = try generationReview()
         #expect(WizardCredits(review) == .credits)
-        review.price.freeDirections = [.return]
+        review.price?.freeDirections = [.return]
         #expect(WizardCredits(review) == .oneFree)
-        review.price.cost = 0
+        review.price?.cost = 0
         #expect(WizardCredits(review) == .free)
-        review.price.unlimited = true
+        review.price?.unlimited = true
         #expect(WizardCredits(review) == .unlimited)
         review.canSave = false
         review.saveBlockedReason = "Not enough credits"

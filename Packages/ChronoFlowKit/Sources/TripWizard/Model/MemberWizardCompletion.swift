@@ -22,13 +22,17 @@ public enum WizardSaveOutcome: Sendable, Equatable { case signUpRequested }
 public enum WizardCredits: Sendable, Equatable {
     case unlimited, free, oneFree, credits, unavailable
     public init(_ review: ApiTripReview) {
+        guard let price = review.price else {
+            self = .unavailable
+            return
+        }
         if !review.canSave, review.saveBlockedReason != nil {
             self = .unavailable
-        } else if review.price.unlimited {
+        } else if price.unlimited {
             self = .unlimited
-        } else if review.price.cost == 0 {
+        } else if price.cost == 0 {
             self = .free
-        } else if review.price.freeDirections.contains(.return) {
+        } else if price.freeDirections.contains(.return) {
             self = .oneFree
         } else {
             self = .credits

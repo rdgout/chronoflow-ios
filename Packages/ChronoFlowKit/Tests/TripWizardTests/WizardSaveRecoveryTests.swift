@@ -184,7 +184,7 @@ import TripWizard
         #expect(try await mock.fetchTrips().count == before + 1)
         #expect(await source.count("save") == 2)
         let balance = try await mock.fetchAccount().settings.planCredits["credits"]
-        #expect(balance == .number(Decimal(review.review.price.balance - review.review.price.cost)))
+        #expect(balance == .number(Decimal((review.review.price?.balance ?? 0) - (review.review.price?.cost ?? 0))))
     }
 }
 

@@ -31,7 +31,7 @@ import Testing
         let before = try await source.fetchTrips().count
         let input = try wizardInput()
         let review = try await source.reviewTrip(ApiTripReviewInput(input: input, profile: wizardProfile()))
-        #expect(review.canSave && review.price.cost == 1 && review.summary != nil)
+        #expect(review.canSave && review.price?.cost == 1 && review.summary != nil)
         #expect(review.itinerary.legs.first?.flightMin == 660)
         let identity = try ApiTripSaveInput(identity: review.identity)
         let saved = try await source.saveTrip(identity: identity)
@@ -63,7 +63,7 @@ import Testing
             "age_band": .null, "shift_work": .null,
         ])
         let first = try await source.reviewTrip(ApiTripReviewInput(input: wizardInput(), profile: missing))
-        #expect(first.status == .needsAnswers && first.prompts.count == 2 && !first.canSave)
+        #expect(first.status == .needsAnswers && first.prompts.count == 2 && !first.canSave && first.price == nil)
         #expect(first.prompts.first?.kind == .ageBand && first.prompts[1].kind == .screening)
         let answered = try await source.reviewTrip(
             ApiTripReviewInput(input: wizardInput(), identity: first.identity, profile: wizardProfile()))
@@ -71,10 +71,11 @@ import Testing
         #expect(answered.status == .ok && answered.canSave)
         let excluded = try await source.reviewTrip(
             ApiTripReviewInput(input: wizardInput(), profile: JSONObject(["shift_work": .bool(true)])))
-        #expect(excluded.status == .noPlan && excluded.prompts.isEmpty && excluded.summary == nil)
+        #expect(
+            excluded.status == .noPlan && excluded.prompts.isEmpty && excluded.summary == nil && excluded.price == nil)
         let underage = try await source.reviewTrip(
             ApiTripReviewInput(input: wizardInput(), profile: JSONObject(["age_band": .string("under_18")])))
-        #expect(underage.status == .noPlan && !underage.canSave)
+        #expect(underage.status == .noPlan && !underage.canSave && underage.price == nil)
         await #expect(throws: DataFailure.reviewExpired) {
             try await source.saveTrip(identity: ApiTripSaveInput(identity: underage.identity))
         }
@@ -102,7 +103,7 @@ import Testing
         }
         let edit = try await source.reviewTripEdit(
             ApiTripReviewInput(input: input), id: saved.tripId, sourceRevision: snapshot.sourceRevision)
-        #expect(edit.price.cost == 0 && edit.canSave)
+        #expect(edit.price?.cost == 0 && edit.canSave)
         let identity = try ApiTripSaveInput(identity: edit.identity)
         #expect(
             try await source.updateTrip(id: saved.tripId, identity: identity, sourceRevision: snapshot.sourceRevision)

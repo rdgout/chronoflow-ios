@@ -196,10 +196,10 @@ extension MemberWizardModel {
             draft.state.review = result.review
             draft.state.updated =
                 unchangedInput && previous != nil
-                && (previous?.summary != result.review.summary || previous?.price.cost != result.review.price.cost
-                    || previous?.price.state != result.review.price.state
-                    || previous?.price.unlimited != result.review.price.unlimited
-                    || previous?.price.freeDirections != result.review.price.freeDirections)
+                && (previous?.summary != result.review.summary || previous?.price?.cost != result.review.price?.cost
+                    || previous?.price?.state != result.review.price?.state
+                    || previous?.price?.unlimited != result.review.price?.unlimited
+                    || previous?.price?.freeDirections != result.review.price?.freeDirections)
             draft.state.reviewedAt = now()
             draft.state.checkedInput = inputFingerprint
             draft.state.saveFailure = nil
@@ -217,7 +217,9 @@ extension MemberWizardModel {
             let questions = result.review.prompts.filter { $0.blocking && ProfilePreferences.isSupported($0) }
             draft.state.questions = questions
             draft.state.questionIndex = 0
-            if result.review.status == .noPlan {
+            if result.review.status == .needsAnswers && questions.isEmpty {
+                applyFailure(.server(status: nil))
+            } else if result.review.status == .noPlan {
                 go(.excluded)
             } else if !questions.isEmpty {
                 go(.question)

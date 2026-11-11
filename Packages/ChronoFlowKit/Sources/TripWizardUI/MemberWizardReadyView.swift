@@ -108,8 +108,7 @@
                         }.buttonStyle(.plain)
                     }
                 }.wizardCard().disabled(model.reviewing)
-                priceBlock
-
+                if model.draft.state.review?.price != nil { priceBlock }
             }
             .task {
                 while !Task.isCancelled {
@@ -156,18 +155,20 @@
             return override.enabled ? t("This trip · {{times}}", ["times": times]) : times
         }
         private var price: String {
-            guard let review = model.draft.state.review else { return "" }
-            if model.isEditing && review.price.cost == 0 { return t("Free") }
-            if review.price.unlimited { return t("Included in your subscription.") }
-            return review.price.cost == 0
+            guard let price = model.draft.state.review?.price else { return "" }
+            if model.isEditing && price.cost == 0 { return t("Free") }
+            if price.unlimited { return t("Included in your subscription.") }
+            return price.cost == 0
                 ? t("Free")
                 : t(
-                    review.price.cost == 1 ? "{{count}} credit" : "{{count}} credits",
-                    ["count": String(review.price.cost)])
+                    price.cost == 1 ? "{{count}} credit" : "{{count}} credits",
+                    ["count": String(price.cost)])
         }
         private var updatedSummary: String {
-            [model.draft.state.review?.summary.map { serverCopy($0.line) } ?? "", t("Price") + ": " + price].joined(
-                separator: " ")
+            [
+                model.draft.state.review?.summary.map { serverCopy($0.line) } ?? "",
+                price.isEmpty ? "" : t("Price") + ": " + price,
+            ].filter { !$0.isEmpty }.joined(separator: " ")
         }
         private var priceBlock: some View {
             VStack(alignment: .leading, spacing: PlanUITokens.wizardControlGap) {
@@ -179,7 +180,7 @@
                             model.credits == .free
                                 ? "Your sign-up credits stay unused."
                                 : "Paid with {{cost}} of the 3 credits you get when you sign up.",
-                            ["cost": String(model.draft.state.review?.price.cost ?? 0)])
+                            ["cost": String(model.draft.state.review?.price?.cost ?? 0)])
                     )
                     .accessibilityIdentifier("wizard.ready.guest-price")
                 } else if !model.isEditing, model.credits == .free {
@@ -188,10 +189,10 @@
                 if model.credits == .oneFree {
                     Text(t("Your flight home is free: only a small shift is needed that way."))
                 }
-                if let review = model.draft.state.review, model.mode == .member, !review.price.unlimited,
-                    review.price.cost > 0
+                if let price = model.draft.state.review?.price, model.mode == .member, !price.unlimited,
+                    price.cost > 0
                 {
-                    Text(t("You have {{count}} credits", ["count": String(review.price.balance)]))
+                    Text(t("You have {{count}} credits", ["count": String(price.balance)]))
                         .fontWeight(model.credits == .unavailable ? .semibold : .regular)
                         .foregroundStyle(
                             (model.credits == .unavailable ? ColorToken.destructive : .mutedForeground).color)
