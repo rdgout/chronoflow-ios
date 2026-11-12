@@ -4,7 +4,7 @@ import XCTest
     enum Account: String { case demo, twofactor }
 
     static func launchScreen(
-        _ screen: String, state: String = "form", language: String = "en", xxLarge: Bool = false,
+        _ screen: String, state: String? = "form", language: String = "en", xxLarge: Bool = false,
         extraEnv: [String: String] = [:], extraArguments: [String] = []
     ) -> XCUIApplication {
         let app = ScreenTestApp.makeApplication()

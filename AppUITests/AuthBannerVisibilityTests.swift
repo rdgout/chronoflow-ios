@@ -18,7 +18,7 @@ nonisolated final class AuthBannerVisibilityTests: ScreenTestCase {
 
     @MainActor private func checkSignUp(xxLarge: Bool, offline: Bool) {
         let app = AuthUIFlow.launchScreen(
-            "sign-up", xxLarge: xxLarge, extraEnv: offline ? ["CF_AUTH_TEST_OFFLINE": "1"] : [:])
+            "sign-up", state: nil, xxLarge: xxLarge, extraEnv: offline ? ["CF_AUTH_TEST_OFFLINE": "1"] : [:])
         openSignUp(app)
         fillSignUp(app, email: offline ? "new@example.com" : MockScenarioValues.demoEmail)
         AuthUIFlow.assertBannerVisible(in: app, scrollIdentifier: "sign-up.scroll")
@@ -35,7 +35,7 @@ nonisolated final class AuthBannerVisibilityTests: ScreenTestCase {
     }
 
     @MainActor private func checkSignIn(xxLarge: Bool) {
-        let app = AuthUIFlow.launchScreen("sign-in", xxLarge: xxLarge)
+        let app = AuthUIFlow.launchScreen("sign-in", state: nil, xxLarge: xxLarge)
         AuthUIFlow.openSignIn(app)
         AuthUIFlow.signIn(app, email: "unknown@example.com")
         AuthUIFlow.assertBannerVisible(in: app, scrollIdentifier: "sign-in.scroll")
@@ -53,7 +53,7 @@ nonisolated final class AuthBannerVisibilityTests: ScreenTestCase {
 
     @MainActor private func checkReset(xxLarge: Bool) {
         let app = AuthUIFlow.launchScreen(
-            "reset", xxLarge: xxLarge, extraEnv: ["CF_AUTH_TEST_RESET_FAILURE": "server"])
+            "reset", state: nil, xxLarge: xxLarge, extraEnv: ["CF_AUTH_TEST_RESET_FAILURE": "server"])
         openResetFromMockMail(app)
         fillReset(app, password: "NewPassword123!", confirmation: "NewPassword123!")
         AuthUIFlow.assertBannerVisible(in: app, scrollIdentifier: "reset.scroll")
