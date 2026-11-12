@@ -11,36 +11,68 @@
     import XCTest
 
     nonisolated final class TripPageSnapshotTests: XCTestCase {
-        @MainActor func testStates() async throws {
+        override func setUp() {
+            super.setUp()
+            executionTimeAllowance = 60
+        }
+
+        @MainActor func testStates17eLoading() async throws { try await states("17e", .loading) }
+        @MainActor func testStates17eRemoteLoading() async throws { try await states("17e", .remoteLoading) }
+        @MainActor func testStates17eRemoteOffline() async throws { try await states("17e", .remoteOffline) }
+        @MainActor func testStates17eReady() async throws { try await states("17e", .ready) }
+        @MainActor func testStates17eNoPlan() async throws { try await states("17e", .noPlan) }
+        @MainActor func testStates17eNotFound() async throws { try await states("17e", .notFound) }
+        @MainActor func testStates17eServer() async throws { try await states("17e", .server) }
+        @MainActor func testStatesSELoading() async throws { try await states("se", .loading) }
+        @MainActor func testStatesSERemoteLoading() async throws { try await states("se", .remoteLoading) }
+        @MainActor func testStatesSERemoteOffline() async throws { try await states("se", .remoteOffline) }
+        @MainActor func testStatesSEReady() async throws { try await states("se", .ready) }
+        @MainActor func testStatesSENoPlan() async throws { try await states("se", .noPlan) }
+        @MainActor func testStatesSENotFound() async throws { try await states("se", .notFound) }
+        @MainActor func testStatesSEServer() async throws { try await states("se", .server) }
+        @MainActor func testStatesDuoLoading() async throws { try await states("duo", .loading) }
+        @MainActor func testStatesDuoRemoteLoading() async throws { try await states("duo", .remoteLoading) }
+        @MainActor func testStatesDuoRemoteOffline() async throws { try await states("duo", .remoteOffline) }
+        @MainActor func testStatesDuoReady() async throws { try await states("duo", .ready) }
+        @MainActor func testStatesDuoNoPlan() async throws { try await states("duo", .noPlan) }
+        @MainActor func testStatesDuoNotFound() async throws { try await states("duo", .notFound) }
+        @MainActor func testStatesDuoServer() async throws { try await states("duo", .server) }
+        @MainActor func testListAndEnd17e() async throws { try await listAndEnd("17e") }
+        @MainActor func testListAndEndSE() async throws { try await listAndEnd("se") }
+        @MainActor func testListAndEndDuo() async throws { try await listAndEnd("duo") }
+        @MainActor func testEndCardStates17e() async throws { try await endCardStates("17e") }
+        @MainActor func testEndCardStatesSE() async throws { try await endCardStates("se") }
+        @MainActor func testEndCardStatesDuo() async throws { try await endCardStates("duo") }
+
+        // One profile and state per test keeps each run inside the hosted budget and names the failing case.
+        @MainActor private func states(_ alias: String, _ state: TripPageState) async throws {
             try await AuthTestHost.registerFonts()
             let formatter = CopyLineFormatter(catalog: try await CopyCatalog.load())
-            for fixture in try AuthDeviceFixture.authSnapshotProfiles() {
+            for fixture in try AuthDeviceFixture.authSnapshotProfiles() where fixture.name == alias {
                 for (style, language, category) in fixture.authSnapshotVariants {
-                    for state in TripPageState.allCases {
-                        let name =
-                            "\(fixture.snapshotName)-\(style == .dark ? "dark" : "light")-\(language)-\(category.rawValue)-\(state.rawValue)"
-                        func capture() async throws -> Data {
-                            try await captureTripPage(
-                                state: state, fixture: fixture, style: style, language: language, category: category,
-                                formatter: formatter)
-                        }
-                        let png = try await capture()
-                        let repeated = try await capture()
-                        guard try SnapshotRaster(png: png) == SnapshotRaster(png: repeated) else {
-                            throw TripSnapshotFailure.freshRootsDiffer(name)
-                        }
-                        let reference = URL(filePath: #filePath).deletingLastPathComponent().appending(
-                            path: "__Snapshots__/TripPage/\(name).png")
-                        try verifyTripSnapshot(png: png, reference: reference)
+                    let name =
+                        "\(fixture.snapshotName)-\(style == .dark ? "dark" : "light")-\(language)-\(category.rawValue)-\(state.rawValue)"
+                    func capture() async throws -> Data {
+                        try await captureTripPage(
+                            state: state, fixture: fixture, style: style, language: language, category: category,
+                            formatter: formatter)
                     }
+                    let png = try await capture()
+                    let repeated = try await capture()
+                    guard try SnapshotRaster(png: png) == SnapshotRaster(png: repeated) else {
+                        throw TripSnapshotFailure.freshRootsDiffer(name)
+                    }
+                    let reference = URL(filePath: #filePath).deletingLastPathComponent().appending(
+                        path: "__Snapshots__/TripPage/\(name).png")
+                    try verifyTripSnapshot(png: png, reference: reference)
                 }
             }
         }
 
-        @MainActor func testEndCardStates() async throws {
+        @MainActor private func endCardStates(_ alias: String) async throws {
             try await AuthTestHost.registerFonts()
             let formatter = CopyLineFormatter(catalog: try await CopyCatalog.load())
-            for fixture in try AuthDeviceFixture.authSnapshotProfiles() {
+            for fixture in try AuthDeviceFixture.authSnapshotProfiles() where fixture.name == alias {
                 for (style, language, category) in fixture.authSnapshotVariants {
                     for noText in [false, true] {
                         let context = try await TripSnapshotContext(state: .ready, language: language)
@@ -76,10 +108,10 @@
             }
         }
 
-        @MainActor func testListAndEnd() async throws {
+        @MainActor private func listAndEnd(_ alias: String) async throws {
             try await AuthTestHost.registerFonts()
             let formatter = CopyLineFormatter(catalog: try await CopyCatalog.load())
-            for fixture in try AuthDeviceFixture.authSnapshotProfiles() {
+            for fixture in try AuthDeviceFixture.authSnapshotProfiles() where fixture.name == alias {
                 for (style, language, category) in fixture.authSnapshotVariants {
                     let context = try await TripSnapshotContext(state: .ready, language: language)
                     try await context.wait()
