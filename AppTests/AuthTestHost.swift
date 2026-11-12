@@ -10,14 +10,19 @@ import XCTest
     let container: SnapshotContainer
     let scale: CGFloat
     var prepareCapture: (UIWindow) -> Void = { _ in }
+    private let sideInsetsOutsideView: Bool
     private var revision = 0
     private var checkedRenderRevision: Int?
     var window: UIWindow { container.window }
 
     init<V: View>(
         _ view: V, size: CGSize, insets: UIEdgeInsets = .zero, style: UIUserInterfaceStyle = .light,
-        language: String = "en", category: UIContentSizeCategory = .large, scale: CGFloat? = nil
+        language: String = "en", category: UIContentSizeCategory = .large, scale: CGFloat? = nil,
+        sideInsetsOutsideView: Bool = false
     ) throws {
+        // Horizontal SwiftUI safe-area insets don't reach screens inside a NavigationStack here. On a device,
+        // UIKit lays tab-root pages out beside the Duo rail instead, which `true` reproduces.
+        self.sideInsetsOutsideView = sideInsetsOutsideView
         container = SnapshotContainer(
             size: size, insets: .init(top: insets.top, left: insets.left, bottom: insets.bottom, right: insets.right),
             scale: scale)
@@ -55,8 +60,7 @@ import XCTest
                 )
                 .safeAreaInset(edge: .top, spacing: 0) { Color.clear.frame(height: insets.top) }
                 .safeAreaInset(edge: .bottom, spacing: 0) { Color.clear.frame(height: insets.bottom) }
-                .safeAreaInset(edge: .leading, spacing: 0) { Color.clear.frame(width: insets.left) }
-                .safeAreaInset(edge: .trailing, spacing: 0) { Color.clear.frame(width: insets.right) }
+                .modifier(SideInsets(left: insets.left, right: insets.right, outside: sideInsetsOutsideView))
                 .id(revision))
     }
 
@@ -255,5 +259,20 @@ nonisolated struct AuthDeviceFixture {
                         top: device.insets.top, left: device.insets.left, bottom: device.insets.bottom,
                         right: device.insets.right), scale: device.scale, device: device)
             }
+    }
+}
+
+private struct SideInsets: ViewModifier {
+    let left: CGFloat
+    let right: CGFloat
+    let outside: Bool
+
+    func body(content: Content) -> some View {
+        if outside {
+            content.padding(.leading, left).padding(.trailing, right)
+        } else {
+            content.safeAreaInset(edge: .leading, spacing: 0) { Color.clear.frame(width: left) }
+                .safeAreaInset(edge: .trailing, spacing: 0) { Color.clear.frame(width: right) }
+        }
     }
 }
