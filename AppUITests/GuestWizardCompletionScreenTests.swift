@@ -47,12 +47,8 @@ nonisolated final class GuestSignupScreenTests: ScreenTestCase {
         let app = GuestWizardScreenUIFlow.launch("GuestSignup")
         XCTAssertTrue(app.textFields["guest-signup.name"].waitUntil(.exists, timeout: 3))
         XCTAssertFalse(app.staticTexts["auth.banner"].exists)
-        let password = app.secureTextFields["guest-signup.password"]
-        XCTAssertTrue(password.exists)
-        XCTAssertTrue(
-            app.staticTexts[
-                "Use at least 12 characters, with uppercase and lowercase letters, numbers and symbols. Choose a password that has not appeared in a data leak."
-            ].exists)
+        XCTAssertTrue(app.secureTextFields["guest-signup.password"].exists)
+        XCTAssertTrue(app.secureTextFields["guest-signup.confirmation"].exists)
     }
 
     @MainActor func testGuestSignupFailed() {

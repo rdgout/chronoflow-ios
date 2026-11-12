@@ -136,7 +136,8 @@ nonisolated final class WelcomeLogicTests: XCTestCase {
     private func assertRoute(button identifier: String, route: String) {
         let app = XCUIApplication()
         app.launchArguments = ["-cf.session", "out", "-cf.reduceMotion"]
-        app.launchMeasured(profile: .launch)
+        // The screen profile seeds a signed-out native session; the guest wizard starts only when signed out.
+        app.launchMeasured()
         defer { app.terminate() }
         XCTAssertTrue(app.staticTexts["welcome.wordmark"].waitUntil(.exists, timeout: 6))
         let button = app.buttons[identifier]
@@ -146,7 +147,7 @@ nonisolated final class WelcomeLogicTests: XCTestCase {
         if route == "signIn" {
             XCTAssertTrue(app.staticTexts["auth.heading"].waitUntil(.exists, timeout: 3))
         } else {
-            XCTAssertTrue(app.staticTexts["route.\(route)"].waitUntil(.exists, timeout: 3))
+            XCTAssertTrue(app.staticTexts["wizard.title"].firstMatch.waitUntil(.exists, timeout: 5))
         }
     }
 

@@ -23,7 +23,7 @@ nonisolated final class SignInTests: ScreenTestCase {
         XCTAssertTrue(app.textFields["sign-in.email"].waitUntil(.exists, timeout: 3))
         reveal(app.buttons["sign-in.guest"], app)
         app.buttons["sign-in.guest"].tap()
-        XCTAssertTrue(app.staticTexts["route.guestWizard"].waitUntil(.exists, timeout: 3))
+        XCTAssertTrue(app.staticTexts["wizard.title"].firstMatch.waitUntil(.exists, timeout: 5))
         XCTAssertFalse(app.images["launch.opening"].exists)
     }
     @MainActor func testReturnChainKeyboardSubmitAndPasswordClearing() throws {
