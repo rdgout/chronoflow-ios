@@ -7,6 +7,7 @@ final class TripScrollTracker {
     private var viewport: CGSize?
     private var layout: TripPageLayout?
     private var restoration: TripScrollRestoration?
+    private var ticks = 0
     var pendingDayID: String? {
         restoration?.anchor.dayID.flatMap { frames[$0] == nil ? $0 : nil }
     }
@@ -40,10 +41,11 @@ final class TripScrollTracker {
             displayLink = nil
         #endif
         restoration = nil
+        ticks = 0
     }
 
     func resize(frames: [String: CGRect], viewport: CGSize, layout: TripPageLayout, anchor: TripPageAnchor) -> Bool {
-        if self.viewport != nil && (self.viewport != viewport || self.layout != layout) {
+        if self.viewport != nil && (self.viewport?.width != viewport.width || self.layout != layout) {
             if self.anchor == nil { self.anchor = anchor }
             beginResize()
         }
@@ -70,6 +72,12 @@ final class TripScrollTracker {
         }
 
         fileprivate func restorePosition() {
+            // Backstop: a restoration that never converges must not keep fighting the user's scrolling.
+            ticks += 1
+            if ticks > Self.maxTicks {
+                cancelRestoration()
+                return
+            }
             guard let scrollView, scrollView.window != nil else {
                 cancelRestoration()
                 return
@@ -79,8 +87,8 @@ final class TripScrollTracker {
                 return
             }
             guard let window = scrollView.window,
-                layout == TripPageLayout.resolve(width: window.bounds.width, height: window.bounds.height),
-                viewport == scrollView.bounds.size,
+                layout == TripPageLayout.resolve(width: window.bounds.width),
+                Self.matches(viewport, scrollView),
                 let id = restoration?.anchor.dayID, let day = dayViews.object(forKey: id as NSString),
                 day.window === window
             else {
@@ -103,6 +111,15 @@ final class TripScrollTracker {
             }
             scrollView.setContentOffset(
                 CGPoint(x: scrollView.contentOffset.x, y: target), animated: false)
+        }
+
+        private static let maxTicks = 60
+
+        // The page measures its viewport inside the safe area; the scroll view itself spans it.
+        private static func matches(_ viewport: CGSize?, _ scrollView: UIScrollView) -> Bool {
+            guard let viewport else { return false }
+            let visible = scrollView.bounds.inset(by: scrollView.safeAreaInsets).size
+            return abs(visible.width - viewport.width) < 0.5 && abs(visible.height - viewport.height) < 0.5
         }
     #endif
 
@@ -223,8 +240,9 @@ nonisolated struct TripScrollRestoration {
 
     init(anchor: TripPageAnchor) { self.anchor = anchor }
 
+    // The anchor offset is measured from the visible top, which sits `-lower` below the content offset.
     func target(for sample: Sample) -> Double {
-        min(sample.upper, max(sample.lower, sample.dayOrigin + anchor.offset))
+        min(sample.upper, max(sample.lower, sample.dayOrigin + anchor.offset + sample.lower))
     }
 
     mutating func observe(_ sample: Sample) -> Bool {

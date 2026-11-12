@@ -56,4 +56,22 @@ struct PlanPageGeometryTests {
             }
         }
     }
+
+    @Test func railInsetsIgnoreTranslationOfPageAndRailTogether() {
+        let container = CGRect(x: 0, y: 0, width: 382, height: 600)
+        let expected = PlanPageGeometry.railInsets(railWidth: 382, container: container)
+        #expect(expected.left == 0)
+        #expect(expected.right == 0)
+        let wide = PlanPageGeometry.railInsets(railWidth: 867, container: container)
+        #expect(wide.left == 0)
+        #expect(wide.right == 485)
+        let shifted = PlanPageGeometry.railInsets(railWidth: 382, container: container.offsetBy(dx: 0, dy: 300))
+        #expect(shifted.left == expected.left)
+        #expect(shifted.right == expected.right)
+        let offset = PlanPageGeometry.railInsets(railWidth: 382, container: CGRect(x: 19, y: 0, width: 363, height: 1))
+        #expect(offset.left == 19)
+        #expect(offset.right == 0)
+        let none = PlanPageGeometry.railInsets(railWidth: 382, container: nil)
+        #expect(none.left == 0 && none.right == 0)
+    }
 }
