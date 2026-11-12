@@ -1,4 +1,5 @@
 import AppCore
+import Auth
 import Foundation
 import LocalStore
 import Observation
@@ -9,6 +10,8 @@ import Observation
     public private(set) var loaded = false
     public private(set) var settingsLoaded = false
     public private(set) var failure = false
+    public let passkeyRegistration: (any PasskeyRegistrationProviding)?
+    public let deviceName: String
     @ObservationIgnored private let database: AccountDatabase
     @ObservationIgnored private let permit: SessionMutationPermit
     @ObservationIgnored private let isCurrent: @Sendable () async -> Bool
@@ -25,8 +28,11 @@ import Observation
         delete: @escaping @MainActor (String) async throws -> Void = { _ in throw DataFailure.unsupported(.security) },
         security: @escaping @MainActor (AccountSecurityChange) async throws -> AccountSecurityResult = { _ in
             throw DataFailure.unsupported(.security)
-        }
+        },
+        passkeyRegistration: (any PasskeyRegistrationProviding)? = nil, deviceName: String = "iPhone"
     ) {
+        self.passkeyRegistration = passkeyRegistration
+        self.deviceName = deviceName
         self.database = database
         self.permit = permit
         self.isCurrent = isCurrent
@@ -112,6 +118,10 @@ import Observation
         if case .snapshot(let value) = result {
             try await database.write(permit: permit) { db in try StoreApplication.snapshot(value, accountID: id, db: db)
             }
+        } else if case .passkeys(let list) = result {
+            var value = settings["security"] ?? JSONObject()
+            value["passkeyCount"] = .number(Decimal(list.count))
+            try await SettingsRepository(database: database).upsertSecurity(value, permit: permit)
         } else if case .confirmTwoFactor = change, case .codes = result {
             var value = settings["security"] ?? JSONObject()
             value["twoFactorEnabled"] = .bool(true)

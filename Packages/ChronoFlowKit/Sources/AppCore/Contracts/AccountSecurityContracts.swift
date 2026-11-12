@@ -22,6 +22,10 @@ public enum AccountSecurityChange: Sendable, Equatable {
     case disableTwoFactor(current: String)
     case revealRecoveryCodes(current: String)
     case regenerateRecoveryCodes(current: String)
+    case listPasskeys
+    case passkeyCreationOptions(current: String)
+    case addPasskey(ApiPasskeyRegistrationInput)
+    case removePasskey(id: Int, current: String)
 }
 
 public enum AccountSecurityResult: Sendable, Equatable {
@@ -29,4 +33,7 @@ public enum AccountSecurityResult: Sendable, Equatable {
     case setup(ApiTwoFactorSetup)
     case codes(ApiRecoveryCodes)
     case snapshot(AccountSnapshot)
+    case passkeys([ApiPasskey])
+    case passkeyCreation(ApiPasskeyRegistrationChallenge)
+    case passkeyAdded(ApiPasskey)
 }

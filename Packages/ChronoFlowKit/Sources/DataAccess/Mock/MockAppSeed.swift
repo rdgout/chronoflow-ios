@@ -45,32 +45,37 @@
             snapshot.billing["checkout"] = .null
             snapshot.security = JSONObject([
                 "canManagePasskeys": .bool(true), "canManageTwoFactor": .bool(true),
-                "passkeys": .array(
-                    ["iPhone 16", "MacBook Pro"].enumerated().map { index, name in
-                        .object([
-                            "id": .number(Decimal(index + 1)), "name": .string(name), "authenticator": .null,
-                            "createdAtDiff": .null, "lastUsedAtDiff": .null,
-                        ])
-                    }),
+                "passkeyCount": .number(2),
                 "passwordRules": .string("minlength: 10;"), "twoFactorEnabled": .bool(false),
                 "twoFactorConfirmedAt": .null, "requiresConfirmation": .bool(true), "retryAfterSeconds": .null,
             ])
             let demo = MockServerAccount(
                 snapshot: snapshot, password: MockScenarioValues.password, walkthroughSeen: walkthroughSeen,
-                trips: trips, details: details)
+                trips: trips, details: details, passkeys: demoPasskeys(now: now))
             snapshot.id = MockScenarioValues.twoFactorID
             snapshot.email = MockScenarioValues.twoFactorEmail
-            snapshot.security["passkeys"] = .array([])
+            snapshot.security["passkeyCount"] = .number(0)
             snapshot.security["twoFactorEnabled"] = .bool(true)
             snapshot.security["twoFactorConfirmedAt"] = .string(now.ISO8601Format())
             let twoFactor = MockServerAccount(
                 snapshot: snapshot, password: MockScenarioValues.password,
                 twoFactorCode: MockScenarioValues.twoFactorCode, recoveryCodes: [MockScenarioValues.recoveryCode],
                 walkthroughSeen: walkthroughSeen,
-                trips: trips, details: details)
+                trips: trips, details: details, passkeys: [])
             var state = MockServerState(accounts: [demo, twoFactor])
             state.seedAnchor = anchor(now: now)
             return state
+        }
+
+        static func demoPasskeys(now: Date) -> [ApiPasskey] {
+            [
+                ApiPasskey(
+                    id: 1, name: "iPhone 16", createdAt: now.addingTimeInterval(-60 * 86400).ISO8601Format(),
+                    lastUsedAt: now.ISO8601Format()),
+                ApiPasskey(
+                    id: 2, name: "MacBook Pro", createdAt: now.addingTimeInterval(-42 * 86400).ISO8601Format(),
+                    lastUsedAt: now.addingTimeInterval(-15 * 86400).ISO8601Format()),
+            ]
         }
 
         static func anchor(now: Date) -> String {
@@ -88,6 +93,10 @@
             let fixtures = try decodedFixtures.get()
             for accountID in [MockScenarioValues.demoID, MockScenarioValues.twoFactorID] {
                 guard var account = state.accounts[accountID] else { continue }
+                if account.passkeys == nil {
+                    account.passkeys = accountID == MockScenarioValues.demoID ? demoPasskeys(now: now) : []
+                }
+                account.snapshot.security["passkeyCount"] = .number(Decimal(account.passkeys?.count ?? 0))
                 for (index, fixture) in fixtures.trips.enumerated() {
                     let id = fixture.card.id
                     guard let tripIndex = account.trips.firstIndex(where: { $0.card.id == id }),

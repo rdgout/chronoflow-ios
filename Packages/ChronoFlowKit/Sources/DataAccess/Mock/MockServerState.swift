@@ -11,9 +11,12 @@ public struct MockServerAccount: Codable, Sendable, Equatable {
     public var resendAvailableAt: TimeInterval
     public var trips: [TripListItem]
     public var details: [String: TripDetail]
+    public var passkeys: [ApiPasskey]?
+    var passkeyCredentialIDs: [String]?
     public init(
         snapshot: AccountSnapshot, password: String, twoFactorCode: String? = nil, recoveryCodes: Set<String> = [],
-        walkthroughSeen: Bool = false, trips: [TripListItem] = [], details: [String: TripDetail] = [:]
+        walkthroughSeen: Bool = false, trips: [TripListItem] = [], details: [String: TripDetail] = [:],
+        passkeys: [ApiPasskey]? = nil
     ) {
         self.snapshot = snapshot
         self.password = password
@@ -23,6 +26,7 @@ public struct MockServerAccount: Codable, Sendable, Equatable {
         self.resendAvailableAt = 0
         self.trips = trips
         self.details = details
+        self.passkeys = passkeys
     }
     public var identity: AccountIdentity {
         AccountIdentity(
@@ -39,6 +43,7 @@ public struct MockServerState: Codable, Sendable, Equatable {
     var sessions: [String: MockSession] = [:]
     var twoFactor: [String: MockTwoFactor] = [:]
     var passkeys: [String: MockPasskey] = [:]
+    var passkeyRegistrations: [String: MockPasskeyRegistration]?
     var resets: [String: MockReset] = [:]
     var rateWindows: [String: MockRateLimiter.Window] = [:]
     var mail: [MockMail] = []
@@ -109,6 +114,12 @@ struct MockTwoFactor: Codable, Sendable, Equatable {
 struct MockPasskey: Codable, Sendable, Equatable {
     let challenge: ApiPasskeyChallenge
     let expiresAt: TimeInterval
+}
+struct MockPasskeyRegistration: Codable, Sendable, Equatable {
+    let accountID: String
+    let challenge: String
+    let expiresAt: TimeInterval
+    var token: String?
 }
 struct MockReset: Codable, Sendable, Equatable {
     let token: String

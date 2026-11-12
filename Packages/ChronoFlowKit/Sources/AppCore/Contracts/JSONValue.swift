@@ -35,6 +35,12 @@ public enum JSONValue: Codable, Sendable, Equatable {
         }
     }
     public var string: String? { if case .string(let v) = self { v } else { nil } }
+    public var int: Int? {
+        guard case .number(let v) = self else { return nil }
+        let number = NSDecimalNumber(decimal: v)
+        return number.decimalValue == Decimal(number.int64Value) && number.int64Value >= 0
+            ? Int(number.int64Value) : nil
+    }
     public var object: [String: JSONValue]? { if case .object(let v) = self { v } else { nil } }
 }
 
