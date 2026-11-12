@@ -13,7 +13,7 @@ import Testing
         #expect(secret.range(of: #"^[0-9a-f]{64}$"#, options: .regularExpression) != nil)
         #expect(review.identity.inputRevision == 1 && review.identity.reviewRevision == 1)
         #expect(review.identity.sourceRevision == nil)
-        #expect(review.price.balance == 3 && review.price.cost == 1 && !review.price.unlimited)
+        #expect(review.price?.balance == 3 && review.price?.cost == 1 && review.price?.unlimited == false)
         #expect(review.canSave && review.saveBlockedReason == nil)
         let state = try #require(store.load())
         #expect(state.accounts.isEmpty && state.sessions.isEmpty && state.claims.isEmpty)
@@ -86,6 +86,7 @@ import Testing
         request.profile["vte"] = .bool(true)
         let review = try await source.reviewGuestTrip(request)
         #expect(review.status == .needsAnswers && !review.canSave && review.saveBlockedReason == nil)
+        #expect(review.price == nil && review.summary == nil)
         #expect(review.prompts.map(\.id) == ["age_band:::", "screening:shift_work::"])
         #expect(review.prompts.allSatisfy { $0.blocking })
         #expect(review.prompts[0].answer == ["age_band": .null])
@@ -104,7 +105,9 @@ import Testing
         var request = try guestReviewInput()
         request.profile[field] = field == "age_band" ? .string("under_18") : .bool(true)
         let review = try await source.reviewGuestTrip(request)
-        #expect(review.status == .noPlan && !review.canSave && review.prompts.isEmpty && review.summary == nil)
+        #expect(
+            review.status == .noPlan && !review.canSave && review.prompts.isEmpty && review.summary == nil
+                && review.price == nil)
     }
 
     @Test func pastArrivalUsesGuestMessage() async throws {
@@ -175,7 +178,7 @@ import Testing
             store: store, seed: MockServerState(), now: clock.now, sleep: { _ in },
             bearer: { throw DataFailure.unauthorized(status: 401) })
         let review = try await publicSource.reviewGuestTrip(guestReviewInput())
-        #expect(review.price.balance == 3)
+        #expect(review.price?.balance == 3)
         let member = try mockSource(store: store, seed: scenarioState())
         var state = try #require(store.load())
         state.accounts = try scenarioState().accounts

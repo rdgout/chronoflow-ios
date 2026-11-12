@@ -850,7 +850,7 @@ public struct ApiTripReview: Codable, Sendable, Equatable {
     public var reasons: [CopyLine]
     public var prompts: [ApiReviewPrompt]
     public var summary: ApiReviewSummary?
-    public var price: ApiReviewPrice
+    public var price: ApiReviewPrice?
     public var canSave: Bool
     public var saveBlockedReason: String?
     public var itinerary: ApiReviewItinerary
@@ -861,7 +861,7 @@ public struct ApiTripReview: Codable, Sendable, Equatable {
         reasons: [CopyLine],
         prompts: [ApiReviewPrompt],
         summary: ApiReviewSummary? = nil,
-        price: ApiReviewPrice,
+        price: ApiReviewPrice? = nil,
         canSave: Bool,
         saveBlockedReason: String? = nil,
         itinerary: ApiReviewItinerary
@@ -885,7 +885,7 @@ public struct ApiTripReview: Codable, Sendable, Equatable {
             reasons: try container.decode([CopyLine].self, forKey: .reasons),
             prompts: try container.decode([ApiReviewPrompt].self, forKey: .prompts),
             summary: try container.decodeIfPresent(ApiReviewSummary.self, forKey: .summary),
-            price: try container.decode(ApiReviewPrice.self, forKey: .price),
+            price: try container.decodeIfPresent(ApiReviewPrice.self, forKey: .price),
             canSave: try container.decode(Bool.self, forKey: .canSave),
             saveBlockedReason: try container.decodeIfPresent(String.self, forKey: .saveBlockedReason),
             itinerary: try container.decode(ApiReviewItinerary.self, forKey: .itinerary)

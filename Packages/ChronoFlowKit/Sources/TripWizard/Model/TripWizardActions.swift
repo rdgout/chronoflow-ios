@@ -81,7 +81,7 @@ extension MemberWizardModel {
             : draft.state.checkingAnswers == true ? "Checking your answers" : "Checking your trip"
     }
 
-    func acceptSourceReload(_ snapshot: ApiTripInputSnapshot, price: ApiReviewPrice) throws {
+    func acceptSourceReload(_ snapshot: ApiTripInputSnapshot, price: ApiReviewPrice?) throws {
         let form = try WizardForm(snapshot: snapshot)
         let before = draft.state.originalForm ?? draft.form
         var fields: [WizardPresentation.SourceChange.Field] = []

@@ -46,7 +46,7 @@ import Testing
         input.input.outbound.legs[0].toIata = "DXB"
         input.input.outbound.legs[0].arriveLocal = "2026-11-10T20:00"
         let review = try await source.reviewGuestTrip(input)
-        #expect(review.price.cost == 0 && review.canSave)
+        #expect(review.price?.cost == 0 && review.canSave)
         let session = try await source.signUp(guestRegistration(review))
         #expect(store.load()?.accounts[session.account.id]?.snapshot.settings.planCredits["credits"] == .number(3))
     }

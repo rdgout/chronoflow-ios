@@ -201,7 +201,7 @@
                                 : "This plan is not available for travellers under 18.", args: [])
                     ],
                     prompts: [],
-                    price: ApiReviewPrice(state: .free, cost: 0, balance: 3, unlimited: false, freeDirections: []),
+                    price: nil,
                     canSave: false,
                     itinerary: ApiReviewItinerary(legs: [], layovers: []))
             }

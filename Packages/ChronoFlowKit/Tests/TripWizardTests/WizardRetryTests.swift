@@ -120,7 +120,7 @@ import Testing
         let fixture = try await completionFixture()
         let model = fixture.model
         var changed = fixture.review
-        changed.price.cost += 1
+        changed.price?.cost += 1
         await fixture.source.queueReviews([.success(changed)])
         if userEdited {
             model.revisit(.fineTune)

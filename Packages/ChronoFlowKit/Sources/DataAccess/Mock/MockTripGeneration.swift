@@ -203,10 +203,13 @@ enum MockTripGeneration {
         let directions: [TripDirection] = input.return == nil ? [.outbound] : [.outbound, .return]
         let free = template.detail.plan.summary?.adaptation.goal == .routine
         let cost = unlimited || free ? 0 : directions.filter { !paidDirections.contains($0) }.count
-        let price = ApiReviewPrice(
-            state: unlimited ? .unlimited : cost == 0 ? (edit ? .paid : .free) : (edit ? .edit : .create), cost: cost,
-            balance: balance,
-            unlimited: unlimited, freeDirections: free ? directions : [])
+        let price =
+            planned
+            ? ApiReviewPrice(
+                state: unlimited ? .unlimited : cost == 0 ? (edit ? .paid : .free) : (edit ? .edit : .create),
+                cost: cost,
+                balance: balance,
+                unlimited: unlimited, freeDirections: free ? directions : []) : nil
         let plan = template.detail.plan
         let summary: ApiReviewSummary?
         if planned, let value = plan.summary, let first = plan.days.first, let last = plan.days.last {

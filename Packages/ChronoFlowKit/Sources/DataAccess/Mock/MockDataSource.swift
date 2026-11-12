@@ -309,7 +309,7 @@ public actor MockDataSource: DataSource {
         if let guest {
             snapshot.settings.bodyClock = guest.draft.profile
             snapshot.settings.sleepAnswered = true
-            snapshot.settings.planCredits["credits"] = .number(Decimal(3 - guest.draft.review.price.cost))
+            snapshot.settings.planCredits["credits"] = .number(Decimal(3 - (guest.draft.review.price?.cost ?? 0)))
             snapshot.readiness = MockSettings.readiness(guest.draft.profile)
         }
         let account = MockServerAccount(snapshot: snapshot, password: input.password)
@@ -327,7 +327,7 @@ public actor MockDataSource: DataSource {
                 inputs[accountID + ":" + token] = saved.2
                 state.wizardInputs = inputs
                 var paid = state.wizardPaidDirections ?? [:]
-                paid[accountID + ":" + token] = guest.draft.review.price.cost > 0 ? [.outbound] : []
+                paid[accountID + ":" + token] = (guest.draft.review.price?.cost ?? 0) > 0 ? [.outbound] : []
                 state.wizardPaidDirections = paid
                 state.claims[token] = MockClaim(
                     accountID: accountID, tripID: token, secret: secret, deviceID: guest.deviceID,
@@ -883,7 +883,7 @@ extension MockDataSource {
             state.accounts[owner]!.trips.append(item)
             state.accounts[owner]!.details[id] = detail
             state.accounts[owner]!.snapshot.settings.planCredits["credits"] = .number(
-                Decimal(currentReview.price.balance - currentReview.price.cost))
+                Decimal((currentReview.price?.balance ?? 0) - (currentReview.price?.cost ?? 0)))
             var receipts = state.wizardReceipts ?? [:]
             receipts[key] = MockWizardReceipt(intent: intent, tripID: id, expiresAt: time + 86400)
             state.wizardReceipts = receipts
@@ -894,7 +894,7 @@ extension MockDataSource {
             var paid = state.wizardPaidDirections ?? [:]
             let directions: [TripDirection] = draft.input.return == nil ? [.outbound] : [.outbound, .return]
             paid[owner + ":" + id] = Array(
-                Set(previousPaid + directions.filter { !currentReview.price.freeDirections.contains($0) }))
+                Set(previousPaid + directions.filter { !(currentReview.price?.freeDirections ?? []).contains($0) }))
             state.wizardPaidDirections = paid
         }
         return ApiTripSaveResult(tripId: id)
