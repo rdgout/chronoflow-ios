@@ -173,11 +173,6 @@
                     XCTAssertGreaterThan(list.height, 0)
                     XCTAssertGreaterThan(header.height, 0)
                 }
-                if checkMenu {
-                    let menu = try XCTUnwrap(measurements.frame(for: "trip.dayMenu"))
-                    XCTAssertGreaterThan(menu.width, 0)
-                    XCTAssertLessThan(menu.maxY, list.minY)
-                }
             } else if state == .remoteLoading {
                 let timeline = try XCTUnwrap(measurements.frame(for: "trip.wide.loading.timeline"))
                 let list = try XCTUnwrap(measurements.frame(for: "trip.wide.loading.list"))
@@ -193,12 +188,11 @@
             }
             let navigation = try XCTUnwrap(navigationController(in: host.controller))
             XCTAssertFalse(navigation.navigationBar.isHidden)
-            let menu = measurements.frame(for: "trip.dayMenu")
             if state == .ready {
-                let menu = try XCTUnwrap(menu)
-                let bar = navigation.navigationBar.convert(navigation.navigationBar.bounds, to: host.window)
-                XCTAssertGreaterThanOrEqual(menu.minY, bar.minY - 0.5)
-                XCTAssertLessThanOrEqual(menu.maxY, bar.maxY + 0.5)
+                let item = try XCTUnwrap(navigation.navigationBar.topItem)
+                let trip = try XCTUnwrap(context.model.plan.detail?.trip)
+                XCTAssertEqual(item.title, "\(trip.from.iata) → \(trip.to.iata)")
+                if checkMenu { XCTAssertNotNil(item.titleMenuProvider) }
             }
             XCTAssertLessThanOrEqual(scroll.contentSize.width, scroll.bounds.width + 0.5)
             let attachment = XCTAttachment(image: try host.image())

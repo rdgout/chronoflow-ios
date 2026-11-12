@@ -21,14 +21,22 @@ struct TripPageRoute: Hashable {
     var notificationToken: UUID? = nil
 }
 
+struct TripPageSession {
+    let snapshot: SessionSnapshot
+    let database: AccountDatabase
+    let permit: SessionMutationPermit
+    let sync: SessionSync
+}
+
 struct TripPageDestination: View {
     let route: TripPageRoute
-    var native: NativeSessionController? = nil
+    var native: NativeSessionController?
     var onTrips: (() -> Void)?
     var onToday: (() -> Void)?
     var onSettings: (() -> Void)?
     var prepareWizard: ((String, TripWizardAction) async throws -> MemberWizardModel)?
     var presentWizard: ((MemberWizardModel) -> Void)?
+    private let session: TripPageSession?
     @State private var model: TripPageModel?
     @State private var openedNotificationStep = false
     @State private var showingReminders = false
@@ -38,11 +46,58 @@ struct TripPageDestination: View {
     @State private var actionFailure: String?
     @Environment(\.locale) private var locale
 
+    init(
+        route: TripPageRoute, native: NativeSessionController? = nil, session: TripPageSession? = nil,
+        onTrips: (() -> Void)? = nil, onToday: (() -> Void)? = nil, onSettings: (() -> Void)? = nil,
+        prepareWizard: ((String, TripWizardAction) async throws -> MemberWizardModel)? = nil,
+        presentWizard: ((MemberWizardModel) -> Void)? = nil
+    ) {
+        self.route = route
+        self.native = native
+        self.session = session
+        self.onTrips = onTrips
+        self.onToday = onToday
+        self.onSettings = onSettings
+        self.prepareWizard = prepareWizard
+        self.presentWizard = presentWizard
+        // Built here, not in the task, so the page and its bar exist on the push's first frame;
+        // a bar swapped in mid-push fades in late.
+        _model = State(initialValue: session.map { Self.makeModel(route: route, session: $0) })
+    }
+
+    private static func makeModel(route: TripPageRoute, session: TripPageSession) -> TripPageModel {
+        var clock: any PlanClock = SystemPlanClock()
+        #if DEBUG
+            if UITestRuntime.environment["CF_PLAN_TEST_FREEZE_CLOCK"] == "1",
+                (UIApplication.shared.delegate as? AppDelegate)?.authServices?.authUITestEnabled == true
+            {
+                clock = FixedPlanClock(now: Date())
+            }
+        #endif
+        let sync = session.sync
+        let snapshot = session.snapshot
+        let page = TripPageModel(
+            tripID: route.tripID, repository: TripRepository(database: session.database),
+            retention: sync.retention, dayID: route.dayID, blockID: route.blockID, awaitingSync: route.awaitingSync,
+            clock: clock, mutationPermit: session.permit,
+            fetchDetail: { id in
+                try await sync.fetchDetail(tripID: id, session: snapshot.session, epoch: snapshot.epoch)
+            })
+        #if DEBUG
+            if (UIApplication.shared.delegate as? AppDelegate)?.authServices?.authUITestEnabled == true {
+                page.timeline = UITestRuntime.environment["CF_PLAN_TEST_ROUTE"]?.hasSuffix(":list") != true
+            }
+        #endif
+        return page
+    }
+
     var body: some View {
         ZStack {
             ColorToken.background.color.ignoresSafeArea()
             if let model {
                 tripPage(model)
+            } else {
+                Color.clear.tripPageLoadingBar()
             }
         }
         .task(id: model?.plan.detail?.plan.meta.inputHash) {
@@ -100,31 +155,22 @@ struct TripPageDestination: View {
         }
         .sheet(isPresented: $showingReminders) { RemindersDestination(native: native, firstTrip: true) }
         .task {
-            guard let native, let snapshot = await native.controller.activeSession(),
-                let database = await native.accounts.activeDatabase(), let sync = native.sync,
-                let permit = await native.controller.mutationPermit(for: snapshot),
-                await native.controller.activeSession() == snapshot, !Task.isCancelled
-            else { return }
-            var clock: any PlanClock = SystemPlanClock()
-            #if DEBUG
-                if UITestRuntime.environment["CF_PLAN_TEST_FREEZE_CLOCK"] == "1",
-                    (UIApplication.shared.delegate as? AppDelegate)?.authServices?.authUITestEnabled == true
-                {
-                    clock = FixedPlanClock(now: Date())
-                }
-            #endif
-            let page = TripPageModel(
-                tripID: route.tripID, repository: TripRepository(database: database), retention: sync.retention,
-                dayID: route.dayID, blockID: route.blockID, awaitingSync: route.awaitingSync,
-                clock: clock, mutationPermit: permit,
-                fetchDetail: { id in
-                    try await sync.fetchDetail(tripID: id, session: snapshot.session, epoch: snapshot.epoch)
-                })
-            #if DEBUG
-                if (UIApplication.shared.delegate as? AppDelegate)?.authServices?.authUITestEnabled == true {
-                    page.timeline = UITestRuntime.environment["CF_PLAN_TEST_ROUTE"]?.hasSuffix(":list") != true
-                }
-            #endif
+            let resolved: TripPageSession
+            if let session {
+                resolved = session
+            } else {
+                guard let native, let snapshot = await native.controller.activeSession(),
+                    let database = await native.accounts.activeDatabase(), let sync = native.sync,
+                    let permit = await native.controller.mutationPermit(for: snapshot)
+                else { return }
+                resolved = TripPageSession(snapshot: snapshot, database: database, permit: permit, sync: sync)
+            }
+            let snapshot = resolved.snapshot
+            let sync = resolved.sync
+            guard let native, await native.controller.activeSession() == snapshot, !Task.isCancelled else {
+                return
+            }
+            let page = model ?? Self.makeModel(route: route, session: resolved)
             model = page
             let events = Task {
                 for await event in await sync.events() {

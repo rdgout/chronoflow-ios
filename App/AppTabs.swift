@@ -20,6 +20,7 @@ struct AppTabs: View {
     var native: NativeSessionController?
     @State private var selection: Tab = .today
     @State private var home: PlanHomeModel?
+    @State private var tripSession: TripPageSession?
     @State private var settingsHome = SettingsHomeModel()
     @State private var settingsPages: SettingsPagesModel?
     @State private var settingsPath = NavigationPath()
@@ -286,6 +287,9 @@ struct AppTabs: View {
             let model = PlanHomeModel(
                 repository: TripRepository(database: database), clock: clock, mutationPermit: permit)
             home = model
+            if let sync = native.sync {
+                tripSession = TripPageSession(snapshot: snapshot, database: database, permit: permit, sync: sync)
+            }
             model.start()
             let recovery = MemberWizardStore(database: database, permit: permit)
             if let source = await native.wizardDataSource(session: snapshot.session) {
@@ -404,7 +408,7 @@ struct AppTabs: View {
 
     private func tripDestination(_ route: TripPageRoute) -> TripPageDestination {
         TripPageDestination(
-            route: route, native: native,
+            route: route, native: native, session: tripSession,
             onTrips: {
                 path.removeAll()
                 tripsPath.removeAll()
