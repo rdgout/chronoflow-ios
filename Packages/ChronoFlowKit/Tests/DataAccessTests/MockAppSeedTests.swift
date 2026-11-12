@@ -39,11 +39,12 @@ extension DataSourceSelectionTests {
             #expect(snapshot.settings.policies.acceptedTermsVersion == "2026-10-01")
             #expect(snapshot.readiness["variant"] == .string("ready"))
             #expect(snapshot.security["twoFactorEnabled"] == .bool(false))
-            guard case .array(let passkeys) = snapshot.security["passkeys"] else {
+            #expect(snapshot.security["passkeyCount"]?.int == 2)
+            guard case .passkeys(let passkeys) = try await source.accountSecurity(.listPasskeys) else {
                 Issue.record("Expected RN demo passkeys")
                 return
             }
-            #expect(passkeys.compactMap { $0.object?["name"]?.string } == ["iPhone 16", "MacBook Pro"])
+            #expect(passkeys.map(\.name) == ["iPhone 16", "MacBook Pro"])
             let trips = try await source.fetchTrips()
             #expect(trips.count == 7)
             #expect(
@@ -82,7 +83,8 @@ extension DataSourceSelectionTests {
             let snapshot = try await source.fetchAccount()
             #expect(snapshot.security["twoFactorEnabled"] == .bool(true))
             #expect(snapshot.security["twoFactorConfirmedAt"]?.string != nil)
-            #expect(snapshot.security["passkeys"] == .array([]))
+            #expect(snapshot.security["passkeyCount"]?.int == 0)
+            #expect(try await source.accountSecurity(.listPasskeys) == .passkeys([]))
         }
 
         @Test(arguments: [false, true])

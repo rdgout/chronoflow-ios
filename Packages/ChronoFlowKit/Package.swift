@@ -49,10 +49,10 @@ let package = Package(
             swiftSettings: [.defaultIsolation(nil)]),
         .target(
             name: "Settings",
-            dependencies: ["AppCore", "LocalStore", "Sync", "PlanCore", "PlanUI", "DesignSystem", "Reminders"],
+            dependencies: ["AppCore", "LocalStore", "Sync", "PlanCore", "PlanUI", "DesignSystem", "Reminders", "Auth"],
             resources: [.process("Resources")], swiftSettings: [.defaultIsolation(nil)]),
         .testTarget(
-            name: "SettingsTests", dependencies: ["Settings", "DataAccess", "TripWizard"],
+            name: "SettingsTests", dependencies: ["Settings", "DataAccess", "TripWizard", "Auth"],
             swiftSettings: [.defaultIsolation(nil)]),
         .target(
             name: "Reminders",
