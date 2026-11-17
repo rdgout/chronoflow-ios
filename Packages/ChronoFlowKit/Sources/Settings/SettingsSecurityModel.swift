@@ -1,9 +1,10 @@
 import AppCore
+import Auth
 import Foundation
 import Observation
 
 public enum SettingsSecurityPrompt: String, Identifiable, Sendable {
-    case enable, disable, reveal, regenerate
+    case enable, disable, reveal, regenerate, addPasskey, removePasskey
     public var id: String { rawValue }
     public var detail: String {
         switch self {
@@ -11,6 +12,9 @@ public enum SettingsSecurityPrompt: String, Identifiable, Sendable {
         case .disable: "Enter your password to turn off two-factor authentication."
         case .reveal: "Enter your password to show your recovery codes."
         case .regenerate: "Enter your password to make new recovery codes. Your current codes stop working."
+        case .addPasskey: "Enter your password to add a passkey on this phone."
+        case .removePasskey:
+            "Are you sure you want to remove the “{{name}}” passkey? You will no longer be able to use it to sign in."
         }
     }
     public var button: String {
@@ -19,10 +23,13 @@ public enum SettingsSecurityPrompt: String, Identifiable, Sendable {
         case .disable: "Turn off"
         case .reveal: "Show codes"
         case .regenerate: "Make new codes"
+        case .addPasskey: "Add a passkey"
+        case .removePasskey: "Remove passkey"
         }
     }
-    public func change(password: String) -> AccountSecurityChange {
+    public func change(password: String) -> AccountSecurityChange? {
         switch self {
+        case .addPasskey, .removePasskey: nil
         case .enable: .enableTwoFactor(current: password)
         case .disable: .disableTwoFactor(current: password)
         case .reveal: .revealRecoveryCodes(current: password)
@@ -41,19 +48,29 @@ public enum SettingsSecurityPrompt: String, Identifiable, Sendable {
     public private(set) var setup: ApiTwoFactorSetup?
     public private(set) var codes: [String] = []
     public private(set) var busy = false
-    public private(set) var message: String?
+    public internal(set) var message: String?
+    public internal(set) var passkeys: [ApiPasskey]?
+    public internal(set) var passkeysUnavailable = false
+    public internal(set) var offline = false
+    public var removal: ApiPasskey?
     public var twoFactorActivationFailed: Bool { message == "Couldn't turn on two-factor." }
     public private(set) var errors: [String: String] = [:]
     private var errorArguments: [String: [String: String]] = [:]
     public private(set) var retryAt: Date?
-    @ObservationIgnored private var generation = 0
-    @ObservationIgnored private let perform: @MainActor (AccountSecurityChange) async throws -> AccountSecurityResult
-    @ObservationIgnored private let now: @Sendable () -> Date
+    @ObservationIgnored var generation = 0
+    @ObservationIgnored var registrationCanceled = false
+    @ObservationIgnored let perform: @MainActor (AccountSecurityChange) async throws -> AccountSecurityResult
+    @ObservationIgnored let now: @Sendable () -> Date
+    @ObservationIgnored let registration: (any PasskeyRegistrationProviding)?
+    @ObservationIgnored let deviceName: String
     public init(
         perform: @escaping @MainActor (AccountSecurityChange) async throws -> AccountSecurityResult,
+        registration: (any PasskeyRegistrationProviding)? = nil, deviceName: String = "iPhone",
         now: @escaping @Sendable () -> Date = { Date() }
     ) {
         self.perform = perform
+        self.registration = registration
+        self.deviceName = deviceName
         self.now = now
     }
     public func refreshLock() {
@@ -83,16 +100,18 @@ public enum SettingsSecurityPrompt: String, Identifiable, Sendable {
         confirmation = ""
         if await run(change) { message = "Password updated" }
     }
-    public func showPrompt(_ action: SettingsSecurityPrompt) {
+    public func showPrompt(_ action: SettingsSecurityPrompt, removing passkey: ApiPasskey? = nil) {
         guard !busy else { return }
         promptPassword = ""
         errors = [:]
         message = nil
+        removal = passkey
         prompt = action
     }
     public func cancelPrompt() {
         guard !busy else { return }
         prompt = nil
+        removal = nil
         promptPassword = ""
         errors = [:]
         message = nil
@@ -101,7 +120,11 @@ public enum SettingsSecurityPrompt: String, Identifiable, Sendable {
         guard let prompt, !promptPassword.isEmpty, !busy, !locked else { return }
         let password = promptPassword
         promptPassword = ""
-        if await run(prompt.change(password: password)) { self.prompt = nil }
+        if let change = prompt.change(password: password) {
+            if await run(change) { self.prompt = nil }
+        } else {
+            await submitPasskeyPrompt(prompt, password: password)
+        }
     }
     public func confirm() async {
         guard !busy, !locked else { return }
@@ -113,16 +136,20 @@ public enum SettingsSecurityPrompt: String, Identifiable, Sendable {
         code = ""
         if await run(.confirmTwoFactor(code: value)) { message = "Two-factor is on. Save your recovery codes now." }
     }
-    @discardableResult private func run(_ change: AccountSecurityChange) async -> Bool {
+    @discardableResult func run(
+        _ change: AccountSecurityChange, work: (@MainActor () async throws -> AccountSecurityResult)? = nil
+    ) async -> Bool {
         let started = generation
         busy = true
         errors = [:]
         message = nil
         defer { if generation == started { busy = false } }
         do {
-            let result = try await perform(change)
+            let result: AccountSecurityResult
+            if let work { result = try await work() } else { result = try await perform(change) }
             guard generation == started, !Task.isCancelled else { return false }
             retryAt = nil
+            offline = false
             switch result {
             case .changed: break
             case .setup(let value):
@@ -134,17 +161,34 @@ public enum SettingsSecurityPrompt: String, Identifiable, Sendable {
             case .snapshot:
                 setup = nil
                 codes = []
+            case .passkeys(let value):
+                passkeys = value
+                passkeysUnavailable = false
+            case .passkeyCreation, .passkeyAdded: break
             }
             return true
-        } catch is CancellationError { return false } catch {
+        } catch is CancellationError { return false } catch let failure as PasskeyFailure where failure == .canceled {
+            if generation == started { registrationCanceled = true }
+            return false
+        } catch {
             guard generation == started else { return false }
             switch error as? DataFailure {
-            case .offline: message = "Needs a connection."
+            case .offline:
+                offline = true
+                message = "Needs a connection."
             case .throttled(let seconds, _):
                 retryAt = now().addingTimeInterval(max(0, seconds))
                 message = "Too many attempts."
             case .validation(let fields, _):
                 for (field, value) in fields {
+                    if field == "credential" || field == "name" {
+                        message = Self.registrationFailure
+                        continue
+                    }
+                    if field == "challengeId" {
+                        message = Self.registrationExpired
+                        continue
+                    }
                     switch value.key {
                     case "The provided password was incorrect.": errors[field] = value.key
                     case "Use at least :min characters.":
@@ -172,9 +216,12 @@ public enum SettingsSecurityPrompt: String, Identifiable, Sendable {
             return false
         }
     }
+    static let registrationFailure = "We couldn't register that passkey. Please try again."
+    static let registrationExpired = "The passkey registration request expired. Please try again."
     private func failureMessage(for change: AccountSecurityChange) -> String {
         switch change {
         case .enableTwoFactor, .confirmTwoFactor: "Couldn't turn on two-factor."
+        case .passkeyCreationOptions, .addPasskey: Self.registrationFailure
         default: "Something went wrong"
         }
     }
@@ -196,5 +243,6 @@ public enum SettingsSecurityPrompt: String, Identifiable, Sendable {
         setup = nil
         codes = []
         prompt = nil
+        removal = nil
     }
 }

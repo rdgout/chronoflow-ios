@@ -927,6 +927,11 @@ extension MockDataSource {
     public func accountSecurity(_ change: AccountSecurityChange) async throws -> AccountSecurityResult {
         try await begin(.accountSecurity)
         let accountID = try accountID(verified: true)
+        switch change {
+        case .listPasskeys, .passkeyCreationOptions, .addPasskey, .removePasskey:
+            return try passkeySecurity(change, accountID: accountID)
+        default: break
+        }
         if case .confirmTwoFactor = change {
             try limit("two-factor-confirm:\(accountID)", count: 5)
         } else {
@@ -937,7 +942,9 @@ extension MockDataSource {
         case .password(let value, _, _), .enableTwoFactor(let value), .disableTwoFactor(let value),
             .revealRecoveryCodes(let value), .regenerateRecoveryCodes(let value):
             current = value
-        case .confirmTwoFactor, .requestPasswordReset: current = nil
+        case .confirmTwoFactor, .requestPasswordReset, .listPasskeys, .passkeyCreationOptions, .addPasskey,
+            .removePasskey:
+            current = nil
         }
         if let current, current != state!.accounts[accountID]!.password {
             throw validation("current_password", "The provided password was incorrect.")
@@ -998,6 +1005,102 @@ extension MockDataSource {
                 try update { $0.accounts[accountID]?.recoveryCodes = codes }
             }
             return .codes(ApiRecoveryCodes(recoveryCodes: state!.accounts[accountID]!.recoveryCodes.sorted()))
+        case .listPasskeys, .passkeyCreationOptions, .addPasskey, .removePasskey:
+            throw DataFailure.server(status: nil)
+        }
+    }
+
+    private static func base64URL(_ data: Data) -> String {
+        data.base64EncodedString().replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
+    }
+
+    private func passkeySecurity(_ change: AccountSecurityChange, accountID: String) throws -> AccountSecurityResult {
+        let time = now().timeIntervalSince1970
+        let account = state!.accounts[accountID]!
+        if case .listPasskeys = change { return .passkeys(account.passkeys ?? []) }
+        try limit("credential:\(accountID)", count: 6)
+        switch change {
+        case .passkeyCreationOptions(let current):
+            guard current == account.password else {
+                throw validation("current_password", "The provided password was incorrect.")
+            }
+            let material = id() + id()
+            let challengeID = SHA256.hash(data: Data(material.utf8)).map { String(format: "%02x", $0) }.joined()
+            let challenge = Self.base64URL(Data(SHA256.hash(data: Data(("registration:" + material).utf8))))
+            let token = requestToken
+            try update {
+                $0.passkeyRegistrations = ($0.passkeyRegistrations ?? [:]).filter { $0.value.expiresAt > time }
+                $0.passkeyRegistrations?[challengeID] = MockPasskeyRegistration(
+                    accountID: accountID, challenge: challenge, expiresAt: time + 120, token: token)
+            }
+            return .passkeyCreation(
+                ApiPasskeyRegistrationChallenge(
+                    challengeId: challengeID,
+                    options: ApiPasskeyCreationOptions(
+                        challenge: challenge, rp: ApiPasskeyRelyingParty(id: "app.chronoflow.net"),
+                        user: ApiPasskeyUserEntity(
+                            id: Self.base64URL(Data(("user:" + accountID).utf8)), name: account.snapshot.email,
+                            displayName: account.snapshot.name),
+                        excludeCredentials: (account.passkeyCredentialIDs ?? []).map {
+                            ApiPasskeyCredentialDescriptor(id: $0)
+                        })))
+        case .addPasskey(let input):
+            let name = input.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            var fields: [String: FieldMessage] = [:]
+            for (field, value) in [("challengeId", input.challengeId), ("name", name)] {
+                let max = field == "name" ? 255 : 64
+                if value.isEmpty {
+                    fields[field] = FieldMessage(key: "Please fill this in.")
+                } else if value.count > max {
+                    fields[field] = FieldMessage(
+                        key: "Use no more than :max characters.", arguments: ["max": .number(Decimal(max))])
+                }
+            }
+            guard fields.isEmpty else { throw DataFailure.validation(fields: fields, status: 422) }
+            guard let stored = state!.passkeyRegistrations?[input.challengeId], stored.accountID == accountID,
+                stored.token == requestToken, stored.expiresAt > time
+            else { throw validation("challengeId", "The passkey registration request expired. Please try again.") }
+            try update { _ = $0.passkeyRegistrations?.removeValue(forKey: input.challengeId) }
+            let credential = input.credential
+            let failure = validation("credential", "We couldn't register that passkey. Please try again.")
+            let valid: (String) -> Bool = { APIDataSource.base64URL($0).map { !$0.isEmpty } ?? false }
+            guard credential.type == .publicKey, valid(credential.id), !credential.id.contains("="),
+                valid(credential.rawId),
+                APIDataSource.base64URL(credential.rawId) == APIDataSource.base64URL(credential.id),
+                valid(credential.response.clientDataJSON), !credential.response.clientDataJSON.contains("="),
+                valid(credential.response.attestationObject),
+                !(account.passkeyCredentialIDs ?? []).contains(credential.id)
+            else { throw failure }
+            let item = ApiPasskey(
+                id: (account.passkeys?.map(\.id).max() ?? 0) + 1, name: name, createdAt: now().ISO8601Format())
+            try update {
+                var list = $0.accounts[accountID]?.passkeys ?? []
+                list.insert(item, at: 0)
+                $0.accounts[accountID]?.passkeys = list
+                var ids = $0.accounts[accountID]?.passkeyCredentialIDs ?? []
+                ids.append(credential.id)
+                $0.accounts[accountID]?.passkeyCredentialIDs = ids
+                $0.accounts[accountID]?.snapshot.security["passkeyCount"] = .number(Decimal(list.count))
+            }
+            return .passkeyAdded(item)
+        case .removePasskey(let passkeyID, let current):
+            guard account.passkeys?.contains(where: { $0.id == passkeyID }) == true else {
+                throw DataFailure.server(status: 404)
+            }
+            guard current == account.password else {
+                throw validation("current_password", "The provided password was incorrect.")
+            }
+            let keep = requestToken
+            try update {
+                let list = ($0.accounts[accountID]?.passkeys ?? []).filter { $0.id != passkeyID }
+                $0.accounts[accountID]?.passkeys = list
+                $0.accounts[accountID]?.snapshot.security["passkeyCount"] = .number(Decimal(list.count))
+                $0.sessions = $0.sessions.filter { $0.value.accountID != accountID || $0.key == keep }
+            }
+            return .changed
+        default:
+            throw DataFailure.server(status: nil)
         }
     }
 }

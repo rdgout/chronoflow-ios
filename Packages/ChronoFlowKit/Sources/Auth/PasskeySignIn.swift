@@ -1,7 +1,9 @@
 import AppCore
 import Foundation
 
-nonisolated public enum PasskeyFailure: Error, Sendable, Equatable { case canceled, invalidEncoding, unavailable, busy }
+nonisolated public enum PasskeyFailure: Error, Sendable, Equatable {
+    case canceled, invalidEncoding, unavailable, busy, alreadyRegistered
+}
 
 nonisolated public enum Base64URL {
     public static func encode(_ bytes: Data) -> String {

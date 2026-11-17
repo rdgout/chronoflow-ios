@@ -42,6 +42,22 @@ extension APIDataSource {
             return .codes(
                 try await client.request(
                     endpoint("POST", ["two-factor", "recovery-codes"], ["current_password": .string(current)])))
+        case .listPasskeys:
+            let list: ApiPasskeyList = try await client.request(APIEndpoint(path: ["account", "passkeys"]))
+            return .passkeys(list.passkeys)
+        case .passkeyCreationOptions(let current):
+            return .passkeyCreation(
+                try await client.request(
+                    endpoint("POST", ["passkeys", "options"], ["current_password": .string(current)])))
+        case .addPasskey(let input):
+            return .passkeyAdded(
+                try await client.request(
+                    APIEndpoint(method: "POST", path: ["account", "passkeys"], body: try JSONEncoder().encode(input)),
+                    expectedStatus: 201))
+        case .removePasskey(let id, let current):
+            try await client.requestNoContent(
+                endpoint("DELETE", ["passkeys", String(id)], ["current_password": .string(current)]))
+            return .changed
         }
     }
 }

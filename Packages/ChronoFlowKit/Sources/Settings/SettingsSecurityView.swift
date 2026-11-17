@@ -9,9 +9,8 @@
         @Environment(\.locale) private var locale
         private let store: SettingsPagesModel
         public init(store: SettingsPagesModel) { self.store = store }
-        private func t(_ key: String) -> String {
-            SettingsStrings.text(key, language: locale.language.languageCode?.identifier == "nl" ? .nl : .en)
-        }
+        private var language: Language { locale.language.languageCode?.identifier == "nl" ? .nl : .en }
+        private func t(_ key: String) -> String { SettingsStrings.text(key, language: language) }
         public var body: some View {
             SettingsPage("Security", identifier: "settings.security.screen") {
                 if let security = store.settings["security"] {
@@ -22,6 +21,17 @@
                             SettingsRow(title: t("Password"), subtitle: t("Change your password"), symbol: "lock")
                         }.buttonStyle(.plain).accessibilityIdentifier("settings.security.password")
                         SettingsDivider()
+                        if let count = security["passkeyCount"]?.int {
+                            NavigationLink {
+                                SettingsPasskeysView(store: store)
+                            } label: {
+                                SettingsRow(
+                                    title: t("Passkeys"),
+                                    subtitle: SettingsPasskeyText.count(count, language: language),
+                                    symbol: "key")
+                            }.buttonStyle(.plain).accessibilityIdentifier("settings.security.passkeys")
+                            SettingsDivider()
+                        }
                         NavigationLink {
                             SettingsTwoFactorView(store: store)
                         } label: {
@@ -282,7 +292,7 @@
         }
     }
 
-    private struct SettingsSecurityFeedback: View {
+    struct SettingsSecurityFeedback: View {
         @Environment(\.locale) private var locale
         let model: SettingsSecurityModel
         var body: some View {
@@ -293,11 +303,12 @@
                     identifier: "settings.security.feedback",
                     success: [
                         "Password updated", "Two-factor is on. Save your recovery codes now.", "Check your inbox.",
+                        "Passkey added", "Passkey removed",
                     ].contains(key))
             }
         }
     }
-    private struct SettingsSecurityLock: View {
+    struct SettingsSecurityLock: View {
         @Environment(\.locale) private var locale
         let model: SettingsSecurityModel
         var body: some View {
@@ -342,7 +353,7 @@
                 }
         }
     }
-    @MainActor private func refreshLock(_ model: SettingsSecurityModel) async {
+    @MainActor func refreshLock(_ model: SettingsSecurityModel) async {
         while model.locked, !Task.isCancelled {
             do { try await Task.sleep(for: .seconds(1)) } catch { return }
             model.refreshLock()

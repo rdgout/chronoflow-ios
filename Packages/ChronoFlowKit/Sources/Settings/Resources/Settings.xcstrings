@@ -4823,6 +4823,353 @@
           }
         }
       }
+    },
+    "%lld passkeys": {
+      "comment": "RN exact English key: {{count}} passkey",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld passkey"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld passkeys"
+                }
+              }
+            }
+          }
+        },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld passkey"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld passkeys"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Add a passkey": {
+      "comment": "Passkey management · RN copy first, then web lang/nl.json",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a passkey"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passkey toevoegen"
+          }
+        }
+      }
+    },
+    "Add one on this phone and you can sign in without typing a password.": {
+      "comment": "Passkey management · RN copy first, then web lang/nl.json",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add one on this phone and you can sign in without typing a password."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voeg er een toe op deze telefoon en log in zonder een wachtwoord te typen."
+          }
+        }
+      }
+    },
+    "Added {{date}}": {
+      "comment": "Passkey management · RN copy first, then web lang/nl.json",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added {{date}}"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toegevoegd {{date}}"
+          }
+        }
+      }
+    },
+    "Are you sure you want to remove the “{{name}}” passkey? You will no longer be able to use it to sign in.": {
+      "comment": "Passkey management · web lang/nl.json",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Are you sure you want to remove the “{{name}}” passkey? You will no longer be able to use it to sign in."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weet je zeker dat je de passkey ‘{{name}}’ wilt verwijderen? Je kunt die daarna niet meer gebruiken om in te loggen."
+          }
+        }
+      }
+    },
+    "Enter your password to add a passkey on this phone.": {
+      "comment": "Passkey management · translated",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter your password to add a passkey on this phone."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voer je wachtwoord in om een passkey toe te voegen op deze telefoon."
+          }
+        }
+      }
+    },
+    "No passkeys yet": {
+      "comment": "Passkey management · RN copy first, then web lang/nl.json",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No passkeys yet"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nog geen passkeys"
+          }
+        }
+      }
+    },
+    "Passkey added": {
+      "comment": "Passkey management · translated",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passkey added"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passkey toegevoegd"
+          }
+        }
+      }
+    },
+    "Passkey removed": {
+      "comment": "Passkey management · translated",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passkey removed"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passkey verwijderd"
+          }
+        }
+      }
+    },
+    "Passkeys": {
+      "comment": "Passkey management · RN copy first, then web lang/nl.json",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passkeys"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passkeys"
+          }
+        }
+      }
+    },
+    "Remove passkey": {
+      "comment": "Passkey management · translated",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove passkey"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passkey verwijderen"
+          }
+        }
+      }
+    },
+    "Remove passkey {{name}}": {
+      "comment": "Passkey management · RN copy first, then web lang/nl.json",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove passkey {{name}}"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passkey {{name}} verwijderen"
+          }
+        }
+      }
+    },
+    "Sign in with Face ID, a fingerprint or your screen lock instead of your password.": {
+      "comment": "Passkey management · RN copy first, then web lang/nl.json",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in with Face ID, a fingerprint or your screen lock instead of your password."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log in met Face ID, een vingerafdruk of je schermvergrendeling in plaats van je wachtwoord."
+          }
+        }
+      }
+    },
+    "The passkey registration request expired. Please try again.": {
+      "comment": "Passkey management · Phase 20 handoff / web lang/nl.json",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The passkey registration request expired. Please try again."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Het registratieverzoek voor de passkey is verlopen. Probeer het opnieuw."
+          }
+        }
+      }
+    },
+    "We couldn't register that passkey. Please try again.": {
+      "comment": "Passkey management · translated",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We couldn't register that passkey. Please try again."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die passkey kon niet worden geregistreerd. Probeer het opnieuw."
+          }
+        }
+      }
+    },
+    "Your passkeys": {
+      "comment": "Passkey management · RN copy first, then web lang/nl.json",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your passkeys"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je passkeys"
+          }
+        }
+      }
+    },
+    "today": {
+      "comment": "Passkey management · board SetPasskeys meta line",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "today"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vandaag"
+          }
+        }
+      }
+    },
+    "used {{date}}": {
+      "comment": "Passkey management · board SetPasskeys meta line",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "used {{date}}"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "gebruikt {{date}}"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

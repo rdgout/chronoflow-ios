@@ -12,6 +12,8 @@ final class AuthSessionServices {
     let resetLinks: GuestResetLinkRouter
     let nativeSession: NativeSessionController
     let model: SignInModel
+    let passkeyRegistration: any PasskeyRegistrationProviding
+    let deviceName: String
     private let source: any DataSource
     private let navigator: RootNavigator
     private let verification: @MainActor (UInt64) async -> Void
@@ -27,6 +29,7 @@ final class AuthSessionServices {
         navigator: RootNavigator, source: (any DataSource)? = nil,
         anchor: @escaping @MainActor () -> UIWindow? = { nil },
         assertionProvider: (any PasskeyAssertionProviding)? = nil,
+        registrationProvider: (any PasskeyRegistrationProviding)? = nil,
         verification: @escaping @MainActor (UInt64) async -> Void
     ) {
         #if DEBUG
@@ -93,10 +96,16 @@ final class AuthSessionServices {
             ?? (services.factory.source == .mock
                 ? DeterministicAssertionProvider { _ in throw PasskeyFailure.unavailable }
                 : SystemPasskeyAssertionProvider(anchor: anchor))
+        let deviceName = DeviceIdentityStore.deviceName(UIDevice.current.name, model: UIDevice.current.model)
+        self.deviceName = deviceName
+        passkeyRegistration =
+            registrationProvider
+            ?? (services.factory.source == .mock
+                ? DeterministicRegistrationProvider() : SystemPasskeyRegistrationProvider(anchor: anchor))
         model = SignInModel(
             source: source, session: native.controller,
             deviceIdentity: { try await identity.identity() },
-            deviceName: DeviceIdentityStore.deviceName(UIDevice.current.name, model: UIDevice.current.model),
+            deviceName: deviceName,
             assertionProvider: assertion,
             claim: { await native.guestWizardStore.claim(secrets: native.guestSecrets) },
             guestReviewExpired: { try? await native.guestWizardStore.reviewExpired(claim: $0) },

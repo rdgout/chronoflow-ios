@@ -206,6 +206,7 @@ struct AppTabs: View {
                 database: database, controller: native.controller, session: snapshot, sync: native.sync)
             settingsHome = settings
             settings.start()
+            let auth = (UIApplication.shared.delegate as? AppDelegate)?.authServices
             let pages = SettingsPagesModel(
                 database: database, permit: permit,
                 isCurrent: { await native.controller.activeSession() == snapshot },
@@ -227,7 +228,8 @@ struct AppTabs: View {
                         }
                     #endif
                     return try await native.accountSecurity(change, session: snapshot)
-                })
+                },
+                passkeyRegistration: auth?.passkeyRegistration, deviceName: auth?.deviceName ?? "iPhone")
             settingsPages = pages
             pages.start()
             #if DEBUG
