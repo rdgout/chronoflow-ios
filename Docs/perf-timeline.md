@@ -178,7 +178,7 @@ Perf configuration on 17e. It does not run the seven-device matrix. `make perf` 
 only the original launch benchmark. Each timeline test has a 300 s execution allowance.
 
 `test60DayTimeToFirstTimelineFrame` measures the custom
-`net.chronoflow.app.native` / `Timeline` / `time-to-first-timeline-frame` signpost and
+`net.chronoflow.app` / `Timeline` / `time-to-first-timeline-frame` signpost and
 `XCTApplicationLaunchMetric` over three iterations. The custom interval begins after
 fixture/database seeding, before model creation. It includes repository observation,
 decode, layout, preparation and the first day drawing. It ends after the splash has gone

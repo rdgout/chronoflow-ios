@@ -832,9 +832,9 @@ def prepare(destination):
     run(["xcrun", "simctl", "spawn", destination.udid, "defaults", "write",
          "com.apple.WebUI", "AutoFillPasswords", "-bool", "false"], log=log)
     reset_appearance(destination)
-    installed = run(["xcrun", "simctl", "get_app_container", destination.udid, "net.chronoflow.app.native", "app"], log=log, check=False)
+    installed = run(["xcrun", "simctl", "get_app_container", destination.udid, "net.chronoflow.app", "app"], log=log, check=False)
     if installed.returncode == 0:
-        run(["xcrun", "simctl", "uninstall", destination.udid, "net.chronoflow.app.native"], log=log)
+        run(["xcrun", "simctl", "uninstall", destination.udid, "net.chronoflow.app"], log=log)
 
 
 def selectors(policy):
