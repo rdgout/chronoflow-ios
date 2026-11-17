@@ -8,7 +8,7 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
-PIN = 'afd80dc0cd127e9ad864d8ac32699383826366c8'
+PIN = 'e36368ec82e6c44c0a5b1c624324e2a4fb5ddd19'
 PATHS = ['Data/Api', 'Data/Trips', 'Data/Plan', 'Planner/Output', 'Planner/Input', 'Enums', 'Planning/Copy']
 RENAMES = {'ApiTripListItem': 'TripListItem', 'ApiTripDetail': 'TripDetail',
            'CheckStateView': 'CheckState', 'CheckMarkView': 'CheckMark', 'CheckKeyView': 'CheckKeyView',
@@ -43,11 +43,6 @@ def generate(repo):
             definitions[name] = body.strip()
     # Phase 19 leaves the planner enum unchanged; the mobile contract only asks shift work.
     definitions['ScreeningQuestion'] = "'shift_work'"
-    # web fix/review-price-without-plan (08cc7cc2): price is null until a plan exists.
-    review = definitions['ApiTripReview']
-    if 'readonly price: ApiReviewPrice,' in review:
-        definitions['ApiTripReview'] = review.replace('readonly price: ApiReviewPrice,', 'readonly price: ApiReviewPrice | null,')
-    definitions['ProfileReadinessBanner'] = "'ready' | 'needs-answers' | 'excluded' | 'adjusted'"
     selected = set()
 
     def include(name, graph):
