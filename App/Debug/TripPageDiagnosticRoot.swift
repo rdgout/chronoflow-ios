@@ -73,7 +73,7 @@
     }
 
     @Observable @MainActor private final class TimelineFirstFrameProbe: NSObject {
-        private let signposter = OSSignposter(subsystem: "net.chronoflow.app.native", category: "Timeline")
+        private let signposter = OSSignposter(subsystem: "net.chronoflow.app", category: "Timeline")
         private var interval: OSSignpostIntervalState?
         private var displayLink: CADisplayLink?
         private var sawFrame = false

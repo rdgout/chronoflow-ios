@@ -54,8 +54,8 @@ struct DeviceIdentityTests {
         let restarted = DeviceIdentityStore(persistence: preferences)
         #expect(try await restarted.identity() == results[0])
         #expect(StorageNamespace.api.directoryName != StorageNamespace.mock.directoryName)
-        #expect(StorageNamespace.api.keychainService == "net.chronoflow.app.native")
-        #expect(StorageNamespace.mock.keychainService == "net.chronoflow.app.native.mock")
+        #expect(StorageNamespace.api.keychainService == "net.chronoflow.app")
+        #expect(StorageNamespace.mock.keychainService == "net.chronoflow.app.mock")
         #expect(try await store.identity() == results[0])
     }
 

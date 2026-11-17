@@ -3,6 +3,6 @@ public enum StorageNamespace: Sendable, CaseIterable {
 
     public var directoryName: String { self == .api ? "ChronoFlow" : "ChronoFlowMock" }
     public var keychainService: String {
-        self == .api ? "net.chronoflow.app.native" : "net.chronoflow.app.native.mock"
+        self == .api ? "net.chronoflow.app" : "net.chronoflow.app.mock"
     }
 }

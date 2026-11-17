@@ -7,7 +7,7 @@ import XCTest
 
 nonisolated final class KeychainSessionStoreTests: XCTestCase {
     func testHostedKeychainRoundTripAndMalformedDeletion() async throws {
-        let store = KeychainSessionStore(service: "net.chronoflow.app.native.tests.\(UUID().uuidString)")
+        let store = KeychainSessionStore(service: "net.chronoflow.app.tests.\(UUID().uuidString)")
         do {
             try await store.delete()
             let empty = try await store.read()

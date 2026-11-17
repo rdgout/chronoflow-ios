@@ -28,7 +28,7 @@ nonisolated struct TimelineMetricBudgetTests {
         #expect(throws: (any Error).self) {
             try TimelineBudgetMetric.Budget.scrollingHitches.validate([sample(hitch + ".adjusted", 0, "ms/s")])
         }
-        let peak = "com.apple.dt.XCTMetric_Memory-net.chronoflow.app.native.physical_peak"
+        let peak = "com.apple.dt.XCTMetric_Memory-net.chronoflow.app.physical_peak"
         try TimelineBudgetMetric.Budget.memoryPeak.validate([sample(peak, 150 * 1_024, "KiB")])
         try TimelineBudgetMetric.Budget.memoryPeak.validate([sample(peak, 57_903_624, "byte")])
         #expect(throws: (any Error).self) {

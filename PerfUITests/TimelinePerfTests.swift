@@ -15,7 +15,7 @@ nonisolated final class TimelinePerfTests: XCTestCase {
             metrics: [
                 TimelineBudgetMetric(
                     XCTOSSignpostMetric(
-                        subsystem: "net.chronoflow.app.native", category: "Timeline",
+                        subsystem: "net.chronoflow.app", category: "Timeline",
                         name: "time-to-first-timeline-frame"), budget: .firstFrame),
                 XCTApplicationLaunchMetric(),
             ], options: options

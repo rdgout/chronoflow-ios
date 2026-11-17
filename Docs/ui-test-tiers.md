@@ -99,7 +99,7 @@ The manifest includes the failing suites, restored guards and every layout suite
 
 ### UI launch timing (2026-11-09)
 
-Debug launches with a valid `CF_AUTH_TEST_ID` emit unified-log `CF_UI_TIMELINE` events in subsystem `net.chronoflow.app.native`, category `UITestTimeline`. `process-entry` is the AppDelegate initializer, the earliest instrumented app entry, not dyld or the kernel process creation time. Each line includes wall-clock seconds, monotonic uptime, test ID and app PID. Runner logs use the same clock fields and ID around `launch()` and the first successful element wait. Correlate by ID and PID; use uptime differences on the same simulator host. `seeded-screen-visible` means the root has laid out and its accessibility is exposed after overlay removal; the runner's first-element marker independently confirms accessibility availability.
+Debug launches with a valid `CF_AUTH_TEST_ID` emit unified-log `CF_UI_TIMELINE` events in subsystem `net.chronoflow.app`, category `UITestTimeline`. `process-entry` is the AppDelegate initializer, the earliest instrumented app entry, not dyld or the kernel process creation time. Each line includes wall-clock seconds, monotonic uptime, test ID and app PID. Runner logs use the same clock fields and ID around `launch()` and the first successful element wait. Correlate by ID and PID; use uptime differences on the same simulator host. `seeded-screen-visible` means the root has laid out and its accessibility is exposed after overlay removal; the runner's first-element marker independently confirms accessibility availability.
 
 Pending user measurements on 17e (same selectors before and after the fast profile):
 
@@ -114,7 +114,7 @@ Pending user measurements on 17e (same selectors before and after the fast profi
 | per-test reset begin → first element found (p50/p95) | n/a | pending | runner |
 | default UI tier wall time / test count / worker count | pending | pending | xcresult + runner |
 
-Capture app events while the test runs with `xcrun simctl spawn <17e-udid> log stream --level info --style compact --predicate 'subsystem == "net.chronoflow.app.native" AND category == "UITestTimeline"' > build/ui-timeline.log`. Preserve the test runner log and xcresult as well. No timing improvement is claimed until these cells are filled from a successful run.
+Capture app events while the test runs with `xcrun simctl spawn <17e-udid> log stream --level info --style compact --predicate 'subsystem == "net.chronoflow.app" AND category == "UITestTimeline"' > build/ui-timeline.log`. Preserve the test runner log and xcresult as well. No timing improvement is claimed until these cells are filled from a successful run.
 
 UI waits now use an immediate check followed by 50 ms × 1.5 backoff, capped at 1 s. Snapshot time counts toward the existing timeout. The runner sleeps between snapshots; it never spins on the app's main actor. Frame stability, keyboard/focus, disappearance and appearance waits share this policy. Host tests cover immediate success, delayed success, backoff/cap and timeout accounting.
 

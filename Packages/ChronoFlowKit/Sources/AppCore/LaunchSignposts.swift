@@ -19,7 +19,7 @@ public final class LaunchSignposts {
     private var intervals: [Interval: OSSignpostIntervalState] = [:]
 
     public init() {
-        signposter = OSSignposter(subsystem: "net.chronoflow.app.native", category: .pointsOfInterest)
+        signposter = OSSignposter(subsystem: "net.chronoflow.app", category: .pointsOfInterest)
     }
 
     public func begin(_ interval: Interval) {

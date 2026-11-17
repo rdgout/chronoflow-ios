@@ -7,7 +7,7 @@ actor KeychainSessionStore: SessionStore {
     let service: String
     let account: String
 
-    init(service: String = "net.chronoflow.app.native", account: String = "session") {
+    init(service: String = "net.chronoflow.app", account: String = "session") {
         self.service = service
         self.account = account
     }

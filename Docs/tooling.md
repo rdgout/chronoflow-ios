@@ -1128,7 +1128,7 @@ its resolved route on its first frame. Stored-data updates support false → tru
 load; the eight-second fallback remains scoped to the launch source. Window teardown is driven
 by the container fade's CATransaction completion, isolated from the repeating status dots.
 
-The native Keychain service is `net.chronoflow.app.native`, account `session`, with JSON keys
+The native Keychain service is `net.chronoflow.app`, account `session`, with JSON keys
 `token` and `accountId`. A malformed value is deleted and resolves signed out. No RN migration
 or URL scheme is enabled. Release always resolves signed out. It parses `-cf.mode ready` and a validated
 `-cf.mainThreadStall` for the physical-device D3 proof; slow/Welcome modes, freeze, readyAt and

@@ -12,7 +12,7 @@
             guard test != nil || allowUngated else { return }
             let line =
                 "CF_UI_TIMELINE id=\(test?.id ?? "ungated") pid=\(ProcessInfo.processInfo.processIdentifier) event=\(event) wall=\(Date().timeIntervalSince1970) uptime=\(ProcessInfo.processInfo.systemUptime) \(details)"
-            Logger(subsystem: "net.chronoflow.app.native", category: "UITestTimeline").notice(
+            Logger(subsystem: "net.chronoflow.app", category: "UITestTimeline").notice(
                 "\(line, privacy: .public)")
         }
     }

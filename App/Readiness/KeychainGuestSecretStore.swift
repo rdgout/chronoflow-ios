@@ -6,7 +6,7 @@ actor KeychainGuestSecretStore: GuestSecretStore {
     struct Failure: Error { let status: OSStatus }
     let service: String
 
-    init(service: String = "net.chronoflow.app.native.guest-secrets") {
+    init(service: String = "net.chronoflow.app.guest-secrets") {
         self.service = service
     }
 

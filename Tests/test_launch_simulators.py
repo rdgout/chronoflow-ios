@@ -1115,8 +1115,8 @@ class RunnerTests(unittest.TestCase):
             ['xcrun', 'simctl', 'spawn', 'device-1', 'defaults', 'write',
              'com.apple.WebUI', 'AutoFillPasswords', '-bool', 'false'],
             ['xcrun', 'simctl', 'ui', 'device-1', 'appearance', 'light'],
-            ['xcrun', 'simctl', 'get_app_container', 'device-1', 'net.chronoflow.app.native', 'app'],
-            ['xcrun', 'simctl', 'uninstall', 'device-1', 'net.chronoflow.app.native'],
+            ['xcrun', 'simctl', 'get_app_container', 'device-1', 'net.chronoflow.app', 'app'],
+            ['xcrun', 'simctl', 'uninstall', 'device-1', 'net.chronoflow.app'],
         ])
         self.assertFalse(any(c[:2] == ['xcrun', 'simctl'] and c[3:4] == ['device-1']
                              for c in self.commands[self.commands.index(serial) + 1:]))
@@ -1164,8 +1164,8 @@ class RunnerTests(unittest.TestCase):
                             ['xcrun', 'simctl', 'spawn', udid, 'defaults', 'write',
                              'com.apple.WebUI', 'AutoFillPasswords', '-bool', 'false'],
                             reset,
-                            ['xcrun', 'simctl', 'get_app_container', udid, 'net.chronoflow.app.native', 'app'],
-                            ['xcrun', 'simctl', 'uninstall', udid, 'net.chronoflow.app.native'],
+                            ['xcrun', 'simctl', 'get_app_container', udid, 'net.chronoflow.app', 'app'],
+                            ['xcrun', 'simctl', 'uninstall', udid, 'net.chronoflow.app'],
                         ]
                         actual = [c for c in self.commands if c[:2] == ['xcrun', 'simctl'] and c[3:4] == [udid]
                                   or c[-1] == 'test-without-building' and 'platform=iOS Simulator,id=' + udid in c]
